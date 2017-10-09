@@ -1,0 +1,38 @@
+version: 2
+jobs:
+  "python-2.7":
+    docker:
+      - image: circleci/python:2.7
+    working_directory: ~/rio-tiler
+    steps:
+      - checkout
+      - run: pip install -U pip
+      - run: pip install virtualenv
+      - run: virtualenv venv
+      - run:
+          command: |
+            . venv/bin/activate
+            pip install -q -e .[test]
+            python -m pytest --cov rio_tiler --cov-report term-missing --ignore=venv
+
+  "python-3.6":
+    docker:
+      - image: circleci/python:3.6.1
+    working_directory: ~/rio-tiler
+    steps:
+      - checkout
+      - run: pip3 install -U pip
+      - run: python3 -m venv venv
+      - run:
+          command: |
+            . venv/bin/activate
+            pip3 install -q -e .[test]
+            python3 -m pytest --cov rio_tiler --cov-report term-missing --ignore=venv
+            codecov -t f6835c8d-9eaa-4555-ace7-70b4de6b0c83
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - "python-2.7"
+      - "python-3.6"
