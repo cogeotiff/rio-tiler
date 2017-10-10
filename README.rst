@@ -261,7 +261,7 @@ The `aws` module can process any raster hosted on AWS S3.
         (3, 256, 256)
 
 
-Convert ``.tile`` output to image
+Convert ``tile`` output to image
 =================================
 
 rio_tiler.utils.array_to_img
