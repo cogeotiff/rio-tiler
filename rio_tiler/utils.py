@@ -211,7 +211,7 @@ def landsat_get_mtl(sceneid):
     try:
         scene_params = landsat_parse_scene_id(sceneid)
         meta_file = 'http://landsat-pds.s3.amazonaws.com/{}_MTL.txt'.format(scene_params['key'])
-        metadata = urlopen(meta_file).read().decode()
+        metadata = str(urlopen(meta_file).read().decode())
         return toa_utils._parse_mtl_txt(metadata)
     except:
         raise Exception('Could not retrieve {} metadata'.format(sceneid))

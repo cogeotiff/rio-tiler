@@ -1,4 +1,9 @@
 
+0.0.2 (2017-10-17)
+------------------
+- Fix python 2/3 compatibilities in rio_tiler.utils.landsat_get_mtl
+
+
 0.0.1 (2017-10-05)
 ------------------
 - Initial release. Requires Rasterio >= 1.0a10.

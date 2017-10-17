@@ -3,6 +3,8 @@
 import os
 import pytest
 
+from mock import patch
+
 import numpy as np
 
 from rio_toa import toa_utils
@@ -32,6 +34,10 @@ S3_PATH = os.path.join(S3_LOCAL, S3_KEY)
 
 with open('{}_MTL.txt'.format(LANDSAT_PATH), 'r') as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
+
+
+with open('{}_MTL.txt'.format(LANDSAT_PATH), 'r') as f:
+    LANDSAT_METADATA_RAW = f.read().encode('utf-8')
 
 
 def test_landsat_min_max_worker():
@@ -296,3 +302,20 @@ def test_array_to_img_invalid_format():
     tileformat = 'gif'
     with pytest.raises(InvalidFormat):
         utils.array_to_img(arr, tileformat)
+
+
+@patch('rio_tiler.utils.urlopen')
+def test_landsat_get_mtl_valid(urlopen):
+
+    urlopen.return_value.read.return_value = LANDSAT_METADATA_RAW
+
+    meta_data = utils.landsat_get_mtl(LANDSAT_SCENE_C1)
+    assert meta_data['L1_METADATA_FILE']['METADATA_FILE_INFO']['LANDSAT_SCENE_ID'] == 'LC80160372017225LGN00'
+
+
+@patch('rio_tiler.utils.urlopen')
+def test_landsat_get_mtl_invalid(urlopen):
+
+    urlopen.return_value.read.return_value = {}
+    with pytest.raises(Exception):
+        utils.landsat_get_mtl(LANDSAT_SCENE_C1)
