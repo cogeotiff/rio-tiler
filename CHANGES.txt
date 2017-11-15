@@ -1,8 +1,11 @@
 
+0.0.3 (2017-11-14)
+------------------
+- Fix Sentinel-2 bad AWS url
+
 0.0.2 (2017-10-17)
 ------------------
 - Fix python 2/3 compatibilities in rio_tiler.utils.landsat_get_mtl
-
 
 0.0.1 (2017-10-05)
 ------------------

@@ -316,7 +316,7 @@ def sentinel_parse_scene_id(sceneid):
     if match:
         meta = match.groupdict()
 
-    utm_zone = meta['utm']
+    utm_zone = meta['utm'].lstrip("0")
     grid_square = meta['sq']
     latitude_band = meta['lat']
     year = meta['acquisitionYear']

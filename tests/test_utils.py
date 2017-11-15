@@ -253,6 +253,27 @@ def test_sentinel_id_valid():
     assert utils.sentinel_parse_scene_id(scene) == expected_content
 
 
+def test_sentinel_id_valid_strip():
+    """
+    Should work as expected (parse sentinel scene id)
+    """
+
+    scene = 'S2A_tile_20170323_07SNC_0'
+    expected_content = {
+        'acquisitionDay': '23',
+        'acquisitionMonth': '03',
+        'acquisitionYear': '2017',
+        'key': 'tiles/7/S/NC/2017/3/23/0',
+        'lat': 'NC',
+        'num': '0',
+        'satellite': 'A',
+        'sensor': '2',
+        'sq': 'S',
+        'utm': '07'}
+
+    assert utils.sentinel_parse_scene_id(scene) == expected_content
+
+
 def test_array_to_img_valid_png():
     """
     Should work as expected
