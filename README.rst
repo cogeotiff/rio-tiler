@@ -107,9 +107,6 @@ The ``landsat8`` module process Landsat 8 data hosted on AWS Public Dataset http
       - y: Mercator tile Y index
       - z: Mercator tile ZOOM level
       - rgb: Bands index for the RGB combination (default: (4, 3, 2))
-      - r_bds: First band (red) DN min and max values (default: (0, 16000))
-      - g_bds: Second band (green) DN min and max values (default: (0, 16000))
-      - b_bds: Third band (blue) DN min and max values (default: (0, 16000))
       - tilesize: Output image size (default: 256)
       - pan: If True, apply pan-sharpening(default: False)
 
@@ -194,9 +191,6 @@ The `sentinel2` module process Sentinel 2 data hosted on AWS Public Dataset http
       - y: Mercator tile Y index
       - z: Mercator tile ZOOM level
       - rgb: Bands index for the RGB combination (default: (04, 03, 02))
-      - r_bds: First band (red) DN min and max values (default: (0, 16000))
-      - g_bds: Second band (green) DN min and max values (default: (0, 16000))
-      - b_bds: Third band (blue) DN min and max values (default: (0, 16000))
       - tilesize: Output image size (default: 256)
 
     ``Output``:

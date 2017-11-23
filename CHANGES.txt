@@ -1,4 +1,11 @@
 
+1.0.0 (2017-11-23)
+------------------
+
+:Breacking Changes:
+
+- remove data value rescaling in `landsat8.tile` and `sentinel2.tile`
+
 0.0.3 (2017-11-14)
 ------------------
 - Fix Sentinel-2 bad AWS url
