@@ -1,5 +1,6 @@
 """rio_tiler.landsat8: Landsat-8 processing."""
 
+import collections
 from functools import partial
 from concurrent import futures
 
@@ -10,7 +11,7 @@ import mercantile
 from rasterio import Affine
 from rasterio import transform
 
-from rio_toa import reflectance, toa_utils
+from rio_toa import reflectance, brightness_temp, toa_utils
 from rio_pansharpen.worker import pansharpen
 
 from rio_tiler import utils
@@ -73,14 +74,14 @@ def metadata(sceneid, pmin=2, pmax=98):
     info = {'sceneid': sceneid}
     info['bounds'] = toa_utils._get_bounds_from_metadata(meta_data['PRODUCT_METADATA'])
 
-    bands = ['1', '2', '3', '4', '5', '6', '7']
+    bands = ['1', '2', '3', '4', '5', '6', '7', '9']
     _min_max_worker = partial(utils.landsat_min_max_worker,
                               address=landsat_address,
                               metadata=meta_data,
                               pmin=pmin,
                               pmax=pmax)
 
-    with futures.ThreadPoolExecutor(max_workers=7) as executor:
+    with futures.ThreadPoolExecutor(max_workers=5) as executor:
         responses = list(executor.map(_min_max_worker, bands))
         info['rgbMinMax'] = dict(zip(bands, responses))
 
@@ -114,6 +115,9 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
     -------
     out : numpy ndarray
     """
+
+    if not isinstance(rgb, collections.Iterable):
+        rgb = tuple((rgb, ))
 
     scene_params = utils.landsat_parse_scene_id(sceneid)
     meta_data = utils.landsat_get_mtl(sceneid).get('L1_METADATA_FILE')
@@ -151,13 +155,30 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
         sun_elev = meta_data['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
 
         for bdx, band in enumerate(rgb):
-            multi_reflect = meta_data['RADIOMETRIC_RESCALING'].get(
-                'REFLECTANCE_MULT_BAND_{}'.format(band))
+            if band > 9:  # TIRS
+                multi_rad = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'RADIANCE_MULT_BAND_{}'.format(band))
 
-            add_reflect = meta_data['RADIOMETRIC_RESCALING'].get(
-                'REFLECTANCE_ADD_BAND_{}'.format(band))
+                add_rad = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'RADIANCE_ADD_BAND_{}'.format(band))
 
-            out[bdx] = 10000 * reflectance.reflectance(
-                out[bdx], multi_reflect, add_reflect, sun_elev, src_nodata=0)
+                k1 = meta_data['TIRS_THERMAL_CONSTANTS'].get(
+                    'K1_CONSTANT_BAND_{}'.format(band))
+
+                k2 = meta_data['TIRS_THERMAL_CONSTANTS'].get(
+                    'K2_CONSTANT_BAND_{}'.format(band))
+
+                out[bdx] = brightness_temp.brightness_temp(
+                    out[bdx], multi_rad, add_rad, k1, k2)
+
+            else:
+                multi_reflect = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'REFLECTANCE_MULT_BAND_{}'.format(band))
+
+                add_reflect = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'REFLECTANCE_ADD_BAND_{}'.format(band))
+
+                out[bdx] = 10000 * reflectance.reflectance(
+                    out[bdx], multi_reflect, add_reflect, sun_elev)
 
         return out

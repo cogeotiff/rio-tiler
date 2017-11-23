@@ -83,6 +83,22 @@ def test_tile_valid_nrg(monkeypatch):
                           rgb=bands).shape == (3, 256, 256)
 
 
+def test_tile_valid_onband(monkeypatch):
+    """
+    Should work as expected
+    """
+
+    monkeypatch.setattr(sentinel2, 'SENTINEL_BUCKET', SENTINEL_BUCKET)
+
+    tile_z = 8
+    tile_x = 77
+    tile_y = 89
+    bands = '08'
+
+    assert sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z,
+                          rgb=bands).shape == (1, 256, 256)
+
+
 def test_tile_invalid_bounds(monkeypatch):
     """
     Should raise an error with invalid tile

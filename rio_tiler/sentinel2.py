@@ -109,6 +109,9 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     out : numpy ndarray
     """
 
+    if isinstance(rgb, str):
+        rgb = tuple((rgb, ))
+
     scene_params = utils.sentinel_parse_scene_id(sceneid)
     sentinel_address = '{}/{}'.format(SENTINEL_BUCKET, scene_params['key'])
 
