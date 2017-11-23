@@ -314,6 +314,36 @@ def test_array_to_img_valid_noband():
     assert utils.array_to_img(arr)
 
 
+def test_array_to_img_cast():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.int16)
+    assert utils.array_to_img(arr)
+
+
+def test_array_to_img_colormap():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    tileformat = 'png'
+    utils.array_to_img(arr, tileformat, color_map=utils.get_colormap())
+
+
+def test_array_to_img_bands_colormap():
+    """
+    Should raise an error with invalid format
+    """
+
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    tileformat = 'png'
+    with pytest.raises(InvalidFormat):
+        utils.array_to_img(arr, tileformat, color_map=True)
+
+
 def test_array_to_img_invalid_format():
     """
     Should raise an error with invalid format
@@ -340,3 +370,7 @@ def test_landsat_get_mtl_invalid(urlopen):
     urlopen.return_value.read.return_value = {}
     with pytest.raises(Exception):
         utils.landsat_get_mtl(LANDSAT_SCENE_C1)
+
+
+def test_get_colormap_valid():
+    assert len(utils.get_colormap()) == 768  # 3 x256

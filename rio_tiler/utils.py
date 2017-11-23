@@ -3,6 +3,7 @@
 import os
 import re
 import base64
+import logging
 import datetime
 from io import BytesIO
 
@@ -27,6 +28,9 @@ try:
     from urllib.request import urlopen
 except ImportError:
     from urllib2 import urlopen
+
+
+logger = logging.getLogger(__name__)
 
 
 def landsat_min_max_worker(band, address, metadata, pmin=2, pmax=98,
@@ -354,19 +358,20 @@ def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
     if tileformat not in ['png', 'jpg']:
         raise InvalidFormat('Invalid {} extension'.format(tileformat))
 
-    # Make sure "arr" has a (bands, rows, columns) shape
-    if arr.ndim == 2:
-        arr = np.reshape(arr, (1,) + arr.shape)
+    if arr.dtype != np.uint8:
+        logger.error('Data casted to UINT8')
+        arr = arr.astype(np.uint8)
 
-    if arr.shape[0] != 1 and color_map:
+    if arr.ndim == 3 and arr.shape[0] == 1:
+        arr = arr[0]
+
+    if arr.ndim != 2 and color_map:
         raise InvalidFormat('Cannot apply colormap on a multiband image')
 
-    if arr.shape[0] == 1:
-        arr = reshape_as_image(arr)
+    if arr.ndim == 2:
         img = Image.fromarray(arr, mode='L')
         if color_map:
             img.putpalette(color_map)
-
     else:
         mask_shape = (1,) + arr.shape[-2:]
         mask = np.full(mask_shape, 255, dtype=np.uint8)
@@ -398,7 +403,7 @@ def get_colormap(name='cfastie'):
 
     Returns
     -------
-    colormap : numpy array
+    colormap : list
         Color map array in a Pillow friendly format
         more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
     """
@@ -407,4 +412,4 @@ def get_colormap(name='cfastie'):
         lines = cmap.read().splitlines()
         colormap = [list(map(int, line.split())) for line in lines if not line.startswith('#')][1:]
 
-    return colormap
+    return list(np.array(colormap).flatten())

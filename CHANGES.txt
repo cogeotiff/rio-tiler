@@ -1,6 +1,7 @@
 
 1.0.0 (2017-11-23)
 ------------------
+- add colormap option in `utils.array_to_img`
 
 :Breacking Changes:
 
