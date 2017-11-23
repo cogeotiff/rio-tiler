@@ -13,6 +13,7 @@ import mercantile
 import rasterio
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling
+from rasterio.plot import reshape_as_image
 from rio_toa import reflectance, toa_utils
 
 from rio_tiler.errors import (InvalidFormat,
@@ -330,16 +331,19 @@ def sentinel_parse_scene_id(sceneid):
     return meta
 
 
-def array_to_img(arr, tileformat='png', nodata=0):
+def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
     """Convert an array to an base64 encoded img
 
     Attributes
     ----------
-
     arr : numpy ndarray
         Image array to encode.
     tileformat : str (default: png)
         Image format to return (Accepted: "jpg" or "png")
+    nodata: int
+        No data value used to create mask
+    color_map: numpy array
+        ColorMap array (see: utils.get_colormap)
 
     Returns
     -------
@@ -350,16 +354,27 @@ def array_to_img(arr, tileformat='png', nodata=0):
     if tileformat not in ['png', 'jpg']:
         raise InvalidFormat('Invalid {} extension'.format(tileformat))
 
-    # https://pillow.readthedocs.io/en/4.3.x/handbook/concepts.html#concept-modes
+    # Make sure "arr" has a (bands, rows, columns) shape
     if arr.ndim == 2:
+        arr = np.reshape(arr, (1,) + arr.shape)
+
+    if arr.shape[0] != 1 and color_map:
+        raise InvalidFormat('Cannot apply colormap on a multiband image')
+
+    if arr.shape[0] == 1:
+        arr = reshape_as_image(arr)
         img = Image.fromarray(arr, mode='L')
+        if color_map:
+            img.putpalette(color_map)
+
     else:
         mask_shape = (1,) + arr.shape[-2:]
         mask = np.full(mask_shape, 255, dtype=np.uint8)
         if nodata is not None:
             mask[0] = np.all(np.dstack(arr) != nodata, axis=2).astype(np.uint8) * 255
-        arr = np.concatenate((arr, mask))
-        img = Image.fromarray(np.stack(arr, axis=2))
+
+        arr = reshape_as_image(np.concatenate((arr, mask)))
+        img = Image.fromarray(arr)
 
     sio = BytesIO()
     if tileformat == 'jpg':
@@ -371,3 +386,25 @@ def array_to_img(arr, tileformat='png', nodata=0):
     sio.seek(0)
 
     return base64.b64encode(sio.getvalue()).decode()
+
+
+def get_colormap(name='cfastie'):
+    """Read color map file
+
+    Attributes
+    ----------
+    name : str
+        colormap name (default: cfastie)
+
+    Returns
+    -------
+    colormap : numpy array
+        Color map array in a Pillow friendly format
+        more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
+    """
+    cmap_file = os.path.join(os.path.dirname(__file__), 'cmap', f'{name}.txt')
+    with open(cmap_file) as cmap:
+        lines = cmap.read().splitlines()
+        colormap = [list(map(int, line.split())) for line in lines if not line.startswith('#')][1:]
+
+    return colormap
