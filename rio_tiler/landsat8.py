@@ -40,8 +40,7 @@ def bounds(sceneid):
     meta_data = utils.landsat_get_mtl(sceneid).get('L1_METADATA_FILE')
 
     info = {'sceneid': sceneid}
-    info['bounds'] = toa_utils._get_bounds_from_metadata(
-        meta_data['PRODUCT_METADATA'])
+    info['bounds'] = toa_utils._get_bounds_from_metadata(meta_data['PRODUCT_METADATA'])
 
     return info
 
@@ -72,8 +71,7 @@ def metadata(sceneid, pmin=2, pmax=98):
     landsat_address = '{}/{}'.format(LANDSAT_BUCKET, scene_params['key'])
 
     info = {'sceneid': sceneid}
-    info['bounds'] = toa_utils._get_bounds_from_metadata(
-        meta_data['PRODUCT_METADATA'])
+    info['bounds'] = toa_utils._get_bounds_from_metadata(meta_data['PRODUCT_METADATA'])
 
     bands = ['1', '2', '3', '4', '5', '6', '7']
     _min_max_worker = partial(utils.landsat_min_max_worker,
@@ -90,8 +88,7 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 @lru_cache()
-def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), r_bds=(0, 16000),
-         g_bds=(0, 16000), b_bds=(0, 16000), tilesize=256, pan=False):
+def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False):
     """Create mercator tile from Landsat-8 data and encodes it in base64.
 
     Attributes
@@ -108,15 +105,6 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), r_bds=(0, 16000),
         Mercator tile ZOOM level.
     rgb : tuple, int, optional (default: (4, 3, 2))
         Bands index for the RGB combination.
-    r_bds : tuple, int, optional (default: (0, 16000))
-        First band (red) DN min and max values (DN * 10,000)
-        used for the linear rescaling.
-    g_bds : tuple, int, optional (default: (0, 16000))
-        Second band (green) DN min and max values (DN * 10,000)
-        used for the linear rescaling.
-    b_bds : tuple, int, optional (default: (0, 16000))
-        Third band (blue) DN min and max values (DN * 10,000)
-        used for the linear rescaling.
     tilesize : int, optional (default: 256)
         Output image size.
     pan : boolean, optional (default: False)
@@ -124,7 +112,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), r_bds=(0, 16000),
 
     Returns
     -------
-    out : numpy ndarray (type: uint8)
+    out : numpy ndarray
     """
 
     scene_params = utils.landsat_parse_scene_id(sceneid)
@@ -142,16 +130,10 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), r_bds=(0, 16000),
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
-    # define a list of bands Min and Max Values (from input)
-    histo_cuts = dict(zip(rgb, [r_bds, g_bds, b_bds]))
-
     ms_tile_size = int(tilesize / 2) if pan else tilesize
-
     addresses = ['{}_B{}.TIF'.format(landsat_address, band) for band in rgb]
-    _tiler = partial(utils.tile_band_worker,
-                     bounds=tile_bounds,
-                     tilesize=ms_tile_size)
 
+    _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=ms_tile_size)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
         out = np.stack(list(executor.map(_tiler, addresses)))
 
@@ -178,11 +160,4 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), r_bds=(0, 16000),
             out[bdx] = 10000 * reflectance.reflectance(
                 out[bdx], multi_reflect, add_reflect, sun_elev, src_nodata=0)
 
-            out[bdx] = np.where(
-                out[bdx] > 0,
-                utils.linear_rescale(
-                    out[bdx],
-                    in_range=histo_cuts.get(band),
-                    out_range=[1, 255]), 0)
-
-    return out.astype(np.uint8)
+        return out

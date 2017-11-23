@@ -74,11 +74,9 @@ def metadata(sceneid, pmin=2, pmax=98):
 
     info = {'sceneid': sceneid, 'bounds': list(wgs_bounds)}
 
-    bands = ['01', '02', '03', '04', '05', '06', '07', '08', '8A', '09', '10',
-             '11', '12']
+    bands = ['01', '02', '03', '04', '05', '06', '07', '08', '8A', '09', '10', '11', '12']
     addresses = ['{}/preview/B{}.jp2'.format(sentinel_address, band) for band in bands]
     _min_max_worker = partial(utils.sentinel_min_max_worker, pmin=pmin, pmax=pmax)
-
     with futures.ThreadPoolExecutor(max_workers=2) as executor:
         responses = list(executor.map(_min_max_worker, addresses))
         info['rgbMinMax'] = dict(zip(bands, responses))
@@ -87,8 +85,7 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 @lru_cache()
-def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'),
-         r_bds=(0, 16000), g_bds=(0, 16000), b_bds=(1, 16000), tilesize=256):
+def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     """Create mercator tile from Sentinel-2 data and encodes it in base64.
 
     Attributes
@@ -104,21 +101,12 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'),
         Mercator tile ZOOM level.
     rgb : tuple, int, optional (default: ('04', '03', '02'))
         Bands index for the RGB combination.
-    r_bds : tuple, int, optional (default: (0, 16000))
-        First band (red) DN min and max values (DN * 10,000)
-        used for the linear rescaling.
-    g_bds : tuple, int, optional (default: (0, 16000))
-        Second band (green) DN min and max values (DN * 10,000)
-        used for the linear rescaling.
-    b_bds : tuple, int, optional (default: (0, 16000))
-        Third band (blue) DN min and max values (DN * 10,000)
-        used for the linear rescaling.
     tilesize : int, optional (default: 256)
         Output image size.
 
     Returns
     -------
-    out : numpy ndarray (type: uint8)
+    out : numpy ndarray
     """
 
     scene_params = utils.sentinel_parse_scene_id(sceneid)
@@ -136,23 +124,10 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'),
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
-    # define a list of bands Min and Max Values (form input)
-    histo_cuts = dict(zip(rgb, [r_bds, g_bds, b_bds]))
-
     addresses = ['{}/B{}.jp2'.format(sentinel_address, band) for band in rgb]
-    _tiler = partial(utils.tile_band_worker,
-                     bounds=tile_bounds,
-                     tilesize=tilesize)
 
+    _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=tilesize)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
         out = np.stack(executor.map(_tiler, addresses))
 
-        for bdx, band in enumerate(rgb):
-            # Rescale Intensity to byte (1->255) with 0 being NoData
-            out[bdx] = np.where(
-                out[bdx] > 0,
-                utils.linear_rescale(out[bdx],
-                                     in_range=histo_cuts.get(band),
-                                     out_range=[1, 255]), 0)
-
-    return out.astype(np.uint8)
+    return out
