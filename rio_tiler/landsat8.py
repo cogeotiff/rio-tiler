@@ -155,7 +155,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
         sun_elev = meta_data['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
 
         for bdx, band in enumerate(rgb):
-            if band > 9:  # TIRS
+            if int(band) > 9:  # TIRS
                 multi_rad = meta_data['RADIOMETRIC_RESCALING'].get(
                     'RADIANCE_MULT_BAND_{}'.format(band))
 
