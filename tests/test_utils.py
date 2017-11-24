@@ -52,6 +52,18 @@ def test_landsat_min_max_worker():
                                         98) == [939, 7025]
 
 
+def test_landsat_min_max_worker_tir():
+    """
+    Should work as expected (read data and return histogram cuts)
+    """
+
+    assert utils.landsat_min_max_worker('10',
+                                        LANDSAT_PATH,
+                                        LANDSAT_METADATA['L1_METADATA_FILE'],
+                                        2,
+                                        98) == [275, 297]
+
+
 def test_sentinel_min_max_worker():
     """
     Should work as expected (read data and return histogram cuts)

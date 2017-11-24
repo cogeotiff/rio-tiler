@@ -15,7 +15,7 @@ import rasterio
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
-from rio_toa import reflectance, toa_utils
+from rio_toa import reflectance, brightness_temp, toa_utils
 
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
@@ -56,17 +56,35 @@ def landsat_min_max_worker(band, address, metadata, pmin=2, pmax=98,
         returns a list of the min/max histogram cut values.
     """
 
-    multi_reflect = metadata['RADIOMETRIC_RESCALING'].get(
-        'REFLECTANCE_MULT_BAND_{}'.format(band))
-    add_reflect = metadata['RADIOMETRIC_RESCALING'].get(
-        'REFLECTANCE_ADD_BAND_{}'.format(band))
-    sun_elev = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+    if int(band) > 9:  # TIRS
+        multi_rad = metadata['RADIOMETRIC_RESCALING'].get(
+            'RADIANCE_MULT_BAND_{}'.format(band))
 
-    with rasterio.open('{}_B{}.TIF'.format(address, band)) as src:
-        arr = src.read(indexes=1,
-                       out_shape=(height, width)).astype(src.profile['dtype'])
-        arr = 10000 * reflectance.reflectance(arr, multi_reflect, add_reflect,
-                                              sun_elev, src_nodata=0)
+        add_rad = metadata['RADIOMETRIC_RESCALING'].get(
+            'RADIANCE_ADD_BAND_{}'.format(band))
+
+        k1 = metadata['TIRS_THERMAL_CONSTANTS'].get(
+            'K1_CONSTANT_BAND_{}'.format(band))
+
+        k2 = metadata['TIRS_THERMAL_CONSTANTS'].get(
+            'K2_CONSTANT_BAND_{}'.format(band))
+
+        with rasterio.open('{}_B{}.TIF'.format(address, band)) as src:
+            arr = src.read(indexes=1,
+                           out_shape=(height, width)).astype(src.profile['dtype'])
+            arr = brightness_temp.brightness_temp(arr, multi_rad, add_rad, k1, k2)
+    else:
+        multi_reflect = metadata['RADIOMETRIC_RESCALING'].get(
+            'REFLECTANCE_MULT_BAND_{}'.format(band))
+        add_reflect = metadata['RADIOMETRIC_RESCALING'].get(
+            'REFLECTANCE_ADD_BAND_{}'.format(band))
+        sun_elev = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+
+        with rasterio.open('{}_B{}.TIF'.format(address, band)) as src:
+            arr = src.read(indexes=1,
+                           out_shape=(height, width)).astype(src.profile['dtype'])
+            arr = 10000 * reflectance.reflectance(arr, multi_reflect, add_reflect,
+                                                  sun_elev, src_nodata=0)
 
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
