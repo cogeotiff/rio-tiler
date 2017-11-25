@@ -380,30 +380,34 @@ def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
         logger.error('Data casted to UINT8')
         arr = arr.astype(np.uint8)
 
-    if arr.ndim == 3 and arr.shape[0] == 1:
-        arr = arr[0]
+    if len(arr.shape) >= 3:
+        arr = reshape_as_image(arr)
+        arr = arr.squeeze()
 
-    if arr.ndim != 2 and color_map:
+    if len(arr.shape) != 2 and color_map:
         raise InvalidFormat('Cannot apply colormap on a multiband image')
 
-    if arr.ndim == 2:
-        img = Image.fromarray(arr, mode='L')
-        if color_map:
-            img.putpalette(color_map)
+    if len(arr.shape) == 2:
+        mode = 'L'
     else:
-        mask_shape = (1,) + arr.shape[-2:]
-        mask = np.full(mask_shape, 255, dtype=np.uint8)
-        if nodata is not None:
-            mask[0] = np.all(np.dstack(arr) != nodata, axis=2).astype(np.uint8) * 255
+        mode = 'RGB'
 
-        arr = reshape_as_image(np.concatenate((arr, mask)))
-        img = Image.fromarray(arr)
+    img = Image.fromarray(arr, mode=mode)
+    if color_map:
+        img.putpalette(color_map)
 
     sio = BytesIO()
     if tileformat == 'jpg':
-        img = img.convert('RGB')
         img.save(sio, 'jpeg', subsampling=0, quality=100)
     else:
+        mask = np.full(arr.shape[0:2], 255, dtype=np.uint8)
+        if len(arr.shape) == 2:
+            arr = np.expand_dims(arr, axis=2)
+        if nodata is not None:
+            mask = np.all(arr != nodata, axis=2).astype(np.uint8) * 255
+
+        mask_img = Image.fromarray(mask)
+        img.putalpha(mask_img)
         img.save(sio, 'png', compress_level=0)
 
     sio.seek(0)
