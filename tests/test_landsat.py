@@ -103,6 +103,24 @@ def test_tile_valid_nrg(landsat_get_mtl, monkeypatch):
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')
+def test_tile_valid_tir(landsat_get_mtl, monkeypatch):
+    """
+    Should work as expected
+    """
+
+    monkeypatch.setattr(landsat8, 'LANDSAT_BUCKET', LANDSAT_BUCKET)
+    landsat_get_mtl.return_value = LANDSAT_METADATA
+
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+    bands = 10
+
+    assert landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z,
+                         rgb=bands).shape == (1, 256, 256)
+
+
+@patch('rio_tiler.utils.landsat_get_mtl')
 def test_tile_valid_pan(landsat_get_mtl, monkeypatch):
     """
     Should work as expected
