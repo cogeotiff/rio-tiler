@@ -329,8 +329,8 @@ def sentinel_parse_scene_id(sceneid):
         r'(?P<acquisitionDay>[0-9]{2})'
         r'_'
         r'(?P<utm>[0-9]{2})'
-        r'(?P<sq>\w{1})'
-        r'(?P<lat>\w{2})'
+        r'(?P<lat>\w{1})'
+        r'(?P<sq>\w{2})'
         r'_'
         r'(?P<num>[0-9]{1})$')
 
@@ -348,7 +348,7 @@ def sentinel_parse_scene_id(sceneid):
     img_num = meta['num']
 
     meta['key'] = 'tiles/{}/{}/{}/{}/{}/{}/{}'.format(
-        utm_zone, grid_square, latitude_band, year, month, day, img_num)
+        utm_zone, latitude_band, grid_square, year, month, day, img_num)
 
     return meta
 
