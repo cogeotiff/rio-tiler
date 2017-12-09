@@ -255,11 +255,11 @@ def test_sentinel_id_valid():
         'acquisitionMonth': '03',
         'acquisitionYear': '2017',
         'key': 'tiles/17/S/NC/2017/3/23/0',
-        'lat': 'NC',
+        'lat': 'S',
         'num': '0',
         'satellite': 'A',
         'sensor': '2',
-        'sq': 'S',
+        'sq': 'NC',
         'utm': '17'}
 
     assert utils.sentinel_parse_scene_id(scene) == expected_content
@@ -276,11 +276,11 @@ def test_sentinel_id_valid_strip():
         'acquisitionMonth': '03',
         'acquisitionYear': '2017',
         'key': 'tiles/7/S/NC/2017/3/23/0',
-        'lat': 'NC',
+        'lat': 'S',
         'num': '0',
         'satellite': 'A',
         'sensor': '2',
-        'sq': 'S',
+        'sq': 'NC',
         'utm': '07'}
 
     assert utils.sentinel_parse_scene_id(scene) == expected_content

@@ -6,6 +6,6 @@ mercantile
 boto3
 cachetools
 
-rasterio[s3]>=1.0a10
+rasterio[s3]>=1.0a12
 rio-toa
 rio-pansharpen
