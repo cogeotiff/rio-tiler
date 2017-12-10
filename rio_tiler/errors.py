@@ -19,3 +19,7 @@ class InvalidLandsatSceneId(RioTilerError):
 
 class InvalidSentinelSceneId(RioTilerError):
     """Invalid Sentinel-2 scene id"""
+
+
+class InvalidBERSSceneId(RioTilerError):
+    """Invalid CBERS scene id"""

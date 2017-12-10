@@ -19,7 +19,8 @@ from rio_toa import reflectance, brightness_temp, toa_utils
 
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
-                              InvalidSentinelSceneId)
+                              InvalidSentinelSceneId,
+                              InvalidBERSSceneId)
 
 from PIL import Image
 
@@ -349,6 +350,40 @@ def sentinel_parse_scene_id(sceneid):
 
     meta['key'] = 'tiles/{}/{}/{}/{}/{}/{}/{}'.format(
         utm_zone, latitude_band, grid_square, year, month, day, img_num)
+
+    return meta
+
+
+def cbers_parse_scene_id(sceneid):
+    """Parse CBERS scene id"""
+
+    # CBERS_4_MUX_20171121_057_094_L2
+    if not re.match('^CBERS_4_MUX_[0-9]{8}_[0-9]{3}_[0-9]{3}_L[0-9]$', sceneid):
+        raise InvalidBERSSceneId('Could not match {}'.format(sceneid))
+
+    cbers_pattern = (
+        r'(?P<sensor>\w{4})'
+        r'_'
+        r'(?P<version>[AB]{1})'
+        r'_MUX_'
+        r'(?P<acquisitionYear>[0-9]{4})'
+        r'(?P<acquisitionMonth>[0-9]{2})'
+        r'(?P<acquisitionDay>[0-9]{2})'
+        r'_'
+        r'(?P<path>[0-9]{3})'
+        r'_'
+        r'(?P<row>[0-9]{3})'
+        r'_'
+        r'(?P<processingLevel>L[0-9]{1})$')
+
+    meta = None
+    match = re.match(cbers_pattern, sceneid, re.IGNORECASE)
+    if match:
+        meta = match.groupdict()
+
+    row = meta['row']
+    path = meta['path']
+    meta['key'] = 'CBERS4/MUX/{}/{}/{}'.format(row, path, sceneid)
 
     return meta
 
