@@ -76,7 +76,7 @@ def metadata(sceneid, pmin=2, pmax=98):
 
     bands = ['01', '02', '03', '04', '05', '06', '07', '08', '8A', '09', '10', '11', '12']
     addresses = ['{}/preview/B{}.jp2'.format(sentinel_address, band) for band in bands]
-    _min_max_worker = partial(utils.sentinel_min_max_worker, pmin=pmin, pmax=pmax)
+    _min_max_worker = partial(utils.band_min_max_worker, pmin=pmin, pmax=pmax)
     with futures.ThreadPoolExecutor(max_workers=2) as executor:
         responses = list(executor.map(_min_max_worker, addresses))
         info['rgbMinMax'] = dict(zip(bands, responses))

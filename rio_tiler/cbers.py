@@ -35,7 +35,7 @@ def bounds(sceneid):
     scene_params = utils.cbers_parse_scene_id(sceneid)
     cbers_address = '{}/{}'.format(CBERS_BUCKET, scene_params['key'])
 
-    with rasterio.open('{}/{}_BAND5.tif'.format(cbers_address, sceneid)) as src:
+    with rasterio.open('{}/{}_BAND6.tif'.format(cbers_address, sceneid)) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
 
@@ -65,18 +65,18 @@ def metadata(sceneid, pmin=2, pmax=98):
         dictionary with image bounds and bands histogram cuts.
     """
 
-    scene_params = utils.cbersl_parse_scene_id(sceneid)
+    scene_params = utils.cbers_parse_scene_id(sceneid)
     cbers_address = '{}/{}'.format(CBERS_BUCKET, scene_params['key'])
 
-    with rasterio.open('{}/preview.jp2'.format(cbers_address)) as src:
+    with rasterio.open('{}/{}_BAND6.tif'.format(cbers_address, sceneid)) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
 
     info = {'sceneid': sceneid, 'bounds': list(wgs_bounds)}
 
-    bands = ['5', '6', '6', '8']
+    bands = ['5', '6', '7', '8']
     addresses = ['{}/{}_BAND{}.tif'.format(cbers_address, sceneid, band) for band in bands]
-    _min_max_worker = partial(utils.sentinel_min_max_worker, pmin=pmin, pmax=pmax)
+    _min_max_worker = partial(utils.band_min_max_worker, pmin=pmin, pmax=pmax)
     with futures.ThreadPoolExecutor(max_workers=2) as executor:
         responses = list(executor.map(_min_max_worker, addresses))
         info['rgbMinMax'] = dict(zip(bands, responses))
@@ -85,7 +85,7 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 @lru_cache()
-def tile(sceneid, tile_x, tile_y, tile_z, rgb=('5', '6', '7'), tilesize=256):
+def tile(sceneid, tile_x, tile_y, tile_z, rgb=('7', '6', '5'), tilesize=256):
     """Create mercator tile from CBERS data.
 
     Attributes
@@ -115,7 +115,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('5', '6', '7'), tilesize=256):
     scene_params = utils.cbers_parse_scene_id(sceneid)
     cbers_address = '{}/{}'.format(CBERS_BUCKET, scene_params['key'])
 
-    with rasterio.open('{}/{}_BAND5.tif'.format(cbers_address, sceneid)) as src:
+    with rasterio.open('{}/{}_BAND6.tif'.format(cbers_address, sceneid)) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
 

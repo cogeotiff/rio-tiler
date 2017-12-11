@@ -21,5 +21,5 @@ class InvalidSentinelSceneId(RioTilerError):
     """Invalid Sentinel-2 scene id"""
 
 
-class InvalidBERSSceneId(RioTilerError):
+class InvalidCBERSSceneId(RioTilerError):
     """Invalid CBERS scene id"""
