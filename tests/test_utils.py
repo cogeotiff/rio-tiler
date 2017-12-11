@@ -12,7 +12,8 @@ from rio_toa import toa_utils
 from rio_tiler import utils
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
-                              InvalidSentinelSceneId)
+                              InvalidSentinelSceneId,
+                              InvalidCBERSSceneId)
 
 SENTINEL_SCENE = 'S2A_tile_20170729_19UDP_0'
 SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__),
@@ -64,13 +65,13 @@ def test_landsat_min_max_worker_tir():
                                         98) == [275, 297]
 
 
-def test_sentinel_min_max_worker():
+def test_band_min_max_worker():
     """
     Should work as expected (read data and return histogram cuts)
     """
 
     address = '{}/preview/B04.jp2'.format(SENTINEL_PATH)
-    assert utils.sentinel_min_max_worker(address, pmin=2, pmax=98) == [255, 8626]
+    assert utils.band_min_max_worker(address, pmin=2, pmax=98) == [255, 8626]
 
 
 def test_tile_band_worker_valid():
@@ -258,6 +259,7 @@ def test_sentinel_id_valid():
         'lat': 'S',
         'num': '0',
         'satellite': 'A',
+        'scene': 'S2A_tile_20170323_17SNC_0',
         'sensor': '2',
         'sq': 'NC',
         'utm': '17'}
@@ -279,11 +281,44 @@ def test_sentinel_id_valid_strip():
         'lat': 'S',
         'num': '0',
         'satellite': 'A',
+        'scene': 'S2A_tile_20170323_07SNC_0',
         'sensor': '2',
         'sq': 'NC',
         'utm': '07'}
 
     assert utils.sentinel_parse_scene_id(scene) == expected_content
+
+
+def test_cbers_id_invalid():
+    """
+    Should raise an error with invalid sceneid
+    """
+
+    scene = 'CBERS_4_MUX_20171121_057_094'
+    with pytest.raises(InvalidCBERSSceneId):
+        utils.cbers_parse_scene_id(scene)
+
+
+def test_cbers_id_valid():
+    """
+    Should work as expected (parse cbers scene id)
+    """
+
+    scene = 'CBERS_4_MUX_20171121_057_094_L2'
+    expected_content = {
+        'acquisitionDay': '21',
+        'acquisitionMonth': '11',
+        'acquisitionYear': '2017',
+        'intrument': 'MUX',
+        'key': 'CBERS4/MUX/057/094/CBERS_4_MUX_20171121_057_094_L2',
+        'path': '057',
+        'processingCorrectionLevel': 'L2',
+        'row': '094',
+        'satellite': '4',
+        'scene': 'CBERS_4_MUX_20171121_057_094_L2',
+        'sensor': 'CBERS'}
+
+    assert utils.cbers_parse_scene_id(scene) == expected_content
 
 
 def test_array_to_img_valid_png():

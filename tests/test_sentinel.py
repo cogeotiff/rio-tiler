@@ -46,7 +46,7 @@ def test_metadata_valid_custom(monkeypatch):
 
     monkeypatch.setattr(sentinel2, 'SENTINEL_BUCKET', SENTINEL_BUCKET)
 
-    meta = sentinel2.metadata(SENTINEL_SCENE)
+    meta = sentinel2.metadata(SENTINEL_SCENE, pmin=5, pmax=95)
     assert meta.get('sceneid') == 'S2A_tile_20170729_19UDP_0'
     assert len(meta.get('bounds')) == 4
     assert meta.get('rgbMinMax')
