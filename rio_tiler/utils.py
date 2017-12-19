@@ -19,7 +19,8 @@ from rio_toa import reflectance, brightness_temp, toa_utils
 
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
-                              InvalidSentinelSceneId)
+                              InvalidSentinelSceneId,
+                              InvalidCBERSSceneId)
 
 from PIL import Image
 
@@ -89,8 +90,8 @@ def landsat_min_max_worker(band, address, metadata, pmin=2, pmax=98,
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
 
-def sentinel_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
-    """Retrieve histogram percentage cut for a Sentinel-2 scene.
+def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
+    """Retrieve histogram percentage cut for a single image band.
 
     Attributes
     ----------
@@ -349,6 +350,45 @@ def sentinel_parse_scene_id(sceneid):
 
     meta['key'] = 'tiles/{}/{}/{}/{}/{}/{}/{}'.format(
         utm_zone, latitude_band, grid_square, year, month, day, img_num)
+
+    meta['scene'] = sceneid
+
+    return meta
+
+
+def cbers_parse_scene_id(sceneid):
+    """Parse CBERS scene id"""
+
+    if not re.match('^CBERS_4_MUX_[0-9]{8}_[0-9]{3}_[0-9]{3}_L[0-9]$', sceneid):
+        raise InvalidCBERSSceneId('Could not match {}'.format(sceneid))
+
+    cbers_pattern = (
+        r'(?P<sensor>\w{5})'
+        r'_'
+        r'(?P<satellite>[0-9]{1})'
+        r'_'
+        r'(?P<intrument>\w{3})'
+        r'_'
+        r'(?P<acquisitionYear>[0-9]{4})'
+        r'(?P<acquisitionMonth>[0-9]{2})'
+        r'(?P<acquisitionDay>[0-9]{2})'
+        r'_'
+        r'(?P<path>[0-9]{3})'
+        r'_'
+        r'(?P<row>[0-9]{3})'
+        r'_'
+        r'(?P<processingCorrectionLevel>L[0-9]{1})$')
+
+    meta = None
+    match = re.match(cbers_pattern, sceneid, re.IGNORECASE)
+    if match:
+        meta = match.groupdict()
+
+    path = meta['path']
+    row = meta['row']
+    meta['key'] = 'CBERS4/MUX/{}/{}/{}'.format(path, row, sceneid)
+
+    meta['scene'] = sceneid
 
     return meta
 

@@ -1,4 +1,4 @@
-"""rio_tiler.sentinel2: Sentinel-2 processing."""
+"""rio_tiler.cbers: cbers processing."""
 
 from functools import partial
 from concurrent import futures
@@ -13,7 +13,7 @@ from rasterio.warp import transform_bounds
 from rio_tiler import utils
 from rio_tiler.errors import TileOutsideBounds
 
-SENTINEL_BUCKET = 's3://sentinel-s2-l1c'
+CBERS_BUCKET = 's3://cbers-pds'
 
 
 @lru_cache()
@@ -24,7 +24,7 @@ def bounds(sceneid):
     ----------
 
     sceneid : str
-        Sentinel-2 sceneid.
+        CBERS sceneid.
 
     Returns
     -------
@@ -32,10 +32,10 @@ def bounds(sceneid):
         dictionary with image bounds.
     """
 
-    scene_params = utils.sentinel_parse_scene_id(sceneid)
-    sentinel_address = '{}/{}'.format(SENTINEL_BUCKET, scene_params['key'])
+    scene_params = utils.cbers_parse_scene_id(sceneid)
+    cbers_address = '{}/{}'.format(CBERS_BUCKET, scene_params['key'])
 
-    with rasterio.open('{}/preview.jp2'.format(sentinel_address)) as src:
+    with rasterio.open('{}/{}_BAND6.tif'.format(cbers_address, sceneid)) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
 
@@ -53,7 +53,7 @@ def metadata(sceneid, pmin=2, pmax=98):
     ----------
 
     sceneid : str
-        Sentinel-2 sceneid.
+        CBERS sceneid.
     pmin : int, optional, (default: 2)
         Histogram minimum cut.
     pmax : int, optional, (default: 98)
@@ -65,17 +65,17 @@ def metadata(sceneid, pmin=2, pmax=98):
         dictionary with image bounds and bands histogram cuts.
     """
 
-    scene_params = utils.sentinel_parse_scene_id(sceneid)
-    sentinel_address = '{}/{}'.format(SENTINEL_BUCKET, scene_params['key'])
+    scene_params = utils.cbers_parse_scene_id(sceneid)
+    cbers_address = '{}/{}'.format(CBERS_BUCKET, scene_params['key'])
 
-    with rasterio.open('{}/preview.jp2'.format(sentinel_address)) as src:
+    with rasterio.open('{}/{}_BAND6.tif'.format(cbers_address, sceneid)) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
 
     info = {'sceneid': sceneid, 'bounds': list(wgs_bounds)}
 
-    bands = ['01', '02', '03', '04', '05', '06', '07', '08', '8A', '09', '10', '11', '12']
-    addresses = ['{}/preview/B{}.jp2'.format(sentinel_address, band) for band in bands]
+    bands = ['5', '6', '7', '8']
+    addresses = ['{}/{}_BAND{}.tif'.format(cbers_address, sceneid, band) for band in bands]
     _min_max_worker = partial(utils.band_min_max_worker, pmin=pmin, pmax=pmax)
     with futures.ThreadPoolExecutor(max_workers=2) as executor:
         responses = list(executor.map(_min_max_worker, addresses))
@@ -85,21 +85,21 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 @lru_cache()
-def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
-    """Create mercator tile from Sentinel-2 data and encodes it in base64.
+def tile(sceneid, tile_x, tile_y, tile_z, rgb=('7', '6', '5'), tilesize=256):
+    """Create mercator tile from CBERS data.
 
     Attributes
     ----------
 
     sceneid : str
-        Sentinel-2 sceneid.
+        CBERS sceneid.
     tile_x : int
         Mercator tile X index.
     tile_y : int
         Mercator tile Y index.
     tile_z : int
         Mercator tile ZOOM level.
-    rgb : tuple, int, optional (default: ('04', '03', '02'))
+    rgb : tuple, int, optional (default: ('5', '6', '7'))
         Bands index for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
@@ -112,11 +112,10 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     if isinstance(rgb, str):
         rgb = tuple((rgb, ))
 
-    scene_params = utils.sentinel_parse_scene_id(sceneid)
-    sentinel_address = '{}/{}'.format(SENTINEL_BUCKET, scene_params['key'])
+    scene_params = utils.cbers_parse_scene_id(sceneid)
+    cbers_address = '{}/{}'.format(CBERS_BUCKET, scene_params['key'])
 
-    sentinel_preview = '{}/preview.jp2'.format(sentinel_address)
-    with rasterio.open(sentinel_preview) as src:
+    with rasterio.open('{}/{}_BAND6.tif'.format(cbers_address, sceneid)) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
 
@@ -127,7 +126,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
-    addresses = ['{}/B{}.jp2'.format(sentinel_address, band) for band in rgb]
+    addresses = ['{}/{}_BAND{}.tif'.format(cbers_address, sceneid, band) for band in rgb]
 
     _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=tilesize)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
