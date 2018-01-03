@@ -5,7 +5,7 @@
 - add TIR (brightness temps) support
 - add CBERS support
 - add global file support
-- add elevation encoding for mapbox-gl and mapzen
+- add elevation encoding for mapzen
 - removing internal caching
 - update to rasterio 1.0a12
 

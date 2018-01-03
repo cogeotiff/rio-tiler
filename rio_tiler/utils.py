@@ -477,26 +477,6 @@ def get_colormap(name='cfastie'):
     return list(np.array(colormap).flatten())
 
 
-def mapbox_elevation_rgb(arr):
-    """Encode elevation value to RGB values compatible with Mapbox-gl-js
-
-    Attributes
-    ----------
-    arr : numpy ndarray
-        Image array to encode.
-
-    Returns
-    -------
-    out : numpy ndarray
-        RGB array (3, h, w)
-    """
-    arr = np.clip(arr + 10000.0, 0.0, 65535.0)
-    r = (arr / 256)
-    g = (arr % 256)
-    b = ((arr * 256) % 256)
-    return np.stack([r, g, b]).astype(np.uint8)
-
-
 def mapzen_elevation_rgb(arr):
     """Encode elevation value to RGB values compatible with Mapzen tangram
 
