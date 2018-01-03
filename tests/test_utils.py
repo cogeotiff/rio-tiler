@@ -421,3 +421,21 @@ def test_landsat_get_mtl_invalid(urlopen):
 
 def test_get_colormap_valid():
     assert len(utils.get_colormap()) == 768  # 3 x256
+
+
+def test_mapbox_elevation_rgb():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 3000, size=(512, 512))
+    assert utils.mapbox_elevation_rgb(arr).shape == (3, 512, 512)
+
+
+def test_mapzen_elevation_rgb():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 3000, size=(512, 512))
+    assert utils.mapzen_elevation_rgb(arr).shape == (3, 512, 512)
