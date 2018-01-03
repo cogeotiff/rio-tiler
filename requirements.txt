@@ -4,7 +4,6 @@ numpy
 Pillow
 mercantile
 boto3
-cachetools
 
 rasterio[s3]>=1.0a12
 rio-toa

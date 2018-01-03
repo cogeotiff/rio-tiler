@@ -1,7 +1,5 @@
 """rio_tiler.aws: AWS raster processing."""
 
-from cachetools.func import lru_cache
-
 import mercantile
 import rasterio
 from rasterio.warp import transform_bounds
@@ -10,7 +8,6 @@ from rio_tiler import utils
 from rio_tiler.errors import TileOutsideBounds
 
 
-@lru_cache()
 def bounds(bucket, key, prefix='s3:/'):
     """Retrieve image bounds.
 
@@ -36,7 +33,6 @@ def bounds(bucket, key, prefix='s3:/'):
     return {'key': key, 'bucket': bucket, 'bounds': list(wgs_bounds)}
 
 
-@lru_cache()
 def tile(bucket, key, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256,
          prefix='s3:/'):
     """Create mercator tile from AWS hosted images and encodes it in base64.
