@@ -46,7 +46,7 @@ def test_metadata_valid_custom(monkeypatch):
 
     monkeypatch.setattr(sentinel2, 'SENTINEL_BUCKET', SENTINEL_BUCKET)
 
-    meta = sentinel2.metadata(SENTINEL_SCENE)
+    meta = sentinel2.metadata(SENTINEL_SCENE, pmin=5, pmax=95)
     assert meta.get('sceneid') == 'S2A_tile_20170729_19UDP_0'
     assert len(meta.get('bounds')) == 4
     assert meta.get('rgbMinMax')
@@ -81,6 +81,22 @@ def test_tile_valid_nrg(monkeypatch):
 
     assert sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z,
                           rgb=bands).shape == (3, 256, 256)
+
+
+def test_tile_valid_onband(monkeypatch):
+    """
+    Should work as expected
+    """
+
+    monkeypatch.setattr(sentinel2, 'SENTINEL_BUCKET', SENTINEL_BUCKET)
+
+    tile_z = 8
+    tile_x = 77
+    tile_y = 89
+    bands = '08'
+
+    assert sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z,
+                          rgb=bands).shape == (1, 256, 256)
 
 
 def test_tile_invalid_bounds(monkeypatch):

@@ -12,7 +12,8 @@ from rio_toa import toa_utils
 from rio_tiler import utils
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
-                              InvalidSentinelSceneId)
+                              InvalidSentinelSceneId,
+                              InvalidCBERSSceneId)
 
 SENTINEL_SCENE = 'S2A_tile_20170729_19UDP_0'
 SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__),
@@ -52,13 +53,25 @@ def test_landsat_min_max_worker():
                                         98) == [939, 7025]
 
 
-def test_sentinel_min_max_worker():
+def test_landsat_min_max_worker_tir():
+    """
+    Should work as expected (read data and return histogram cuts)
+    """
+
+    assert utils.landsat_min_max_worker('10',
+                                        LANDSAT_PATH,
+                                        LANDSAT_METADATA['L1_METADATA_FILE'],
+                                        2,
+                                        98) == [275, 297]
+
+
+def test_band_min_max_worker():
     """
     Should work as expected (read data and return histogram cuts)
     """
 
     address = '{}/preview/B04.jp2'.format(SENTINEL_PATH)
-    assert utils.sentinel_min_max_worker(address, pmin=2, pmax=98) == [255, 8626]
+    assert utils.band_min_max_worker(address, pmin=2, pmax=98) == [255, 8626]
 
 
 def test_tile_band_worker_valid():
@@ -243,11 +256,12 @@ def test_sentinel_id_valid():
         'acquisitionMonth': '03',
         'acquisitionYear': '2017',
         'key': 'tiles/17/S/NC/2017/3/23/0',
-        'lat': 'NC',
+        'lat': 'S',
         'num': '0',
         'satellite': 'A',
+        'scene': 'S2A_tile_20170323_17SNC_0',
         'sensor': '2',
-        'sq': 'S',
+        'sq': 'NC',
         'utm': '17'}
 
     assert utils.sentinel_parse_scene_id(scene) == expected_content
@@ -264,14 +278,47 @@ def test_sentinel_id_valid_strip():
         'acquisitionMonth': '03',
         'acquisitionYear': '2017',
         'key': 'tiles/7/S/NC/2017/3/23/0',
-        'lat': 'NC',
+        'lat': 'S',
         'num': '0',
         'satellite': 'A',
+        'scene': 'S2A_tile_20170323_07SNC_0',
         'sensor': '2',
-        'sq': 'S',
+        'sq': 'NC',
         'utm': '07'}
 
     assert utils.sentinel_parse_scene_id(scene) == expected_content
+
+
+def test_cbers_id_invalid():
+    """
+    Should raise an error with invalid sceneid
+    """
+
+    scene = 'CBERS_4_MUX_20171121_057_094'
+    with pytest.raises(InvalidCBERSSceneId):
+        utils.cbers_parse_scene_id(scene)
+
+
+def test_cbers_id_valid():
+    """
+    Should work as expected (parse cbers scene id)
+    """
+
+    scene = 'CBERS_4_MUX_20171121_057_094_L2'
+    expected_content = {
+        'acquisitionDay': '21',
+        'acquisitionMonth': '11',
+        'acquisitionYear': '2017',
+        'intrument': 'MUX',
+        'key': 'CBERS4/MUX/057/094/CBERS_4_MUX_20171121_057_094_L2',
+        'path': '057',
+        'processingCorrectionLevel': 'L2',
+        'row': '094',
+        'satellite': '4',
+        'scene': 'CBERS_4_MUX_20171121_057_094_L2',
+        'sensor': 'CBERS'}
+
+    assert utils.cbers_parse_scene_id(scene) == expected_content
 
 
 def test_array_to_img_valid_png():
@@ -314,6 +361,36 @@ def test_array_to_img_valid_noband():
     assert utils.array_to_img(arr)
 
 
+def test_array_to_img_cast():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.int16)
+    assert utils.array_to_img(arr)
+
+
+def test_array_to_img_colormap():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    tileformat = 'png'
+    utils.array_to_img(arr, tileformat, color_map=utils.get_colormap())
+
+
+def test_array_to_img_bands_colormap():
+    """
+    Should raise an error with invalid format
+    """
+
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    tileformat = 'png'
+    with pytest.raises(InvalidFormat):
+        utils.array_to_img(arr, tileformat, color_map=True)
+
+
 def test_array_to_img_invalid_format():
     """
     Should raise an error with invalid format
@@ -340,3 +417,25 @@ def test_landsat_get_mtl_invalid(urlopen):
     urlopen.return_value.read.return_value = {}
     with pytest.raises(Exception):
         utils.landsat_get_mtl(LANDSAT_SCENE_C1)
+
+
+def test_get_colormap_valid():
+    assert len(utils.get_colormap()) == 768  # 3 x256
+
+
+def test_mapbox_elevation_rgb():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 3000, size=(512, 512))
+    assert utils.mapbox_elevation_rgb(arr).shape == (3, 512, 512)
+
+
+def test_mapzen_elevation_rgb():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 3000, size=(512, 512))
+    assert utils.mapzen_elevation_rgb(arr).shape == (3, 512, 512)

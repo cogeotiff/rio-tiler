@@ -1,4 +1,19 @@
 
+1.0a.0 (2018-01-03)
+------------------
+- add colormap option in `utils.array_to_img`
+- add TIR (brightness temps) support
+- add CBERS support
+- add global file support
+- add elevation encoding for mapbox-gl and mapzen
+- removing internal caching
+- update to rasterio 1.0a12
+
+:Breacking Changes:
+- remove data value rescaling in `landsat8.tile` and `sentinel2.tile`
+- fix wrong lat/grid_square value in `utils.sentinel_parse_scene_id`
+- rename `utils.sentinel_min_max_worker` to `utils.band_min_max_worker`
+
 0.0.3 (2017-11-14)
 ------------------
 - Fix Sentinel-2 bad AWS url

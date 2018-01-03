@@ -3,6 +3,7 @@
 import os
 import re
 import base64
+import logging
 import datetime
 from io import BytesIO
 
@@ -13,11 +14,13 @@ import mercantile
 import rasterio
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling
-from rio_toa import reflectance, toa_utils
+from rasterio.plot import reshape_as_image
+from rio_toa import reflectance, brightness_temp, toa_utils
 
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
-                              InvalidSentinelSceneId)
+                              InvalidSentinelSceneId,
+                              InvalidCBERSSceneId)
 
 from PIL import Image
 
@@ -26,6 +29,9 @@ try:
     from urllib.request import urlopen
 except ImportError:
     from urllib2 import urlopen
+
+
+logger = logging.getLogger(__name__)
 
 
 def landsat_min_max_worker(band, address, metadata, pmin=2, pmax=98,
@@ -51,23 +57,41 @@ def landsat_min_max_worker(band, address, metadata, pmin=2, pmax=98,
         returns a list of the min/max histogram cut values.
     """
 
-    multi_reflect = metadata['RADIOMETRIC_RESCALING'].get(
-        'REFLECTANCE_MULT_BAND_{}'.format(band))
-    add_reflect = metadata['RADIOMETRIC_RESCALING'].get(
-        'REFLECTANCE_ADD_BAND_{}'.format(band))
-    sun_elev = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+    if int(band) > 9:  # TIRS
+        multi_rad = metadata['RADIOMETRIC_RESCALING'].get(
+            'RADIANCE_MULT_BAND_{}'.format(band))
 
-    with rasterio.open('{}_B{}.TIF'.format(address, band)) as src:
-        arr = src.read(indexes=1,
-                       out_shape=(height, width)).astype(src.profile['dtype'])
-        arr = 10000 * reflectance.reflectance(arr, multi_reflect, add_reflect,
-                                              sun_elev, src_nodata=0)
+        add_rad = metadata['RADIOMETRIC_RESCALING'].get(
+            'RADIANCE_ADD_BAND_{}'.format(band))
+
+        k1 = metadata['TIRS_THERMAL_CONSTANTS'].get(
+            'K1_CONSTANT_BAND_{}'.format(band))
+
+        k2 = metadata['TIRS_THERMAL_CONSTANTS'].get(
+            'K2_CONSTANT_BAND_{}'.format(band))
+
+        with rasterio.open('{}_B{}.TIF'.format(address, band)) as src:
+            arr = src.read(indexes=1,
+                           out_shape=(height, width)).astype(src.profile['dtype'])
+            arr = brightness_temp.brightness_temp(arr, multi_rad, add_rad, k1, k2)
+    else:
+        multi_reflect = metadata['RADIOMETRIC_RESCALING'].get(
+            'REFLECTANCE_MULT_BAND_{}'.format(band))
+        add_reflect = metadata['RADIOMETRIC_RESCALING'].get(
+            'REFLECTANCE_ADD_BAND_{}'.format(band))
+        sun_elev = metadata['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+
+        with rasterio.open('{}_B{}.TIF'.format(address, band)) as src:
+            arr = src.read(indexes=1,
+                           out_shape=(height, width)).astype(src.profile['dtype'])
+            arr = 10000 * reflectance.reflectance(arr, multi_reflect, add_reflect,
+                                                  sun_elev, src_nodata=0)
 
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
 
-def sentinel_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
-    """Retrieve histogram percentage cut for a Sentinel-2 scene.
+def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
+    """Retrieve histogram percentage cut for a single image band.
 
     Attributes
     ----------
@@ -306,8 +330,8 @@ def sentinel_parse_scene_id(sceneid):
         r'(?P<acquisitionDay>[0-9]{2})'
         r'_'
         r'(?P<utm>[0-9]{2})'
-        r'(?P<sq>\w{1})'
-        r'(?P<lat>\w{2})'
+        r'(?P<lat>\w{1})'
+        r'(?P<sq>\w{2})'
         r'_'
         r'(?P<num>[0-9]{1})$')
 
@@ -325,21 +349,63 @@ def sentinel_parse_scene_id(sceneid):
     img_num = meta['num']
 
     meta['key'] = 'tiles/{}/{}/{}/{}/{}/{}/{}'.format(
-        utm_zone, grid_square, latitude_band, year, month, day, img_num)
+        utm_zone, latitude_band, grid_square, year, month, day, img_num)
+
+    meta['scene'] = sceneid
 
     return meta
 
 
-def array_to_img(arr, tileformat='png', nodata=0):
+def cbers_parse_scene_id(sceneid):
+    """Parse CBERS scene id"""
+
+    if not re.match('^CBERS_4_MUX_[0-9]{8}_[0-9]{3}_[0-9]{3}_L[0-9]$', sceneid):
+        raise InvalidCBERSSceneId('Could not match {}'.format(sceneid))
+
+    cbers_pattern = (
+        r'(?P<sensor>\w{5})'
+        r'_'
+        r'(?P<satellite>[0-9]{1})'
+        r'_'
+        r'(?P<intrument>\w{3})'
+        r'_'
+        r'(?P<acquisitionYear>[0-9]{4})'
+        r'(?P<acquisitionMonth>[0-9]{2})'
+        r'(?P<acquisitionDay>[0-9]{2})'
+        r'_'
+        r'(?P<path>[0-9]{3})'
+        r'_'
+        r'(?P<row>[0-9]{3})'
+        r'_'
+        r'(?P<processingCorrectionLevel>L[0-9]{1})$')
+
+    meta = None
+    match = re.match(cbers_pattern, sceneid, re.IGNORECASE)
+    if match:
+        meta = match.groupdict()
+
+    path = meta['path']
+    row = meta['row']
+    meta['key'] = 'CBERS4/MUX/{}/{}/{}'.format(path, row, sceneid)
+
+    meta['scene'] = sceneid
+
+    return meta
+
+
+def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
     """Convert an array to an base64 encoded img
 
     Attributes
     ----------
-
     arr : numpy ndarray
         Image array to encode.
     tileformat : str (default: png)
         Image format to return (Accepted: "jpg" or "png")
+    nodata: int
+        No data value used to create mask
+    color_map: numpy array
+        ColorMap array (see: utils.get_colormap)
 
     Returns
     -------
@@ -350,24 +416,102 @@ def array_to_img(arr, tileformat='png', nodata=0):
     if tileformat not in ['png', 'jpg']:
         raise InvalidFormat('Invalid {} extension'.format(tileformat))
 
-    # https://pillow.readthedocs.io/en/4.3.x/handbook/concepts.html#concept-modes
-    if arr.ndim == 2:
-        img = Image.fromarray(arr, mode='L')
+    if arr.dtype != np.uint8:
+        logger.error('Data casted to UINT8')
+        arr = arr.astype(np.uint8)
+
+    if len(arr.shape) >= 3:
+        arr = reshape_as_image(arr)
+        arr = arr.squeeze()
+
+    if len(arr.shape) != 2 and color_map:
+        raise InvalidFormat('Cannot apply colormap on a multiband image')
+
+    if len(arr.shape) == 2:
+        mode = 'L'
     else:
-        mask_shape = (1,) + arr.shape[-2:]
-        mask = np.full(mask_shape, 255, dtype=np.uint8)
-        if nodata is not None:
-            mask[0] = np.all(np.dstack(arr) != nodata, axis=2).astype(np.uint8) * 255
-        arr = np.concatenate((arr, mask))
-        img = Image.fromarray(np.stack(arr, axis=2))
+        mode = 'RGB'
+
+    img = Image.fromarray(arr, mode=mode)
+    if color_map:
+        img.putpalette(color_map)
 
     sio = BytesIO()
     if tileformat == 'jpg':
-        img = img.convert('RGB')
         img.save(sio, 'jpeg', subsampling=0, quality=100)
     else:
+        mask = np.full(arr.shape[0:2], 255, dtype=np.uint8)
+        if len(arr.shape) == 2:
+            arr = np.expand_dims(arr, axis=2)
+        if nodata is not None:
+            mask = np.all(arr != nodata, axis=2).astype(np.uint8) * 255
+
+        mask_img = Image.fromarray(mask)
+        img.putalpha(mask_img)
         img.save(sio, 'png', compress_level=0)
 
     sio.seek(0)
 
     return base64.b64encode(sio.getvalue()).decode()
+
+
+def get_colormap(name='cfastie'):
+    """Read color map file
+
+    Attributes
+    ----------
+    name : str
+        colormap name (default: cfastie)
+
+    Returns
+    -------
+    colormap : list
+        Color map array in a Pillow friendly format
+        more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
+    """
+    cmap_file = os.path.join(os.path.dirname(__file__), 'cmap', '{0}.txt'.format(name))
+    with open(cmap_file) as cmap:
+        lines = cmap.read().splitlines()
+        colormap = [list(map(int, line.split())) for line in lines if not line.startswith('#')][1:]
+
+    return list(np.array(colormap).flatten())
+
+
+def mapbox_elevation_rgb(arr):
+    """Encode elevation value to RGB values compatible with Mapbox-gl-js
+
+    Attributes
+    ----------
+    arr : numpy ndarray
+        Image array to encode.
+
+    Returns
+    -------
+    out : numpy ndarray
+        RGB array (3, h, w)
+    """
+    arr = np.clip(arr + 10000.0, 0.0, 65535.0)
+    r = (arr / 256)
+    g = (arr % 256)
+    b = ((arr * 256) % 256)
+    return np.stack([r, g, b]).astype(np.uint8)
+
+
+def mapzen_elevation_rgb(arr):
+    """Encode elevation value to RGB values compatible with Mapzen tangram
+
+    Attributes
+    ----------
+    arr : numpy ndarray
+        Image array to encode.
+
+    Returns
+    -------
+    out : numpy ndarray
+        RGB array (3, h, w)
+    """
+    arr = np.clip(arr + 32768.0, 0.0, 65535.0)
+    r = (arr / 256)
+    g = (arr % 256)
+    b = ((arr * 256) % 256)
+    return np.stack([r, g, b]).astype(np.uint8)

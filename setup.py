@@ -20,8 +20,8 @@ with open('README.rst') as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = ["numpy", "Pillow", "mercantile", "boto3", "cachetools",
-             "rasterio[s3]>=1.0a10", "rio-toa", "rio-pansharpen"]
+inst_reqs = ["numpy", "Pillow", "mercantile", "boto3",
+             "rasterio[s3]>=1.0a12", "rio-toa", "rio-pansharpen"]
 
 extra_reqs = {
     'test': ['mock', 'pytest', 'pytest-cov', 'codecov']}
@@ -44,6 +44,7 @@ setup(name='rio_tiler',
       url='https://github.com/mapbox/rio-tiler',
       license='BSD',
       packages=find_packages(exclude=['ez_setup', 'examples', 'tests']),
+      package_data={'cmap': ['*.txt']},
       include_package_data=True,
       zip_safe=False,
       install_requires=inst_reqs,
