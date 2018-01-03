@@ -7,8 +7,8 @@ from rio_tiler import main
 from rio_tiler.errors import TileOutsideBounds
 
 PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures')
-ADDRESS = f'{PREFIX}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'
-ADDRESS_NODATA = f'{PREFIX}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif'
+ADDRESS = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(PREFIX)
+ADDRESS_NODATA = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif'.format(PREFIX)
 
 
 def test_bounds_valid():
