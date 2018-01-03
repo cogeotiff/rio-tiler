@@ -1,9 +1,12 @@
 
-1.0.0 (2017-11-23)
+1.0a.0 (2018-01-03)
 ------------------
 - add colormap option in `utils.array_to_img`
 - add TIR (brightness temps) support
 - add CBERS support
+- add global web file support
+- removing internal caching
+- update to rasterio 1.0a12
 
 :Breacking Changes:
 - remove data value rescaling in `landsat8.tile` and `sentinel2.tile`
