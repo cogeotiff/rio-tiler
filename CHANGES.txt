@@ -4,7 +4,7 @@
 - add colormap option in `utils.array_to_img`
 - add TIR (brightness temps) support
 - add CBERS support
-- add global web file support
+- add global file support
 - add elevation encoding for mapbox-gl and mapzen
 - removing internal caching
 - update to rasterio 1.0a12

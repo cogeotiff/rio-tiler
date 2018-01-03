@@ -1,4 +1,4 @@
-"""rio_tiler.html: HTML raster processing."""
+"""rio_tiler.main: raster processing."""
 
 import mercantile
 import rasterio
@@ -31,7 +31,7 @@ def bounds(address):
 
 
 def tile(address, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256):
-    """Create mercator tile from any web images.
+    """Create mercator tile from any images.
 
     Attributes
     ----------
