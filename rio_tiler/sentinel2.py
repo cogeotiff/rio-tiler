@@ -4,7 +4,6 @@ from functools import partial
 from concurrent import futures
 
 import numpy as np
-from cachetools.func import lru_cache
 
 import mercantile
 import rasterio
@@ -16,7 +15,6 @@ from rio_tiler.errors import TileOutsideBounds
 SENTINEL_BUCKET = 's3://sentinel-s2-l1c'
 
 
-@lru_cache()
 def bounds(sceneid):
     """Retrieve image bounds.
 
@@ -45,7 +43,6 @@ def bounds(sceneid):
     return info
 
 
-@lru_cache()
 def metadata(sceneid, pmin=2, pmax=98):
     """Retrieve image bounds and histogram info.
 
@@ -84,7 +81,6 @@ def metadata(sceneid, pmin=2, pmax=98):
     return info
 
 
-@lru_cache()
 def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     """Create mercator tile from Sentinel-2 data and encodes it in base64.
 
