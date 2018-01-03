@@ -1,6 +1,5 @@
 """rio_tiler.landsat8: Landsat-8 processing."""
 
-import collections
 from functools import partial
 from concurrent import futures
 
@@ -86,7 +85,7 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False):
-    """Create mercator tile from Landsat-8 data and encodes it in base64.
+    """Create mercator tile from Landsat-8 data.
 
     Attributes
     ----------
@@ -112,7 +111,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
     out : numpy ndarray
     """
 
-    if not isinstance(rgb, collections.Iterable):
+    if not isinstance(rgb, tuple):
         rgb = tuple((rgb, ))
 
     scene_params = utils.landsat_parse_scene_id(sceneid)

@@ -82,7 +82,7 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
-    """Create mercator tile from Sentinel-2 data and encodes it in base64.
+    """Create mercator tile from Sentinel-2 data.
 
     Attributes
     ----------
@@ -95,7 +95,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
         Mercator tile Y index.
     tile_z : int
         Mercator tile ZOOM level.
-    rgb : tuple, int, optional (default: ('04', '03', '02'))
+    rgb : tuple, str, optional (default: ('04', '03', '02'))
         Bands index for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
@@ -105,7 +105,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     out : numpy ndarray
     """
 
-    if isinstance(rgb, str):
+    if not isinstance(rgb, tuple):
         rgb = tuple((rgb, ))
 
     scene_params = utils.sentinel_parse_scene_id(sceneid)

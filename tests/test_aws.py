@@ -63,6 +63,20 @@ def test_tile_valid_bands():
                     prefix=PREFIX).shape == (3, 256, 256)
 
 
+def test_tile_valid_oneband():
+    """
+    Should work as expected
+    """
+
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+    bands = 3
+
+    assert aws.tile(BUCKET, KEY, tile_x, tile_y, tile_z, rgb=bands,
+                    prefix=PREFIX).shape == (256, 256)
+
+
 def test_tile_invalid_bounds():
     """
     Should raise an error with invalid tile

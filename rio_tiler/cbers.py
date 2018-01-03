@@ -4,7 +4,6 @@ from functools import partial
 from concurrent import futures
 
 import numpy as np
-from cachetools.func import lru_cache
 
 import mercantile
 import rasterio
@@ -16,7 +15,6 @@ from rio_tiler.errors import TileOutsideBounds
 CBERS_BUCKET = 's3://cbers-pds'
 
 
-@lru_cache()
 def bounds(sceneid):
     """Retrieve image bounds.
 
@@ -45,7 +43,6 @@ def bounds(sceneid):
     return info
 
 
-@lru_cache()
 def metadata(sceneid, pmin=2, pmax=98):
     """Retrieve image bounds and histogram info.
 
@@ -84,8 +81,7 @@ def metadata(sceneid, pmin=2, pmax=98):
     return info
 
 
-@lru_cache()
-def tile(sceneid, tile_x, tile_y, tile_z, rgb=('7', '6', '5'), tilesize=256):
+def tile(sceneid, tile_x, tile_y, tile_z, rgb=(7, 6, 5), tilesize=256):
     """Create mercator tile from CBERS data.
 
     Attributes
@@ -109,7 +105,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('7', '6', '5'), tilesize=256):
     out : numpy ndarray
     """
 
-    if isinstance(rgb, str):
+    if not isinstance(rgb, tuple):
         rgb = tuple((rgb, ))
 
     scene_params = utils.cbers_parse_scene_id(sceneid)

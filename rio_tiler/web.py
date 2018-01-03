@@ -1,4 +1,4 @@
-"""rio_tiler.aws: AWS raster processing."""
+"""rio_tiler.html: HTML raster processing."""
 
 import mercantile
 import rasterio
@@ -8,16 +8,14 @@ from rio_tiler import utils
 from rio_tiler.errors import TileOutsideBounds
 
 
-def bounds(bucket, key, prefix='s3:/'):
+def bounds(address):
     """Retrieve image bounds.
 
     Attributes
     ----------
 
-    bucket : str
-        AWS bucket's name.
-    key : str
-        AWS file's key.
+    address : str
+        file url.
 
     Returns
     -------
@@ -25,25 +23,21 @@ def bounds(bucket, key, prefix='s3:/'):
         dictionary with image bounds.
     """
 
-    source_address = '{}/{}/{}'.format(prefix, bucket, key)
-    with rasterio.open(source_address) as src:
+    with rasterio.open(address) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
 
-    return {'key': key, 'bucket': bucket, 'bounds': list(wgs_bounds)}
+    return {'url': address, 'bounds': list(wgs_bounds)}
 
 
-def tile(bucket, key, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256,
-         prefix='s3:/'):
-    """Create mercator tile from AWS hosted images.
+def tile(address, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256):
+    """Create mercator tile from any web images.
 
     Attributes
     ----------
 
-    bucket : str
-        AWS bucket's name.
-    key : str
-        AWS file's key.
+    address : str
+        file url.
     tile_x : int
         Mercator tile X index.
     tile_y : int
@@ -60,9 +54,7 @@ def tile(bucket, key, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256,
     out : numpy ndarray
     """
 
-    source_address = '{}/{}/{}'.format(prefix, bucket, key)
-
-    with rasterio.open(source_address) as src:
+    with rasterio.open(address) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
         nodata = src.nodata
@@ -74,6 +66,6 @@ def tile(bucket, key, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256,
 
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
-    out = utils.tile_band_worker(source_address, tile_bounds, tilesize, indexes=rgb, nodata=nodata)
+    out = utils.tile_band_worker(address, tile_bounds, tilesize, indexes=rgb, nodata=nodata)
 
     return out

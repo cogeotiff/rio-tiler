@@ -75,7 +75,7 @@ def test_tile_valid_nrg(monkeypatch):
     tile_z = 10
     tile_x = 664
     tile_y = 495
-    bands = ('8', '7', '6')
+    bands = (8, 7, 6)
 
     assert cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands).shape == (3, 256, 256)
 
@@ -90,7 +90,7 @@ def test_tile_valid_onband(monkeypatch):
     tile_z = 10
     tile_x = 664
     tile_y = 495
-    bands = ('8')
+    bands = 8
 
     assert cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands).shape == (1, 256, 256)
 
