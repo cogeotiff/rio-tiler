@@ -1,5 +1,5 @@
 
-1.0a.1 (2018-01-04)
+1.0a1 (2018-01-04)
 ------------------
 - remove aws.py sub-module (replaced by main.py)
 - no default bands value for main.py tiles.
