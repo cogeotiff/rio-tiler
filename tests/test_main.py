@@ -30,7 +30,7 @@ def test_tile_valid_default():
     tile_x = 109554
     tile_y = 200458
 
-    assert main.tile(ADDRESS, tile_x, tile_y, tile_z).shape == (3, 256, 256)
+    assert main.tile(ADDRESS, tile_x, tile_y, tile_z).shape == (4, 256, 256)
 
 
 def test_tile_valid_nodata():
@@ -42,7 +42,7 @@ def test_tile_valid_nodata():
     tile_x = 109554
     tile_y = 200458
 
-    assert main.tile(ADDRESS_NODATA, tile_x, tile_y, tile_z).shape == (3, 256, 256)
+    assert main.tile(ADDRESS_NODATA, tile_x, tile_y, tile_z).shape == (4, 256, 256)
 
 
 def test_tile_valid_bands():
