@@ -33,7 +33,7 @@ def bounds(bucket, key, prefix='s3:/'):
     return {'key': key, 'bucket': bucket, 'bounds': list(wgs_bounds)}
 
 
-def tile(bucket, key, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256,
+def tile(bucket, key, tile_x, tile_y, tile_z, rgb=None,  tilesize=256,
          prefix='s3:/'):
     """Create mercator tile from AWS hosted images.
 
@@ -66,6 +66,8 @@ def tile(bucket, key, tile_x, tile_y, tile_z, rgb=(1, 2, 3),  tilesize=256,
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
         nodata = src.nodata
+        if not rgb:
+            rgb = src.indexes
 
     if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
         raise TileOutsideBounds(
