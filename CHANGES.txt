@@ -1,4 +1,9 @@
 
+1.0a.1 (2018-01-04)
+------------------
+- remove aws.py sub-module (replaced by main.py)
+- no default bands value for main.py tiles.
+
 1.0a.0 (2018-01-03)
 ------------------
 - add colormap option in `utils.array_to_img`
