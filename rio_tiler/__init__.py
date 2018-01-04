@@ -1,3 +1,3 @@
 """rio-tiler"""
 
-__version__ = '1.0a.0'
+__version__ = '1.0a.1'
