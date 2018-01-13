@@ -2,7 +2,7 @@
 Rio-tiler
 =========
 
-Rasterio pluggin to serve tiles from AWS S3 hosted files.
+Rasterio plugin to serve tiles from AWS S3 hosted files.
 
 .. image:: https://circleci.com/gh/mapbox/rio-tiler.svg?style=svg&circle-token=b78bc1a238c21046a855a9c80b441a8f2f9a4478
    :target: https://circleci.com/gh/mapbox/rio-tiler
@@ -38,8 +38,8 @@ Or if you want to create an AWS Lambda package using rasterio wheels:
 .. code-block:: console
 
     # On a centos machine
-    pip install rio-tiler --no-binary numpy -t /tmp/vendored -U
-    zip -r9q package.zip vendored/*
+    $ pip install rio-tiler --no-binary numpy -t /tmp/vendored -U
+    $ zip -r9q package.zip vendored/*
 
 API Overview
 ============
@@ -47,7 +47,7 @@ API Overview
 rio_tiler.landsat8
 ------------------
 
-The ``landsat8`` module process Landsat 8 data hosted on AWS Public Dataset https://aws.amazon.com/fr/public-datasets/landsat/
+The ``landsat8`` module processes data hosted on the `Landsat 8 AWS Public Dataset <https://aws.amazon.com/fr/public-datasets/landsat/>`_.
 
 - **landsat8.bounds**
 
@@ -108,7 +108,7 @@ The ``landsat8`` module process Landsat 8 data hosted on AWS Public Dataset http
       - z: Mercator tile ZOOM level
       - rgb: Bands index for the RGB combination (default: (4, 3, 2))
       - tilesize: Output image size (default: 256)
-      - pan: If True, apply pan-sharpening(default: False)
+      - pan: If True, apply pan-sharpening (default: False)
 
     ``Output``:
       - numpy ndarray of the image data
@@ -124,7 +124,7 @@ The ``landsat8`` module process Landsat 8 data hosted on AWS Public Dataset http
 rio_tiler.sentinel2
 -------------------
 
-The `sentinel2` module process Sentinel 2 data hosted on AWS Public Dataset http://sentinel-pds.s3-website.eu-central-1.amazonaws.com
+The ``sentinel2`` module processes data hosted on the `Sentinel 2 AWS Public Dataset <http://sentinel-pds.s3-website.eu-central-1.amazonaws.com>`_.
 
 - **sentinel2.bounds**
 
