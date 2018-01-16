@@ -138,6 +138,23 @@ def test_tile_valid_pan(landsat_get_mtl, monkeypatch):
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')
+def test_tile_valid_ratio(landsat_get_mtl, monkeypatch):
+    """
+    Should work as expected
+    """
+
+    monkeypatch.setattr(landsat8, 'LANDSAT_BUCKET', LANDSAT_BUCKET)
+    landsat_get_mtl.return_value = LANDSAT_METADATA
+
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+    expression = '(B[5]-B[4])/(B[5]+B[4])'
+
+    assert landsat8.tile_ratio(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z,
+                         expression).shape == (256, 256)
+
+@patch('rio_tiler.utils.landsat_get_mtl')
 def test_tile_invalid_bounds(landsat_get_mtl, monkeypatch):
     """
     Should raise an error with invalid tile

@@ -2,6 +2,7 @@
 
 from functools import partial
 from concurrent import futures
+import re
 
 import numpy as np
 
@@ -175,5 +176,91 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
 
                 out[bdx] = 10000 * reflectance.reflectance(
                     out[bdx], multi_reflect, add_reflect, sun_elev)
+
+        return out
+
+
+def tile_ratio(sceneid, tile_x, tile_y, tile_z, expression, tilesize=256):
+    """Create mercator bands ratio tile from Landsat-8 data.
+
+    Attributes
+    ----------
+
+    sceneid : str
+        Landsat sceneid. For scenes after May 2017,
+        sceneid have to be LANDSAT_PRODUCT_ID.
+    tile_x : int
+        Mercator tile X index.
+    tile_y : int
+        Mercator tile Y index.
+    tile_z : int
+        Mercator tile ZOOM level.
+    expression : str
+        bands ratio expressioin, eg: (B[5]-B[4])/(B[5]+B[4])
+    tilesize : int, optional (default: 256)
+        Output image size.
+
+    Returns
+    -------
+    out : numpy ndarray
+    """
+    
+    bands = tuple(set(map(int, re.findall('\d+', expression))))
+    if not isinstance(bands, tuple):
+        bands = tuple((bands, ))
+
+    scene_params = utils.landsat_parse_scene_id(sceneid)
+    meta_data = utils.landsat_get_mtl(sceneid).get('L1_METADATA_FILE')
+    landsat_address = '{}/{}'.format(LANDSAT_BUCKET, scene_params['key'])
+
+    wgs_bounds = toa_utils._get_bounds_from_metadata(
+        meta_data['PRODUCT_METADATA'])
+
+    if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
+        raise TileOutsideBounds(
+            'Tile {}/{}/{} is outside image bounds'.format(
+                tile_z, tile_x, tile_y))
+
+    mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
+    tile_bounds = mercantile.xy_bounds(mercator_tile)
+
+    addresses = ['{}_B{}.TIF'.format(landsat_address, band) for band in bands]
+
+    _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=tilesize)
+    with futures.ThreadPoolExecutor(max_workers=3) as executor:
+        out = np.stack(list(executor.map(_tiler, addresses)))
+
+        sun_elev = meta_data['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
+        B = {}
+        for bdx, band in enumerate(bands):
+            if int(band) > 9:  # TIRS
+                multi_rad = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'RADIANCE_MULT_BAND_{}'.format(band))
+
+                add_rad = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'RADIANCE_ADD_BAND_{}'.format(band))
+
+                k1 = meta_data['TIRS_THERMAL_CONSTANTS'].get(
+                    'K1_CONSTANT_BAND_{}'.format(band))
+
+                k2 = meta_data['TIRS_THERMAL_CONSTANTS'].get(
+                    'K2_CONSTANT_BAND_{}'.format(band))
+
+                out[bdx] = brightness_temp.brightness_temp(
+                    out[bdx], multi_rad, add_rad, k1, k2)
+
+            else:
+                multi_reflect = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'REFLECTANCE_MULT_BAND_{}'.format(band))
+
+                add_reflect = meta_data['RADIOMETRIC_RESCALING'].get(
+                    'REFLECTANCE_ADD_BAND_{}'.format(band))
+
+                out[bdx] = 10000 * reflectance.reflectance(
+                    out[bdx], multi_reflect, add_reflect, sun_elev)
+
+            B[band] = out[bdx].astype(np.float32)
+            
+        out = eval(expression)
 
         return out
