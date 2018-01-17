@@ -18,7 +18,6 @@ from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rio_toa import reflectance, brightness_temp, toa_utils
 
-from rio_tiler import landsat8, sentinel2, cbers, main
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
                               InvalidSentinelSceneId,
@@ -506,17 +505,21 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, *kwargs):
     rgb = expr.split(',')
 
     if sceneid.startswith('L'):
-        tile = landsat8.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
+        from rio_tiler.landsat8 import tile
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
     elif sceneid.startswith('S2'):
-        tile = sentinel2.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
+        from rio_tiler.sentinel2 import tile
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
     elif sceneid.startswith('CBERS'):
-        tile = cbers.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
+        from rio_tiler.cbers import tile
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
     else:
+        from rio_tiler.main import tile
         bands = tuple(map(int, bands_names))
-        tile = main.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
 
     ctx = {}
     for bdx, b in enumerate(bands_names):
-        ctx[b] = tile[bdx]
+        ctx[b] = arr[bdx]
 
     return np.array([np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=ctx)) for bloc in rgb])
