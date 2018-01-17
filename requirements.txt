@@ -1,5 +1,6 @@
 
 numpy
+numexpr
 
 Pillow
 mercantile
