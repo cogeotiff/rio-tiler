@@ -503,16 +503,16 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, *kwargs):
     """
     """
     bands_names = list(set(re.findall(r'b(?P<bands>[0-9]{1,2})', expr)))
-    bands = tuple(map(int, bands_names))
     rgb = expr.split(',')
 
     if sceneid.startswith('L'):
-        tile = landsat8.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+        tile = landsat8.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
     elif sceneid.startswith('S2'):
-        tile = sentinel2.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+        tile = sentinel2.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
     elif sceneid.startswith('CBERS'):
-        tile = cbers.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+        tile = cbers.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
     else:
+        bands = tuple(map(int, bands_names))
         tile = main.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
 
     ctx = {}
