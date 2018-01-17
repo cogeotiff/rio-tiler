@@ -506,7 +506,7 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, *kwargs):
     bands = tuple(map(int, bands_names))
     rgb = expr.split(',')
 
-    if sceneid.startswith('L8'):
+    if sceneid.startswith('L'):
         tile = landsat8.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
     elif sceneid.startswith('S2'):
         tile = sentinel2.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
