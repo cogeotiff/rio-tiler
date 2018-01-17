@@ -430,3 +430,85 @@ def test_mapzen_elevation_rgb():
 
     arr = np.random.randint(0, 3000, size=(512, 512))
     assert utils.mapzen_elevation_rgb(arr).shape == (3, 512, 512)
+
+
+@patch('rio_tiler.landsat8.tile')
+def test_expression_ndvi(landsat_tile):
+    """
+    Should work as expected
+    """
+
+    landsat_tile.return_value = np.random.randint(0, 255, size=(2, 512, 512), dtype=np.uint8)
+
+    expr = '(b5 - b4) / (b5 + b4)'
+
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+
+    sceneid = 'LC08_L1TP_016037_20170813_20170814_01_RT'
+    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (1, 512, 512)
+    assert len(landsat_tile.call_args[1].get('rgb')) == 2
+
+
+@patch('rio_tiler.landsat8.tile')
+def test_expression_landsat_rgb(landsat_tile):
+    """
+    Should work as expected
+    """
+
+    landsat_tile.return_value = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+
+    expr = 'b5*0.8, b4*1.1, b3*0.8'
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+
+    sceneid = 'LC08_L1TP_016037_20170813_20170814_01_RT'
+    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (3, 512, 512)
+    assert len(landsat_tile.call_args[1].get('rgb')) == 3
+
+
+def test_expression_main_ratio():
+    """
+    Should work as expected
+    """
+
+    expr = '(b4 - b3) / (b4 + b3)'
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+
+    prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
+    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (1, 256, 256)
+
+
+def test_expression_main_rgb():
+    """
+    Should work as expected
+    """
+
+    expr = 'b1*0.8, b2*1.1, b3*0.8'
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+
+    prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
+    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (3, 256, 256)
+
+
+def test_expression_main_kwargs():
+    """
+    Should work as expected
+    """
+
+    expr = '(b4 - b3) / (b4 + b3)'
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+
+    prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
+    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr, tilesize=512).shape == (1, 512, 512)

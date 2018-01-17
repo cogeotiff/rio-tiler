@@ -498,28 +498,28 @@ def mapzen_elevation_rgb(arr):
     return np.stack([r, g, b]).astype(np.uint8)
 
 
-def expression(sceneid, tile_x, tile_y, tile_z, expr, *kwargs):
+def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
     """
     """
-    bands_names = list(set(re.findall(r'b(?P<bands>[0-9]{1,2})', expr)))
+    bands_names = tuple(set(re.findall(r'b(?P<bands>[0-9]{1,2})', expr)))
     rgb = expr.split(',')
 
     if sceneid.startswith('L'):
         from rio_tiler.landsat8 import tile
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
     elif sceneid.startswith('S2'):
         from rio_tiler.sentinel2 import tile
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
     elif sceneid.startswith('CBERS'):
         from rio_tiler.cbers import tile
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, *kwargs)
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
     else:
         from rio_tiler.main import tile
         bands = tuple(map(int, bands_names))
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, **kwargs)
 
     ctx = {}
     for bdx, b in enumerate(bands_names):
-        ctx[b] = arr[bdx]
+        ctx[f'b{b}'] = arr[bdx]
 
     return np.array([np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=ctx)) for bloc in rgb])
