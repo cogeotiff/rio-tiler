@@ -520,6 +520,6 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
 
     ctx = {}
     for bdx, b in enumerate(bands_names):
-        ctx[f'b{b}'] = arr[bdx]
+        ctx['b{}'.format(b)] = arr[bdx]
 
     return np.array([np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=ctx)) for bloc in rgb])
