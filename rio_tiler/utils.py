@@ -8,6 +8,7 @@ import datetime
 from io import BytesIO
 
 import numpy as np
+import numexpr as ne
 
 import mercantile
 
@@ -17,6 +18,7 @@ from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rio_toa import reflectance, brightness_temp, toa_utils
 
+from rio_tiler import landsat8, sentinel2, cbers, main
 from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
                               InvalidSentinelSceneId,
@@ -495,3 +497,26 @@ def mapzen_elevation_rgb(arr):
     g = (arr % 256)
     b = ((arr * 256) % 256)
     return np.stack([r, g, b]).astype(np.uint8)
+
+
+def expression(sceneid, tile_x, tile_y, tile_z, expr, *kwargs):
+    """
+    """
+    bands_names = list(set(re.findall(r'b(?P<bands>[0-9]{1,2})', expr)))
+    bands = tuple(map(int, bands_names))
+    rgb = expr.split(',')
+
+    if sceneid.startswith('L8'):
+        tile = landsat8.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+    elif sceneid.startswith('S2'):
+        tile = sentinel2.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+    elif sceneid.startswith('CBERS'):
+        tile = cbers.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+    else:
+        tile = main.tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, *kwargs)
+
+    ctx = {}
+    for bdx, b in enumerate(bands_names):
+        ctx[b] = tile[bdx]
+
+    return np.array([np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=ctx)) for bloc in rgb])
