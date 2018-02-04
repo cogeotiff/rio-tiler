@@ -62,7 +62,9 @@ def test_tile_valid_default(monkeypatch):
     tile_x = 664
     tile_y = 495
 
-    assert cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z).shape == (3, 256, 256)
+    data, mask = cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 def test_tile_valid_nrg(monkeypatch):
@@ -77,7 +79,9 @@ def test_tile_valid_nrg(monkeypatch):
     tile_y = 495
     bands = (8, 7, 6)
 
-    assert cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands).shape == (3, 256, 256)
+    data, mask = cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 def test_tile_valid_onband(monkeypatch):
@@ -92,7 +96,9 @@ def test_tile_valid_onband(monkeypatch):
     tile_y = 495
     bands = 8
 
-    assert cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands).shape == (1, 256, 256)
+    data, mask = cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    assert data.shape == (1, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 def test_tile_invalid_bounds(monkeypatch):

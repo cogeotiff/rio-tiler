@@ -102,7 +102,8 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(7, 6, 5), tilesize=256):
 
     Returns
     -------
-    out : numpy ndarray
+    data : numpy ndarray
+    mask: numpy array
     """
 
     if not isinstance(rgb, tuple):
@@ -124,8 +125,9 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(7, 6, 5), tilesize=256):
 
     addresses = ['{}/{}_BAND{}.tif'.format(cbers_address, sceneid, band) for band in rgb]
 
-    _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=tilesize)
+    _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=tilesize, nodata=0)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
-        out = np.stack(executor.map(_tiler, addresses))
+        data, masks = zip(*list(executor.map(_tiler, addresses)))
+        mask = np.all(masks, axis=0)
 
-    return out
+    return np.concatenate(data), mask

@@ -30,7 +30,7 @@ def bounds(address):
     return {'url': address, 'bounds': list(wgs_bounds)}
 
 
-def tile(address, tile_x, tile_y, tile_z, rgb=None,  tilesize=256):
+def tile(address, tile_x, tile_y, tile_z, rgb=None, tilesize=256, nodata=None, alpha=None):
     """Create mercator tile from any images.
 
     Attributes
@@ -48,26 +48,28 @@ def tile(address, tile_x, tile_y, tile_z, rgb=None,  tilesize=256):
         Bands index for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
+    nodata: int or float, optional (defaults: None)
+    alpha: int, optional (defaults: None)
+        Force alphaband if not present in the dataset metadata
 
     Returns
     -------
-    out : numpy ndarray
+    data : numpy ndarray
+    mask: numpy array
     """
 
     with rasterio.open(address) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
-        nodata = src.nodata
+        nodata = nodata if nodata else src.nodata
         if not rgb:
             rgb = src.indexes
 
     if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
         raise TileOutsideBounds(
-            'Tile {}/{}/{} is outside image bounds'.format(
-                tile_z, tile_x, tile_y))
+            'Tile {}/{}/{} is outside image bounds'.format(tile_z, tile_x, tile_y))
 
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
-    out = utils.tile_band_worker(address, tile_bounds, tilesize, indexes=rgb, nodata=nodata)
-
-    return out
+    return utils.tile_band_worker(address, tile_bounds, tilesize, indexes=rgb,
+                                  nodata=nodata, alpha=alpha)
