@@ -411,7 +411,7 @@ def cbers_parse_scene_id(sceneid):
     return meta
 
 
-def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
+def array_to_img(arr, tileformat='png', mask=None, color_map=None):
     """Convert an array to an base64 encoded img
 
     Attributes
@@ -420,8 +420,8 @@ def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
         Image array to encode.
     tileformat : str (default: png)
         Image format to return (Accepted: "jpg" or "png")
-    nodata: int
-        No data value used to create mask
+    Mask: numpy ndarray
+        Mask
     color_map: numpy array
         ColorMap array (see: utils.get_colormap)
 
@@ -456,18 +456,15 @@ def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
 
     sio = BytesIO()
     if tileformat == 'jpg':
-        img.save(sio, 'jpeg', subsampling=0, quality=100)
+        tileformat = 'jpeg'
+        params = {'subsampling': 0, 'quality': 100}
     else:
-        mask = np.full(arr.shape[0:2], 255, dtype=np.uint8)
-        if len(arr.shape) == 2:
-            arr = np.expand_dims(arr, axis=2)
-        if nodata is not None:
-            mask = np.all(arr != nodata, axis=2).astype(np.uint8) * 255
+        if mask is not None:
+            mask_img = Image.fromarray(mask)
+            img.putalpha(mask_img)
+        params = {'compress_level': 0}
 
-        mask_img = Image.fromarray(mask)
-        img.putalpha(mask_img)
-        img.save(sio, 'png', compress_level=0)
-
+    img.save(sio, tileformat, **params)
     sio.seek(0)
 
     return base64.b64encode(sio.getvalue()).decode()

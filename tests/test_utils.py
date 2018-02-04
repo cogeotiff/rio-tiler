@@ -366,6 +366,18 @@ def test_array_to_img_valid_png():
     assert utils.array_to_img(arr, tileformat)
 
 
+def test_array_to_img_valid_mask():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.random.randint(0, 1, size=(512, 512), dtype=np.uint8) * 255
+    tileformat = 'png'
+
+    assert utils.array_to_img(arr, tileformat, mask=mask)
+
+
 def test_array_to_img_valid_jpg():
     """
     Should work as expected
