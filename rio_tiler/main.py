@@ -61,7 +61,7 @@ def tile(address, tile_x, tile_y, tile_z, rgb=None, tilesize=256, nodata=None, a
     with rasterio.open(address) as src:
         wgs_bounds = transform_bounds(
             *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
-        nodata = nodata if nodata else src.nodata
+        nodata = nodata if nodata is not None else src.nodata
         if not rgb:
             rgb = src.indexes
 
