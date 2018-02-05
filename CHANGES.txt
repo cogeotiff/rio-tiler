@@ -1,3 +1,13 @@
+1.0a2 (2018-01-05)
+------------------
+- better nodata/mask/alpha band definition and support
+
+:Breacking Changes:
+- tile functions now return an associated mask (Landsat, Sentinel, CBERS, main)
+- remove nodata support in utils.image_to_array function
+- add mask support in utils.image_to_array function
+- utils.tile_band_worker will always return a (Band, Width, Height) array (e.g 1x256x256 or 3x256x256)
+
 
 1.0a1 (2018-01-04)
 ------------------
