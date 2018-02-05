@@ -129,6 +129,6 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=tilesize, nodata=0)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
-        mask = np.all(masks, axis=0)
+        mask = np.all(masks, axis=0) * 255
 
     return np.concatenate(data), mask
