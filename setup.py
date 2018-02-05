@@ -20,7 +20,7 @@ with open('README.rst') as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = ["numpy", "Pillow", "mercantile", "boto3",
+inst_reqs = ["numpy", "numexpr", "Pillow", "mercantile", "boto3",
              "rasterio[s3]>=1.0a12", "rio-toa", "rio-pansharpen"]
 
 extra_reqs = {
