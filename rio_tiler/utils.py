@@ -460,7 +460,7 @@ def array_to_img(arr, tileformat='png', mask=None, color_map=None):
         params = {'subsampling': 0, 'quality': 100}
     else:
         if mask is not None:
-            mask_img = Image.fromarray(mask)
+            mask_img = Image.fromarray(mask.astype(np.uint8))
             img.putalpha(mask_img)
         params = {'compress_level': 0}
 

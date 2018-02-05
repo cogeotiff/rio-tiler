@@ -137,7 +137,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         data = np.concatenate(data)
-        mask = np.all(masks, axis=0) * 255
+        mask = np.all(masks, axis=0).astype(np.uint8) * 255
 
         if pan:
             pan_address = '{}_B8.TIF'.format(landsat_address)
