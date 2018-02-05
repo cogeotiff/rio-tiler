@@ -484,7 +484,9 @@ def test_expression_ndvi(landsat_tile):
     Should work as expected
     """
 
-    landsat_tile.return_value = np.random.randint(0, 255, size=(2, 512, 512), dtype=np.uint8)
+    landsat_tile.return_value = [
+        np.random.randint(0, 255, size=(2, 256, 256), dtype=np.uint8),
+        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255]
 
     expr = '(b5 - b4) / (b5 + b4)'
 
@@ -493,7 +495,9 @@ def test_expression_ndvi(landsat_tile):
     tile_y = 102
 
     sceneid = 'LC08_L1TP_016037_20170813_20170814_01_RT'
-    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (1, 512, 512)
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
+    data.shape == (1, 256, 256)
+    mask.shape == (256, 256)
     assert len(landsat_tile.call_args[1].get('rgb')) == 2
 
 
@@ -503,7 +507,9 @@ def test_expression_landsat_rgb(landsat_tile):
     Should work as expected
     """
 
-    landsat_tile.return_value = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    landsat_tile.return_value = [
+        np.random.randint(0, 255, size=(3, 256, 256), dtype=np.uint8),
+        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255]
 
     expr = 'b5*0.8, b4*1.1, b3*0.8'
     tile_z = 8
@@ -511,7 +517,9 @@ def test_expression_landsat_rgb(landsat_tile):
     tile_y = 102
 
     sceneid = 'LC08_L1TP_016037_20170813_20170814_01_RT'
-    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (3, 512, 512)
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
+    data.shape == (3, 512, 512)
+    mask.shape == (512, 512)
     assert len(landsat_tile.call_args[1].get('rgb')) == 3
 
 
@@ -526,8 +534,10 @@ def test_expression_main_ratio():
     tile_y = 200458
 
     prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
-    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
-    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (1, 256, 256)
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(prefix)
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
+    data.shape == (1, 256, 256)
+    mask.shape == (256, 256)
 
 
 def test_expression_main_rgb():
@@ -542,7 +552,9 @@ def test_expression_main_rgb():
 
     prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
     sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
-    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr).shape == (3, 256, 256)
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
+    data.shape == (3, 256, 256)
+    mask.shape == (256, 256)
 
 
 def test_expression_main_kwargs():
@@ -556,5 +568,7 @@ def test_expression_main_kwargs():
     tile_y = 200458
 
     prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
-    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
-    assert utils.expression(sceneid, tile_x, tile_y, tile_z, expr, tilesize=512).shape == (1, 512, 512)
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(prefix)
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr, tilesize=512)
+    data.shape == (1, 512, 512)
+    mask.shape == (512, 512)

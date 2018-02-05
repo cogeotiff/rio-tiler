@@ -521,20 +521,20 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
 
     if sceneid.startswith('L'):
         from rio_tiler.landsat8 import tile
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
+        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
     elif sceneid.startswith('S2'):
         from rio_tiler.sentinel2 import tile
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
+        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
     elif sceneid.startswith('CBERS'):
         from rio_tiler.cbers import tile
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
+        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands_names, **kwargs)
     else:
         from rio_tiler.main import tile
         bands = tuple(map(int, bands_names))
-        arr = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, **kwargs)
+        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, rgb=bands, **kwargs)
 
     ctx = {}
     for bdx, b in enumerate(bands_names):
         ctx['b{}'.format(b)] = arr[bdx]
 
-    return np.array([np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=ctx)) for bloc in rgb])
+    return np.array([np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=ctx)) for bloc in rgb]), mask
