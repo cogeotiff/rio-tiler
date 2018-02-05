@@ -1,5 +1,6 @@
-1.0a2 (2018-01-05)
+1.0a2 (2018-02-05)
 ------------------
+- add "expression" utility function
 - better nodata/mask/alpha band definition and support
 
 :Breacking Changes:
