@@ -63,8 +63,9 @@ def test_tile_valid_default(monkeypatch):
     tile_x = 77
     tile_y = 89
 
-    assert sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y,
-                          tile_z).shape == (3, 256, 256)
+    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 def test_tile_valid_nrg(monkeypatch):
@@ -79,8 +80,9 @@ def test_tile_valid_nrg(monkeypatch):
     tile_y = 89
     bands = ('08', '04', '03')
 
-    assert sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z,
-                          rgb=bands).shape == (3, 256, 256)
+    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 def test_tile_valid_onband(monkeypatch):
@@ -95,8 +97,9 @@ def test_tile_valid_onband(monkeypatch):
     tile_y = 89
     bands = '08'
 
-    assert sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z,
-                          rgb=bands).shape == (1, 256, 256)
+    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    assert data.shape == (1, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 def test_tile_invalid_bounds(monkeypatch):
