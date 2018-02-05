@@ -80,8 +80,9 @@ def test_tile_valid_default(landsat_get_mtl, monkeypatch):
     tile_x = 71
     tile_y = 102
 
-    assert landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y,
-                         tile_z).shape == (3, 256, 256)
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')
@@ -98,8 +99,9 @@ def test_tile_valid_nrg(landsat_get_mtl, monkeypatch):
     tile_y = 102
     bands = (5, 4, 3)
 
-    assert landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z,
-                         rgb=bands).shape == (3, 256, 256)
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, rgb=bands)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')
@@ -116,8 +118,9 @@ def test_tile_valid_tir(landsat_get_mtl, monkeypatch):
     tile_y = 102
     bands = 10
 
-    assert landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z,
-                         rgb=bands).shape == (1, 256, 256)
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, rgb=bands)
+    assert data.shape == (1, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')
@@ -133,8 +136,9 @@ def test_tile_valid_pan(landsat_get_mtl, monkeypatch):
     tile_x = 71
     tile_y = 102
 
-    assert landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z,
-                         pan=True).shape == (3, 256, 256)
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, pan=True)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')

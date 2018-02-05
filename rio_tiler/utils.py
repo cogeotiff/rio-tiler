@@ -18,7 +18,8 @@ from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rio_toa import reflectance, brightness_temp, toa_utils
 
-from rio_tiler.errors import (InvalidFormat,
+from rio_tiler.errors import (RioTilerError,
+                              InvalidFormat,
                               InvalidLandsatSceneId,
                               InvalidSentinelSceneId,
                               InvalidCBERSSceneId)
@@ -118,19 +119,21 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
 
-def tile_band_worker(address, bounds, tilesize, indexes=[1], nodata=0):
+def tile_band_worker(address, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
     """Read band data
 
     Attributes
     ----------
 
-    address : Sentinel-2/Landsat-8 band AWS address
+    address : file address
     bounds : Mercator tile bounds to retrieve
     tilesize : Output image size
     indexes : list of ints or a single int, optional, (default: 1)
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.
-    nodata: int or float, optional (defaults: 0)
+    nodata: int or float, optional (defaults: None)
+    alpha: int, optional (defaults: None)
+        Force alphaband if not present in the dataset metadata
 
     Returns
     -------
@@ -139,26 +142,41 @@ def tile_band_worker(address, bounds, tilesize, indexes=[1], nodata=0):
     """
     w, s, e, n = bounds
 
-    out_shape = (tilesize, tilesize)
+    if alpha is not None and nodata is not None:
+        raise RioTilerError('cannot pass alpha and nodata option')
 
-    if not isinstance(indexes, int):
-        if len(indexes) == 1:
-            indexes = indexes[0]
-        else:
-            out_shape = (len(indexes),) + out_shape
+    if isinstance(indexes, int):
+        indexes = [indexes]
+
+    out_shape = (len(indexes), tilesize, tilesize)
 
     with rasterio.open(address) as src:
-        with WarpedVRT(src,
-                       dst_crs='EPSG:3857',
-                       resampling=Resampling.bilinear,
-                       src_nodata=nodata,
-                       dst_nodata=nodata) as vrt:
+        with WarpedVRT(src, dst_crs='EPSG:3857', resampling=Resampling.bilinear,
+                       src_nodata=nodata, dst_nodata=nodata) as vrt:
+
                             window = vrt.window(w, s, e, n, precision=21)
-                            return vrt.read(window=window,
+
+                            data = vrt.read(window=window,
                                             boundless=True,
                                             resampling=Resampling.bilinear,
                                             out_shape=out_shape,
                                             indexes=indexes)
+
+                            mask = vrt.read_masks(1, window=window,
+                                                  out_shape=(tilesize, tilesize),
+                                                  boundless=True,
+                                                  resampling=Resampling.bilinear)
+
+                            if nodata is not None:
+                                mask = np.all(data != nodata, axis=0).astype(np.uint8) * 255
+
+                            if alpha is not None:
+                                mask = vrt.read(alpha, window=window,
+                                                out_shape=(tilesize, tilesize),
+                                                boundless=True,
+                                                resampling=Resampling.bilinear)
+
+    return data, mask
 
 
 def linear_rescale(image, in_range=(0, 1), out_range=(1, 255)):
@@ -394,7 +412,7 @@ def cbers_parse_scene_id(sceneid):
     return meta
 
 
-def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
+def array_to_img(arr, tileformat='png', mask=None, color_map=None):
     """Convert an array to an base64 encoded img
 
     Attributes
@@ -403,8 +421,8 @@ def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
         Image array to encode.
     tileformat : str (default: png)
         Image format to return (Accepted: "jpg" or "png")
-    nodata: int
-        No data value used to create mask
+    Mask: numpy ndarray
+        Mask
     color_map: numpy array
         ColorMap array (see: utils.get_colormap)
 
@@ -439,18 +457,15 @@ def array_to_img(arr, tileformat='png', nodata=0, color_map=None):
 
     sio = BytesIO()
     if tileformat == 'jpg':
-        img.save(sio, 'jpeg', subsampling=0, quality=100)
+        tileformat = 'jpeg'
+        params = {'subsampling': 0, 'quality': 100}
     else:
-        mask = np.full(arr.shape[0:2], 255, dtype=np.uint8)
-        if len(arr.shape) == 2:
-            arr = np.expand_dims(arr, axis=2)
-        if nodata is not None:
-            mask = np.all(arr != nodata, axis=2).astype(np.uint8) * 255
+        if mask is not None:
+            mask_img = Image.fromarray(mask.astype(np.uint8))
+            img.putalpha(mask_img)
+        params = {'compress_level': 0}
 
-        mask_img = Image.fromarray(mask)
-        img.putalpha(mask_img)
-        img.save(sio, 'png', compress_level=0)
-
+    img.save(sio, tileformat, **params)
     sio.seek(0)
 
     return base64.b64encode(sio.getvalue()).decode()

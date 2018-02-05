@@ -10,7 +10,8 @@ import numpy as np
 from rio_toa import toa_utils
 
 from rio_tiler import utils
-from rio_tiler.errors import (InvalidFormat,
+from rio_tiler.errors import (RioTilerError,
+                              InvalidFormat,
                               InvalidLandsatSceneId,
                               InvalidSentinelSceneId,
                               InvalidCBERSSceneId)
@@ -84,8 +85,9 @@ def test_tile_band_worker_valid():
               -8766409.899970293, 3835304.331237001)
     tilesize = 16
 
-    arr = utils.tile_band_worker(address, bounds, tilesize)
-    assert arr.shape == (16, 16)
+    arr, mask = utils.tile_band_worker(address, bounds, tilesize)
+    assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
 
 
 def test_tile_band_worker_list_index():
@@ -97,8 +99,9 @@ def test_tile_band_worker_list_index():
               -8766409.899970293, 3835304.331237001)
     tilesize = 16
 
-    arr = utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=(1))
-    assert arr.shape == (16, 16)
+    arr, mask = utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=(1))
+    assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
 
 
 def test_tile_band_worker_int_index():
@@ -110,8 +113,9 @@ def test_tile_band_worker_int_index():
               -8766409.899970293, 3835304.331237001)
     tilesize = 16
 
-    arr = utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=1)
-    assert arr.shape == (16, 16)
+    arr, mask = utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=1)
+    assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
 
 
 def test_tile_band_worker_rgb():
@@ -123,8 +127,23 @@ def test_tile_band_worker_rgb():
               -8766409.899970293, 3835304.331237001)
     tilesize = 16
 
-    arr = utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=(3, 2, 1))
+    arr, mask = utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=(3, 2, 1))
     assert arr.shape == (3, 16, 16)
+    assert mask.shape == (16, 16)
+
+
+def test_tile_band_worker_alpha():
+    """
+    Should work as expected (read rgb)
+    """
+
+    bounds = (-8844681.416934313, 3757032.814272982,
+              -8766409.899970293, 3835304.331237001)
+    tilesize = 16
+
+    arr, mask = utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=(3, 2, 1), alpha=3)
+    assert arr.shape == (3, 16, 16)
+    assert mask.shape == (16, 16)
 
 
 def test_tile_band_worker_nodata():
@@ -138,8 +157,23 @@ def test_tile_band_worker_nodata():
     tilesize = 16
     nodata = 255
 
-    arr = utils.tile_band_worker(address, bounds, tilesize, nodata=nodata)
-    assert arr.shape == (16, 16)
+    arr, mask = utils.tile_band_worker(address, bounds, tilesize, nodata=nodata)
+    assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
+
+
+def test_tile_band_worker_nodatalpha():
+    """
+    Should work as expected (read rgb)
+    """
+
+    bounds = (-8844681.416934313, 3757032.814272982,
+              -8766409.899970293, 3835304.331237001)
+    tilesize = 16
+
+    with pytest.raises(RioTilerError):
+        utils.tile_band_worker(S3_PATH, bounds, tilesize, indexes=(3, 2, 1),
+                               nodata=0, alpha=3)
 
 
 def test_linear_rescale_valid():
@@ -330,6 +364,18 @@ def test_array_to_img_valid_png():
     tileformat = 'png'
 
     assert utils.array_to_img(arr, tileformat)
+
+
+def test_array_to_img_valid_mask():
+    """
+    Should work as expected
+    """
+
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.random.randint(0, 1, size=(512, 512), dtype=np.uint8) * 255
+    tileformat = 'png'
+
+    assert utils.array_to_img(arr, tileformat, mask=mask)
 
 
 def test_array_to_img_valid_jpg():
