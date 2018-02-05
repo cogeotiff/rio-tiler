@@ -166,10 +166,10 @@ def tile_band_worker(address, bounds, tilesize, indexes=[1], nodata=None, alpha=
                                                   boundless=True,
                                                   resampling=Resampling.bilinear)
 
-                            if nodata:
+                            if nodata is not None:
                                 mask = np.all(data != nodata, axis=0).astype(np.uint8) * 255
 
-                            if alpha:
+                            if alpha is not None:
                                 mask = vrt.read(alpha, window=window,
                                                 out_shape=(tilesize, tilesize),
                                                 boundless=True,
