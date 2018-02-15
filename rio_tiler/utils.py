@@ -98,7 +98,7 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
     Attributes
     ----------
 
-    address : Sentinel-2 band AWS address
+    address : Image band URL
     pmin : Histogram minimum cut (default: 2)
     pmax : Histogram maximum cut (default: 98)
     width : int, optional (default: 1024)
