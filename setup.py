@@ -12,10 +12,6 @@ with open('rio_tiler/__init__.py') as f:
             continue
 
 
-def read(fname):
-    return open(os.path.join(os.path.dirname(__file__), fname)).read()
-
-
 with open('README.rst') as f:
     readme = f.read()
 
