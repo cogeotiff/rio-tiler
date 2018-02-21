@@ -43,11 +43,15 @@ here is how to create an AWS Lambda package on most UNIX machines:
     $ zip -r9q package.zip vendored/*
 ```
 
+### Overview
+
+Create tiles using one of these rio_tiler modules: `main`, `sentinel2`, `landsat8`, `cbers`. 
+
+The `main` module can create mercator tiles and get the bounds of any satellite imagery in an AWS S3 bucket that you have read access to. The other, mission specific, modules can also return metadata. 
+
 ### Usage
 
-There are four modues that can create tiles: `main`, `sentinel2`, `landsat8`, `cbers`. The `main` module can create mercator tiles and get the bounds of any satellite imagery in an AWS S3 bucket that you have read access to. The mission specific modules can also return metadata.
-
-The primary method of each of the tiling modules is `tile()`. Here is an example of getting a Landsat8 tile.
+Get a Landsat8 tile.
 
 ```
 from rio_tiler import landsat8
@@ -56,7 +60,7 @@ tile.shape
 # (3, 256, 256)
 ```
 	
-This is how to to save a tile to PNG or JPEG.
+Save a tile to PNG or JPEG.
 
 ```
 from rio_tiler.utils import array_to_img
@@ -65,7 +69,7 @@ from rio_tiler.utils import array_to_img
 array_to_img(tile, 'png')
 ```
 
-Here is an example of how to get the WGS84 bounds for a Landsat scene.
+Get WGS84 bounds for a Landsat scene.
 
 ```
 from rio_tiler import landsat8
@@ -73,7 +77,7 @@ landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
 # {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818], 'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
 ```
 
-Here is how to get the metadata (WGS84 bounds and min and max values) of a Landsat scene.
+Get metadata (WGS84 bounds and min and max values) of a Landsat scene.
 
 ```
 from rio_tiler import landsat8
@@ -91,7 +95,7 @@ landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
    'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
 ```
 
-The primary purpose for calculating min and max values of an image is to rescale pixel values from their original range (e.g. 16bits = 0 to 65,535) through a linear transformation to the range used by computer screens (i.e. 8 bits, 0 and 255). This will ensure that image displays look good.
+The primary purpose for calculating min and max values of an image is to rescale pixel values from their original range (e.g. 16bits = 0 to 65,535) through a linear transformation to the range used by computer screens (i.e. 8 bits, 0 and 255). This will make images look good on display.
 
 #### The Datasets
 
