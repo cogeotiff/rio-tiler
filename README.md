@@ -82,7 +82,6 @@ Get metadata (WGS84 bounds and min and max values) of a Landsat scene.
 ```
 from rio_tiler import landsat8
 
-# min and max are calculated within percentile range of 5 to 95%
 landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
   {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
    'rgbMinMax': {'1': [1245, 5396],
