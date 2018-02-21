@@ -99,8 +99,8 @@ The primary purpose for calculating min and max values of an image is to rescale
 
 #### The Datasets
 
-* [Landsat 8](https://aws.amazon.com/fr/public-datasets/landsat) 
 * [Sentinel 2](http://sentinel-pds.s3-website.eu-central-1.amazonaws.com)
+* [Landsat 8](https://aws.amazon.com/fr/public-datasets/landsat) 
 * [CBERS](https://aws.amazon.com/blogs/publicsector/the-china-brazil-earth-resources-satellite-mission/)
 
 #### License
