@@ -83,15 +83,15 @@ Get metadata (WGS84 bounds and min and max values) of a Landsat scene.
 from rio_tiler import landsat8
 
 landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
-  {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
-   'rgbMinMax': {'1': [1245, 5396],
-    '2': [983, 5384],
-    '3': [718, 5162],
-    '4': [470, 5273],
-    '5': [403, 6440],
-    '6': [258, 4257],
-    '7': [151, 2984]},
-   'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
+#  {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
+#   'rgbMinMax': {'1': [1245, 5396],
+#    '2': [983, 5384],
+#    '3': [718, 5162],
+#    '4': [470, 5273],
+#    '5': [403, 6440],
+#    '6': [258, 4257],
+#    '7': [151, 2984]},
+#   'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
 ```
 
 The primary purpose for calculating min and max values of an image is to rescale pixel values from their original range (e.g. 16bits = 0 to 65,535) through a linear transformation to the range used by computer screens (i.e. 8 bits, 0 and 255). This will make images look good on display.
