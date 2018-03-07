@@ -18,7 +18,7 @@ from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rio_toa import reflectance, brightness_temp, toa_utils
 
-from rio_tiler.profiles import TileProfiles
+from rio_tiler import profiles as TileProfiles
 from rio_tiler.errors import (RioTilerError,
                               InvalidFormat,
                               InvalidLandsatSceneId,
