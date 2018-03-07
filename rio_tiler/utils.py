@@ -18,6 +18,7 @@ from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rio_toa import reflectance, brightness_temp, toa_utils
 
+from rio_tiler.profiles import TileProfiles
 from rio_tiler.errors import (RioTilerError,
                               InvalidFormat,
                               InvalidLandsatSceneId,
@@ -411,15 +412,13 @@ def cbers_parse_scene_id(sceneid):
     return meta
 
 
-def array_to_img(arr, tileformat='png', mask=None, color_map=None):
+def array_to_img(arr, mask=None, color_map=None):
     """Convert an array to an base64 encoded img
 
     Attributes
     ----------
     arr : numpy ndarray
         Image array to encode.
-    tileformat : str (default: png)
-        Image format to return (Accepted: "jpg" or "png")
     Mask: numpy ndarray
         Mask
     color_map: numpy array
@@ -427,13 +426,9 @@ def array_to_img(arr, tileformat='png', mask=None, color_map=None):
 
     Returns
     -------
-    out : str
-        base64 encoded PNG or JPEG image.
+    img : object
+        Pillow image
     """
-
-    if tileformat not in ['png', 'jpg']:
-        raise InvalidFormat('Invalid {} extension'.format(tileformat))
-
     if arr.dtype != np.uint8:
         logger.error('Data casted to UINT8')
         arr = arr.astype(np.uint8)
@@ -445,28 +440,41 @@ def array_to_img(arr, tileformat='png', mask=None, color_map=None):
     if len(arr.shape) != 2 and color_map:
         raise InvalidFormat('Cannot apply colormap on a multiband image')
 
-    if len(arr.shape) == 2:
-        mode = 'L'
-    else:
-        mode = 'RGB'
+    mode = 'L' if len(arr.shape) == 2 else 'RGB'
 
     img = Image.fromarray(arr, mode=mode)
     if color_map:
         img.putpalette(color_map)
 
+    if mask is not None:
+        mask_img = Image.fromarray(mask.astype(np.uint8))
+        img.putalpha(mask_img)
+
+    return img
+
+
+def b64_encode_img(img, tileformat):
+    """Convert a Pillow image to an base64 encoded string
+    Attributes
+    ----------
+    img : object
+        Pillow image
+    tileformat : str
+        Image format to return (Accepted: "jpg" or "png")
+
+    Returns
+    -------
+    out : str
+        base64 encoded image.
+    """
+    params = TileProfiles.get(tileformat)
+
+    if tileformat == 'jpeg':
+        img = img.convert('RGB')
+
     sio = BytesIO()
-    if tileformat == 'jpg':
-        tileformat = 'jpeg'
-        params = {'subsampling': 0, 'quality': 100}
-    else:
-        if mask is not None:
-            mask_img = Image.fromarray(mask.astype(np.uint8))
-            img.putalpha(mask_img)
-        params = {'compress_level': 0}
-
-    img.save(sio, tileformat, **params)
+    img.save(sio, tileformat.upper(), **params)
     sio.seek(0)
-
     return base64.b64encode(sio.getvalue()).decode()
 
 
