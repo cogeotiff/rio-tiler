@@ -355,97 +355,88 @@ def test_cbers_id_valid():
     assert utils.cbers_parse_scene_id(scene) == expected_content
 
 
-def test_array_to_img_valid_png():
+def test_array_to_img_valid():
+    """Should work as expected
     """
-    Should work as expected
-    """
-
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    tileformat = 'png'
-
-    assert utils.array_to_img(arr, tileformat)
+    assert utils.array_to_img(arr)
 
 
 def test_array_to_img_valid_mask():
+    """Should work as expected
     """
-    Should work as expected
-    """
-
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.random.randint(0, 1, size=(512, 512), dtype=np.uint8) * 255
-    tileformat = 'png'
-
-    assert utils.array_to_img(arr, tileformat, mask=mask)
-
-
-def test_array_to_img_valid_jpg():
-    """
-    Should work as expected
-    """
-
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    tileformat = 'jpg'
-
-    assert utils.array_to_img(arr, tileformat)
+    assert utils.array_to_img(arr, mask=mask)
 
 
 def test_array_to_img_valid_oneband():
+    """Should work as expected
     """
-    Should work as expected
-    """
-
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
     assert utils.array_to_img(arr)
 
 
 def test_array_to_img_valid_noband():
+    """Should work as expected
     """
-    Should work as expected
-    """
-
     arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
     assert utils.array_to_img(arr)
 
 
 def test_array_to_img_cast():
+    """Should work as expected
     """
-    Should work as expected
-    """
-
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.int16)
     assert utils.array_to_img(arr)
 
 
 def test_array_to_img_colormap():
+    """Should work as expected
     """
-    Should work as expected
-    """
-
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    tileformat = 'png'
-    utils.array_to_img(arr, tileformat, color_map=utils.get_colormap())
+    utils.array_to_img(arr, color_map=utils.get_colormap())
 
 
 def test_array_to_img_bands_colormap():
+    """Should raise an error with invalid format
     """
-    Should raise an error with invalid format
-    """
-
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    tileformat = 'png'
     with pytest.raises(InvalidFormat):
-        utils.array_to_img(arr, tileformat, color_map=True)
+        utils.array_to_img(arr, color_map=True)
+
+
+def test_b64_encode_img_valid_jpg():
+    """Should work as expected
+    """
+    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+    img = utils.array_to_img(arr)
+    assert utils.b64_encode_img(img, 'jpeg')
+
+
+def test_b64_encode_img_valid_png():
+    """Should work as expected
+    """
+    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+    img = utils.array_to_img(arr)
+    assert utils.b64_encode_img(img, 'png')
+
+
+def test_b64_encode_img_valid_webp():
+    """Should work as expected
+    """
+    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+    img = utils.array_to_img(arr)
+    assert utils.b64_encode_img(img, 'webp')
 
 
 def test_array_to_img_invalid_format():
+    """Should raise an error with invalid format
     """
-    Should raise an error with invalid format
-    """
-
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    tileformat = 'gif'
+    img = utils.array_to_img(arr)
     with pytest.raises(InvalidFormat):
-        utils.array_to_img(arr, tileformat)
+        utils.b64_encode_img(img, 'gif')
 
 
 @patch('rio_tiler.utils.urlopen')
