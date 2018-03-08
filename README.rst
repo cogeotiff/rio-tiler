@@ -263,6 +263,26 @@ rio_tiler.utils.array_to_img
 
   ``Input``:
     - numpy **nuint8** ndarray
+    - mask **nuint8** array
+
+  ``Output``:
+    - Pillow Image object
+
+
+  .. code-block:: python
+
+    >>> from rio_tiler import landsat8
+    >>> from rio_tiler.utils import array_to_img, b64_encode_img
+    >>> tile, mask = landsat8.tile('LC08_L1TP_016037_20170813_20170814_01_RT', 71, 102, 8)
+    >>> # convert the data to an image object
+    >>> img = array_to_img(tile, mask=mask) # this returns a pillow image
+
+
+rio_tiler.utils.b64_encode_img
+------------------------------
+
+  ``Input``:
+    - img Pillow image
     - tileformat: Image format to return ("jpg" or "png")
 
   ``Output``:
@@ -272,9 +292,10 @@ rio_tiler.utils.array_to_img
   .. code-block:: python
 
     >>> from rio_tiler import landsat8
-    >>> from rio_tiler.utils import array_to_img
-    >>> tile = landsat8.tile('LC08_L1TP_016037_20170813_20170814_01_RT', 71, 102, 8)
-    >>> array_to_img(tile, 'png')
+    >>> from rio_tiler.utils import array_to_img, b64_encode_img
+    >>> tile, mask = landsat8.tile('LC08_L1TP_016037_20170813_20170814_01_RT', 71, 102, 8)
+    >>> img = array_to_img(tile, mask=mask) # this returns a pillow image
+    >>> str_img = b64_encode_img(img, 'jpeg')
     'iVBORw0KGgoAAAANSUhEUgAAAQAAAAEACAYAAABccqhmAAEAAElEQVR4AQAggN9/AAAAAAA....
 
 
