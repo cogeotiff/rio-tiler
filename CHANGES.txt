@@ -1,3 +1,11 @@
+1.0a4 (2018-03-07)
+------------------
+- adds utils.b64_encode_img function to encode an image object into a base64 string
+- add tiles profiles (jpeg, png, webp) based on https://github.com/mapnik/mapnik/wiki/Image-IO#default-output-details
+
+:Breacking Changes:
+- Refactor `rio_tiler.utils.array_to_img` to return PIL image object
+
 1.0a3 (2018-02-05)
 ------------------
 - only using `read_masks` for mask creation when it's needed.
