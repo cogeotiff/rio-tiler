@@ -51,11 +51,11 @@ The `main` module can create mercator tiles and get the bounds of any satellite 
 
 ### Usage
 
-Get a Landsat8 tile.
+Get a Sentinel2 tile.
 
 ```
-from rio_tiler import landsat8
-tile = landsat8.tile('LC08_L1TP_016037_20170813_20170814_01_RT', 71, 102, 8)
+from rio_tiler import sentinel2
+tile = sentinel2.tile('S2A_tile_20170729_19UDP_0', 77, 89, 8)
 tile.shape
 # (3, 256, 256)
 ```
