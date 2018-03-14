@@ -54,11 +54,11 @@ All of the tiling modules can return the original image bounds.
 
 ### Usage
 
-Get a Sentinel2 tile.
+Get a Sentinel2 tile and its mask (if any).
 
 ```
 from rio_tiler import sentinel2
-tile = sentinel2.tile('S2A_tile_20170729_19UDP_0', 77, 89, 8)
+tile, mask = sentinel2.tile('S2A_tile_20170729_19UDP_0', 77, 89, 8)
 tile.shape
 # (3, 256, 256)
 ```
