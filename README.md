@@ -47,7 +47,10 @@ here is how to create an AWS Lambda package on most UNIX machines:
 
 Create tiles using one of these rio_tiler modules: `main`, `sentinel2`, `landsat8`, `cbers`. 
 
-The `main` module can create mercator tiles and get the bounds of any satellite imagery in an AWS S3 bucket that you have read access to. The other, mission specific, modules can also return metadata. 
+Each of these modules can return the original image bounds.
+
+The `main` module can create mercator tiles from any satellite image data source supported by Rasterio (i.e. local files, http, etc.). The mission specific modules make it easier to extract tiles from AWS S3 buckets (i.e. only a scene ID is required); They can also be used to return metadata.
+
 
 ### Usage
 
