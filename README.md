@@ -63,13 +63,12 @@ tile.shape
 # (3, 256, 256)
 ```
 	
-Save a tile to PNG or JPEG.
+Create image from tile
 
 ```
 from rio_tiler.utils import array_to_img
 
-# convert base64 encoded image tile to png
-array_to_img(tile, 'png')
+img = array_to_img(tile, mask=mask) # this returns a pillow image
 ```
 
 Get WGS84 bounds for a Landsat scene.
