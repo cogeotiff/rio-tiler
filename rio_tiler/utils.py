@@ -411,8 +411,39 @@ def cbers_parse_scene_id(sceneid):
 
     return meta
 
+def bytescale(arr, cmin=None, cmax=None, high=255, low=0):
+    """
+    Scale array to 8-bits (e.g. for display on a screen) 
+    
+    [source] scipy.misc.bytescale: 
+    http://github.com/scipy/scipy/blob/v0.19.0/scipy/misc/pilutil.py#L33-L102
+    """
+    if arr.dtype == np.uint8:
+        return arr
 
-def array_to_img(arr, mask=None, color_map=None):
+    if high > 255:
+        raise ValueError("`high` should be less than or equal to 255.")
+    if low < 0:
+        raise ValueError("`low` should be greater than or equal to 0.")
+    if high < low:
+        raise ValueError("`high` should be greater than or equal to `low`.")
+
+    if cmin is None:
+        cmin = arr.min()
+    if cmax is None:
+        cmax = arr.max()
+
+    cscale = cmax - cmin
+    if cscale < 0:
+        raise ValueError("`cmax` should be larger than `cmin`.")
+    elif cscale == 0:
+        cscale = 1
+
+    scale = float(high - low) / cscale
+    bytearr = (arr - cmin) * scale + low
+    return (bytearr.clip(low, high) + 0.5).astype(np.uint8)
+  
+def array_to_img(arr, mask=None, color_map=None, cmin=None, cmax=None):
     """Convert an array to an base64 encoded img
 
     Attributes
@@ -423,15 +454,23 @@ def array_to_img(arr, mask=None, color_map=None):
         Mask
     color_map: numpy array
         ColorMap array (see: utils.get_colormap)
+    cmin: scalar
+        Minimum value for linear rescale
+    cmax: scalar
+        Maximum value for linear rescale
 
     Returns
     -------
     img : object
         Pillow image
     """
+    
+    if cmin or cmax:
+        arr = bytescale(arr, cmin=cmin, cmax=cmax)
+    
     if arr.dtype != np.uint8:
-        logger.error('Data casted to UINT8')
-        arr = arr.astype(np.uint8)
+        logger.warning('Data automatically bytescaled')
+        arr = bytescale(arr)
 
     if len(arr.shape) >= 3:
         arr = reshape_as_image(arr)
