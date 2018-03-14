@@ -71,6 +71,13 @@ from rio_tiler.utils import array_to_img
 img = array_to_img(tile, mask=mask) # this returns a pillow image
 ```
 
+Convert image into base64 encoded string (PNG or JPEG)
+
+```
+from rio_tiler.utils import b64_encode_img
+str_img = b64_encode_img(img, 'jpeg')
+```
+
 Get bounds for a Landsat scene (WGS84).
 
 ```
