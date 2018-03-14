@@ -1,6 +1,6 @@
 ## Rio-tiler
 
-Rasterio plugin to serve mercator tiles from satellite imagery hosted on Amazon S3 buckets.
+Rasterio plugin to create mercator tiles from raster sources.
 
 ![circleci][circleci_img]
 ![codecov][codecov_img]
