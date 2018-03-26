@@ -489,7 +489,7 @@ def test_expression_ndvi(landsat_tile):
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
     data.shape == (1, 256, 256)
     mask.shape == (256, 256)
-    assert len(landsat_tile.call_args[1].get('rgb')) == 2
+    assert len(landsat_tile.call_args[1].get('bands')) == 2
 
 
 @patch('rio_tiler.landsat8.tile')
@@ -511,7 +511,7 @@ def test_expression_landsat_rgb(landsat_tile):
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
     data.shape == (3, 512, 512)
     mask.shape == (512, 512)
-    assert len(landsat_tile.call_args[1].get('rgb')) == 3
+    assert len(landsat_tile.call_args[1].get('bands')) == 3
 
 
 def test_expression_main_ratio():

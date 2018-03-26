@@ -84,7 +84,7 @@ def metadata(sceneid, pmin=2, pmax=98):
     return info
 
 
-def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False):
+def tile(sceneid, tile_x, tile_y, tile_z, bands=(4, 3, 2), tilesize=256, pan=False):
     """Create mercator tile from Landsat-8 data.
 
     Attributes
@@ -99,7 +99,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
         Mercator tile Y index.
     tile_z : int
         Mercator tile ZOOM level.
-    rgb : tuple, int, optional (default: (4, 3, 2))
+    bands : tuple, int, optional (default: (4, 3, 2))
         Bands index for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
@@ -112,8 +112,8 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
     mask: numpy array
     """
 
-    if not isinstance(rgb, tuple):
-        rgb = tuple((rgb, ))
+    if not isinstance(bands, tuple):
+        bands = tuple((bands, ))
 
     scene_params = utils.landsat_parse_scene_id(sceneid)
     meta_data = utils.landsat_get_mtl(sceneid).get('L1_METADATA_FILE')
@@ -131,7 +131,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
     ms_tile_size = int(tilesize / 2) if pan else tilesize
-    addresses = ['{}_B{}.TIF'.format(landsat_address, band) for band in rgb]
+    addresses = ['{}_B{}.TIF'.format(landsat_address, band) for band in bands]
 
     _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=ms_tile_size, nodata=0)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
@@ -152,7 +152,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
 
         sun_elev = meta_data['IMAGE_ATTRIBUTES']['SUN_ELEVATION']
 
-        for bdx, band in enumerate(rgb):
+        for bdx, band in enumerate(bands):
             if int(band) > 9:  # TIRS
                 multi_rad = meta_data['RADIOMETRIC_RESCALING'].get(
                     'RADIANCE_MULT_BAND_{}'.format(band))

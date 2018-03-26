@@ -80,7 +80,7 @@ def test_tile_valid_nrg(monkeypatch):
     tile_y = 89
     bands = ('08', '04', '03')
 
-    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
 
@@ -97,7 +97,7 @@ def test_tile_valid_onband(monkeypatch):
     tile_y = 89
     bands = '08'
 
-    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
 
