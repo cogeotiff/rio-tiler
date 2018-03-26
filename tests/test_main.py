@@ -48,7 +48,7 @@ def test_tile_valid_bands():
     tile_y = 200458
     bands = (1)
 
-    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, indexes=bands)
     assert data.shape == (1, 256, 256)
 
 
@@ -61,7 +61,7 @@ def test_tile_valid_internal_alpha():
     tile_x = 109554
     tile_y = 200458
 
-    data, mask = main.tile(ADDRESS_ALPHA, tile_x, tile_y, tile_z, rgb=(1, 2, 3))
+    data, mask = main.tile(ADDRESS_ALPHA, tile_x, tile_y, tile_z, indexes=(1, 2, 3))
     assert data.shape == (3, 256, 256)
     assert not mask.all()
 
@@ -75,7 +75,7 @@ def test_tile_valid_alpha():
     tile_x = 109554
     tile_y = 200458
 
-    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, rgb=(1, 2, 3), alpha=3)
+    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, indexes=(1, 2, 3), alpha=3)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
 
@@ -162,7 +162,7 @@ def test_tile_valid_oneband():
     tile_y = 200458
     bands = 3
 
-    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, indexes=bands)
     assert data.shape == (1, 256, 256)
 
 
