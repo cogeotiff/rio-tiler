@@ -6,8 +6,8 @@ jobs:
     working_directory: ~/rio-tiler
     steps:
       - checkout
-      - run: pip install -U pip
-      - run: pip install virtualenv
+      - run: sudo pip install -U pip
+      - run: sudo pip install virtualenv
       - run: virtualenv venv
       - run:
           command: |
@@ -21,7 +21,7 @@ jobs:
     working_directory: ~/rio-tiler
     steps:
       - checkout
-      - run: pip3 install -U pip
+      - run: sudo pip3 install -U pip
       - run: python3 -m venv venv
       - run:
           command: |
