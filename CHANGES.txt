@@ -1,3 +1,13 @@
+1.0a5 (2018-03-26)
+------------------
+- adds DatasetReader input option for utils.tile_read (do not close the dataset on each read)
+
+:Breacking Changes:
+- `utils.tile_band_worker` renamed to `utils.tile_read`
+- `main.tile` **rgb** option renamed **indexes**
+- `sentinel2.tile`, `landsat8.tile`,  `cbers.tile` **rgb** option renamed **bands**
+- `main.tile` default nodata mask is handled by rasterio
+
 1.0a4 (2018-03-07)
 ------------------
 - adds utils.b64_encode_img function to encode an image object into a base64 string
