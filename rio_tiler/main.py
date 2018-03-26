@@ -65,11 +65,11 @@ def tile(address, tile_x, tile_y, tile_z, rgb=None, tilesize=256, nodata=None, a
         if not rgb:
             rgb = src.indexes
 
-    if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
-        raise TileOutsideBounds(
-            'Tile {}/{}/{} is outside image bounds'.format(tile_z, tile_x, tile_y))
+        if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
+            raise TileOutsideBounds(
+                'Tile {}/{}/{} is outside image bounds'.format(tile_z, tile_x, tile_y))
 
-    mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
-    tile_bounds = mercantile.xy_bounds(mercator_tile)
-    return utils.tile_band_worker(address, tile_bounds, tilesize, indexes=rgb,
-                                  nodata=nodata, alpha=alpha)
+        mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
+        tile_bounds = mercantile.xy_bounds(mercator_tile)
+        return utils.tile_read(src, tile_bounds, tilesize, indexes=rgb,
+                                   nodata=nodata, alpha=alpha)

@@ -133,7 +133,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
     ms_tile_size = int(tilesize / 2) if pan else tilesize
     addresses = ['{}_B{}.TIF'.format(landsat_address, band) for band in rgb]
 
-    _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=ms_tile_size, nodata=0)
+    _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=ms_tile_size, nodata=0)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         data = np.concatenate(data)
@@ -141,7 +141,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(4, 3, 2), tilesize=256, pan=False
 
         if pan:
             pan_address = '{}_B8.TIF'.format(landsat_address)
-            matrix_pan, mask = utils.tile_band_worker(pan_address, tile_bounds, tilesize, nodata=0)
+            matrix_pan, mask = utils.tile_read(pan_address, tile_bounds, tilesize, nodata=0)
 
             w, s, e, n = tile_bounds
             pan_transform = transform.from_bounds(w, s, e, n, tilesize, tilesize)

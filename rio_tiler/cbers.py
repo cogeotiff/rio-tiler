@@ -125,7 +125,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=(7, 6, 5), tilesize=256):
 
     addresses = ['{}/{}_BAND{}.tif'.format(cbers_address, sceneid, band) for band in rgb]
 
-    _tiler = partial(utils.tile_band_worker, bounds=tile_bounds, tilesize=tilesize, nodata=0)
+    _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         mask = np.all(masks, axis=0).astype(np.uint8) * 255

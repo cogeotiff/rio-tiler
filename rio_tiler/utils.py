@@ -15,6 +15,7 @@ import mercantile
 import rasterio
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling
+from rasterio.io import DatasetReader
 from rasterio.plot import reshape_as_image
 from rio_toa import reflectance, brightness_temp, toa_utils
 
@@ -120,13 +121,13 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
 
-def tile_band_worker(address, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
-    """Read band data
+def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
+    """Read data and mask
 
     Attributes
     ----------
-
-    address : file address
+    source : str or rasterio.io.DatasetReader
+        input file path or rasterio.io.DatasetReader object
     bounds : Mercator tile bounds to retrieve
     tilesize : Output image size
     indexes : list of ints or a single int, optional, (default: 1)
@@ -151,30 +152,55 @@ def tile_band_worker(address, bounds, tilesize, indexes=[1], nodata=None, alpha=
 
     out_shape = (len(indexes), tilesize, tilesize)
 
-    with rasterio.open(address) as src:
-        with WarpedVRT(src, dst_crs='EPSG:3857', resampling=Resampling.bilinear,
-                       src_nodata=nodata, dst_nodata=nodata) as vrt:
+    vrt_params = dict(
+        dst_crs='EPSG:3857',
+        resampling=Resampling.bilinear,
+        src_nodata=nodata,
+        dst_nodata=nodata)
 
-                            window = vrt.window(w, s, e, n, precision=21)
+    if isinstance(source, DatasetReader):
+        with WarpedVRT(source, **vrt_params) as vrt:
+            window = vrt.window(w, s, e, n, precision=21)
+            data = vrt.read(window=window,
+                            boundless=True,
+                            resampling=Resampling.bilinear,
+                            out_shape=out_shape,
+                            indexes=indexes)
 
-                            data = vrt.read(window=window,
-                                            boundless=True,
-                                            resampling=Resampling.bilinear,
-                                            out_shape=out_shape,
-                                            indexes=indexes)
+            if nodata is not None:
+                mask = np.all(data != nodata, axis=0).astype(np.uint8) * 255
+            elif alpha is not None:
+                mask = vrt.read(alpha, window=window,
+                                out_shape=(tilesize, tilesize),
+                                boundless=True,
+                                resampling=Resampling.bilinear)
+            else:
+                mask = vrt.read_masks(1, window=window,
+                                      out_shape=(tilesize, tilesize),
+                                      boundless=True,
+                                      resampling=Resampling.bilinear)
+    else:
+        with rasterio.open(source) as src:
+            with WarpedVRT(src, **vrt_params) as vrt:
+                window = vrt.window(w, s, e, n, precision=21)
+                data = vrt.read(window=window,
+                                boundless=True,
+                                resampling=Resampling.bilinear,
+                                out_shape=out_shape,
+                                indexes=indexes)
 
-                            if nodata is not None:
-                                mask = np.all(data != nodata, axis=0).astype(np.uint8) * 255
-                            elif alpha is not None:
-                                mask = vrt.read(alpha, window=window,
-                                                out_shape=(tilesize, tilesize),
-                                                boundless=True,
-                                                resampling=Resampling.bilinear)
-                            else:
-                                mask = vrt.read_masks(1, window=window,
-                                                      out_shape=(tilesize, tilesize),
-                                                      boundless=True,
-                                                      resampling=Resampling.bilinear)
+                if nodata is not None:
+                    mask = np.all(data != nodata, axis=0).astype(np.uint8) * 255
+                elif alpha is not None:
+                    mask = vrt.read(alpha, window=window,
+                                    out_shape=(tilesize, tilesize),
+                                    boundless=True,
+                                    resampling=Resampling.bilinear)
+                else:
+                    mask = vrt.read_masks(1, window=window,
+                                          out_shape=(tilesize, tilesize),
+                                          boundless=True,
+                                          resampling=Resampling.bilinear)
 
     return data, mask
 
