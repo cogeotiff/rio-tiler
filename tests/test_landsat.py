@@ -99,7 +99,7 @@ def test_tile_valid_nrg(landsat_get_mtl, monkeypatch):
     tile_y = 102
     bands = (5, 4, 3)
 
-    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
 
@@ -118,7 +118,7 @@ def test_tile_valid_tir(landsat_get_mtl, monkeypatch):
     tile_y = 102
     bands = 10
 
-    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
 

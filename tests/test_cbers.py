@@ -79,7 +79,7 @@ def test_tile_valid_nrg(monkeypatch):
     tile_y = 495
     bands = (8, 7, 6)
 
-    data, mask = cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
 
@@ -96,7 +96,7 @@ def test_tile_valid_onband(monkeypatch):
     tile_y = 495
     bands = 8
 
-    data, mask = cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, rgb=bands)
+    data, mask = cbers.tile(CBERS_SCENE, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
 

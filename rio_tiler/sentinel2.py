@@ -81,7 +81,7 @@ def metadata(sceneid, pmin=2, pmax=98):
     return info
 
 
-def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
+def tile(sceneid, tile_x, tile_y, tile_z, bands=('04', '03', '02'), tilesize=256):
     """Create mercator tile from Sentinel-2 data.
 
     Attributes
@@ -95,7 +95,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
         Mercator tile Y index.
     tile_z : int
         Mercator tile ZOOM level.
-    rgb : tuple, str, optional (default: ('04', '03', '02'))
+    bands : tuple, str, optional (default: ('04', '03', '02'))
         Bands index for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
@@ -106,8 +106,8 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     mask: numpy array
     """
 
-    if not isinstance(rgb, tuple):
-        rgb = tuple((rgb, ))
+    if not isinstance(bands, tuple):
+        bands = tuple((bands, ))
 
     scene_params = utils.sentinel_parse_scene_id(sceneid)
     sentinel_address = '{}/{}'.format(SENTINEL_BUCKET, scene_params['key'])
@@ -124,7 +124,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, rgb=('04', '03', '02'), tilesize=256):
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
-    addresses = ['{}/B{}.jp2'.format(sentinel_address, band) for band in rgb]
+    addresses = ['{}/B{}.jp2'.format(sentinel_address, band) for band in bands]
 
     _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0)
     with futures.ThreadPoolExecutor(max_workers=3) as executor:
