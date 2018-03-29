@@ -528,7 +528,7 @@ def test_expression_sentinel2(sentinel2):
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
     data.shape == (1, 256, 256)
     mask.shape == (256, 256)
-    assert sentinel2.call_args[1].get('bands') == ('8A', '12')
+    assert sorted(list(sentinel2.call_args[1].get('bands'))) == ['12', '8A']
 
 
 @patch('rio_tiler.landsat8.tile')
