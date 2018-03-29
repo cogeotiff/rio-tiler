@@ -508,6 +508,29 @@ def test_expression_ndvi(landsat_tile):
     assert len(landsat_tile.call_args[1].get('bands')) == 2
 
 
+@patch('rio_tiler.sentinel2.tile')
+def test_expression_sentinel2(sentinel2):
+    """
+    Should work as expected
+    """
+
+    sentinel2.return_value = [
+        np.random.randint(0, 255, size=(2, 256, 256), dtype=np.uint8),
+        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255]
+
+    expr = '(b8A - b12) / (b8A + b12)'
+
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+
+    sceneid = 'S2A_tile_20170323_17SNC_0'
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
+    data.shape == (1, 256, 256)
+    mask.shape == (256, 256)
+    assert sorted(list(sentinel2.call_args[1].get('bands'))) == ['12', '8A']
+
+
 @patch('rio_tiler.landsat8.tile')
 def test_expression_landsat_rgb(landsat_tile):
     """
