@@ -1,3 +1,7 @@
+1.0a6 (2018-03-29)
+------------------
+- Fixes sentinel-2 band 8A regex bug in `rio_tiler.utils.expression`
+
 1.0a5 (2018-03-26)
 ------------------
 - adds DatasetReader input option for utils.tile_read (do not close the dataset on each read)
