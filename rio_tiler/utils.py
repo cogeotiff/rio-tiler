@@ -549,7 +549,7 @@ def mapzen_elevation_rgb(arr):
 def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
     """
     """
-    bands_names = tuple(set(re.findall(r'b(?P<bands>[0-9]{1,2})', expr)))
+    bands_names = tuple(set(re.findall(r'b(?P<bands>[0-9A]{1,2})', expr)))
     rgb = expr.split(',')
 
     if sceneid.startswith('L'):
