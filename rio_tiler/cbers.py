@@ -98,7 +98,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256):
     tile_z : int
         Mercator tile ZOOM level.
     bands : tuple, int, optional (default: None)
-        Bands index for the RGB combination. If none uses default
+        Bands index for the RGB combination. If None uses default
         defined for the instrument
     tilesize : int, optional (default: 256)
         Output image size.
