@@ -497,8 +497,6 @@ def test_b64_encode_img_valid_png():
     img = utils.array_to_img(arr)
     assert utils.b64_encode_img(img, 'png')
 
-# KeyError being generated for WEBP format
-@pytest.mark.xfail
 def test_b64_encode_img_valid_webp():
     """Should work as expected
     """
