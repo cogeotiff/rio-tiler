@@ -117,7 +117,7 @@ The Datasets
 
 .. _Sentinel2: http://sentinel-pds.s3-website.eu-central-1.amazonaws.com
 .. _Landsat8: https://aws.amazon.com/fr/public-datasets/landsat
-.. _CBERS: https://aws.amazon.com/blogs/publicsector/the-china-brazil-earth-resources-satellite-mission/
+.. _CBERS: https://registry.opendata.aws/cbers/
 
 License
 -------
