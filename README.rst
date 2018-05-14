@@ -87,7 +87,7 @@ Get bounds for a Landsat scene (WGS84).
 
    from rio_tiler import landsat8
    landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
-   # {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818], 
+   # {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
    #  'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
 
 Get metadata of a Landsat scene (i.e. percentinle min and max values, and bounds in WGS84) .
