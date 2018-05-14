@@ -1,3 +1,7 @@
+1.0a7 (2018-05-14)
+------------------
+- Support for additional CBERS instruments (fredliporace)
+
 1.0a6 (2018-03-29)
 ------------------
 - Fixes sentinel-2 band 8A regex bug in `rio_tiler.utils.expression`
