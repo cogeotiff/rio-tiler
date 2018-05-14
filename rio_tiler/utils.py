@@ -404,15 +404,14 @@ def sentinel_parse_scene_id(sceneid):
 def cbers_parse_scene_id(sceneid):
     """Parse CBERS scene id"""
 
-    if not re.match('^CBERS_4_MUX_[0-9]{8}_[0-9]{3}_[0-9]{3}_L[0-9]$', sceneid):
+    if not re.match('^CBERS_4_\w+_[0-9]{8}_[0-9]{3}_[0-9]{3}_L[0-9]$', sceneid):
         raise InvalidCBERSSceneId('Could not match {}'.format(sceneid))
 
     cbers_pattern = (
-        r'(?P<sensor>\w{5})'
+        r'(?P<satellite>\w+)_'
+        r'(?P<mission>[0-9]{1})'
         r'_'
-        r'(?P<satellite>[0-9]{1})'
-        r'_'
-        r'(?P<intrument>\w{3})'
+        r'(?P<instrument>\w+)'
         r'_'
         r'(?P<acquisitionYear>[0-9]{4})'
         r'(?P<acquisitionMonth>[0-9]{2})'
@@ -431,10 +430,37 @@ def cbers_parse_scene_id(sceneid):
 
     path = meta['path']
     row = meta['row']
-    meta['key'] = 'CBERS4/MUX/{}/{}/{}'.format(path, row, sceneid)
+    instrument = meta['instrument']
+    meta['key'] = 'CBERS4/{}/{}/{}/{}'.format(instrument, path, row, sceneid)
 
     meta['scene'] = sceneid
 
+    instrument_params = {
+        'MUX': {
+            'reference_band':'6',
+            'bands': ['5', '6', '7', '8'],
+            'rgb': (7, 6, 5)
+        },
+        'AWFI': {
+            'reference_band': '14',
+            'bands': ['13', '14', '15', '16'],
+            'rgb': (15, 14, 13)
+        },
+        'PAN10M': {
+            'reference_band': '4',
+            'bands': ['2', '3', '4'],
+            'rgb': (3, 4, 2)
+        },
+        'PAN5M': {
+            'reference_band': '1',
+            'bands': ['1'],
+            'rgb': (1, 1, 1)
+        }
+    }
+    meta['reference_band'] = instrument_params[instrument]['reference_band']
+    meta['bands'] = instrument_params[instrument]['bands']
+    meta['rgb'] = instrument_params[instrument]['rgb']
+    
     return meta
 
 

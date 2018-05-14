@@ -359,14 +359,74 @@ def test_cbers_id_valid():
         'acquisitionDay': '21',
         'acquisitionMonth': '11',
         'acquisitionYear': '2017',
-        'intrument': 'MUX',
+        'instrument': 'MUX',
         'key': 'CBERS4/MUX/057/094/CBERS_4_MUX_20171121_057_094_L2',
         'path': '057',
         'processingCorrectionLevel': 'L2',
         'row': '094',
-        'satellite': '4',
+        'mission': '4',
         'scene': 'CBERS_4_MUX_20171121_057_094_L2',
-        'sensor': 'CBERS'}
+        'reference_band': '6',
+        'bands': ['5', '6', '7', '8'],
+        'rgb': (7, 6, 5),
+        'satellite': 'CBERS'}
+
+    assert utils.cbers_parse_scene_id(scene) == expected_content
+
+    scene = 'CBERS_4_AWFI_20171121_057_094_L2'
+    expected_content = {
+        'acquisitionDay': '21',
+        'acquisitionMonth': '11',
+        'acquisitionYear': '2017',
+        'instrument': 'AWFI',
+        'key': 'CBERS4/AWFI/057/094/CBERS_4_AWFI_20171121_057_094_L2',
+        'path': '057',
+        'processingCorrectionLevel': 'L2',
+        'row': '094',
+        'mission': '4',
+        'scene': 'CBERS_4_AWFI_20171121_057_094_L2',
+        'reference_band': '14',
+        'bands': ['13', '14', '15', '16'],
+        'rgb': (15, 14, 13),
+        'satellite': 'CBERS'}
+
+    assert utils.cbers_parse_scene_id(scene) == expected_content
+
+    scene = 'CBERS_4_PAN10M_20171121_057_094_L2'
+    expected_content = {
+        'acquisitionDay': '21',
+        'acquisitionMonth': '11',
+        'acquisitionYear': '2017',
+        'instrument': 'PAN10M',
+        'key': 'CBERS4/PAN10M/057/094/CBERS_4_PAN10M_20171121_057_094_L2',
+        'path': '057',
+        'processingCorrectionLevel': 'L2',
+        'row': '094',
+        'mission': '4',
+        'scene': 'CBERS_4_PAN10M_20171121_057_094_L2',
+        'reference_band': '4',
+        'bands': ['2', '3', '4'],
+        'rgb': (3, 4, 2),
+        'satellite': 'CBERS'}
+
+    assert utils.cbers_parse_scene_id(scene) == expected_content
+
+    scene = 'CBERS_4_PAN5M_20171121_057_094_L2'
+    expected_content = {
+        'acquisitionDay': '21',
+        'acquisitionMonth': '11',
+        'acquisitionYear': '2017',
+        'instrument': 'PAN5M',
+        'key': 'CBERS4/PAN5M/057/094/CBERS_4_PAN5M_20171121_057_094_L2',
+        'path': '057',
+        'processingCorrectionLevel': 'L2',
+        'row': '094',
+        'mission': '4',
+        'scene': 'CBERS_4_PAN5M_20171121_057_094_L2',
+        'reference_band': '1',
+        'bands': ['1'],
+        'rgb': (1, 1, 1),
+        'satellite': 'CBERS'}
 
     assert utils.cbers_parse_scene_id(scene) == expected_content
 
@@ -436,7 +496,6 @@ def test_b64_encode_img_valid_png():
     arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
     img = utils.array_to_img(arr)
     assert utils.b64_encode_img(img, 'png')
-
 
 def test_b64_encode_img_valid_webp():
     """Should work as expected
