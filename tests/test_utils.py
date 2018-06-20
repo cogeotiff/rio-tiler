@@ -96,8 +96,8 @@ def test_tile_read_list_index():
     Should work as expected
     """
 
-    bounds = (-8844681.416934313, 3757032.814272982,
-              -8766409.899970293, 3835304.331237001)
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
     tilesize = 16
 
     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(1))
@@ -110,8 +110,8 @@ def test_tile_read_int_index():
     Should work as expected
     """
 
-    bounds = (-8844681.416934313, 3757032.814272982,
-              -8766409.899970293, 3835304.331237001)
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
     tilesize = 16
 
     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=1)
@@ -124,8 +124,8 @@ def test_tile_read_rgb():
     Should work as expected (read rgb)
     """
 
-    bounds = (-8844681.416934313, 3757032.814272982,
-              -8766409.899970293, 3835304.331237001)
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
     tilesize = 16
 
     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1))
@@ -138,8 +138,8 @@ def test_tile_read_alpha():
     Should work as expected (read rgb)
     """
 
-    bounds = (-8844681.416934313, 3757032.814272982,
-              -8766409.899970293, 3835304.331237001)
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
     tilesize = 16
 
     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1), alpha=3)
@@ -168,8 +168,8 @@ def test_tile_read_nodatalpha():
     Should work as expected (read rgb)
     """
 
-    bounds = (-8844681.416934313, 3757032.814272982,
-              -8766409.899970293, 3835304.331237001)
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
     tilesize = 16
 
     with pytest.raises(RioTilerError):
