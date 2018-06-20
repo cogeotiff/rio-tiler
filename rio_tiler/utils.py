@@ -125,7 +125,25 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
 
 
 def get_vrt_transform(src, bounds, vrt_crs='epsg:3857'):
+    """Calculate VRT transform.
 
+    Attributes
+    ----------
+    src : rasterio.io.DatasetReader
+        Rasterio io.DatasetReader object
+    bounds : list
+        Mercator tile bounds to retrieve
+    vrt_crs : str
+        VRT coordinate reference system string (default "epsg:3857")
+
+    Returns
+    -------
+    vrt_transform: Affine
+        Output affine transformation matrix
+    vrt_width, vrt_height: int
+        Output dimensions
+
+    """
     dst_transform, _, _ = calculate_default_transform(src.crs,
                                                       'epsg:3857',
                                                       src.width,
@@ -135,13 +153,13 @@ def get_vrt_transform(src, bounds, vrt_crs='epsg:3857'):
     vrt_width = math.ceil((e - w) / dst_transform.a)
     vrt_height = math.ceil((s - n) / dst_transform.e)
 
-    vrt_transform = transform.from_bounds(*bounds, vrt_width, vrt_height)
+    vrt_transform = transform.from_bounds(w, s, e, n, vrt_width, vrt_height)
 
     return vrt_transform, vrt_width, vrt_height
 
 
 def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
-    """Read data and mask
+    """Read data and mask.
 
     Attributes
     ----------
@@ -170,15 +188,18 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
     vrt_params = dict(
         crs='EPSG:3857',
         resampling=Resampling.bilinear,
-        init_dest_nodata=False, add_alpha=True)
+        add_alpha=True)
 
     if nodata:
-        vrt_params.update(dict(nodata=nodata))
+        vrt_params.update(dict(nodata=nodata,
+                               add_alpha=False,
+                               init_dest_nodata=False))
 
     out_shape = (len(indexes), tilesize, tilesize)
 
     if isinstance(source, DatasetReader):
-        vrt_transform, vrt_width, vrt_height = get_vrt_transform(source, bounds)
+        vrt_transform, vrt_width, vrt_height = get_vrt_transform(source,
+                                                                 bounds)
         vrt_params.update(dict(
             transform=vrt_transform,
             width=vrt_width,
@@ -196,10 +217,10 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
             else:
                 mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
 
-
     else:
         with rasterio.open(source) as src:
-            vrt_transform, vrt_width, vrt_height = get_vrt_transform(src, bounds)
+            vrt_transform, vrt_width, vrt_height = get_vrt_transform(src,
+                                                                     bounds)
             vrt_params.update(dict(
                 transform=vrt_transform,
                 width=vrt_width,
@@ -217,7 +238,6 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
                                     resampling=Resampling.bilinear)
                 else:
                     mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
-
 
     return data, mask
 

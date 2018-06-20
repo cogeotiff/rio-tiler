@@ -113,7 +113,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256):
 
     if not bands:
         bands = scene_params['rgb']
-    
+
     if not isinstance(bands, tuple):
         bands = tuple((bands, ))
 
