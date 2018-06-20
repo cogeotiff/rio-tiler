@@ -190,7 +190,7 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
         resampling=Resampling.bilinear,
         add_alpha=True)
 
-    if nodata:
+    if nodata is not None:
         vrt_params.update(dict(nodata=nodata,
                                add_alpha=False,
                                init_dest_nodata=False))
