@@ -1,6 +1,4 @@
 
-import os
-
 from setuptools import setup, find_packages
 
 with open('rio_tiler/__init__.py') as f:
@@ -17,7 +15,7 @@ with open('README.rst') as f:
 
 # Runtime requirements.
 inst_reqs = ["numpy", "numexpr", "Pillow", "mercantile", "boto3",
-             "rasterio[s3]>=1.0a12", "rio-toa", "rio-pansharpen"]
+             "rasterio[s3]==1.0b1", "rio-toa", "rio-pansharpen"]
 
 extra_reqs = {
     'test': ['mock', 'pytest', 'pytest-cov', 'codecov']}
