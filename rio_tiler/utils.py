@@ -126,20 +126,18 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
 
 def get_vrt_transform(src, bounds, vrt_crs='epsg:3857'):
 
-        dst_transform, _, _ = calculate_default_transform(src.crs,
-                                                          'epsg:3857',
-                                                          src.width,
-                                                          src.height,
-                                                          *src.bounds)
-        w, s, e, n = bounds
-        vrt_width = math.ceil((e - w) / dst_transform.a)
-        vrt_height = math.ceil((s - n) / dst_transform.e)
+    dst_transform, _, _ = calculate_default_transform(src.crs,
+                                                      'epsg:3857',
+                                                      src.width,
+                                                      src.height,
+                                                      *src.bounds)
+    w, s, e, n = bounds
+    vrt_width = math.ceil((e - w) / dst_transform.a)
+    vrt_height = math.ceil((s - n) / dst_transform.e)
 
-        vrt_transform = transform.from_bounds(*bounds, vrt_width, vrt_height)
+    vrt_transform = transform.from_bounds(*bounds, vrt_width, vrt_height)
 
-        return vrt_transform, vrt_width, vrt_height
-
-
+    return vrt_transform, vrt_width, vrt_height
 
 
 def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
