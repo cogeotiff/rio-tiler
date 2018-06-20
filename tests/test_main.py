@@ -38,6 +38,20 @@ def test_tile_valid_default():
     assert mask.all()
 
 
+def test_tile_valid_default_boundless():
+    """Should work as expected.
+
+    Mask should not be all valid because it's boundless read.
+    """
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+
+    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z)
+    assert data.shape == (3, 256, 256)
+    assert not mask.all()
+
+
 def test_tile_valid_bands():
     """
     Should work as expected

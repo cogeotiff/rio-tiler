@@ -90,7 +90,7 @@ def test_tile_read_valid():
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
 
-# NOTE: Those three tests are failing making test process stop 
+# NOTE: Those three tests are failing making test process stop
 # def test_tile_read_list_index():
 #     """
 #     Should work as expected
