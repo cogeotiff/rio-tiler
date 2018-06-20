@@ -158,7 +158,7 @@ def get_vrt_transform(src, bounds, vrt_crs='epsg:3857'):
     return vrt_transform, vrt_width, vrt_height
 
 
-def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
+def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
     """Read data and mask.
 
     Attributes
@@ -171,24 +171,20 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.
     nodata: int or float, optional (defaults: None)
-    alpha: int, optional (defaults: None)
-        Force alphaband if not present in the dataset metadata
 
     Returns
     -------
     out : array, int
         returns pixel value.
     """
-    if alpha is not None and nodata is not None:
-        raise RioTilerError('cannot pass alpha and nodata option')
 
     if isinstance(indexes, int):
         indexes = [indexes]
 
     vrt_params = dict(
-        crs='EPSG:3857',
-        resampling=Resampling.bilinear,
-        add_alpha=True)
+        add_alpha=True,
+        crs='epsg:3857',
+        resampling=Resampling.bilinear)
 
     if nodata is not None:
         vrt_params.update(dict(nodata=nodata,
@@ -209,13 +205,7 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
             data = vrt.read(out_shape=out_shape,
                             resampling=Resampling.bilinear,
                             indexes=indexes)
-
-            if alpha is not None:
-                mask = vrt.read(alpha,
-                                out_shape=(tilesize, tilesize),
-                                resampling=Resampling.bilinear)
-            else:
-                mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
+            mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
 
     else:
         with rasterio.open(source) as src:
@@ -231,13 +221,7 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
                 data = vrt.read(out_shape=out_shape,
                                 resampling=Resampling.bilinear,
                                 indexes=indexes)
-
-                if alpha is not None:
-                    mask = vrt.read(alpha,
-                                    out_shape=(tilesize, tilesize),
-                                    resampling=Resampling.bilinear)
-                else:
-                    mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
+                mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
 
     return data, mask
 

@@ -7,6 +7,8 @@ from mock import patch
 
 import numpy as np
 
+from click.testing import CliRunner
+
 from rio_toa import toa_utils
 
 import rasterio
@@ -90,61 +92,43 @@ def test_tile_read_valid():
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
 
-# NOTE: Those three tests are failing making test process stop
-# def test_tile_read_list_index():
-#     """
-#     Should work as expected
-#     """
-#
-#     bounds = (-8844681.416934313, 3757032.814272982,
-#               -8766409.899970293, 3835304.331237001)
-#     tilesize = 16
-#
-#     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(1))
-#     assert arr.shape == (1, 16, 16)
-#     assert mask.shape == (16, 16)
-#
-#
-# def test_tile_read_int_index():
-#     """
-#     Should work as expected
-#     """
-#
-#     bounds = (-8844681.416934313, 3757032.814272982,
-#               -8766409.899970293, 3835304.331237001)
-#     tilesize = 16
-#
-#     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=1)
-#     assert arr.shape == (1, 16, 16)
-#     assert mask.shape == (16, 16)
-#
-#
-# def test_tile_read_rgb():
-#     """
-#     Should work as expected (read rgb)
-#     """
-#
-#     bounds = (-8844681.416934313, 3757032.814272982,
-#               -8766409.899970293, 3835304.331237001)
-#     tilesize = 16
-#
-#     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1))
-#     assert arr.shape == (3, 16, 16)
-#     assert mask.shape == (16, 16)
-#
-#
-# def test_tile_read_alpha():
-#     """
-#     Should work as expected (read rgb)
-#     """
-#
-#     bounds = (-8844681.416934313, 3757032.814272982,
-#               -8766409.899970293, 3835304.331237001)
-#     tilesize = 16
-#
-#     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1), alpha=3)
-#     assert arr.shape == (3, 16, 16)
-#     assert mask.shape == (16, 16)
+def test_tile_read_list_index():
+    """
+    Should work as expected
+    """
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
+    tilesize = 16
+
+    arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(1))
+    assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
+
+
+def test_tile_read_int_index():
+    """
+    Should work as expected
+    """
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
+    tilesize = 16
+
+    arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=1)
+    assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
+
+
+def test_tile_read_rgb():
+    """
+    Should work as expected (read rgb)
+    """
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
+    tilesize = 16
+
+    arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1))
+    assert arr.shape == (3, 16, 16)
+    assert mask.shape == (16, 16)
 
 
 def test_tile_read_nodata():
@@ -161,19 +145,6 @@ def test_tile_read_nodata():
     arr, mask = utils.tile_read(address, bounds, tilesize, nodata=nodata)
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
-
-
-def test_tile_read_nodatalpha():
-    """
-    Should work as expected (read rgb)
-    """
-
-    bounds = (-8844681.416934313, 3757032.814272982,
-              -8766409.899970293, 3835304.331237001)
-    tilesize = 16
-
-    with pytest.raises(RioTilerError):
-        utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1), nodata=0, alpha=3)
 
 
 def test_tile_read_dataset():
@@ -617,13 +588,13 @@ def test_expression_main_ratio():
     Should work as expected
     """
 
-    expr = '(b4 - b3) / (b4 + b3)'
+    expr = '(b3 - b2) / (b3 + b2)'
     tile_z = 19
     tile_x = 109554
     tile_y = 200458
 
     prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
-    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(prefix)
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
     data.shape == (1, 256, 256)
     mask.shape == (256, 256)
@@ -651,13 +622,13 @@ def test_expression_main_kwargs():
     Should work as expected
     """
 
-    expr = '(b4 - b3) / (b4 + b3)'
+    expr = '(b3 - b2) / (b3 + b2)'
     tile_z = 19
     tile_x = 109554
     tile_y = 200458
 
     prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
-    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(prefix)
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr, tilesize=512)
     data.shape == (1, 512, 512)
     mask.shape == (512, 512)

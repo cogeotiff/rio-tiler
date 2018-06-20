@@ -30,7 +30,7 @@ def bounds(address):
     return {'url': address, 'bounds': list(wgs_bounds)}
 
 
-def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=None, alpha=None):
+def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=None):
     """
     Create mercator tile from any images.
 
@@ -50,8 +50,6 @@ def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=Non
         Output image size.
     nodata: int or float, optional
         Overwrite nodata value for mask creation.
-    alpha: int, optional
-        Overwrite alpha band index for mask creation.
 
     Returns
     -------
@@ -72,4 +70,4 @@ def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=Non
         mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
         tile_bounds = mercantile.xy_bounds(mercator_tile)
         return utils.tile_read(src, tile_bounds, tilesize, indexes=indexes,
-                               nodata=nodata, alpha=alpha)
+                               nodata=nodata)

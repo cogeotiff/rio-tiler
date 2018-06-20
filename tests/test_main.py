@@ -71,27 +71,15 @@ def test_tile_valid_internal_alpha():
     Should work as expected
     """
 
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
+    # Non-boundless tile
+    tile_z = 22
+    tile_x = 876432
+    tile_y = 1603670
 
     data, mask = main.tile(ADDRESS_ALPHA, tile_x, tile_y, tile_z, indexes=(1, 2, 3))
+    print(mask)
     assert data.shape == (3, 256, 256)
     assert not mask.all()
-
-
-def test_tile_valid_alpha():
-    """
-    Should work as expected
-    """
-
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
-
-    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, indexes=(1, 2, 3), alpha=3)
-    assert data.shape == (3, 256, 256)
-    assert mask.shape == (256, 256)
 
 
 def test_tile_valid_internal_nodata():
