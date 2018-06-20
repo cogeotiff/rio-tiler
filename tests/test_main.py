@@ -10,8 +10,8 @@ PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures')
 ADDRESS = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(PREFIX)
 ADDRESS_ALPHA = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(PREFIX)
 ADDRESS_NODATA = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif'.format(PREFIX)
-# ADDRESS_MASK = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_mask.tif'.format(PREFIX)
-# ADDRESS_EXTMASK = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_extmask.tif.msk'.format(PREFIX)
+ADDRESS_MASK = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_mask.tif'.format(PREFIX)
+ADDRESS_EXTMASK = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_extmask.tif'.format(PREFIX)
 
 
 def test_bounds_valid():
@@ -108,34 +108,32 @@ def test_tile_valid_external_nodata():
     assert not mask.all()
 
 
-# # This test should pass but currently fail with rasterio==1.0a12
-# def test_tile_valid_internal_mask():
-#     """
-#     Should work as expected
-#     """
-#
-#     tile_z = 19
-#     tile_x = 109554
-#     tile_y = 200458
-#
-#     data, mask = main.tile(ADDRESS_MASK, tile_x, tile_y, tile_z, rgb=(1, 2, 3))
-#     assert data.shape == (3, 256, 256)
-#     assert not mask.all()
-#
-#
-# # This test should pass but currently fail with rasterio==1.0a12
-# def test_tile_valid_external_mask():
-#     """
-#     Should work as expected
-#     """
-#
-#     tile_z = 19
-#     tile_x = 109554
-#     tile_y = 200458
-#
-#     data, mask = main.tile(ADDRESS_EXTMASK, tile_x, tile_y, tile_z, rgb=(1, 2, 3))
-#     assert data.shape == (3, 256, 256)
-#     assert not mask.all()
+def test_tile_valid_internal_mask():
+    """
+    Should work as expected
+    """
+
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+
+    data, mask = main.tile(ADDRESS_MASK, tile_x, tile_y, tile_z, indexes=(1, 2, 3))
+    assert data.shape == (3, 256, 256)
+    assert not mask.all()
+
+
+def test_tile_valid_external_mask():
+    """
+    Should work as expected
+    """
+
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+
+    data, mask = main.tile(ADDRESS_EXTMASK, tile_x, tile_y, tile_z, indexes=(1, 2, 3))
+    assert data.shape == (3, 256, 256)
+    assert not mask.all()
 
 
 def test_tile_valid_wrong_nodata():
