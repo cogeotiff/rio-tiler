@@ -1,38 +1,42 @@
 version: 2
+common: &common
+  working_directory: ~/rio-tiler
+  steps:
+    - checkout
+    - run:
+        name: install dependencies
+        command: pip install tox codecov pre-commit --user
+    - run:
+        name: run tox
+        command: ~/.local/bin/tox
+    - run:
+        name: upload coverage report
+        command: |
+          if [[ "$UPLOAD_COVERAGE" == 1 ]]; then
+             ~/.local/bin/coverage xml
+             ~/.local/bin/codecov
+          fi
+        when: always
+
 jobs:
   "python-2.7":
+    <<: *common
     docker:
       - image: circleci/python:2.7
-    working_directory: ~/rio-tiler
-    steps:
-      - checkout
-      - run: sudo pip install -U pip
-      - run: sudo pip install virtualenv
-      - run: virtualenv venv
-      - run:
-          command: |
-            . venv/bin/activate
-            pip install -q -e .[test]
-            python -m pytest --cov rio_tiler --cov-report term-missing --ignore=venv
+        environment:
+          - TOXENV=py27
 
   "python-3.6":
+    <<: *common
     docker:
-      - image: circleci/python:3.6.1
-    working_directory: ~/rio-tiler
-    steps:
-      - checkout
-      - run: sudo pip3 install -U pip
-      - run: python3 -m venv venv
-      - run:
-          command: |
-            . venv/bin/activate
-            pip3 install -q -e .[test]
-            python3 -m pytest --cov rio_tiler --cov-report term-missing --ignore=venv
-            codecov -t f6835c8d-9eaa-4555-ace7-70b4de6b0c83
+      - image: circleci/python:3.6.5
+        environment:
+          - TOXENV=py36
+          - UPLOAD_COVERAGE=1
 
 workflows:
   version: 2
-  build:
+  test:
     jobs:
       - "python-2.7"
       - "python-3.6"
