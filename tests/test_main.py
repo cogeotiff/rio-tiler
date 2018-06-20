@@ -29,9 +29,9 @@ def test_tile_valid_default():
     Should work as expected
     """
 
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
+    tile_z = 21
+    tile_x = 438217
+    tile_y = 801835
 
     data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
