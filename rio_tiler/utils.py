@@ -23,8 +23,7 @@ from rasterio.warp import calculate_default_transform
 from rio_toa import reflectance, brightness_temp, toa_utils
 
 from rio_tiler import profiles as TileProfiles
-from rio_tiler.errors import (RioTilerError,
-                              InvalidFormat,
+from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
                               InvalidSentinelSceneId,
                               InvalidCBERSSceneId)
