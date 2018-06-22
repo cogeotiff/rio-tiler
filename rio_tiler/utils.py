@@ -123,7 +123,7 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
 
-def get_vrt_transform(src, bounds, vrt_crs='epsg:3857'):
+def get_vrt_transform(src, bounds, bounds_crs='epsg:3857'):
     """Calculate VRT transform.
 
     Attributes
@@ -131,9 +131,9 @@ def get_vrt_transform(src, bounds, vrt_crs='epsg:3857'):
     src : rasterio.io.DatasetReader
         Rasterio io.DatasetReader object
     bounds : list
-        Mercator tile bounds to retrieve
-    vrt_crs : str
-        VRT coordinate reference system string (default "epsg:3857")
+        Bounds (left, bottom, right, top)
+    bounds_crs : str
+        Coordinate reference system string (default "epsg:3857")
 
     Returns
     -------
@@ -144,7 +144,7 @@ def get_vrt_transform(src, bounds, vrt_crs='epsg:3857'):
 
     """
     dst_transform, _, _ = calculate_default_transform(src.crs,
-                                                      'epsg:3857',
+                                                      bounds_crs,
                                                       src.width,
                                                       src.height,
                                                       *src.bounds)
@@ -164,8 +164,10 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
     ----------
     source : str or rasterio.io.DatasetReader
         input file path or rasterio.io.DatasetReader object
-    bounds : Mercator tile bounds to retrieve
-    tilesize : Output image size
+    bounds : list
+        Mercator tile bounds (left, bottom, right, top)
+    tilesize : int
+        Output image size
     indexes : list of ints or a single int, optional, (default: 1)
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.

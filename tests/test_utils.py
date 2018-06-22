@@ -632,3 +632,32 @@ def test_expression_main_kwargs():
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr, tilesize=512)
     data.shape == (1, 512, 512)
     mask.shape == (512, 512)
+
+
+def test_get_vrt_transform_valid():
+    """Should return correct transform and size."""
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
+
+    with rasterio.open(S3_PATH) as src:
+        vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(src,
+                                                                       bounds)
+    assert vrt_transform[2] == -11663507.036777973
+    assert vrt_transform[5] == 4715037.199028169
+    assert vrt_width == 100
+    assert vrt_height == 100
+
+
+def test_get_vrt_transform_valid4326():
+    """Should return correct transform and size."""
+    bounds = (-104.77523803710938, 38.95353532141205,
+              -104.77455139160156, 38.954069293441066)
+
+    with rasterio.open(S3_PATH) as src:
+        vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(src,
+                                                                       bounds,
+                                                                       bounds_crs='epsg:4326')
+    assert vrt_transform[2] == -104.77523803710938
+    assert vrt_transform[5] == 38.954069293441066
+    assert vrt_width == 420
+    assert vrt_height == 327
