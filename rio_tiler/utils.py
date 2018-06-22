@@ -15,7 +15,7 @@ import mercantile
 
 import rasterio
 from rasterio.vrt import WarpedVRT
-from rasterio.enums import Resampling
+from rasterio.enums import Resampling, MaskFlags
 from rasterio.io import DatasetReader
 from rasterio.plot import reshape_as_image
 from rasterio import transform
@@ -157,6 +157,13 @@ def get_vrt_transform(src, bounds, bounds_crs='epsg:3857'):
     return vrt_transform, vrt_width, vrt_height
 
 
+def has_alpha_band(src):
+    for flags in src.mask_flag_enums:
+        if MaskFlags.alpha in flags:
+            return True
+    return False
+
+
 def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
     """Read data and mask.
 
@@ -202,6 +209,10 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
             width=vrt_width,
             height=vrt_height
         ))
+
+        if has_alpha_band(source):
+            vrt_params.update(dict(add_alpha=False))
+
         with WarpedVRT(source, **vrt_params) as vrt:
             data = vrt.read(out_shape=out_shape,
                             resampling=Resampling.bilinear,
@@ -217,6 +228,9 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
                 width=vrt_width,
                 height=vrt_height
             ))
+
+            if has_alpha_band(src):
+                vrt_params.update(dict(add_alpha=False))
 
             with WarpedVRT(src, **vrt_params) as vrt:
                 data = vrt.read(out_shape=out_shape,
