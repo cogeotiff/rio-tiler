@@ -77,7 +77,6 @@ def test_tile_valid_internal_alpha():
     tile_y = 1603670
 
     data, mask = main.tile(ADDRESS_ALPHA, tile_x, tile_y, tile_z, indexes=(1, 2, 3))
-    print(mask)
     assert data.shape == (3, 256, 256)
     assert not mask.all()
 
