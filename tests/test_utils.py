@@ -33,9 +33,10 @@ LANDSAT_PATH = os.path.join(LANDSAT_BUCKET,
 
 
 S3_KEY = 'hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'
-S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__),
-                                 'fixtures', 'my-bucket')
+S3_KEY_ALPHA = 'hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'
+S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures', 'my-bucket')
 S3_PATH = os.path.join(S3_LOCAL, S3_KEY)
+S3_ALPHA_PATH = os.path.join(S3_LOCAL, S3_KEY_ALPHA)
 
 with open('{}_MTL.txt'.format(LANDSAT_PATH), 'r') as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
@@ -127,6 +128,24 @@ def test_tile_read_rgb():
     tilesize = 16
 
     arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1))
+    assert arr.shape == (3, 16, 16)
+    assert mask.shape == (16, 16)
+
+
+def test_tile_read_alpha():
+    """
+    Should work as expected
+    """
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
+    tilesize = 16
+
+    arr, mask = utils.tile_read(S3_ALPHA_PATH, bounds, tilesize, indexes=(1, 2, 3))
+    assert arr.shape == (3, 16, 16)
+    assert mask.shape == (16, 16)
+
+    with rasterio.open(S3_ALPHA_PATH) as src:
+        arr, mask = utils.tile_read(src, bounds, tilesize, indexes=(1, 2, 3))
     assert arr.shape == (3, 16, 16)
     assert mask.shape == (16, 16)
 

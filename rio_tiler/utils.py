@@ -615,18 +615,18 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
     rgb = expr.split(',')
 
     if sceneid.startswith('L'):
-        from rio_tiler.landsat8 import tile
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
+        from rio_tiler.landsat8 import tile as l8_tile
+        arr, mask = l8_tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
     elif sceneid.startswith('S2'):
-        from rio_tiler.sentinel2 import tile
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
+        from rio_tiler.sentinel2 import tile as s2_tile
+        arr, mask = s2_tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
     elif sceneid.startswith('CBERS'):
-        from rio_tiler.cbers import tile
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
+        from rio_tiler.cbers import tile as cbers_tile
+        arr, mask = cbers_tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
     else:
-        from rio_tiler.main import tile
+        from rio_tiler.main import tile as main_tile
         bands = tuple(map(int, bands_names))
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, indexes=bands, **kwargs)
+        arr, mask = main_tile(sceneid,  tile_x, tile_y, tile_z, indexes=bands, **kwargs)
 
     ctx = {}
     for bdx, b in enumerate(bands_names):
