@@ -7,6 +7,8 @@ from mock import patch
 
 import numpy as np
 
+from click.testing import CliRunner
+
 from rio_toa import toa_utils
 
 import rasterio
@@ -31,9 +33,10 @@ LANDSAT_PATH = os.path.join(LANDSAT_BUCKET,
 
 
 S3_KEY = 'hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'
-S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__),
-                                 'fixtures', 'my-bucket')
+S3_KEY_ALPHA = 'hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'
+S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures', 'my-bucket')
 S3_PATH = os.path.join(S3_LOCAL, S3_KEY)
+S3_ALPHA_PATH = os.path.join(S3_LOCAL, S3_KEY_ALPHA)
 
 with open('{}_MTL.txt'.format(LANDSAT_PATH), 'r') as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
@@ -90,12 +93,10 @@ def test_tile_read_valid():
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
 
-
 def test_tile_read_list_index():
     """
     Should work as expected
     """
-
     bounds = (-11663507.036777973, 4715018.0897710975,
               -11663487.927520901, 4715037.199028169)
     tilesize = 16
@@ -109,7 +110,6 @@ def test_tile_read_int_index():
     """
     Should work as expected
     """
-
     bounds = (-11663507.036777973, 4715018.0897710975,
               -11663487.927520901, 4715037.199028169)
     tilesize = 16
@@ -123,7 +123,6 @@ def test_tile_read_rgb():
     """
     Should work as expected (read rgb)
     """
-
     bounds = (-11663507.036777973, 4715018.0897710975,
               -11663487.927520901, 4715037.199028169)
     tilesize = 16
@@ -135,14 +134,18 @@ def test_tile_read_rgb():
 
 def test_tile_read_alpha():
     """
-    Should work as expected (read rgb)
+    Should work as expected
     """
-
     bounds = (-11663507.036777973, 4715018.0897710975,
               -11663487.927520901, 4715037.199028169)
     tilesize = 16
 
-    arr, mask = utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1), alpha=3)
+    arr, mask = utils.tile_read(S3_ALPHA_PATH, bounds, tilesize, indexes=(1, 2, 3))
+    assert arr.shape == (3, 16, 16)
+    assert mask.shape == (16, 16)
+
+    with rasterio.open(S3_ALPHA_PATH) as src:
+        arr, mask = utils.tile_read(src, bounds, tilesize, indexes=(1, 2, 3))
     assert arr.shape == (3, 16, 16)
     assert mask.shape == (16, 16)
 
@@ -161,19 +164,6 @@ def test_tile_read_nodata():
     arr, mask = utils.tile_read(address, bounds, tilesize, nodata=nodata)
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
-
-
-def test_tile_read_nodatalpha():
-    """
-    Should work as expected (read rgb)
-    """
-
-    bounds = (-11663507.036777973, 4715018.0897710975,
-              -11663487.927520901, 4715037.199028169)
-    tilesize = 16
-
-    with pytest.raises(RioTilerError):
-        utils.tile_read(S3_PATH, bounds, tilesize, indexes=(3, 2, 1), nodata=0, alpha=3)
 
 
 def test_tile_read_dataset():
@@ -617,13 +607,13 @@ def test_expression_main_ratio():
     Should work as expected
     """
 
-    expr = '(b4 - b3) / (b4 + b3)'
+    expr = '(b3 - b2) / (b3 + b2)'
     tile_z = 19
     tile_x = 109554
     tile_y = 200458
 
     prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
-    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(prefix)
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
     data.shape == (1, 256, 256)
     mask.shape == (256, 256)
@@ -651,13 +641,42 @@ def test_expression_main_kwargs():
     Should work as expected
     """
 
-    expr = '(b4 - b3) / (b4 + b3)'
+    expr = '(b3 - b2) / (b3 + b2)'
     tile_z = 19
     tile_x = 109554
     tile_y = 200458
 
     prefix = os.path.join(os.path.dirname(__file__), 'fixtures')
-    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(prefix)
+    sceneid = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(prefix)
     data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr, tilesize=512)
     data.shape == (1, 512, 512)
     mask.shape == (512, 512)
+
+
+def test_get_vrt_transform_valid():
+    """Should return correct transform and size."""
+    bounds = (-11663507.036777973, 4715018.0897710975,
+              -11663487.927520901, 4715037.199028169)
+
+    with rasterio.open(S3_PATH) as src:
+        vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(src,
+                                                                       bounds)
+    assert vrt_transform[2] == -11663507.036777973
+    assert vrt_transform[5] == 4715037.199028169
+    assert vrt_width == 100
+    assert vrt_height == 100
+
+
+def test_get_vrt_transform_valid4326():
+    """Should return correct transform and size."""
+    bounds = (-104.77523803710938, 38.95353532141205,
+              -104.77455139160156, 38.954069293441066)
+
+    with rasterio.open(S3_PATH) as src:
+        vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(src,
+                                                                       bounds,
+                                                                       bounds_crs='epsg:4326')
+    assert vrt_transform[2] == -104.77523803710938
+    assert vrt_transform[5] == 38.954069293441066
+    assert vrt_width == 420
+    assert vrt_height == 327

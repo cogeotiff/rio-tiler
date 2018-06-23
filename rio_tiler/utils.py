@@ -2,6 +2,7 @@
 
 import os
 import re
+import math
 import base64
 import logging
 import datetime
@@ -14,14 +15,15 @@ import mercantile
 
 import rasterio
 from rasterio.vrt import WarpedVRT
-from rasterio.enums import Resampling
+from rasterio.enums import Resampling, MaskFlags
 from rasterio.io import DatasetReader
 from rasterio.plot import reshape_as_image
+from rasterio import transform
+from rasterio.warp import calculate_default_transform
 from rio_toa import reflectance, brightness_temp, toa_utils
 
 from rio_tiler import profiles as TileProfiles
-from rio_tiler.errors import (RioTilerError,
-                              InvalidFormat,
+from rio_tiler.errors import (InvalidFormat,
                               InvalidLandsatSceneId,
                               InvalidSentinelSceneId,
                               InvalidCBERSSceneId)
@@ -121,86 +123,120 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
 
-def tile_read(source, bounds, tilesize, indexes=[1], nodata=None, alpha=None):
-    """Read data and mask
+def get_vrt_transform(src, bounds, bounds_crs='epsg:3857'):
+    """Calculate VRT transform.
+
+    Attributes
+    ----------
+    src : rasterio.io.DatasetReader
+        Rasterio io.DatasetReader object
+    bounds : list
+        Bounds (left, bottom, right, top)
+    bounds_crs : str
+        Coordinate reference system string (default "epsg:3857")
+
+    Returns
+    -------
+    vrt_transform: Affine
+        Output affine transformation matrix
+    vrt_width, vrt_height: int
+        Output dimensions
+
+    """
+    dst_transform, _, _ = calculate_default_transform(src.crs,
+                                                      bounds_crs,
+                                                      src.width,
+                                                      src.height,
+                                                      *src.bounds)
+    w, s, e, n = bounds
+    vrt_width = math.ceil((e - w) / dst_transform.a)
+    vrt_height = math.ceil((s - n) / dst_transform.e)
+
+    vrt_transform = transform.from_bounds(w, s, e, n, vrt_width, vrt_height)
+
+    return vrt_transform, vrt_width, vrt_height
+
+
+def has_alpha_band(src):
+    for flags in src.mask_flag_enums:
+        if MaskFlags.alpha in flags:
+            return True
+    return False
+
+
+def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
+    """Read data and mask.
 
     Attributes
     ----------
     source : str or rasterio.io.DatasetReader
         input file path or rasterio.io.DatasetReader object
-    bounds : Mercator tile bounds to retrieve
-    tilesize : Output image size
+    bounds : list
+        Mercator tile bounds (left, bottom, right, top)
+    tilesize : int
+        Output image size
     indexes : list of ints or a single int, optional, (default: 1)
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.
     nodata: int or float, optional (defaults: None)
-    alpha: int, optional (defaults: None)
-        Force alphaband if not present in the dataset metadata
 
     Returns
     -------
     out : array, int
         returns pixel value.
     """
-    w, s, e, n = bounds
-
-    if alpha is not None and nodata is not None:
-        raise RioTilerError('cannot pass alpha and nodata option')
 
     if isinstance(indexes, int):
         indexes = [indexes]
 
+    vrt_params = dict(
+        add_alpha=True,
+        crs='epsg:3857',
+        resampling=Resampling.bilinear)
+
+    if nodata is not None:
+        vrt_params.update(dict(nodata=nodata,
+                               add_alpha=False,
+                               init_dest_nodata=False))
+
     out_shape = (len(indexes), tilesize, tilesize)
 
-    vrt_params = dict(
-        dst_crs='EPSG:3857',
-        resampling=Resampling.bilinear,
-        src_nodata=nodata,
-        dst_nodata=nodata)
-
     if isinstance(source, DatasetReader):
-        with WarpedVRT(source, **vrt_params) as vrt:
-            window = vrt.window(w, s, e, n, precision=21)
-            data = vrt.read(window=window,
-                            boundless=True,
-                            resampling=Resampling.bilinear,
-                            out_shape=out_shape,
-                            indexes=indexes)
+        vrt_transform, vrt_width, vrt_height = get_vrt_transform(source,
+                                                                 bounds)
+        vrt_params.update(dict(
+            transform=vrt_transform,
+            width=vrt_width,
+            height=vrt_height
+        ))
 
-            if nodata is not None:
-                mask = np.all(data != nodata, axis=0).astype(np.uint8) * 255
-            elif alpha is not None:
-                mask = vrt.read(alpha, window=window,
-                                out_shape=(tilesize, tilesize),
-                                boundless=True,
-                                resampling=Resampling.bilinear)
-            else:
-                mask = vrt.read_masks(1, window=window,
-                                      out_shape=(tilesize, tilesize),
-                                      boundless=True,
-                                      resampling=Resampling.bilinear)
+        if has_alpha_band(source):
+            vrt_params.update(dict(add_alpha=False))
+
+        with WarpedVRT(source, **vrt_params) as vrt:
+            data = vrt.read(out_shape=out_shape,
+                            resampling=Resampling.bilinear,
+                            indexes=indexes)
+            mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
+
     else:
         with rasterio.open(source) as src:
-            with WarpedVRT(src, **vrt_params) as vrt:
-                window = vrt.window(w, s, e, n, precision=21)
-                data = vrt.read(window=window,
-                                boundless=True,
-                                resampling=Resampling.bilinear,
-                                out_shape=out_shape,
-                                indexes=indexes)
+            vrt_transform, vrt_width, vrt_height = get_vrt_transform(src,
+                                                                     bounds)
+            vrt_params.update(dict(
+                transform=vrt_transform,
+                width=vrt_width,
+                height=vrt_height
+            ))
 
-                if nodata is not None:
-                    mask = np.all(data != nodata, axis=0).astype(np.uint8) * 255
-                elif alpha is not None:
-                    mask = vrt.read(alpha, window=window,
-                                    out_shape=(tilesize, tilesize),
-                                    boundless=True,
-                                    resampling=Resampling.bilinear)
-                else:
-                    mask = vrt.read_masks(1, window=window,
-                                          out_shape=(tilesize, tilesize),
-                                          boundless=True,
-                                          resampling=Resampling.bilinear)
+            if has_alpha_band(src):
+                vrt_params.update(dict(add_alpha=False))
+
+            with WarpedVRT(src, **vrt_params) as vrt:
+                data = vrt.read(out_shape=out_shape,
+                                resampling=Resampling.bilinear,
+                                indexes=indexes)
+                mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
 
     return data, mask
 
@@ -437,7 +473,7 @@ def cbers_parse_scene_id(sceneid):
 
     instrument_params = {
         'MUX': {
-            'reference_band':'6',
+            'reference_band': '6',
             'bands': ['5', '6', '7', '8'],
             'rgb': (7, 6, 5)
         },
@@ -460,7 +496,7 @@ def cbers_parse_scene_id(sceneid):
     meta['reference_band'] = instrument_params[instrument]['reference_band']
     meta['bands'] = instrument_params[instrument]['bands']
     meta['rgb'] = instrument_params[instrument]['rgb']
-    
+
     return meta
 
 
@@ -579,18 +615,18 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
     rgb = expr.split(',')
 
     if sceneid.startswith('L'):
-        from rio_tiler.landsat8 import tile
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
+        from rio_tiler.landsat8 import tile as l8_tile
+        arr, mask = l8_tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
     elif sceneid.startswith('S2'):
-        from rio_tiler.sentinel2 import tile
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
+        from rio_tiler.sentinel2 import tile as s2_tile
+        arr, mask = s2_tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
     elif sceneid.startswith('CBERS'):
-        from rio_tiler.cbers import tile
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
+        from rio_tiler.cbers import tile as cbers_tile
+        arr, mask = cbers_tile(sceneid,  tile_x, tile_y, tile_z, bands=bands_names, **kwargs)
     else:
-        from rio_tiler.main import tile
+        from rio_tiler.main import tile as main_tile
         bands = tuple(map(int, bands_names))
-        arr, mask = tile(sceneid,  tile_x, tile_y, tile_z, indexes=bands, **kwargs)
+        arr, mask = main_tile(sceneid,  tile_x, tile_y, tile_z, indexes=bands, **kwargs)
 
     ctx = {}
     for bdx, b in enumerate(bands_names):

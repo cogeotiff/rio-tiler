@@ -15,10 +15,10 @@ with open('README.rst') as f:
 
 # Runtime requirements.
 inst_reqs = ["numpy", "numexpr", "Pillow", "mercantile", "boto3",
-             "rasterio[s3]==1.0b1", "rio-toa", "rio-pansharpen"]
+             "rasterio[s3]==1.0b4", "rio-toa", "rio-pansharpen"]
 
 extra_reqs = {
-    'test': ['mock', 'pytest', 'pytest-cov', 'codecov']}
+    'test': ['mock', 'pytest', 'pytest-cov']}
 
 setup(name='rio_tiler',
       version=version,
