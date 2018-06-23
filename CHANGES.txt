@@ -1,3 +1,14 @@
+1.0b1 (2018-06-23)
+------------------
+- adapt to rasterio 1.0b4
+- fix mask (internal/external) fetching 🙏
+- fix boundless read with new rasterio 1.0b2
+- fix custom nodata handling
+- fix performances issue
+
+:Breacking Changes:
+- removed alpha band options to select a custom alpha band number
+
 1.0a8 (2018-06-20)
 ------------------
 - Fix rasterio version to 1.0b1 (#46 and #44)
