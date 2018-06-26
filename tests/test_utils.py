@@ -151,19 +151,18 @@ def test_tile_read_alpha():
 
 
 def test_tile_read_nodata():
-    """
-    Should work as expected (read landsat band)
-    """
+    """Should work as expected when forcing nodata value"""
+    address = '{}_B4.TIF'.format(LANDSAT_PATH)
+    bounds = (-9040360.209344367, 3991847.365165044,
+              -9001224.450862356, 4030983.1236470537)
 
-    address = '{}_B2.TIF'.format(LANDSAT_PATH)
-    bounds = (-8844681.416934313, 3757032.814272982,
-              -8766409.899970293, 3835304.331237001)
     tilesize = 16
-    nodata = 255
+    nodata = 0
 
     arr, mask = utils.tile_read(address, bounds, tilesize, nodata=nodata)
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
+    assert not mask.all()
 
 
 def test_tile_read_dataset():

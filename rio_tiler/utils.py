@@ -197,6 +197,7 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
     if nodata is not None:
         vrt_params.update(dict(nodata=nodata,
                                add_alpha=False,
+                               src_nodata=nodata,
                                init_dest_nodata=False))
 
     out_shape = (len(indexes), tilesize, tilesize)

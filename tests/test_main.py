@@ -96,17 +96,15 @@ def test_tile_valid_internal_nodata():
 
 
 def test_tile_valid_external_nodata():
-    """
-    Should work as expected
-    """
-
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
+    """Should work as expected"""
+    tile_z = 22
+    tile_x = 876431
+    tile_y = 1603669
 
     data, mask = main.tile(ADDRESS_NODATA, tile_x, tile_y, tile_z, nodata=0)
     assert data.shape == (3, 256, 256)
     assert not mask.all()
+    assert (mask[:, 0:3] == 0).all()
 
 
 def test_tile_valid_internal_mask():
