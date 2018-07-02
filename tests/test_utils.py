@@ -521,7 +521,13 @@ def test_landsat_get_mtl_invalid(urlopen):
 
 
 def test_get_colormap_valid():
+    """Test default (cfastie) color map."""
     assert len(utils.get_colormap()) == 768  # 3 x256
+
+
+def test_get_colormap_schwarzwald():
+    """Test schwarzwald color map."""
+    assert len(utils.get_colormap(name='schwarzwald')) == 768  # 3 x256
 
 
 def test_mapzen_elevation_rgb():
