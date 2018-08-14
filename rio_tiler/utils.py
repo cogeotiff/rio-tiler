@@ -15,7 +15,7 @@ import mercantile
 
 import rasterio
 from rasterio.vrt import WarpedVRT
-from rasterio.enums import Resampling, MaskFlags
+from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.io import DatasetReader
 from rasterio.plot import reshape_as_image
 from rasterio import transform
@@ -158,9 +158,12 @@ def get_vrt_transform(src, bounds, bounds_crs='epsg:3857'):
 
 
 def has_alpha_band(src):
-    for flags in src.mask_flag_enums:
-        if MaskFlags.alpha in flags:
-            return True
+    """Check for alpha band or mask in source."""
+    if (
+        any([MaskFlags.alpha in flags for flags in src.mask_flag_enums])
+        or ColorInterp.alpha in src.colorinterp
+    ):
+        return True
     return False
 
 
