@@ -38,6 +38,10 @@ S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures', 'my-buck
 S3_PATH = os.path.join(S3_LOCAL, S3_KEY)
 S3_ALPHA_PATH = os.path.join(S3_LOCAL, S3_KEY_ALPHA)
 
+KEY_PIX4D = 'pix4d/pix4d_alpha_nodata.tif'
+PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
+
+
 with open('{}_MTL.txt'.format(LANDSAT_PATH), 'r') as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
 
@@ -161,6 +165,18 @@ def test_tile_read_nodata():
 
     arr, mask = utils.tile_read(address, bounds, tilesize, nodata=nodata)
     assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
+    assert not mask.all()
+
+
+def test_tile_read_nodata_and_alpha():
+    """Should work as expected when forcing nodata value"""
+    bounds = (13604568.04230881, -333876.9395496497,
+              13605791.034761373, -332653.9470970885)
+
+    tilesize = 16
+    arr, mask = utils.tile_read(PIX4D_PATH, bounds, tilesize, indexes=[1, 2, 3])
+    assert arr.shape == (3, 16, 16)
     assert mask.shape == (16, 16)
     assert not mask.all()
 
