@@ -1,3 +1,7 @@
+1.0rc2 (2018-08-22)
+-------------------
+- add test case for pix4d nodata+alpha band data
+
 1.0rc1 (2018-07-16)
 -------------------
 - rasterio 1.0.0
