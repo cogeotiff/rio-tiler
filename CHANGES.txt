@@ -1,3 +1,7 @@
+Next
+----
+- fetch Landsat panchromatic band min/max (#58)
+
 1.0rc2 (2018-08-22)
 -------------------
 - add test case for pix4d nodata+alpha band data
