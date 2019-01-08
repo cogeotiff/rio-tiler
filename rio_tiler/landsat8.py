@@ -70,7 +70,7 @@ def metadata(sceneid, pmin=2, pmax=98):
     info = {'sceneid': sceneid}
     info['bounds'] = toa_utils._get_bounds_from_metadata(meta_data['PRODUCT_METADATA'])
 
-    bands = ['1', '2', '3', '4', '5', '6', '7', '9', '10', '11']
+    bands = ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10', '11']
     _min_max_worker = partial(utils.landsat_min_max_worker,
                               address=landsat_address,
                               metadata=meta_data,

@@ -1,3 +1,7 @@
+Next
+----
+- add missing Landsat panchromatic band (08) min/max fetch in `rio_tiler.landsat8.metadata` (#58)
+
 1.0rc2 (2018-08-22)
 -------------------
 - add test case for pix4d nodata+alpha band data
