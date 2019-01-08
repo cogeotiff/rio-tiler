@@ -48,7 +48,7 @@ def test_metadata_valid_default(landsat_get_mtl, monkeypatch):
     meta = landsat8.metadata(LANDSAT_SCENE_C1)
     assert meta.get('sceneid') == 'LC08_L1TP_016037_20170813_20170814_01_RT'
     assert len(meta.get('bounds')) == 4
-    assert meta.get('rgbMinMax')
+    assert len(meta.get('rgbMinMax')) == 11
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')
@@ -64,7 +64,7 @@ def test_metadata_valid_custom(landsat_get_mtl, monkeypatch):
     meta = landsat8.metadata(LANDSAT_SCENE_C1)
     assert meta.get('sceneid') == 'LC08_L1TP_016037_20170813_20170814_01_RT'
     assert len(meta.get('bounds')) == 4
-    assert meta.get('rgbMinMax')
+    assert len(meta.get('rgbMinMax')) == 11
 
 
 @patch('rio_tiler.utils.landsat_get_mtl')
