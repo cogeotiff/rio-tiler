@@ -1,6 +1,6 @@
 Next
 ----
-- fetch Landsat panchromatic band min/max (#58)
+- add missing Landsat panchromatic band (08) min/max fetch in `rio_tiler.landsat8.metadata` (#58)
 
 1.0rc2 (2018-08-22)
 -------------------
