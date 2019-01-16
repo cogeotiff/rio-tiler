@@ -127,7 +127,9 @@ See `LICENSE.txt <LICENSE.txt>`__.
 Authors
 -------
 
-See `AUTHORS.txt <AUTHORS.txt>`__.
+The rio-tiler project was begun at Mapbox and has been transferred in January 2019.
+
+See `AUTHORS.txt <AUTHORS.txt>`__ for a listing of individual contributors.
 
 Changes
 -------
