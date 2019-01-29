@@ -545,8 +545,37 @@ def array_to_img(arr, mask=None, color_map=None):
     return img
 
 
+def img_to_buffer(img, image_format, image_options={}):
+    """Convert a Pillow image to io buffer.
+
+    Attributes
+    ----------
+    img : object
+        Pillow image
+    image_format : str
+        Image file formats
+    image_options : dict
+        Pillow image format options.
+        See https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
+
+    Returns
+    -------
+    buffer
+
+    """
+
+    if image_format == "jpeg":
+        img = img.convert("RGB")
+
+    sio = BytesIO()
+    img.save(sio, image_format.upper(), **image_options)
+    sio.seek(0)
+    return sio.getvalue()
+
+
 def b64_encode_img(img, tileformat):
-    """Convert a Pillow image to an base64 encoded string
+    """Convert a Pillow image to an base64 encoded string.
+
     Attributes
     ----------
     img : object
@@ -558,6 +587,7 @@ def b64_encode_img(img, tileformat):
     -------
     out : str
         base64 encoded image.
+
     """
     params = TileProfiles.get(tileformat)
 

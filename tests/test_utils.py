@@ -701,3 +701,24 @@ def test_get_vrt_transform_valid4326():
     assert vrt_transform[5] == 38.954069293441066
     assert vrt_width == 420
     assert vrt_height == 327
+
+
+def test_img_to_buffer_valid_jpg():
+    """Should create a jpeg buffer."""
+    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+    img = utils.array_to_img(arr)
+    assert utils.img_to_buffer(img, "jpeg")
+
+
+def test_img_to_buffer_valid_png():
+    """Should create a png buffer."""
+    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+    img = utils.array_to_img(arr)
+    assert utils.img_to_buffer(img, "png")
+
+
+def test_img_to_buffer_valid_options():
+    """Should create a png buffer with compression options."""
+    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+    img = utils.array_to_img(arr)
+    assert utils.img_to_buffer(img, "png", image_options={"compress_level": 0})
