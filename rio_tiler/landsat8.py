@@ -20,11 +20,11 @@ LANDSAT_BUCKET = "s3://landsat-pds"
 
 
 def bounds(sceneid):
-    """Retrieve image bounds.
+    """
+    Retrieve image bounds.
 
     Attributes
     ----------
-
     sceneid : str
         Landsat sceneid. For scenes after May 2017,
         sceneid have to be LANDSAT_PRODUCT_ID.
@@ -33,8 +33,8 @@ def bounds(sceneid):
     -------
     out : dict
         dictionary with image bounds.
-    """
 
+    """
     meta_data = utils.landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
 
     info = {"sceneid": sceneid}
@@ -44,11 +44,11 @@ def bounds(sceneid):
 
 
 def metadata(sceneid, pmin=2, pmax=98):
-    """Retrieve image bounds and histogram info.
+    """
+    Retrieve image bounds and histogram info.
 
     Attributes
     ----------
-
     sceneid : str
         Landsat sceneid. For scenes after May 2017,
         sceneid have to be LANDSAT_PRODUCT_ID.
@@ -61,8 +61,8 @@ def metadata(sceneid, pmin=2, pmax=98):
     -------
     out : dict
         dictionary with image bounds and bands histogram cuts.
-    """
 
+    """
     scene_params = utils.landsat_parse_scene_id(sceneid)
     meta_data = utils.landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
     landsat_address = "{}/{}".format(LANDSAT_BUCKET, scene_params["key"])
@@ -87,11 +87,11 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 def tile(sceneid, tile_x, tile_y, tile_z, bands=(4, 3, 2), tilesize=256, pan=False):
-    """Create mercator tile from Landsat-8 data.
+    """
+    Create mercator tile from Landsat-8 data.
 
     Attributes
     ----------
-
     sceneid : str
         Landsat sceneid. For scenes after May 2017,
         sceneid have to be LANDSAT_PRODUCT_ID.
@@ -112,8 +112,8 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=(4, 3, 2), tilesize=256, pan=Fal
     -------
     data : numpy ndarray
     mask: numpy array
-    """
 
+    """
     if not isinstance(bands, tuple):
         bands = tuple((bands,))
 

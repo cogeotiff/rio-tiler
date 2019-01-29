@@ -16,11 +16,11 @@ SENTINEL_BUCKET = "s3://sentinel-s2-l1c"
 
 
 def bounds(sceneid):
-    """Retrieve image bounds.
+    """
+    Retrieve image bounds.
 
     Attributes
     ----------
-
     sceneid : str
         Sentinel-2 sceneid.
 
@@ -28,8 +28,8 @@ def bounds(sceneid):
     -------
     out : dict
         dictionary with image bounds.
-    """
 
+    """
     scene_params = utils.sentinel_parse_scene_id(sceneid)
     sentinel_address = "{}/{}".format(SENTINEL_BUCKET, scene_params["key"])
 
@@ -45,11 +45,11 @@ def bounds(sceneid):
 
 
 def metadata(sceneid, pmin=2, pmax=98):
-    """Retrieve image bounds and histogram info.
+    """
+    Retrieve image bounds and histogram info.
 
     Attributes
     ----------
-
     sceneid : str
         Sentinel-2 sceneid.
     pmin : int, optional, (default: 2)
@@ -61,8 +61,8 @@ def metadata(sceneid, pmin=2, pmax=98):
     -------
     out : dict
         dictionary with image bounds and bands histogram cuts.
-    """
 
+    """
     scene_params = utils.sentinel_parse_scene_id(sceneid)
     sentinel_address = "{}/{}".format(SENTINEL_BUCKET, scene_params["key"])
 
@@ -98,11 +98,11 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256):
-    """Create mercator tile from Sentinel-2 data.
+    """
+    Create mercator tile from Sentinel-2 data.
 
     Attributes
     ----------
-
     sceneid : str
         Sentinel-2 sceneid.
     tile_x : int
@@ -120,8 +120,8 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256
     -------
     data : numpy ndarray
     mask: numpy array
-    """
 
+    """
     if not isinstance(bands, tuple):
         bands = tuple((bands,))
 

@@ -16,11 +16,11 @@ CBERS_BUCKET = "s3://cbers-pds"
 
 
 def bounds(sceneid):
-    """Retrieve image bounds.
+    """
+    Retrieve image bounds.
 
     Attributes
     ----------
-
     sceneid : str
         CBERS sceneid.
 
@@ -28,8 +28,8 @@ def bounds(sceneid):
     -------
     out : dict
         dictionary with image bounds.
-    """
 
+    """
     scene_params = utils.cbers_parse_scene_id(sceneid)
     cbers_address = "{}/{}".format(CBERS_BUCKET, scene_params["key"])
 
@@ -49,11 +49,11 @@ def bounds(sceneid):
 
 
 def metadata(sceneid, pmin=2, pmax=98):
-    """Retrieve image bounds and histogram info.
+    """
+    Retrieve image bounds and histogram info.
 
     Attributes
     ----------
-
     sceneid : str
         CBERS sceneid.
     pmin : int, optional, (default: 2)
@@ -65,8 +65,8 @@ def metadata(sceneid, pmin=2, pmax=98):
     -------
     out : dict
         dictionary with image bounds and bands histogram cuts.
-    """
 
+    """
     scene_params = utils.cbers_parse_scene_id(sceneid)
     cbers_address = "{}/{}".format(CBERS_BUCKET, scene_params["key"])
 
@@ -94,11 +94,11 @@ def metadata(sceneid, pmin=2, pmax=98):
 
 
 def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256):
-    """Create mercator tile from CBERS data.
+    """
+    Create mercator tile from CBERS data.
 
     Attributes
     ----------
-
     sceneid : str
         CBERS sceneid.
     tile_x : int
@@ -117,8 +117,8 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256):
     -------
     data : numpy ndarray
     mask: numpy array
-    """
 
+    """
     scene_params = utils.cbers_parse_scene_id(sceneid)
 
     if not bands:

@@ -1,11 +1,10 @@
-"""rio_tiler.profiles"""
+"""Image file profiles."""
 
 from rio_tiler.errors import InvalidFormat
 
 
 def get(name):
-    """https://github.com/mapnik/mapnik/wiki/Image-IO#default-output-details
-    """
+    """https://github.com/mapnik/mapnik/wiki/Image-IO#default-output-details."""
     if name == "jpeg":
         """https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html#jpeg"""
         return {"quality": 95}
