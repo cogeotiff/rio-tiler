@@ -4,11 +4,11 @@ Rio-tiler
 
 Rasterio plugin to create mercator tiles from raster sources.
 
-.. image:: https://circleci.com/gh/mapbox/rio-tiler.svg?style=svg&circle-token=b78bc1a238c21046a855a9c80b441a8f2f9a4478
-   :target: https://circleci.com/gh/mapbox/rio-tiler
+.. image:: https://circleci.com/gh/cogeotiff/rio-tiler.svg?style=svg&circle-token=b78bc1a238c21046a855a9c80b441a8f2f9a4478
+   :target: https://circleci.com/gh/cogeotiff/rio-tiler
 
-.. image:: https://codecov.io/gh/mapbox/rio-tiler/branch/master/graph/badge.svg?token=zuHupC20cG
-   :target: https://codecov.io/gh/mapbox/rio-tiler
+.. image:: https://codecov.io/gh/cogeotiff/rio-tiler/branch/master/graph/badge.svg?token=zuHupC20cG
+   :target: https://codecov.io/gh/cogeotiff/rio-tiler
 
 Additional support is provided for the following satellite missions:
 
@@ -33,7 +33,7 @@ or install from source:
 
 .. code-block:: console
 
-    $ git clone https://github.com/mapbox/rio-tiler.git
+    $ git clone https://github.com/cogeotiff/rio-tiler.git
     $ cd rio-tiler
     $ pip install -U pip
     $ pip install -e .
