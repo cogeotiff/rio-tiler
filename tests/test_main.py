@@ -6,12 +6,22 @@ import pytest
 from rio_tiler import main
 from rio_tiler.errors import TileOutsideBounds
 
-PREFIX = os.path.join(os.path.dirname(__file__), 'fixtures')
-ADDRESS = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif'.format(PREFIX)
-ADDRESS_ALPHA = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif'.format(PREFIX)
-ADDRESS_NODATA = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif'.format(PREFIX)
-ADDRESS_MASK = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_mask.tif'.format(PREFIX)
-ADDRESS_EXTMASK = '{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_extmask.tif'.format(PREFIX)
+PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
+ADDRESS = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif".format(
+    PREFIX
+)
+ADDRESS_ALPHA = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif".format(
+    PREFIX
+)
+ADDRESS_NODATA = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif".format(
+    PREFIX
+)
+ADDRESS_MASK = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_mask.tif".format(
+    PREFIX
+)
+ADDRESS_EXTMASK = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_extmask.tif".format(
+    PREFIX
+)
 
 
 def test_bounds_valid():
@@ -20,8 +30,8 @@ def test_bounds_valid():
     """
 
     meta = main.bounds(ADDRESS)
-    assert meta.get('url') == ADDRESS
-    assert len(meta.get('bounds')) == 4
+    assert meta.get("url") == ADDRESS
+    assert len(meta.get("bounds")) == 4
 
 
 def test_tile_valid_default():
@@ -60,7 +70,7 @@ def test_tile_valid_bands():
     tile_z = 19
     tile_x = 109554
     tile_y = 200458
-    bands = (1)
+    bands = 1
 
     data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, indexes=bands)
     assert data.shape == (1, 256, 256)

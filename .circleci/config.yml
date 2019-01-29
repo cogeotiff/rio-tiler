@@ -10,6 +10,12 @@ common: &common
         name: run tox
         command: ~/.local/bin/tox
     - run:
+        name: run pre-commit
+        command: |
+          if [[ "$CIRCLE_JOB" == "python-3.6" ]]; then
+             ~/.local/bin/pre-commit run --all-files
+          fi
+    - run:
         name: upload coverage report
         command: |
           if [[ "$UPLOAD_COVERAGE" == 1 ]]; then
