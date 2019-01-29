@@ -25,9 +25,10 @@ def bounds(address):
     """
     with rasterio.open(address) as src:
         wgs_bounds = transform_bounds(
-            *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
+            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
+        )
 
-    return {'url': address, 'bounds': list(wgs_bounds)}
+    return {"url": address, "bounds": list(wgs_bounds)}
 
 
 def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=None):
@@ -59,15 +60,18 @@ def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=Non
     """
     with rasterio.open(address) as src:
         wgs_bounds = transform_bounds(
-            *[src.crs, 'epsg:4326'] + list(src.bounds), densify_pts=21)
+            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
+        )
 
         indexes = indexes if indexes is not None else src.indexes
 
         if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
-                'Tile {}/{}/{} is outside image bounds'.format(tile_z, tile_x, tile_y))
+                "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
+            )
 
         mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
         tile_bounds = mercantile.xy_bounds(mercator_tile)
-        return utils.tile_read(src, tile_bounds, tilesize, indexes=indexes,
-                               nodata=nodata)
+        return utils.tile_read(
+            src, tile_bounds, tilesize, indexes=indexes, nodata=nodata
+        )
