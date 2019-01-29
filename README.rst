@@ -4,6 +4,9 @@ Rio-tiler
 
 Rasterio plugin to create mercator tiles from raster sources.
 
+.. image:: https://badge.fury.io/py/rio-tiler.svg
+    :target: https://badge.fury.io/py/rio-tiler
+
 .. image:: https://circleci.com/gh/cogeotiff/rio-tiler.svg?style=svg&circle-token=b78bc1a238c21046a855a9c80b441a8f2f9a4478
    :target: https://circleci.com/gh/cogeotiff/rio-tiler
 
@@ -135,3 +138,25 @@ Changes
 -------
 
 See `CHANGES.txt <CHANGES.txt>`__.
+
+
+Contribution & Development
+==========================
+
+Issues and pull requests are more than welcome.
+
+**dev install**
+
+.. code-block:: console
+
+  $ git clone https://github.com/cogeotiff/rio-tiler.git
+  $ cd rio-tiler
+  $ pip install -e .[dev]
+
+**Python3.6 only**
+
+This repo is set to use `pre-commit` to run *flake8*, *pydocstring* and *black* ("uncompromising Python code formatter") when commiting new code.
+
+.. code-block:: console
+
+  $ pre-commit install
