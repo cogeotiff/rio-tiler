@@ -15,17 +15,11 @@ Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF dataset.
 
 Additional support is provided for the following satellite missions hosted on **AWS Public Dataset**:
 
-* Sentinel2_ (please read this_)
+* `Sentinel2 <http://sentinel-pds.s3-website.eu-central-1.amazonaws.com>`__ (please read `this <https://github.com/cogeotiff/rio-tiler#Partial-reading-on-Cloud-hosted-dataset>`__)
 
-.. _Sentinel2: http://sentinel-pds.s3-website.eu-central-1.amazonaws.com .. this: https://github.com/cogeotiff/rio-tiler#Partial-reading-on-Cloud-hosted-dataset
+* `Landsat8 <https://aws.amazon.com/fr/public-datasets/landsat>`__
 
-* Landsat8_
-
-.. _Landsat8: https://aws.amazon.com/fr/public-datasets/landsat
-
-* CBERS_
-
-.. _CBERS: https://registry.opendata.aws/cbers/
+* `CBERS <https://registry.opendata.aws/cbers/>`__
 
 Rio-tiler supports Python 2.7 and 3.3-3.7.
 
@@ -48,14 +42,6 @@ or install from source:
     $ cd rio-tiler
     $ pip install -U pip
     $ pip install -e .
-
-here is how to create an AWS Lambda package on most UNIX machines:
-
-.. code-block:: console
-
-    # On a centos machine
-    $ pip install rio-tiler --no-binary numpy -t /tmp/vendored -U
-    $ zip -r9q package.zip vendored/*
 
 Overview
 ========
@@ -189,3 +175,19 @@ Changes
 =======
 
 See `CHANGES.txt <CHANGES.txt>`__.
+
+
+Create an AWS Lambda package
+============================
+
+The easiest way to make sure the package will work on AWS is to use docker
+
+.. code-block:: console
+
+    FROM lambci/lambda:build-python3.6
+    ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+    RUN pip3 install rio-tiler --no-binary numpy -t /tmp/python -U
+    RUN cd /tmp/python && zip -r9q /tmp/package.zip *
+
+
+Ref: https://github.com/vincentsarago/simple-rio-lambda
