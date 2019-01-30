@@ -39,6 +39,12 @@ jobs:
         environment:
           - TOXENV=py36
           - UPLOAD_COVERAGE=1
+  "python-3.7":
+    <<: *common
+    docker:
+      - image: circleci/python:3.7.2
+        environment:
+          - TOXENV=py37
 
 workflows:
   version: 2
@@ -46,3 +52,4 @@ workflows:
     jobs:
       - "python-2.7"
       - "python-3.6"
+      - "python-3.7"
