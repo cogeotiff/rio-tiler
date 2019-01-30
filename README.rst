@@ -134,7 +134,8 @@ Rio-tiler perform partial reading on local or distant dataset, which is why it w
 It's important to note that **Sentinel-2 scenes hosted on AWS are not in Cloud Optimized format but in JPEG2000**.
 When performing partial reading of JPEG2000 dataset GDAL (rasterio backend library) will need to make a lot of **GET requests** and transfer a lot of data.
 
-:warning: AWS Sentinel-2 bucket is in *requester-pays* mode which means that each user will pay for GET/LIST requests and data transfer. While this seems acceptable, using rio-tiler to access JPEG2000 dataset (as sentinel-2) can result in a huge AWS bill.
+**warning**
+AWS Sentinel-2 bucket is in *requester-pays* mode which means that each user will pay for GET/LIST requests and data transfer. While this seems acceptable, using rio-tiler to access JPEG2000 dataset (as sentinel-2) can result in a huge AWS bill.
 
 ref: https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f
 
