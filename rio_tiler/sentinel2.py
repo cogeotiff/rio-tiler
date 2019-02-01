@@ -10,9 +10,24 @@ import rasterio
 from rasterio.warp import transform_bounds
 
 from rio_tiler import utils
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName
 
 SENTINEL_BUCKET = "s3://sentinel-s2-l1c"
+SENTINEL_BANDS = [
+    "01",
+    "02",
+    "03",
+    "04",
+    "05",
+    "06",
+    "07",
+    "08",
+    "8A",
+    "09",
+    "10",
+    "11",
+    "12",
+]
 
 
 def bounds(sceneid):
@@ -73,26 +88,13 @@ def metadata(sceneid, pmin=2, pmax=98):
 
     info = {"sceneid": sceneid, "bounds": list(wgs_bounds)}
 
-    bands = [
-        "01",
-        "02",
-        "03",
-        "04",
-        "05",
-        "06",
-        "07",
-        "08",
-        "8A",
-        "09",
-        "10",
-        "11",
-        "12",
+    addresses = [
+        "{}/preview/B{}.jp2".format(sentinel_address, band) for band in SENTINEL_BANDS
     ]
-    addresses = ["{}/preview/B{}.jp2".format(sentinel_address, band) for band in bands]
     _min_max_worker = partial(utils.band_min_max_worker, pmin=pmin, pmax=pmax)
     with futures.ThreadPoolExecutor(max_workers=2) as executor:
         responses = list(executor.map(_min_max_worker, addresses))
-        info["rgbMinMax"] = dict(zip(bands, responses))
+        info["rgbMinMax"] = dict(zip(SENTINEL_BANDS, responses))
 
     return info
 
@@ -124,6 +126,10 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256
     """
     if not isinstance(bands, tuple):
         bands = tuple((bands,))
+
+    for band in bands:
+        if band not in SENTINEL_BANDS:
+            raise InvalidBandName("{} is not a valid Sentinel band name".format(band))
 
     scene_params = utils.sentinel_parse_scene_id(sceneid)
     sentinel_address = "{}/{}".format(SENTINEL_BUCKET, scene_params["key"])

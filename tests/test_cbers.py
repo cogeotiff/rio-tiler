@@ -4,7 +4,7 @@ import os
 import pytest
 
 from rio_tiler import cbers
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName, DeprecationWarning
 
 CBERS_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "cbers-pds")
 CBERS_MUX_SCENE = "CBERS_4_MUX_20171121_057_094_L2"
@@ -135,17 +135,14 @@ def test_tile_valid_default(monkeypatch):
     assert mask.shape == (256, 256)
 
 
-def test_tile_valid_nrg(monkeypatch):
-    """
-    Should work as expected
-    """
-
+def test_tile_valid_custom(monkeypatch):
+    """Should return custom band combination tiles."""
     monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
 
     tile_z = 10
     tile_x = 664
     tile_y = 495
-    bands = (8, 7, 6)
+    bands = ("8", "7", "6")
     data, mask = cbers.tile(CBERS_MUX_SCENE, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
@@ -153,7 +150,7 @@ def test_tile_valid_nrg(monkeypatch):
     tile_z = 10
     tile_x = 401
     tile_y = 585
-    bands = (16, 15, 14)
+    bands = ("16", "15", "14")
     data, mask = cbers.tile(CBERS_AWFI_SCENE, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
@@ -161,7 +158,7 @@ def test_tile_valid_nrg(monkeypatch):
     tile_z = 10
     tile_x = 370
     tile_y = 535
-    bands = (4, 3, 2)
+    bands = ("4", "3", "2")
     data, mask = cbers.tile(CBERS_PAN10M_SCENE, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
@@ -169,27 +166,53 @@ def test_tile_valid_nrg(monkeypatch):
     tile_z = 10
     tile_x = 390
     tile_y = 547
-    bands = (1, 1, 1)
+    bands = ("1", "1", "1")
     data, mask = cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
 
 
-def test_tile_valid_onband(monkeypatch):
-    """
-    Should work as expected
-    """
-
+# TODO: Remove on 1.0.0
+def test_tile_warnsInteger(monkeypatch):
+    """Should warns on integer band name."""
     monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
 
     tile_z = 10
-    tile_x = 664
-    tile_y = 495
-    bands = 8
+    tile_x = 390
+    tile_y = 547
+    bands = 1
 
-    data, mask = cbers.tile(CBERS_MUX_SCENE, tile_x, tile_y, tile_z, bands=bands)
+    with pytest.warns(DeprecationWarning):
+        data, mask = cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z, bands=bands)
+        assert data.shape == (1, 256, 256)
+        assert mask.shape == (256, 256)
+
+
+def test_tile_valid_oneband(monkeypatch):
+    """Test when passing a string instead of a tuple."""
+    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+
+    tile_z = 10
+    tile_x = 390
+    tile_y = 547
+    bands = "1"
+
+    data, mask = cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
+
+
+def test_tile_invalid_band(monkeypatch):
+    """Should raise an error on invalid band name."""
+    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+
+    tile_z = 10
+    tile_x = 390
+    tile_y = 547
+    bands = "21"
+
+    with pytest.raises(InvalidBandName):
+        data, mask = cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z, bands=bands)
 
 
 def test_tile_invalid_bounds(monkeypatch):

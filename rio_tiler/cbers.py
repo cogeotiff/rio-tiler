@@ -1,5 +1,6 @@
 """rio_tiler.cbers: cbers processing."""
 
+import warnings
 from functools import partial
 from concurrent import futures
 
@@ -10,9 +11,10 @@ import rasterio
 from rasterio.warp import transform_bounds
 
 from rio_tiler import utils
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName, DeprecationWarning
 
 CBERS_BUCKET = "s3://cbers-pds"
+CBERS_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "15", "16"]
 
 
 def bounds(sceneid):
@@ -126,6 +128,22 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256):
 
     if not isinstance(bands, tuple):
         bands = tuple((bands,))
+
+    for band in bands:
+        if isinstance(band, int):
+            warnings.warn(
+                "Integer band name support will be removed in 1.0", DeprecationWarning
+            )
+            band = str(band)
+        if band not in scene_params["bands"]:
+            raise InvalidBandName(
+                "{} is not a valid band name for {} CBERS instrument".format(
+                    band, scene_params["instrument"]
+                )
+            )
+
+    # TODO: remove in 1.0.0
+    bands = tuple(map(str, bands))
 
     cbers_address = "{}/{}".format(CBERS_BUCKET, scene_params["key"])
 
