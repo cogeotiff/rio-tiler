@@ -1,6 +1,10 @@
 Next
 ----
 - add missing Landsat panchromatic band (08) min/max fetch in `rio_tiler.landsat8.metadata` (#58)
+- add `rio_tiler.utils.img_to_buffer` to create a buffer from a PIL Image (#62)
+- add pre-commit for commit validation (#64)
+- code formating using Black (the uncompromising Python code formatter) (#64)
+- update documention (Sentinel-2 cost) (#68)
 
 1.0rc2 (2018-08-22)
 -------------------
