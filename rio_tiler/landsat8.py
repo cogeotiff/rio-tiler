@@ -1,5 +1,6 @@
 """rio_tiler.landsat8: Landsat-8 processing."""
 
+import warnings
 from functools import partial
 from concurrent import futures
 
@@ -13,10 +14,11 @@ from rio_toa import reflectance, brightness_temp, toa_utils
 from rio_pansharpen.worker import pansharpen
 
 from rio_tiler import utils
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName, DeprecationWarning
 
 
 LANDSAT_BUCKET = "s3://landsat-pds"
+LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
 
 
 def bounds(sceneid):
@@ -70,7 +72,6 @@ def metadata(sceneid, pmin=2, pmax=98):
     info = {"sceneid": sceneid}
     info["bounds"] = toa_utils._get_bounds_from_metadata(meta_data["PRODUCT_METADATA"])
 
-    bands = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
     _min_max_worker = partial(
         utils.landsat_min_max_worker,
         address=landsat_address,
@@ -80,13 +81,15 @@ def metadata(sceneid, pmin=2, pmax=98):
     )
 
     with futures.ThreadPoolExecutor(max_workers=5) as executor:
-        responses = list(executor.map(_min_max_worker, bands))
-        info["rgbMinMax"] = dict(zip(bands, responses))
+        responses = list(executor.map(_min_max_worker, LANDSAT_BANDS))
+        info["rgbMinMax"] = dict(zip(LANDSAT_BANDS, responses))
 
     return info
 
 
-def tile(sceneid, tile_x, tile_y, tile_z, bands=(4, 3, 2), tilesize=256, pan=False):
+def tile(
+    sceneid, tile_x, tile_y, tile_z, bands=("4", "3", "2"), tilesize=256, pan=False
+):
     """
     Create mercator tile from Landsat-8 data.
 
@@ -101,7 +104,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=(4, 3, 2), tilesize=256, pan=Fal
         Mercator tile Y index.
     tile_z : int
         Mercator tile ZOOM level.
-    bands : tuple, int, optional (default: (4, 3, 2))
+    bands : tuple, str, optional (default: ("4", "3", "2"))
         Bands index for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
@@ -116,6 +119,18 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=(4, 3, 2), tilesize=256, pan=Fal
     """
     if not isinstance(bands, tuple):
         bands = tuple((bands,))
+
+    for band in bands:
+        if isinstance(band, int):
+            warnings.warn(
+                "Integer band name support will be removed in 1.0", DeprecationWarning
+            )
+            band = str(band)
+        if band not in LANDSAT_BANDS:
+            raise InvalidBandName("{} is not a valid Landsat band name".format(band))
+
+    # TODO: remove in 1.0.0
+    bands = tuple(map(str, bands))
 
     scene_params = utils.landsat_parse_scene_id(sceneid)
     meta_data = utils.landsat_get_mtl(sceneid).get("L1_METADATA_FILE")

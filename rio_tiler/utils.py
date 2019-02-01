@@ -66,7 +66,7 @@ def landsat_min_max_worker(
         returns a list of the min/max histogram cut values.
 
     """
-    if int(band) > 9:  # TIRS
+    if band in ["10", "11"]:  # TIRS
         multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
             "RADIANCE_MULT_BAND_{}".format(band)
         )
@@ -487,14 +487,22 @@ def cbers_parse_scene_id(sceneid):
     meta["scene"] = sceneid
 
     instrument_params = {
-        "MUX": {"reference_band": "6", "bands": ["5", "6", "7", "8"], "rgb": (7, 6, 5)},
+        "MUX": {
+            "reference_band": "6",
+            "bands": ["5", "6", "7", "8"],
+            "rgb": ("7", "6", "5"),
+        },
         "AWFI": {
             "reference_band": "14",
             "bands": ["13", "14", "15", "16"],
-            "rgb": (15, 14, 13),
+            "rgb": ("15", "14", "13"),
         },
-        "PAN10M": {"reference_band": "4", "bands": ["2", "3", "4"], "rgb": (3, 4, 2)},
-        "PAN5M": {"reference_band": "1", "bands": ["1"], "rgb": (1, 1, 1)},
+        "PAN10M": {
+            "reference_band": "4",
+            "bands": ["2", "3", "4"],
+            "rgb": ("3", "4", "2"),
+        },
+        "PAN5M": {"reference_band": "1", "bands": ["1"], "rgb": ("1", "1", "1")},
     }
     meta["reference_band"] = instrument_params[instrument]["reference_band"]
     meta["bands"] = instrument_params[instrument]["bands"]

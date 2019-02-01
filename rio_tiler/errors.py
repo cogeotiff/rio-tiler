@@ -23,3 +23,11 @@ class InvalidSentinelSceneId(RioTilerError):
 
 class InvalidCBERSSceneId(RioTilerError):
     """Invalid CBERS scene id."""
+
+
+class InvalidBandName(RioTilerError):
+    """Invalid band name."""
+
+
+class DeprecationWarning(UserWarning):
+    """Rio-tiler module deprecations warning."""
