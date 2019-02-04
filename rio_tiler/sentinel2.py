@@ -7,6 +7,7 @@ import numpy as np
 
 import mercantile
 import rasterio
+from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
 
 from rio_tiler import utils
@@ -59,9 +60,21 @@ def bounds(sceneid):
     return info
 
 
+def _sentinel_stats(src_path, percentiles=(2, 98)):
+    """
+    src_path : str or PathLike object
+        A dataset path or URL. Will be opened in "r" mode.
+    """
+    with rasterio.open(src_path) as src:
+        arr = src.read(indexes=[1], masked=True)
+        arr[arr == 0] = np.ma.masked
+
+    return {1: utils._stats(arr, percentiles=percentiles)}
+
+
 def metadata(sceneid, pmin=2, pmax=98):
     """
-    Retrieve image bounds and histogram info.
+    Retrieve image bounds and band statistics.
 
     Attributes
     ----------
@@ -75,27 +88,31 @@ def metadata(sceneid, pmin=2, pmax=98):
     Returns
     -------
     out : dict
-        dictionary with image bounds and bands histogram cuts.
+        Dictionary with image bounds and bands statistics.
 
     """
     scene_params = utils.sentinel_parse_scene_id(sceneid)
     sentinel_address = "{}/{}".format(SENTINEL_BUCKET, scene_params["key"])
 
+    dst_crs = CRS({"init": "EPSG:4326"})
     with rasterio.open("{}/preview.jp2".format(sentinel_address)) as src:
-        wgs_bounds = transform_bounds(
-            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
+        bounds = transform_bounds(
+            *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
         )
 
-    info = {"sceneid": sceneid, "bounds": list(wgs_bounds)}
+    info = {"sceneid": sceneid}
+    info["bounds"] = {"value": bounds, "crs": dst_crs.to_string()}
 
     addresses = [
         "{}/preview/B{}.jp2".format(sentinel_address, band) for band in SENTINEL_BANDS
     ]
-    _min_max_worker = partial(utils.band_min_max_worker, pmin=pmin, pmax=pmax)
-    with futures.ThreadPoolExecutor(max_workers=2) as executor:
-        responses = list(executor.map(_min_max_worker, addresses))
-        info["rgbMinMax"] = dict(zip(SENTINEL_BANDS, responses))
 
+    _stats_worker = partial(_sentinel_stats, percentiles=(pmin, pmax))
+    with futures.ThreadPoolExecutor(max_workers=2) as executor:
+        responses = executor.map(_stats_worker, addresses)
+    info["statistics"] = {
+        b: v for b, d in zip(SENTINEL_BANDS, responses) for k, v in d.items()
+    }
     return info
 
 

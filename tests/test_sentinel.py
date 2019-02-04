@@ -11,6 +11,17 @@ SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "sentinel-
 SENTINEL_PATH = os.path.join(SENTINEL_BUCKET, "tiles/19/U/DP/2017/7/29/0/")
 
 
+@pytest.fixture(autouse=True)
+def testing_env_var(monkeypatch):
+    """Set fake env to make sure we don't hit AWS services."""
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "jqt")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "rde")
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.setenv("AWS_CONFIG_FILE", "/tmp/noconfigheere")
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/tmp/noconfighereeither")
+    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+
+
 def test_bounds_valid(monkeypatch):
     """
     Should work as expected (get bounds)
@@ -24,31 +35,25 @@ def test_bounds_valid(monkeypatch):
 
 
 def test_metadata_valid_default(monkeypatch):
-    """
-    Should work as expected (get bounds and get histogram cuts values
-    for all bands)
-    """
-
+    """Get bounds and get stats for all bands."""
     monkeypatch.setattr(sentinel2, "SENTINEL_BUCKET", SENTINEL_BUCKET)
 
     meta = sentinel2.metadata(SENTINEL_SCENE)
-    assert meta.get("sceneid") == "S2A_tile_20170729_19UDP_0"
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
+    assert meta["sceneid"] == SENTINEL_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 13
+    assert meta["statistics"]["01"]["pc"] == [1088, 8235]
 
 
 def test_metadata_valid_custom(monkeypatch):
-    """
-    Should work as expected (get bounds and get histogram cuts values
-    for all bands)
-    """
-
+    """Get bounds and get stats for all bands with custom percentiles."""
     monkeypatch.setattr(sentinel2, "SENTINEL_BUCKET", SENTINEL_BUCKET)
 
     meta = sentinel2.metadata(SENTINEL_SCENE, pmin=5, pmax=95)
-    assert meta.get("sceneid") == "S2A_tile_20170729_19UDP_0"
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
+    assert meta["sceneid"] == SENTINEL_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 13
+    assert meta["statistics"]["01"]["pc"] == [1110, 7236]
 
 
 def test_tile_valid_default(monkeypatch):

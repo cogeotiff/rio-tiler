@@ -47,7 +47,7 @@ def bounds(sceneid):
 
 def metadata(sceneid, pmin=2, pmax=98):
     """
-    Retrieve image bounds and histogram info.
+    Retrieve image bounds and band statistics.
 
     Attributes
     ----------
@@ -62,28 +62,35 @@ def metadata(sceneid, pmin=2, pmax=98):
     Returns
     -------
     out : dict
-        dictionary with image bounds and bands histogram cuts.
+        Dictionary with bounds and bands statistics.
 
     """
     scene_params = utils.landsat_parse_scene_id(sceneid)
     meta_data = utils.landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
-    landsat_address = "{}/{}".format(LANDSAT_BUCKET, scene_params["key"])
+    path_prefix = "{}/{}".format(LANDSAT_BUCKET, scene_params["key"])
 
     info = {"sceneid": sceneid}
-    info["bounds"] = toa_utils._get_bounds_from_metadata(meta_data["PRODUCT_METADATA"])
 
-    _min_max_worker = partial(
-        utils.landsat_min_max_worker,
-        address=landsat_address,
+    _stats_worker = partial(
+        utils.landsat_get_stats,
+        address_prefix=path_prefix,
         metadata=meta_data,
-        pmin=pmin,
-        pmax=pmax,
+        overview_level=1,
+        percentiles=(pmin, pmax),
     )
 
     with futures.ThreadPoolExecutor(max_workers=5) as executor:
-        responses = list(executor.map(_min_max_worker, LANDSAT_BANDS))
-        info["rgbMinMax"] = dict(zip(LANDSAT_BANDS, responses))
+        responses = list(executor.map(_stats_worker, LANDSAT_BANDS))
 
+    info["bounds"] = [
+        r["bounds"] for b, r in zip(LANDSAT_BANDS, responses) if b == "8"
+    ][0]
+
+    info["statistics"] = {
+        b: v
+        for b, d in zip(LANDSAT_BANDS, responses)
+        for k, v in d["statistics"].items()
+    }
     return info
 
 

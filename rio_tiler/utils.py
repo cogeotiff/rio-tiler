@@ -5,6 +5,7 @@ import re
 import math
 import base64
 import logging
+import warnings
 import datetime
 from io import BytesIO
 
@@ -14,12 +15,13 @@ import numexpr as ne
 import mercantile
 
 import rasterio
+from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.io import DatasetReader
 from rasterio.plot import reshape_as_image
 from rasterio import transform
-from rasterio.warp import calculate_default_transform
+from rasterio.warp import calculate_default_transform, transform_bounds
 from rio_toa import reflectance, brightness_temp, toa_utils
 
 from rio_tiler import profiles as TileProfiles
@@ -28,6 +30,8 @@ from rio_tiler.errors import (
     InvalidLandsatSceneId,
     InvalidSentinelSceneId,
     InvalidCBERSSceneId,
+    DeprecationWarning,
+    NoOverviewWarning,
 )
 
 from PIL import Image
@@ -66,6 +70,10 @@ def landsat_min_max_worker(
         returns a list of the min/max histogram cut values.
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.landsat_min_max_worker' will be deprecated in 1.0",
+        DeprecationWarning,
+    )
     if band in ["10", "11"]:  # TIRS
         multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
             "RADIANCE_MULT_BAND_{}".format(band)
@@ -124,12 +132,262 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
         returns a list of the min/max histogram cut values.
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.band_min_max_worker' will be deprecated in 1.0",
+        DeprecationWarning,
+    )
     with rasterio.open(address) as src:
         arr = src.read(indexes=1, out_shape=(height, width)).astype(
             src.profile["dtype"]
         )
 
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
+
+
+def _stats(arr, percentiles=(2, 98)):
+    """Calculate array statistics."""
+    sample, edges = np.histogram(arr[~arr.mask])
+    return {
+        "pc": np.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
+        "min": arr.min(),
+        "max": arr.max(),
+        "std": arr.std(),
+        "histogram": [sample.tolist(), edges.tolist()],
+    }
+
+
+def landsat_get_stats(
+    band,
+    address_prefix,
+    metadata,
+    overview_level=None,
+    max_size=1024,
+    percentiles=(2, 98),
+    dst_crs=CRS({"init": "EPSG:4326"}),
+):
+    """
+    Retrieve landsat dataset statistics.
+
+    Attributes
+    ----------
+    band : str
+        Landsat band number
+    address_prefix : str
+        A Landsat AWS S3 dataset prefix.
+    metadata : dict
+        Landsat metadata
+    overview_level : int, optional
+        Overview (decimation) level to fetch.
+    max_size: int, optional
+        Maximum size of dataset to retrieve
+        (will be used to calculate the overview level to fetch).
+    percentiles : tulple, optional
+        Percentile or sequence of percentiles to compute,
+        which must be between 0 and 100 inclusive (default: (2, 98)).
+    dst_crs: CRS or dict
+        Target coordinate reference system (default: EPSG:4326).
+
+    Returns
+    -------
+    out : dict
+        (percentiles), min, max, stdev, histogram for each band,
+        e.g.
+        {
+            "4": {
+                'pc': [15, 121],
+                'min': 1,
+                'max': 162,
+                'std': 27.22067722127997,
+                'histogram': [
+                    [102934, 135489, 20981, 13548, 11406, 8799, 7351, 5622, 2985, 662]
+                    [1., 17.1, 33.2, 49.3, 65.4, 81.5, 97.6, 113.7, 129.8, 145.9, 162.]
+                ]
+            }
+        }
+    """
+    src_path = "{}_B{}.TIF".format(address_prefix, band)
+    with rasterio.open(src_path) as src:
+        levels = src.overviews(1)
+        width = src.width
+        height = src.height
+        bounds = transform_bounds(
+            *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
+        )
+
+        if len(levels):
+            if overview_level:
+                decim = levels[overview_level]
+            else:
+                # determine which zoom level to read
+                for ii, decim in enumerate(levels):
+                    if max(width // decim, height // decim) < max_size:
+                        break
+        else:
+            decim = 1
+            warnings.warn(
+                "Dataset has no overviews, reading the full dataset", NoOverviewWarning
+            )
+
+        out_shape = (height // decim, width // decim)
+        vrt_params = dict(
+            nodata=0, add_alpha=False, src_nodata=0, init_dest_nodata=False
+        )
+        with WarpedVRT(src, **vrt_params) as vrt:
+            arr = vrt.read(out_shape=out_shape, indexes=[1], masked=True)
+
+    if band in ["10", "11"]:  # TIRS
+        multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
+            "RADIANCE_MULT_BAND_{}".format(band)
+        )
+        add_rad = metadata["RADIOMETRIC_RESCALING"].get(
+            "RADIANCE_ADD_BAND_{}".format(band)
+        )
+        k1 = metadata["TIRS_THERMAL_CONSTANTS"].get("K1_CONSTANT_BAND_{}".format(band))
+        k2 = metadata["TIRS_THERMAL_CONSTANTS"].get("K2_CONSTANT_BAND_{}".format(band))
+
+        arr = brightness_temp.brightness_temp(arr, multi_rad, add_rad, k1, k2)
+    else:
+        multi_reflect = metadata["RADIOMETRIC_RESCALING"].get(
+            "REFLECTANCE_MULT_BAND_{}".format(band)
+        )
+        add_reflect = metadata["RADIOMETRIC_RESCALING"].get(
+            "REFLECTANCE_ADD_BAND_{}".format(band)
+        )
+        sun_elev = metadata["IMAGE_ATTRIBUTES"]["SUN_ELEVATION"]
+
+        arr = 10000 * reflectance.reflectance(
+            arr, multi_reflect, add_reflect, sun_elev, src_nodata=0
+        )
+
+    stats = {band: _stats(arr, percentiles=percentiles)}
+
+    return {
+        "bounds": {
+            "value": bounds,
+            "crs": dst_crs.to_string() if isinstance(dst_crs, CRS) else dst_crs,
+        },
+        "statistics": stats,
+    }
+
+
+def raster_get_stats(
+    src_path,
+    indexes=None,
+    nodata=None,
+    overview_level=None,
+    max_size=1024,
+    percentiles=(2, 98),
+    dst_crs=CRS({"init": "EPSG:4326"}),
+):
+    """
+    Retrieve dataset statistics.
+
+    Attributes
+    ----------
+    src_path : str or PathLike object
+        A dataset path or URL. Will be opened in "r" mode.
+    indexes : tuple, list, int, optional
+        Dataset band indexes.
+    nodata, int, optional
+        Custom nodata value if not preset in dataset.
+    overview_level : int, optional
+        Overview (decimation) level to fetch.
+    max_size: int, optional
+        Maximum size of dataset to retrieve
+        (will be used to calculate the overview level to fetch).
+    percentiles : tulple, optional
+        Percentile or sequence of percentiles to compute,
+        which must be between 0 and 100 inclusive (default: (2, 98)).
+    dst_crs: CRS or dict
+        Target coordinate reference system (default: EPSG:4326).
+
+    Returns
+    -------
+    out : dict
+        bounds and band statistics: (percentiles), min, max, stdev, histogram
+
+        e.g.
+        {
+            'bounds': {
+                'value': (145.72265625, 14.853515625, 145.810546875, 14.94140625),
+                'crs': '+init=EPSG:4326'
+            },
+            'statistics': {
+                1: {
+                    'pc': [38, 147],
+                    'min': 20,
+                    'max': 180,
+                    'std': 28.123562304138662,
+                    'histogram': [
+                        [1625, 219241, 28344, 15808, 12325, 10687, 8535, 7348, 4656, 1208],
+                        [20.0, 36.0, 52.0, 68.0, 84.0, 100.0, 116.0, 132.0, 148.0, 164.0, 180.0]
+                    ]
+                }
+                ...
+                3: {...}
+                4: {...}
+            }
+        }
+    """
+    if isinstance(indexes, int):
+        indexes = [indexes]
+    elif isinstance(indexes, tuple):
+        indexes = list(indexes)
+
+    with rasterio.open(src_path) as src:
+        levels = src.overviews(1)
+        width = src.width
+        height = src.height
+        indexes = indexes if indexes else src.indexes
+        bounds = transform_bounds(
+            *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
+        )
+
+        if len(levels):
+            if overview_level:
+                decim = levels[overview_level]
+            else:
+                # determine which zoom level to read
+                for ii, decim in enumerate(levels):
+                    if max(width // decim, height // decim) < max_size:
+                        break
+        else:
+            decim = 1
+            warnings.warn(
+                "Dataset has no overviews, reading the full dataset", NoOverviewWarning
+            )
+
+        out_shape = (len(indexes), height // decim, width // decim)
+
+        vrt_params = dict(add_alpha=True, resampling=Resampling.bilinear)
+        if has_alpha_band(src):
+            vrt_params.update(dict(add_alpha=False))
+
+        if nodata is not None:
+            vrt_params.update(
+                dict(
+                    nodata=nodata,
+                    add_alpha=False,
+                    src_nodata=nodata,
+                    init_dest_nodata=False,
+                )
+            )
+
+        with WarpedVRT(src, **vrt_params) as vrt:
+            arr = vrt.read(out_shape=out_shape, indexes=indexes, masked=True)
+            stats = {
+                indexes[b]: _stats(arr[b], percentiles=percentiles)
+                for b in range(arr.shape[0])
+                if vrt.colorinterp[b] != ColorInterp.alpha
+            }
+
+    return {
+        "bounds": {
+            "value": bounds,
+            "crs": dst_crs.to_string() if isinstance(dst_crs, CRS) else dst_crs,
+        },
+        "statistics": stats,
+    }
 
 
 def get_vrt_transform(src, bounds, bounds_crs="epsg:3857"):

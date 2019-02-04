@@ -31,3 +31,7 @@ class InvalidBandName(RioTilerError):
 
 class DeprecationWarning(UserWarning):
     """Rio-tiler module deprecations warning."""
+
+
+class NoOverviewWarning(UserWarning):
+    """Dataset has no overviews."""
