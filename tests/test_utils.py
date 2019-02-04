@@ -387,10 +387,7 @@ def test_cbers_id_invalid():
 
 
 def test_cbers_id_valid():
-    """
-    Should work as expected (parse cbers scene id)
-    """
-
+    """Should work as expected (parse cbers scene id)."""
     scene = "CBERS_4_MUX_20171121_057_094_L2"
     expected_content = {
         "acquisitionDay": "21",
@@ -405,7 +402,7 @@ def test_cbers_id_valid():
         "scene": "CBERS_4_MUX_20171121_057_094_L2",
         "reference_band": "6",
         "bands": ["5", "6", "7", "8"],
-        "rgb": (7, 6, 5),
+        "rgb": ("7", "6", "5"),
         "satellite": "CBERS",
     }
 
@@ -425,7 +422,7 @@ def test_cbers_id_valid():
         "scene": "CBERS_4_AWFI_20171121_057_094_L2",
         "reference_band": "14",
         "bands": ["13", "14", "15", "16"],
-        "rgb": (15, 14, 13),
+        "rgb": ("15", "14", "13"),
         "satellite": "CBERS",
     }
 
@@ -445,7 +442,7 @@ def test_cbers_id_valid():
         "scene": "CBERS_4_PAN10M_20171121_057_094_L2",
         "reference_band": "4",
         "bands": ["2", "3", "4"],
-        "rgb": (3, 4, 2),
+        "rgb": ("3", "4", "2"),
         "satellite": "CBERS",
     }
 
@@ -465,7 +462,7 @@ def test_cbers_id_valid():
         "scene": "CBERS_4_PAN5M_20171121_057_094_L2",
         "reference_band": "1",
         "bands": ["1"],
-        "rgb": (1, 1, 1),
+        "rgb": ("1", "1", "1"),
         "satellite": "CBERS",
     }
 
@@ -664,6 +661,26 @@ def test_expression_landsat_rgb(landsat_tile):
     data.shape == (3, 512, 512)
     mask.shape == (512, 512)
     assert len(landsat_tile.call_args[1].get("bands")) == 3
+
+
+@patch("rio_tiler.cbers.tile")
+def test_expression_cbers_rgb(cbers_tile):
+    """Should read tile from CBERS data."""
+    cbers_tile.return_value = [
+        np.random.randint(0, 255, size=(3, 256, 256), dtype=np.uint8),
+        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255,
+    ]
+
+    expr = "b8*0.8, b7*1.1, b6*0.8"
+    tile_z = 10
+    tile_x = 664
+    tile_y = 495
+
+    sceneid = "CBERS_4_MUX_20171121_057_094_L2"
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
+    data.shape == (3, 512, 512)
+    mask.shape == (512, 512)
+    assert len(cbers_tile.call_args[1].get("bands")) == 3
 
 
 def test_expression_main_ratio():

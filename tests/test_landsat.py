@@ -8,7 +8,7 @@ from mock import patch
 from rio_toa import toa_utils
 
 from rio_tiler import landsat8
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName, DeprecationWarning
 
 LANDSAT_SCENE_C1 = "LC08_L1TP_016037_20170813_20170814_01_RT"
 LANDSAT_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "landsat-pds")
@@ -86,10 +86,23 @@ def test_tile_valid_default(landsat_get_mtl, monkeypatch):
 
 @patch("rio_tiler.utils.landsat_get_mtl")
 def test_tile_valid_nrg(landsat_get_mtl, monkeypatch):
-    """
-    Should work as expected
-    """
+    """Should return a custom band combination tile."""
+    monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
+    landsat_get_mtl.return_value = LANDSAT_METADATA
 
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+    bands = ("5", "4", "3")
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
+    assert data.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
+
+
+# TODO: Remove on 1.0.0
+@patch("rio_tiler.utils.landsat_get_mtl")
+def test_tile_warnsInteger(landsat_get_mtl, monkeypatch):
+    """Should warns on integer band name."""
     monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
     landsat_get_mtl.return_value = LANDSAT_METADATA
 
@@ -97,29 +110,45 @@ def test_tile_valid_nrg(landsat_get_mtl, monkeypatch):
     tile_x = 71
     tile_y = 102
     bands = (5, 4, 3)
-
-    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
-    assert data.shape == (3, 256, 256)
-    assert mask.shape == (256, 256)
+    with pytest.warns(DeprecationWarning):
+        data, mask = landsat8.tile(
+            LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands
+        )
+        assert data.shape == (3, 256, 256)
+        assert mask.shape == (256, 256)
 
 
 @patch("rio_tiler.utils.landsat_get_mtl")
 def test_tile_valid_tir(landsat_get_mtl, monkeypatch):
-    """
-    Should work as expected
-    """
-
+    """Should return a tile and mask from TIR band."""
     monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
     landsat_get_mtl.return_value = LANDSAT_METADATA
 
     tile_z = 8
     tile_x = 71
     tile_y = 102
-    bands = 10
+    bands = "10"
 
     data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
+
+
+@patch("rio_tiler.utils.landsat_get_mtl")
+def test_tile_invalidband(landsat_get_mtl, monkeypatch):
+    """Should raise an error on invalid band name."""
+    monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
+
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+    bands = "25"
+
+    with pytest.raises(InvalidBandName):
+        data, mask = landsat8.tile(
+            LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands
+        )
+    landsat_get_mtl.assert_not_called()
 
 
 @patch("rio_tiler.utils.landsat_get_mtl")

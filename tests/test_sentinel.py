@@ -4,7 +4,7 @@ import os
 import pytest
 
 from rio_tiler import sentinel2
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName
 
 SENTINEL_SCENE = "S2A_tile_20170729_19UDP_0"
 SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "sentinel-s2-l1c")
@@ -84,11 +84,8 @@ def test_tile_valid_nrg(monkeypatch):
     assert mask.shape == (256, 256)
 
 
-def test_tile_valid_onband(monkeypatch):
-    """
-    Should work as expected
-    """
-
+def test_tile_valid_oneband(monkeypatch):
+    """Test when passing a string instead of a tuple."""
     monkeypatch.setattr(sentinel2, "SENTINEL_BUCKET", SENTINEL_BUCKET)
 
     tile_z = 8
@@ -99,6 +96,19 @@ def test_tile_valid_onband(monkeypatch):
     data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
+
+
+def test_tile_invalid_band(monkeypatch):
+    """Should raise an error on invalid band name."""
+    monkeypatch.setattr(sentinel2, "SENTINEL_BUCKET", SENTINEL_BUCKET)
+
+    tile_z = 8
+    tile_x = 77
+    tile_y = 89
+    bands = "9A"
+
+    with pytest.raises(InvalidBandName):
+        data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=bands)
 
 
 def test_tile_invalid_bounds(monkeypatch):
