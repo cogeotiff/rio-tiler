@@ -12,6 +12,10 @@ and to return more statistics (#66)
 **Breacking Changes**
 - update `metadata` structure returned by `landsat8.metadata`, `sentinel2.metadata`, `cbers.metadata`
 - force sentinel, landsat and cbers band names to be string and add validation (#65)
+- moved landsat utility functions from `rio_tiler.utils` to `rio_tiler.landsat8`
+  - rio_tiler.utils.landsat_get_mtl -> rio_tiler.landsat8._landsat_get_mtl
+  - rio_tiler.utils.landsat_parse_scene_id -> rio_tiler.landsat8._landsat_parse_scene_id
+  - rio_tiler.utils.landsat_get_stats -> rio_tiler.landsat8._landsat_stats
 
 
 1.0rc2 (2018-08-22)
