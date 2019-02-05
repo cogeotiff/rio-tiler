@@ -18,7 +18,7 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.io import DatasetReader
+from rasterio.io import DatasetReader, MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio import transform
 from rasterio.warp import calculate_default_transform, transform_bounds
@@ -788,6 +788,10 @@ def array_to_img(arr, mask=None, color_map=None):
         Pillow image
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.array_to_img' will be deprecated in 1.0 to remove PIL support",
+        DeprecationWarning,
+    )
     if arr.dtype != np.uint8:
         logger.error("Data casted to UINT8")
         arr = arr.astype(np.uint8)
@@ -831,6 +835,10 @@ def img_to_buffer(img, image_format, image_options={}):
     buffer
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.img_to_buffer' will be deprecated in 1.0 to remove PIL support",
+        DeprecationWarning,
+    )
     if image_format == "jpeg":
         img = img.convert("RGB")
 
@@ -857,6 +865,9 @@ def b64_encode_img(img, tileformat):
         base64 encoded image.
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.b64_encode_img' will be deprecated in 1.0", DeprecationWarning
+    )
     params = TileProfiles.get(tileformat)
 
     if tileformat == "jpeg":
@@ -866,6 +877,73 @@ def b64_encode_img(img, tileformat):
     img.save(sio, tileformat.upper(), **params)
     sio.seek(0)
     return base64.b64encode(sio.getvalue()).decode()
+
+
+def array_to_image(
+    arr, mask=None, img_format="png", color_map=None, **creation_options
+):
+    """
+    Translate numpy ndarray to image buffer using GDAL.
+
+    Usage
+    -----
+    tile, mask = rio_tiler.utils.tile_read(......)
+    with open('test.jpg') as f:
+        f.write(array_to_image(tile, mask, img_format="jpeg"))
+
+    Attributes
+    ----------
+    arr : numpy ndarray
+        Image array to encode.
+    mask: numpy ndarray, optional
+        Mask array
+    img_format: str, optional
+        Image format to return (default: 'png').
+        List of supported format by GDAL: https://www.gdal.org/formats_list.html
+    color_map: dict, optional
+        GDAL compatible ColorMap dictionary (see: rio_tiler.utils.get_colormap)
+    creation_options: dict, optional
+        Image driver creation options to pass to GDAL
+
+    Returns
+    -------
+    buffer
+
+    """
+    if len(arr.shape) < 3:
+        arr = np.expand_dims(arr, axis=0)
+
+    if color_map is not None:
+        # Apply colormap and transpose back to raster band-style
+        arr = np.transpose(color_map[arr][0], [2, 0, 1]).astype(np.uint8)
+
+    # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
+    if img_format == "webp" and arr.shape[0] == 1:
+        arr = np.repeat(arr, 3, axis=0)
+
+    if mask is not None and img_format != "jpeg":
+        nbands = arr.shape[0] + 1
+    else:
+        nbands = arr.shape[0]
+
+    output_profile = dict(
+        driver=img_format,
+        dtype=arr.dtype,
+        count=nbands,
+        height=arr.shape[1],
+        width=arr.shape[2],
+    )
+    output_profile.update(creation_options)
+
+    with MemoryFile() as memfile:
+        with memfile.open(**output_profile) as dst:
+            dst.write(arr, indexes=list(range(1, arr.shape[0] + 1)))
+
+            # Use Mask as an alpha band
+            if mask is not None and img_format != "jpeg":
+                dst.write(mask.astype(np.uint8), indexes=nbands)
+
+        return memfile.read()
 
 
 def get_colormap(name="cfastie"):
