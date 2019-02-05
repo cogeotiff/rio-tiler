@@ -31,6 +31,33 @@ def bounds(address):
     return {"url": address, "bounds": list(wgs_bounds)}
 
 
+def metadata(address, pmin=2, pmax=98, **kwargs):
+    """
+    Return image bounds and band statistics.
+
+    Attributes
+    ----------
+    address : str or PathLike object
+        A dataset path or URL. Will be opened in "r" mode.
+    pmin : int, optional, (default: 2)
+        Histogram minimum cut.
+    pmax : int, optional, (default: 98)
+        Histogram maximum cut.
+    kwargs : optional
+        These are passed to 'rio_tiler.utils.raster_get_stats'
+        e.g: overview_level=2, dst_crs='epsg:4326'
+
+    Returns
+    -------
+    out : dict
+        Dictionary with image bounds and bands statistics.
+
+    """
+    info = {"address": address}
+    info.update(utils.raster_get_stats(address, percentiles=(pmin, pmax), **kwargs))
+    return info
+
+
 def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=None):
     """
     Create mercator tile from any images.

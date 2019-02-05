@@ -5,6 +5,12 @@ Next
 - add pre-commit for commit validation (#64)
 - code formating using Black (the uncompromising Python code formatter) (#64)
 - update documention (Sentinel-2 cost) (#68)
+- add `utils.raster_get_stats` and `utils._get_stats` to replace `min_max*` function
+and to return more statistics (#66)
+- add overview level selection to statistical functions to reduce the data download (#59)
+
+**Breacking Changes**
+- update `metadata` structure returned by `landsat8.metadata`, `sentinel2.metadata`, `cbers.metadata`
 
 1.0rc2 (2018-08-22)
 -------------------

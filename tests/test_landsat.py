@@ -21,6 +21,17 @@ with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
 
 
+@pytest.fixture(autouse=True)
+def testing_env_var(monkeypatch):
+    """Set fake env to make sure we don't hit AWS services."""
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "jqt")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "rde")
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.setenv("AWS_CONFIG_FILE", "/tmp/noconfigheere")
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/tmp/noconfighereeither")
+    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
+
+
 @patch("rio_tiler.utils.landsat_get_mtl")
 def test_bounds_valid(landsat_get_mtl):
     """
@@ -30,40 +41,34 @@ def test_bounds_valid(landsat_get_mtl):
     landsat_get_mtl.return_value = LANDSAT_METADATA
 
     meta = landsat8.bounds(LANDSAT_SCENE_C1)
-    assert meta.get("sceneid") == "LC08_L1TP_016037_20170813_20170814_01_RT"
+    assert meta.get("sceneid") == LANDSAT_SCENE_C1
     assert len(meta.get("bounds")) == 4
 
 
 @patch("rio_tiler.utils.landsat_get_mtl")
 def test_metadata_valid_default(landsat_get_mtl, monkeypatch):
-    """
-    Should work as expected (get metadata and get histogram cuts values
-    for all bands)
-    """
-
+    """Get bounds and get stats for all bands."""
     monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
     landsat_get_mtl.return_value = LANDSAT_METADATA
 
     meta = landsat8.metadata(LANDSAT_SCENE_C1)
-    assert meta.get("sceneid") == "LC08_L1TP_016037_20170813_20170814_01_RT"
-    assert len(meta.get("bounds")) == 4
-    assert len(meta.get("rgbMinMax")) == 11
+    assert meta["sceneid"] == LANDSAT_SCENE_C1
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 11
+    assert list(map(int, meta["statistics"]["1"]["pc"])) == [1210, 7046]
 
 
 @patch("rio_tiler.utils.landsat_get_mtl")
 def test_metadata_valid_custom(landsat_get_mtl, monkeypatch):
-    """
-    Should work as expected (get metadata and get histogram cuts values
-    for all bands)
-    """
-
+    """Get bounds and get stats for all bands with custom percentiles."""
     monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
     landsat_get_mtl.return_value = LANDSAT_METADATA
 
-    meta = landsat8.metadata(LANDSAT_SCENE_C1)
-    assert meta.get("sceneid") == "LC08_L1TP_016037_20170813_20170814_01_RT"
-    assert len(meta.get("bounds")) == 4
-    assert len(meta.get("rgbMinMax")) == 11
+    meta = landsat8.metadata(LANDSAT_SCENE_C1, pmin=10, pmax=90)
+    assert meta["sceneid"] == LANDSAT_SCENE_C1
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 11
+    assert list(map(int, meta["statistics"]["1"]["pc"])) == [1275, 3918]
 
 
 @patch("rio_tiler.utils.landsat_get_mtl")

@@ -52,7 +52,7 @@ def bounds(sceneid):
 
 def metadata(sceneid, pmin=2, pmax=98):
     """
-    Retrieve image bounds and histogram info.
+    Return band bounds and statistics.
 
     Attributes
     ----------
@@ -66,32 +66,33 @@ def metadata(sceneid, pmin=2, pmax=98):
     Returns
     -------
     out : dict
-        dictionary with image bounds and bands histogram cuts.
+        Dictionary with bounds and bands statistics.
 
     """
     scene_params = utils.cbers_parse_scene_id(sceneid)
     cbers_address = "{}/{}".format(CBERS_BUCKET, scene_params["key"])
-
-    with rasterio.open(
-        "{}/{}_BAND{}.tif".format(
-            cbers_address, sceneid, scene_params["reference_band"]
-        )
-    ) as src:
-        wgs_bounds = transform_bounds(
-            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
-        )
-
-    info = {"sceneid": sceneid, "bounds": list(wgs_bounds)}
-
     bands = scene_params["bands"]
+    ref_band = scene_params["reference_band"]
+
+    info = {"sceneid": sceneid}
+
     addresses = [
         "{}/{}_BAND{}.tif".format(cbers_address, sceneid, band) for band in bands
     ]
-    _min_max_worker = partial(utils.band_min_max_worker, pmin=pmin, pmax=pmax)
+    _stats_worker = partial(
+        utils.raster_get_stats,
+        indexes=[1],
+        nodata=0,
+        overview_level=2,
+        percentiles=(pmin, pmax),
+    )
     with futures.ThreadPoolExecutor(max_workers=2) as executor:
-        responses = list(executor.map(_min_max_worker, addresses))
-        info["rgbMinMax"] = dict(zip(bands, responses))
+        responses = list(executor.map(_stats_worker, addresses))
 
+    info["bounds"] = [r["bounds"] for b, r in zip(bands, responses) if b == ref_band][0]
+    info["statistics"] = {
+        b: v for b, d in zip(bands, responses) for k, v in d["statistics"].items()
+    }
     return info
 
 

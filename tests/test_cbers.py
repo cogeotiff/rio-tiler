@@ -17,6 +17,17 @@ CBERS_MUX_PATH = os.path.join(
 )
 
 
+@pytest.fixture(autouse=True)
+def testing_env_var(monkeypatch):
+    """Set fake env to make sure we don't hit AWS services."""
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "jqt")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "rde")
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.setenv("AWS_CONFIG_FILE", "/tmp/noconfigheere")
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/tmp/noconfighereeither")
+    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
+
+
 def test_bounds_valid(monkeypatch):
     """
     Should work as expected (get bounds)
@@ -42,32 +53,33 @@ def test_bounds_valid(monkeypatch):
 
 
 def test_metadata_valid_default(monkeypatch):
-    """
-    Should work as expected (get bounds and get histogram cuts values
-    for all bands)
-    """
+    """Should work as expected.
 
+    Get bounds and get histogram cuts values for all bands
+
+    """
     monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
 
     meta = cbers.metadata(CBERS_MUX_SCENE)
-    assert meta.get("sceneid") == CBERS_MUX_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
+    assert meta["sceneid"] == CBERS_MUX_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 4
+    assert meta["statistics"]["5"]["pc"] == [28, 93]
 
     meta = cbers.metadata(CBERS_AWFI_SCENE)
-    assert meta.get("sceneid") == CBERS_AWFI_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
+    assert meta["sceneid"] == CBERS_AWFI_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 4
 
     meta = cbers.metadata(CBERS_PAN10M_SCENE)
-    assert meta.get("sceneid") == CBERS_PAN10M_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
+    assert meta["sceneid"] == CBERS_PAN10M_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 3
 
     meta = cbers.metadata(CBERS_PAN5M_SCENE)
-    assert meta.get("sceneid") == CBERS_PAN5M_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
+    assert meta["sceneid"] == CBERS_PAN5M_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 1
 
 
 def test_metadata_valid_custom(monkeypatch):
@@ -80,23 +92,8 @@ def test_metadata_valid_custom(monkeypatch):
 
     meta = cbers.metadata(CBERS_MUX_SCENE, pmin=5, pmax=95)
     assert meta.get("sceneid") == CBERS_MUX_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
-
-    meta = cbers.metadata(CBERS_AWFI_SCENE, pmin=5, pmax=95)
-    assert meta.get("sceneid") == CBERS_AWFI_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
-
-    meta = cbers.metadata(CBERS_PAN10M_SCENE, pmin=5, pmax=95)
-    assert meta.get("sceneid") == CBERS_PAN10M_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
-
-    meta = cbers.metadata(CBERS_PAN5M_SCENE, pmin=5, pmax=95)
-    assert meta.get("sceneid") == CBERS_PAN5M_SCENE
-    assert len(meta.get("bounds")) == 4
-    assert meta.get("rgbMinMax")
+    assert len(meta["bounds"]["value"]) == 4
+    assert meta["statistics"]["5"]["pc"] == [29, 59]
 
 
 def test_tile_valid_default(monkeypatch):
