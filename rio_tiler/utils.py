@@ -24,12 +24,7 @@ from rio_toa import reflectance, brightness_temp
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler import profiles as TileProfiles
-from rio_tiler.errors import (
-    InvalidFormat,
-    InvalidSentinelSceneId,
-    DeprecationWarning,
-    NoOverviewWarning,
-)
+from rio_tiler.errors import InvalidFormat, DeprecationWarning, NoOverviewWarning
 
 from PIL import Image
 
@@ -439,49 +434,6 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
         and (tile_y <= maxtile.y + 1)
         and (tile_y >= mintile.y)
     )
-
-
-def sentinel_parse_scene_id(sceneid):
-    """Parse Sentinel-2 scene id."""
-    if not re.match("^S2[AB]_tile_[0-9]{8}_[0-9]{2}[A-Z]{3}_[0-9]$", sceneid):
-        raise InvalidSentinelSceneId("Could not match {}".format(sceneid))
-
-    sentinel_pattern = (
-        r"^S"
-        r"(?P<sensor>\w{1})"
-        r"(?P<satellite>[AB]{1})"
-        r"_tile_"
-        r"(?P<acquisitionYear>[0-9]{4})"
-        r"(?P<acquisitionMonth>[0-9]{2})"
-        r"(?P<acquisitionDay>[0-9]{2})"
-        r"_"
-        r"(?P<utm>[0-9]{2})"
-        r"(?P<lat>\w{1})"
-        r"(?P<sq>\w{2})"
-        r"_"
-        r"(?P<num>[0-9]{1})$"
-    )
-
-    meta = None
-    match = re.match(sentinel_pattern, sceneid, re.IGNORECASE)
-    if match:
-        meta = match.groupdict()
-
-    utm_zone = meta["utm"].lstrip("0")
-    grid_square = meta["sq"]
-    latitude_band = meta["lat"]
-    year = meta["acquisitionYear"]
-    month = meta["acquisitionMonth"].lstrip("0")
-    day = meta["acquisitionDay"].lstrip("0")
-    img_num = meta["num"]
-
-    meta["key"] = "tiles/{}/{}/{}/{}/{}/{}/{}".format(
-        utm_zone, latitude_band, grid_square, year, month, day, img_num
-    )
-
-    meta["scene"] = sceneid
-
-    return meta
 
 
 def array_to_img(arr, mask=None, color_map=None):

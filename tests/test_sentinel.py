@@ -4,7 +4,7 @@ import os
 import pytest
 
 from rio_tiler import sentinel2
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidSentinelSceneId
 
 SENTINEL_SCENE = "S2A_tile_20170729_19UDP_0"
 SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "sentinel-s2-l1c")
@@ -129,3 +129,50 @@ def test_tile_invalid_bounds(monkeypatch):
 
     with pytest.raises(TileOutsideBounds):
         sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z)
+
+
+def test_sentinel_id_invalid():
+    """Raises error on invalid sentinel-2 sceneid."""
+    scene = "S2A_tile_20170323_17SNC"
+    with pytest.raises(InvalidSentinelSceneId):
+        sentinel2._sentinel_parse_scene_id(scene)
+
+
+def test_sentinel_id_valid():
+    """Parse sentinel-2 valid sceneid and return metadata."""
+    scene = "S2A_tile_20170323_17SNC_0"
+    expected_content = {
+        "acquisitionDay": "23",
+        "acquisitionMonth": "03",
+        "acquisitionYear": "2017",
+        "key": "tiles/17/S/NC/2017/3/23/0",
+        "lat": "S",
+        "num": "0",
+        "satellite": "A",
+        "scene": "S2A_tile_20170323_17SNC_0",
+        "sensor": "2",
+        "sq": "NC",
+        "utm": "17",
+    }
+
+    assert sentinel2._sentinel_parse_scene_id(scene) == expected_content
+
+
+def test_sentinel_id_valid_strip():
+    """Parse sentinel-2 valid sceneid with leading 0 and return metadata."""
+    scene = "S2A_tile_20170323_07SNC_0"
+    expected_content = {
+        "acquisitionDay": "23",
+        "acquisitionMonth": "03",
+        "acquisitionYear": "2017",
+        "key": "tiles/7/S/NC/2017/3/23/0",
+        "lat": "S",
+        "num": "0",
+        "satellite": "A",
+        "scene": "S2A_tile_20170323_07SNC_0",
+        "sensor": "2",
+        "sq": "NC",
+        "utm": "07",
+    }
+
+    assert sentinel2._sentinel_parse_scene_id(scene) == expected_content

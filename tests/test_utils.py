@@ -12,12 +12,7 @@ from rio_toa import toa_utils
 import rasterio
 from rasterio.crs import CRS
 from rio_tiler import utils
-from rio_tiler.errors import (
-    InvalidFormat,
-    InvalidSentinelSceneId,
-    DeprecationWarning,
-    NoOverviewWarning,
-)
+from rio_tiler.errors import InvalidFormat, DeprecationWarning, NoOverviewWarning
 
 SENTINEL_SCENE = "S2A_tile_20170729_19UDP_0"
 SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "sentinel-s2-l1c")
@@ -248,62 +243,6 @@ def test_tile_exists_valid():
     tile_z, tile_x, tile_y = map(int, tile.split("-"))
     bounds = [-78.75, 34.30714385628803, -75.93749999999999, 36.59788913307021]
     assert utils.tile_exists(bounds, tile_z, tile_x, tile_y)
-
-
-def test_sentinel_id_invalid():
-    """
-    Should raise an error with invalid sceneid
-    """
-
-    scene = "S2A_tile_20170323_17SNC"
-    with pytest.raises(InvalidSentinelSceneId):
-        utils.sentinel_parse_scene_id(scene)
-
-
-def test_sentinel_id_valid():
-    """
-    Should work as expected (parse sentinel scene id)
-    """
-
-    scene = "S2A_tile_20170323_17SNC_0"
-    expected_content = {
-        "acquisitionDay": "23",
-        "acquisitionMonth": "03",
-        "acquisitionYear": "2017",
-        "key": "tiles/17/S/NC/2017/3/23/0",
-        "lat": "S",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_tile_20170323_17SNC_0",
-        "sensor": "2",
-        "sq": "NC",
-        "utm": "17",
-    }
-
-    assert utils.sentinel_parse_scene_id(scene) == expected_content
-
-
-def test_sentinel_id_valid_strip():
-    """
-    Should work as expected (parse sentinel scene id)
-    """
-
-    scene = "S2A_tile_20170323_07SNC_0"
-    expected_content = {
-        "acquisitionDay": "23",
-        "acquisitionMonth": "03",
-        "acquisitionYear": "2017",
-        "key": "tiles/7/S/NC/2017/3/23/0",
-        "lat": "S",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_tile_20170323_07SNC_0",
-        "sensor": "2",
-        "sq": "NC",
-        "utm": "07",
-    }
-
-    assert utils.sentinel_parse_scene_id(scene) == expected_content
 
 
 def test_array_to_img_valid():
