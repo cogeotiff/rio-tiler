@@ -1,24 +1,259 @@
 """rio_tiler.landsat8: Landsat-8 processing."""
 
+import os
+import re
 import warnings
+import datetime
 from functools import partial
 from concurrent import futures
 
 import numpy as np
 
 import mercantile
-from rasterio import Affine
-from rasterio import transform
+
+import rasterio
+from rasterio import Affine, transform
+from rasterio.crs import CRS
+from rasterio.vrt import WarpedVRT
+from rasterio.warp import transform_bounds
 
 from rio_toa import reflectance, brightness_temp, toa_utils
 from rio_pansharpen.worker import pansharpen
 
 from rio_tiler import utils
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName, DeprecationWarning
+from rio_tiler.errors import (
+    TileOutsideBounds,
+    InvalidBandName,
+    InvalidLandsatSceneId,
+    DeprecationWarning,
+    NoOverviewWarning,
+)
+
+# Python 2/3
+try:
+    from urllib.request import urlopen
+except ImportError:
+    from urllib2 import urlopen
 
 
 LANDSAT_BUCKET = "s3://landsat-pds"
 LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+
+
+def _landsat_get_mtl(sceneid):
+    """
+    Get Landsat-8 MTL metadata.
+
+    Attributes
+    ----------
+    sceneid : str
+        Landsat sceneid. For scenes after May 2017,
+        sceneid have to be LANDSAT_PRODUCT_ID.
+
+    Returns
+    -------
+    out : dict
+        returns a JSON like object with the metadata.
+
+    """
+    scene_params = _landsat_parse_scene_id(sceneid)
+    meta_file = "http://landsat-pds.s3.amazonaws.com/{}_MTL.txt".format(
+        scene_params["key"]
+    )
+    metadata = str(urlopen(meta_file).read().decode())
+    return toa_utils._parse_mtl_txt(metadata)
+
+
+def _landsat_parse_scene_id(sceneid):
+    """
+    Parse Landsat-8 scene id.
+
+    Author @perrygeo - http://www.perrygeo.com
+
+    """
+    pre_collection = r"(L[COTEM]8\d{6}\d{7}[A-Z]{3}\d{2})"
+    collection_1 = r"(L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|T2|RT))"
+    if not re.match("^{}|{}$".format(pre_collection, collection_1), sceneid):
+        raise InvalidLandsatSceneId("Could not match {}".format(sceneid))
+
+    precollection_pattern = (
+        r"^L"
+        r"(?P<sensor>\w{1})"
+        r"(?P<satellite>\w{1})"
+        r"(?P<path>[0-9]{3})"
+        r"(?P<row>[0-9]{3})"
+        r"(?P<acquisitionYear>[0-9]{4})"
+        r"(?P<acquisitionJulianDay>[0-9]{3})"
+        r"(?P<groundStationIdentifier>\w{3})"
+        r"(?P<archiveVersion>[0-9]{2})$"
+    )
+
+    collection_pattern = (
+        r"^L"
+        r"(?P<sensor>\w{1})"
+        r"(?P<satellite>\w{2})"
+        r"_"
+        r"(?P<processingCorrectionLevel>\w{4})"
+        r"_"
+        r"(?P<path>[0-9]{3})"
+        r"(?P<row>[0-9]{3})"
+        r"_"
+        r"(?P<acquisitionYear>[0-9]{4})"
+        r"(?P<acquisitionMonth>[0-9]{2})"
+        r"(?P<acquisitionDay>[0-9]{2})"
+        r"_"
+        r"(?P<processingYear>[0-9]{4})"
+        r"(?P<processingMonth>[0-9]{2})"
+        r"(?P<processingDay>[0-9]{2})"
+        r"_"
+        r"(?P<collectionNumber>\w{2})"
+        r"_"
+        r"(?P<collectionCategory>\w{2})$"
+    )
+
+    meta = None
+    for pattern in [collection_pattern, precollection_pattern]:
+        match = re.match(pattern, sceneid, re.IGNORECASE)
+        if match:
+            meta = match.groupdict()
+            break
+
+    if meta.get("acquisitionJulianDay"):
+        date = datetime.datetime(
+            int(meta["acquisitionYear"]), 1, 1
+        ) + datetime.timedelta(int(meta["acquisitionJulianDay"]) - 1)
+
+        meta["date"] = date.strftime("%Y-%m-%d")
+    else:
+        meta["date"] = "{}-{}-{}".format(
+            meta["acquisitionYear"], meta["acquisitionMonth"], meta["acquisitionDay"]
+        )
+
+    collection = meta.get("collectionNumber", "")
+    if collection != "":
+        collection = "c{}".format(int(collection))
+
+    meta["key"] = os.path.join(
+        collection, "L8", meta["path"], meta["row"], sceneid, sceneid
+    )
+
+    meta["scene"] = sceneid
+
+    return meta
+
+
+def _landsat_stats(
+    band,
+    address_prefix,
+    metadata,
+    overview_level=None,
+    max_size=1024,
+    percentiles=(2, 98),
+    dst_crs=CRS({"init": "EPSG:4326"}),
+):
+    """
+    Retrieve landsat dataset statistics.
+
+    Attributes
+    ----------
+    band : str
+        Landsat band number
+    address_prefix : str
+        A Landsat AWS S3 dataset prefix.
+    metadata : dict
+        Landsat metadata
+    overview_level : int, optional
+        Overview (decimation) level to fetch.
+    max_size: int, optional
+        Maximum size of dataset to retrieve
+        (will be used to calculate the overview level to fetch).
+    percentiles : tulple, optional
+        Percentile or sequence of percentiles to compute,
+        which must be between 0 and 100 inclusive (default: (2, 98)).
+    dst_crs: CRS or dict
+        Target coordinate reference system (default: EPSG:4326).
+
+    Returns
+    -------
+    out : dict
+        (percentiles), min, max, stdev, histogram for each band,
+        e.g.
+        {
+            "4": {
+                'pc': [15, 121],
+                'min': 1,
+                'max': 162,
+                'std': 27.22067722127997,
+                'histogram': [
+                    [102934, 135489, 20981, 13548, 11406, 8799, 7351, 5622, 2985, 662]
+                    [1., 17.1, 33.2, 49.3, 65.4, 81.5, 97.6, 113.7, 129.8, 145.9, 162.]
+                ]
+            }
+        }
+    """
+    src_path = "{}_B{}.TIF".format(address_prefix, band)
+    with rasterio.open(src_path) as src:
+        levels = src.overviews(1)
+        width = src.width
+        height = src.height
+        bounds = transform_bounds(
+            *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
+        )
+
+        if len(levels):
+            if overview_level:
+                decim = levels[overview_level]
+            else:
+                # determine which zoom level to read
+                for ii, decim in enumerate(levels):
+                    if max(width // decim, height // decim) < max_size:
+                        break
+        else:
+            decim = 1
+            warnings.warn(
+                "Dataset has no overviews, reading the full dataset", NoOverviewWarning
+            )
+
+        out_shape = (height // decim, width // decim)
+        vrt_params = dict(
+            nodata=0, add_alpha=False, src_nodata=0, init_dest_nodata=False
+        )
+        with WarpedVRT(src, **vrt_params) as vrt:
+            arr = vrt.read(out_shape=out_shape, indexes=[1], masked=True)
+
+    if band in ["10", "11"]:  # TIRS
+        multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
+            "RADIANCE_MULT_BAND_{}".format(band)
+        )
+        add_rad = metadata["RADIOMETRIC_RESCALING"].get(
+            "RADIANCE_ADD_BAND_{}".format(band)
+        )
+        k1 = metadata["TIRS_THERMAL_CONSTANTS"].get("K1_CONSTANT_BAND_{}".format(band))
+        k2 = metadata["TIRS_THERMAL_CONSTANTS"].get("K2_CONSTANT_BAND_{}".format(band))
+
+        arr = brightness_temp.brightness_temp(arr, multi_rad, add_rad, k1, k2)
+    else:
+        multi_reflect = metadata["RADIOMETRIC_RESCALING"].get(
+            "REFLECTANCE_MULT_BAND_{}".format(band)
+        )
+        add_reflect = metadata["RADIOMETRIC_RESCALING"].get(
+            "REFLECTANCE_ADD_BAND_{}".format(band)
+        )
+        sun_elev = metadata["IMAGE_ATTRIBUTES"]["SUN_ELEVATION"]
+
+        arr = 10000 * reflectance.reflectance(
+            arr, multi_reflect, add_reflect, sun_elev, src_nodata=0
+        )
+
+    stats = {band: utils._stats(arr, percentiles=percentiles)}
+
+    return {
+        "bounds": {
+            "value": bounds,
+            "crs": dst_crs.to_string() if isinstance(dst_crs, CRS) else dst_crs,
+        },
+        "statistics": stats,
+    }
 
 
 def bounds(sceneid):
@@ -37,7 +272,7 @@ def bounds(sceneid):
         dictionary with image bounds.
 
     """
-    meta_data = utils.landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
+    meta_data = _landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
 
     info = {"sceneid": sceneid}
     info["bounds"] = toa_utils._get_bounds_from_metadata(meta_data["PRODUCT_METADATA"])
@@ -65,14 +300,14 @@ def metadata(sceneid, pmin=2, pmax=98):
         Dictionary with bounds and bands statistics.
 
     """
-    scene_params = utils.landsat_parse_scene_id(sceneid)
-    meta_data = utils.landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
+    scene_params = _landsat_parse_scene_id(sceneid)
+    meta_data = _landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
     path_prefix = "{}/{}".format(LANDSAT_BUCKET, scene_params["key"])
 
     info = {"sceneid": sceneid}
 
     _stats_worker = partial(
-        utils.landsat_get_stats,
+        _landsat_stats,
         address_prefix=path_prefix,
         metadata=meta_data,
         overview_level=1,
@@ -139,8 +374,8 @@ def tile(
     # TODO: remove in 1.0.0
     bands = tuple(map(str, bands))
 
-    scene_params = utils.landsat_parse_scene_id(sceneid)
-    meta_data = utils.landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
+    scene_params = _landsat_parse_scene_id(sceneid)
+    meta_data = _landsat_get_mtl(sceneid).get("L1_METADATA_FILE")
     landsat_address = "{}/{}".format(LANDSAT_BUCKET, scene_params["key"])
 
     wgs_bounds = toa_utils._get_bounds_from_metadata(meta_data["PRODUCT_METADATA"])
