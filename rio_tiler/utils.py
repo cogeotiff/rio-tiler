@@ -17,7 +17,7 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.io import DatasetReader
+from rasterio.io import DatasetReader, MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio import transform
 from rio_toa import reflectance, brightness_temp
@@ -29,6 +29,12 @@ from rio_tiler.errors import InvalidFormat, DeprecationWarning, NoOverviewWarnin
 from PIL import Image
 
 logger = logging.getLogger(__name__)
+
+
+def _chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i : i + n]
 
 
 def landsat_min_max_worker(
@@ -455,6 +461,10 @@ def array_to_img(arr, mask=None, color_map=None):
         Pillow image
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.array_to_img' will be deprecated in 1.0 to remove PIL support",
+        DeprecationWarning,
+    )
     if arr.dtype != np.uint8:
         logger.error("Data casted to UINT8")
         arr = arr.astype(np.uint8)
@@ -498,6 +508,10 @@ def img_to_buffer(img, image_format, image_options={}):
     buffer
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.img_to_buffer' will be deprecated in 1.0 to remove PIL support",
+        DeprecationWarning,
+    )
     if image_format == "jpeg":
         img = img.convert("RGB")
 
@@ -524,6 +538,9 @@ def b64_encode_img(img, tileformat):
         base64 encoded image.
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.b64_encode_img' will be deprecated in 1.0", DeprecationWarning
+    )
     params = TileProfiles.get(tileformat)
 
     if tileformat == "jpeg":
@@ -535,20 +552,93 @@ def b64_encode_img(img, tileformat):
     return base64.b64encode(sio.getvalue()).decode()
 
 
-def get_colormap(name="cfastie"):
+def array_to_image(
+    arr, mask=None, img_format="png", color_map=None, **creation_options
+):
     """
-    Read colormap file.
+    Translate numpy ndarray to image buffer using GDAL.
+
+    Usage
+    -----
+    tile, mask = rio_tiler.utils.tile_read(......)
+    with open('test.jpg', 'wb') as f:
+        f.write(array_to_image(tile, mask, img_format="jpeg"))
 
     Attributes
     ----------
-    name : str
-        colormap name (default: cfastie)
+    arr : numpy ndarray
+        Image array to encode.
+    mask: numpy ndarray, optional
+        Mask array
+    img_format: str, optional
+        Image format to return (default: 'png').
+        List of supported format by GDAL: https://www.gdal.org/formats_list.html
+    color_map: dict, optional
+        GDAL compatible ColorMap dictionary (see: rio_tiler.utils.get_colormap)
+    creation_options: dict, optional
+        Image driver creation options to pass to GDAL
 
     Returns
     -------
-    colormap : list
-        Color map array in a Pillow friendly format
+    buffer
+
+    """
+    img_format = img_format.lower()
+
+    if len(arr.shape) < 3:
+        arr = np.expand_dims(arr, axis=0)
+
+    if color_map is not None:
+        # Apply colormap and transpose back to raster band-style
+        arr = np.transpose(color_map[arr][0], [2, 0, 1]).astype(np.uint8)
+
+    # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
+    if img_format == "webp" and arr.shape[0] == 1:
+        arr = np.repeat(arr, 3, axis=0)
+
+    if mask is not None and img_format != "jpeg":
+        nbands = arr.shape[0] + 1
+    else:
+        nbands = arr.shape[0]
+
+    output_profile = dict(
+        driver=img_format,
+        dtype=arr.dtype,
+        count=nbands,
+        height=arr.shape[1],
+        width=arr.shape[2],
+    )
+    output_profile.update(creation_options)
+
+    with MemoryFile() as memfile:
+        with memfile.open(**output_profile) as dst:
+            dst.write(arr, indexes=list(range(1, arr.shape[0] + 1)))
+
+            # Use Mask as an alpha band
+            if mask is not None and img_format != "jpeg":
+                dst.write(mask.astype(np.uint8), indexes=nbands)
+
+        return memfile.read()
+
+
+def get_colormap(name="cfastie", format="pil"):
+    """
+    Return Pillow or GDAL compatible colormap array.
+
+    Attributes
+    ----------
+    name : str, optional
+        Colormap name (default: cfastie)
+    format: str, optional
+        Compatiblity library, should be "pil" or "gdal" (default: pil).
+
+    Returns
+    -------
+    colormap : list or numpy.array
+        Color map list in a Pillow friendly format
         more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
+        or
+        Color map array in GDAL friendly format
 
     """
     cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.txt".format(name))
@@ -558,7 +648,13 @@ def get_colormap(name="cfastie"):
             list(map(int, line.split())) for line in lines if not line.startswith("#")
         ][1:]
 
-    return list(np.array(colormap).flatten())
+    cmap = list(np.array(colormap).flatten())
+    if format.lower() == "pil":
+        return cmap
+    elif format.lower() == "gdal":
+        return np.array(list(_chunks(cmap, 3)))
+    else:
+        raise Exception("Unsupported {} colormap format".format(format))
 
 
 def mapzen_elevation_rgb(arr):

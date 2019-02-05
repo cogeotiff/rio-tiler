@@ -73,6 +73,32 @@ Read a tile from a file over the internet
    print(mask.shape)
    > (256, 256)
 
+Create image from tile
+
+.. code-block:: python
+
+  from rio_tiler.utils import array_to_image
+  buffer = array_to_img(tile, mask=mask) # this returns a buffer (PNG by default)
+
+
+Use creation options to match `mapnik` default
+
+.. code-block:: python
+
+  from rio_tiler.utils import array_to_image
+  from rio_tiler.profiles import img_profiles
+  options = img_profiles["webp"]
+
+  buffer = array_to_img(tile, mask=mask, img_format="webp", **options)
+
+Write image to file
+
+.. code-block:: python
+
+  with open("my.png", "wb") as f:
+    f.write(buffer)
+
+
 Get a Sentinel2 tile and its nodata mask.
 
 .. code-block:: python
@@ -92,40 +118,48 @@ Get bounds for a Landsat scene (WGS84).
   > {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
   >  'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
 
-Get metadata of a Landsat scene (i.e. percentinle min and max values, and bounds in WGS84) .
+Get metadata of a Landsat scene (i.e. percentiles (pc) min/max values, histograms, and bounds in WGS84) .
 
 .. code-block:: python
 
   from rio_tiler import landsat8
   landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
-  >  {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
-  >   'rgbMinMax': {'1': [1245, 5396],
-  >    '2': [983, 5384],
-  >    '3': [718, 5162],
-  >    '4': [470, 5273],
-  >    '5': [403, 6440],
-  >    '6': [258, 4257],
-  >    '7': [151, 2984]},
-  >   'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
+  {
+    'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT',
+    'bounds': {
+      'value': (-81.30844102941015, 32.105321365706104,  -78.82036599673634, 34.22863519772504),
+      'crs': '+init=EPSG:4326'
+    },
+    'statistics': {
+      '1': {
+        'pc': [1251.297607421875, 5142.0126953125],
+        'min': -1114.7020263671875,
+        'max': 11930.634765625,
+        'std': 1346.6463388957156,
+        'histogram': [
+          [1716, 257951, 174296, 36184, 20828, 11783, 6862, 2941, 635, 99],
+          [-1114.7020263671875, 189.83164978027344, 1494.3653564453125, 2798.89892578125, 4103.4326171875, 5407.96630859375, 6712.5, 8017.03369140625, 9321.5673828125, 10626.1015625, 11930.634765625]
+        ]
+      },
+      ...
+      ...
+      '11': {
+        'pc': [278.3393859863281, 293.4466247558594],
+        'min': 147.27650451660156,
+        'max': 297.4621276855469,
+        'std': 7.660112832018338,
+        'histogram': [
+          [207, 201, 204, 271, 350, 944, 1268, 2383, 43085, 453084],
+          [147.27650451660156, 162.29507446289062, 177.31362915039062, 192.33218383789062, 207.3507537841797, 222.36932373046875, 237.38787841796875, 252.40643310546875, 267.42498779296875, 282.4435729980469, 297.4621276855469]
+        ]
+      }
+    }
+  }
+
 
 The primary purpose for calculating minimum and maximum values of an image is to rescale pixel values from their original range (e.g. 0 to 65,535) to the range used by computer screens (i.e. 0 and 255) through a linear transformation.
 This will make images look good on display.
 
-
-Create image from tile
-
-.. code-block:: python
-
-   from rio_tiler.utils import array_to_img
-   img = array_to_img(tile, mask=mask) # this returns a pillow image
-
-Convert image into to binary
-
-.. code-block:: python
-
-   from rio_tiler.utils import img_to_buffer
-   with open("my.jpg", "wb") as f:
-     f.write(img_to_buffer(img, "jpeg", image_options={"quality": 95}))
 
 Partial reading on Cloud hosted dataset
 =======================================
