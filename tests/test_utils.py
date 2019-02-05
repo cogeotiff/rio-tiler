@@ -21,6 +21,9 @@ from rio_tiler.errors import (
     NoOverviewWarning,
 )
 
+from .conftest import requires_webp
+
+
 SENTINEL_SCENE = "S2A_tile_20170729_19UDP_0"
 SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "sentinel-s2-l1c")
 SENTINEL_PATH = os.path.join(SENTINEL_BUCKET, "tiles/19/U/DP/2017/7/29/0/")
@@ -477,88 +480,110 @@ def test_cbers_id_valid():
     assert utils.cbers_parse_scene_id(scene) == expected_content
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_valid():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_valid_mask():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    mask = np.random.randint(0, 1, size=(512, 512), dtype=np.uint8) * 255
-    assert utils.array_to_img(arr, mask=mask)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+        mask = np.random.randint(0, 1, size=(512, 512), dtype=np.uint8) * 255
+        assert utils.array_to_img(arr, mask=mask)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_valid_oneband():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_valid_noband():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_cast():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.int16)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.int16)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_colormap():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    utils.array_to_img(arr, color_map=utils.get_colormap())
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+        utils.array_to_img(arr, color_map=utils.get_colormap())
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_bands_colormap():
     """Should raise an error with invalid format
     """
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    with pytest.raises(InvalidFormat):
-        utils.array_to_img(arr, color_map=True)
+    with pytest.warns(DeprecationWarning):
+        with pytest.raises(InvalidFormat):
+            utils.array_to_img(arr, color_map=True)
 
 
+# TODO: Remove on 1.0.0
 def test_b64_encode_img_valid_jpg():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.b64_encode_img(img, "jpeg")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.b64_encode_img(img, "jpeg")
 
 
+# TODO: Remove on 1.0.0
 def test_b64_encode_img_valid_png():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.b64_encode_img(img, "png")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.b64_encode_img(img, "png")
 
 
+# TODO: Remove on 1.0.0
 def test_b64_encode_img_valid_webp():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.b64_encode_img(img, "webp")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.b64_encode_img(img, "webp")
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_invalid_format():
     """Should raise an error with invalid format
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    with pytest.raises(InvalidFormat):
-        utils.b64_encode_img(img, "gif")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        with pytest.raises(InvalidFormat):
+            utils.b64_encode_img(img, "gif")
 
 
 @patch("rio_tiler.utils.urlopen")
@@ -582,13 +607,24 @@ def test_landsat_get_mtl_invalid(urlopen):
 
 
 def test_get_colormap_valid():
-    """Test default (cfastie) color map."""
+    """Returns 'cfastie' colormap in a PIL friendly format."""
     assert len(utils.get_colormap()) == 768  # 3 x256
 
 
 def test_get_colormap_schwarzwald():
-    """Test schwarzwald color map."""
+    """Returns 'schwarzwald' colormap in a GDAL friendly format."""
     assert len(utils.get_colormap(name="schwarzwald")) == 768  # 3 x256
+
+
+def test_get_colormap_gdal():
+    """Returns 'cfastie' colormap in a GDAL friendly format."""
+    assert len(utils.get_colormap(format="gdal")) == 256  # 256 x 3
+
+
+def test_get_colormap_unsupported():
+    """Raise error on unsupported format."""
+    with pytest.raises(Exception):
+        utils.get_colormap(format="gal")
 
 
 def test_mapzen_elevation_rgb():
@@ -786,23 +822,28 @@ def test_get_vrt_transform_valid4326():
 
 def test_img_to_buffer_valid_jpg():
     """Should create a jpeg buffer."""
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.img_to_buffer(img, "jpeg")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.img_to_buffer(img, "jpeg")
 
 
+# TODO: Remove on 1.0.0
 def test_img_to_buffer_valid_png():
     """Should create a png buffer."""
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.img_to_buffer(img, "png")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.img_to_buffer(img, "png")
 
 
+# TODO: Remove on 1.0.0
 def test_img_to_buffer_valid_options():
     """Should create a png buffer with compression options."""
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.img_to_buffer(img, "png", image_options={"compress_level": 0})
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.img_to_buffer(img, "png", image_options={"compress_level": 0})
 
 
 def test_statsFunction_valid():
@@ -909,3 +950,45 @@ def test_raster_get_stats_validOptions():
     stats = utils.raster_get_stats(S3_PATH, indexes=(3,))
     assert len(stats["statistics"]) == 1
     assert stats["statistics"][3]["pc"] == [54, 192]
+
+
+def test_array_to_image_valid_1band():
+    """Creates PNG image buffer from one band array."""
+    arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
+    assert utils.array_to_image(arr)
+
+
+def test_array_to_image_valid_colormap():
+    """Creates 'colormaped' PNG image buffer from one band array."""
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    cmap = utils.get_colormap(name="cfastie", format="gdal")
+    assert utils.array_to_image(arr, color_map=cmap)
+
+
+def test_array_to_image_valid_mask():
+    """Creates image buffer from 3 bands array and mask."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+    assert utils.array_to_image(arr, mask=mask)
+    assert utils.array_to_image(arr, mask=mask, img_format="jpeg")
+
+
+def test_array_to_image_valid_options():
+    """Creates image buffer with driver options."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8) + 255
+    assert utils.array_to_image(arr, mask=mask, img_format="png", ZLEVEL=9)
+
+
+def test_array_to_image_geotiff():
+    """Creates GeoTIFF image buffer from 3 bands array."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8) + 255
+    assert utils.array_to_image(arr, mask=mask, img_format="GTiff")
+
+
+@requires_webp
+def test_array_to_image_valid_1bandWebp():
+    """Creates WEBP image buffer from 1 band array."""
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    assert utils.array_to_image(arr, img_format="WEBP")

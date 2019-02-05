@@ -1,0 +1,1 @@
+"""rio-tiler tests suite."""

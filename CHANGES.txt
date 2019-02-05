@@ -8,6 +8,9 @@ Next
 - add `utils.raster_get_stats` and `utils._get_stats` to replace `min_max*` function
 and to return more statistics (#66)
 - add overview level selection to statistical functions to reduce the data download (#59)
+- add pure GDAL `array_to_image` function to replace PIL tools (#29)
+- add GDAL format output from `utils.get_colormap` to be used in `array_to_image` (#29)
+
 
 **Breacking Changes**
 - update `metadata` structure returned by `landsat8.metadata`, `sentinel2.metadata`, `cbers.metadata`
