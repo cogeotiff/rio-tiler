@@ -1,7 +1,9 @@
 """rio_tiler.cbers: cbers processing."""
 
+import os
 import re
 import warnings
+import multiprocessing
 from functools import partial
 from concurrent import futures
 
@@ -21,6 +23,9 @@ from rio_tiler.errors import (
 
 CBERS_BUCKET = "s3://cbers-pds"
 CBERS_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "15", "16"]
+
+# ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
+MAX_THREADS = os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5)
 
 
 def _cbers_parse_scene_id(sceneid):
@@ -182,7 +187,7 @@ def metadata(sceneid, pmin=2, pmax=98):
         overview_level=2,
         percentiles=(pmin, pmax),
     )
-    with futures.ThreadPoolExecutor(max_workers=2) as executor:
+    with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         responses = list(executor.map(_stats_worker, addresses))
 
     info["bounds"] = [r["bounds"] for b, r in zip(bands, responses) if b == ref_band][0]
@@ -266,7 +271,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256):
     ]
 
     _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0)
-    with futures.ThreadPoolExecutor(max_workers=3) as executor:
+    with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         mask = np.all(masks, axis=0).astype(np.uint8) * 255
 

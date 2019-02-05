@@ -1,6 +1,8 @@
 """rio_tiler.sentinel2: Sentinel-2 processing."""
 
+import os
 import re
+import multiprocessing
 from functools import partial
 from concurrent import futures
 
@@ -30,6 +32,9 @@ SENTINEL_BANDS = [
     "11",
     "12",
 ]
+
+# ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
+MAX_THREADS = os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5)
 
 
 def _sentinel_parse_scene_id(sceneid):
@@ -181,7 +186,7 @@ def metadata(sceneid, pmin=2, pmax=98):
     ]
 
     _stats_worker = partial(_sentinel_stats, percentiles=(pmin, pmax))
-    with futures.ThreadPoolExecutor(max_workers=2) as executor:
+    with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         responses = executor.map(_stats_worker, addresses)
     info["statistics"] = {
         b: v for b, d in zip(SENTINEL_BANDS, responses) for k, v in d.items()
@@ -241,7 +246,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256
     addresses = ["{}/B{}.jp2".format(sentinel_address, band) for band in bands]
 
     _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0)
-    with futures.ThreadPoolExecutor(max_workers=3) as executor:
+    with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         mask = np.all(masks, axis=0).astype(np.uint8) * 255
 

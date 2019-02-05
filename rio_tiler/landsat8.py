@@ -4,6 +4,7 @@ import os
 import re
 import warnings
 import datetime
+import multiprocessing
 from functools import partial
 from concurrent import futures
 
@@ -38,6 +39,8 @@ except ImportError:
 
 LANDSAT_BUCKET = "s3://landsat-pds"
 LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+# ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
+MAX_THREADS = os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5)
 
 
 def _landsat_get_mtl(sceneid):
@@ -314,7 +317,7 @@ def metadata(sceneid, pmin=2, pmax=98):
         percentiles=(pmin, pmax),
     )
 
-    with futures.ThreadPoolExecutor(max_workers=5) as executor:
+    with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         responses = list(executor.map(_stats_worker, LANDSAT_BANDS))
 
     info["bounds"] = [
@@ -394,7 +397,7 @@ def tile(
     _tiler = partial(
         utils.tile_read, bounds=tile_bounds, tilesize=ms_tile_size, nodata=0
     )
-    with futures.ThreadPoolExecutor(max_workers=3) as executor:
+    with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         data = np.concatenate(data)
         mask = np.all(masks, axis=0).astype(np.uint8) * 255
