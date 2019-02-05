@@ -1,7 +1,7 @@
 Authors
 -------
 
-* Vincent Sarago <vincent@mapbox.com>
+* Vincent Sarago <vincent@developmentseed.com>
 * Sean Gillies <sean@mapbox.com>
 
 See also https://github.com/mapbox/rio-tiler/graphs/contributors.
