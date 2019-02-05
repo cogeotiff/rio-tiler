@@ -14,7 +14,6 @@ from rasterio.crs import CRS
 from rio_tiler import utils
 from rio_tiler.errors import (
     InvalidFormat,
-    InvalidLandsatSceneId,
     InvalidSentinelSceneId,
     InvalidCBERSSceneId,
     DeprecationWarning,
@@ -45,10 +44,6 @@ PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
 with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
-
-
-with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
-    LANDSAT_METADATA_RAW = f.read().encode("utf-8")
 
 
 # TODO: Remove on 1.0.0
@@ -254,78 +249,6 @@ def test_tile_exists_valid():
     tile_z, tile_x, tile_y = map(int, tile.split("-"))
     bounds = [-78.75, 34.30714385628803, -75.93749999999999, 36.59788913307021]
     assert utils.tile_exists(bounds, tile_z, tile_x, tile_y)
-
-
-def test_landsat_id_pre_invalid():
-    """
-    Should raise an error with invalid sceneid
-    """
-
-    scene = "L0300342017083LGN00"
-    with pytest.raises(InvalidLandsatSceneId):
-        utils.landsat_parse_scene_id(scene)
-
-
-def test_landsat_id_c1_invalid():
-    """
-    Should raise an error with invalid sceneid
-    """
-
-    scene = "LC08_005004_20170410_20170414_01_T1"
-    with pytest.raises(InvalidLandsatSceneId):
-        utils.landsat_parse_scene_id(scene)
-
-
-def test_landsat_id_pre_valid():
-    """
-    Should work as expected (parse landsat pre sceneid)
-    """
-
-    scene = "LC80300342017083LGN00"
-    expected_content = {
-        "acquisitionJulianDay": "083",
-        "acquisitionYear": "2017",
-        "archiveVersion": "00",
-        "date": "2017-03-24",
-        "groundStationIdentifier": "LGN",
-        "key": "L8/030/034/LC80300342017083LGN00/LC80300342017083LGN00",
-        "path": "030",
-        "row": "034",
-        "satellite": "8",
-        "scene": "LC80300342017083LGN00",
-        "sensor": "C",
-    }
-
-    assert utils.landsat_parse_scene_id(scene) == expected_content
-
-
-def test_landsat_id_c1_valid():
-    """
-    Should work as expected (parse landsat c1 sceneid)
-    """
-
-    scene = "LC08_L1TP_005004_20170410_20170414_01_T1"
-    expected_content = {
-        "acquisitionDay": "10",
-        "acquisitionMonth": "04",
-        "acquisitionYear": "2017",
-        "collectionCategory": "T1",
-        "collectionNumber": "01",
-        "date": "2017-04-10",
-        "key": "c1/L8/005/004/LC08_L1TP_005004_20170410_\
-20170414_01_T1/LC08_L1TP_005004_20170410_20170414_01_T1",
-        "path": "005",
-        "processingCorrectionLevel": "L1TP",
-        "processingDay": "14",
-        "processingMonth": "04",
-        "processingYear": "2017",
-        "row": "004",
-        "satellite": "08",
-        "scene": "LC08_L1TP_005004_20170410_20170414_01_T1",
-        "sensor": "C",
-    }
-
-    assert utils.landsat_parse_scene_id(scene) == expected_content
 
 
 def test_sentinel_id_invalid():
@@ -559,26 +482,6 @@ def test_array_to_img_invalid_format():
     img = utils.array_to_img(arr)
     with pytest.raises(InvalidFormat):
         utils.b64_encode_img(img, "gif")
-
-
-@patch("rio_tiler.utils.urlopen")
-def test_landsat_get_mtl_valid(urlopen):
-
-    urlopen.return_value.read.return_value = LANDSAT_METADATA_RAW
-
-    meta_data = utils.landsat_get_mtl(LANDSAT_SCENE_C1)
-    assert (
-        meta_data["L1_METADATA_FILE"]["METADATA_FILE_INFO"]["LANDSAT_SCENE_ID"]
-        == "LC80160372017225LGN00"
-    )
-
-
-@patch("rio_tiler.utils.urlopen")
-def test_landsat_get_mtl_invalid(urlopen):
-
-    urlopen.return_value.read.return_value = {}
-    with pytest.raises(Exception):
-        utils.landsat_get_mtl(LANDSAT_SCENE_C1)
 
 
 def test_get_colormap_valid():
@@ -819,42 +722,6 @@ def test_statsFunction_valid():
 
     stats = utils._stats(arr, percentiles=(5, 95))
     assert stats["pc"] == [31, 195]
-
-
-def test_landsat_get_stats_valid():
-    """Should return a valid dict with array statistics."""
-    stats = utils.landsat_get_stats(
-        "4", LANDSAT_PATH, LANDSAT_METADATA["L1_METADATA_FILE"]
-    )
-    assert stats["bounds"]
-    assert stats["bounds"]["crs"] == CRS({"init": "EPSG:4326"})
-    assert stats["statistics"]["4"]
-    assert isinstance(stats["statistics"]["4"]["pc"][0], float)
-    assert list(map(int, stats["statistics"]["4"]["pc"])) == [423, 7028]
-
-
-def test_landsat_get_stats_validOptions():
-    """Should return a valid dict with array statistics."""
-    stats = utils.landsat_get_stats(
-        "10",
-        LANDSAT_PATH,
-        LANDSAT_METADATA["L1_METADATA_FILE"],
-        overview_level=2,
-        percentiles=(5, 95),
-        dst_crs="epsg:3857",
-    )
-    assert stats["bounds"]
-    assert stats["bounds"]["crs"] == "epsg:3857"
-    assert stats["statistics"]["10"]
-    assert list(map(int, stats["statistics"]["10"]["pc"])) == [281, 297]
-
-
-def test_landsat_get_stats_noOverviews():
-    """Should return a valid dict with array statistics and warns about missing overviews."""
-    stats = utils.landsat_get_stats(
-        "5", LANDSAT_PATH, LANDSAT_METADATA["L1_METADATA_FILE"]
-    )
-    assert stats["statistics"]["5"]
 
 
 def test_raster_get_stats_valid():
