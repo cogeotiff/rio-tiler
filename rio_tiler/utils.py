@@ -46,6 +46,12 @@ except ImportError:
 logger = logging.getLogger(__name__)
 
 
+def _chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i : i + n]
+
+
 def landsat_min_max_worker(
     band, address, metadata, pmin=2, pmax=98, width=1024, height=1024
 ):
@@ -888,7 +894,7 @@ def array_to_image(
     Usage
     -----
     tile, mask = rio_tiler.utils.tile_read(......)
-    with open('test.jpg') as f:
+    with open('test.jpg', 'wb') as f:
         f.write(array_to_image(tile, mask, img_format="jpeg"))
 
     Attributes
@@ -910,6 +916,8 @@ def array_to_image(
     buffer
 
     """
+    img_format = img_format.lower()
+
     if len(arr.shape) < 3:
         arr = np.expand_dims(arr, axis=0)
 
@@ -946,20 +954,24 @@ def array_to_image(
         return memfile.read()
 
 
-def get_colormap(name="cfastie"):
+def get_colormap(name="cfastie", format="pil"):
     """
-    Read colormap file.
+    Return Pillow or GDAL compatible colormap array.
 
     Attributes
     ----------
-    name : str
-        colormap name (default: cfastie)
+    name : str, optional
+        Colormap name (default: cfastie)
+    format: str, optional
+        Compatiblity library, should be "pil" or "gdal" (default: pil).
 
     Returns
     -------
-    colormap : list
-        Color map array in a Pillow friendly format
+    colormap : list or numpy.array
+        Color map list in a Pillow friendly format
         more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
+        or
+        Color map array in GDAL friendly format
 
     """
     cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.txt".format(name))
@@ -969,7 +981,13 @@ def get_colormap(name="cfastie"):
             list(map(int, line.split())) for line in lines if not line.startswith("#")
         ][1:]
 
-    return list(np.array(colormap).flatten())
+    cmap = list(np.array(colormap).flatten())
+    if format.lower() == "pil":
+        return cmap
+    elif format.lower() == "gdal":
+        return np.array(list(_chunks(cmap, 3)))
+    else:
+        raise Exception("Unsupported {} colormap format".format(format))
 
 
 def mapzen_elevation_rgb(arr):
