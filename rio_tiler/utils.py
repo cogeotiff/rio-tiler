@@ -580,7 +580,7 @@ def array_to_image(
 
     Returns
     -------
-    buffer
+    bytes
 
     """
     img_format = img_format.lower()
