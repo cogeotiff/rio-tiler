@@ -11,6 +11,8 @@ and to return more statistics (#66)
 
 **Breacking Changes**
 - update `metadata` structure returned by `landsat8.metadata`, `sentinel2.metadata`, `cbers.metadata`
+- force sentinel, landsat and cbers band names to be string and add validation (#65)
+
 
 1.0rc2 (2018-08-22)
 -------------------
