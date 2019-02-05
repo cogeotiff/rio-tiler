@@ -11,7 +11,7 @@ and to return more statistics (#66)
 - add pure GDAL `array_to_image` function to replace PIL tools (#29)
 - add GDAL format output from `utils.get_colormap` to be used in `array_to_image` (#29)
 - add GDAL compatible Image creation profile (#29)
-
+- add max threads number settings via "MAX_THREADS" environment variable (#71)
 
 **Breacking Changes**
 - update `metadata` structure returned by `landsat8.metadata`, `sentinel2.metadata`, `cbers.metadata`
