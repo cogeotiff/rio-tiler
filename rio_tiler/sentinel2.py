@@ -1,5 +1,6 @@
 """rio_tiler.sentinel2: Sentinel-2 processing."""
 
+import re
 from functools import partial
 from concurrent import futures
 
@@ -11,7 +12,7 @@ from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
 
 from rio_tiler import utils
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidSentinelSceneId
 
 SENTINEL_BUCKET = "s3://sentinel-s2-l1c"
 SENTINEL_BANDS = [
@@ -31,6 +32,78 @@ SENTINEL_BANDS = [
 ]
 
 
+def _sentinel_parse_scene_id(sceneid):
+    """Parse Sentinel-2 scene id.
+
+    Attributes
+    ----------
+    sceneid : str
+        Sentinel-2 sceneid.
+
+    Returns
+    -------
+    out : dict
+        dictionary with metadata constructed from the sceneid.
+
+        e.g:
+        _sentinel_parse_scene_id('S2A_tile_20170323_07SNC_0')
+        {
+            "acquisitionDay": "23",
+            "acquisitionMonth": "03",
+            "acquisitionYear": "2017",
+            "key": "tiles/7/S/NC/2017/3/23/0",
+            "lat": "S",
+            "num": "0",
+            "satellite": "A",
+            "scene": "S2A_tile_20170323_07SNC_0",
+            "sensor": "2",
+            "sq": "NC",
+            "utm": "07",
+        }
+
+    """
+
+    if not re.match("^S2[AB]_tile_[0-9]{8}_[0-9]{2}[A-Z]{3}_[0-9]$", sceneid):
+        raise InvalidSentinelSceneId("Could not match {}".format(sceneid))
+
+    sentinel_pattern = (
+        r"^S"
+        r"(?P<sensor>\w{1})"
+        r"(?P<satellite>[AB]{1})"
+        r"_tile_"
+        r"(?P<acquisitionYear>[0-9]{4})"
+        r"(?P<acquisitionMonth>[0-9]{2})"
+        r"(?P<acquisitionDay>[0-9]{2})"
+        r"_"
+        r"(?P<utm>[0-9]{2})"
+        r"(?P<lat>\w{1})"
+        r"(?P<sq>\w{2})"
+        r"_"
+        r"(?P<num>[0-9]{1})$"
+    )
+
+    meta = None
+    match = re.match(sentinel_pattern, sceneid, re.IGNORECASE)
+    if match:
+        meta = match.groupdict()
+
+    utm_zone = meta["utm"].lstrip("0")
+    grid_square = meta["sq"]
+    latitude_band = meta["lat"]
+    year = meta["acquisitionYear"]
+    month = meta["acquisitionMonth"].lstrip("0")
+    day = meta["acquisitionDay"].lstrip("0")
+    img_num = meta["num"]
+
+    meta["key"] = "tiles/{}/{}/{}/{}/{}/{}/{}".format(
+        utm_zone, latitude_band, grid_square, year, month, day, img_num
+    )
+
+    meta["scene"] = sceneid
+
+    return meta
+
+
 def bounds(sceneid):
     """
     Retrieve image bounds.
@@ -46,7 +119,7 @@ def bounds(sceneid):
         dictionary with image bounds.
 
     """
-    scene_params = utils.sentinel_parse_scene_id(sceneid)
+    scene_params = _sentinel_parse_scene_id(sceneid)
     sentinel_address = "{}/{}".format(SENTINEL_BUCKET, scene_params["key"])
 
     with rasterio.open("{}/preview.jp2".format(sentinel_address)) as src:
@@ -91,7 +164,7 @@ def metadata(sceneid, pmin=2, pmax=98):
         Dictionary with image bounds and bands statistics.
 
     """
-    scene_params = utils.sentinel_parse_scene_id(sceneid)
+    scene_params = _sentinel_parse_scene_id(sceneid)
     sentinel_address = "{}/{}".format(SENTINEL_BUCKET, scene_params["key"])
 
     dst_crs = CRS({"init": "EPSG:4326"})
@@ -148,7 +221,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256
         if band not in SENTINEL_BANDS:
             raise InvalidBandName("{} is not a valid Sentinel band name".format(band))
 
-    scene_params = utils.sentinel_parse_scene_id(sceneid)
+    scene_params = _sentinel_parse_scene_id(sceneid)
     sentinel_address = "{}/{}".format(SENTINEL_BUCKET, scene_params["key"])
 
     sentinel_preview = "{}/preview.jp2".format(sentinel_address)
