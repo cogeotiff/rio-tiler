@@ -4,7 +4,12 @@ import os
 import pytest
 
 from rio_tiler import cbers
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName, DeprecationWarning
+from rio_tiler.errors import (
+    TileOutsideBounds,
+    InvalidBandName,
+    DeprecationWarning,
+    InvalidCBERSSceneId,
+)
 
 CBERS_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "cbers-pds")
 CBERS_MUX_SCENE = "CBERS_4_MUX_20171121_057_094_L2"
@@ -225,3 +230,93 @@ def test_tile_invalid_bounds(monkeypatch):
 
     with pytest.raises(TileOutsideBounds):
         cbers.tile(CBERS_MUX_SCENE, tile_x, tile_y, tile_z)
+
+
+def test_cbers_id_invalid():
+    """Raises error on invalid cbers sceneid."""
+    scene = "CBERS_4_MUX_20171121_057_094"
+    with pytest.raises(InvalidCBERSSceneId):
+        cbers._cbers_parse_scene_id(scene)
+
+
+def test_cbers_id_valid():
+    """Parse valid CBERS sceneids and return metadata."""
+    scene = "CBERS_4_MUX_20171121_057_094_L2"
+    expected_content = {
+        "acquisitionDay": "21",
+        "acquisitionMonth": "11",
+        "acquisitionYear": "2017",
+        "instrument": "MUX",
+        "key": "CBERS4/MUX/057/094/CBERS_4_MUX_20171121_057_094_L2",
+        "path": "057",
+        "processingCorrectionLevel": "L2",
+        "row": "094",
+        "mission": "4",
+        "scene": "CBERS_4_MUX_20171121_057_094_L2",
+        "reference_band": "6",
+        "bands": ["5", "6", "7", "8"],
+        "rgb": ("7", "6", "5"),
+        "satellite": "CBERS",
+    }
+
+    assert cbers._cbers_parse_scene_id(scene) == expected_content
+
+    scene = "CBERS_4_AWFI_20171121_057_094_L2"
+    expected_content = {
+        "acquisitionDay": "21",
+        "acquisitionMonth": "11",
+        "acquisitionYear": "2017",
+        "instrument": "AWFI",
+        "key": "CBERS4/AWFI/057/094/CBERS_4_AWFI_20171121_057_094_L2",
+        "path": "057",
+        "processingCorrectionLevel": "L2",
+        "row": "094",
+        "mission": "4",
+        "scene": "CBERS_4_AWFI_20171121_057_094_L2",
+        "reference_band": "14",
+        "bands": ["13", "14", "15", "16"],
+        "rgb": ("15", "14", "13"),
+        "satellite": "CBERS",
+    }
+
+    assert cbers._cbers_parse_scene_id(scene) == expected_content
+
+    scene = "CBERS_4_PAN10M_20171121_057_094_L2"
+    expected_content = {
+        "acquisitionDay": "21",
+        "acquisitionMonth": "11",
+        "acquisitionYear": "2017",
+        "instrument": "PAN10M",
+        "key": "CBERS4/PAN10M/057/094/CBERS_4_PAN10M_20171121_057_094_L2",
+        "path": "057",
+        "processingCorrectionLevel": "L2",
+        "row": "094",
+        "mission": "4",
+        "scene": "CBERS_4_PAN10M_20171121_057_094_L2",
+        "reference_band": "4",
+        "bands": ["2", "3", "4"],
+        "rgb": ("3", "4", "2"),
+        "satellite": "CBERS",
+    }
+
+    assert cbers._cbers_parse_scene_id(scene) == expected_content
+
+    scene = "CBERS_4_PAN5M_20171121_057_094_L2"
+    expected_content = {
+        "acquisitionDay": "21",
+        "acquisitionMonth": "11",
+        "acquisitionYear": "2017",
+        "instrument": "PAN5M",
+        "key": "CBERS4/PAN5M/057/094/CBERS_4_PAN5M_20171121_057_094_L2",
+        "path": "057",
+        "processingCorrectionLevel": "L2",
+        "row": "094",
+        "mission": "4",
+        "scene": "CBERS_4_PAN5M_20171121_057_094_L2",
+        "reference_band": "1",
+        "bands": ["1"],
+        "rgb": ("1", "1", "1"),
+        "satellite": "CBERS",
+    }
+
+    assert cbers._cbers_parse_scene_id(scene) == expected_content

@@ -1,5 +1,6 @@
 """rio_tiler.cbers: cbers processing."""
 
+import re
 import warnings
 from functools import partial
 from concurrent import futures
@@ -11,10 +12,105 @@ import rasterio
 from rasterio.warp import transform_bounds
 
 from rio_tiler import utils
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName, DeprecationWarning
+from rio_tiler.errors import (
+    TileOutsideBounds,
+    InvalidBandName,
+    DeprecationWarning,
+    InvalidCBERSSceneId,
+)
 
 CBERS_BUCKET = "s3://cbers-pds"
 CBERS_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "15", "16"]
+
+
+def _cbers_parse_scene_id(sceneid):
+    """Parse CBERS scene id.
+
+    Attributes
+    ----------
+    sceneid : str
+        CBERS sceneid.
+
+    Returns
+    -------
+    out : dict
+        dictionary with metadata constructed from the sceneid.
+
+        e.g:
+        _cbers_parse_scene_id('CBERS_4_PAN5M_20171121_057_094_L2')
+        {
+            "acquisitionDay": "21",
+            "acquisitionMonth": "11",
+            "acquisitionYear": "2017",
+            "instrument": "PAN5M",
+            "key": "CBERS4/PAN5M/057/094/CBERS_4_PAN5M_20171121_057_094_L2",
+            "path": "057",
+            "processingCorrectionLevel": "L2",
+            "row": "094",
+            "mission": "4",
+            "scene": "CBERS_4_PAN5M_20171121_057_094_L2",
+            "reference_band": "1",
+            "bands": ["1"],
+            "rgb": ("1", "1", "1"),
+            "satellite": "CBERS",
+        }
+
+    """
+    if not re.match(r"^CBERS_4_\w+_[0-9]{8}_[0-9]{3}_[0-9]{3}_L[0-9]$", sceneid):
+        raise InvalidCBERSSceneId("Could not match {}".format(sceneid))
+
+    cbers_pattern = (
+        r"(?P<satellite>\w+)_"
+        r"(?P<mission>[0-9]{1})"
+        r"_"
+        r"(?P<instrument>\w+)"
+        r"_"
+        r"(?P<acquisitionYear>[0-9]{4})"
+        r"(?P<acquisitionMonth>[0-9]{2})"
+        r"(?P<acquisitionDay>[0-9]{2})"
+        r"_"
+        r"(?P<path>[0-9]{3})"
+        r"_"
+        r"(?P<row>[0-9]{3})"
+        r"_"
+        r"(?P<processingCorrectionLevel>L[0-9]{1})$"
+    )
+
+    meta = None
+    match = re.match(cbers_pattern, sceneid, re.IGNORECASE)
+    if match:
+        meta = match.groupdict()
+
+    path = meta["path"]
+    row = meta["row"]
+    instrument = meta["instrument"]
+    meta["key"] = "CBERS4/{}/{}/{}/{}".format(instrument, path, row, sceneid)
+
+    meta["scene"] = sceneid
+
+    instrument_params = {
+        "MUX": {
+            "reference_band": "6",
+            "bands": ["5", "6", "7", "8"],
+            "rgb": ("7", "6", "5"),
+        },
+        "AWFI": {
+            "reference_band": "14",
+            "bands": ["13", "14", "15", "16"],
+            "rgb": ("15", "14", "13"),
+        },
+        "PAN10M": {
+            "reference_band": "4",
+            "bands": ["2", "3", "4"],
+            "rgb": ("3", "4", "2"),
+        },
+        "PAN5M": {"reference_band": "1", "bands": ["1"], "rgb": ("1", "1", "1")},
+    }
+    meta["reference_band"] = instrument_params[instrument]["reference_band"]
+    meta["bands"] = instrument_params[instrument]["bands"]
+    meta["rgb"] = instrument_params[instrument]["rgb"]
+
+    return meta
 
 
 def bounds(sceneid):
@@ -32,7 +128,7 @@ def bounds(sceneid):
         dictionary with image bounds.
 
     """
-    scene_params = utils.cbers_parse_scene_id(sceneid)
+    scene_params = _cbers_parse_scene_id(sceneid)
     cbers_address = "{}/{}".format(CBERS_BUCKET, scene_params["key"])
 
     with rasterio.open(
@@ -69,7 +165,7 @@ def metadata(sceneid, pmin=2, pmax=98):
         Dictionary with bounds and bands statistics.
 
     """
-    scene_params = utils.cbers_parse_scene_id(sceneid)
+    scene_params = _cbers_parse_scene_id(sceneid)
     cbers_address = "{}/{}".format(CBERS_BUCKET, scene_params["key"])
     bands = scene_params["bands"]
     ref_band = scene_params["reference_band"]
@@ -122,7 +218,7 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256):
     mask: numpy array
 
     """
-    scene_params = utils.cbers_parse_scene_id(sceneid)
+    scene_params = _cbers_parse_scene_id(sceneid)
 
     if not bands:
         bands = scene_params["rgb"]

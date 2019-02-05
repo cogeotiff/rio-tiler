@@ -16,6 +16,8 @@ and to return more statistics (#66)
   - rio_tiler.utils.landsat_get_mtl -> rio_tiler.landsat8._landsat_get_mtl
   - rio_tiler.utils.landsat_parse_scene_id -> rio_tiler.landsat8._landsat_parse_scene_id
   - rio_tiler.utils.landsat_get_stats -> rio_tiler.landsat8._landsat_stats
+- moved cbers utility functions from `rio_tiler.utils` to `rio_tiler.cbers`
+  - rio_tiler.utils.cbers_parse_scene_id -> rio_tiler.cbers._cbers_parse_scene_id
 
 
 1.0rc2 (2018-08-22)
