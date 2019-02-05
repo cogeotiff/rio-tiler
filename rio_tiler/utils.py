@@ -149,9 +149,9 @@ def _stats(arr, percentiles=(2, 98)):
     sample, edges = np.histogram(arr[~arr.mask])
     return {
         "pc": np.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
-        "min": arr.min(),
-        "max": arr.max(),
-        "std": arr.std(),
+        "min": arr.min().item(),
+        "max": arr.max().item(),
+        "std": arr.std().item(),
         "histogram": [sample.tolist(), edges.tolist()],
     }
 
