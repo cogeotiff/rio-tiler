@@ -5,7 +5,7 @@ import re
 import math
 import base64
 import logging
-import datetime
+import warnings
 from io import BytesIO
 
 import numpy as np
@@ -14,32 +14,27 @@ import numexpr as ne
 import mercantile
 
 import rasterio
+from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.io import DatasetReader
+from rasterio.io import DatasetReader, MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio import transform
-from rasterio.warp import calculate_default_transform
-from rio_toa import reflectance, brightness_temp, toa_utils
+from rio_toa import reflectance, brightness_temp
+from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler import profiles as TileProfiles
-from rio_tiler.errors import (
-    InvalidFormat,
-    InvalidLandsatSceneId,
-    InvalidSentinelSceneId,
-    InvalidCBERSSceneId,
-)
+from rio_tiler.errors import InvalidFormat, DeprecationWarning, NoOverviewWarning
 
 from PIL import Image
 
-# Python 2/3
-try:
-    from urllib.request import urlopen
-except ImportError:
-    from urllib2 import urlopen
-
-
 logger = logging.getLogger(__name__)
+
+
+def _chunks(l, n):
+    """Yield successive n-sized chunks from l."""
+    for i in range(0, len(l), n):
+        yield l[i : i + n]
 
 
 def landsat_min_max_worker(
@@ -66,7 +61,11 @@ def landsat_min_max_worker(
         returns a list of the min/max histogram cut values.
 
     """
-    if int(band) > 9:  # TIRS
+    warnings.warn(
+        "'rio_tiler.utils.landsat_min_max_worker' will be deprecated in 1.0",
+        DeprecationWarning,
+    )
+    if band in ["10", "11"]:  # TIRS
         multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
             "RADIANCE_MULT_BAND_{}".format(band)
         )
@@ -124,12 +123,148 @@ def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
         returns a list of the min/max histogram cut values.
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.band_min_max_worker' will be deprecated in 1.0",
+        DeprecationWarning,
+    )
     with rasterio.open(address) as src:
         arr = src.read(indexes=1, out_shape=(height, width)).astype(
             src.profile["dtype"]
         )
 
     return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
+
+
+def _stats(arr, percentiles=(2, 98)):
+    """Calculate array statistics."""
+    sample, edges = np.histogram(arr[~arr.mask])
+    return {
+        "pc": np.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
+        "min": arr.min().item(),
+        "max": arr.max().item(),
+        "std": arr.std().item(),
+        "histogram": [sample.tolist(), edges.tolist()],
+    }
+
+
+def raster_get_stats(
+    src_path,
+    indexes=None,
+    nodata=None,
+    overview_level=None,
+    max_size=1024,
+    percentiles=(2, 98),
+    dst_crs=CRS({"init": "EPSG:4326"}),
+):
+    """
+    Retrieve dataset statistics.
+
+    Attributes
+    ----------
+    src_path : str or PathLike object
+        A dataset path or URL. Will be opened in "r" mode.
+    indexes : tuple, list, int, optional
+        Dataset band indexes.
+    nodata, int, optional
+        Custom nodata value if not preset in dataset.
+    overview_level : int, optional
+        Overview (decimation) level to fetch.
+    max_size: int, optional
+        Maximum size of dataset to retrieve
+        (will be used to calculate the overview level to fetch).
+    percentiles : tulple, optional
+        Percentile or sequence of percentiles to compute,
+        which must be between 0 and 100 inclusive (default: (2, 98)).
+    dst_crs: CRS or dict
+        Target coordinate reference system (default: EPSG:4326).
+
+    Returns
+    -------
+    out : dict
+        bounds and band statistics: (percentiles), min, max, stdev, histogram
+
+        e.g.
+        {
+            'bounds': {
+                'value': (145.72265625, 14.853515625, 145.810546875, 14.94140625),
+                'crs': '+init=EPSG:4326'
+            },
+            'statistics': {
+                1: {
+                    'pc': [38, 147],
+                    'min': 20,
+                    'max': 180,
+                    'std': 28.123562304138662,
+                    'histogram': [
+                        [1625, 219241, 28344, 15808, 12325, 10687, 8535, 7348, 4656, 1208],
+                        [20.0, 36.0, 52.0, 68.0, 84.0, 100.0, 116.0, 132.0, 148.0, 164.0, 180.0]
+                    ]
+                }
+                ...
+                3: {...}
+                4: {...}
+            }
+        }
+    """
+    if isinstance(indexes, int):
+        indexes = [indexes]
+    elif isinstance(indexes, tuple):
+        indexes = list(indexes)
+
+    with rasterio.open(src_path) as src:
+        levels = src.overviews(1)
+        width = src.width
+        height = src.height
+        indexes = indexes if indexes else src.indexes
+        bounds = transform_bounds(
+            *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
+        )
+
+        if len(levels):
+            if overview_level:
+                decim = levels[overview_level]
+            else:
+                # determine which zoom level to read
+                for ii, decim in enumerate(levels):
+                    if max(width // decim, height // decim) < max_size:
+                        break
+        else:
+            decim = 1
+            warnings.warn(
+                "Dataset has no overviews, reading the full dataset", NoOverviewWarning
+            )
+
+        out_shape = (len(indexes), height // decim, width // decim)
+
+        vrt_params = dict(add_alpha=True, resampling=Resampling.bilinear)
+        if has_alpha_band(src):
+            vrt_params.update(dict(add_alpha=False))
+
+        if nodata is not None:
+            vrt_params.update(
+                dict(
+                    nodata=nodata,
+                    add_alpha=False,
+                    src_nodata=nodata,
+                    init_dest_nodata=False,
+                )
+            )
+
+        with WarpedVRT(src, **vrt_params) as vrt:
+            arr = vrt.read(out_shape=out_shape, indexes=indexes, masked=True)
+            stats = {
+                indexes[b]: _stats(arr[b], percentiles=percentiles)
+                for b in range(arr.shape[0])
+                if vrt.colorinterp[b] != ColorInterp.alpha
+            }
+
+    return {
+        "bounds": {
+            "value": bounds,
+            "crs": dst_crs.to_string() if isinstance(dst_crs, CRS) else dst_crs,
+        },
+        "statistics": stats,
+    }
 
 
 def get_vrt_transform(src, bounds, bounds_crs="epsg:3857"):
@@ -307,202 +442,6 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
     )
 
 
-def landsat_get_mtl(sceneid):
-    """
-    Get Landsat-8 MTL metadata.
-
-    Attributes
-    ----------
-    sceneid : str
-        Landsat sceneid. For scenes after May 2017,
-        sceneid have to be LANDSAT_PRODUCT_ID.
-
-    Returns
-    -------
-    out : dict
-        returns a JSON like object with the metadata.
-
-    """
-    scene_params = landsat_parse_scene_id(sceneid)
-    meta_file = "http://landsat-pds.s3.amazonaws.com/{}_MTL.txt".format(
-        scene_params["key"]
-    )
-    metadata = str(urlopen(meta_file).read().decode())
-    return toa_utils._parse_mtl_txt(metadata)
-
-
-def landsat_parse_scene_id(sceneid):
-    """
-    Parse Landsat-8 scene id.
-
-    Author @perrygeo - http://www.perrygeo.com
-
-    """
-    pre_collection = r"(L[COTEM]8\d{6}\d{7}[A-Z]{3}\d{2})"
-    collection_1 = r"(L[COTEM]08_L\d{1}[A-Z]{2}_\d{6}_\d{8}_\d{8}_\d{2}_(T1|T2|RT))"
-    if not re.match("^{}|{}$".format(pre_collection, collection_1), sceneid):
-        raise InvalidLandsatSceneId("Could not match {}".format(sceneid))
-
-    precollection_pattern = (
-        r"^L"
-        r"(?P<sensor>\w{1})"
-        r"(?P<satellite>\w{1})"
-        r"(?P<path>[0-9]{3})"
-        r"(?P<row>[0-9]{3})"
-        r"(?P<acquisitionYear>[0-9]{4})"
-        r"(?P<acquisitionJulianDay>[0-9]{3})"
-        r"(?P<groundStationIdentifier>\w{3})"
-        r"(?P<archiveVersion>[0-9]{2})$"
-    )
-
-    collection_pattern = (
-        r"^L"
-        r"(?P<sensor>\w{1})"
-        r"(?P<satellite>\w{2})"
-        r"_"
-        r"(?P<processingCorrectionLevel>\w{4})"
-        r"_"
-        r"(?P<path>[0-9]{3})"
-        r"(?P<row>[0-9]{3})"
-        r"_"
-        r"(?P<acquisitionYear>[0-9]{4})"
-        r"(?P<acquisitionMonth>[0-9]{2})"
-        r"(?P<acquisitionDay>[0-9]{2})"
-        r"_"
-        r"(?P<processingYear>[0-9]{4})"
-        r"(?P<processingMonth>[0-9]{2})"
-        r"(?P<processingDay>[0-9]{2})"
-        r"_"
-        r"(?P<collectionNumber>\w{2})"
-        r"_"
-        r"(?P<collectionCategory>\w{2})$"
-    )
-
-    meta = None
-    for pattern in [collection_pattern, precollection_pattern]:
-        match = re.match(pattern, sceneid, re.IGNORECASE)
-        if match:
-            meta = match.groupdict()
-            break
-
-    if meta.get("acquisitionJulianDay"):
-        date = datetime.datetime(
-            int(meta["acquisitionYear"]), 1, 1
-        ) + datetime.timedelta(int(meta["acquisitionJulianDay"]) - 1)
-
-        meta["date"] = date.strftime("%Y-%m-%d")
-    else:
-        meta["date"] = "{}-{}-{}".format(
-            meta["acquisitionYear"], meta["acquisitionMonth"], meta["acquisitionDay"]
-        )
-
-    collection = meta.get("collectionNumber", "")
-    if collection != "":
-        collection = "c{}".format(int(collection))
-
-    meta["key"] = os.path.join(
-        collection, "L8", meta["path"], meta["row"], sceneid, sceneid
-    )
-
-    meta["scene"] = sceneid
-
-    return meta
-
-
-def sentinel_parse_scene_id(sceneid):
-    """Parse Sentinel-2 scene id."""
-    if not re.match("^S2[AB]_tile_[0-9]{8}_[0-9]{2}[A-Z]{3}_[0-9]$", sceneid):
-        raise InvalidSentinelSceneId("Could not match {}".format(sceneid))
-
-    sentinel_pattern = (
-        r"^S"
-        r"(?P<sensor>\w{1})"
-        r"(?P<satellite>[AB]{1})"
-        r"_tile_"
-        r"(?P<acquisitionYear>[0-9]{4})"
-        r"(?P<acquisitionMonth>[0-9]{2})"
-        r"(?P<acquisitionDay>[0-9]{2})"
-        r"_"
-        r"(?P<utm>[0-9]{2})"
-        r"(?P<lat>\w{1})"
-        r"(?P<sq>\w{2})"
-        r"_"
-        r"(?P<num>[0-9]{1})$"
-    )
-
-    meta = None
-    match = re.match(sentinel_pattern, sceneid, re.IGNORECASE)
-    if match:
-        meta = match.groupdict()
-
-    utm_zone = meta["utm"].lstrip("0")
-    grid_square = meta["sq"]
-    latitude_band = meta["lat"]
-    year = meta["acquisitionYear"]
-    month = meta["acquisitionMonth"].lstrip("0")
-    day = meta["acquisitionDay"].lstrip("0")
-    img_num = meta["num"]
-
-    meta["key"] = "tiles/{}/{}/{}/{}/{}/{}/{}".format(
-        utm_zone, latitude_band, grid_square, year, month, day, img_num
-    )
-
-    meta["scene"] = sceneid
-
-    return meta
-
-
-def cbers_parse_scene_id(sceneid):
-    """Parse CBERS scene id."""
-    if not re.match(r"^CBERS_4_\w+_[0-9]{8}_[0-9]{3}_[0-9]{3}_L[0-9]$", sceneid):
-        raise InvalidCBERSSceneId("Could not match {}".format(sceneid))
-
-    cbers_pattern = (
-        r"(?P<satellite>\w+)_"
-        r"(?P<mission>[0-9]{1})"
-        r"_"
-        r"(?P<instrument>\w+)"
-        r"_"
-        r"(?P<acquisitionYear>[0-9]{4})"
-        r"(?P<acquisitionMonth>[0-9]{2})"
-        r"(?P<acquisitionDay>[0-9]{2})"
-        r"_"
-        r"(?P<path>[0-9]{3})"
-        r"_"
-        r"(?P<row>[0-9]{3})"
-        r"_"
-        r"(?P<processingCorrectionLevel>L[0-9]{1})$"
-    )
-
-    meta = None
-    match = re.match(cbers_pattern, sceneid, re.IGNORECASE)
-    if match:
-        meta = match.groupdict()
-
-    path = meta["path"]
-    row = meta["row"]
-    instrument = meta["instrument"]
-    meta["key"] = "CBERS4/{}/{}/{}/{}".format(instrument, path, row, sceneid)
-
-    meta["scene"] = sceneid
-
-    instrument_params = {
-        "MUX": {"reference_band": "6", "bands": ["5", "6", "7", "8"], "rgb": (7, 6, 5)},
-        "AWFI": {
-            "reference_band": "14",
-            "bands": ["13", "14", "15", "16"],
-            "rgb": (15, 14, 13),
-        },
-        "PAN10M": {"reference_band": "4", "bands": ["2", "3", "4"], "rgb": (3, 4, 2)},
-        "PAN5M": {"reference_band": "1", "bands": ["1"], "rgb": (1, 1, 1)},
-    }
-    meta["reference_band"] = instrument_params[instrument]["reference_band"]
-    meta["bands"] = instrument_params[instrument]["bands"]
-    meta["rgb"] = instrument_params[instrument]["rgb"]
-
-    return meta
-
-
 def array_to_img(arr, mask=None, color_map=None):
     """
     Convert an array to a base64 encoded img.
@@ -522,6 +461,10 @@ def array_to_img(arr, mask=None, color_map=None):
         Pillow image
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.array_to_img' will be deprecated in 1.0 to remove PIL support",
+        DeprecationWarning,
+    )
     if arr.dtype != np.uint8:
         logger.error("Data casted to UINT8")
         arr = arr.astype(np.uint8)
@@ -565,6 +508,10 @@ def img_to_buffer(img, image_format, image_options={}):
     buffer
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.img_to_buffer' will be deprecated in 1.0 to remove PIL support",
+        DeprecationWarning,
+    )
     if image_format == "jpeg":
         img = img.convert("RGB")
 
@@ -591,6 +538,9 @@ def b64_encode_img(img, tileformat):
         base64 encoded image.
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.b64_encode_img' will be deprecated in 1.0", DeprecationWarning
+    )
     params = TileProfiles.get(tileformat)
 
     if tileformat == "jpeg":
@@ -602,20 +552,93 @@ def b64_encode_img(img, tileformat):
     return base64.b64encode(sio.getvalue()).decode()
 
 
-def get_colormap(name="cfastie"):
+def array_to_image(
+    arr, mask=None, img_format="png", color_map=None, **creation_options
+):
     """
-    Read colormap file.
+    Translate numpy ndarray to image buffer using GDAL.
+
+    Usage
+    -----
+    tile, mask = rio_tiler.utils.tile_read(......)
+    with open('test.jpg', 'wb') as f:
+        f.write(array_to_image(tile, mask, img_format="jpeg"))
 
     Attributes
     ----------
-    name : str
-        colormap name (default: cfastie)
+    arr : numpy ndarray
+        Image array to encode.
+    mask: numpy ndarray, optional
+        Mask array
+    img_format: str, optional
+        Image format to return (default: 'png').
+        List of supported format by GDAL: https://www.gdal.org/formats_list.html
+    color_map: dict, optional
+        GDAL compatible ColorMap dictionary (see: rio_tiler.utils.get_colormap)
+    creation_options: dict, optional
+        Image driver creation options to pass to GDAL
 
     Returns
     -------
-    colormap : list
-        Color map array in a Pillow friendly format
+    bytes
+
+    """
+    img_format = img_format.lower()
+
+    if len(arr.shape) < 3:
+        arr = np.expand_dims(arr, axis=0)
+
+    if color_map is not None:
+        # Apply colormap and transpose back to raster band-style
+        arr = np.transpose(color_map[arr][0], [2, 0, 1]).astype(np.uint8)
+
+    # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
+    if img_format == "webp" and arr.shape[0] == 1:
+        arr = np.repeat(arr, 3, axis=0)
+
+    if mask is not None and img_format != "jpeg":
+        nbands = arr.shape[0] + 1
+    else:
+        nbands = arr.shape[0]
+
+    output_profile = dict(
+        driver=img_format,
+        dtype=arr.dtype,
+        count=nbands,
+        height=arr.shape[1],
+        width=arr.shape[2],
+    )
+    output_profile.update(creation_options)
+
+    with MemoryFile() as memfile:
+        with memfile.open(**output_profile) as dst:
+            dst.write(arr, indexes=list(range(1, arr.shape[0] + 1)))
+
+            # Use Mask as an alpha band
+            if mask is not None and img_format != "jpeg":
+                dst.write(mask.astype(np.uint8), indexes=nbands)
+
+        return memfile.read()
+
+
+def get_colormap(name="cfastie", format="pil"):
+    """
+    Return Pillow or GDAL compatible colormap array.
+
+    Attributes
+    ----------
+    name : str, optional
+        Colormap name (default: cfastie)
+    format: str, optional
+        Compatiblity library, should be "pil" or "gdal" (default: pil).
+
+    Returns
+    -------
+    colormap : list or numpy.array
+        Color map list in a Pillow friendly format
         more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
+        or
+        Color map array in GDAL friendly format
 
     """
     cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.txt".format(name))
@@ -625,7 +648,13 @@ def get_colormap(name="cfastie"):
             list(map(int, line.split())) for line in lines if not line.startswith("#")
         ][1:]
 
-    return list(np.array(colormap).flatten())
+    cmap = list(np.array(colormap).flatten())
+    if format.lower() == "pil":
+        return cmap
+    elif format.lower() == "gdal":
+        return np.array(list(_chunks(cmap, 3)))
+    else:
+        raise Exception("Unsupported {} colormap format".format(format))
 
 
 def mapzen_elevation_rgb(arr):

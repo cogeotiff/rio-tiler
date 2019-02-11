@@ -24,6 +24,17 @@ ADDRESS_EXTMASK = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0
 )
 
 
+@pytest.fixture(autouse=True)
+def testing_env_var(monkeypatch):
+    """Set fake env to make sure we don't hit AWS services."""
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "jqt")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "rde")
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.setenv("AWS_CONFIG_FILE", "/tmp/noconfigheere")
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/tmp/noconfighereeither")
+    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
+
+
 def test_bounds_valid():
     """
     Should work as expected (get bounds)
@@ -32,6 +43,25 @@ def test_bounds_valid():
     meta = main.bounds(ADDRESS)
     assert meta.get("url") == ADDRESS
     assert len(meta.get("bounds")) == 4
+
+
+def test_metadata_valid():
+    """Get bounds and get stats for all bands."""
+    meta = main.metadata(ADDRESS)
+    assert meta["address"] == ADDRESS
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 3
+    assert meta["statistics"][1]["pc"] == [12, 198]
+
+
+def test_metadata_valid_custom():
+    """Get bounds and get stats for all bands with custom percentiles."""
+    meta = main.metadata(ADDRESS, pmin=5, pmax=90, dst_crs="epsg:3857")
+    assert meta["address"] == ADDRESS
+    assert meta["bounds"]["crs"] == "epsg:3857"
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 3
+    assert meta["statistics"][1]["pc"] == [30, 191]
 
 
 def test_tile_valid_default():

@@ -10,13 +10,12 @@ import numpy as np
 from rio_toa import toa_utils
 
 import rasterio
+from rasterio.crs import CRS
 from rio_tiler import utils
-from rio_tiler.errors import (
-    InvalidFormat,
-    InvalidLandsatSceneId,
-    InvalidSentinelSceneId,
-    InvalidCBERSSceneId,
-)
+from rio_tiler.errors import InvalidFormat, DeprecationWarning, NoOverviewWarning
+
+from .conftest import requires_webp
+
 
 SENTINEL_SCENE = "S2A_tile_20170729_19UDP_0"
 SENTINEL_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "sentinel-s2-l1c")
@@ -28,12 +27,13 @@ LANDSAT_PATH = os.path.join(
     LANDSAT_BUCKET, "c1", "L8", "016", "037", LANDSAT_SCENE_C1, LANDSAT_SCENE_C1
 )
 
-
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
+S3_KEY_NODATA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif"
 S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__), "fixtures", "my-bucket")
 S3_PATH = os.path.join(S3_LOCAL, S3_KEY)
 S3_ALPHA_PATH = os.path.join(S3_LOCAL, S3_KEY_ALPHA)
+S3_NODATA_PATH = os.path.join(S3_LOCAL, S3_KEY_NODATA)
 
 KEY_PIX4D = "pix4d/pix4d_alpha_nodata.tif"
 PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
@@ -43,37 +43,37 @@ with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
 
 
-with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
-    LANDSAT_METADATA_RAW = f.read().encode("utf-8")
-
-
+# TODO: Remove on 1.0.0
 def test_landsat_min_max_worker():
     """
     Should work as expected (read data and return histogram cuts)
     """
+    with pytest.warns(DeprecationWarning):
+        assert utils.landsat_min_max_worker(
+            "2", LANDSAT_PATH, LANDSAT_METADATA["L1_METADATA_FILE"], 2, 98
+        ) == [939, 7025]
 
-    assert utils.landsat_min_max_worker(
-        "2", LANDSAT_PATH, LANDSAT_METADATA["L1_METADATA_FILE"], 2, 98
-    ) == [939, 7025]
 
-
+# TODO: Remove on 1.0.0
 def test_landsat_min_max_worker_tir():
     """
     Should work as expected (read data and return histogram cuts)
     """
+    with pytest.warns(DeprecationWarning):
+        assert utils.landsat_min_max_worker(
+            "10", LANDSAT_PATH, LANDSAT_METADATA["L1_METADATA_FILE"], 2, 98
+        ) == [275, 297]
 
-    assert utils.landsat_min_max_worker(
-        "10", LANDSAT_PATH, LANDSAT_METADATA["L1_METADATA_FILE"], 2, 98
-    ) == [275, 297]
 
-
+# TODO: Remove on 1.0.0
 def test_band_min_max_worker():
     """
     Should work as expected (read data and return histogram cuts)
     """
 
     address = "{}/preview/B04.jp2".format(SENTINEL_PATH)
-    assert utils.band_min_max_worker(address, pmin=2, pmax=98) == [255, 8626]
+    with pytest.warns(DeprecationWarning):
+        assert utils.band_min_max_worker(address, pmin=2, pmax=98) == [255, 8626]
 
 
 def test_tile_read_valid():
@@ -248,342 +248,130 @@ def test_tile_exists_valid():
     assert utils.tile_exists(bounds, tile_z, tile_x, tile_y)
 
 
-def test_landsat_id_pre_invalid():
-    """
-    Should raise an error with invalid sceneid
-    """
-
-    scene = "L0300342017083LGN00"
-    with pytest.raises(InvalidLandsatSceneId):
-        utils.landsat_parse_scene_id(scene)
-
-
-def test_landsat_id_c1_invalid():
-    """
-    Should raise an error with invalid sceneid
-    """
-
-    scene = "LC08_005004_20170410_20170414_01_T1"
-    with pytest.raises(InvalidLandsatSceneId):
-        utils.landsat_parse_scene_id(scene)
-
-
-def test_landsat_id_pre_valid():
-    """
-    Should work as expected (parse landsat pre sceneid)
-    """
-
-    scene = "LC80300342017083LGN00"
-    expected_content = {
-        "acquisitionJulianDay": "083",
-        "acquisitionYear": "2017",
-        "archiveVersion": "00",
-        "date": "2017-03-24",
-        "groundStationIdentifier": "LGN",
-        "key": "L8/030/034/LC80300342017083LGN00/LC80300342017083LGN00",
-        "path": "030",
-        "row": "034",
-        "satellite": "8",
-        "scene": "LC80300342017083LGN00",
-        "sensor": "C",
-    }
-
-    assert utils.landsat_parse_scene_id(scene) == expected_content
-
-
-def test_landsat_id_c1_valid():
-    """
-    Should work as expected (parse landsat c1 sceneid)
-    """
-
-    scene = "LC08_L1TP_005004_20170410_20170414_01_T1"
-    expected_content = {
-        "acquisitionDay": "10",
-        "acquisitionMonth": "04",
-        "acquisitionYear": "2017",
-        "collectionCategory": "T1",
-        "collectionNumber": "01",
-        "date": "2017-04-10",
-        "key": "c1/L8/005/004/LC08_L1TP_005004_20170410_\
-20170414_01_T1/LC08_L1TP_005004_20170410_20170414_01_T1",
-        "path": "005",
-        "processingCorrectionLevel": "L1TP",
-        "processingDay": "14",
-        "processingMonth": "04",
-        "processingYear": "2017",
-        "row": "004",
-        "satellite": "08",
-        "scene": "LC08_L1TP_005004_20170410_20170414_01_T1",
-        "sensor": "C",
-    }
-
-    assert utils.landsat_parse_scene_id(scene) == expected_content
-
-
-def test_sentinel_id_invalid():
-    """
-    Should raise an error with invalid sceneid
-    """
-
-    scene = "S2A_tile_20170323_17SNC"
-    with pytest.raises(InvalidSentinelSceneId):
-        utils.sentinel_parse_scene_id(scene)
-
-
-def test_sentinel_id_valid():
-    """
-    Should work as expected (parse sentinel scene id)
-    """
-
-    scene = "S2A_tile_20170323_17SNC_0"
-    expected_content = {
-        "acquisitionDay": "23",
-        "acquisitionMonth": "03",
-        "acquisitionYear": "2017",
-        "key": "tiles/17/S/NC/2017/3/23/0",
-        "lat": "S",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_tile_20170323_17SNC_0",
-        "sensor": "2",
-        "sq": "NC",
-        "utm": "17",
-    }
-
-    assert utils.sentinel_parse_scene_id(scene) == expected_content
-
-
-def test_sentinel_id_valid_strip():
-    """
-    Should work as expected (parse sentinel scene id)
-    """
-
-    scene = "S2A_tile_20170323_07SNC_0"
-    expected_content = {
-        "acquisitionDay": "23",
-        "acquisitionMonth": "03",
-        "acquisitionYear": "2017",
-        "key": "tiles/7/S/NC/2017/3/23/0",
-        "lat": "S",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_tile_20170323_07SNC_0",
-        "sensor": "2",
-        "sq": "NC",
-        "utm": "07",
-    }
-
-    assert utils.sentinel_parse_scene_id(scene) == expected_content
-
-
-def test_cbers_id_invalid():
-    """
-    Should raise an error with invalid sceneid
-    """
-
-    scene = "CBERS_4_MUX_20171121_057_094"
-    with pytest.raises(InvalidCBERSSceneId):
-        utils.cbers_parse_scene_id(scene)
-
-
-def test_cbers_id_valid():
-    """
-    Should work as expected (parse cbers scene id)
-    """
-
-    scene = "CBERS_4_MUX_20171121_057_094_L2"
-    expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "MUX",
-        "key": "CBERS4/MUX/057/094/CBERS_4_MUX_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
-        "mission": "4",
-        "scene": "CBERS_4_MUX_20171121_057_094_L2",
-        "reference_band": "6",
-        "bands": ["5", "6", "7", "8"],
-        "rgb": (7, 6, 5),
-        "satellite": "CBERS",
-    }
-
-    assert utils.cbers_parse_scene_id(scene) == expected_content
-
-    scene = "CBERS_4_AWFI_20171121_057_094_L2"
-    expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "AWFI",
-        "key": "CBERS4/AWFI/057/094/CBERS_4_AWFI_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
-        "mission": "4",
-        "scene": "CBERS_4_AWFI_20171121_057_094_L2",
-        "reference_band": "14",
-        "bands": ["13", "14", "15", "16"],
-        "rgb": (15, 14, 13),
-        "satellite": "CBERS",
-    }
-
-    assert utils.cbers_parse_scene_id(scene) == expected_content
-
-    scene = "CBERS_4_PAN10M_20171121_057_094_L2"
-    expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "PAN10M",
-        "key": "CBERS4/PAN10M/057/094/CBERS_4_PAN10M_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
-        "mission": "4",
-        "scene": "CBERS_4_PAN10M_20171121_057_094_L2",
-        "reference_band": "4",
-        "bands": ["2", "3", "4"],
-        "rgb": (3, 4, 2),
-        "satellite": "CBERS",
-    }
-
-    assert utils.cbers_parse_scene_id(scene) == expected_content
-
-    scene = "CBERS_4_PAN5M_20171121_057_094_L2"
-    expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "PAN5M",
-        "key": "CBERS4/PAN5M/057/094/CBERS_4_PAN5M_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
-        "mission": "4",
-        "scene": "CBERS_4_PAN5M_20171121_057_094_L2",
-        "reference_band": "1",
-        "bands": ["1"],
-        "rgb": (1, 1, 1),
-        "satellite": "CBERS",
-    }
-
-    assert utils.cbers_parse_scene_id(scene) == expected_content
-
-
 def test_array_to_img_valid():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_valid_mask():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    mask = np.random.randint(0, 1, size=(512, 512), dtype=np.uint8) * 255
-    assert utils.array_to_img(arr, mask=mask)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+        mask = np.random.randint(0, 1, size=(512, 512), dtype=np.uint8) * 255
+        assert utils.array_to_img(arr, mask=mask)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_valid_oneband():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_valid_noband():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_cast():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.int16)
-    assert utils.array_to_img(arr)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.int16)
+        assert utils.array_to_img(arr)
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_colormap():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    utils.array_to_img(arr, color_map=utils.get_colormap())
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+        utils.array_to_img(arr, color_map=utils.get_colormap())
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_bands_colormap():
     """Should raise an error with invalid format
     """
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    with pytest.raises(InvalidFormat):
-        utils.array_to_img(arr, color_map=True)
+    with pytest.warns(DeprecationWarning):
+        with pytest.raises(InvalidFormat):
+            utils.array_to_img(arr, color_map=True)
 
 
+# TODO: Remove on 1.0.0
 def test_b64_encode_img_valid_jpg():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.b64_encode_img(img, "jpeg")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.b64_encode_img(img, "jpeg")
 
 
+# TODO: Remove on 1.0.0
 def test_b64_encode_img_valid_png():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.b64_encode_img(img, "png")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.b64_encode_img(img, "png")
 
 
+# TODO: Remove on 1.0.0
 def test_b64_encode_img_valid_webp():
     """Should work as expected
     """
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.b64_encode_img(img, "webp")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.b64_encode_img(img, "webp")
 
 
+# TODO: Remove on 1.0.0
 def test_array_to_img_invalid_format():
     """Should raise an error with invalid format
     """
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    with pytest.raises(InvalidFormat):
-        utils.b64_encode_img(img, "gif")
-
-
-@patch("rio_tiler.utils.urlopen")
-def test_landsat_get_mtl_valid(urlopen):
-
-    urlopen.return_value.read.return_value = LANDSAT_METADATA_RAW
-
-    meta_data = utils.landsat_get_mtl(LANDSAT_SCENE_C1)
-    assert (
-        meta_data["L1_METADATA_FILE"]["METADATA_FILE_INFO"]["LANDSAT_SCENE_ID"]
-        == "LC80160372017225LGN00"
-    )
-
-
-@patch("rio_tiler.utils.urlopen")
-def test_landsat_get_mtl_invalid(urlopen):
-
-    urlopen.return_value.read.return_value = {}
-    with pytest.raises(Exception):
-        utils.landsat_get_mtl(LANDSAT_SCENE_C1)
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        with pytest.raises(InvalidFormat):
+            utils.b64_encode_img(img, "gif")
 
 
 def test_get_colormap_valid():
-    """Test default (cfastie) color map."""
+    """Returns 'cfastie' colormap in a PIL friendly format."""
     assert len(utils.get_colormap()) == 768  # 3 x256
 
 
 def test_get_colormap_schwarzwald():
-    """Test schwarzwald color map."""
+    """Returns 'schwarzwald' colormap in a GDAL friendly format."""
     assert len(utils.get_colormap(name="schwarzwald")) == 768  # 3 x256
+
+
+def test_get_colormap_gdal():
+    """Returns 'cfastie' colormap in a GDAL friendly format."""
+    assert len(utils.get_colormap(format="gdal")) == 256  # 256 x 3
+
+
+def test_get_colormap_unsupported():
+    """Raise error on unsupported format."""
+    with pytest.raises(Exception):
+        utils.get_colormap(format="gal")
 
 
 def test_mapzen_elevation_rgb():
@@ -664,6 +452,26 @@ def test_expression_landsat_rgb(landsat_tile):
     data.shape == (3, 512, 512)
     mask.shape == (512, 512)
     assert len(landsat_tile.call_args[1].get("bands")) == 3
+
+
+@patch("rio_tiler.cbers.tile")
+def test_expression_cbers_rgb(cbers_tile):
+    """Should read tile from CBERS data."""
+    cbers_tile.return_value = [
+        np.random.randint(0, 255, size=(3, 256, 256), dtype=np.uint8),
+        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255,
+    ]
+
+    expr = "b8*0.8, b7*1.1, b6*0.8"
+    tile_z = 10
+    tile_x = 664
+    tile_y = 495
+
+    sceneid = "CBERS_4_MUX_20171121_057_094_L2"
+    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
+    data.shape == (3, 512, 512)
+    mask.shape == (512, 512)
+    assert len(cbers_tile.call_args[1].get("bands")) == 3
 
 
 def test_expression_main_ratio():
@@ -761,20 +569,137 @@ def test_get_vrt_transform_valid4326():
 
 def test_img_to_buffer_valid_jpg():
     """Should create a jpeg buffer."""
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.img_to_buffer(img, "jpeg")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.img_to_buffer(img, "jpeg")
 
 
+# TODO: Remove on 1.0.0
 def test_img_to_buffer_valid_png():
     """Should create a png buffer."""
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.img_to_buffer(img, "png")
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.img_to_buffer(img, "png")
 
 
+# TODO: Remove on 1.0.0
 def test_img_to_buffer_valid_options():
     """Should create a png buffer with compression options."""
-    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
-    img = utils.array_to_img(arr)
-    assert utils.img_to_buffer(img, "png", image_options={"compress_level": 0})
+    with pytest.warns(DeprecationWarning):
+        arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+        img = utils.array_to_img(arr)
+        assert utils.img_to_buffer(img, "png", image_options={"compress_level": 0})
+
+
+def test_statsFunction_valid():
+    """Should return a valid dict with array statistics."""
+    with rasterio.open(S3_ALPHA_PATH) as src:
+        arr = src.read(indexes=[1], masked=True)
+    stats = utils._stats(arr)
+    assert stats["pc"] == [10, 200]
+    assert stats["min"] == 0
+    assert stats["max"] == 254
+    assert int(stats["std"]) == 55
+    assert len(stats["histogram"]) == 2
+    assert len(stats["histogram"][0]) == 10
+
+    stats = utils._stats(arr, percentiles=(5, 95))
+    assert stats["pc"] == [31, 195]
+
+
+def test_raster_get_stats_valid():
+    """Should return a valid dict with array statistics."""
+    stats = utils.raster_get_stats(S3_PATH)
+    assert stats["bounds"]
+    assert stats["bounds"]["crs"] == CRS({"init": "EPSG:4326"})
+    assert len(stats["statistics"]) == 3
+    assert stats["statistics"][1]["pc"] == [12, 198]
+    assert stats["statistics"][2]["pc"] == [27, 201]
+    assert stats["statistics"][3]["pc"] == [54, 192]
+
+
+def test_raster_get_stats_validAlpha():
+    """Should return a valid dict with array statistics."""
+    with pytest.warns(NoOverviewWarning):
+        stats = utils.raster_get_stats(S3_ALPHA_PATH)
+    assert len(stats["statistics"]) == 3
+    assert stats["statistics"][1]["pc"] == [12, 199]
+    assert stats["statistics"][2]["pc"] == [29, 201]
+    assert stats["statistics"][3]["pc"] == [56, 193]
+
+
+def test_raster_get_stats_validNodata():
+    """Should return a valid dict with array statistics."""
+    with pytest.warns(NoOverviewWarning):
+        stats = utils.raster_get_stats(S3_NODATA_PATH)
+    assert stats["bounds"]
+    assert len(stats["statistics"]) == 3
+    assert stats["statistics"][1]["pc"] == [12, 198]
+    assert stats["statistics"][2]["pc"] == [28, 201]
+    assert stats["statistics"][3]["pc"] == [56, 192]
+
+    with pytest.warns(NoOverviewWarning):
+        stats = utils.raster_get_stats(S3_NODATA_PATH, nodata=0)
+    assert stats["bounds"]
+    assert len(stats["statistics"]) == 3
+    assert stats["statistics"][1]["pc"] == [12, 198]
+    assert stats["statistics"][2]["pc"] == [28, 201]
+    assert stats["statistics"][3]["pc"] == [56, 192]
+
+
+def test_raster_get_stats_validOptions():
+    """Should return a valid dict with array statistics."""
+    stats = utils.raster_get_stats(
+        S3_PATH, indexes=3, overview_level=1, percentiles=(10, 90), dst_crs="epsg:3857"
+    )
+    assert stats["bounds"]["crs"] == "epsg:3857"
+    assert len(stats["statistics"]) == 1
+    assert stats["statistics"][3]["pc"] == [77, 178]
+
+    stats = utils.raster_get_stats(S3_PATH, indexes=(3,))
+    assert len(stats["statistics"]) == 1
+    assert stats["statistics"][3]["pc"] == [54, 192]
+
+
+def test_array_to_image_valid_1band():
+    """Creates PNG image buffer from one band array."""
+    arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
+    assert utils.array_to_image(arr)
+
+
+def test_array_to_image_valid_colormap():
+    """Creates 'colormaped' PNG image buffer from one band array."""
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    cmap = utils.get_colormap(name="cfastie", format="gdal")
+    assert utils.array_to_image(arr, color_map=cmap)
+
+
+def test_array_to_image_valid_mask():
+    """Creates image buffer from 3 bands array and mask."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+    assert utils.array_to_image(arr, mask=mask)
+    assert utils.array_to_image(arr, mask=mask, img_format="jpeg")
+
+
+def test_array_to_image_valid_options():
+    """Creates image buffer with driver options."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8) + 255
+    assert utils.array_to_image(arr, mask=mask, img_format="png", ZLEVEL=9)
+
+
+def test_array_to_image_geotiff():
+    """Creates GeoTIFF image buffer from 3 bands array."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8) + 255
+    assert utils.array_to_image(arr, mask=mask, img_format="GTiff")
+
+
+@requires_webp
+def test_array_to_image_valid_1bandWebp():
+    """Creates WEBP image buffer from 1 band array."""
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    assert utils.array_to_image(arr, img_format="WEBP")
