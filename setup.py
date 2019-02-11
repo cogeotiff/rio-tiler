@@ -18,7 +18,6 @@ with open("README.rst") as f:
 inst_reqs = [
     "numpy",
     "numexpr",
-    "Pillow",
     "mercantile",
     "boto3",
     "rasterio[s3]~=1.0",
