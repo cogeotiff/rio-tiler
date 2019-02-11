@@ -26,7 +26,6 @@ from rio_tiler.errors import (
     TileOutsideBounds,
     InvalidBandName,
     InvalidLandsatSceneId,
-    DeprecationWarning,
     NoOverviewWarning,
 )
 
@@ -39,6 +38,7 @@ except ImportError:
 
 LANDSAT_BUCKET = "s3://landsat-pds"
 LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+
 # ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
 MAX_THREADS = os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5)
 
@@ -366,16 +366,8 @@ def tile(
         bands = tuple((bands,))
 
     for band in bands:
-        if isinstance(band, int):
-            warnings.warn(
-                "Integer band name support will be removed in 1.0", DeprecationWarning
-            )
-            band = str(band)
         if band not in LANDSAT_BANDS:
             raise InvalidBandName("{} is not a valid Landsat band name".format(band))
-
-    # TODO: remove in 1.0.0
-    bands = tuple(map(str, bands))
 
     scene_params = _landsat_parse_scene_id(sceneid)
     meta_data = _landsat_get_mtl(sceneid).get("L1_METADATA_FILE")

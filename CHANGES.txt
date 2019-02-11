@@ -1,10 +1,9 @@
-Next
-----
+1.0.0 (2019-02-11)
+------------------
 - add missing Landsat panchromatic band (08) min/max fetch in `rio_tiler.landsat8.metadata` (#58)
-- add `rio_tiler.utils.img_to_buffer` to create a buffer from a PIL Image (#62)
 - add pre-commit for commit validation (#64)
-- code formating using Black (the uncompromising Python code formatter) (#64)
-- update documention (Sentinel-2 cost) (#68)
+- code formatting using Black (the uncompromising Python code formatter) (#64)
+- update documentation (Sentinel-2 cost) (#68)
 - add `utils.raster_get_stats` and `utils._get_stats` to replace `min_max*` function
 and to return more statistics (#66)
 - add overview level selection to statistical functions to reduce the data download (#59)
@@ -24,7 +23,11 @@ and to return more statistics (#66)
   - rio_tiler.utils.cbers_parse_scene_id -> rio_tiler.cbers._cbers_parse_scene_id
 - moved sentinel-2 utility functions from `rio_tiler.utils` to `rio_tiler.sentinel2`
   - rio_tiler.utils.sentinel_parse_scene_id -> rio_tiler.sentinel2._sentinel_parse_scene_id
-
+- removed deprecated PIL support as well as base64 encoding function in rio_tiler.utils
+  - rio_tiler.utils.img_to_buffer
+  - rio_tiler.utils.array_to_img
+  - rio_tiler.utils.b64_encode_img
+- removed deprecated min_max* functions (landsat_min_max_worker and band_min_max_worker)
 
 1.0rc2 (2018-08-22)
 -------------------

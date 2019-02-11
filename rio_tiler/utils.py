@@ -3,10 +3,8 @@
 import os
 import re
 import math
-import base64
 import logging
 import warnings
-from io import BytesIO
 
 import numpy as np
 import numexpr as ne
@@ -18,15 +16,10 @@ from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.io import DatasetReader, MemoryFile
-from rasterio.plot import reshape_as_image
 from rasterio import transform
-from rio_toa import reflectance, brightness_temp
 from rasterio.warp import calculate_default_transform, transform_bounds
 
-from rio_tiler import profiles as TileProfiles
-from rio_tiler.errors import InvalidFormat, DeprecationWarning, NoOverviewWarning
-
-from PIL import Image
+from rio_tiler.errors import NoOverviewWarning
 
 logger = logging.getLogger(__name__)
 
@@ -35,104 +28,6 @@ def _chunks(l, n):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(l), n):
         yield l[i : i + n]
-
-
-def landsat_min_max_worker(
-    band, address, metadata, pmin=2, pmax=98, width=1024, height=1024
-):
-    """
-    Retrieve histogram percentage cut for a Landsat-8 scene.
-
-    Attributes
-    ----------
-    address : Landsat band AWS address
-    band : Landsat band number
-    metadata : Landsat metadata
-    pmin : Histogram minimum cut (default: 2)
-    pmax : Histogram maximum cut (default: 98)
-    width : int, optional (default: 1024)
-        Pixel width for the decimated read.
-    height : int, optional (default: 1024)
-        Pixel height for the decimated read.
-
-    Returns
-    -------
-    out : list, int
-        returns a list of the min/max histogram cut values.
-
-    """
-    warnings.warn(
-        "'rio_tiler.utils.landsat_min_max_worker' will be deprecated in 1.0",
-        DeprecationWarning,
-    )
-    if band in ["10", "11"]:  # TIRS
-        multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
-            "RADIANCE_MULT_BAND_{}".format(band)
-        )
-
-        add_rad = metadata["RADIOMETRIC_RESCALING"].get(
-            "RADIANCE_ADD_BAND_{}".format(band)
-        )
-
-        k1 = metadata["TIRS_THERMAL_CONSTANTS"].get("K1_CONSTANT_BAND_{}".format(band))
-
-        k2 = metadata["TIRS_THERMAL_CONSTANTS"].get("K2_CONSTANT_BAND_{}".format(band))
-
-        with rasterio.open("{}_B{}.TIF".format(address, band)) as src:
-            arr = src.read(indexes=1, out_shape=(height, width)).astype(
-                src.profile["dtype"]
-            )
-            arr = brightness_temp.brightness_temp(arr, multi_rad, add_rad, k1, k2)
-    else:
-        multi_reflect = metadata["RADIOMETRIC_RESCALING"].get(
-            "REFLECTANCE_MULT_BAND_{}".format(band)
-        )
-        add_reflect = metadata["RADIOMETRIC_RESCALING"].get(
-            "REFLECTANCE_ADD_BAND_{}".format(band)
-        )
-        sun_elev = metadata["IMAGE_ATTRIBUTES"]["SUN_ELEVATION"]
-
-        with rasterio.open("{}_B{}.TIF".format(address, band)) as src:
-            arr = src.read(indexes=1, out_shape=(height, width)).astype(
-                src.profile["dtype"]
-            )
-            arr = 10000 * reflectance.reflectance(
-                arr, multi_reflect, add_reflect, sun_elev, src_nodata=0
-            )
-
-    return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
-
-
-def band_min_max_worker(address, pmin=2, pmax=98, width=1024, height=1024):
-    """
-    Retrieve histogram percentage cut for a single image band.
-
-    Attributes
-    ----------
-    address : Image band URL
-    pmin : Histogram minimum cut (default: 2)
-    pmax : Histogram maximum cut (default: 98)
-    width : int, optional (default: 1024)
-        Pixel width for the decimated read.
-    height : int, optional (default: 1024)
-        Pixel height for the decimated read.
-
-    Returns
-    -------
-    out : list, int
-        returns a list of the min/max histogram cut values.
-
-    """
-    warnings.warn(
-        "'rio_tiler.utils.band_min_max_worker' will be deprecated in 1.0",
-        DeprecationWarning,
-    )
-    with rasterio.open(address) as src:
-        arr = src.read(indexes=1, out_shape=(height, width)).astype(
-            src.profile["dtype"]
-        )
-
-    return np.percentile(arr[arr > 0], (pmin, pmax)).astype(np.int).tolist()
 
 
 def _stats(arr, percentiles=(2, 98)):
@@ -440,116 +335,6 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
         and (tile_y <= maxtile.y + 1)
         and (tile_y >= mintile.y)
     )
-
-
-def array_to_img(arr, mask=None, color_map=None):
-    """
-    Convert an array to a base64 encoded img.
-
-    Attributes
-    ----------
-    arr : numpy ndarray
-        Image array to encode.
-    Mask: numpy ndarray
-        Mask
-    color_map: numpy array
-        ColorMap array (see: utils.get_colormap)
-
-    Returns
-    -------
-    img : object
-        Pillow image
-
-    """
-    warnings.warn(
-        "'rio_tiler.utils.array_to_img' will be deprecated in 1.0 to remove PIL support",
-        DeprecationWarning,
-    )
-    if arr.dtype != np.uint8:
-        logger.error("Data casted to UINT8")
-        arr = arr.astype(np.uint8)
-
-    if len(arr.shape) >= 3:
-        arr = reshape_as_image(arr)
-        arr = arr.squeeze()
-
-    if len(arr.shape) != 2 and color_map:
-        raise InvalidFormat("Cannot apply colormap on a multiband image")
-
-    mode = "L" if len(arr.shape) == 2 else "RGB"
-
-    img = Image.fromarray(arr, mode=mode)
-    if color_map:
-        img.putpalette(color_map)
-
-    if mask is not None:
-        mask_img = Image.fromarray(mask.astype(np.uint8))
-        img.putalpha(mask_img)
-
-    return img
-
-
-def img_to_buffer(img, image_format, image_options={}):
-    """
-    Convert a Pillow image to io buffer.
-
-    Attributes
-    ----------
-    img : object
-        Pillow image
-    image_format : str
-        Image file formats
-    image_options : dict
-        Pillow image format options.
-        See https://pillow.readthedocs.io/en/stable/handbook/image-file-formats.html
-
-    Returns
-    -------
-    buffer
-
-    """
-    warnings.warn(
-        "'rio_tiler.utils.img_to_buffer' will be deprecated in 1.0 to remove PIL support",
-        DeprecationWarning,
-    )
-    if image_format == "jpeg":
-        img = img.convert("RGB")
-
-    sio = BytesIO()
-    img.save(sio, image_format.upper(), **image_options)
-    sio.seek(0)
-    return sio.getvalue()
-
-
-def b64_encode_img(img, tileformat):
-    """
-    Convert a Pillow image to an base64 encoded string.
-
-    Attributes
-    ----------
-    img : object
-        Pillow image
-    tileformat : str
-        Image format to return (Accepted: "jpg" or "png")
-
-    Returns
-    -------
-    out : str
-        base64 encoded image.
-
-    """
-    warnings.warn(
-        "'rio_tiler.utils.b64_encode_img' will be deprecated in 1.0", DeprecationWarning
-    )
-    params = TileProfiles.get(tileformat)
-
-    if tileformat == "jpeg":
-        img = img.convert("RGB")
-
-    sio = BytesIO()
-    img.save(sio, tileformat.upper(), **params)
-    sio.seek(0)
-    return base64.b64encode(sio.getvalue()).decode()
 
 
 def array_to_image(

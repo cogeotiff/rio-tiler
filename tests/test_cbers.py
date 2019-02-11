@@ -4,12 +4,7 @@ import os
 import pytest
 
 from rio_tiler import cbers
-from rio_tiler.errors import (
-    TileOutsideBounds,
-    InvalidBandName,
-    DeprecationWarning,
-    InvalidCBERSSceneId,
-)
+from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidCBERSSceneId
 
 CBERS_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "cbers-pds")
 CBERS_MUX_SCENE = "CBERS_4_MUX_20171121_057_094_L2"
@@ -172,22 +167,6 @@ def test_tile_valid_custom(monkeypatch):
     data, mask = cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
-
-
-# TODO: Remove on 1.0.0
-def test_tile_warnsInteger(monkeypatch):
-    """Should warns on integer band name."""
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
-
-    tile_z = 10
-    tile_x = 390
-    tile_y = 547
-    bands = 1
-
-    with pytest.warns(DeprecationWarning):
-        data, mask = cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z, bands=bands)
-        assert data.shape == (1, 256, 256)
-        assert mask.shape == (256, 256)
 
 
 def test_tile_valid_oneband(monkeypatch):

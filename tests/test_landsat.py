@@ -12,7 +12,6 @@ from rio_tiler import landsat8
 from rio_tiler.errors import (
     TileOutsideBounds,
     InvalidBandName,
-    DeprecationWarning,
     NoOverviewWarning,
     InvalidLandsatSceneId,
 )
@@ -112,25 +111,6 @@ def test_tile_valid_nrg(landsat_get_mtl, monkeypatch):
     data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
-
-
-# TODO: Remove on 1.0.0
-@patch("rio_tiler.landsat8._landsat_get_mtl")
-def test_tile_warnsInteger(landsat_get_mtl, monkeypatch):
-    """Should warns on integer band name."""
-    monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
-    landsat_get_mtl.return_value = LANDSAT_METADATA
-
-    tile_z = 8
-    tile_x = 71
-    tile_y = 102
-    bands = (5, 4, 3)
-    with pytest.warns(DeprecationWarning):
-        data, mask = landsat8.tile(
-            LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands
-        )
-        assert data.shape == (3, 256, 256)
-        assert mask.shape == (256, 256)
 
 
 @patch("rio_tiler.landsat8._landsat_get_mtl")
