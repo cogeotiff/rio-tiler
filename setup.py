@@ -25,7 +25,10 @@ inst_reqs = [
     "rio-pansharpen",
 ]
 
-extra_reqs = {"test": ["mock", "pytest", "pytest-cov"]}
+extra_reqs = {
+    "test": ["mock", "pytest", "pytest-cov"],
+    "dev": ["mock", "pytest", "pytest-cov", "pre-commit"],
+}
 
 setup(
     name="rio_tiler",
