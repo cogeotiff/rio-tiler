@@ -1,3 +1,8 @@
+Next (TBD)
+----------
+- Fix mask datatype bug in `rio_tiler.utils.array_to_image`
+
+
 1.0.0 (2019-02-11)
 ------------------
 - add missing Landsat panchromatic band (08) min/max fetch in `rio_tiler.landsat8.metadata` (#58)

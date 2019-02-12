@@ -401,7 +401,7 @@ def array_to_image(
 
             # Use Mask as an alpha band
             if mask is not None and img_format != "jpeg":
-                dst.write(mask.astype(np.uint8), indexes=nbands)
+                dst.write(mask.astype(arr.dtype), indexes=nbands)
 
         return memfile.read()
 
