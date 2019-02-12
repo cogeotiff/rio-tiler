@@ -527,6 +527,13 @@ def test_array_to_image_valid_options():
     assert utils.array_to_image(arr, mask=mask, img_format="png", ZLEVEL=9)
 
 
+def test_array_to_image_geotiff16Bytes():
+    """Creates GeoTIFF image buffer from 3 bands array."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint16)
+    mask = np.zeros((512, 512), dtype=np.uint8) + 255
+    assert utils.array_to_image(arr, mask=mask, img_format="GTiff")
+
+
 def test_array_to_image_geotiff():
     """Creates GeoTIFF image buffer from 3 bands array."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
