@@ -136,14 +136,7 @@ def raster_get_stats(
             vrt_params.update(dict(add_alpha=False))
 
         if nodata is not None:
-            vrt_params.update(
-                dict(
-                    nodata=nodata,
-                    add_alpha=False,
-                    src_nodata=nodata,
-                    init_dest_nodata=False,
-                )
-            )
+            vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
         with WarpedVRT(src, **vrt_params) as vrt:
             arr = vrt.read(out_shape=out_shape, indexes=indexes, masked=True)
@@ -234,14 +227,7 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
     vrt_params = dict(add_alpha=True, crs="epsg:3857", resampling=Resampling.bilinear)
 
     if nodata is not None:
-        vrt_params.update(
-            dict(
-                nodata=nodata,
-                add_alpha=False,
-                src_nodata=nodata,
-                init_dest_nodata=False,
-            )
-        )
+        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
     out_shape = (len(indexes), tilesize, tilesize)
 

@@ -16,10 +16,10 @@ ADDRESS_ALPHA = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1
 ADDRESS_NODATA = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif".format(
     PREFIX
 )
-ADDRESS_MASK = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_mask.tif".format(
+ADDRESS_MASK = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_mask.tif".format(
     PREFIX
 )
-ADDRESS_EXTMASK = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata_extmask.tif".format(
+ADDRESS_EXTMASK = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_extmask.tif".format(
     PREFIX
 )
 
@@ -65,10 +65,7 @@ def test_metadata_valid_custom():
 
 
 def test_tile_valid_default():
-    """
-    Should work as expected
-    """
-
+    """Should return a 3 bands array and a full valid mask."""
     tile_z = 21
     tile_x = 438217
     tile_y = 801835
@@ -79,10 +76,8 @@ def test_tile_valid_default():
 
 
 def test_tile_valid_default_boundless():
-    """Should work as expected.
-
-    Mask should not be all valid because it's boundless read.
-    """
+    """Should return a partial valid mask because of boundless read."""
+    # boundless tile
     tile_z = 19
     tile_x = 109554
     tile_y = 200458
@@ -93,13 +88,10 @@ def test_tile_valid_default_boundless():
 
 
 def test_tile_valid_bands():
-    """
-    Should work as expected
-    """
-
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
+    """Should return One band array."""
+    tile_z = 21
+    tile_x = 438217
+    tile_y = 801835
     bands = 1
 
     data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, indexes=bands)
@@ -107,11 +99,8 @@ def test_tile_valid_bands():
 
 
 def test_tile_valid_internal_alpha():
-    """
-    Should work as expected
-    """
-
-    # Non-boundless tile
+    """Should return a 3 bands array and a partial valid mask."""
+    # non-boundless tile covering the alpha masked part
     tile_z = 22
     tile_x = 876432
     tile_y = 1603670
@@ -122,92 +111,84 @@ def test_tile_valid_internal_alpha():
 
 
 def test_tile_valid_internal_nodata():
-    """
-    Should work as expected
-    """
-
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
+    """Should return a 3 bands array and a partial valid mask."""
+    # non-boundless tile covering the nodata part
+    tile_z = 22
+    tile_x = 876431
+    tile_y = 1603670
 
     data, mask = main.tile(ADDRESS_NODATA, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert not mask.all()
 
 
-def test_tile_valid_external_nodata():
-    """Should work as expected"""
-    tile_z = 22
-    tile_x = 876431
-    tile_y = 1603669
+def test_tile_valid_wrong_nodata():
+    """"Should return a full valid mask."""
+    tile_z = 21
+    tile_x = 438217
+    tile_y = 801835
 
-    data, mask = main.tile(ADDRESS_NODATA, tile_x, tile_y, tile_z, nodata=0)
+    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, nodata=1000)
+    assert data.shape == (3, 256, 256)
+    assert mask.all()
+
+
+def test_tile_valid_wrong_nodata_boundless():
+    """"Should return partial valid mask because of boundless read."""
+    # boundless tile
+    tile_z = 19
+    tile_x = 109554
+    tile_y = 200458
+
+    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, nodata=1000)
     assert data.shape == (3, 256, 256)
     assert not mask.all()
-    assert (mask[:, 0:3] == 0).all()
 
 
 def test_tile_valid_internal_mask():
-    """
-    Should work as expected
-    """
+    """"Should return partial valid mask."""
+    # non-boundless tile covering the masked part
+    tile_z = 22
+    tile_x = 876431
+    tile_y = 1603670
 
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
-
-    data, mask = main.tile(ADDRESS_MASK, tile_x, tile_y, tile_z, indexes=(1, 2, 3))
+    data, mask = main.tile(ADDRESS_MASK, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert not mask.all()
 
+    # boundless tile covering the masked part
+    tile_z = 22
+    tile_x = 876431
+    tile_y = 1603668
+    data, mask = main.tile(ADDRESS_MASK, tile_x, tile_y, tile_z)
+    assert data.shape == (3, 256, 256)
+    assert not mask.all()
+    assert not mask[0].any()
+
 
 def test_tile_valid_external_mask():
-    """
-    Should work as expected
-    """
-
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
+    """"Should return partial valid mask if external mask is found."""
+    # non-boundless tile covering the masked part
+    tile_z = 22
+    tile_x = 876431
+    tile_y = 1603670
 
     data, mask = main.tile(ADDRESS_EXTMASK, tile_x, tile_y, tile_z, indexes=(1, 2, 3))
     assert data.shape == (3, 256, 256)
     assert not mask.all()
 
-
-def test_tile_valid_wrong_nodata():
-    """
-    Should work as expected
-    """
-
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
-
-    data, mask = main.tile(ADDRESS_NODATA, tile_x, tile_y, tile_z, nodata=10000)
+    # boundless tile covering the masked part
+    tile_z = 22
+    tile_x = 876431
+    tile_y = 1603668
+    data, mask = main.tile(ADDRESS_EXTMASK, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
-    assert mask.all()
-
-
-def test_tile_valid_oneband():
-    """
-    Should work as expected
-    """
-
-    tile_z = 19
-    tile_x = 109554
-    tile_y = 200458
-    bands = 3
-
-    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, indexes=bands)
-    assert data.shape == (1, 256, 256)
+    assert not mask.all()
+    assert not mask[0].any()
 
 
 def test_tile_invalid_bounds():
-    """
-    Should raise an error with invalid tile
-    """
-
+    """Should raise an error with invalid tile."""
     tile_z = 19
     tile_x = 554
     tile_y = 200458
