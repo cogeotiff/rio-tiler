@@ -1,7 +1,7 @@
-Next (TBD)
-----------
-- Fix mask datatype bug in `rio_tiler.utils.array_to_image`
-
+1.0.1 (2019-02-14)
+------------------
+- Fix mask datatype bug in `rio_tiler.utils.array_to_image`(#79)
+- Fix nodata handling and better test for the nodata/mask main module (#81)
 
 1.0.0 (2019-02-11)
 ------------------
