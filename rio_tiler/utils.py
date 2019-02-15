@@ -198,19 +198,19 @@ def has_alpha_band(src):
     return False
 
 
-def tile_read(source, bounds, tilesize, indexes=None, nodata=None):
+def _tile_read(srd_dst, bounds, tilesize, indexes=None, nodata=None):
     """
     Read data and mask.
 
     Attributes
     ----------
-    source : str or rasterio.io.DatasetReader
-        input file path or rasterio.io.DatasetReader object
+    srd_dst : rasterio.io.DatasetReader
+        rasterio.io.DatasetReader object
     bounds : list
         Mercator tile bounds (left, bottom, right, top)
     tilesize : int
         Output image size
-    indexes : list of ints or a single int, optional, (default: 1)
+    indexes : list of ints or a single int, optional, (defaults: None)
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.
     nodata: int or float, optional (defaults: None)
@@ -223,57 +223,59 @@ def tile_read(source, bounds, tilesize, indexes=None, nodata=None):
     """
     if isinstance(indexes, int):
         indexes = [indexes]
+    elif isinstance(indexes, tuple):
+        indexes = list(indexes)
 
     vrt_params = dict(add_alpha=True, crs="epsg:3857", resampling=Resampling.bilinear)
 
-    if isinstance(source, DatasetReader):
-        vrt_transform, vrt_width, vrt_height = get_vrt_transform(source, bounds)
-        vrt_params.update(
-            dict(transform=vrt_transform, width=vrt_width, height=vrt_height)
+    vrt_transform, vrt_width, vrt_height = get_vrt_transform(srd_dst, bounds)
+    vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
+
+    indexes = indexes if indexes is not None else srd_dst.indexes
+    out_shape = (len(indexes), tilesize, tilesize)
+
+    nodata = nodata if nodata is not None else srd_dst.nodata
+    if nodata is not None:
+        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
+
+    if has_alpha_band(srd_dst):
+        vrt_params.update(dict(add_alpha=False))
+
+    with WarpedVRT(srd_dst, **vrt_params) as vrt:
+        data = vrt.read(
+            out_shape=out_shape, resampling=Resampling.bilinear, indexes=indexes
         )
+        mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
 
-        indexes = indexes if indexes is not None else source.indexes
-        out_shape = (len(indexes), tilesize, tilesize)
+        return data, mask
 
-        nodata = nodata if nodata is not None else source.nodata
-        if nodata is not None:
-            vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
-        if has_alpha_band(source):
-            vrt_params.update(dict(add_alpha=False))
+def tile_read(source, bounds, tilesize, **kwargs):
+    """
+    Read data and mask.
 
-        with WarpedVRT(source, **vrt_params) as vrt:
-            data = vrt.read(
-                out_shape=out_shape, resampling=Resampling.bilinear, indexes=indexes
-            )
-            mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
+    Attributes
+    ----------
+    source : str or rasterio.io.DatasetReader
+        input file path or rasterio.io.DatasetReader object
+    bounds : list
+        Mercator tile bounds (left, bottom, right, top)
+    tilesize : int
+        Output image size
+    kwargs: dict, optional
+        These will be passed to the _tile_read function.
 
+    Returns
+    -------
+    out : array, int
+        returns pixel value.
+
+    """
+    if isinstance(source, DatasetReader):
+        return _tile_read(source, bounds, tilesize, **kwargs)
     else:
         with rasterio.open(source) as src:
-            vrt_transform, vrt_width, vrt_height = get_vrt_transform(src, bounds)
-            vrt_params.update(
-                dict(transform=vrt_transform, width=vrt_width, height=vrt_height)
-            )
-
-            indexes = indexes if indexes is not None else src.indexes
-            out_shape = (len(indexes), tilesize, tilesize)
-
-            nodata = nodata if nodata is not None else src.nodata
-            if nodata is not None:
-                vrt_params.update(
-                    dict(nodata=nodata, add_alpha=False, src_nodata=nodata)
-                )
-
-            if has_alpha_band(src):
-                vrt_params.update(dict(add_alpha=False))
-
-            with WarpedVRT(src, **vrt_params) as vrt:
-                data = vrt.read(
-                    out_shape=out_shape, resampling=Resampling.bilinear, indexes=indexes
-                )
-                mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
-
-    return data, mask
+            return _tile_read(src, bounds, tilesize, **kwargs)
 
 
 def linear_rescale(image, in_range=(0, 1), out_range=(1, 255)):
