@@ -191,6 +191,26 @@ def test_tile_read_dataset():
     assert src.closed
 
 
+def test_tile_read_dataset_nodata():
+    """
+    Should work as expected (read rgb)
+    """
+    # non-boundless tile covering the nodata part 22-876431-1603670
+    bounds = (
+        -104.77532386779785,
+        38.95360206813569,
+        -104.77523803710938,
+        38.95366881479647,
+    )
+    tilesize = 16
+
+    with rasterio.open(S3_NODATA_PATH) as src:
+        arr, mask = utils.tile_read(src, bounds, tilesize)
+    assert arr.shape == (3, 16, 16)
+    assert not mask.all()
+    assert src.closed
+
+
 def test_linear_rescale_valid():
     """
     Should work as expected (read data band)

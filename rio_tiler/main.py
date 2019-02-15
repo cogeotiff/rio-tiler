@@ -90,9 +90,6 @@ def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=Non
             *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
         )
 
-        indexes = indexes if indexes is not None else src.indexes
-        nodata = nodata if nodata is not None else src.nodata
-
         if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
                 "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
