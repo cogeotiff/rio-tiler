@@ -198,7 +198,7 @@ def has_alpha_band(src):
     return False
 
 
-def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
+def tile_read(source, bounds, tilesize, indexes=None, nodata=None):
     """
     Read data and mask.
 
@@ -226,16 +226,18 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
 
     vrt_params = dict(add_alpha=True, crs="epsg:3857", resampling=Resampling.bilinear)
 
-    if nodata is not None:
-        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
-
-    out_shape = (len(indexes), tilesize, tilesize)
-
     if isinstance(source, DatasetReader):
         vrt_transform, vrt_width, vrt_height = get_vrt_transform(source, bounds)
         vrt_params.update(
             dict(transform=vrt_transform, width=vrt_width, height=vrt_height)
         )
+
+        indexes = indexes if indexes is not None else source.indexes
+        out_shape = (len(indexes), tilesize, tilesize)
+
+        nodata = nodata if nodata is not None else source.nodata
+        if nodata is not None:
+            vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
         if has_alpha_band(source):
             vrt_params.update(dict(add_alpha=False))
@@ -252,6 +254,15 @@ def tile_read(source, bounds, tilesize, indexes=[1], nodata=None):
             vrt_params.update(
                 dict(transform=vrt_transform, width=vrt_width, height=vrt_height)
             )
+
+            indexes = indexes if indexes is not None else src.indexes
+            out_shape = (len(indexes), tilesize, tilesize)
+
+            nodata = nodata if nodata is not None else src.nodata
+            if nodata is not None:
+                vrt_params.update(
+                    dict(nodata=nodata, add_alpha=False, src_nodata=nodata)
+                )
 
             if has_alpha_band(src):
                 vrt_params.update(dict(add_alpha=False))
