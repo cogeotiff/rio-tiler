@@ -198,7 +198,9 @@ def has_alpha_band(src):
     return False
 
 
-def _tile_read(srd_dst, bounds, tilesize, indexes=None, nodata=None):
+def _tile_read(
+    srd_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear"
+):
     """
     Read data and mask.
 
@@ -214,6 +216,8 @@ def _tile_read(srd_dst, bounds, tilesize, indexes=None, nodata=None):
         If `indexes` is a list, the result is a 3D array, but is
         a 2D array if it is a band index number.
     nodata: int or float, optional (defaults: None)
+    resampling_method : str, optional (default: "bilinear")
+         Resampling algorithm
 
     Returns
     -------
@@ -226,7 +230,9 @@ def _tile_read(srd_dst, bounds, tilesize, indexes=None, nodata=None):
     elif isinstance(indexes, tuple):
         indexes = list(indexes)
 
-    vrt_params = dict(add_alpha=True, crs="epsg:3857", resampling=Resampling.bilinear)
+    vrt_params = dict(
+        add_alpha=True, crs="epsg:3857", resampling=Resampling[resampling_method]
+    )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(srd_dst, bounds)
     vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
@@ -243,7 +249,9 @@ def _tile_read(srd_dst, bounds, tilesize, indexes=None, nodata=None):
 
     with WarpedVRT(srd_dst, **vrt_params) as vrt:
         data = vrt.read(
-            out_shape=out_shape, resampling=Resampling.bilinear, indexes=indexes
+            out_shape=out_shape,
+            indexes=indexes,
+            resampling=Resampling[resampling_method],
         )
         mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
 
