@@ -58,7 +58,7 @@ def metadata(address, pmin=2, pmax=98, **kwargs):
     return info
 
 
-def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=None):
+def tile(address, tile_x, tile_y, tile_z, tilesize=256, **kwargs):
     """
     Create mercator tile from any images.
 
@@ -72,12 +72,10 @@ def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=Non
         Mercator tile Y index.
     tile_z : int
         Mercator tile ZOOM level.
-    indexes : tuple, int, optional (default: (1, 2, 3))
-        Bands indexes for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
-    nodata: int or float, optional
-        Overwrite nodata value for mask creation.
+    kwargs: dict, optional
+        These will be passed to the 'rio_tiler.utils._tile_read' function.
 
     Returns
     -------
@@ -97,6 +95,4 @@ def tile(address, tile_x, tile_y, tile_z, indexes=None, tilesize=256, nodata=Non
 
         mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
         tile_bounds = mercantile.xy_bounds(mercator_tile)
-        return utils.tile_read(
-            src, tile_bounds, tilesize, indexes=indexes, nodata=nodata
-        )
+        return utils.tile_read(src, tile_bounds, tilesize, **kwargs)

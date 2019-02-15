@@ -98,6 +98,16 @@ def test_tile_valid_bands():
     assert data.shape == (1, 256, 256)
 
 
+def test_tile_valid_resampling():
+    """Should return an array and a mask."""
+    tile_z = 21
+    tile_x = 438217
+    tile_y = 801835
+    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z, resampling_method="nearest")
+    assert data.shape == (3, 256, 256)
+    assert mask.all()
+
+
 def test_tile_valid_internal_alpha():
     """Should return a 3 bands array and a partial valid mask."""
     # non-boundless tile covering the alpha masked part
