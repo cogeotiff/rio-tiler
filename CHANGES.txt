@@ -1,13 +1,21 @@
-1.1.0 (TBD)
------------
+1.1.0 (2019-02-15)
+------------------
+
 - Allow options forwarding to `tile_read` from `main.tile` function (#86)
 - Add `resampling_method` options in `rio_tiler.utils.tile_read` to allow user set
 resampling. Default is now bilinear (#85)
-- Refactor `rio_tiler.utils.tile_read` to reduce code complexity (#84)
-- Fix nodata forwarding to tile_read option when source is a path (#83)
 
-**Breacking Changes**
-- `indexes` options is now set to `**None** in `rio_tiler.utils.tile_read`.
+Bug fixes:
+
+- Fix nodata option forwarding to tile_read when source is a path (#83)
+
+Refactoring:
+
+- Refactor `rio_tiler.utils.tile_read` to reduce code complexity (#84)
+
+Breacking Changes:
+
+- `indexes` options is now set to **None** in `rio_tiler.utils.tile_read`.
 Default will now be the dataset indexes.
 
 1.0.1 (2019-02-14)
