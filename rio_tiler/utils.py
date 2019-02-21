@@ -106,14 +106,14 @@ def raster_get_stats(
     elif isinstance(indexes, tuple):
         indexes = list(indexes)
 
-    with rasterio.open(src_path) as src:
-        levels = src.overviews(1)
-        width = src.width
-        height = src.height
-        indexes = indexes if indexes else src.indexes
-        nodata = nodata if nodata is not None else src.nodata
+    with rasterio.open(src_path) as src_dst:
+        levels = src_dst.overviews(1)
+        width = src_dst.width
+        height = src_dst.height
+        indexes = indexes if indexes else src_dst.indexes
+        nodata = nodata if nodata is not None else src_dst.nodata
         bounds = transform_bounds(
-            *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
+            *[src_dst.crs, dst_crs] + list(src_dst.bounds), densify_pts=21
         )
 
         if len(levels):
@@ -133,13 +133,13 @@ def raster_get_stats(
         out_shape = (len(indexes), height // decim, width // decim)
 
         vrt_params = dict(add_alpha=True, resampling=Resampling.bilinear)
-        if has_alpha_band(src):
+        if has_alpha_band(src_dst):
             vrt_params.update(dict(add_alpha=False))
 
         if nodata is not None:
             vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
-        with WarpedVRT(src, **vrt_params) as vrt:
+        with WarpedVRT(src_dst, **vrt_params) as vrt:
             arr = vrt.read(out_shape=out_shape, indexes=indexes, masked=True)
             stats = {
                 indexes[b]: _stats(arr[b], percentiles=percentiles)
@@ -156,13 +156,13 @@ def raster_get_stats(
     }
 
 
-def get_vrt_transform(src, bounds, bounds_crs="epsg:3857"):
+def get_vrt_transform(src_dst, bounds, bounds_crs="epsg:3857"):
     """
     Calculate VRT transform.
 
     Attributes
     ----------
-    src : rasterio.io.DatasetReader
+    src_dst : rasterio.io.DatasetReader
         Rasterio io.DatasetReader object
     bounds : list
         Bounds (left, bottom, right, top)
@@ -178,7 +178,7 @@ def get_vrt_transform(src, bounds, bounds_crs="epsg:3857"):
 
     """
     dst_transform, _, _ = calculate_default_transform(
-        src.crs, bounds_crs, src.width, src.height, *src.bounds
+        src_dst.crs, bounds_crs, src_dst.width, src_dst.height, *src_dst.bounds
     )
     w, s, e, n = bounds
     vrt_width = math.ceil((e - w) / dst_transform.a)
@@ -189,11 +189,11 @@ def get_vrt_transform(src, bounds, bounds_crs="epsg:3857"):
     return vrt_transform, vrt_width, vrt_height
 
 
-def has_alpha_band(src):
+def has_alpha_band(src_dst):
     """Check for alpha band or mask in source."""
     if (
-        any([MaskFlags.alpha in flags for flags in src.mask_flag_enums])
-        or ColorInterp.alpha in src.colorinterp
+        any([MaskFlags.alpha in flags for flags in src_dst.mask_flag_enums])
+        or ColorInterp.alpha in src_dst.colorinterp
     ):
         return True
     return False
@@ -283,8 +283,8 @@ def tile_read(source, bounds, tilesize, **kwargs):
     if isinstance(source, DatasetReader):
         return _tile_read(source, bounds, tilesize, **kwargs)
     else:
-        with rasterio.open(source) as src:
-            return _tile_read(src, bounds, tilesize, **kwargs)
+        with rasterio.open(source) as src_dst:
+            return _tile_read(src_dst, bounds, tilesize, **kwargs)
 
 
 def linear_rescale(image, in_range=(0, 1), out_range=(1, 255)):
