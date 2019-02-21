@@ -200,14 +200,14 @@ def has_alpha_band(src):
 
 
 def _tile_read(
-    srd_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear"
+    src_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear"
 ):
     """
     Read data and mask.
 
     Attributes
     ----------
-    srd_dst : rasterio.io.DatasetReader
+    src_dst : rasterio.io.DatasetReader
         rasterio.io.DatasetReader object
     bounds : list
         Mercator tile bounds (left, bottom, right, top)
@@ -235,20 +235,20 @@ def _tile_read(
         add_alpha=True, crs="epsg:3857", resampling=Resampling[resampling_method]
     )
 
-    vrt_transform, vrt_width, vrt_height = get_vrt_transform(srd_dst, bounds)
+    vrt_transform, vrt_width, vrt_height = get_vrt_transform(src_dst, bounds)
     vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
 
-    indexes = indexes if indexes is not None else srd_dst.indexes
+    indexes = indexes if indexes is not None else src_dst.indexes
     out_shape = (len(indexes), tilesize, tilesize)
 
-    nodata = nodata if nodata is not None else srd_dst.nodata
+    nodata = nodata if nodata is not None else src_dst.nodata
     if nodata is not None:
         vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
-    if has_alpha_band(srd_dst):
+    if has_alpha_band(src_dst):
         vrt_params.update(dict(add_alpha=False))
 
-    with WarpedVRT(srd_dst, **vrt_params) as vrt:
+    with WarpedVRT(src_dst, **vrt_params) as vrt:
         data = vrt.read(
             out_shape=out_shape,
             indexes=indexes,
