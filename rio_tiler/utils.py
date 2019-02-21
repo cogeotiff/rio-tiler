@@ -111,6 +111,7 @@ def raster_get_stats(
         width = src.width
         height = src.height
         indexes = indexes if indexes else src.indexes
+        nodata = nodata if nodata is not None else src.nodata
         bounds = transform_bounds(
             *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
         )
