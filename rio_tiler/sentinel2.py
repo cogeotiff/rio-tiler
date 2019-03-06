@@ -34,7 +34,7 @@ SENTINEL_BANDS = [
 ]
 
 # ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
-MAX_THREADS = os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5)
+MAX_THREADS = int(os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5))
 
 
 def _sentinel_parse_scene_id(sceneid):

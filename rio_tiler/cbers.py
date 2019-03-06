@@ -19,7 +19,7 @@ CBERS_BUCKET = "s3://cbers-pds"
 CBERS_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "13", "14", "15", "16"]
 
 # ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
-MAX_THREADS = os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5)
+MAX_THREADS = int(os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5))
 
 
 def _cbers_parse_scene_id(sceneid):
