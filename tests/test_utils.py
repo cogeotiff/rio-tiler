@@ -277,6 +277,11 @@ def test_get_colormap_schwarzwald():
     assert len(utils.get_colormap(name="schwarzwald")) == 768  # 3 x256
 
 
+def test_get_colormap_rplumbo():
+    """Returns 'rplumbo' colormap in a GDAL friendly format."""
+    assert len(utils.get_colormap(name="rplumbo")) == 768  # 3 x256
+
+
 def test_get_colormap_gdal():
     """Returns 'cfastie' colormap in a GDAL friendly format."""
     assert len(utils.get_colormap(format="gdal")) == 256  # 256 x 3
