@@ -383,7 +383,12 @@ def array_to_image(
 
     if color_map is not None:
         # Apply colormap and transpose back to raster band-style
-        arr = np.transpose(color_map[arr][0], [2, 0, 1]).astype(np.uint8)
+        # arr = np.transpose(color_map[arr][0], [2, 0, 1]).astype(np.uint8)
+        res = np.zeros((arr.shape[1], arr.shape[2], 3), dtype=np.uint8)
+        for k, v in color_map.items():
+            res[arr[0] == k] = v
+        arr = np.transpose(res, [2, 0, 1])
+        del res
 
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
     if img_format == "webp" and arr.shape[0] == 1:
@@ -445,7 +450,8 @@ def get_colormap(name="cfastie", format="pil"):
     if format.lower() == "pil":
         return cmap
     elif format.lower() == "gdal":
-        return np.array(list(_chunks(cmap, 3)))
+        cmap = list(_chunks(cmap, 3))
+        return dict(enumerate(cmap))
     else:
         raise Exception("Unsupported {} colormap format".format(format))
 
