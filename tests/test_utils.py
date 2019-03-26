@@ -583,6 +583,24 @@ def test_array_to_image_valid_colormap():
     assert utils.array_to_image(arr, color_map=cmap)
 
 
+def test_array_to_image_valid_colormapDict():
+    """Create 'colormaped' PNG image buffer from one band array using discrete cmap."""
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    cmap = {1: [255, 255, 255], 50: [255, 255, 0], 100: [255, 0, 0], 150: [0, 0, 255]}
+    assert utils.array_to_image(arr, color_map=cmap)
+
+
+def test_apply_discrete_colormap_valid():
+    """Apply discrete colormap to array."""
+    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
+    arr[0, 0, 0] = 1
+    arr[0, 1, 1] = 100
+    cmap = {1: [255, 255, 255], 50: [255, 255, 0], 100: [255, 0, 0], 150: [0, 0, 255]}
+    res = utils._apply_discrete_colormap(arr, cmap)
+    assert res[:, 0, 0].tolist() == [255, 255, 255]
+    assert res[:, 1, 1].tolist() == [255, 0, 0]
+
+
 def test_array_to_image_valid_mask():
     """Creates image buffer from 3 bands array and mask."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)

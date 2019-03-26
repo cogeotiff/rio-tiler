@@ -2,6 +2,8 @@
 Next (TBD)
 ----------
 
+- `rio_tiler.utils.array_to_image`'s color_map arg can be a dictionary of discrete values (#91)
+
 Breacking Changes:
 
 - `expr` argument is now a required option in `rio_tiler.utils.expression`. (#88)

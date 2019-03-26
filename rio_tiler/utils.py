@@ -345,6 +345,33 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
     )
 
 
+def _apply_discrete_colormap(arr, cmap):
+    """
+    Apply discrete colormap.
+
+    Attributes
+    ----------
+    arr : numpy.ndarray
+        1D image array to convert.
+    color_map: dict
+        Discrete ColorMap dictionary
+        e.g:
+        {
+            1: [255, 255, 255],
+            2: [255, 0, 0]
+        }
+
+    Returns
+    -------
+    arr: numpy.ndarray
+
+    """
+    res = np.zeros((arr.shape[1], arr.shape[2], 3), dtype=np.uint8)
+    for k, v in cmap.items():
+        res[arr[0] == k] = v
+    return np.transpose(res, [2, 0, 1])
+
+
 def array_to_image(
     arr, mask=None, img_format="png", color_map=None, **creation_options
 ):
@@ -366,8 +393,13 @@ def array_to_image(
     img_format: str, optional
         Image format to return (default: 'png').
         List of supported format by GDAL: https://www.gdal.org/formats_list.html
-    color_map: dict, optional
-        GDAL compatible ColorMap dictionary (see: rio_tiler.utils.get_colormap)
+    color_map: numpy.ndarray or dict, optional
+        color_map can be either a (256, 3) array or RGB triplet
+        (e.g. [[255, 255, 255],...]) mapping each 1D pixel value rescaled
+        from 0 to 255
+        OR
+        it can be a dictionary of discrete values
+        (e.g. { 1.3: [255, 255, 255], 2.5: [255, 0, 0]}) mapping any pixel value to a triplet
     creation_options: dict, optional
         Image driver creation options to pass to GDAL
 
@@ -381,8 +413,9 @@ def array_to_image(
     if len(arr.shape) < 3:
         arr = np.expand_dims(arr, axis=0)
 
-    if color_map is not None:
-        # Apply colormap and transpose back to raster band-style
+    if color_map is not None and isinstance(color_map, dict):
+        arr = _apply_discrete_colormap(arr, color_map)
+    elif color_map is not None:
         arr = np.transpose(color_map[arr][0], [2, 0, 1]).astype(np.uint8)
 
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
