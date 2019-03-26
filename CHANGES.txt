@@ -1,6 +1,6 @@
 
-Next (TBD)
-----------
+1.2.0 (2019-03-26)
+------------------
 
 - `rio_tiler.utils.array_to_image`'s color_map arg can be a dictionary of discrete values (#91)
 
