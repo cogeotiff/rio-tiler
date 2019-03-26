@@ -472,7 +472,7 @@ def mapzen_elevation_rgb(arr):
     return np.stack([r, g, b]).astype(np.uint8)
 
 
-def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
+def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
     """
     Apply expression on data.
 
@@ -487,7 +487,7 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
         Mercator tile Y index.
     tile_z : int
         Mercator tile ZOOM level.
-    expr : str
+    expr : str, required
         Expression to apply (e.g '(B5+B4)/(B5-B4)')
         Band name should start with 'B'.
 
@@ -497,6 +497,9 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr, **kwargs):
         Returns processed pixel value.
 
     """
+    if not expr:
+        raise Exception("Missing expression")
+
     bands_names = tuple(set(re.findall(r"b(?P<bands>[0-9A]{1,2})", expr)))
     rgb = expr.split(",")
 
