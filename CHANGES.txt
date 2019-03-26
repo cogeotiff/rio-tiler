@@ -1,4 +1,11 @@
 
+Next (TBD)
+----------
+
+Breacking Changes:
+
+- `expr` argument is now a required option in `rio_tiler.utils.expression`. (#88)
+
 1.1.4 (2019-03-11)
 ------------------
 - Add 'rplumbo' colormap (#90 by @DanSchoppe)
