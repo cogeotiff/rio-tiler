@@ -345,6 +345,14 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
     )
 
 
+def _apply_colormap(arr, cmap):
+    """Apply discrete colormap."""
+    res = np.zeros((arr.shape[1], arr.shape[2], 3), dtype=np.uint8)
+    for k, v in cmap.items():
+        res[arr[0] == k] = v
+    return np.transpose(res, [2, 0, 1])
+
+
 def array_to_image(
     arr, mask=None, img_format="png", color_map=None, **creation_options
 ):
@@ -382,13 +390,7 @@ def array_to_image(
         arr = np.expand_dims(arr, axis=0)
 
     if color_map is not None:
-        # Apply colormap and transpose back to raster band-style
-        # arr = np.transpose(color_map[arr][0], [2, 0, 1]).astype(np.uint8)
-        res = np.zeros((arr.shape[1], arr.shape[2], 3), dtype=np.uint8)
-        for k, v in color_map.items():
-            res[arr[0] == k] = v
-        arr = np.transpose(res, [2, 0, 1])
-        del res
+        arr = _apply_colormap(arr, color_map)
 
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
     if img_format == "webp" and arr.shape[0] == 1:
@@ -450,8 +452,7 @@ def get_colormap(name="cfastie", format="pil"):
     if format.lower() == "pil":
         return cmap
     elif format.lower() == "gdal":
-        cmap = list(_chunks(cmap, 3))
-        return dict(enumerate(cmap))
+        return dict(enumerate(_chunks(cmap, 3)))
     else:
         raise Exception("Unsupported {} colormap format".format(format))
 

@@ -5,6 +5,8 @@ Next (TBD)
 Breacking Changes:
 
 - `expr` argument is now a required option in `rio_tiler.utils.expression`. (#88)
+- `rio_tiler.utils.get_colormap` returns a dictionary for "gdal" format (#91)
+- `rio_tiler.utils.array_to_image` 'color_map' option MUST be a dictionary (#91)
 
 1.1.4 (2019-03-11)
 ------------------
