@@ -1,3 +1,10 @@
+1.2.1 (2019-03-26)
+------------------
+
+- Replace rio-pansharpen dependency with a fork of the brovey function directly
+into `rio_tiler.utils` (rio-pansharpen is unmaintened and not compatible with 
+rasterio>=1) (#94).
+
 
 1.2.0 (2019-03-26)
 ------------------

@@ -15,15 +15,7 @@ with open("README.rst") as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = [
-    "numpy",
-    "numexpr",
-    "mercantile",
-    "boto3",
-    "rasterio[s3]~=1.0",
-    "rio-toa",
-    "rio-pansharpen",
-]
+inst_reqs = ["numpy", "numexpr", "mercantile", "boto3", "rasterio[s3]~=1.0", "rio-toa"]
 
 extra_reqs = {
     "test": ["mock", "pytest", "pytest-cov"],

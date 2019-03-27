@@ -13,13 +13,10 @@ import numpy as np
 import mercantile
 
 import rasterio
-from rasterio import Affine, transform
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
-
 from rio_toa import reflectance, brightness_temp, toa_utils
-from rio_pansharpen.worker import pansharpen
 
 from rio_tiler import utils
 from rio_tiler.errors import (
@@ -383,12 +380,9 @@ def tile(
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
-    ms_tile_size = int(tilesize / 2) if pan else tilesize
     addresses = ["{}_B{}.TIF".format(landsat_address, band) for band in bands]
 
-    _tiler = partial(
-        utils.tile_read, bounds=tile_bounds, tilesize=ms_tile_size, nodata=0
-    )
+    _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0)
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         data = np.concatenate(data)
@@ -399,22 +393,7 @@ def tile(
             matrix_pan, mask = utils.tile_read(
                 pan_address, tile_bounds, tilesize, nodata=0
             )
-
-            w, s, e, n = tile_bounds
-            pan_transform = transform.from_bounds(w, s, e, n, tilesize, tilesize)
-            vis_transform = pan_transform * Affine.scale(2.0)
-            data = pansharpen(
-                data,
-                vis_transform,
-                matrix_pan,
-                pan_transform,
-                np.int16,
-                "EPSG:3857",
-                "EPSG:3857",
-                0.2,
-                method="Brovey",
-                src_nodata=0,
-            )
+            data = utils.pansharpening_brovey(data, matrix_pan, 0.2, matrix_pan.dtype)
 
         sun_elev = meta_data["IMAGE_ATTRIBUTES"]["SUN_ELEVATION"]
 

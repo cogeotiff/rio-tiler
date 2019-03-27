@@ -570,3 +570,21 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
         ),
         mask,
     )
+
+
+def pansharpening_brovey(rgb, pan, weight, pan_dtype):
+    """
+    Brovey Method: Each resampled, multispectral pixel is
+    multiplied by the ratio of the corresponding
+    panchromatic pixel intensity to the sum of all the
+    multispectral intensities.
+
+    Original code from https://github.com/mapbox/rio-pansharpen
+    """
+
+    def _calculateRatio(rgb, pan, weight):
+        return pan / ((rgb[0] + rgb[1] + rgb[2] * weight) / (2 + weight))
+
+    with np.errstate(invalid="ignore", divide="ignore"):
+        ratio = _calculateRatio(rgb, pan, weight)
+        return np.clip(ratio * rgb, 0, np.iinfo(pan_dtype).max).astype(pan_dtype)
