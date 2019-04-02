@@ -63,8 +63,6 @@ def get_zooms(src_dst, lat=0.0, tilesize=256):
     ----------
     src_dst: rasterio.io.DatasetReader
         Rasterio io.DatasetReader object
-    max_z: int, optional (default: 23)
-        Max mercator zoom level allowed
     lat: float, optional
         Center latitude of the dataset. This is only needed in case you want to
         apply latitude correction factor to ensure consitent maximum zoom level
