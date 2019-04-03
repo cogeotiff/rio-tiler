@@ -525,6 +525,10 @@ def test_raster_get_stats_valid():
     assert stats["statistics"][1]["pc"] == [12, 198]
     assert stats["statistics"][2]["pc"] == [27, 201]
     assert stats["statistics"][3]["pc"] == [54, 192]
+    assert stats["minzoom"]
+    assert stats["maxzoom"]
+    assert len(stats["band_names"]) == 3
+    assert "band1" in stats["band_names"]
 
 
 def test_raster_get_stats_validAlpha():

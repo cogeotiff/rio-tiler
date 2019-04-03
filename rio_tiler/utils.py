@@ -19,6 +19,8 @@ from rasterio.io import DatasetReader, MemoryFile
 from rasterio import transform
 from rasterio.warp import calculate_default_transform, transform_bounds
 
+from rio_tiler.mercator import get_zooms
+
 from rio_tiler.errors import NoOverviewWarning
 
 logger = logging.getLogger(__name__)
@@ -116,6 +118,20 @@ def raster_get_stats(
             *[src_dst.crs, dst_crs] + list(src_dst.bounds), densify_pts=21
         )
 
+        minzoom, maxzoom = get_zooms(src_dst)
+
+        def _get_name(ix):
+            """Return band names."""
+            try:
+                name = src_dst.descriptions[ix - 1]
+                if not name:
+                    name = "band{}".format(ix)
+            except IndexError:
+                name = "band{}".format(ix)
+            return name
+
+        band_names = [_get_name(ix) for ix in indexes]
+
         if len(levels):
             if overview_level:
                 decim = levels[overview_level]
@@ -152,6 +168,9 @@ def raster_get_stats(
             "value": bounds,
             "crs": dst_crs.to_string() if isinstance(dst_crs, CRS) else dst_crs,
         },
+        "minzoom": minzoom,
+        "maxzoom": maxzoom,
+        "band_names": band_names,
         "statistics": stats,
     }
 

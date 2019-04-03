@@ -50,6 +50,10 @@ def test_metadata_valid():
     meta = main.metadata(ADDRESS)
     assert meta["address"] == ADDRESS
     assert len(meta["bounds"]["value"]) == 4
+    assert meta["minzoom"]
+    assert meta["maxzoom"]
+    assert len(meta["band_names"]) == 3
+    assert "band1" in meta["band_names"]
     assert len(meta["statistics"].items()) == 3
     assert meta["statistics"][1]["pc"] == [12, 198]
 
