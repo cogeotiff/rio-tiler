@@ -78,7 +78,8 @@ def raster_get_stats(
     Returns
     -------
     out : dict
-        bounds and band statistics: (percentiles), min, max, stdev, histogram
+        bounds, mercator zoom range, band descriptions
+        and band statistics: (percentiles), min, max, stdev, histogram
 
         e.g.
         {
@@ -86,6 +87,9 @@ def raster_get_stats(
                 'value': (145.72265625, 14.853515625, 145.810546875, 14.94140625),
                 'crs': '+init=EPSG:4326'
             },
+            'minzoom': 8,
+            'maxzoom': 12,
+            'band_descriptions': ['red', 'green', 'blue', 'nir']
             'statistics': {
                 1: {
                     'pc': [38, 147],
@@ -120,17 +124,14 @@ def raster_get_stats(
 
         minzoom, maxzoom = get_zooms(src_dst)
 
-        def _get_name(ix):
-            """Return band names."""
-            try:
-                name = src_dst.descriptions[ix - 1]
-                if not name:
-                    name = "band{}".format(ix)
-            except IndexError:
+        def _get_descr(ix):
+            """Return band description."""
+            name = src_dst.descriptions[ix - 1]
+            if not name:
                 name = "band{}".format(ix)
             return name
 
-        band_names = [_get_name(ix) for ix in indexes]
+        band_descriptions = [_get_descr(ix) for ix in indexes]
 
         if len(levels):
             if overview_level:
@@ -170,7 +171,7 @@ def raster_get_stats(
         },
         "minzoom": minzoom,
         "maxzoom": maxzoom,
-        "band_names": band_names,
+        "band_descriptions": band_descriptions,
         "statistics": stats,
     }
 
