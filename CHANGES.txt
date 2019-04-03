@@ -1,3 +1,9 @@
+1.2.2 (2019-04-03)
+------------------
+
+- add mercator min/max zoom info in metadata output from rio_tiler.utils.raster_get_stats (#96)
+- add band description (band name) in metadata output from rio_tiler.utils.raster_get_stats (#96)
+
 1.2.1 (2019-03-26)
 ------------------
 
