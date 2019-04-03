@@ -38,6 +38,8 @@ S3_NODATA_PATH = os.path.join(S3_LOCAL, S3_KEY_NODATA)
 KEY_PIX4D = "pix4d/pix4d_alpha_nodata.tif"
 PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
+COG_DST = os.path.join(os.path.dirname(__file__), "fixtures", "cog_name.tif")
+
 
 with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
@@ -525,6 +527,16 @@ def test_raster_get_stats_valid():
     assert stats["statistics"][1]["pc"] == [12, 198]
     assert stats["statistics"][2]["pc"] == [27, 201]
     assert stats["statistics"][3]["pc"] == [54, 192]
+    assert stats["minzoom"]
+    assert stats["maxzoom"]
+    assert len(stats["band_descriptions"]) == 3
+    assert "band1" in stats["band_descriptions"]
+
+    stats = utils.raster_get_stats(COG_DST)
+    assert stats["minzoom"]
+    assert stats["maxzoom"]
+    assert len(stats["band_descriptions"]) == 1
+    assert "b1" in stats["band_descriptions"]
 
 
 def test_raster_get_stats_validAlpha():

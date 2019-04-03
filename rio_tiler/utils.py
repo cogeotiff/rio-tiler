@@ -19,6 +19,8 @@ from rasterio.io import DatasetReader, MemoryFile
 from rasterio import transform
 from rasterio.warp import calculate_default_transform, transform_bounds
 
+from rio_tiler.mercator import get_zooms
+
 from rio_tiler.errors import NoOverviewWarning
 
 logger = logging.getLogger(__name__)
@@ -76,7 +78,8 @@ def raster_get_stats(
     Returns
     -------
     out : dict
-        bounds and band statistics: (percentiles), min, max, stdev, histogram
+        bounds, mercator zoom range, band descriptions
+        and band statistics: (percentiles), min, max, stdev, histogram
 
         e.g.
         {
@@ -84,6 +87,9 @@ def raster_get_stats(
                 'value': (145.72265625, 14.853515625, 145.810546875, 14.94140625),
                 'crs': '+init=EPSG:4326'
             },
+            'minzoom': 8,
+            'maxzoom': 12,
+            'band_descriptions': ['red', 'green', 'blue', 'nir']
             'statistics': {
                 1: {
                     'pc': [38, 147],
@@ -115,6 +121,17 @@ def raster_get_stats(
         bounds = transform_bounds(
             *[src_dst.crs, dst_crs] + list(src_dst.bounds), densify_pts=21
         )
+
+        minzoom, maxzoom = get_zooms(src_dst)
+
+        def _get_descr(ix):
+            """Return band description."""
+            name = src_dst.descriptions[ix - 1]
+            if not name:
+                name = "band{}".format(ix)
+            return name
+
+        band_descriptions = [_get_descr(ix) for ix in indexes]
 
         if len(levels):
             if overview_level:
@@ -152,6 +169,9 @@ def raster_get_stats(
             "value": bounds,
             "crs": dst_crs.to_string() if isinstance(dst_crs, CRS) else dst_crs,
         },
+        "minzoom": minzoom,
+        "maxzoom": maxzoom,
+        "band_descriptions": band_descriptions,
         "statistics": stats,
     }
 
