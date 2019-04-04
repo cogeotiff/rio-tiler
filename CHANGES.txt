@@ -1,3 +1,11 @@
+next (TBD)
+------------------
+
+Bug fixes:
+
+- return index number with band descriptions (#99)
+
+
 1.2.2 (2019-04-03)
 ------------------
 

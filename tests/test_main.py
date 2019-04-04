@@ -53,7 +53,7 @@ def test_metadata_valid():
     assert meta["minzoom"]
     assert meta["maxzoom"]
     assert len(meta["band_descriptions"]) == 3
-    assert "band1" in meta["band_descriptions"]
+    assert (1, "band1") == meta["band_descriptions"][0]
     assert len(meta["statistics"].items()) == 3
     assert meta["statistics"][1]["pc"] == [12, 198]
 

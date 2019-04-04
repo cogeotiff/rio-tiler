@@ -530,13 +530,13 @@ def test_raster_get_stats_valid():
     assert stats["minzoom"]
     assert stats["maxzoom"]
     assert len(stats["band_descriptions"]) == 3
-    assert "band1" in stats["band_descriptions"]
+    assert (1, "band1") == stats["band_descriptions"][0]
 
     stats = utils.raster_get_stats(COG_DST)
     assert stats["minzoom"]
     assert stats["maxzoom"]
     assert len(stats["band_descriptions"]) == 1
-    assert "b1" in stats["band_descriptions"]
+    assert (1, "b1") == stats["band_descriptions"][0]
 
 
 def test_raster_get_stats_validAlpha():
