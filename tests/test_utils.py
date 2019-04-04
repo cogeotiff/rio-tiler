@@ -517,6 +517,9 @@ def test_statsFunction_valid():
     stats = utils._stats(arr, percentiles=(5, 95))
     assert stats["pc"] == [31, 195]
 
+    stats = utils._stats(arr, percentiles=(5, 95), bins=20)
+    assert len(stats["histogram"][0]) == 20
+
 
 def test_raster_get_stats_valid():
     """Should return a valid dict with array statistics."""
@@ -537,6 +540,9 @@ def test_raster_get_stats_valid():
     assert stats["maxzoom"]
     assert len(stats["band_descriptions"]) == 1
     assert (1, "b1") == stats["band_descriptions"][0]
+
+    stats = utils.raster_get_stats(S3_PATH, histogram_bins=20)
+    assert len(stats["statistics"][1]["histogram"][0]) == 20
 
 
 def test_raster_get_stats_validAlpha():

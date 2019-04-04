@@ -64,7 +64,12 @@ def test_metadata_valid_default(landsat_get_mtl, monkeypatch):
     assert meta["sceneid"] == LANDSAT_SCENE_C1
     assert len(meta["bounds"]["value"]) == 4
     assert len(meta["statistics"].items()) == 11
+    assert len(meta["statistics"]["1"]["histogram"][0]) == 10
     assert list(map(int, meta["statistics"]["1"]["pc"])) == [1210, 7046]
+
+    meta = landsat8.metadata(LANDSAT_SCENE_C1, histogram_bins=20)
+    assert meta["sceneid"] == LANDSAT_SCENE_C1
+    assert len(meta["statistics"]["1"]["histogram"][0]) == 20
 
 
 @patch("rio_tiler.landsat8._landsat_get_mtl")

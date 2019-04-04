@@ -4,7 +4,7 @@ next (TBD)
 Bug fixes:
 
 - return index number with band descriptions (#99)
-
+- add histogram_bins options to be passed to rio_tiler.{module}.metadata function (#98)
 
 1.2.2 (2019-04-03)
 ------------------

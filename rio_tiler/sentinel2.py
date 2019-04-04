@@ -138,19 +138,20 @@ def bounds(sceneid):
     return info
 
 
-def _sentinel_stats(src_path, percentiles=(2, 98)):
+def _sentinel_stats(src_path, percentiles=(2, 98), histogram_bins=10):
     """
     src_path : str or PathLike object
         A dataset path or URL. Will be opened in "r" mode.
     """
+
     with rasterio.open(src_path) as src:
         arr = src.read(indexes=[1], masked=True)
         arr[arr == 0] = np.ma.masked
 
-    return {1: utils._stats(arr, percentiles=percentiles)}
+    return {1: utils._stats(arr, percentiles=percentiles, bins=histogram_bins)}
 
 
-def metadata(sceneid, pmin=2, pmax=98):
+def metadata(sceneid, pmin=2, pmax=98, **kwargs):
     """
     Retrieve image bounds and band statistics.
 
@@ -162,6 +163,9 @@ def metadata(sceneid, pmin=2, pmax=98):
         Histogram minimum cut.
     pmax : int, optional, (default: 98)
         Histogram maximum cut.
+    kwargs : optional
+        These are passed to 'rio_tiler.sentinel2._sentinel_stats'
+        e.g: histogram_bins=20'
 
     Returns
     -------
@@ -185,7 +189,7 @@ def metadata(sceneid, pmin=2, pmax=98):
         "{}/preview/B{}.jp2".format(sentinel_address, band) for band in SENTINEL_BANDS
     ]
 
-    _stats_worker = partial(_sentinel_stats, percentiles=(pmin, pmax))
+    _stats_worker = partial(_sentinel_stats, percentiles=(pmin, pmax), **kwargs)
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         responses = executor.map(_stats_worker, addresses)
     info["statistics"] = {
