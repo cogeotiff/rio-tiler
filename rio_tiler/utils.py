@@ -131,7 +131,7 @@ def raster_get_stats(
                 name = "band{}".format(ix)
             return name
 
-        band_descriptions = [_get_descr(ix) for ix in indexes]
+        band_descriptions = [(ix, _get_descr(ix)) for ix in indexes]
 
         if len(levels):
             if overview_level:
