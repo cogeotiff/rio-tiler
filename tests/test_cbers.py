@@ -66,6 +66,13 @@ def test_metadata_valid_default(monkeypatch):
     assert len(meta["statistics"].items()) == 4
     assert meta["statistics"]["5"]["pc"] == [28, 93]
 
+    meta = cbers.metadata(CBERS_MUX_SCENE, histogram_bins=20)
+    assert meta["sceneid"] == CBERS_MUX_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 4
+    assert len(meta["statistics"]["5"]["histogram"][0]) == 20
+    assert meta["statistics"]["5"]["pc"] == [28, 93]
+
     meta = cbers.metadata(CBERS_AWFI_SCENE)
     assert meta["sceneid"] == CBERS_AWFI_SCENE
     assert len(meta["bounds"]["value"]) == 4

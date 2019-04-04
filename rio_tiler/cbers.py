@@ -145,7 +145,7 @@ def bounds(sceneid):
     return info
 
 
-def metadata(sceneid, pmin=2, pmax=98):
+def metadata(sceneid, pmin=2, pmax=98, **kwargs):
     """
     Return band bounds and statistics.
 
@@ -157,6 +157,9 @@ def metadata(sceneid, pmin=2, pmax=98):
         Histogram minimum cut.
     pmax : int, optional, (default: 98)
         Histogram maximum cut.
+    kwargs : optional
+        These are passed to 'rio_tiler.utils.raster_get_stats'
+        e.g: histogram_bins=20, dst_crs='epsg:4326'
 
     Returns
     -------
@@ -180,6 +183,7 @@ def metadata(sceneid, pmin=2, pmax=98):
         nodata=0,
         overview_level=2,
         percentiles=(pmin, pmax),
+        **kwargs
     )
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         responses = list(executor.map(_stats_worker, addresses))

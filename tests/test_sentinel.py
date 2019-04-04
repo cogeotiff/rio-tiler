@@ -55,6 +55,13 @@ def test_metadata_valid_custom(monkeypatch):
     assert len(meta["statistics"].items()) == 13
     assert meta["statistics"]["01"]["pc"] == [1110, 7236]
 
+    meta = sentinel2.metadata(SENTINEL_SCENE, pmin=5, pmax=95, histogram_bins=20)
+    assert meta["sceneid"] == SENTINEL_SCENE
+    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["statistics"].items()) == 13
+    assert meta["statistics"]["01"]["pc"] == [1110, 7236]
+    assert len(meta["statistics"]["01"]["histogram"][0]) == 20
+
 
 def test_tile_valid_default(monkeypatch):
     """

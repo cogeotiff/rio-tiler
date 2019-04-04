@@ -150,6 +150,7 @@ def _landsat_stats(
     max_size=1024,
     percentiles=(2, 98),
     dst_crs=CRS({"init": "EPSG:4326"}),
+    histogram_bins=10,
 ):
     """
     Retrieve landsat dataset statistics.
@@ -172,6 +173,8 @@ def _landsat_stats(
         which must be between 0 and 100 inclusive (default: (2, 98)).
     dst_crs: CRS or dict
         Target coordinate reference system (default: EPSG:4326).
+    histogram_bins: int, optional
+        Defines the number of equal-width histogram bins (default: 10).
 
     Returns
     -------
@@ -245,7 +248,7 @@ def _landsat_stats(
             arr, multi_reflect, add_reflect, sun_elev, src_nodata=0
         )
 
-    stats = {band: utils._stats(arr, percentiles=percentiles)}
+    stats = {band: utils._stats(arr, percentiles=percentiles, bins=histogram_bins)}
 
     return {
         "bounds": {
@@ -280,7 +283,7 @@ def bounds(sceneid):
     return info
 
 
-def metadata(sceneid, pmin=2, pmax=98):
+def metadata(sceneid, pmin=2, pmax=98, **kwargs):
     """
     Retrieve image bounds and band statistics.
 
@@ -293,6 +296,9 @@ def metadata(sceneid, pmin=2, pmax=98):
         Histogram minimum cut.
     pmax : int, optional, (default: 98)
         Histogram maximum cut.
+    kwargs : optional
+        These are passed to 'rio_tiler.landsat8._landsat_stats'
+        e.g: histogram_bins=20, dst_crs='epsg:4326'
 
     Returns
     -------
@@ -312,6 +318,7 @@ def metadata(sceneid, pmin=2, pmax=98):
         metadata=meta_data,
         overview_level=1,
         percentiles=(pmin, pmax),
+        **kwargs
     )
 
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:

@@ -32,9 +32,9 @@ def _chunks(l, n):
         yield l[i : i + n]
 
 
-def _stats(arr, percentiles=(2, 98)):
+def _stats(arr, percentiles=(2, 98), **kwargs):
     """Calculate array statistics."""
-    sample, edges = np.histogram(arr[~arr.mask])
+    sample, edges = np.histogram(arr[~arr.mask], **kwargs)
     return {
         "pc": np.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
         "min": arr.min().item(),
@@ -52,6 +52,7 @@ def raster_get_stats(
     max_size=1024,
     percentiles=(2, 98),
     dst_crs=CRS({"init": "EPSG:4326"}),
+    histogram_bins=10,
 ):
     """
     Retrieve dataset statistics.
@@ -74,6 +75,8 @@ def raster_get_stats(
         which must be between 0 and 100 inclusive (default: (2, 98)).
     dst_crs: CRS or dict
         Target coordinate reference system (default: EPSG:4326).
+    histogram_bins: int, optional
+        Defines the number of equal-width histogram bins (default: 10).
 
     Returns
     -------
@@ -89,7 +92,7 @@ def raster_get_stats(
             },
             'minzoom': 8,
             'maxzoom': 12,
-            'band_descriptions': ['red', 'green', 'blue', 'nir']
+            'band_descriptions': [(1, 'red'), (2, 'green'), (3, 'blue'), (4, 'nir')]
             'statistics': {
                 1: {
                     'pc': [38, 147],
@@ -159,7 +162,7 @@ def raster_get_stats(
         with WarpedVRT(src_dst, **vrt_params) as vrt:
             arr = vrt.read(out_shape=out_shape, indexes=indexes, masked=True)
             stats = {
-                indexes[b]: _stats(arr[b], percentiles=percentiles)
+                indexes[b]: _stats(arr[b], percentiles=percentiles, bins=histogram_bins)
                 for b in range(arr.shape[0])
                 if vrt.colorinterp[b] != ColorInterp.alpha
             }

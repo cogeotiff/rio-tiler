@@ -60,11 +60,14 @@ def test_metadata_valid():
 
 def test_metadata_valid_custom():
     """Get bounds and get stats for all bands with custom percentiles."""
-    meta = main.metadata(ADDRESS, pmin=5, pmax=90, dst_crs="epsg:3857")
+    meta = main.metadata(
+        ADDRESS, pmin=5, pmax=90, dst_crs="epsg:3857", histogram_bins=20
+    )
     assert meta["address"] == ADDRESS
     assert meta["bounds"]["crs"] == "epsg:3857"
     assert len(meta["bounds"]["value"]) == 4
     assert len(meta["statistics"].items()) == 3
+    assert len(meta["statistics"][1]["histogram"][0]) == 20
     assert meta["statistics"][1]["pc"] == [30, 191]
 
 
