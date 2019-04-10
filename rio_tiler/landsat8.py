@@ -151,6 +151,7 @@ def _landsat_stats(
     percentiles=(2, 98),
     dst_crs=CRS({"init": "EPSG:4326"}),
     histogram_bins=10,
+    histogram_range=None,
 ):
     """
     Retrieve landsat dataset statistics.
@@ -175,6 +176,9 @@ def _landsat_stats(
         Target coordinate reference system (default: EPSG:4326).
     histogram_bins: int, optional
         Defines the number of equal-width histogram bins (default: 10).
+    histogram_range: tuple or list, optional
+        The lower and upper range of the bins. If not provided, range is simply
+        the min and max of the array.
 
     Returns
     -------
@@ -248,7 +252,13 @@ def _landsat_stats(
             arr, multi_reflect, add_reflect, sun_elev, src_nodata=0
         )
 
-    stats = {band: utils._stats(arr, percentiles=percentiles, bins=histogram_bins)}
+    params = {}
+    if histogram_bins:
+        params.update(dict(bins=histogram_bins))
+    if histogram_range:
+        params.update(dict(range=histogram_range))
+
+    stats = {band: utils._stats(arr, percentiles=percentiles, **params)}
 
     return {
         "bounds": {

@@ -138,7 +138,9 @@ def bounds(sceneid):
     return info
 
 
-def _sentinel_stats(src_path, percentiles=(2, 98), histogram_bins=10):
+def _sentinel_stats(
+    src_path, percentiles=(2, 98), histogram_bins=10, histogram_range=None
+):
     """
     src_path : str or PathLike object
         A dataset path or URL. Will be opened in "r" mode.
@@ -148,7 +150,13 @@ def _sentinel_stats(src_path, percentiles=(2, 98), histogram_bins=10):
         arr = src.read(indexes=[1], masked=True)
         arr[arr == 0] = np.ma.masked
 
-    return {1: utils._stats(arr, percentiles=percentiles, bins=histogram_bins)}
+    params = {}
+    if histogram_bins:
+        params.update(dict(bins=histogram_bins))
+    if histogram_range:
+        params.update(dict(range=histogram_range))
+
+    return {1: utils._stats(arr, percentiles=percentiles, **params)}
 
 
 def metadata(sceneid, pmin=2, pmax=98, **kwargs):

@@ -544,6 +544,11 @@ def test_raster_get_stats_valid():
     stats = utils.raster_get_stats(S3_PATH, histogram_bins=20)
     assert len(stats["statistics"][1]["histogram"][0]) == 20
 
+    stats = utils.raster_get_stats(
+        S3_PATH, histogram_bins=None, histogram_range=[30, 70]
+    )
+    assert len(stats["statistics"][1]["histogram"][0]) == 10
+
 
 def test_raster_get_stats_validAlpha():
     """Should return a valid dict with array statistics."""

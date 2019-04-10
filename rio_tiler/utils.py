@@ -33,7 +33,35 @@ def _chunks(l, n):
 
 
 def _stats(arr, percentiles=(2, 98), **kwargs):
-    """Calculate array statistics."""
+    """
+    Calculate array statistics.
+
+    Attributes
+    ----------
+    arr: numpy ndarray
+        Input array data to get the stats from.
+    percentiles: tuple, optional
+        Tuple of Min/Max percentiles to compute.
+    kwargs: dict, optional
+        These will be passed to the numpy.histogram function.
+
+    Returns
+    -------
+    dict
+        numpy array statistics: percentiles, min, max, stdev, histogram
+
+        e.g.
+        {
+            'pc': [38, 147],
+            'min': 20,
+            'max': 180,
+            'std': 28.123562304138662,
+            'histogram': [
+                [1625, 219241, 28344, 15808, 12325, 10687, 8535, 7348, 4656, 1208],
+                [20.0, 36.0, 52.0, 68.0, 84.0, 100.0, 116.0, 132.0, 148.0, 164.0, 180.0]
+            ]
+        }
+    """
     sample, edges = np.histogram(arr[~arr.mask], **kwargs)
     return {
         "pc": np.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
@@ -53,6 +81,7 @@ def raster_get_stats(
     percentiles=(2, 98),
     dst_crs=CRS({"init": "EPSG:4326"}),
     histogram_bins=10,
+    histogram_range=None,
 ):
     """
     Retrieve dataset statistics.
@@ -77,6 +106,9 @@ def raster_get_stats(
         Target coordinate reference system (default: EPSG:4326).
     histogram_bins: int, optional
         Defines the number of equal-width histogram bins (default: 10).
+    histogram_range: tuple or list, optional
+        The lower and upper range of the bins. If not provided, range is simply
+        the min and max of the array.
 
     Returns
     -------
@@ -161,8 +193,15 @@ def raster_get_stats(
 
         with WarpedVRT(src_dst, **vrt_params) as vrt:
             arr = vrt.read(out_shape=out_shape, indexes=indexes, masked=True)
+
+            params = {}
+            if histogram_bins:
+                params.update(dict(bins=histogram_bins))
+            if histogram_range:
+                params.update(dict(range=histogram_range))
+
             stats = {
-                indexes[b]: _stats(arr[b], percentiles=percentiles, bins=histogram_bins)
+                indexes[b]: _stats(arr[b], percentiles=percentiles, **params)
                 for b in range(arr.shape[0])
                 if vrt.colorinterp[b] != ColorInterp.alpha
             }
