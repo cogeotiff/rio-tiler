@@ -1,3 +1,8 @@
+1.2.4 (2019-04-16)
+------------------
+
+- add histogram_range options to be passed to rio_tiler.{module}.metadata function (#102)
+
 1.2.3 (2019-04-04)
 ------------------
 
@@ -19,7 +24,6 @@ Bug fixes:
 - Replace rio-pansharpen dependency with a fork of the brovey function directly
 into `rio_tiler.utils` (rio-pansharpen is unmaintened and not compatible with 
 rasterio>=1) (#94).
-
 
 1.2.0 (2019-03-26)
 ------------------
