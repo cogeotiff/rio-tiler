@@ -17,11 +17,13 @@ from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.io import DatasetReader, MemoryFile
 from rasterio import transform
+from rasterio import windows
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler.mercator import get_zooms
 
 from rio_tiler.errors import NoOverviewWarning
+from affine import Affine
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +264,7 @@ def has_alpha_band(src_dst):
 
 
 def _tile_read(
-    src_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear"
+    src_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear", tile_padding=0
 ):
     """
     Read data and mask.
@@ -281,6 +283,9 @@ def _tile_read(
     nodata: int or float, optional (defaults: None)
     resampling_method : str, optional (default: "bilinear")
          Resampling algorithm
+    tile_padding : int, optional (default: 0)
+        Padding to apply to the retrival of the tile to assist in reducing 
+        resampling artefacts on edges.
 
     Returns
     -------
@@ -298,6 +303,20 @@ def _tile_read(
     )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(src_dst, bounds)
+    out_window = None
+    if tile_padding > 0:
+        vrt_transform = vrt_transform * Affine.translation(-tile_padding, -tile_padding)
+        orig_height = vrt_height
+        print('B', orig_height, vrt_height)
+        orig_width = vrt_width
+        vrt_height = vrt_height + 2 * tile_padding
+        vrt_width = vrt_width + 2 * tile_padding
+        print('A', orig_height, vrt_height)
+
+        out_window = windows.Window(
+            col_off=tile_padding, row_off=tile_padding, width=orig_width, height=orig_height
+        )
+
     vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
 
     indexes = indexes if indexes is not None else src_dst.indexes
@@ -314,9 +333,11 @@ def _tile_read(
         data = vrt.read(
             out_shape=out_shape,
             indexes=indexes,
-            resampling=Resampling[resampling_method],
+            window=out_window,
+            resampling=Resampling[resampling_method]
         )
-        mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
+
+        mask = vrt.dataset_mask(out_shape=(tilesize, tilesize), window=out_window)
 
         return data, mask
 
