@@ -307,11 +307,9 @@ def _tile_read(
     if tile_padding > 0:
         vrt_transform = vrt_transform * Affine.translation(-tile_padding, -tile_padding)
         orig_height = vrt_height
-        print('B', orig_height, vrt_height)
         orig_width = vrt_width
         vrt_height = vrt_height + 2 * tile_padding
         vrt_width = vrt_width + 2 * tile_padding
-        print('A', orig_height, vrt_height)
 
         out_window = windows.Window(
             col_off=tile_padding, row_off=tile_padding, width=orig_width, height=orig_height
