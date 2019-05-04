@@ -264,7 +264,7 @@ def has_alpha_band(src_dst):
 
 
 def _tile_read(
-    src_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear", tile_padding=0
+    src_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear", tile_edges_padding=2
 ):
     """
     Read data and mask.
@@ -283,9 +283,9 @@ def _tile_read(
     nodata: int or float, optional (defaults: None)
     resampling_method : str, optional (default: "bilinear")
          Resampling algorithm
-    tile_padding : int, optional (default: 0)
+    tile_edges_padding : int, optional (default: 2)
         Padding to apply to the retrival of the tile to assist in reducing 
-        resampling artefacts on edges.
+        resampling artefacts along edges.
 
     Returns
     -------
@@ -304,15 +304,15 @@ def _tile_read(
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(src_dst, bounds)
     out_window = None
-    if tile_padding > 0:
-        vrt_transform = vrt_transform * Affine.translation(-tile_padding, -tile_padding)
-        orig_height = vrt_height
-        orig_width = vrt_width
-        vrt_height = vrt_height + 2 * tile_padding
-        vrt_width = vrt_width + 2 * tile_padding
+    if tile_edges_padding > 0:
+        vrt_transform = vrt_transform * Affine.translation(-tile_edges_padding, -tile_edges_padding)
+        orig__vrt_height = vrt_height
+        orig_vrt_width = vrt_width
+        vrt_height = vrt_height + 2 * tile_edges_padding
+        vrt_width = vrt_width + 2 * tile_edges_padding
 
         out_window = windows.Window(
-            col_off=tile_padding, row_off=tile_padding, width=orig_width, height=orig_height
+            col_off=tile_edges_padding, row_off=tile_edges_padding, width=orig_vrt_width, height=orig__vrt_height
         )
 
     vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))

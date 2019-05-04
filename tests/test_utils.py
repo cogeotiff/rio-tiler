@@ -107,8 +107,25 @@ def test_resampling_with_diff_padding_returns_different_results():
     tilesize = 16
 
     arr, mask = utils.tile_read(address, bounds, tilesize)
-    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_padding=2)
+    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edges_padding=0)
     assert not np.array_equal(arr, arr2)
+
+
+def test_tile_padding_only_effects_edge_pixels():
+    """Adding tile padding should effect edge pixels only."""
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+    bounds = (
+        -8844681.416934313,
+        3757032.814272982,
+        -8766409.899970293,
+        3835304.331237001,
+    )
+    tilesize = 16
+
+    arr, mask = utils.tile_read(address, bounds, tilesize)
+    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edges_padding=0)
+    assert arr[0][0][0] != arr2[0][0][0]
+    assert arr[0][10][10] == arr2[0][10][10]
 
 
 def test_tile_read_invalidResampling():
