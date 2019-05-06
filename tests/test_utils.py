@@ -107,7 +107,7 @@ def test_resampling_with_diff_padding_returns_different_results():
     tilesize = 16
 
     arr, mask = utils.tile_read(address, bounds, tilesize)
-    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edges_padding=0)
+    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edge_padding=0)
     assert not np.array_equal(arr, arr2)
 
 
@@ -123,7 +123,7 @@ def test_tile_padding_only_effects_edge_pixels():
     tilesize = 16
 
     arr, mask = utils.tile_read(address, bounds, tilesize)
-    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edges_padding=0)
+    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edge_padding=0)
     assert arr[0][0][0] != arr2[0][0][0]
     assert arr[0][10][10] == arr2[0][10][10]
 
