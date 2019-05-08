@@ -264,7 +264,13 @@ def has_alpha_band(src_dst):
 
 
 def _tile_read(
-    src_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear", tile_edge_padding=2
+    src_dst,
+    bounds,
+    tilesize,
+    indexes=None,
+    nodata=None,
+    resampling_method="bilinear",
+    tile_edge_padding=2,
 ):
     """
     Read data and mask.
@@ -303,16 +309,25 @@ def _tile_read(
     )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(src_dst, bounds)
-    out_window = windows.Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
+    out_window = windows.Window(
+        col_off=0, row_off=0, width=vrt_width, height=vrt_height
+    )
 
-    if tile_edge_padding > 0 and not _requested_tile_aligned_with_internal_tile(src_dst, bounds, tilesize):
-        vrt_transform = vrt_transform * Affine.translation(-tile_edge_padding, -tile_edge_padding)
+    if tile_edge_padding > 0 and not _requested_tile_aligned_with_internal_tile(
+        src_dst, bounds, tilesize
+    ):
+        vrt_transform = vrt_transform * Affine.translation(
+            -tile_edge_padding, -tile_edge_padding
+        )
         orig__vrt_height = vrt_height
         orig_vrt_width = vrt_width
         vrt_height = vrt_height + 2 * tile_edge_padding
         vrt_width = vrt_width + 2 * tile_edge_padding
         out_window = windows.Window(
-            col_off=tile_edge_padding, row_off=tile_edge_padding, width=orig_vrt_width, height=orig__vrt_height
+            col_off=tile_edge_padding,
+            row_off=tile_edge_padding,
+            width=orig_vrt_width,
+            height=orig__vrt_height,
         )
 
     vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
@@ -332,7 +347,7 @@ def _tile_read(
             out_shape=out_shape,
             indexes=indexes,
             window=out_window,
-            resampling=Resampling[resampling_method]
+            resampling=Resampling[resampling_method],
         )
 
         mask = vrt.dataset_mask(out_shape=(tilesize, tilesize), window=out_window)
@@ -425,6 +440,7 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
         and (tile_y >= mintile.y)
     )
 
+
 def _requested_tile_aligned_with_internal_tile(src_dst, bounds, tilesize):
     """Check if tile is aligned with internal tiles."""
     if src_dst.crs != CRS.from_epsg(3857):
@@ -444,6 +460,7 @@ def _requested_tile_aligned_with_internal_tile(src_dst, bounds, tilesize):
         return False
 
     return True
+
 
 def _apply_discrete_colormap(arr, cmap):
     """

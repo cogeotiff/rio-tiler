@@ -66,7 +66,6 @@ def test_tile_read_valid():
     assert mask.shape == (16, 16)
 
 
-
 def test_tile_read_validResampling():
     """Should return a 1 band array and a mask."""
     address = "{}_B2.TIF".format(LANDSAT_PATH)
@@ -94,7 +93,9 @@ def test_resampling_returns_different_results():
     tilesize = 16
 
     arr, mask = utils.tile_read(address, bounds, tilesize)
-    arr2, mask2 = utils.tile_read(address, bounds, tilesize, resampling_method="nearest")
+    arr2, mask2 = utils.tile_read(
+        address, bounds, tilesize, resampling_method="nearest"
+    )
     assert not np.array_equal(arr, arr2)
 
 
