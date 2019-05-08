@@ -41,6 +41,7 @@ PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
 COG_DST = os.path.join(os.path.dirname(__file__), "fixtures", "cog_name.tif")
 COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
+COG_NOWEB = os.path.join(os.path.dirname(__file__), "fixtures", "noweb.tif")
 
 
 with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
@@ -719,3 +720,21 @@ def test_array_to_image_valid_1bandWebp():
     """Creates WEBP image buffer from 1 band array."""
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
     assert utils.array_to_image(arr, img_format="WEBP")
+
+
+def test_aligned_with_internaltile():
+    """Check if COG is in WebMercator and aligned with internal tiles."""
+    bounds = mercantile.bounds(43, 25, 7)
+    with rasterio.open(COG_DST) as src_dst:
+        assert not utils._requested_tile_aligned_with_internal_tile(
+            src_dst, bounds, 256
+        )
+
+    bounds = mercantile.bounds(147, 182, 9)
+    with rasterio.open(COG_NOWEB) as src_dst:
+        assert not utils._requested_tile_aligned_with_internal_tile(
+            src_dst, bounds, 256
+        )
+
+    with rasterio.open(COG_WEB_TILED) as src_dst:
+        assert utils._requested_tile_aligned_with_internal_tile(src_dst, bounds, 256)
