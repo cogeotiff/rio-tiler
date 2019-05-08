@@ -6,6 +6,7 @@ import pytest
 from mock import patch
 
 import numpy as np
+import mercantile
 
 from rio_toa import toa_utils
 
@@ -39,6 +40,7 @@ KEY_PIX4D = "pix4d/pix4d_alpha_nodata.tif"
 PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
 COG_DST = os.path.join(os.path.dirname(__file__), "fixtures", "cog_name.tif")
+COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 
 
 with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
@@ -78,6 +80,65 @@ def test_tile_read_validResampling():
     arr, mask = utils.tile_read(address, bounds, tilesize, resampling_method="nearest")
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
+
+
+def test_resampling_returns_different_results():
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+    bounds = (
+        -8844681.416934313,
+        3757032.814272982,
+        -8766409.899970293,
+        3835304.331237001,
+    )
+    tilesize = 16
+
+    arr, mask = utils.tile_read(address, bounds, tilesize)
+    arr2, mask2 = utils.tile_read(
+        address, bounds, tilesize, resampling_method="nearest"
+    )
+    assert not np.array_equal(arr, arr2)
+
+
+def test_resampling_with_diff_padding_returns_different_results():
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+    bounds = (
+        -8844681.416934313,
+        3757032.814272982,
+        -8766409.899970293,
+        3835304.331237001,
+    )
+    tilesize = 16
+
+    arr, mask = utils.tile_read(address, bounds, tilesize)
+    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edge_padding=0)
+    assert not np.array_equal(arr, arr2)
+
+
+def test_tile_padding_only_effects_edge_pixels():
+    """Adding tile padding should effect edge pixels only."""
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+    bounds = (
+        -8844681.416934313,
+        3757032.814272982,
+        -8766409.899970293,
+        3835304.331237001,
+    )
+    tilesize = 16
+
+    arr, mask = utils.tile_read(address, bounds, tilesize)
+    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edge_padding=0)
+    assert not np.array_equal(arr[0][0], arr2[0][0])
+    assert np.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
+
+
+def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
+    address = COG_WEB_TILED
+    bounds = mercantile.bounds(147, 182, 9)
+    tilesize = 256
+
+    arr, mask = utils.tile_read(address, bounds, tilesize)
+    arr2, mask2 = utils.tile_read(address, bounds, tilesize, tile_edge_padding=0)
+    assert np.array_equal(arr, arr2)
 
 
 def test_tile_read_invalidResampling():

@@ -17,11 +17,13 @@ from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
 from rasterio.io import DatasetReader, MemoryFile
 from rasterio import transform
+from rasterio import windows
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler.mercator import get_zooms
 
 from rio_tiler.errors import NoOverviewWarning
+from affine import Affine
 
 logger = logging.getLogger(__name__)
 
@@ -262,7 +264,13 @@ def has_alpha_band(src_dst):
 
 
 def _tile_read(
-    src_dst, bounds, tilesize, indexes=None, nodata=None, resampling_method="bilinear"
+    src_dst,
+    bounds,
+    tilesize,
+    indexes=None,
+    nodata=None,
+    resampling_method="bilinear",
+    tile_edge_padding=2,
 ):
     """
     Read data and mask.
@@ -281,6 +289,9 @@ def _tile_read(
     nodata: int or float, optional (defaults: None)
     resampling_method : str, optional (default: "bilinear")
          Resampling algorithm
+    tile_edge_padding : int, optional (default: 2)
+        Padding to apply to each edge of the tile when retrieving data
+        to assist in reducing resampling artefacts along edges.
 
     Returns
     -------
@@ -298,6 +309,27 @@ def _tile_read(
     )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(src_dst, bounds)
+    out_window = windows.Window(
+        col_off=0, row_off=0, width=vrt_width, height=vrt_height
+    )
+
+    if tile_edge_padding > 0 and not _requested_tile_aligned_with_internal_tile(
+        src_dst, bounds, tilesize
+    ):
+        vrt_transform = vrt_transform * Affine.translation(
+            -tile_edge_padding, -tile_edge_padding
+        )
+        orig__vrt_height = vrt_height
+        orig_vrt_width = vrt_width
+        vrt_height = vrt_height + 2 * tile_edge_padding
+        vrt_width = vrt_width + 2 * tile_edge_padding
+        out_window = windows.Window(
+            col_off=tile_edge_padding,
+            row_off=tile_edge_padding,
+            width=orig_vrt_width,
+            height=orig__vrt_height,
+        )
+
     vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
 
     indexes = indexes if indexes is not None else src_dst.indexes
@@ -314,9 +346,11 @@ def _tile_read(
         data = vrt.read(
             out_shape=out_shape,
             indexes=indexes,
+            window=out_window,
             resampling=Resampling[resampling_method],
         )
-        mask = vrt.dataset_mask(out_shape=(tilesize, tilesize))
+
+        mask = vrt.dataset_mask(out_shape=(tilesize, tilesize), window=out_window)
 
         return data, mask
 
@@ -405,6 +439,27 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
         and (tile_y <= maxtile.y + 1)
         and (tile_y >= mintile.y)
     )
+
+
+def _requested_tile_aligned_with_internal_tile(src_dst, bounds, tilesize):
+    """Check if tile is aligned with internal tiles."""
+    if src_dst.crs != CRS.from_epsg(3857):
+        return False
+
+    col_off, row_off, w, h = windows.from_bounds(
+        *bounds, height=tilesize, transform=src_dst.transform, width=tilesize
+    ).flatten()
+
+    if round(w) % 64 and round(h) % 64:
+        return False
+
+    if (src_dst.width - round(col_off)) % 64:
+        return False
+
+    if (src_dst.height - round(row_off)) % 64:
+        return False
+
+    return True
 
 
 def _apply_discrete_colormap(arr, cmap):

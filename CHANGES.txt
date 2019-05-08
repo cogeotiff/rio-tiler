@@ -1,3 +1,8 @@
+Next release 
+------------------
+
+- add tile_edge_padding option to be passed to rio_tiler.utils._tile_read to reduce sharp edges that occur due to resampling (#104)
+
 1.2.4 (2019-04-16)
 ------------------
 
