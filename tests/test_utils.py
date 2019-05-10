@@ -738,3 +738,19 @@ def test_aligned_with_internaltile():
 
     with rasterio.open(COG_WEB_TILED) as src_dst:
         assert utils._requested_tile_aligned_with_internal_tile(src_dst, bounds, 256)
+
+
+def test_tile_read_validMask():
+    """Dataset mask should be the same as the actual mask."""
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+
+    bounds = (
+        -8844681.416934313,
+        3757032.814272982,
+        -8766409.899970293,
+        3835304.331237001,
+    )
+    tilesize = 128
+    arr, mask = utils.tile_read(address, bounds, tilesize, nodata=0)
+    masknodata = (arr[0] != 0).astype(np.uint8) * 255
+    np.testing.assert_array_equal(mask, masknodata)
