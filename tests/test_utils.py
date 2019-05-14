@@ -31,10 +31,17 @@ LANDSAT_PATH = os.path.join(
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 S3_KEY_NODATA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif"
+S3_KEY_MASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_mask.tif"
+S3_KEY_EXTMASK = (
+    "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_extmask.tif"
+)
+
 S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__), "fixtures", "my-bucket")
 S3_PATH = os.path.join(S3_LOCAL, S3_KEY)
 S3_ALPHA_PATH = os.path.join(S3_LOCAL, S3_KEY_ALPHA)
 S3_NODATA_PATH = os.path.join(S3_LOCAL, S3_KEY_NODATA)
+S3_MASK_PATH = os.path.join(S3_LOCAL, S3_KEY_MASK)
+S3_EXTMASK_PATH = os.path.join(S3_LOCAL, S3_KEY_EXTMASK)
 
 KEY_PIX4D = "pix4d/pix4d_alpha_nodata.tif"
 PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
@@ -48,11 +55,19 @@ with open("{}_MTL.txt".format(LANDSAT_PATH), "r") as f:
     LANDSAT_METADATA = toa_utils._parse_mtl_txt(f.read())
 
 
-def test_tile_read_valid():
-    """
-    Should work as expected (read landsat band)
-    """
+@pytest.fixture(autouse=True)
+def testing_env_var(monkeypatch):
+    """Set fake env to make sure we don't hit AWS services."""
+    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "jqt")
+    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "rde")
+    monkeypatch.delenv("AWS_PROFILE", raising=False)
+    monkeypatch.setenv("AWS_CONFIG_FILE", "/tmp/noconfigheere")
+    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/tmp/noconfighereeither")
+    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
 
+
+def test_tile_read_valid():
+    """Should work as expected (read landsat band)."""
     address = "{}_B2.TIF".format(LANDSAT_PATH)
     bounds = (
         -8844681.416934313,
@@ -210,29 +225,84 @@ def test_tile_read_rgb():
 
 
 def test_tile_read_alpha():
-    """
-    Should work as expected
-    """
-    bounds = (
-        -11663507.036777973,
-        4715018.0897710975,
-        -11663487.927520901,
-        4715037.199028169,
+    """Read masked area."""
+    # non-boundless tile covering the alpha masked part
+    mercator_tile = mercantile.Tile(x=876432, y=1603670, z=22)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(S3_ALPHA_PATH, bounds, 256, indexes=(1, 2, 3))
+    assert arr.shape == (3, 256, 256)
+    assert not mask.all()
+
+
+def test_tile_read_internal_nodata():
+    """Read masked area."""
+    # non-boundless tile covering the nodata part
+    mercator_tile = mercantile.Tile(x=876431, y=1603670, z=22)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(S3_NODATA_PATH, bounds, 256, indexes=(1, 2, 3))
+    assert arr.shape == (3, 256, 256)
+    assert not mask.all()
+
+
+def test_tile_read_wrong_nodata():
+    """Return empty mask on wrong nodata."""
+    # non-boundless tile covering the nodata part
+    mercator_tile = mercantile.Tile(x=438217, y=801835, z=21)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(
+        S3_NODATA_PATH, bounds, 256, indexes=(1, 2, 3), nodata=1000
     )
-    tilesize = 16
+    assert arr.shape == (3, 256, 256)
+    assert mask.all()
 
-    arr, mask = utils.tile_read(S3_ALPHA_PATH, bounds, tilesize, indexes=(1, 2, 3))
-    assert arr.shape == (3, 16, 16)
-    assert mask.shape == (16, 16)
+    # Mask boundless values
+    mercator_tile = mercantile.Tile(x=109554, y=200458, z=19)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(
+        S3_NODATA_PATH, bounds, 256, indexes=(1, 2, 3), nodata=1000
+    )
+    assert arr.shape == (3, 256, 256)
+    assert not mask.all()
 
-    with rasterio.open(S3_ALPHA_PATH) as src:
-        arr, mask = utils.tile_read(src, bounds, tilesize, indexes=(1, 2, 3))
-    assert arr.shape == (3, 16, 16)
-    assert mask.shape == (16, 16)
+
+def test_tile_read_mask():
+    """Read masked area."""
+    # non-boundless tile covering the masked part
+    mercator_tile = mercantile.Tile(x=876431, y=1603669, z=22)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(S3_MASK_PATH, bounds, 256)
+    assert arr.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
+    assert not mask.all()
+
+    # boundless tile covering the masked part
+    mercator_tile = mercantile.Tile(x=876431, y=1603668, z=22)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(S3_MASK_PATH, bounds, 256)
+    assert arr.shape == (3, 256, 256)
+    assert not mask.all()
+
+
+def test_tile_read_extmask():
+    """Read masked area."""
+    # non-boundless tile covering the masked part
+    mercator_tile = mercantile.Tile(x=876431, y=1603669, z=22)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(S3_EXTMASK_PATH, bounds, 256)
+    assert arr.shape == (3, 256, 256)
+    assert mask.shape == (256, 256)
+    assert not mask.all()
+
+    # boundless tile covering the masked part
+    mercator_tile = mercantile.Tile(x=876431, y=1603668, z=22)
+    bounds = mercantile.xy_bounds(mercator_tile)
+    arr, mask = utils.tile_read(S3_MASK_PATH, bounds, 256)
+    assert arr.shape == (3, 256, 256)
+    assert not mask.all()
 
 
 def test_tile_read_nodata():
-    """Should work as expected when forcing nodata value"""
+    """Should work as expected when forcing nodata value."""
     address = "{}_B4.TIF".format(LANDSAT_PATH)
     bounds = (
         -9040360.209344367,
@@ -738,3 +808,20 @@ def test_aligned_with_internaltile():
 
     with rasterio.open(COG_WEB_TILED) as src_dst:
         assert utils._requested_tile_aligned_with_internal_tile(src_dst, bounds, 256)
+
+
+# See https://github.com/cogeotiff/rio-tiler/issues/105#issuecomment-492268836
+# def test_tile_read_validMask():
+#     """Dataset mask should be the same as the actual mask."""
+#     address = "{}_B2.TIF".format(LANDSAT_PATH)
+
+#     bounds = (
+#         -8844681.416934313,
+#         3757032.814272982,
+#         -8766409.899970293,
+#         3835304.331237001,
+#     )
+#     tilesize = 128
+#     arr, mask = utils.tile_read(address, bounds, tilesize, nodata=0)
+#     masknodata = (arr[0] != 0).astype(np.uint8) * 255
+#     np.testing.assert_array_equal(mask, masknodata)

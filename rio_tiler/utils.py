@@ -349,7 +349,6 @@ def _tile_read(
             window=out_window,
             resampling=Resampling[resampling_method],
         )
-
         mask = vrt.dataset_mask(out_shape=(tilesize, tilesize), window=out_window)
 
         return data, mask
