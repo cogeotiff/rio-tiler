@@ -825,3 +825,38 @@ def test_aligned_with_internaltile():
 #     arr, mask = utils.tile_read(address, bounds, tilesize, nodata=0)
 #     masknodata = (arr[0] != 0).astype(np.uint8) * 255
 #     np.testing.assert_array_equal(mask, masknodata)
+
+
+def test_tile_read_crs():
+    """Read tile using different target CRS and bounds CRS."""
+    bounds = (
+        -11663507.036777973,
+        4715018.0897710975,
+        -11663487.927520901,
+        4715037.199028169,
+    )
+    tilesize = 16
+
+    # Test target CRS with input bounds in bounds_crs
+    arr, mask = utils.tile_read(
+        S3_PATH,
+        bounds,
+        tilesize,
+        indexes=(3, 2, 1),
+        dst_crs="epsg:4326",
+        bounds_crs="epsg:3857",
+    )
+    assert arr.shape == (3, 16, 16)
+    assert mask.shape == (16, 16)
+
+    # Test target CRS with input bounds in target CRS
+    bounds = (
+        -104.7750663757324,
+        38.95353532141203,
+        -104.77489471435543,
+        38.95366881479646,
+    )
+    arr_crs, mask_crs = utils.tile_read(
+        S3_PATH, bounds, tilesize, indexes=(3, 2, 1), dst_crs="epsg:4326"
+    )
+    assert np.array_equal(arr, arr_crs)
