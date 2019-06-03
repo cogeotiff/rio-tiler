@@ -23,7 +23,7 @@ extra_reqs = {
 }
 
 setup(
-    name="rio_tiler",
+    name="rio-tiler",
     version=version,
     description=u"""Get mercator tile from landsat,
           sentinel or other AWS hosted raster""",
