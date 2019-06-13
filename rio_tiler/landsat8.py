@@ -328,7 +328,7 @@ def metadata(sceneid, pmin=2, pmax=98, **kwargs):
         metadata=meta_data,
         overview_level=1,
         percentiles=(pmin, pmax),
-        **kwargs,
+        **kwargs
     )
 
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
@@ -354,7 +354,7 @@ def tile(
     bands=("4", "3", "2"),
     tilesize=256,
     pan=False,
-    **kwargs,
+    **kwargs
 ):
     """
     Create mercator tile from Landsat-8 data.
