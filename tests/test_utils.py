@@ -407,13 +407,18 @@ def test_get_colormap_valid():
 
 
 def test_get_colormap_schwarzwald():
-    """Returns 'schwarzwald' colormap in a GDAL friendly format."""
+    """Returns 'schwarzwald' colormap in a PIL friendly format."""
     assert len(utils.get_colormap(name="schwarzwald")) == 768  # 3 x256
 
 
 def test_get_colormap_rplumbo():
-    """Returns 'rplumbo' colormap in a GDAL friendly format."""
+    """Returns 'rplumbo' colormap in a PIL friendly format."""
     assert len(utils.get_colormap(name="rplumbo")) == 768  # 3 x256
+
+
+def test_get_colormap_grayscale():
+    """Returns 'grayscale' colormap in a PIL friendly format."""
+    assert len(utils.get_colormap(name="grayscale")) == 768  # 3 x256
 
 
 def test_get_colormap_gdal():
