@@ -1,3 +1,5 @@
 """rio-tiler."""
 
-__version__ = "1.2.7"
+import pkg_resources
+
+version = pkg_resources.get_distribution(__package__).version

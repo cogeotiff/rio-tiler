@@ -347,7 +347,14 @@ def metadata(sceneid, pmin=2, pmax=98, **kwargs):
 
 
 def tile(
-    sceneid, tile_x, tile_y, tile_z, bands=("4", "3", "2"), tilesize=256, pan=False
+    sceneid,
+    tile_x,
+    tile_y,
+    tile_z,
+    bands=("4", "3", "2"),
+    tilesize=256,
+    pan=False,
+    **kwargs
 ):
     """
     Create mercator tile from Landsat-8 data.
@@ -369,6 +376,8 @@ def tile(
         Output image size.
     pan : boolean, optional (default: False)
         If True, apply pan-sharpening.
+    kwargs: dict, optional
+        These will be passed to the 'rio_tiler.utils._tile_read' function.
 
     Returns
     -------
@@ -399,7 +408,9 @@ def tile(
 
     addresses = ["{}_B{}.TIF".format(landsat_address, band) for band in bands]
 
-    _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0)
+    _tiler = partial(
+        utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0, **kwargs
+    )
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         data = np.concatenate(data)

@@ -56,9 +56,11 @@ jobs:
       steps:
         - checkout
         - run:
+            command: pip install -e . --user
+        - run:
             name: verify git tag vs. version
             command: |
-              VERSION=$(python -c 'import rio_tiler; print(rio_tiler.__version__)')
+              VERSION=$(python -c 'import rio_tiler; print(rio_tiler.version)')
               if [ "$VERSION" = "$CIRCLE_TAG" ]; then exit 0; else exit 3; fi
         - run:
             name: install dependencies

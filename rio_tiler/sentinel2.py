@@ -206,7 +206,9 @@ def metadata(sceneid, pmin=2, pmax=98, **kwargs):
     return info
 
 
-def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256):
+def tile(
+    sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256, **kwargs
+):
     """
     Create mercator tile from Sentinel-2 data.
 
@@ -224,6 +226,8 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256
         Bands index for the RGB combination.
     tilesize : int, optional (default: 256)
         Output image size.
+    kwargs: dict, optional
+        These will be passed to the 'rio_tiler.utils._tile_read' function.
 
     Returns
     -------
@@ -257,7 +261,9 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=("04", "03", "02"), tilesize=256
 
     addresses = ["{}/B{}.jp2".format(sentinel_address, band) for band in bands]
 
-    _tiler = partial(utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0)
+    _tiler = partial(
+        utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0, **kwargs
+    )
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
         data, masks = zip(*list(executor.map(_tiler, addresses)))
         mask = np.all(masks, axis=0).astype(np.uint8) * 255
