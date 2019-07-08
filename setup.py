@@ -2,16 +2,7 @@
 
 from setuptools import setup, find_packages
 
-with open("rio_tiler/__init__.py") as f:
-    for line in f:
-        if line.find("__version__") >= 0:
-            version = line.split("=")[1].strip()
-            version = version.strip('"')
-            version = version.strip("'")
-            continue
-
-
-with open("README.rst") as f:
+with open("README.md") as f:
     readme = f.read()
 
 # Runtime requirements.
@@ -24,10 +15,11 @@ extra_reqs = {
 
 setup(
     name="rio_tiler",
-    version=version,
+    version="1.2.8",
     description=u"""Get mercator tile from landsat,
           sentinel or other AWS hosted raster""",
     long_description=readme,
+    long_description_content_type="text/markdown",
     classifiers=[
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
@@ -38,8 +30,8 @@ setup(
     ],
     keywords="raster aws tiler gdal rasterio",
     author=u"Vincent Sarago",
-    author_email="vincent.sarago@mapbox.com",
-    url="https://github.com/mapbox/rio-tiler",
+    author_email="vincent@developmentseed.org",
+    url="https://github.com/cogeotiff/rio-tiler",
     license="BSD",
     packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
     package_data={"cmap": ["*.txt"]},
