@@ -220,7 +220,12 @@ def raster_get_stats(
     }
 
 
-def get_vrt_transform(src_dst, bounds, bounds_crs="epsg:3857"):
+def get_vrt_transform(
+    src_dst,
+    bounds,
+    bounds_crs=CRS({"init": "EPSG:3857"}),
+    dst_crs=CRS({"init": "EPSG:3857"}),
+):
     """
     Calculate VRT transform.
 
@@ -229,9 +234,12 @@ def get_vrt_transform(src_dst, bounds, bounds_crs="epsg:3857"):
     src_dst : rasterio.io.DatasetReader
         Rasterio io.DatasetReader object
     bounds : list
-        Bounds (left, bottom, right, top)
+        Bounds (left, bottom, right, top) in target crs ("dst_crs").
     bounds_crs : str
         Coordinate reference system string (default "epsg:3857")
+        Replaced by "dst_crs" and will be deprecated in 1.3.0.
+    dst_crs: CRS or str, optional
+        Target coordinate reference system (default "epsg:3857").
 
     Returns
     -------
@@ -271,6 +279,8 @@ def _tile_read(
     nodata=None,
     resampling_method="bilinear",
     tile_edge_padding=2,
+    dst_crs=CRS({"init": "EPSG:3857"}),
+    bounds_crs=None,
 ):
     """
     Read data and mask.
@@ -280,7 +290,7 @@ def _tile_read(
     src_dst : rasterio.io.DatasetReader
         rasterio.io.DatasetReader object
     bounds : list
-        Mercator tile bounds (left, bottom, right, top)
+        Output bounds (left, bottom, right, top) in target crs ("dst_crs").
     tilesize : int
         Output image size
     indexes : list of ints or a single int, optional, (defaults: None)
@@ -288,10 +298,14 @@ def _tile_read(
         a 2D array if it is a band index number.
     nodata: int or float, optional (defaults: None)
     resampling_method : str, optional (default: "bilinear")
-         Resampling algorithm
+        Resampling algorithm.
     tile_edge_padding : int, optional (default: 2)
         Padding to apply to each edge of the tile when retrieving data
         to assist in reducing resampling artefacts along edges.
+    dst_crs: CRS or str, optional
+        Target coordinate reference system (default "epsg:3857").
+    bounds_crs: CRS or str, optional
+        Overwrite bounds coordinate reference system (default None, equal to dst_crs).
 
     Returns
     -------
@@ -304,11 +318,19 @@ def _tile_read(
     elif isinstance(indexes, tuple):
         indexes = list(indexes)
 
+    if not bounds_crs:
+        bounds_crs = dst_crs
+
+    bounds = transform_bounds(*[bounds_crs, dst_crs] + list(bounds), densify_pts=21)
+
     vrt_params = dict(
-        add_alpha=True, crs="epsg:3857", resampling=Resampling[resampling_method]
+        add_alpha=True, crs=dst_crs, resampling=Resampling[resampling_method]
     )
 
-    vrt_transform, vrt_width, vrt_height = get_vrt_transform(src_dst, bounds)
+    vrt_transform, vrt_width, vrt_height = get_vrt_transform(
+        src_dst, bounds, dst_crs=dst_crs
+    )
+
     out_window = windows.Window(
         col_off=0, row_off=0, width=vrt_width, height=vrt_height
     )

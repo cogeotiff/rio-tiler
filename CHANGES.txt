@@ -1,10 +1,10 @@
 
-NEXT (TBD)
+1.2.8 (2019-07-08)
 ----------
 
 - Add kwargs options in landsat8.tile, sentinel2.tile and cbers.tile functions to 
 allow `resampling_method` and `tile_edge_padding` options forwarding to utils._tile_read.
-
+- Add Input (bounds_crs) and Output (dst_crs) option to `utils._tile_read` function (#108)
 
 1.2.7 (2019-05-14)
 ------------------
