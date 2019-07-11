@@ -15,7 +15,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="1.2.8",
+    version="1.2.9",
     description=u"""Get mercator tile from landsat,
           sentinel or other AWS hosted raster""",
     long_description=readme,

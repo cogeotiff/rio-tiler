@@ -1,6 +1,11 @@
 
+1.2.9 (2019-07-11)
+------------------
+- fix issue #113, adds depreciation warning for `bounds_crs` in favor of `dst_crs` 
+in `rio_tiler.utils.get_vrt_transform`
+
 1.2.8 (2019-07-08)
-----------
+------------------
 
 - Add kwargs options in landsat8.tile, sentinel2.tile and cbers.tile functions to 
 allow `resampling_method` and `tile_edge_padding` options forwarding to utils._tile_read.
