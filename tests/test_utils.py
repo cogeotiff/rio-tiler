@@ -13,7 +13,7 @@ from rio_toa import toa_utils
 import rasterio
 from rasterio.crs import CRS
 from rio_tiler import utils
-from rio_tiler.errors import NoOverviewWarning
+from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
 
 from .conftest import requires_webp
 
@@ -615,6 +615,26 @@ def test_get_vrt_transform_valid():
     assert vrt_height == 100
 
 
+def test_get_vrt_transform_deprWarning():
+    """Should Warn user for bounds_crs depreciation."""
+    bounds = (
+        -104.77523803710938,
+        38.95353532141205,
+        -104.77455139160156,
+        38.954069293441066,
+    )
+    with pytest.warns(DeprecationWarning):
+        with rasterio.open(S3_PATH) as src:
+            vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
+                src, bounds, bounds_crs="epsg:4326"
+            )
+
+    assert vrt_transform[2] == -104.77523803710938
+    assert vrt_transform[5] == 38.954069293441066
+    assert vrt_width == 420
+    assert vrt_height == 327
+
+
 def test_get_vrt_transform_valid4326():
     """Should return correct transform and size."""
     bounds = (
@@ -623,11 +643,11 @@ def test_get_vrt_transform_valid4326():
         -104.77455139160156,
         38.954069293441066,
     )
-
     with rasterio.open(S3_PATH) as src:
         vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
-            src, bounds, bounds_crs="epsg:4326"
+            src, bounds, dst_crs="epsg:4326"
         )
+
     assert vrt_transform[2] == -104.77523803710938
     assert vrt_transform[5] == 38.954069293441066
     assert vrt_width == 420

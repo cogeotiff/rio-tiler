@@ -22,7 +22,7 @@ from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler.mercator import get_zooms
 
-from rio_tiler.errors import NoOverviewWarning
+from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
 from affine import Affine
 
 logger = logging.getLogger(__name__)
@@ -221,10 +221,7 @@ def raster_get_stats(
 
 
 def get_vrt_transform(
-    src_dst,
-    bounds,
-    bounds_crs=CRS({"init": "EPSG:3857"}),
-    dst_crs=CRS({"init": "EPSG:3857"}),
+    src_dst, bounds, bounds_crs=None, dst_crs=CRS({"init": "EPSG:3857"})
 ):
     """
     Calculate VRT transform.
@@ -249,8 +246,14 @@ def get_vrt_transform(
         Output dimensions
 
     """
+    if bounds_crs is not None:
+        warnings.warn(
+            "bounds_crs will be removed in 1.3.0, use dst_crs", DeprecationWarning
+        )
+        dst_crs = bounds_crs
+
     dst_transform, _, _ = calculate_default_transform(
-        src_dst.crs, bounds_crs, src_dst.width, src_dst.height, *src_dst.bounds
+        src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
     )
     w, s, e, n = bounds
     vrt_width = math.ceil((e - w) / dst_transform.a)
