@@ -608,14 +608,9 @@ def get_colormap(name="cfastie", format="pil"):
         Color map array in GDAL friendly format
 
     """
-    cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.txt".format(name))
-    with open(cmap_file) as cmap:
-        lines = cmap.read().splitlines()
-        colormap = [
-            list(map(int, line.split())) for line in lines if not line.startswith("#")
-        ][1:]
+    cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.npy".format(name))
+    cmap = list(np.load(cmap_file).flatten())
 
-    cmap = list(np.array(colormap).flatten())
     if format.lower() == "pil":
         return cmap
     elif format.lower() == "gdal":
