@@ -1,1 +1,1 @@
-include rio_tiler/cmap/*.txt
+include rio_tiler/cmap/*.npy
