@@ -1,5 +1,5 @@
-NEXT (TBD)
-----------
+1.2.10 (2019-07-18)
+-------------------
 - add more colormap options (from matplotlib) and switch from txt files to numpy binaries (#115)
 
 1.2.9 (2019-07-11)
