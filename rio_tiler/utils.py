@@ -344,7 +344,7 @@ def _tile_read(
         vrt_transform = vrt_transform * Affine.translation(
             -tile_edge_padding, -tile_edge_padding
         )
-        orig__vrt_height = vrt_height
+        orig_vrt_height = vrt_height
         orig_vrt_width = vrt_width
         vrt_height = vrt_height + 2 * tile_edge_padding
         vrt_width = vrt_width + 2 * tile_edge_padding
@@ -352,7 +352,7 @@ def _tile_read(
             col_off=tile_edge_padding,
             row_off=tile_edge_padding,
             width=orig_vrt_width,
-            height=orig__vrt_height,
+            height=orig_vrt_height,
         )
 
     vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
@@ -696,13 +696,12 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
         bands = tuple(map(int, bands_names))
         arr, mask = main_tile(sceneid, tile_x, tile_y, tile_z, indexes=bands, **kwargs)
 
-    ctx = {}
-    for bdx, b in enumerate(bands_names):
-        ctx["b{}".format(b)] = arr[bdx]
+    bands_names = ["b{}".format(b) for b in bands_names]
+    arr = dict(zip(bands_names, arr))
 
     return (
         np.array(
-            [np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=ctx)) for bloc in rgb]
+            [np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=arr)) for bloc in rgb]
         ),
         mask,
     )
