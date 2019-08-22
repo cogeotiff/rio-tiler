@@ -1,3 +1,8 @@
+
+NEXT (TBD)
+----------
+- reduce memory footprint of expression tiler (#18d4acc)
+
 1.2.10 (2019-07-18)
 -------------------
 - add more colormap options (from matplotlib) and switch from txt files to numpy binaries (#115)
