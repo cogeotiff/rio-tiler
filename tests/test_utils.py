@@ -12,6 +12,8 @@ from rio_toa import toa_utils
 
 import rasterio
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
+
 from rio_tiler import utils
 from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
 
@@ -743,6 +745,20 @@ def test_raster_get_stats_validOptions():
     stats = utils.raster_get_stats(S3_PATH, indexes=(3,))
     assert len(stats["statistics"]) == 1
     assert stats["statistics"][3]["pc"] == [54, 192]
+
+
+def test_raster_get_stats_ovr():
+    """Validate that overview level return the same result than reeading the overview."""
+    resampling_method = "bilinear"
+    rio_stats = utils.raster_get_stats(
+        S3_PATH, overview_level=1, resampling_method=resampling_method
+    )
+
+    with rasterio.open(S3_PATH, overview_level=1) as src_dst:
+        indexes = src_dst.indexes
+        arr = src_dst.read(resampling=Resampling[resampling_method], masked=True)
+        stats = {indexes[b]: utils._stats(arr[b], bins=10) for b in range(arr.shape[0])}
+    assert rio_stats["statistics"] == stats
 
 
 def test_array_to_image_valid_1band():
