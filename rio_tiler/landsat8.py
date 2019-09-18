@@ -34,7 +34,7 @@ except ImportError:
 
 
 LANDSAT_BUCKET = "s3://landsat-pds"
-LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11"]
+LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "QA"]
 
 # ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
 MAX_THREADS = int(os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5))
@@ -222,24 +222,19 @@ def _landsat_stats(
             )
 
         out_shape = (height // decim, width // decim)
+
+        if band == "QA":
+            nodata = 1
+        else:
+            nodata = 0
+
         vrt_params = dict(
-            nodata=0, add_alpha=False, src_nodata=0, init_dest_nodata=False
+            nodata=nodata, add_alpha=False, src_nodata=nodata, init_dest_nodata=False
         )
         with WarpedVRT(src, **vrt_params) as vrt:
             arr = vrt.read(out_shape=out_shape, indexes=[1], masked=True)
 
-    if band in ["10", "11"]:  # TIRS
-        multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
-            "RADIANCE_MULT_BAND_{}".format(band)
-        )
-        add_rad = metadata["RADIOMETRIC_RESCALING"].get(
-            "RADIANCE_ADD_BAND_{}".format(band)
-        )
-        k1 = metadata["TIRS_THERMAL_CONSTANTS"].get("K1_CONSTANT_BAND_{}".format(band))
-        k2 = metadata["TIRS_THERMAL_CONSTANTS"].get("K2_CONSTANT_BAND_{}".format(band))
-
-        arr = brightness_temp.brightness_temp(arr, multi_rad, add_rad, k1, k2)
-    else:
+    if band in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:  # OLI
         multi_reflect = metadata["RADIOMETRIC_RESCALING"].get(
             "REFLECTANCE_MULT_BAND_{}".format(band)
         )
@@ -251,6 +246,17 @@ def _landsat_stats(
         arr = 10000 * reflectance.reflectance(
             arr, multi_reflect, add_reflect, sun_elev, src_nodata=0
         )
+    elif band in ["10", "11"]:  # TIRS
+        multi_rad = metadata["RADIOMETRIC_RESCALING"].get(
+            "RADIANCE_MULT_BAND_{}".format(band)
+        )
+        add_rad = metadata["RADIOMETRIC_RESCALING"].get(
+            "RADIANCE_ADD_BAND_{}".format(band)
+        )
+        k1 = metadata["TIRS_THERMAL_CONSTANTS"].get("K1_CONSTANT_BAND_{}".format(band))
+        k2 = metadata["TIRS_THERMAL_CONSTANTS"].get("K2_CONSTANT_BAND_{}".format(band))
+
+        arr = brightness_temp.brightness_temp(arr, multi_rad, add_rad, k1, k2)
 
     params = {}
     if histogram_bins:
@@ -406,13 +412,19 @@ def tile(
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
-    addresses = ["{}_B{}.TIF".format(landsat_address, band) for band in bands]
+    def _tiler(band):
+        address = "{}_B{}.TIF".format(landsat_address, band)
+        if band == "QA":
+            nodata = 1
+        else:
+            nodata = 0
 
-    _tiler = partial(
-        utils.tile_read, bounds=tile_bounds, tilesize=tilesize, nodata=0, **kwargs
-    )
+        return utils.tile_read(
+            address, bounds=tile_bounds, tilesize=tilesize, nodata=nodata, **kwargs
+        )
+
     with futures.ThreadPoolExecutor(max_workers=MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(_tiler, addresses)))
+        data, masks = zip(*list(executor.map(_tiler, bands)))
         data = np.concatenate(data)
         mask = np.all(masks, axis=0).astype(np.uint8) * 255
 
@@ -426,7 +438,20 @@ def tile(
         sun_elev = meta_data["IMAGE_ATTRIBUTES"]["SUN_ELEVATION"]
 
         for bdx, band in enumerate(bands):
-            if int(band) > 9:  # TIRS
+            if band in ["1", "2", "3", "4", "5", "6", "7", "8", "9"]:  # OLI
+                multi_reflect = meta_data["RADIOMETRIC_RESCALING"].get(
+                    "REFLECTANCE_MULT_BAND_{}".format(band)
+                )
+
+                add_reflect = meta_data["RADIOMETRIC_RESCALING"].get(
+                    "REFLECTANCE_ADD_BAND_{}".format(band)
+                )
+
+                data[bdx] = 10000 * reflectance.reflectance(
+                    data[bdx], multi_reflect, add_reflect, sun_elev
+                )
+
+            elif band in ["10", "11"]:  # TIRS
                 multi_rad = meta_data["RADIOMETRIC_RESCALING"].get(
                     "RADIANCE_MULT_BAND_{}".format(band)
                 )
@@ -445,19 +470,6 @@ def tile(
 
                 data[bdx] = brightness_temp.brightness_temp(
                     data[bdx], multi_rad, add_rad, k1, k2
-                )
-
-            else:
-                multi_reflect = meta_data["RADIOMETRIC_RESCALING"].get(
-                    "REFLECTANCE_MULT_BAND_{}".format(band)
-                )
-
-                add_reflect = meta_data["RADIOMETRIC_RESCALING"].get(
-                    "REFLECTANCE_ADD_BAND_{}".format(band)
-                )
-
-                data[bdx] = 10000 * reflectance.reflectance(
-                    data[bdx], multi_reflect, add_reflect, sun_elev
                 )
 
         return data, mask
