@@ -63,7 +63,7 @@ def test_metadata_valid_default(landsat_get_mtl, monkeypatch):
     meta = landsat8.metadata(LANDSAT_SCENE_C1)
     assert meta["sceneid"] == LANDSAT_SCENE_C1
     assert len(meta["bounds"]["value"]) == 4
-    assert len(meta["statistics"].items()) == 11
+    assert len(meta["statistics"].items()) == 12
     assert len(meta["statistics"]["1"]["histogram"][0]) == 10
     assert list(map(int, meta["statistics"]["1"]["pc"])) == [1210, 7046]
 
@@ -87,7 +87,7 @@ def test_metadata_valid_custom(landsat_get_mtl, monkeypatch):
     meta = landsat8.metadata(LANDSAT_SCENE_C1, pmin=10, pmax=90)
     assert meta["sceneid"] == LANDSAT_SCENE_C1
     assert len(meta["bounds"]["value"]) == 4
-    assert len(meta["statistics"].items()) == 11
+    assert len(meta["statistics"].items()) == 12
     assert list(map(int, meta["statistics"]["1"]["pc"])) == [1275, 3918]
 
 
@@ -134,6 +134,22 @@ def test_tile_valid_tir(landsat_get_mtl, monkeypatch):
     tile_x = 71
     tile_y = 102
     bands = "10"
+
+    data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
+    assert data.shape == (1, 256, 256)
+    assert mask.shape == (256, 256)
+
+
+@patch("rio_tiler.landsat8._landsat_get_mtl")
+def test_tile_valid_qa(landsat_get_mtl, monkeypatch):
+    """Should return a tile and mask from TIR band."""
+    monkeypatch.setattr(landsat8, "LANDSAT_BUCKET", LANDSAT_BUCKET)
+    landsat_get_mtl.return_value = LANDSAT_METADATA
+
+    tile_z = 8
+    tile_x = 71
+    tile_y = 102
+    bands = "QA"
 
     data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands=bands)
     assert data.shape == (1, 256, 256)
