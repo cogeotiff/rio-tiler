@@ -1,7 +1,8 @@
 
 NEXT (TBD)
 ----------
-- reduce memory footprint of expression tiler (#18d4acc)
+- reduce memory footprint of expression tiler
+- fix wrong calculation for overview size in `raster_get_stats` (#116)
 
 1.2.10 (2019-07-18)
 -------------------

@@ -12,6 +12,8 @@ from rio_toa import toa_utils
 
 import rasterio
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
+
 from rio_tiler import utils
 from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
 
@@ -679,8 +681,8 @@ def test_raster_get_stats_valid():
     assert stats["bounds"]
     assert stats["bounds"]["crs"] == CRS({"init": "EPSG:4326"})
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 198]
-    assert stats["statistics"][2]["pc"] == [27, 201]
+    assert stats["statistics"][1]["pc"] == [11, 199]
+    assert stats["statistics"][2]["pc"] == [26, 201]
     assert stats["statistics"][3]["pc"] == [54, 192]
     assert stats["minzoom"]
     assert stats["maxzoom"]
@@ -707,9 +709,9 @@ def test_raster_get_stats_validAlpha():
     with pytest.warns(NoOverviewWarning):
         stats = utils.raster_get_stats(S3_ALPHA_PATH)
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 199]
-    assert stats["statistics"][2]["pc"] == [29, 201]
-    assert stats["statistics"][3]["pc"] == [56, 193]
+    assert stats["statistics"][1]["pc"] == [10, 200]
+    assert stats["statistics"][2]["pc"] == [27, 202]
+    assert stats["statistics"][3]["pc"] == [55, 193]
 
 
 def test_raster_get_stats_validNodata():
@@ -718,16 +720,16 @@ def test_raster_get_stats_validNodata():
         stats = utils.raster_get_stats(S3_NODATA_PATH)
     assert stats["bounds"]
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 198]
-    assert stats["statistics"][2]["pc"] == [28, 201]
+    assert stats["statistics"][1]["pc"] == [13, 199]
+    assert stats["statistics"][2]["pc"] == [27, 202]
     assert stats["statistics"][3]["pc"] == [56, 192]
 
     with pytest.warns(NoOverviewWarning):
         stats = utils.raster_get_stats(S3_NODATA_PATH, nodata=0)
     assert stats["bounds"]
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 198]
-    assert stats["statistics"][2]["pc"] == [28, 201]
+    assert stats["statistics"][1]["pc"] == [13, 199]
+    assert stats["statistics"][2]["pc"] == [27, 202]
     assert stats["statistics"][3]["pc"] == [56, 192]
 
 
@@ -743,6 +745,20 @@ def test_raster_get_stats_validOptions():
     stats = utils.raster_get_stats(S3_PATH, indexes=(3,))
     assert len(stats["statistics"]) == 1
     assert stats["statistics"][3]["pc"] == [54, 192]
+
+
+def test_raster_get_stats_ovr():
+    """Validate that overview level return the same result than reeading the overview."""
+    resampling_method = "bilinear"
+    rio_stats = utils.raster_get_stats(
+        S3_PATH, overview_level=1, resampling_method=resampling_method
+    )
+
+    with rasterio.open(S3_PATH, overview_level=1) as src_dst:
+        indexes = src_dst.indexes
+        arr = src_dst.read(resampling=Resampling[resampling_method], masked=True)
+        stats = {indexes[b]: utils._stats(arr[b], bins=10) for b in range(arr.shape[0])}
+    assert rio_stats["statistics"] == stats
 
 
 def test_array_to_image_valid_1band():

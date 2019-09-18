@@ -74,6 +74,11 @@ def _stats(arr, percentiles=(2, 98), **kwargs):
     }
 
 
+# https://github.com/OSGeo/gdal/blob/b1c9c12ad373e40b955162b45d704070d4ebf7b0/gdal/frmts/ingr/IngrTypes.cpp#L191
+def _div_round_up(a, b):
+    return (a // b) if (a % b) == 0 else (a // b) + 1
+
+
 def raster_get_stats(
     src_path,
     indexes=None,
@@ -84,6 +89,7 @@ def raster_get_stats(
     dst_crs=CRS({"init": "EPSG:4326"}),
     histogram_bins=10,
     histogram_range=None,
+    resampling_method="bilinear",
 ):
     """
     Retrieve dataset statistics.
@@ -111,6 +117,8 @@ def raster_get_stats(
     histogram_range: tuple or list, optional
         The lower and upper range of the bins. If not provided, range is simply
         the min and max of the array.
+    resampling_method : str, optional (default: "bilinear")
+        Resampling algorithm.
 
     Returns
     -------
@@ -176,7 +184,10 @@ def raster_get_stats(
             else:
                 # determine which zoom level to read
                 for ii, decim in enumerate(levels):
-                    if max(width // decim, height // decim) < max_size:
+                    if (
+                        max(_div_round_up(width, decim), _div_round_up(height, decim))
+                        < max_size
+                    ):
                         break
         else:
             decim = 1
@@ -184,9 +195,13 @@ def raster_get_stats(
                 "Dataset has no overviews, reading the full dataset", NoOverviewWarning
             )
 
-        out_shape = (len(indexes), height // decim, width // decim)
+        out_shape = (
+            len(indexes),
+            _div_round_up(height, decim),
+            _div_round_up(width, decim),
+        )
 
-        vrt_params = dict(add_alpha=True, resampling=Resampling.bilinear)
+        vrt_params = dict(add_alpha=True)
         if has_alpha_band(src_dst):
             vrt_params.update(dict(add_alpha=False))
 
@@ -194,7 +209,12 @@ def raster_get_stats(
             vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
         with WarpedVRT(src_dst, **vrt_params) as vrt:
-            arr = vrt.read(out_shape=out_shape, indexes=indexes, masked=True)
+            arr = vrt.read(
+                out_shape=out_shape,
+                indexes=indexes,
+                resampling=Resampling[resampling_method],
+                masked=True,
+            )
 
             params = {}
             if histogram_bins:
