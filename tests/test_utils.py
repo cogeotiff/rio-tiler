@@ -681,8 +681,8 @@ def test_raster_get_stats_valid():
     assert stats["bounds"]
     assert stats["bounds"]["crs"] == CRS({"init": "EPSG:4326"})
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 198]
-    assert stats["statistics"][2]["pc"] == [27, 201]
+    assert stats["statistics"][1]["pc"] == [11, 199]
+    assert stats["statistics"][2]["pc"] == [26, 201]
     assert stats["statistics"][3]["pc"] == [54, 192]
     assert stats["minzoom"]
     assert stats["maxzoom"]
@@ -709,9 +709,9 @@ def test_raster_get_stats_validAlpha():
     with pytest.warns(NoOverviewWarning):
         stats = utils.raster_get_stats(S3_ALPHA_PATH)
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 199]
-    assert stats["statistics"][2]["pc"] == [29, 201]
-    assert stats["statistics"][3]["pc"] == [56, 193]
+    assert stats["statistics"][1]["pc"] == [10, 200]
+    assert stats["statistics"][2]["pc"] == [27, 202]
+    assert stats["statistics"][3]["pc"] == [55, 193]
 
 
 def test_raster_get_stats_validNodata():
@@ -720,16 +720,16 @@ def test_raster_get_stats_validNodata():
         stats = utils.raster_get_stats(S3_NODATA_PATH)
     assert stats["bounds"]
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 198]
-    assert stats["statistics"][2]["pc"] == [28, 201]
+    assert stats["statistics"][1]["pc"] == [13, 199]
+    assert stats["statistics"][2]["pc"] == [27, 202]
     assert stats["statistics"][3]["pc"] == [56, 192]
 
     with pytest.warns(NoOverviewWarning):
         stats = utils.raster_get_stats(S3_NODATA_PATH, nodata=0)
     assert stats["bounds"]
     assert len(stats["statistics"]) == 3
-    assert stats["statistics"][1]["pc"] == [12, 198]
-    assert stats["statistics"][2]["pc"] == [28, 201]
+    assert stats["statistics"][1]["pc"] == [13, 199]
+    assert stats["statistics"][2]["pc"] == [27, 202]
     assert stats["statistics"][3]["pc"] == [56, 192]
 
 
