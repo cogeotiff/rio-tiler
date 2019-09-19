@@ -1,6 +1,6 @@
 
-NEXT (TBD)
-----------
+1.2.11 (2019-09-18)
+-------------------
 - reduce memory footprint of expression tiler
 - fix wrong calculation for overview size in `raster_get_stats` (#116)
 - Add Landsat 8 QA Band (#117).
