@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from rasterio.enums import Resampling
 
 from rio_tiler import utils
-from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
+from rio_tiler.errors import NoOverviewWarning, DeprecationWarning, TileOutsideBounds
 
 from .conftest import requires_webp
 
@@ -377,6 +377,21 @@ def test_tile_read_dataset_nodata():
     assert arr.shape == (3, 16, 16)
     assert not mask.all()
     assert src.closed
+
+
+def test_tile_read_not_covering_the_whole_tile():
+    """Should raise an error when dataset doesn't cover more than 50% of the tile."""
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+
+    bounds = (
+        -9079495.967826376,
+        3991847.365165044,
+        -9001224.450862356,
+        4070118.882129065,
+    )
+    tilesize = 16
+    with pytest.raises(TileOutsideBounds):
+        utils.tile_read(address, bounds, tilesize, minimum_tile_cover=0.6)
 
 
 def test_linear_rescale_valid():
