@@ -689,6 +689,19 @@ def test_raster_get_stats_valid():
     assert len(stats["band_descriptions"]) == 3
     assert (1, "band1") == stats["band_descriptions"][0]
 
+    with rasterio.open(S3_PATH) as src_dst:
+        stats = utils.raster_get_stats(src_dst)
+        assert stats["bounds"]
+        assert stats["bounds"]["crs"] == CRS({"init": "EPSG:4326"})
+        assert len(stats["statistics"]) == 3
+        assert stats["statistics"][1]["pc"] == [11, 199]
+        assert stats["statistics"][2]["pc"] == [26, 201]
+        assert stats["statistics"][3]["pc"] == [54, 192]
+        assert stats["minzoom"]
+        assert stats["maxzoom"]
+        assert len(stats["band_descriptions"]) == 3
+        assert (1, "band1") == stats["band_descriptions"][0]
+
     stats = utils.raster_get_stats(COG_DST)
     assert stats["minzoom"]
     assert stats["maxzoom"]
