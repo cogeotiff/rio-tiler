@@ -1,7 +1,7 @@
 NEXT (TBD)
 ----------
-
 - Allow `DatasetReader` input for `utils.raster_get_stats`
+- add `minimum_tile_cover` option to filter dataset not covering a certain amount of the tile.
 
 1.2.11 (2019-09-18)
 -------------------

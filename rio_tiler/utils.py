@@ -22,7 +22,7 @@ from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler.mercator import get_zooms
 
-from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
+from rio_tiler.errors import NoOverviewWarning, DeprecationWarning, TileOutsideBounds
 from affine import Affine
 
 logger = logging.getLogger(__name__)
@@ -328,6 +328,7 @@ def _tile_read(
     tile_edge_padding=2,
     dst_crs=CRS({"init": "EPSG:3857"}),
     bounds_crs=None,
+    minimum_tile_cover=None,
 ):
     """
     Read data and mask.
@@ -353,11 +354,14 @@ def _tile_read(
         Target coordinate reference system (default "epsg:3857").
     bounds_crs: CRS or str, optional
         Overwrite bounds coordinate reference system (default None, equal to dst_crs).
+    minimum_tile_cover: float, optional (default: None)
+        Minimum % overlap for which to raise an error with dataset not
+        covering enought of the tile.
 
     Returns
     -------
-    out : array, int
-        returns pixel value.
+    data : numpy ndarray
+    mask: numpy array
 
     """
     if isinstance(indexes, int):
@@ -368,7 +372,8 @@ def _tile_read(
     if not bounds_crs:
         bounds_crs = dst_crs
 
-    bounds = transform_bounds(*[bounds_crs, dst_crs] + list(bounds), densify_pts=21)
+    bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
+    src_bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
 
     vrt_params = dict(
         add_alpha=True, crs=dst_crs, resampling=Resampling[resampling_method]
@@ -381,6 +386,16 @@ def _tile_read(
     out_window = windows.Window(
         col_off=0, row_off=0, width=vrt_width, height=vrt_height
     )
+
+    x_overlap = max(0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0]))
+    y_overlap = max(0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1]))
+    cover_ratio = (x_overlap * y_overlap) / (
+        (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
+    )
+    if minimum_tile_cover and cover_ratio < minimum_tile_cover:
+        raise TileOutsideBounds(
+            "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
+        )
 
     if tile_edge_padding > 0 and not _requested_tile_aligned_with_internal_tile(
         src_dst, bounds, tilesize
