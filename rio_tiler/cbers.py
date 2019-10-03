@@ -135,12 +135,10 @@ def bounds(sceneid):
             cbers_address, sceneid, scene_params["reference_band"]
         )
     ) as src:
-        wgs_bounds = transform_bounds(
-            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
-        )
+        bounds = transform_bounds(src.crs, "epsg:4326", *src.bounds, densify_pts=21)
 
     info = {"sceneid": sceneid}
-    info["bounds"] = list(wgs_bounds)
+    info["bounds"] = list(bounds)
 
     return info
 
@@ -246,11 +244,9 @@ def tile(sceneid, tile_x, tile_y, tile_z, bands=None, tilesize=256, **kwargs):
             cbers_address, sceneid, scene_params["reference_band"]
         )
     ) as src:
-        wgs_bounds = transform_bounds(
-            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
-        )
+        bounds = transform_bounds(src.crs, "epsg:4326", *src.bounds, densify_pts=21)
 
-    if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
+    if not utils.tile_exists(bounds, tile_z, tile_x, tile_y):
         raise TileOutsideBounds(
             "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
         )

@@ -203,9 +203,7 @@ def _landsat_stats(
         levels = src.overviews(1)
         width = src.width
         height = src.height
-        bounds = transform_bounds(
-            *[src.crs, dst_crs] + list(src.bounds), densify_pts=21
-        )
+        bounds = transform_bounds(src.crs, dst_crs, *src.bounds, densify_pts=21)
 
         if len(levels):
             if overview_level:

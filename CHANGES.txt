@@ -1,7 +1,11 @@
-NEXT (TBD)
+1.3.0 (TBD)
 ----------
-- Allow `DatasetReader` input for `utils.raster_get_stats`
+- Allow `DatasetReader`, `DatasetWriter`, `WarpedVRT` input for `utils.raster_get_stats` and `utils.tile_read`
 - add `minimum_tile_cover` option to filter dataset not covering a certain amount of the tile.
+- add Sentinel-1 submodule
+
+Breacking Changes:
+- need rasterio>=1.1
 
 1.2.11 (2019-09-18)
 -------------------
