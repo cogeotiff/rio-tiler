@@ -8,9 +8,10 @@ Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF dataset.
 
 Additional support is provided for the following satellite missions hosted on **AWS Public Dataset**:
 
-- [Sentinel2](http://sentinel-pds.s3-website.eu-central-1.amazonaws.com) (please read [this](https://github.com/cogeotiff/rio-tiler#Partial-reading-on-Cloud-hosted-dataset))
+- [Sentinel2](https://registry.opendata.aws/sentinel-2/) (**requester-pays**) (please read [this](https://github.com/cogeotiff/rio-tiler#Partial-reading-on-Cloud-hosted-dataset))
+- [Sentinel1](https://registry.opendata.aws/sentinel-1/) (**requester-pays**)
 - [Landsat8](https://aws.amazon.com/fr/public-datasets/landsat)
-- [CBERS](https://registry.opendata.aws/cbers/)
+- [CBERS](https://registry.opendata.aws/cbers/)  (**requester-pays**)
 
 Rio-tiler supports Python 2.7 and 3.3-3.7.
 
@@ -35,7 +36,7 @@ $ pip install -e .
 
 ## Overview
 
-Create tiles using one of these rio_tiler modules: `main`, `sentinel2`, `landsat8`, `cbers`.
+Create tiles using one of these rio_tiler modules: `main`, `sentinel2`, `sentinel1`, `landsat8`, `cbers`.
 
 The `main` module can create mercator tiles from any raster source supported by Rasterio (i.e. local files, http, s3, gcs etc.). The mission specific modules make it easier to extract tiles from AWS S3 buckets (i.e. only a scene ID is required); They can also be used to return metadata.
 
@@ -149,15 +150,15 @@ landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
 The primary purpose for calculating minimum and maximum values of an image is to rescale pixel values from their original range (e.g. 0 to 65,535) to the range used by computer screens (i.e. 0 and 255) through a linear transformation.
 This will make images look good on display.
 
+## Requester-pays Buckets 
+
+On AWS, `sentinel2`, `sentinel1`, and `cbers` dataset are stored in a `requester-pays` bucket, meaning the cost of GET, LIST requests will be charged to the users. For rio-tiler to work with those buckets, you'll need to set `AWS_REQUEST_PAYER="requester"` in your environement.
 
 ## Partial reading on Cloud hosted dataset
 
 Rio-tiler perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
 It's important to note that **Sentinel-2 scenes hosted on AWS are not in Cloud Optimized format but in JPEG2000**.
 When performing partial reading of JPEG2000 dataset GDAL (rasterio backend library) will need to make a lot of **GET requests** and transfer a lot of data.
-
-**warning**
-AWS Sentinel-2 bucket is in *requester-pays* mode which means that each user will pay for GET/LIST requests and data transfer. While this seems acceptable, using rio-tiler to access JPEG2000 dataset (as sentinel-2) can result in a huge AWS bill.
 
 Ref: [Do you really want people using your data](https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f) blog post.
 
@@ -203,7 +204,7 @@ The easiest way to make sure the package will work on AWS is to use docker
 ```dockerfile
 FROM lambci/lambda:build-python3.6
 
-ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CFLAGS="--std=c99"
 
 RUN pip3 install rio-tiler --no-binary numpy -t /tmp/python -U
 
