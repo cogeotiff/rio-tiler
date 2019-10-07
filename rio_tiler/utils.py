@@ -741,12 +741,6 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
         arr, mask = s2_tile(
             sceneid, tile_x, tile_y, tile_z, bands=bands_names, **kwargs
         )
-    elif sceneid.startswith("S1"):
-        from rio_tiler.sentinel1 import tile as s1_tile
-
-        arr, mask = s1_tile(
-            sceneid, tile_x, tile_y, tile_z, bands=bands_names, **kwargs
-        )
     elif sceneid.startswith("CBERS"):
         from rio_tiler.cbers import tile as cbers_tile
 
