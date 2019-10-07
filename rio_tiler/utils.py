@@ -15,14 +15,14 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.io import DatasetReader, MemoryFile
+from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio import transform
 from rasterio import windows
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler.mercator import get_zooms
 
-from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
+from rio_tiler.errors import NoOverviewWarning, DeprecationWarning, TileOutsideBounds
 from affine import Affine
 
 logger = logging.getLogger(__name__)
@@ -79,8 +79,8 @@ def _div_round_up(a, b):
     return (a // b) if (a % b) == 0 else (a // b) + 1
 
 
-def raster_get_stats(
-    src_path,
+def _raster_get_stats(
+    src_dst,
     indexes=None,
     nodata=None,
     overview_level=None,
@@ -96,8 +96,8 @@ def raster_get_stats(
 
     Attributes
     ----------
-    src_path : str or PathLike object
-        A dataset path or URL. Will be opened in "r" mode.
+    src_dst : rasterio.io.DatasetReader
+        rasterio.io.DatasetReader object
     indexes : tuple, list, int, optional
         Dataset band indexes.
     nodata, int, optional
@@ -151,82 +151,80 @@ def raster_get_stats(
                 4: {...}
             }
         }
+
     """
     if isinstance(indexes, int):
         indexes = [indexes]
     elif isinstance(indexes, tuple):
         indexes = list(indexes)
 
-    with rasterio.open(src_path) as src_dst:
-        levels = src_dst.overviews(1)
-        width = src_dst.width
-        height = src_dst.height
-        indexes = indexes if indexes else src_dst.indexes
-        nodata = nodata if nodata is not None else src_dst.nodata
-        bounds = transform_bounds(
-            *[src_dst.crs, dst_crs] + list(src_dst.bounds), densify_pts=21
-        )
+    levels = src_dst.overviews(1)
+    width = src_dst.width
+    height = src_dst.height
+    indexes = indexes if indexes else src_dst.indexes
+    nodata = nodata if nodata is not None else src_dst.nodata
+    bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
 
-        minzoom, maxzoom = get_zooms(src_dst)
+    minzoom, maxzoom = get_zooms(src_dst)
 
-        def _get_descr(ix):
-            """Return band description."""
-            name = src_dst.descriptions[ix - 1]
-            if not name:
-                name = "band{}".format(ix)
-            return name
+    def _get_descr(ix):
+        """Return band description."""
+        name = src_dst.descriptions[ix - 1]
+        if not name:
+            name = "band{}".format(ix)
+        return name
 
-        band_descriptions = [(ix, _get_descr(ix)) for ix in indexes]
+    band_descriptions = [(ix, _get_descr(ix)) for ix in indexes]
 
-        if len(levels):
-            if overview_level:
-                decim = levels[overview_level]
-            else:
-                # determine which zoom level to read
-                for ii, decim in enumerate(levels):
-                    if (
-                        max(_div_round_up(width, decim), _div_round_up(height, decim))
-                        < max_size
-                    ):
-                        break
+    if len(levels):
+        if overview_level:
+            decim = levels[overview_level]
         else:
-            decim = 1
-            warnings.warn(
-                "Dataset has no overviews, reading the full dataset", NoOverviewWarning
-            )
-
-        out_shape = (
-            len(indexes),
-            _div_round_up(height, decim),
-            _div_round_up(width, decim),
+            # determine which zoom level to read
+            for ii, decim in enumerate(levels):
+                if (
+                    max(_div_round_up(width, decim), _div_round_up(height, decim))
+                    < max_size
+                ):
+                    break
+    else:
+        decim = 1
+        warnings.warn(
+            "Dataset has no overviews, reading the full dataset", NoOverviewWarning
         )
 
-        vrt_params = dict(add_alpha=True)
-        if has_alpha_band(src_dst):
-            vrt_params.update(dict(add_alpha=False))
+    out_shape = (
+        len(indexes),
+        _div_round_up(height, decim),
+        _div_round_up(width, decim),
+    )
 
-        if nodata is not None:
-            vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
+    vrt_params = dict(add_alpha=True)
+    if has_alpha_band(src_dst):
+        vrt_params.update(dict(add_alpha=False))
 
-        with WarpedVRT(src_dst, **vrt_params) as vrt:
-            arr = vrt.read(
-                out_shape=out_shape,
-                indexes=indexes,
-                resampling=Resampling[resampling_method],
-                masked=True,
-            )
+    if nodata is not None:
+        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
-            params = {}
-            if histogram_bins:
-                params.update(dict(bins=histogram_bins))
-            if histogram_range:
-                params.update(dict(range=histogram_range))
+    with WarpedVRT(src_dst, **vrt_params) as vrt:
+        arr = vrt.read(
+            out_shape=out_shape,
+            indexes=indexes,
+            resampling=Resampling[resampling_method],
+            masked=True,
+        )
 
-            stats = {
-                indexes[b]: _stats(arr[b], percentiles=percentiles, **params)
-                for b in range(arr.shape[0])
-                if vrt.colorinterp[b] != ColorInterp.alpha
-            }
+        params = {}
+        if histogram_bins:
+            params.update(dict(bins=histogram_bins))
+        if histogram_range:
+            params.update(dict(range=histogram_range))
+
+        stats = {
+            indexes[b]: _stats(arr[b], percentiles=percentiles, **params)
+            for b in range(arr.shape[0])
+            if vrt.colorinterp[b] != ColorInterp.alpha
+        }
 
     return {
         "bounds": {
@@ -238,6 +236,30 @@ def raster_get_stats(
         "band_descriptions": band_descriptions,
         "statistics": stats,
     }
+
+
+def raster_get_stats(source, **kwargs):
+    """
+    Read data and mask.
+
+    Attributes
+    ----------
+    source : str or rasterio.io.DatasetReader
+        input file path or rasterio.io.DatasetReader object
+    kwargs: dict, optional
+        These will be passed to the _raster_get_stats function.
+
+    Returns
+    -------
+    out : array, int
+        returns pixel value.
+
+    """
+    if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
+        return _raster_get_stats(source, **kwargs)
+    else:
+        with rasterio.open(source) as src_dst:
+            return _raster_get_stats(src_dst, **kwargs)
 
 
 def get_vrt_transform(
@@ -304,6 +326,7 @@ def _tile_read(
     tile_edge_padding=2,
     dst_crs=CRS({"init": "EPSG:3857"}),
     bounds_crs=None,
+    minimum_tile_cover=None,
 ):
     """
     Read data and mask.
@@ -329,11 +352,14 @@ def _tile_read(
         Target coordinate reference system (default "epsg:3857").
     bounds_crs: CRS or str, optional
         Overwrite bounds coordinate reference system (default None, equal to dst_crs).
+    minimum_tile_cover: float, optional (default: None)
+        Minimum % overlap for which to raise an error with dataset not
+        covering enought of the tile.
 
     Returns
     -------
-    out : array, int
-        returns pixel value.
+    data : numpy ndarray
+    mask: numpy array
 
     """
     if isinstance(indexes, int):
@@ -344,7 +370,7 @@ def _tile_read(
     if not bounds_crs:
         bounds_crs = dst_crs
 
-    bounds = transform_bounds(*[bounds_crs, dst_crs] + list(bounds), densify_pts=21)
+    bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
 
     vrt_params = dict(
         add_alpha=True, crs=dst_crs, resampling=Resampling[resampling_method]
@@ -357,6 +383,17 @@ def _tile_read(
     out_window = windows.Window(
         col_off=0, row_off=0, width=vrt_width, height=vrt_height
     )
+
+    src_bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
+    x_overlap = max(0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0]))
+    y_overlap = max(0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1]))
+    cover_ratio = (x_overlap * y_overlap) / (
+        (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
+    )
+    if minimum_tile_cover and cover_ratio < minimum_tile_cover:
+        raise TileOutsideBounds(
+            "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
+        )
 
     if tile_edge_padding > 0 and not _requested_tile_aligned_with_internal_tile(
         src_dst, bounds, tilesize
@@ -420,7 +457,7 @@ def tile_read(source, bounds, tilesize, **kwargs):
         returns pixel value.
 
     """
-    if isinstance(source, DatasetReader):
+    if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
         return _tile_read(source, bounds, tilesize, **kwargs)
     else:
         with rasterio.open(source) as src_dst:

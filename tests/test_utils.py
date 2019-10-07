@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from rasterio.enums import Resampling
 
 from rio_tiler import utils
-from rio_tiler.errors import NoOverviewWarning, DeprecationWarning
+from rio_tiler.errors import NoOverviewWarning, DeprecationWarning, TileOutsideBounds
 
 from .conftest import requires_webp
 
@@ -379,6 +379,21 @@ def test_tile_read_dataset_nodata():
     assert src.closed
 
 
+def test_tile_read_not_covering_the_whole_tile():
+    """Should raise an error when dataset doesn't cover more than 50% of the tile."""
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+
+    bounds = (
+        -9079495.967826376,
+        3991847.365165044,
+        -9001224.450862356,
+        4070118.882129065,
+    )
+    tilesize = 16
+    with pytest.raises(TileOutsideBounds):
+        utils.tile_read(address, bounds, tilesize, minimum_tile_cover=0.6)
+
+
 def test_linear_rescale_valid():
     """
     Should work as expected (read data band)
@@ -688,6 +703,19 @@ def test_raster_get_stats_valid():
     assert stats["maxzoom"]
     assert len(stats["band_descriptions"]) == 3
     assert (1, "band1") == stats["band_descriptions"][0]
+
+    with rasterio.open(S3_PATH) as src_dst:
+        stats = utils.raster_get_stats(src_dst)
+        assert stats["bounds"]
+        assert stats["bounds"]["crs"] == CRS({"init": "EPSG:4326"})
+        assert len(stats["statistics"]) == 3
+        assert stats["statistics"][1]["pc"] == [11, 199]
+        assert stats["statistics"][2]["pc"] == [26, 201]
+        assert stats["statistics"][3]["pc"] == [54, 192]
+        assert stats["minzoom"]
+        assert stats["maxzoom"]
+        assert len(stats["band_descriptions"]) == 3
+        assert (1, "band1") == stats["band_descriptions"][0]
 
     stats = utils.raster_get_stats(COG_DST)
     assert stats["minzoom"]

@@ -6,7 +6,7 @@ with open("README.md") as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = ["numpy", "numexpr", "mercantile", "boto3", "rasterio[s3]~=1.0", "rio-toa"]
+inst_reqs = ["numpy", "numexpr", "mercantile", "boto3", "rasterio[s3]>=1.1", "rio-toa"]
 
 extra_reqs = {
     "test": ["mock", "pytest", "pytest-cov"],
@@ -15,8 +15,8 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="1.2.11",
-    description=u"""Get mercator tile from CloudOptimized GeoTIFF and other cloud hosted raster such as CBERS-4, Sentinel-2 and Landsat-8 AWS PDS""",
+    version="1.3.0",
+    description=u"""Get mercator tile from CloudOptimized GeoTIFF and other cloud hosted raster such as CBERS-4, Sentinel-2, Sentinel-1 and Landsat-8 AWS PDS""",
     long_description=readme,
     long_description_content_type="text/markdown",
     classifiers=[
