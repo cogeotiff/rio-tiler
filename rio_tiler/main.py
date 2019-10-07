@@ -24,11 +24,9 @@ def bounds(address):
 
     """
     with rasterio.open(address) as src:
-        wgs_bounds = transform_bounds(
-            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
-        )
+        bounds = transform_bounds(src.crs, "epsg:4326", *src.bounds, densify_pts=21)
 
-    return {"url": address, "bounds": list(wgs_bounds)}
+    return {"url": address, "bounds": list(bounds)}
 
 
 def metadata(address, pmin=2, pmax=98, **kwargs):
@@ -84,11 +82,9 @@ def tile(address, tile_x, tile_y, tile_z, tilesize=256, **kwargs):
 
     """
     with rasterio.open(address) as src:
-        wgs_bounds = transform_bounds(
-            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
-        )
+        bounds = transform_bounds(src.crs, "epsg:4326", *src.bounds, densify_pts=21)
 
-        if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
+        if not utils.tile_exists(bounds, tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
                 "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
             )
