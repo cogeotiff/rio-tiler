@@ -247,11 +247,9 @@ def tile(
 
     sentinel_preview = "{}/preview.jp2".format(sentinel_address)
     with rasterio.open(sentinel_preview) as src:
-        wgs_bounds = transform_bounds(
-            *[src.crs, "epsg:4326"] + list(src.bounds), densify_pts=21
-        )
+        bounds = transform_bounds(src.crs, "epsg:4326", *src.bounds, densify_pts=21)
 
-    if not utils.tile_exists(wgs_bounds, tile_z, tile_x, tile_y):
+    if not utils.tile_exists(bounds, tile_z, tile_x, tile_y):
         raise TileOutsideBounds(
             "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
         )

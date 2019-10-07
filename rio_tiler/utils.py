@@ -15,7 +15,7 @@ import rasterio
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import Resampling, MaskFlags, ColorInterp
-from rasterio.io import DatasetReader, MemoryFile
+from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio import transform
 from rasterio import windows
 from rasterio.warp import calculate_default_transform, transform_bounds
@@ -163,9 +163,7 @@ def _raster_get_stats(
     height = src_dst.height
     indexes = indexes if indexes else src_dst.indexes
     nodata = nodata if nodata is not None else src_dst.nodata
-    bounds = transform_bounds(
-        *[src_dst.crs, dst_crs] + list(src_dst.bounds), densify_pts=21
-    )
+    bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
 
     minzoom, maxzoom = get_zooms(src_dst)
 
@@ -257,7 +255,7 @@ def raster_get_stats(source, **kwargs):
         returns pixel value.
 
     """
-    if isinstance(source, DatasetReader):
+    if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
         return _raster_get_stats(source, **kwargs)
     else:
         with rasterio.open(source) as src_dst:
@@ -373,7 +371,6 @@ def _tile_read(
         bounds_crs = dst_crs
 
     bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
-    src_bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
 
     vrt_params = dict(
         add_alpha=True, crs=dst_crs, resampling=Resampling[resampling_method]
@@ -387,6 +384,7 @@ def _tile_read(
         col_off=0, row_off=0, width=vrt_width, height=vrt_height
     )
 
+    src_bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
     x_overlap = max(0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0]))
     y_overlap = max(0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1]))
     cover_ratio = (x_overlap * y_overlap) / (
@@ -459,7 +457,7 @@ def tile_read(source, bounds, tilesize, **kwargs):
         returns pixel value.
 
     """
-    if isinstance(source, DatasetReader):
+    if isinstance(source, (DatasetReader, DatasetWriter, WarpedVRT)):
         return _tile_read(source, bounds, tilesize, **kwargs)
     else:
         with rasterio.open(source) as src_dst:
