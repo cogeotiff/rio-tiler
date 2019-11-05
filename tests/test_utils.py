@@ -827,6 +827,11 @@ def test_array_to_image_valid_mask():
     assert utils.array_to_image(arr, mask=mask)
     assert utils.array_to_image(arr, mask=mask, img_format="jpeg")
 
+def test_array_to_image_valid_mask_png():
+    """Creates PNG image buffer from 4 bands array and mask."""
+    arr = np.random.randint(0, 255, size=(4, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+    assert utils.array_to_image(arr, mask=mask, img_format="png")
 
 def test_array_to_image_valid_options():
     """Creates image buffer with driver options."""
