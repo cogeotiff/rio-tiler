@@ -620,7 +620,7 @@ def array_to_image(
     if img_format == "webp" and arr.shape[0] == 1:
         arr = np.repeat(arr, 3, axis=0)
 
-    if mask is not None and img_format != "jpeg":
+    if mask is not None and not img_format in ["jpeg", "png"]:
         nbands = arr.shape[0] + 1
     else:
         nbands = arr.shape[0]
@@ -639,7 +639,7 @@ def array_to_image(
             dst.write(arr, indexes=list(range(1, arr.shape[0] + 1)))
 
             # Use Mask as an alpha band
-            if mask is not None and img_format != "jpeg":
+            if mask is not None and not img_format in ["jpeg", "png"]:
                 dst.write(mask.astype(arr.dtype), indexes=nbands)
 
         return memfile.read()
