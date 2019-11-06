@@ -209,7 +209,8 @@ def _raster_get_stats(
     if nodata is not None:
         vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
-    with WarpedVRT(src_dst, **vrt_params, **warp_vrt_option) as vrt:
+    vrt_params.update(warp_vrt_option)
+    with WarpedVRT(src_dst, **vrt_params) as vrt:
         arr = vrt.read(
             out_shape=out_shape,
             indexes=indexes,
@@ -430,7 +431,8 @@ def _tile_read(
     if has_alpha_band(src_dst):
         vrt_params.update(dict(add_alpha=False))
 
-    with WarpedVRT(src_dst, **vrt_params, **warp_vrt_option) as vrt:
+    vrt_params.update(warp_vrt_option)
+    with WarpedVRT(src_dst, **vrt_params) as vrt:
         data = vrt.read(
             out_shape=out_shape,
             indexes=indexes,
