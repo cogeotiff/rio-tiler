@@ -950,3 +950,12 @@ def test_tile_read_vrt_option():
     )
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
+
+
+def test_find_non_alpha():
+    """Return valid indexes."""
+    with rasterio.open(S3_ALPHA_PATH) as src_dst:
+        assert utils.non_alpha_indexes(src_dst) == (1, 2, 3)
+
+    with rasterio.open(PIX4D_PATH) as src_dst:
+        assert utils.non_alpha_indexes(src_dst) == (1, 2, 3)
