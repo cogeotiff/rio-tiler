@@ -90,6 +90,7 @@ def _raster_get_stats(
     histogram_bins=10,
     histogram_range=None,
     resampling_method="bilinear",
+    warp_vrt_option={},
 ):
     """
     Retrieve dataset statistics.
@@ -119,6 +120,8 @@ def _raster_get_stats(
         the min and max of the array.
     resampling_method : str, optional (default: "bilinear")
         Resampling algorithm.
+    warp_vrt_option: dict, optional (default: {})
+        These will be passed to the rasterio.warp.WarpedVRT class.
 
     Returns
     -------
@@ -206,7 +209,7 @@ def _raster_get_stats(
     if nodata is not None:
         vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
-    with WarpedVRT(src_dst, **vrt_params) as vrt:
+    with WarpedVRT(src_dst, **vrt_params, **warp_vrt_option) as vrt:
         arr = vrt.read(
             out_shape=out_shape,
             indexes=indexes,
@@ -327,6 +330,7 @@ def _tile_read(
     dst_crs=CRS({"init": "EPSG:3857"}),
     bounds_crs=None,
     minimum_tile_cover=None,
+    warp_vrt_option={},
 ):
     """
     Read data and mask.
@@ -355,6 +359,8 @@ def _tile_read(
     minimum_tile_cover: float, optional (default: None)
         Minimum % overlap for which to raise an error with dataset not
         covering enought of the tile.
+    warp_vrt_option: dict, optional (default: {})
+        These will be passed to the rasterio.warp.WarpedVRT class.
 
     Returns
     -------
@@ -424,7 +430,7 @@ def _tile_read(
     if has_alpha_band(src_dst):
         vrt_params.update(dict(add_alpha=False))
 
-    with WarpedVRT(src_dst, **vrt_params) as vrt:
+    with WarpedVRT(src_dst, **vrt_params, **warp_vrt_option) as vrt:
         data = vrt.read(
             out_shape=out_shape,
             indexes=indexes,

@@ -5,6 +5,5 @@ numexpr
 mercantile
 boto3
 
-rasterio[s3]~=1.0
+rasterio[s3]~=1.1
 rio-toa
-rio-pansharpen
