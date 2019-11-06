@@ -320,6 +320,20 @@ def has_alpha_band(src_dst):
     return False
 
 
+def non_alpha_indexes(src_dst):
+    """Return indexes of non-alpha bands."""
+    return tuple(
+        (
+            b
+            for ix, b in enumerate(src_dst.indexes)
+            if (
+                src_dst.mask_flag_enums[ix] is not MaskFlags.alpha
+                and src_dst.colorinterp[ix] is not ColorInterp.alpha
+            )
+        )
+    )
+
+
 def _tile_read(
     src_dst,
     bounds,
