@@ -731,6 +731,14 @@ def test_raster_get_stats_valid():
     )
     assert len(stats["statistics"][1]["histogram"][0]) == 10
 
+    stats = utils.raster_get_stats(
+        S3_PATH,
+        histogram_bins=None,
+        histogram_range=[30, 70],
+        warp_vrt_option=dict(source_extra=10, num_threads=10),
+    )
+    assert len(stats["statistics"][1]["histogram"][0]) == 10
+
 
 def test_raster_get_stats_validAlpha():
     """Should return a valid dict with array statistics."""
@@ -924,3 +932,21 @@ def test_tile_read_crs():
         S3_PATH, bounds, tilesize, indexes=(3, 2, 1), dst_crs="epsg:4326"
     )
     assert np.array_equal(arr, arr_crs)
+
+
+def test_tile_read_vrt_option():
+    """Should work as expected (read landsat band)."""
+    address = "{}_B2.TIF".format(LANDSAT_PATH)
+    bounds = (
+        -8844681.416934313,
+        3757032.814272982,
+        -8766409.899970293,
+        3835304.331237001,
+    )
+    tilesize = 16
+
+    arr, mask = utils.tile_read(
+        address, bounds, tilesize, warp_vrt_option=dict(source_extra=10, num_threads=10)
+    )
+    assert arr.shape == (1, 16, 16)
+    assert mask.shape == (16, 16)
