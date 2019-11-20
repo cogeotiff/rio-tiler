@@ -125,7 +125,7 @@ def _raster_get_stats(
         These will be passed to the rasterio.warp.WarpedVRT class.
     expr : str, optional (default: None)
         Expression to apply to raster before computing statistics
-        
+
     Returns
     -------
     out : dict
@@ -221,7 +221,7 @@ def _raster_get_stats(
             masked=True,
         )
 
-       if expr is not None:
+        if expr is not None:
             bands_names = tuple(set(re.findall(r"(?P<bands>b[0-9A]{1,2})", expr)))
             rgb = expr.split(",")
             mask = np.array([arr.mask[0]])
