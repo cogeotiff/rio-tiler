@@ -91,6 +91,7 @@ def _raster_get_stats(
     histogram_range=None,
     resampling_method="bilinear",
     warp_vrt_option={},
+    expr=None,
 ):
     """
     Retrieve dataset statistics.
@@ -122,7 +123,9 @@ def _raster_get_stats(
         Resampling algorithm.
     warp_vrt_option: dict, optional (default: {})
         These will be passed to the rasterio.warp.WarpedVRT class.
-
+    expr : str, optional (default: None)
+        Expression to apply to raster before computing statistics
+        
     Returns
     -------
     out : dict
@@ -217,6 +220,21 @@ def _raster_get_stats(
             resampling=Resampling[resampling_method],
             masked=True,
         )
+
+       if expr is not None:
+            bands_names = tuple(set(re.findall(r"(?P<bands>b[0-9A]{1,2})", expr)))
+            rgb = expr.split(",")
+            mask = np.array([arr.mask[0]])
+
+            arr = dict(zip(bands_names, arr))
+            arr = np.ma.array(
+                [np.nan_to_num(ne.evaluate(bloc.strip(), local_dict=arr)) for bloc in rgb],
+                mask=mask
+            )
+
+            # Mask infinite values (we're just calculating stats)
+            arr.mask[arr>1e+300] = True
+            arr.mask[arr<-1e+300] = True
 
         params = {}
         if histogram_bins:
