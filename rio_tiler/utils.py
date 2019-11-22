@@ -338,25 +338,24 @@ def get_overview_level(
     dst_transform, _, _ = calculate_default_transform(
         src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
     )
+    src_res = dst_transform.a
 
     # Compute what the "natural" output resolution (in pixels) would be for this input dataset
     w, s, e, n = bounds
     vrt_transform = transform.from_bounds(w, s, e, n, tilesize, tilesize)
     target_res = vrt_transform.a
 
-    levels = [1] + src_dst.overviews(1)
-    res = [dst_transform.a * decim for decim in levels]
-
     ovr_idx = -1
-    for ovr_idx in range(len(res) - 1):
-        ovrRes = res[ovr_idx]
-        nextRes = res[ovr_idx + 1]
-        if (ovrRes < target_res) and (nextRes > target_res):
-            break
-        if abs(ovrRes - target_res) < 1e-1:
-            break
-
-    return ovr_idx if ovr_idx > 0 else None
+    if target_res > src_res:
+        res = [src_res * decim for decim in src_dst.overviews(1)]
+        for ovr_idx in range(ovr_idx, len(res) - 1):
+            ovrRes = src_res if ovr_idx < 0 else res[ovr_idx]
+            nextRes = res[ovr_idx + 1]
+            if (ovrRes < target_res) and (nextRes > target_res):
+                break
+            if abs(ovrRes - target_res) < 1e-1:
+                break
+    return ovr_idx
 
 
 def has_alpha_band(src_dst):
@@ -459,7 +458,7 @@ def _tile_read(
             )
 
     overview_level = get_overview_level(src_dst, bounds, tilesize)
-    options = {"overview_level": overview_level} if overview_level is not None else {}
+    options = {"overview_level": overview_level} if overview_level >= 0 else {}
     with rasterio.open(src_dst.name, **options) as ovr_dst:
         w, s, e, n = bounds
         vrt_transform = transform.from_bounds(w, s, e, n, tilesize, tilesize)
@@ -507,7 +506,7 @@ def _tile_read(
         vrt_params.update(warp_vrt_option)
         with WarpedVRT(ovr_dst, **vrt_params) as vrt:
             data = vrt.read(
-                # out_shape=(len(indexes), tilesize, tilesize),
+                out_shape=(len(indexes), tilesize, tilesize),
                 indexes=indexes,
                 window=out_window,
                 resampling=Resampling[resampling_method],
