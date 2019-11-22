@@ -310,6 +310,55 @@ def get_vrt_transform(
     return vrt_transform, vrt_width, vrt_height
 
 
+def get_overview_level(
+    src_dst, bounds, tilesize=256, dst_crs=CRS({"init": "EPSG:3857"})
+):
+    """
+    Return the overview level corresponding to the tile resolution.
+
+    Freely adapted from https://github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e944744b7c9b2bd6c400/gdal/apps/gdalwarp_lib.cpp#L2293-L2362
+
+    Attributes
+    ----------
+    src_dst : rasterio.io.DatasetReader
+        Rasterio io.DatasetReader object
+    bounds : list
+        Bounds (left, bottom, right, top) in target crs ("dst_crs").
+    tilesize : int
+        Output tile size (default: 256)
+    dst_crs: CRS or str, optional
+        Target coordinate reference system (default "epsg:3857").
+
+    Returns
+    -------
+    ovr_idx: Int or None
+        Overview level
+
+    """
+    dst_transform, _, _ = calculate_default_transform(
+        src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
+    )
+
+    # Compute what the "natural" output resolution (in pixels) would be for this input dataset
+    w, s, e, n = bounds
+    vrt_transform = transform.from_bounds(w, s, e, n, tilesize, tilesize)
+    target_res = vrt_transform.a
+
+    levels = [1] + src_dst.overviews(1)
+    res = [dst_transform.a * decim for decim in levels]
+
+    ovr_idx = -1
+    for ovr_idx in range(len(res) - 1):
+        ovrRes = res[ovr_idx]
+        nextRes = res[ovr_idx + 1]
+        if (ovrRes < target_res) and (nextRes > target_res):
+            break
+        if abs(ovrRes - target_res) < 1e-1:
+            break
+
+    return ovr_idx if ovr_idx > 0 else None
+
+
 def has_alpha_band(src_dst):
     """Check for alpha band or mask in source."""
     if (
@@ -388,74 +437,84 @@ def _tile_read(
     elif isinstance(indexes, tuple):
         indexes = list(indexes)
 
-    if not bounds_crs:
-        bounds_crs = dst_crs
+    if bounds_crs:
+        bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
 
-    bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
-
-    vrt_params = dict(
-        add_alpha=True, crs=dst_crs, resampling=Resampling[resampling_method]
-    )
-
-    vrt_transform, vrt_width, vrt_height = get_vrt_transform(
-        src_dst, bounds, dst_crs=dst_crs
-    )
-
-    out_window = windows.Window(
-        col_off=0, row_off=0, width=vrt_width, height=vrt_height
-    )
-
-    src_bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
-    x_overlap = max(0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0]))
-    y_overlap = max(0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1]))
-    cover_ratio = (x_overlap * y_overlap) / (
-        (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
-    )
-    if minimum_tile_cover and cover_ratio < minimum_tile_cover:
-        raise TileOutsideBounds(
-            "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
+    if minimum_tile_cover:
+        src_bounds = transform_bounds(
+            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21
         )
-
-    if tile_edge_padding > 0 and not _requested_tile_aligned_with_internal_tile(
-        src_dst, bounds, tilesize
-    ):
-        vrt_transform = vrt_transform * Affine.translation(
-            -tile_edge_padding, -tile_edge_padding
+        x_overlap = max(
+            0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
         )
-        orig_vrt_height = vrt_height
-        orig_vrt_width = vrt_width
-        vrt_height = vrt_height + 2 * tile_edge_padding
-        vrt_width = vrt_width + 2 * tile_edge_padding
+        y_overlap = max(
+            0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1])
+        )
+        cover_ratio = (x_overlap * y_overlap) / (
+            (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
+        )
+        if cover_ratio < minimum_tile_cover:
+            raise TileOutsideBounds(
+                "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
+            )
+
+    overview_level = get_overview_level(src_dst, bounds, tilesize)
+    options = {"overview_level": overview_level} if overview_level is not None else {}
+    with rasterio.open(src_dst.name, **options) as ovr_dst:
+        w, s, e, n = bounds
+        vrt_transform = transform.from_bounds(w, s, e, n, tilesize, tilesize)
+
         out_window = windows.Window(
-            col_off=tile_edge_padding,
-            row_off=tile_edge_padding,
-            width=orig_vrt_width,
-            height=orig_vrt_height,
+            col_off=0, row_off=0, width=tilesize, height=tilesize
         )
 
-    vrt_params.update(dict(transform=vrt_transform, width=vrt_width, height=vrt_height))
+        vrt_width = tilesize
+        vrt_height = tilesize
+        if tile_edge_padding > 0 and not _requested_tile_aligned_with_internal_tile(
+            src_dst, bounds, tilesize
+        ):
+            vrt_transform = vrt_transform * Affine.translation(
+                -tile_edge_padding, -tile_edge_padding
+            )
+            orig_vrt_height = tilesize
+            orig_vrt_width = tilesize
+            vrt_height = tilesize + 2 * tile_edge_padding
+            vrt_width = tilesize + 2 * tile_edge_padding
+            out_window = windows.Window(
+                col_off=tile_edge_padding,
+                row_off=tile_edge_padding,
+                width=orig_vrt_width,
+                height=orig_vrt_height,
+            )
 
-    indexes = indexes if indexes is not None else src_dst.indexes
-    out_shape = (len(indexes), tilesize, tilesize)
-
-    nodata = nodata if nodata is not None else src_dst.nodata
-    if nodata is not None:
-        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
-
-    if has_alpha_band(src_dst):
-        vrt_params.update(dict(add_alpha=False))
-
-    vrt_params.update(warp_vrt_option)
-    with WarpedVRT(src_dst, **vrt_params) as vrt:
-        data = vrt.read(
-            out_shape=out_shape,
-            indexes=indexes,
-            window=out_window,
+        vrt_params = dict(
+            add_alpha=True,
+            crs=dst_crs,
             resampling=Resampling[resampling_method],
+            transform=vrt_transform,
+            width=vrt_width,
+            height=vrt_height,
         )
-        mask = vrt.dataset_mask(out_shape=(tilesize, tilesize), window=out_window)
 
-        return data, mask
+        indexes = indexes if indexes is not None else src_dst.indexes
+        nodata = nodata if nodata is not None else src_dst.nodata
+        if nodata is not None:
+            vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
+
+        if has_alpha_band(src_dst):
+            vrt_params.update(dict(add_alpha=False))
+
+        vrt_params.update(warp_vrt_option)
+        with WarpedVRT(ovr_dst, **vrt_params) as vrt:
+            data = vrt.read(
+                # out_shape=(len(indexes), tilesize, tilesize),
+                indexes=indexes,
+                window=out_window,
+                resampling=Resampling[resampling_method],
+            )
+            mask = vrt.dataset_mask(out_shape=(tilesize, tilesize), window=out_window)
+
+            return data, mask
 
 
 def tile_read(source, bounds, tilesize, **kwargs):
