@@ -355,6 +355,7 @@ def get_overview_level(
                 break
             if abs(ovrRes - target_res) < 1e-1:
                 break
+
     return ovr_idx
 
 
@@ -458,6 +459,11 @@ def _tile_read(
             )
 
     overview_level = get_overview_level(src_dst, bounds, tilesize)
+    if overview_level >= 0:
+        logger.debug(
+            "Selecting overview level {} for {}".format(overview_level, src_dst.name)
+        )
+
     options = {"overview_level": overview_level} if overview_level >= 0 else {}
     with rasterio.open(src_dst.name, **options) as ovr_dst:
         w, s, e, n = bounds
