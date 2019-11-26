@@ -344,10 +344,12 @@ def get_overview_level(
     w, s, e, n = bounds
     vrt_transform = transform.from_bounds(w, s, e, n, tilesize, tilesize)
     target_res = vrt_transform.a
+    print(target_res)
 
     ovr_idx = -1
     if target_res > src_res:
         res = [src_res * decim for decim in src_dst.overviews(1)]
+        print(res)
         for ovr_idx in range(ovr_idx, len(res) - 1):
             ovrRes = src_res if ovr_idx < 0 else res[ovr_idx]
             nextRes = res[ovr_idx + 1]
@@ -355,6 +357,8 @@ def get_overview_level(
                 break
             if abs(ovrRes - target_res) < 1e-1:
                 break
+        else:
+            ovr_idx = len(res) - 1
 
     return ovr_idx
 

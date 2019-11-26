@@ -959,3 +959,18 @@ def test_find_non_alpha():
 
     with rasterio.open(PIX4D_PATH) as src_dst:
         assert utils.non_alpha_indexes(src_dst) == (1, 2, 3)
+
+
+def test_get_overview_level():
+    """Test overview level calculation."""
+    bounds = (
+        -11663507.036777973,
+        4715018.0897710975,
+        -11663487.927520901,
+        4715037.199028169,
+    )
+    with rasterio.open(S3_PATH) as src_dst:
+        assert utils.get_overview_level(src_dst, bounds, tilesize=8) == 2
+        assert utils.get_overview_level(src_dst, bounds, tilesize=16) == 1
+        assert utils.get_overview_level(src_dst, bounds, tilesize=32) == 0
+        assert utils.get_overview_level(src_dst, bounds, tilesize=64) == -1
