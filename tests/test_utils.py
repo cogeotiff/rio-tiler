@@ -797,6 +797,26 @@ def test_raster_get_stats_ovr():
     assert rio_stats["statistics"] == stats
 
 
+def test_raster_get_stats_expr():
+    """Validate that expressions work for raster statistics."""
+    resampling_method = "bilinear"
+    rio_stats = utils.raster_get_stats(
+        S3_PATH, overview_level=1, resampling_method=resampling_method, expr="b1 + b2"
+    )
+    
+    assert rio_stats["statistics"][1]["pc"] == [38, 400]
+    assert rio_stats["statistics"][1]["max"] == 507
+    assert rio_stats["statistics"][1]["min"] == 0
+
+    rio_stats = utils.raster_get_stats(
+        S3_PATH, overview_level=1, resampling_method=resampling_method, expr="b1 - b2"
+    )
+    
+    assert rio_stats["statistics"][1]["pc"] == [-18, 39]
+    assert rio_stats["statistics"][1]["max"] == 88
+    assert rio_stats["statistics"][1]["min"] == -80
+
+
 def test_array_to_image_valid_1band():
     """Creates PNG image buffer from one band array."""
     arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
