@@ -68,7 +68,7 @@ Create image from tile
 ```python
 from rio_tiler.utils import array_to_image
 
-buffer = array_to_img(tile, mask=mask) # this returns a buffer (PNG by default)
+buffer = array_to_image(tile, mask=mask) # this returns a buffer (PNG by default)
 ```
 
 Use creation options to match `mapnik` default
@@ -78,7 +78,7 @@ from rio_tiler.utils import array_to_image
 from rio_tiler.profiles import img_profiles
 
 options = img_profiles["webp"]
-buffer = array_to_img(tile, mask=mask, img_format="webp", **options)
+buffer = array_to_image(tile, mask=mask, img_format="webp", **options)
 ```
 
 Write image to file
