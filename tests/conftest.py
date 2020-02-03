@@ -85,7 +85,6 @@ def create_cog(
             mem.colorinterp = ci
             mem.write(data)
 
-            kwargs = {"add_mask": True} if nodata_type == "mask" else {}
             cog_translate(
                 mem,
                 fout,
@@ -94,7 +93,7 @@ def create_cog(
                 in_memory=True,
                 dtype=dtype,
                 quiet=True,
-                **kwargs,
+                add_mask=True if nodata_type == "mask" else False,
             )
 
     return fout
