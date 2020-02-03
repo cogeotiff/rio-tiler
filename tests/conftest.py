@@ -50,6 +50,7 @@ def create_cog(
     mask = numpy.zeros((1, y_size, x_size), dtype=numpy.uint8) + 255
     mask[:, 0:500, 0:500] = 0
 
+    w, s, e, n = bounds
     src_profile = dict(
         driver="GTiff",
         count=nband,
@@ -57,7 +58,7 @@ def create_cog(
         height=y_size,
         width=x_size,
         crs=crs,
-        transform=from_bounds(*bounds, x_size, y_size),
+        transform=from_bounds(w, s, e, n, x_size, y_size),
     )
     if nodata_type in ["nodata", "mask"]:
         src_profile["nodata"] = 0
