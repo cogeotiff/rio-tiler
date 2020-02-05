@@ -113,3 +113,5 @@ def benchmark_fixtures():
 
     for dataset in benchmark_dataset:
         create_cog(databench_dir, **dataset)
+
+    return True

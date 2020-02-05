@@ -47,6 +47,20 @@ jobs:
         environment:
           - TOXENV=py37
 
+  benchmark:
+    docker:
+      - image: circleci/python:3.7.2
+    working_directory: ~/rio-tiler
+    steps:
+     - checkout
+     - run: pip install -e .[test] --user
+     - run: |
+         python -m pytest \
+         --benchmark-only \
+         --benchmark-autosave \
+         --benchmark-columns 'min, max, mean, median' \
+         --benchmark-sort 'min'
+
   deploy:
       docker:
         - image: circleci/python:3.7.2
@@ -79,6 +93,7 @@ workflows:
   version: 2
   build_and_deploy:
     jobs:
+      - benchmark
       - "python-2.7"
       - "python-3.6"
       - "python-3.7":
