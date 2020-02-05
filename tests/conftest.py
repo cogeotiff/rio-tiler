@@ -6,12 +6,22 @@ import pytest
 
 import numpy
 
+import rasterio
 from rasterio.io import MemoryFile
 from rasterio.transform import from_bounds
 from rasterio.enums import ColorInterp
 
 from rio_cogeo.cogeo import cog_translate
 from rio_cogeo.profiles import cog_profiles
+
+
+with rasterio.Env() as env:
+    drivers = env.drivers()
+
+
+requires_webp = pytest.mark.skipif(
+    "WEBP" not in drivers.keys(), reason="Only relevant if WEBP drivers is supported"
+)
 
 
 @pytest.fixture
@@ -33,6 +43,9 @@ def cloudoptimized_geotiff():
         fout = "{}/{}-{}-{}-{}b.tif".format(output_dir, name, dtype, nodata_type, nband)
         if os.path.exists(fout):
             return fout
+
+        if not os.path.isdir(output_dir):
+            os.makedirs(output_dir)
 
         profile_options = {"blockxsize": tilesize, "blockysize": tilesize}
         output_profile = cog_profiles.get("deflate")
