@@ -102,3 +102,6 @@ ENV/
 
 
 .pytest_cache
+
+.benchmarks/
+tests/benchmarks/data/*

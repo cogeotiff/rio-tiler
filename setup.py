@@ -9,8 +9,15 @@ with open("README.md") as f:
 inst_reqs = ["numpy", "numexpr", "mercantile", "boto3", "rasterio[s3]>=1.1", "rio-toa"]
 
 extra_reqs = {
-    "test": ["mock", "pytest", "pytest-cov"],
-    "dev": ["mock", "pytest", "pytest-cov", "pre-commit"],
+    "test": ["mock", "pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
+    "dev": [
+        "mock",
+        "pytest",
+        "pytest-benchmark",
+        "pytest-cov",
+        "rio-cogeo",
+        "pre-commit",
+    ],
 }
 
 setup(
