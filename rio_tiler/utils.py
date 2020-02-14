@@ -748,7 +748,7 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
     if not expr:
         raise Exception("Missing expression")
 
-    bands_names = tuple(set(re.findall(r"b(?P<bands>[0-9A]{1,2})", expr)))
+    bands_names = remove_duplicates(re.findall(r"b(?P<bands>[0-9A]{1,2})", expr))
     rgb = expr.split(",")
 
     if sceneid.startswith("L"):
@@ -802,3 +802,13 @@ def pansharpening_brovey(rgb, pan, weight, pan_dtype):
     with np.errstate(invalid="ignore", divide="ignore"):
         ratio = _calculateRatio(rgb, pan, weight)
         return np.clip(ratio * rgb, 0, np.iinfo(pan_dtype).max).astype(pan_dtype)
+
+
+def remove_duplicates(seq):
+    """
+    Remove duplicates from a sequence while preserving order.
+    Adapted from https://stackoverflow.com/a/480227
+    """
+    seen = set()
+    seen_add = seen.add
+    return tuple([x for x in seq if not (x in seen or seen_add(x))])
