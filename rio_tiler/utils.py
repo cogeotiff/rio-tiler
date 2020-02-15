@@ -346,41 +346,44 @@ def _tile_read(
     bounds_crs=None,
     minimum_tile_cover=None,
     warp_vrt_option={},
+    force_binary_mask=True,
 ):
     """
     Read data and mask.
 
     Attributes
     ----------
-    src_dst : rasterio.io.DatasetReader
-        rasterio.io.DatasetReader object
-    bounds : list
-        Output bounds (left, bottom, right, top) in target crs ("dst_crs").
-    tilesize : int
-        Output image size
-    indexes : list of ints or a single int, optional, (defaults: None)
-        If `indexes` is a list, the result is a 3D array, but is
-        a 2D array if it is a band index number.
-    nodata: int or float, optional (defaults: None)
-    resampling_method : str, optional (default: "bilinear")
-        Resampling algorithm.
-    tile_edge_padding : int, optional (default: 2)
-        Padding to apply to each edge of the tile when retrieving data
-        to assist in reducing resampling artefacts along edges.
-    dst_crs: CRS or str, optional
-        Target coordinate reference system (default "epsg:3857").
-    bounds_crs: CRS or str, optional
-        Overwrite bounds coordinate reference system (default None, equal to dst_crs).
-    minimum_tile_cover: float, optional (default: None)
-        Minimum % overlap for which to raise an error with dataset not
-        covering enought of the tile.
-    warp_vrt_option: dict, optional (default: {})
-        These will be passed to the rasterio.warp.WarpedVRT class.
+        src_dst : rasterio.io.DatasetReader
+            rasterio.io.DatasetReader object
+        bounds : list
+            Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+        tilesize : int
+            Output image size
+        indexes : list of ints or a single int, optional, (defaults: None)
+            If `indexes` is a list, the result is a 3D array, but is
+            a 2D array if it is a band index number.
+        nodata: int or float, optional (defaults: None)
+        resampling_method : str, optional (default: "bilinear")
+            Resampling algorithm.
+        tile_edge_padding : int, optional (default: 2)
+            Padding to apply to each edge of the tile when retrieving data
+            to assist in reducing resampling artefacts along edges.
+        dst_crs: CRS or str, optional
+            Target coordinate reference system (default "epsg:3857").
+        bounds_crs: CRS or str, optional
+            Overwrite bounds coordinate reference system (default None, equal to dst_crs).
+        minimum_tile_cover: float, optional (default: None)
+            Minimum % overlap for which to raise an error with dataset not
+            covering enought of the tile.
+        warp_vrt_option: dict, optional (default: {})
+            These will be passed to the rasterio.warp.WarpedVRT class.
+        force_binary_mask, bool, optional (default: True)
+            If True, rio-tiler makes sure mask has only 0 or 255 values.
 
     Returns
     -------
-    data : numpy ndarray
-    mask: numpy array
+        data : numpy ndarray
+        mask: numpy array
 
     """
     if isinstance(indexes, int):
@@ -453,7 +456,13 @@ def _tile_read(
             window=out_window,
             resampling=Resampling[resampling_method],
         )
-        mask = vrt.dataset_mask(out_shape=(tilesize, tilesize), window=out_window)
+        mask = vrt.dataset_mask(
+            out_shape=(tilesize, tilesize),
+            window=out_window,
+            resampling=Resampling[resampling_method],
+        )
+        if force_binary_mask:
+            mask = np.where(mask != 0, np.uint8(255), np.uint8(0))
 
         return data, mask
 
