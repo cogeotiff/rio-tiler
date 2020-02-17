@@ -456,11 +456,23 @@ def _tile_read(
             window=out_window,
             resampling=Resampling[resampling_method],
         )
-        mask = vrt.dataset_mask(
-            out_shape=(tilesize, tilesize),
-            window=out_window,
-            resampling=Resampling[resampling_method],
-        )
+        # This is to overcome some problem with GDALGetMask()
+        if ColorInterp.alpha in vrt.colorinterp:
+            idx = vrt.colorinterp.index(ColorInterp.alpha) + 1
+            mask = vrt.read(
+                indexes=idx,
+                out_shape=(tilesize, tilesize),
+                window=out_window,
+                resampling=Resampling[resampling_method],
+                out_dtype="uint8",
+            )
+        else:
+            mask = vrt.dataset_mask(
+                out_shape=(tilesize, tilesize),
+                window=out_window,
+                resampling=Resampling[resampling_method],
+            )
+
         if force_binary_mask:
             mask = np.where(mask != 0, np.uint8(255), np.uint8(0))
 
