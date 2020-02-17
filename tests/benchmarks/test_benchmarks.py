@@ -18,7 +18,9 @@ def read_tile(src_path, tile):
     # We make sure to not store things in cache.
     with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
         with rasterio.open(src_path) as src_dst:
-            return utils._tile_read(src_dst, tile_bounds, 256)
+            return utils._tile_read(
+                src_dst, tile_bounds, 256, resampling_method="nearest"
+            )
 
 
 @pytest.mark.parametrize("tile_name", ["full", "boundless"])
