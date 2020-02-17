@@ -31,14 +31,44 @@ dataset = [
     dict(equator, dtype="int8", nodata_type="nodata"),
     dict(equator, dtype="int8", nodata_type="mask"),
     # dict(equator, dtype="uint16", nodata_type="alpha"), #fail
-    dict(equator, dtype="uint16", nodata_type="nodata"),  # OK
-    dict(equator, dtype="uint16", nodata_type="mask"),  # OK
+    dict(equator, dtype="uint16", nodata_type="nodata"),
+    dict(equator, dtype="uint16", nodata_type="mask"),
     # dict(equator, dtype="int16", nodata_type="alpha"), # Fail
-    dict(equator, dtype="int16", nodata_type="nodata"),  # Ok
+    dict(equator, dtype="int16", nodata_type="nodata"),
     # dict(equator, dtype="int16", nodata_type="mask"), # Fail
 ]
 
 cog_path = os.path.join(os.path.dirname(__file__), "fixtures", "mask")
+
+
+def test_mask_bilinear(cloudoptimized_geotiff):
+    """Test mask read with bilinear resampling"""
+    src_path = cloudoptimized_geotiff(
+        cog_path, **equator, dtype="uint8", nodata_type="mask"
+    )
+
+    tile = mercantile.Tile(x=535, y=498, z=10)
+    tile_bounds = mercantile.xy_bounds(tile)
+    with rasterio.open(src_path) as src_dst:
+        data, mask = utils._tile_read(
+            src_dst,
+            tile_bounds,
+            256,
+            resampling_method="bilinear",
+            force_binary_mask=True,
+        )
+        masknodata = (data[0] != 0).astype(numpy.uint8) * 255
+        numpy.testing.assert_array_equal(mask, masknodata)
+
+        data, mask = utils._tile_read(
+            src_dst,
+            tile_bounds,
+            256,
+            resampling_method="bilinear",
+            force_binary_mask=False,
+        )
+        masknodata = (data[0] != 0).astype(numpy.uint8) * 255
+        assert not numpy.array_equal(mask, masknodata)
 
 
 @pytest.mark.parametrize("resampling", ["bilinear", "nearest"])
@@ -60,6 +90,3 @@ def test_mask(dataset_info, tile_name, resampling, cloudoptimized_geotiff):
         )
         masknodata = (data[0] != 0).astype(numpy.uint8) * 255
         numpy.testing.assert_array_equal(mask, masknodata)
-
-        # data, mask = utils._tile_read(src_dst, tile_bounds, 256, resampling_method=resampling, force_binary_mask=False)
-        # assert not numpy.array_equal(mask , masknodata)

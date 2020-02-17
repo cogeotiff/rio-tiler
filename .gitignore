@@ -105,4 +105,4 @@ ENV/
 
 .benchmarks/
 tests/benchmarks/data/*
-tests/fixtures/mask/*.tif
+tests/fixtures/mask*

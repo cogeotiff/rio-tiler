@@ -456,6 +456,7 @@ def _tile_read(
             window=out_window,
             resampling=Resampling[resampling_method],
         )
+
         # This is to overcome some problem with GDALGetMask()
         if ColorInterp.alpha in vrt.colorinterp:
             idx = vrt.colorinterp.index(ColorInterp.alpha) + 1
