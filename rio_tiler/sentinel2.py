@@ -5,6 +5,7 @@ import re
 import warnings
 import itertools
 import multiprocessing
+from collections import OrderedDict
 from functools import partial
 from concurrent import futures
 
@@ -25,23 +26,32 @@ from rio_tiler.errors import (
 
 AWS_SENTINEL_BUCKET = "s3://sentinel-s2-"
 
-SENTINEL_L1_BANDS = {
-    "10m": ["02", "03", "04", "08"],
-    "20m": ["05", "06", "07", "11", "12", "8A"],
-    "60m": ["01", "09", "10"],
-}
+SENTINEL_L1_BANDS = OrderedDict(
+    [
+        ("10m", ["02", "03", "04", "08"]),
+        ("20m", ["05", "06", "07", "11", "12", "8A"]),
+        ("60m", ["01", "09", "10"]),
+    ]
+)
 
-SENTINEL_L2_BANDS = {
-    "10m": ["02", "03", "04", "08"],
-    "20m": ["02", "03", "04", "05", "06", "07", "08", "11", "12", "8A"],
-    "60m": ["01", "02", "03", "04", "05", "06", "07", "08", "09", "11", "12", "8A"],
-}
+SENTINEL_L2_BANDS = OrderedDict(
+    [
+        ("10m", ["02", "03", "04", "08"]),
+        ("20m", ["02", "03", "04", "05", "06", "07", "08", "11", "12", "8A"]),
+        (
+            "60m",
+            ["01", "02", "03", "04", "05", "06", "07", "08", "09", "11", "12", "8A"],
+        ),
+    ]
+)
 
-SENTINEL_L2_PRODUCTS = {
-    "10m": ["AOT", "WVP"],
-    "20m": ["AOT", "SCL", "WVP"],
-    "60m": ["AOT", "SCL", "WVP"],
-}
+SENTINEL_L2_PRODUCTS = OrderedDict(
+    [
+        ("10m", ["AOT", "WVP"]),
+        ("20m", ["AOT", "SCL", "WVP"]),
+        ("60m", ["AOT", "SCL", "WVP"]),
+    ]
+)
 
 # ref: https://docs.python.org/3/library/concurrent.futures.html#threadpoolexecutor
 MAX_THREADS = int(os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5))
