@@ -1,10 +1,11 @@
 """rio_tiler.utils: utility functions."""
 
-from typing import Any, Dict, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import os
 import re
 import math
+import warnings
 
 import numpy
 import numexpr
@@ -21,6 +22,8 @@ from rasterio import windows
 from rasterio.warp import calculate_default_transform
 
 from rio_tiler import constants
+from rio_tiler.errors import DeprecationWarning
+from rio_tiler.colormap import apply_cmap
 
 
 def _chunks(l: Sequence, n: int):
@@ -289,6 +292,10 @@ def array_to_image(
     bytes
 
     """
+    warnings.warn(
+        "rio_tiler.utils.array_to_image will be replaced by rio_tiler.utils.render in rio_tiler v2.0.0",
+        DeprecationWarning,
+    )
     img_format = img_format.lower()
 
     if len(arr.shape) < 3:
@@ -328,6 +335,108 @@ def array_to_image(
         return memfile.read()
 
 
+def geotiff_options(
+    x, y, z, tilesize: int = 256, dst_crs: CRS = constants.WEB_MERCATOR_CRS
+) -> Dict:
+    """
+    GeoTIFF options.
+
+    Attributes
+    ----------
+        x : int
+            Mercator tile X index.
+        y : int
+            Mercator tile Y index.
+        z : int
+            Mercator tile ZOOM level.
+        tilesize : int, optional
+            Output tile size. Default is 256.
+        dst_crs: CRS, optional
+            Target coordinate reference system, default is "epsg:3857".
+
+    Returns
+    -------
+        dict
+
+    """
+    bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
+    dst_transform = transform.from_bounds(*bounds, tilesize, tilesize)
+    return dict(crs=dst_crs, transform=dst_transform)
+
+
+def render(
+    tile: numpy.ndarray,
+    mask: Optional[numpy.ndarray] = None,
+    img_format: str = "PNG",
+    colormap: Optional[Dict] = None,
+    **creation_options: Any,
+) -> bytes:
+    """
+    Translate numpy ndarray to image buffer using GDAL.
+
+    Usage
+    -----
+        tile, mask = rio_tiler.utils.tile_read(......)
+        with open('test.jpg', 'wb') as f:
+            f.write(array_to_image(tile, mask, img_format="jpeg"))
+
+    Attributes
+    ----------
+        tile : numpy ndarray
+            Image array to encode.
+        mask: numpy ndarray, optional
+            Mask array
+        img_format: str, optional
+            Image format to return (default: 'png').
+            List of supported format by GDAL: https://www.gdal.org/formats_list.html
+        colormap: dict, optional
+            GDAL RGBA Color Table dictionary.
+        creation_options: dict, optional
+            Image driver creation options to pass to GDAL
+
+    Returns
+    -------
+        bytes: BytesIO
+            Reurn image body.
+
+    """
+    if len(tile.shape) < 3:
+        tile = numpy.expand_dims(tile, axis=0)
+
+    if colormap:
+        tile, alpha = apply_cmap(tile, colormap)
+        if mask is not None:
+            mask = (
+                mask * alpha * 255
+            )  # This is a special case when we want to mask some valid data
+
+    # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
+    if img_format == "WEBP" and tile.shape[0] == 1:
+        tile = numpy.repeat(tile, 3, axis=0)
+    elif img_format == "JPEG":
+        mask = None
+
+    count, height, width = tile.shape
+
+    output_profile = dict(
+        driver=img_format,
+        dtype=tile.dtype,
+        count=count + 1 if mask is not None else count,
+        height=height,
+        width=width,
+    )
+    output_profile.update(creation_options)
+
+    with MemoryFile() as memfile:
+        with memfile.open(**output_profile) as dst:
+            dst.write(tile, indexes=list(range(1, count + 1)))
+            # Use Mask as an alpha band
+            if mask is not None:
+                dst.write(mask.astype(tile.dtype), indexes=count + 1)
+
+        return memfile.read()
+
+
 def get_colormap(name="cfastie", format="pil"):
     """
     Return Pillow or GDAL compatible colormap array.
@@ -348,6 +457,10 @@ def get_colormap(name="cfastie", format="pil"):
         Color map array in GDAL friendly format
 
     """
+    warnings.warn(
+        "rio_tiler.utils.get_colormap will be replaced by rio_tiler.colormap.get_colormap in v2.0.0",
+        DeprecationWarning,
+    )
     cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.npy".format(name))
     cmap = list(numpy.load(cmap_file).flatten())
 
