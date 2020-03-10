@@ -230,18 +230,14 @@ def test_tile_read_mask():
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
         # non-boundless tile covering the masked part
         with rasterio.open(S3_MASK_PATH) as src_dst:
-            arr, mask = reader.tile(
-                src_dst, 876431, 1603669, 22, tilesize=16, resampling_method="nearest"
-            )
+            arr, mask = reader.tile(src_dst, 876431, 1603669, 22, tilesize=16)
         assert arr.shape == (3, 16, 16)
         assert mask.shape == (16, 16)
         assert not mask.all()
 
         # boundless tile covering the masked part
         with rasterio.open(S3_MASK_PATH) as src_dst:
-            arr, mask = reader.tile(
-                src_dst, 876431, 1603668, 22, tilesize=256, resampling_method="nearest"
-            )
+            arr, mask = reader.tile(src_dst, 876431, 1603668, 22, tilesize=256)
         assert arr.shape == (3, 256, 256)
         assert not mask.all()
 
@@ -253,9 +249,7 @@ def test_tile_read_extmask():
     bounds = mercantile.xy_bounds(mercator_tile)
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="TRUE"):
         with rasterio.open(S3_EXTMASK_PATH) as src_dst:
-            arr, mask = reader.part(
-                src_dst, bounds, 256, 256, resampling_method="nearest"
-            )
+            arr, mask = reader.part(src_dst, bounds, 256, 256)
         assert arr.shape == (3, 256, 256)
         assert mask.shape == (256, 256)
         assert not mask.all()
@@ -265,9 +259,7 @@ def test_tile_read_extmask():
     bounds = mercantile.xy_bounds(mercator_tile)
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
         with rasterio.open(S3_MASK_PATH) as src_dst:
-            arr, mask = reader.part(
-                src_dst, bounds, 256, 256, resampling_method="nearest"
-            )
+            arr, mask = reader.part(src_dst, bounds, 256, 256)
         assert arr.shape == (3, 256, 256)
         assert not mask.all()
 
