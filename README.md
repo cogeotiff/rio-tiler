@@ -36,9 +36,9 @@ $ pip install -e .
 
 ## Overview
 
-Create tiles using one of these rio_tiler modules: `main`, `sentinel2`, `sentinel1`, `landsat8`, `cbers`.
+Create tiles using one of these rio_tiler `io` submodules: `cogeo`, `sentinel2`, `sentinel1`, `landsat8`, `cbers`.
 
-The `main` module can create mercator tiles from any raster source supported by Rasterio (i.e. local files, http, s3, gcs etc.). The mission specific modules make it easier to extract tiles from AWS S3 buckets (i.e. only a scene ID is required); They can also be used to return metadata.
+The `rio_tiler.io.cogeo` module can create mercator tiles from any raster source supported by Rasterio (i.e. local files, http, s3, gcs etc.). The mission specific modules make it easier to extract tiles from AWS S3 buckets (i.e. only a scene ID is required); They can also be used to return metadata.
 
 Each tilling modules have a method to return image metadata (e.g bounds).
 
@@ -47,9 +47,9 @@ Each tilling modules have a method to return image metadata (e.g bounds).
 Read a tile from a file over the internet
 
 ```python
-from rio_tiler import main
+from rio_tiler.io import cogeo
 
-tile, mask = main.tile(
+tile, mask = cogeo.tile(
   'http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif',
   691559,
   956905,
@@ -91,9 +91,9 @@ with open("my.png", "wb") as f:
 Get a Sentinel2 tile and its nodata mask.
 
 ```python
-from rio_tiler import sentinel2
+from rio_tiler.io import sentinel2
 
-tile, mask = sentinel2.tile('S2A_tile_20170729_19UDP_0', 77, 89, 8)
+tile, mask = sentinel2.tile('S2A_L1C_20170729_19UDP_0', 77, 89, 8)
 print(tile.shape)
 > (3, 256, 256)
 ```
@@ -101,7 +101,7 @@ print(tile.shape)
 Get bounds for a Landsat scene (WGS84).
 
 ```python
-from rio_tiler import landsat8
+from rio_tiler.io import landsat8
 
 landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
 > {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
@@ -111,15 +111,12 @@ landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
 Get metadata of a Landsat scene (i.e. percentiles (pc) min/max values, histograms, and bounds in WGS84) .
 
 ```python
-from rio_tiler import landsat8
+from rio_tiler.io import landsat8
 
 landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
 {
   'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT',
-  'bounds': {
-    'value': (-81.30844102941015, 32.105321365706104,  -78.82036599673634, 34.22863519772504),
-    'crs': '+init=EPSG:4326'
-  },
+  'bounds':(-81.30844102941015, 32.105321365706104,  -78.82036599673634, 34.22863519772504),
   'statistics': {
     '1': {
       'pc': [1251.297607421875, 5142.0126953125],
@@ -149,6 +146,28 @@ landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
 
 The primary purpose for calculating minimum and maximum values of an image is to rescale pixel values from their original range (e.g. 0 to 65,535) to the range used by computer screens (i.e. 0 and 255) through a linear transformation.
 This will make images look good on display.
+
+#### Working with STAC items 
+
+`rio_tiler.reader` submodule has `multi_*` functions (tile, preview, point, metadata) allowing to fetch and merge info 
+from multiple dataset (think about multiple bands stored in separated files).
+
+```python
+from typing import Dict 
+from rio_tiler import reader
+
+item: Dict = ... # a STAC Items
+
+# Name of assets to read
+names = ["red", "green", "blue"]
+
+assets = [item["assets"][name]["href"] for name in names]
+
+tile, mask = reader.multi_tile(assets, x, y, z, tilesize=256)
+
+print(tile.shape)
+> (3, 256, 256)
+```
 
 ## Requester-pays Buckets 
 

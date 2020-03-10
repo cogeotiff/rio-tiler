@@ -3,7 +3,7 @@
 import os
 import pytest
 
-from rio_tiler import main
+from rio_tiler.io import cogeo
 from rio_tiler.errors import TileOutsideBounds
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -20,43 +20,45 @@ def testing_env_var(monkeypatch):
     monkeypatch.delenv("AWS_PROFILE", raising=False)
     monkeypatch.setenv("AWS_CONFIG_FILE", "/tmp/noconfigheere")
     monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/tmp/noconfighereeither")
-    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
+    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+
+
+def test_spatial_info_valid():
+    """Should work as expected (get spatial info)"""
+    meta = cogeo.spatial_info(ADDRESS)
+    assert meta.get("address")
+    assert meta.get("minzoom")
+    assert meta.get("maxzoom")
+    assert meta.get("center")
+    assert len(meta.get("bounds")) == 4
 
 
 def test_bounds_valid():
-    """
-    Should work as expected (get bounds)
-    """
-
-    meta = main.bounds(ADDRESS)
-    assert meta.get("url") == ADDRESS
+    """Should work as expected (get bounds)"""
+    meta = cogeo.bounds(ADDRESS)
+    assert meta.get("address") == ADDRESS
     assert len(meta.get("bounds")) == 4
 
 
 def test_metadata_valid():
     """Get bounds and get stats for all bands."""
-    meta = main.metadata(ADDRESS)
+    meta = cogeo.metadata(ADDRESS)
     assert meta["address"] == ADDRESS
-    assert len(meta["bounds"]["value"]) == 4
-    assert meta["minzoom"]
-    assert meta["maxzoom"]
     assert len(meta["band_descriptions"]) == 3
     assert (1, "band1") == meta["band_descriptions"][0]
     assert len(meta["statistics"].items()) == 3
-    assert meta["statistics"][1]["pc"] == [11, 199]
+    assert meta["statistics"][1]["pc"] == [12, 198]
 
 
 def test_metadata_valid_custom():
     """Get bounds and get stats for all bands with custom percentiles."""
-    meta = main.metadata(
-        ADDRESS, pmin=5, pmax=90, dst_crs="epsg:3857", histogram_bins=20
+    meta = cogeo.metadata(
+        ADDRESS, pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128
     )
     assert meta["address"] == ADDRESS
-    assert meta["bounds"]["crs"] == "epsg:3857"
-    assert len(meta["bounds"]["value"]) == 4
     assert len(meta["statistics"].items()) == 3
     assert len(meta["statistics"][1]["histogram"][0]) == 20
-    assert meta["statistics"][1]["pc"] == [28, 192]
+    assert meta["statistics"][1]["pc"] == [41, 184]
 
 
 def test_tile_valid_default():
@@ -65,7 +67,7 @@ def test_tile_valid_default():
     tile_x = 438217
     tile_y = 801835
 
-    data, mask = main.tile(ADDRESS, tile_x, tile_y, tile_z)
+    data, mask = cogeo.tile(ADDRESS, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert mask.all()
 
@@ -77,4 +79,4 @@ def test_tile_invalid_bounds():
     tile_y = 200458
 
     with pytest.raises(TileOutsideBounds):
-        main.tile(ADDRESS, tile_x, tile_y, tile_z)
+        cogeo.tile(ADDRESS, tile_x, tile_y, tile_z)

@@ -1,3 +1,19 @@
+2.0a1 (TBD)
+------------------
+- added multi_* functions to rio_tiler.reader to support multiple assets addresses
+- added `rio_tiler.utils.has_mask_band` function
+- added type hints
+
+Breacking Changes:
+- removed python 2 support
+- new package architecture (.io submodule)
+- introduced new rio_tiler.reader functions (part, preview, metadata...)
+- renamed rio_tiler.main to rio_tiler.io.cogeo
+- bucket and prefixes are defined in rio_tiler.io.dataset.`{dataset}_parse` function from 
+  AWS supported Public Dataset
+- renamed `minimum_tile_cover` to `minimum_overlap`
+- renamed `tile_edge_padding` to `padding`
+
 1.4.0 (2020-02-19)
 ------------------
 - Add Sentinel2-L2A support (#137)

@@ -5,7 +5,7 @@ import pytest
 
 import rasterio
 import mercantile
-from rio_tiler import utils
+from rio_tiler import reader
 
 from . import benchmark_dataset, benchmark_tiles
 
@@ -18,7 +18,7 @@ def read_tile(src_path, tile):
     # We make sure to not store things in cache.
     with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
         with rasterio.open(src_path) as src_dst:
-            return utils._tile_read(src_dst, tile_bounds, 256)
+            return reader.part(src_dst, tile_bounds, 256, 256)
 
 
 @pytest.mark.parametrize("tile_name", ["full", "boundless"])
