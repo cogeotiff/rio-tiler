@@ -39,6 +39,7 @@ def _read(
     nodata: Optional[Union[float, int, str]] = None,
     resampling_method: Resampling = "bilinear",
     force_binary_mask: bool = True,
+    unscale: bool = False,
     vrt_options: Dict = {},
 ):
     """
@@ -62,6 +63,9 @@ def _read(
         force_binary_mask, bool, optional
             If True, rio-tiler makes sure mask has only 0 or 255 values.
             Default is set to True.
+        unscale, bool, optional
+            If True, apply scale and offset to the data array.
+            Default is set to False.
         vrt_options: dict, optional
             These will be passed to the rasterio.warp.WarpedVRT class.
 
@@ -111,6 +115,11 @@ def _read(
 
         if force_binary_mask:
             mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
+
+        if unscale:
+            data = data.astype("float32", casting="unsafe")
+            numpy.multiply(data, vrt.scales[0], out=data, casting="unsafe")
+            numpy.add(data, vrt.offsets[0], out=data, casting="unsafe")
 
     return data, mask
 
@@ -264,6 +273,7 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Union[Sequence[int], int]] = None,
     coord_crs: CRS = constants.WGS84_CRS,
+    unscale: bool = False,
 ) -> List:
     """
     Read point value
@@ -278,9 +288,11 @@ def point(
             Band indexes
         coord_crs : rasterio.crs.CRS, optional
             (X, Y) coordinate system. Default is WGS84/EPSG:4326.
+        unscale, bool, optional
+            If True, apply scale and offset to the data.
+            Default is set to False.
         kwargs : Any, optional
             Additional options to forward to src_dst.sample()
-
 
     Returns
     -------
@@ -299,7 +311,17 @@ def point(
         raise Exception("Point is outside dataset bounds")
 
     indexes = indexes if indexes is not None else src_dst.indexes
-    return list(src_dst.sample([(lon[0], lat[0])], indexes=indexes))[0].tolist()
+
+    point_values = list(src_dst.sample([(lon[0], lat[0])], indexes=indexes))[0]
+
+    if unscale:
+        point_values = point_values.astype("float32", casting="unsafe")
+        numpy.multiply(
+            point_values, src_dst.scales[0], out=point_values, casting="unsafe"
+        )
+        numpy.add(point_values, src_dst.offsets[0], out=point_values, casting="unsafe")
+
+    return point_values.tolist()
 
 
 def metadata(
