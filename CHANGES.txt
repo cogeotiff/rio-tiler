@@ -4,6 +4,7 @@
 - added `rio_tiler.utils.has_mask_band` function
 - added `rio_tiler.utils.get_overview_level` to calculate the overview level needed for partial reading.
 - added type hints
+- added scale, offsets, colormap, datatype and colorinterp in reader.metadata output (#158)
 
 Breaking Changes:
 - removed python 2 support

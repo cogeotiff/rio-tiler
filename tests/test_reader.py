@@ -39,6 +39,7 @@ PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
 COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
+COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -450,3 +451,23 @@ def test_read_unscale():
             src_dst, [310000, 4100000], coord_crs=src_dst.crs, unscale=True
         )
         assert round(p[0], 3) == 1000.892
+
+
+def test_metadata():
+    """Should return correct metadata."""
+    with rasterio.open(COG_CMAP) as src_dst:
+        meta = reader.metadata(src_dst)
+        assert meta["dtype"] == "int8"
+        assert meta["colorinterp"] == ["palette"]
+        assert not meta.get("scale")
+        assert not meta.get("ofsset")
+        assert meta.get("colormap")
+
+    with rasterio.open(COG_SCALE) as src_dst:
+        meta = reader.metadata(src_dst)
+        assert meta["dtype"] == "int16"
+        assert meta["colorinterp"] == ["gray"]
+        assert meta["scale"] == 0.0001
+        assert meta["offset"] == 1000.0
+        assert meta["band_descriptions"] == [(1, "Green")]
+        assert not meta.get("colormap")
