@@ -274,8 +274,11 @@ def test_get_vrt_transform_valid4326():
 
     assert vrt_transform[2] == -104.77523803710938
     assert vrt_transform[5] == 38.954069293441066
-    assert vrt_width == 420
-    assert vrt_height == 327
+    assert vrt_width == 399
+    assert vrt_height == 397
+    # With rasterio.warp.calculate_default_transform
+    # assert vrt_width == 420
+    # assert vrt_height == 327
 
 
 def test_statsFunction_valid():

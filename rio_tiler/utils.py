@@ -12,13 +12,13 @@ import numexpr
 from affine import Affine
 import mercantile
 
+from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import MaskFlags, ColorInterp
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
-from rasterio import transform
-from rasterio import windows
-from rasterio.warp import calculate_default_transform
+from rasterio.transform import from_bounds
+from rasterio.warp import transform, transform_bounds
 
 from rio_tiler import constants
 
@@ -76,6 +76,133 @@ def _div_round_up(a, b):
     return (a // b) if (a % b) == 0 else (a // b) + 1
 
 
+def get_overview_level(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    bounds: Tuple[float, float, float, float],
+    height: int,
+    width: int,
+    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+) -> int:
+    """
+    Return the overview level corresponding to the tile resolution.
+
+    Freely adapted from https://github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e944744b7c9b2bd6c400/gdal/apps/gdalwarp_lib.cpp#L2293-L2362
+
+    Attributes
+    ----------
+        src_dst : rasterio.io.DatasetReader
+            Rasterio io.DatasetReader object
+        bounds : list
+            Bounds (left, bottom, right, top) in target crs ("dst_crs").
+        height : int
+            Output height.
+        width : int
+            Output width.
+        dst_crs: CRS or str, optional
+            Target coordinate reference system (default "epsg:3857").
+
+    Returns
+    -------
+        ovr_idx: Int or None
+            Overview level
+
+    """
+    dst_transform, _, _ = calculate_default_transform(
+        src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
+    )
+    src_res = dst_transform.a
+
+    # Compute what the "natural" output resolution (in pixels) would be for this input dataset
+    w, s, e, n = bounds
+    vrt_transform = from_bounds(w, s, e, n, height, width)
+    target_res = vrt_transform.a
+
+    ovr_idx = -1
+    if target_res > src_res:
+        res = [src_res * decim for decim in src_dst.overviews(1)]
+
+        for ovr_idx in range(ovr_idx, len(res) - 1):
+            ovrRes = src_res if ovr_idx < 0 else res[ovr_idx]
+            nextRes = res[ovr_idx + 1]
+            if (ovrRes < target_res) and (nextRes > target_res):
+                break
+            if abs(ovrRes - target_res) < 1e-1:
+                break
+        else:
+            ovr_idx = len(res) - 1
+
+    return ovr_idx
+
+
+# from DHI-GRAS/terracotta
+# https://github.com/DHI-GRAS/terracotta/blob/8ad22ca812678c9a08f26abefb63b220579b18f7/terracotta/drivers/raster_base.py#L398
+def calculate_default_transform(
+    src_crs: CRS,
+    dst_crs: CRS,
+    width: int,
+    height: int,
+    *bounds: Tuple[float, float, float, float],
+) -> Tuple[Affine, int, int]:
+    """
+    A more stable version of GDAL's default transform.
+
+    Ensures that the number of pixels along the image's shortest diagonal remains
+    the same in both CRS, without enforcing square pixels.
+    Bounds are in order (west, south, east, north).
+
+    Attributes
+    ----------
+        src_crs: CRS
+            Source coordinate reference system, in rasterio dict format.
+        dst_crs: CRS
+            Target coordinate reference system.
+        width, height: int
+            Source raster width and height.
+        left, bottom, right, top: float, optional
+            Bounding coordinates in src_crs, from the bounds property of a
+            raster. Required unless using gcps.
+
+    Returns
+    -------
+        transform: Affine
+            Output affine transformation matrix
+        width, height: int
+            Output dimensions
+
+    """
+    # transform image corners to target CRS
+    dst_corner_sw, dst_corner_nw, dst_corner_se, dst_corner_ne = list(
+        zip(
+            *transform(
+                src_crs,
+                dst_crs,
+                [bounds[0], bounds[0], bounds[2], bounds[2]],
+                [bounds[1], bounds[3], bounds[1], bounds[3]],
+            )
+        )
+    )
+
+    # determine inner bounding box of corners in target CRS
+    dst_corner_bounds = [
+        max(dst_corner_sw[0], dst_corner_nw[0]),
+        max(dst_corner_sw[1], dst_corner_se[1]),
+        min(dst_corner_se[0], dst_corner_ne[0]),
+        min(dst_corner_nw[1], dst_corner_ne[1]),
+    ]
+
+    # compute target resolution
+    dst_corner_transform = from_bounds(*dst_corner_bounds, width=width, height=height)
+    target_res = (dst_corner_transform.a, dst_corner_transform.e)
+
+    # get transform spanning whole bounds (not just projected corners)
+    dst_bounds = transform_bounds(src_crs, dst_crs, *bounds)
+    dst_width = math.ceil((dst_bounds[2] - dst_bounds[0]) / target_res[0])
+    dst_height = math.ceil((dst_bounds[1] - dst_bounds[3]) / target_res[1])
+    dst_transform = from_bounds(*dst_bounds, width=dst_width, height=dst_height)
+
+    return dst_transform, dst_width, dst_height
+
+
 def get_vrt_transform(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
@@ -108,7 +235,7 @@ def get_vrt_transform(
     vrt_width = math.ceil((e - w) / dst_transform.a)
     vrt_height = math.ceil((s - n) / dst_transform.e)
 
-    vrt_transform = transform.from_bounds(w, s, e, n, vrt_width, vrt_height)
+    vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
 
     return vrt_transform, vrt_width, vrt_height
 

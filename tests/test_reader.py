@@ -101,25 +101,26 @@ def test_resampling_with_diff_padding_returns_different_results():
         3835304.331237001,
     )
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 16, 16)
-        arr2, _ = reader.part(src_dst, bounds, 16, 16, padding=0)
+        arr, _ = reader.part(src_dst, bounds, 32, 32, nodata=0)
+        arr2, _ = reader.part(src_dst, bounds, 32, 32, nodata=0, padding=2)
 
     assert not np.array_equal(arr, arr2)
 
 
-def test_tile_padding_only_effects_edge_pixels():
-    """Adding tile padding should effect edge pixels only."""
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 16, 16)
-        arr2, _ = reader.part(src_dst, bounds, 16, 16, padding=0)
-    assert not np.array_equal(arr[0][0], arr2[0][0])
-    assert np.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
+# This is NOT TRUE, padding affects the whole array not just the border.
+# def test_tile_padding_only_effects_edge_pixels():
+#     """Adding tile padding should effect edge pixels only."""
+#     bounds = (
+#         -8844681.416934313,
+#         3757032.814272982,
+#         -8766409.899970293,
+#         3835304.331237001,
+#     )
+#     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+#         arr, _ = reader.part(src_dst, bounds, 32, 32, nodata=0)
+#         arr2, _ = reader.part(src_dst, bounds, 32, 32, nodata=0, padding=2)
+#     assert not np.array_equal(arr[0][0], arr2[0][0])
+#     assert np.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
 
 
 def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
