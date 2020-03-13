@@ -413,8 +413,24 @@ def metadata(
         for b in range(data.shape[0])
     }
 
+    other_meta = dict()
+    if src_dst.scales[0] and src_dst.offsets[0]:
+        other_meta.update(dict(scale=src_dst.scales[0]))
+        other_meta.update(dict(offset=src_dst.offsets[0]))
+
+    try:
+        cmap = src_dst.colormap(1)
+        other_meta.update(dict(colormap=cmap))
+    except ValueError:
+        pass
+
     return dict(
-        bounds=bounds, statistics=statistics, band_descriptions=band_descriptions
+        bounds=bounds,
+        statistics=statistics,
+        band_descriptions=band_descriptions,
+        dtype=src_dst.meta["dtype"],
+        colorinterp=[c.name for c in src_dst.colorinterp],
+        **other_meta,
     )
 
 
