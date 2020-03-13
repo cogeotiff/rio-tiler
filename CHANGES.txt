@@ -4,7 +4,7 @@
 - added `rio_tiler.utils.has_mask_band` function
 - added type hints
 
-Breacking Changes:
+Breaking Changes:
 - removed python 2 support
 - new package architecture (.io submodule)
 - introduced new rio_tiler.reader functions (part, preview, metadata...)

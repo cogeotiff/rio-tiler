@@ -3,7 +3,7 @@
 import os
 import pytest
 
-import numpy as np
+import numpy
 import mercantile
 
 import rasterio
@@ -38,6 +38,7 @@ KEY_PIX4D = "pix4d/pix4d_alpha_nodata.tif"
 PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
 COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
+COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -90,7 +91,7 @@ def test_resampling_returns_different_results():
         arr, _ = reader.part(src_dst, bounds, 16, 16)
         arr2, _ = reader.part(src_dst, bounds, 16, 16, resampling_method="nearest")
 
-    assert not np.array_equal(arr, arr2)
+    assert not numpy.array_equal(arr, arr2)
 
 
 def test_resampling_with_diff_padding_returns_different_results():
@@ -104,7 +105,7 @@ def test_resampling_with_diff_padding_returns_different_results():
         arr, _ = reader.part(src_dst, bounds, 16, 16)
         arr2, _ = reader.part(src_dst, bounds, 16, 16, padding=0)
 
-    assert not np.array_equal(arr, arr2)
+    assert not numpy.array_equal(arr, arr2)
 
 
 def test_tile_padding_only_effects_edge_pixels():
@@ -118,8 +119,8 @@ def test_tile_padding_only_effects_edge_pixels():
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
         arr, _ = reader.part(src_dst, bounds, 16, 16)
         arr2, _ = reader.part(src_dst, bounds, 16, 16, padding=0)
-    assert not np.array_equal(arr[0][0], arr2[0][0])
-    assert np.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
+    assert not numpy.array_equal(arr[0][0], arr2[0][0])
+    assert numpy.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
 
 
 def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
@@ -127,7 +128,7 @@ def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
     with rasterio.open(COG_WEB_TILED) as src_dst:
         arr, _ = reader.tile(src_dst, 147, 182, 9, tilesize=256, padding=0)
         arr2, _ = reader.tile(src_dst, 147, 182, 9, tilesize=256, padding=100)
-    assert np.array_equal(arr, arr2)
+    assert numpy.array_equal(arr, arr2)
 
 
 def test_tile_read_invalidResampling():
@@ -357,8 +358,8 @@ def test_tile_read_validMask():
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
         arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=0)
 
-    masknodata = (arr[0] != 0).astype(np.uint8) * 255
-    np.testing.assert_array_equal(mask, masknodata)
+    masknodata = (arr[0] != 0).astype(numpy.uint8) * 255
+    numpy.testing.assert_array_equal(mask, masknodata)
 
 
 def test_tile_read_crs():
@@ -400,7 +401,7 @@ def test_tile_read_crs():
             dst_crs=constants.WGS84_CRS,
         )
 
-        assert np.array_equal(arr, arr_crs)
+        assert numpy.array_equal(arr, arr_crs)
 
 
 def test_tile_read_vrt_option():
@@ -422,3 +423,29 @@ def test_tile_read_vrt_option():
         )
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
+
+
+def test_read_unscale():
+    """Should or Shouldn't apply scale and offset to a data."""
+    with rasterio.open(COG_SCALE) as src_dst:
+        arr, mask = reader.tile(src_dst, 218, 99, 8, tilesize=128)
+        arrS, maskS = reader.tile(src_dst, 218, 99, 8, tilesize=128, unscale=True)
+
+        assert arr.dtype == "int16"
+        assert arrS.dtype == "float32"
+        assert not numpy.array_equal(arr, arrS)
+        numpy.testing.assert_array_equal(mask, maskS)
+
+        meta = reader.metadata(src_dst)
+        assert isinstance(meta["statistics"][1]["min"], int)
+
+        meta = reader.metadata(src_dst, unscale=True)
+        assert isinstance(meta["statistics"][1]["min"], float)
+
+        p = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
+        assert p == [8917]
+
+        p = reader.point(
+            src_dst, [310000, 4100000], coord_crs=src_dst.crs, unscale=True
+        )
+        assert round(p[0], 3) == 1000.892
