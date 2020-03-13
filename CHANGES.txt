@@ -5,7 +5,7 @@
 - added `rio_tiler.utils.get_overview_level` to calculate the overview level needed for partial reading.
 - added type hints
 
-Breacking Changes:
+Breaking Changes:
 - removed python 2 support
 - new package architecture (.io submodule)
 - introduced new rio_tiler.reader functions (part, preview, metadata...)
