@@ -462,3 +462,12 @@ def test_metadata():
         assert not meta.get("scale")
         assert not meta.get("ofsset")
         assert meta.get("colormap")
+
+    with rasterio.open(COG_SCALE) as src_dst:
+        meta = reader.metadata(src_dst)
+        assert meta["dtype"] == "int16"
+        assert meta["colorinterp"] == ["gray"]
+        assert meta["scale"] == 0.0001
+        assert meta["offset"] == 1000.0
+        assert meta["band_descriptions"] == [(1, "Green")]
+        assert not meta.get("colormap")
