@@ -129,7 +129,7 @@ def part(
     bounds: Tuple[float, float, float, float],
     height: int,
     width: int,
-    padding: int = 2,
+    padding: int = 0,
     dst_crs: CRS = constants.WEB_MERCATOR_CRS,
     bounds_crs: Optional[CRS] = None,
     minimum_overlap: Optional[float] = None,

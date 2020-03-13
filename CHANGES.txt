@@ -2,6 +2,7 @@
 ------------------
 - added multi_* functions to rio_tiler.reader to support multiple assets addresses
 - added `rio_tiler.utils.has_mask_band` function
+- added `rio_tiler.utils.get_overview_level` to calculate the overview level needed for partial reading.
 - added type hints
 
 Breaking Changes:
@@ -13,6 +14,8 @@ Breaking Changes:
   AWS supported Public Dataset
 - renamed `minimum_tile_cover` to `minimum_overlap`
 - renamed `tile_edge_padding` to `padding`
+- padding is set to 0 by default.
+- use terracotta calculate_default_transform (see https://github.com/cogeotiff/rio-tiler/issues/56#issuecomment-442484999)
 
 1.4.0 (2020-02-19)
 ------------------
