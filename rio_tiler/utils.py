@@ -277,17 +277,17 @@ def linear_rescale(image, in_range=(0, 1), out_range=(1, 255)):
 
     Attributes
     ----------
-    image : numpy ndarray
-        Image array to rescale.
-    in_range : list, int, optional, (default: [0,1])
-        Image min/max value to rescale.
-    out_range : list, int, optional, (default: [1,255])
-        output min/max bounds to rescale to.
+        image : numpy ndarray
+            Image array to rescale.
+        in_range : list, int, optional, (default: [0,1])
+            Image min/max value to rescale.
+        out_range : list, int, optional, (default: [1,255])
+            output min/max bounds to rescale to.
 
     Returns
     -------
-    out : numpy ndarray
-        returns rescaled image array.
+        out : numpy ndarray
+            returns rescaled image array.
 
     """
     imin, imax = in_range
@@ -303,19 +303,19 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
 
     Attributes
     ----------
-    bounds : list
-        WGS84 bounds (left, bottom, right, top).
-    x : int
-        Mercator tile Y index.
-    y : int
-        Mercator tile Y index.
-    z : int
-        Mercator tile ZOOM level.
+        bounds : list
+            WGS84 bounds (left, bottom, right, top).
+        z : int
+            Mercator tile ZOOM level.
+        y : int
+            Mercator tile Y index.
+        x : int
+            Mercator tile Y index.
 
     Returns
     -------
-    out : boolean
-        if True, the z-x-y mercator tile in inside the bounds.
+        out : boolean
+            if True, the z-x-y mercator tile in inside the bounds.
 
     """
     mintile = mercantile.tile(bounds[0], bounds[3], tile_z)
@@ -359,19 +359,19 @@ def _apply_discrete_colormap(arr, cmap):
 
     Attributes
     ----------
-    arr : numpy.ndarray
-        1D image array to convert.
-    color_map: dict
-        Discrete ColorMap dictionary
-        e.g:
-        {
-            1: [255, 255, 255],
-            2: [255, 0, 0]
-        }
+        arr : numpy.ndarray
+            1D image array to convert.
+        color_map: dict
+            Discrete ColorMap dictionary
+            e.g:
+            {
+                1: [255, 255, 255],
+                2: [255, 0, 0]
+            }
 
     Returns
     -------
-    arr: numpy.ndarray
+        arr: numpy.ndarray
 
     """
     res = numpy.zeros((arr.shape[1], arr.shape[2], 3), dtype=numpy.uint8)
@@ -388,32 +388,32 @@ def array_to_image(
 
     Usage
     -----
-    tile, mask = rio_tiler.utils.tile_read(......)
-    with open('test.jpg', 'wb') as f:
-        f.write(array_to_image(tile, mask, img_format="jpeg"))
+        tile, mask = rio_tiler.utils.tile_read(......)
+        with open('test.jpg', 'wb') as f:
+            f.write(array_to_image(tile, mask, img_format="jpeg"))
 
     Attributes
     ----------
-    arr : numpy ndarray
-        Image array to encode.
-    mask: numpy ndarray, optional
-        Mask array
-    img_format: str, optional
-        Image format to return (default: 'png').
-        List of supported format by GDAL: https://www.gdal.org/formats_list.html
-    color_map: numpy.ndarray or dict, optional
-        color_map can be either a (256, 3) array or RGB triplet
-        (e.g. [[255, 255, 255],...]) mapping each 1D pixel value rescaled
-        from 0 to 255
-        OR
-        it can be a dictionary of discrete values
-        (e.g. { 1.3: [255, 255, 255], 2.5: [255, 0, 0]}) mapping any pixel value to a triplet
-    creation_options: dict, optional
-        Image driver creation options to pass to GDAL
+        arr : numpy ndarray
+            Image array to encode.
+        mask: numpy ndarray, optional
+            Mask array
+        img_format: str, optional
+            Image format to return (default: 'png').
+            List of supported format by GDAL: https://www.gdal.org/formats_list.html
+        color_map: numpy.ndarray or dict, optional
+            color_map can be either a (256, 3) array or RGB triplet
+            (e.g. [[255, 255, 255],...]) mapping each 1D pixel value rescaled
+            from 0 to 255
+            OR
+            it can be a dictionary of discrete values
+            (e.g. { 1.3: [255, 255, 255], 2.5: [255, 0, 0]}) mapping any pixel value to a triplet
+        creation_options: dict, optional
+            Image driver creation options to pass to GDAL
 
     Returns
     -------
-    bytes
+        bytes
 
     """
     img_format = img_format.lower()
@@ -461,18 +461,18 @@ def get_colormap(name="cfastie", format="pil"):
 
     Attributes
     ----------
-    name : str, optional
-        Colormap name (default: cfastie)
-    format: str, optional
-        Compatiblity library, should be "pil" or "gdal" (default: pil).
+        name : str, optional
+            Colormap name (default: cfastie)
+        format: str, optional
+            Compatiblity library, should be "pil" or "gdal" (default: pil).
 
     Returns
     -------
-    colormap : list or numpy.array
-        Color map list in a Pillow friendly format
-        more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
-        or
-        Color map array in GDAL friendly format
+        colormap : list or numpy.array
+            Color map list in a Pillow friendly format
+            more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
+            or
+            Color map array in GDAL friendly format
 
     """
     cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.npy".format(name))
@@ -492,13 +492,13 @@ def mapzen_elevation_rgb(arr):
 
     Attributes
     ----------
-    arr : numpy ndarray
-        Image array to encode.
+        arr : numpy ndarray
+            Image array to encode.
 
     Returns
     -------
-    out : numpy ndarray
-        RGB array (3, h, w)
+        out : numpy ndarray
+            RGB array (3, h, w)
 
     """
     arr = numpy.clip(arr + 32768.0, 0.0, 65535.0)
@@ -514,23 +514,22 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
 
     Attributes
     ----------
-    sceneid : str
-        Landsat id, Sentinel id, CBERS ids or file url.
-
-    tile_x : int
-        Mercator tile X index.
-    tile_y : int
-        Mercator tile Y index.
-    tile_z : int
-        Mercator tile ZOOM level.
-    expr : str, required
-        Expression to apply (e.g '(B5+B4)/(B5-B4)')
-        Band name should start with 'B'.
+        sceneid : str
+            Landsat id, Sentinel id, CBERS ids or file url.
+        tile_x : int
+            Mercator tile X index.
+        tile_y : int
+            Mercator tile Y index.
+        tile_z : int
+            Mercator tile ZOOM level.
+        expr : str, required
+            Expression to apply (e.g '(B5+B4)/(B5-B4)')
+            Band name should start with 'B'.
 
     Returns
     -------
-    out : ndarray
-        Returns processed pixel value.
+        out : ndarray
+            Returns processed pixel value.
 
     """
     if not expr:
