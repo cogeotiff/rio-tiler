@@ -13,7 +13,7 @@ Additional support is provided for the following satellite missions hosted on **
 - [Landsat8](https://aws.amazon.com/fr/public-datasets/landsat)
 - [CBERS](https://registry.opendata.aws/cbers/)  (**requester-pays**)
 
-Rio-tiler supports Python 2.7 and 3.3-3.7.
+**Starting with version 2.0 rio-tiler only supports Python>=3.**
 
 
 ## Install

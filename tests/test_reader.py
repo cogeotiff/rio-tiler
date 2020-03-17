@@ -39,6 +39,7 @@ PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
 COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
+COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -102,25 +103,26 @@ def test_resampling_with_diff_padding_returns_different_results():
         3835304.331237001,
     )
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 16, 16)
-        arr2, _ = reader.part(src_dst, bounds, 16, 16, padding=0)
+        arr, _ = reader.part(src_dst, bounds, 32, 32, nodata=0)
+        arr2, _ = reader.part(src_dst, bounds, 32, 32, nodata=0, padding=2)
 
     assert not numpy.array_equal(arr, arr2)
 
 
-def test_tile_padding_only_effects_edge_pixels():
-    """Adding tile padding should effect edge pixels only."""
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 16, 16)
-        arr2, _ = reader.part(src_dst, bounds, 16, 16, padding=0)
-    assert not numpy.array_equal(arr[0][0], arr2[0][0])
-    assert numpy.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
+# This is NOT TRUE, padding affects the whole array not just the border.
+# def test_tile_padding_only_effects_edge_pixels():
+#     """Adding tile padding should effect edge pixels only."""
+#     bounds = (
+#         -8844681.416934313,
+#         3757032.814272982,
+#         -8766409.899970293,
+#         3835304.331237001,
+#     )
+#     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+#         arr, _ = reader.part(src_dst, bounds, 32, 32, nodata=0)
+#         arr2, _ = reader.part(src_dst, bounds, 32, 32, nodata=0, padding=2)
+#     assert not np.array_equal(arr[0][0], arr2[0][0])
+#     assert np.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
 
 
 def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
@@ -449,3 +451,23 @@ def test_read_unscale():
             src_dst, [310000, 4100000], coord_crs=src_dst.crs, unscale=True
         )
         assert round(p[0], 3) == 1000.892
+
+
+def test_metadata():
+    """Should return correct metadata."""
+    with rasterio.open(COG_CMAP) as src_dst:
+        meta = reader.metadata(src_dst)
+        assert meta["dtype"] == "int8"
+        assert meta["colorinterp"] == ["palette"]
+        assert not meta.get("scale")
+        assert not meta.get("ofsset")
+        assert meta.get("colormap")
+
+    with rasterio.open(COG_SCALE) as src_dst:
+        meta = reader.metadata(src_dst)
+        assert meta["dtype"] == "int16"
+        assert meta["colorinterp"] == ["gray"]
+        assert meta["scale"] == 0.0001
+        assert meta["offset"] == 1000.0
+        assert meta["band_descriptions"] == [(1, "Green")]
+        assert not meta.get("colormap")

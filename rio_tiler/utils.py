@@ -13,13 +13,13 @@ import numexpr
 from affine import Affine
 import mercantile
 
+from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.enums import MaskFlags, ColorInterp
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
-from rasterio import transform
-from rasterio import windows
-from rasterio.warp import calculate_default_transform
+from rasterio.transform import from_bounds
+from rasterio.warp import transform, transform_bounds
 
 from rio_tiler import constants
 from rio_tiler.errors import DeprecationWarning
@@ -79,6 +79,133 @@ def _div_round_up(a, b):
     return (a // b) if (a % b) == 0 else (a // b) + 1
 
 
+def get_overview_level(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    bounds: Tuple[float, float, float, float],
+    height: int,
+    width: int,
+    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+) -> int:
+    """
+    Return the overview level corresponding to the tile resolution.
+
+    Freely adapted from https://github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e944744b7c9b2bd6c400/gdal/apps/gdalwarp_lib.cpp#L2293-L2362
+
+    Attributes
+    ----------
+        src_dst : rasterio.io.DatasetReader
+            Rasterio io.DatasetReader object
+        bounds : list
+            Bounds (left, bottom, right, top) in target crs ("dst_crs").
+        height : int
+            Output height.
+        width : int
+            Output width.
+        dst_crs: CRS or str, optional
+            Target coordinate reference system (default "epsg:3857").
+
+    Returns
+    -------
+        ovr_idx: Int or None
+            Overview level
+
+    """
+    dst_transform, _, _ = calculate_default_transform(
+        src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
+    )
+    src_res = dst_transform.a
+
+    # Compute what the "natural" output resolution (in pixels) would be for this input dataset
+    w, s, e, n = bounds
+    vrt_transform = from_bounds(w, s, e, n, height, width)
+    target_res = vrt_transform.a
+
+    ovr_idx = -1
+    if target_res > src_res:
+        res = [src_res * decim for decim in src_dst.overviews(1)]
+
+        for ovr_idx in range(ovr_idx, len(res) - 1):
+            ovrRes = src_res if ovr_idx < 0 else res[ovr_idx]
+            nextRes = res[ovr_idx + 1]
+            if (ovrRes < target_res) and (nextRes > target_res):
+                break
+            if abs(ovrRes - target_res) < 1e-1:
+                break
+        else:
+            ovr_idx = len(res) - 1
+
+    return ovr_idx
+
+
+# from DHI-GRAS/terracotta
+# https://github.com/DHI-GRAS/terracotta/blob/8ad22ca812678c9a08f26abefb63b220579b18f7/terracotta/drivers/raster_base.py#L398
+def calculate_default_transform(
+    src_crs: CRS,
+    dst_crs: CRS,
+    width: int,
+    height: int,
+    *bounds: Tuple[float, float, float, float],
+) -> Tuple[Affine, int, int]:
+    """
+    A more stable version of GDAL's default transform.
+
+    Ensures that the number of pixels along the image's shortest diagonal remains
+    the same in both CRS, without enforcing square pixels.
+    Bounds are in order (west, south, east, north).
+
+    Attributes
+    ----------
+        src_crs: CRS
+            Source coordinate reference system, in rasterio dict format.
+        dst_crs: CRS
+            Target coordinate reference system.
+        width, height: int
+            Source raster width and height.
+        left, bottom, right, top: float, optional
+            Bounding coordinates in src_crs, from the bounds property of a
+            raster. Required unless using gcps.
+
+    Returns
+    -------
+        transform: Affine
+            Output affine transformation matrix
+        width, height: int
+            Output dimensions
+
+    """
+    # transform image corners to target CRS
+    dst_corner_sw, dst_corner_nw, dst_corner_se, dst_corner_ne = list(
+        zip(
+            *transform(
+                src_crs,
+                dst_crs,
+                [bounds[0], bounds[0], bounds[2], bounds[2]],
+                [bounds[1], bounds[3], bounds[1], bounds[3]],
+            )
+        )
+    )
+
+    # determine inner bounding box of corners in target CRS
+    dst_corner_bounds = [
+        max(dst_corner_sw[0], dst_corner_nw[0]),
+        max(dst_corner_sw[1], dst_corner_se[1]),
+        min(dst_corner_se[0], dst_corner_ne[0]),
+        min(dst_corner_nw[1], dst_corner_ne[1]),
+    ]
+
+    # compute target resolution
+    dst_corner_transform = from_bounds(*dst_corner_bounds, width=width, height=height)
+    target_res = (dst_corner_transform.a, dst_corner_transform.e)
+
+    # get transform spanning whole bounds (not just projected corners)
+    dst_bounds = transform_bounds(src_crs, dst_crs, *bounds)
+    dst_width = math.ceil((dst_bounds[2] - dst_bounds[0]) / target_res[0])
+    dst_height = math.ceil((dst_bounds[1] - dst_bounds[3]) / target_res[1])
+    dst_transform = from_bounds(*dst_bounds, width=dst_width, height=dst_height)
+
+    return dst_transform, dst_width, dst_height
+
+
 def get_vrt_transform(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
@@ -111,7 +238,7 @@ def get_vrt_transform(
     vrt_width = math.ceil((e - w) / dst_transform.a)
     vrt_height = math.ceil((s - n) / dst_transform.e)
 
-    vrt_transform = transform.from_bounds(w, s, e, n, vrt_width, vrt_height)
+    vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
 
     return vrt_transform, vrt_width, vrt_height
 
@@ -153,17 +280,17 @@ def linear_rescale(image, in_range=(0, 1), out_range=(1, 255)):
 
     Attributes
     ----------
-    image : numpy ndarray
-        Image array to rescale.
-    in_range : list, int, optional, (default: [0,1])
-        Image min/max value to rescale.
-    out_range : list, int, optional, (default: [1,255])
-        output min/max bounds to rescale to.
+        image : numpy ndarray
+            Image array to rescale.
+        in_range : list, int, optional, (default: [0,1])
+            Image min/max value to rescale.
+        out_range : list, int, optional, (default: [1,255])
+            output min/max bounds to rescale to.
 
     Returns
     -------
-    out : numpy ndarray
-        returns rescaled image array.
+        out : numpy ndarray
+            returns rescaled image array.
 
     """
     imin, imax = in_range
@@ -179,19 +306,19 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
 
     Attributes
     ----------
-    bounds : list
-        WGS84 bounds (left, bottom, right, top).
-    x : int
-        Mercator tile Y index.
-    y : int
-        Mercator tile Y index.
-    z : int
-        Mercator tile ZOOM level.
+        bounds : list
+            WGS84 bounds (left, bottom, right, top).
+        z : int
+            Mercator tile ZOOM level.
+        y : int
+            Mercator tile Y index.
+        x : int
+            Mercator tile Y index.
 
     Returns
     -------
-    out : boolean
-        if True, the z-x-y mercator tile in inside the bounds.
+        out : boolean
+            if True, the z-x-y mercator tile in inside the bounds.
 
     """
     mintile = mercantile.tile(bounds[0], bounds[3], tile_z)
@@ -235,19 +362,19 @@ def _apply_discrete_colormap(arr, cmap):
 
     Attributes
     ----------
-    arr : numpy.ndarray
-        1D image array to convert.
-    color_map: dict
-        Discrete ColorMap dictionary
-        e.g:
-        {
-            1: [255, 255, 255],
-            2: [255, 0, 0]
-        }
+        arr : numpy.ndarray
+            1D image array to convert.
+        color_map: dict
+            Discrete ColorMap dictionary
+            e.g:
+            {
+                1: [255, 255, 255],
+                2: [255, 0, 0]
+            }
 
     Returns
     -------
-    arr: numpy.ndarray
+        arr: numpy.ndarray
 
     """
     res = numpy.zeros((arr.shape[1], arr.shape[2], 3), dtype=numpy.uint8)
@@ -264,32 +391,32 @@ def array_to_image(
 
     Usage
     -----
-    tile, mask = rio_tiler.utils.tile_read(......)
-    with open('test.jpg', 'wb') as f:
-        f.write(array_to_image(tile, mask, img_format="jpeg"))
+        tile, mask = rio_tiler.utils.tile_read(......)
+        with open('test.jpg', 'wb') as f:
+            f.write(array_to_image(tile, mask, img_format="jpeg"))
 
     Attributes
     ----------
-    arr : numpy ndarray
-        Image array to encode.
-    mask: numpy ndarray, optional
-        Mask array
-    img_format: str, optional
-        Image format to return (default: 'png').
-        List of supported format by GDAL: https://www.gdal.org/formats_list.html
-    color_map: numpy.ndarray or dict, optional
-        color_map can be either a (256, 3) array or RGB triplet
-        (e.g. [[255, 255, 255],...]) mapping each 1D pixel value rescaled
-        from 0 to 255
-        OR
-        it can be a dictionary of discrete values
-        (e.g. { 1.3: [255, 255, 255], 2.5: [255, 0, 0]}) mapping any pixel value to a triplet
-    creation_options: dict, optional
-        Image driver creation options to pass to GDAL
+        arr : numpy ndarray
+            Image array to encode.
+        mask: numpy ndarray, optional
+            Mask array
+        img_format: str, optional
+            Image format to return (default: 'png').
+            List of supported format by GDAL: https://www.gdal.org/formats_list.html
+        color_map: numpy.ndarray or dict, optional
+            color_map can be either a (256, 3) array or RGB triplet
+            (e.g. [[255, 255, 255],...]) mapping each 1D pixel value rescaled
+            from 0 to 255
+            OR
+            it can be a dictionary of discrete values
+            (e.g. { 1.3: [255, 255, 255], 2.5: [255, 0, 0]}) mapping any pixel value to a triplet
+        creation_options: dict, optional
+            Image driver creation options to pass to GDAL
 
     Returns
     -------
-    bytes
+        bytes
 
     """
     warnings.warn(
@@ -443,18 +570,18 @@ def get_colormap(name="cfastie", format="pil"):
 
     Attributes
     ----------
-    name : str, optional
-        Colormap name (default: cfastie)
-    format: str, optional
-        Compatiblity library, should be "pil" or "gdal" (default: pil).
+        name : str, optional
+            Colormap name (default: cfastie)
+        format: str, optional
+            Compatiblity library, should be "pil" or "gdal" (default: pil).
 
     Returns
     -------
-    colormap : list or numpy.array
-        Color map list in a Pillow friendly format
-        more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
-        or
-        Color map array in GDAL friendly format
+        colormap : list or numpy.array
+            Color map list in a Pillow friendly format
+            more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
+            or
+            Color map array in GDAL friendly format
 
     """
     warnings.warn(
@@ -478,13 +605,13 @@ def mapzen_elevation_rgb(arr):
 
     Attributes
     ----------
-    arr : numpy ndarray
-        Image array to encode.
+        arr : numpy ndarray
+            Image array to encode.
 
     Returns
     -------
-    out : numpy ndarray
-        RGB array (3, h, w)
+        out : numpy ndarray
+            RGB array (3, h, w)
 
     """
     arr = numpy.clip(arr + 32768.0, 0.0, 65535.0)
@@ -500,23 +627,22 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
 
     Attributes
     ----------
-    sceneid : str
-        Landsat id, Sentinel id, CBERS ids or file url.
-
-    tile_x : int
-        Mercator tile X index.
-    tile_y : int
-        Mercator tile Y index.
-    tile_z : int
-        Mercator tile ZOOM level.
-    expr : str, required
-        Expression to apply (e.g '(B5+B4)/(B5-B4)')
-        Band name should start with 'B'.
+        sceneid : str
+            Landsat id, Sentinel id, CBERS ids or file url.
+        tile_x : int
+            Mercator tile X index.
+        tile_y : int
+            Mercator tile Y index.
+        tile_z : int
+            Mercator tile ZOOM level.
+        expr : str, required
+            Expression to apply (e.g '(B5+B4)/(B5-B4)')
+            Band name should start with 'B'.
 
     Returns
     -------
-    out : ndarray
-        Returns processed pixel value.
+        out : ndarray
+            Returns processed pixel value.
 
     """
     if not expr:
