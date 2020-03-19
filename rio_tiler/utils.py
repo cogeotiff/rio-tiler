@@ -510,8 +510,8 @@ def expression(
         tile_z : int
             Mercator tile ZOOM level.
         expr : str, required
-            Expression to apply (e.g '(B5+B4)/(B5-B4)')
-            Band name should start with 'B'.
+            Expression to apply (e.g '(b5+b4)/(b5-b4)')
+            Band name should start with 'b'.
 
     Returns
     -------
