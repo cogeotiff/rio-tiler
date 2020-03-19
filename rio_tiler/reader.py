@@ -455,6 +455,8 @@ def tile(
             Mercator tile Y index.
         z : int
             Mercator tile ZOOM level.
+        tilesize : int, optional
+            Output tile size. Default is 256.
         kwargs : Any, optional
             Additional options to forward to part()
 

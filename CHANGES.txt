@@ -5,6 +5,7 @@
 - added `rio_tiler.utils.get_overview_level` to calculate the overview level needed for partial reading.
 - added type hints
 - added scale, offsets, colormap, datatype and colorinterp in reader.metadata output (#158)
+- new `rio_tiler.colormap` submodule
 
 Breaking Changes:
 - removed python 2 support
@@ -17,6 +18,12 @@ Breaking Changes:
 - renamed `tile_edge_padding` to `padding`
 - padding is set to 0 by default.
 - use terracotta calculate_default_transform (see https://github.com/cogeotiff/rio-tiler/issues/56#issuecomment-442484999)
+- colormaps are now have an alpha value
+- `rio_tiler.utils.get_colormap` replaced by `rio_tiler.colormap.get_colormap` 
+- new `rio_tiler.colormap.get_colormap` supports only GDAL like colormap
+- replaced `rio_tiler.utils.array_to_image` by `rio_tiler.utils.render`
+- replaced `rio_tiler.utils.apply_cmap` by `rio_tiler.colormap.apply_cmap`
+- replaced `rio_tiler.utils._apply_discrete_colormap` by `rio_tiler.colormap.apply_discrete_cmap`
 
 1.4.0 (2020-02-19)
 ------------------

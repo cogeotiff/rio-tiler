@@ -11,6 +11,7 @@ import mercantile
 import rasterio
 
 from rio_tiler import utils
+from rio_tiler import colormap
 from rio_tiler import constants
 
 from .conftest import requires_webp
@@ -61,32 +62,6 @@ def test_tile_exists_valid():
     tile_z, tile_x, tile_y = map(int, tile.split("-"))
     bounds = [-78.75, 34.30714385628803, -75.93749999999999, 36.59788913307021]
     assert utils.tile_exists(bounds, tile_z, tile_x, tile_y)
-
-
-def test_get_colormap_valid():
-    """Returns 'cfastie' colormap in a PIL friendly format."""
-    assert len(utils.get_colormap()) == 768  # 3 x256
-
-
-def test_get_colormap_schwarzwald():
-    """Returns 'schwarzwald' colormap in a GDAL friendly format."""
-    assert len(utils.get_colormap(name="schwarzwald")) == 768  # 3 x256
-
-
-def test_get_colormap_rplumbo():
-    """Returns 'rplumbo' colormap in a GDAL friendly format."""
-    assert len(utils.get_colormap(name="rplumbo")) == 768  # 3 x256
-
-
-def test_get_colormap_gdal():
-    """Returns 'cfastie' colormap in a GDAL friendly format."""
-    assert len(utils.get_colormap(format="gdal")) == 256  # 256 x 3
-
-
-def test_get_colormap_unsupported():
-    """Raise error on unsupported format."""
-    with pytest.raises(Exception):
-        utils.get_colormap(format="gal")
 
 
 def test_mapzen_elevation_rgb():
@@ -301,71 +276,67 @@ def test_statsFunction_valid():
     assert len(stats["histogram"][0]) == 20
 
 
-def test_array_to_image_valid_1band():
+def test_render_valid_1band():
     """Creates PNG image buffer from one band array."""
     arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)
-    assert utils.array_to_image(arr)
+    assert utils.render(arr)
 
 
-def test_array_to_image_valid_colormap():
+def test_render_valid_colormap():
     """Creates 'colormaped' PNG image buffer from one band array."""
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    cmap = utils.get_colormap(name="cfastie", format="gdal")
-    assert utils.array_to_image(arr, color_map=cmap)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+    cmap = colormap.get_colormap("cfastie")
+    assert utils.render(arr, mask, colormap=cmap, img_format="jpeg")
 
 
-def test_array_to_image_valid_colormapDict():
+def test_render_valid_colormapDict():
     """Create 'colormaped' PNG image buffer from one band array using discrete cmap."""
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    cmap = {1: [255, 255, 255], 50: [255, 255, 0], 100: [255, 0, 0], 150: [0, 0, 255]}
-    assert utils.array_to_image(arr, color_map=cmap)
+    cmap = {
+        1: [255, 255, 255, 255],
+        50: [255, 255, 0, 255],
+        100: [255, 0, 0, 255],
+        150: [0, 0, 255, 255],
+    }
+    assert utils.render(arr, colormap=cmap)
 
 
-def test_apply_discrete_colormap_valid():
-    """Apply discrete colormap to array."""
-    arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    arr[0, 0, 0] = 1
-    arr[0, 1, 1] = 100
-    cmap = {1: [255, 255, 255], 50: [255, 255, 0], 100: [255, 0, 0], 150: [0, 0, 255]}
-    res = utils._apply_discrete_colormap(arr, cmap)
-    assert res[:, 0, 0].tolist() == [255, 255, 255]
-    assert res[:, 1, 1].tolist() == [255, 0, 0]
-
-
-def test_array_to_image_valid_mask():
+def test_render_valid_mask():
     """Creates image buffer from 3 bands array and mask."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8)
-    assert utils.array_to_image(arr, mask=mask)
-    assert utils.array_to_image(arr, mask=mask, img_format="jpeg")
+    assert utils.render(arr, mask=mask)
+    assert utils.render(arr, mask=mask, img_format="jpeg")
 
 
-def test_array_to_image_valid_options():
+def test_render_valid_options():
     """Creates image buffer with driver options."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8) + 255
-    assert utils.array_to_image(arr, mask=mask, img_format="png", ZLEVEL=9)
+    assert utils.render(arr, mask=mask, img_format="png", ZLEVEL=9)
 
 
-def test_array_to_image_geotiff16Bytes():
+def test_render_geotiff16Bytes():
     """Creates GeoTIFF image buffer from 3 bands array."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint16)
     mask = np.zeros((512, 512), dtype=np.uint8) + 255
-    assert utils.array_to_image(arr, mask=mask, img_format="GTiff")
+    assert utils.render(arr, mask=mask, img_format="GTiff")
 
 
-def test_array_to_image_geotiff():
+def test_render_geotiff():
     """Creates GeoTIFF image buffer from 3 bands array."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8) + 255
-    assert utils.array_to_image(arr, mask=mask, img_format="GTiff")
+    ops = utils.geotiff_options(1, 0, 0)
+    assert utils.render(arr, mask=mask, img_format="GTiff", **ops)
 
 
 @requires_webp
-def test_array_to_image_valid_1bandWebp():
+def test_render_valid_1bandWebp():
     """Creates WEBP image buffer from 1 band array."""
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
-    assert utils.array_to_image(arr, img_format="WEBP")
+    assert utils.render(arr, img_format="WEBP")
 
 
 def test_aligned_with_internaltile():
@@ -418,3 +389,57 @@ def test_has_mask():
 
     with rasterio.open(COG_DST) as src_dst:
         assert not utils.has_mask_band(src_dst)
+
+
+def test_chunck():
+    """Should split a list in multiple chunks."""
+    chuncks = list(utils._chunks(list(range(10)), 3))
+    assert len(chuncks) == 4
+
+
+def test_div():
+    """Should return up rounded value."""
+    assert utils._div_round_up(3, 2) == 2
+    assert utils._div_round_up(2, 2) == 1
+
+
+def test_ovr_level():
+    """Should return the correct overview level."""
+    with rasterio.open(COG_DST) as src_dst:
+        # raw/-1: 2667x2658 0: 1329x1334, 1: 665x667, 2: 333x334, 3: 167x167
+        assert (
+            utils.get_overview_level(
+                src_dst, src_dst.bounds, 100, 100, dst_crs=src_dst.crs
+            )
+            == 3
+        )
+        assert (
+            utils.get_overview_level(
+                src_dst, src_dst.bounds, 200, 200, dst_crs=src_dst.crs
+            )
+            == 2
+        )
+        assert (
+            utils.get_overview_level(
+                src_dst, src_dst.bounds, 500, 500, dst_crs=src_dst.crs
+            )
+            == 1
+        )
+        assert (
+            utils.get_overview_level(
+                src_dst, src_dst.bounds, 800, 800, dst_crs=src_dst.crs
+            )
+            == 0
+        )
+        assert (
+            utils.get_overview_level(
+                src_dst, src_dst.bounds, 1500, 1500, dst_crs=src_dst.crs
+            )
+            == -1
+        )
+        assert (
+            utils.get_overview_level(
+                src_dst, src_dst.bounds, 3000, 3000, dst_crs=src_dst.crs
+            )
+            == -1
+        )

@@ -8,7 +8,7 @@ import matplotlib.cm as cm
 def generate_maps() -> None:
     x = np.linspace(0, 1, 256)
     for name, colormap in cm.cmap_d.items():
-        cmap_vals = colormap(x)[:, :-1]  # cut off alpha
+        cmap_vals = colormap(x)[:, :]
         cmap_uint8 = (cmap_vals * 255).astype('uint8')
         np.save(f'{name.lower()}.npy', cmap_uint8)
 

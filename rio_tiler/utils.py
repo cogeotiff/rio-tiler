@@ -1,8 +1,7 @@
 """rio_tiler.utils: utility functions."""
 
-from typing import Any, Dict, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
-import os
 import re
 import math
 
@@ -21,6 +20,7 @@ from rasterio.transform import from_bounds
 from rasterio.warp import transform, transform_bounds
 
 from rio_tiler import constants
+from rio_tiler.colormap import apply_cmap
 
 
 def _chunks(l: Sequence, n: int):
@@ -112,7 +112,8 @@ def get_overview_level(
     )
     src_res = dst_transform.a
 
-    # Compute what the "natural" output resolution (in pixels) would be for this input dataset
+    # Compute what the "natural" output resolution
+    # (in pixels) would be for this input dataset
     w, s, e, n = bounds
     vrt_transform = from_bounds(w, s, e, n, height, width)
     target_res = vrt_transform.a
@@ -353,36 +354,42 @@ def _requested_tile_aligned_with_internal_tile(src_dst, bounds, height, width):
     return True
 
 
-def _apply_discrete_colormap(arr, cmap):
+def geotiff_options(
+    x, y, z, tilesize: int = 256, dst_crs: CRS = constants.WEB_MERCATOR_CRS
+) -> Dict:
     """
-    Apply discrete colormap.
+    GeoTIFF options.
 
     Attributes
     ----------
-        arr : numpy.ndarray
-            1D image array to convert.
-        color_map: dict
-            Discrete ColorMap dictionary
-            e.g:
-            {
-                1: [255, 255, 255],
-                2: [255, 0, 0]
-            }
+        x : int
+            Mercator tile X index.
+        y : int
+            Mercator tile Y index.
+        z : int
+            Mercator tile ZOOM level.
+        tilesize : int, optional
+            Output tile size. Default is 256.
+        dst_crs: CRS, optional
+            Target coordinate reference system, default is "epsg:3857".
 
     Returns
     -------
-        arr: numpy.ndarray
+        dict
 
     """
-    res = numpy.zeros((arr.shape[1], arr.shape[2], 3), dtype=numpy.uint8)
-    for k, v in cmap.items():
-        res[arr[0] == k] = v
-    return numpy.transpose(res, [2, 0, 1])
+    bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
+    dst_transform = from_bounds(*bounds, tilesize, tilesize)
+    return dict(crs=dst_crs, transform=dst_transform)
 
 
-def array_to_image(
-    arr, mask=None, img_format="png", color_map=None, **creation_options
-):
+def render(
+    tile: numpy.ndarray,
+    mask: Optional[numpy.ndarray] = None,
+    img_format: str = "PNG",
+    colormap: Optional[Dict] = None,
+    **creation_options: Any,
+) -> bytes:
     """
     Translate numpy ndarray to image buffer using GDAL.
 
@@ -394,96 +401,61 @@ def array_to_image(
 
     Attributes
     ----------
-        arr : numpy ndarray
+        tile : numpy ndarray
             Image array to encode.
         mask: numpy ndarray, optional
             Mask array
         img_format: str, optional
             Image format to return (default: 'png').
             List of supported format by GDAL: https://www.gdal.org/formats_list.html
-        color_map: numpy.ndarray or dict, optional
-            color_map can be either a (256, 3) array or RGB triplet
-            (e.g. [[255, 255, 255],...]) mapping each 1D pixel value rescaled
-            from 0 to 255
-            OR
-            it can be a dictionary of discrete values
-            (e.g. { 1.3: [255, 255, 255], 2.5: [255, 0, 0]}) mapping any pixel value to a triplet
+        colormap: dict, optional
+            GDAL RGBA Color Table dictionary.
         creation_options: dict, optional
             Image driver creation options to pass to GDAL
 
     Returns
     -------
-        bytes
+        bytes: BytesIO
+            Reurn image body.
 
     """
-    img_format = img_format.lower()
+    img_format = img_format.upper()
 
-    if len(arr.shape) < 3:
-        arr = numpy.expand_dims(arr, axis=0)
+    if len(tile.shape) < 3:
+        tile = numpy.expand_dims(tile, axis=0)
 
-    if color_map is not None and isinstance(color_map, dict):
-        arr = _apply_discrete_colormap(arr, color_map)
-    elif color_map is not None:
-        arr = numpy.transpose(color_map[arr][0], [2, 0, 1]).astype(numpy.uint8)
+    if colormap:
+        tile, alpha = apply_cmap(tile, colormap)
+        if mask is not None:
+            mask = (
+                mask * alpha * 255
+            )  # This is a special case when we want to mask some valid data
 
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
-    if img_format == "webp" and arr.shape[0] == 1:
-        arr = numpy.repeat(arr, 3, axis=0)
+    if img_format == "WEBP" and tile.shape[0] == 1:
+        tile = numpy.repeat(tile, 3, axis=0)
+    elif img_format == "JPEG":
+        mask = None
 
-    if mask is not None and img_format != "jpeg":
-        nbands = arr.shape[0] + 1
-    else:
-        nbands = arr.shape[0]
+    count, height, width = tile.shape
 
     output_profile = dict(
         driver=img_format,
-        dtype=arr.dtype,
-        count=nbands,
-        height=arr.shape[1],
-        width=arr.shape[2],
+        dtype=tile.dtype,
+        count=count + 1 if mask is not None else count,
+        height=height,
+        width=width,
     )
     output_profile.update(creation_options)
 
     with MemoryFile() as memfile:
         with memfile.open(**output_profile) as dst:
-            dst.write(arr, indexes=list(range(1, arr.shape[0] + 1)))
-
+            dst.write(tile, indexes=list(range(1, count + 1)))
             # Use Mask as an alpha band
-            if mask is not None and img_format != "jpeg":
-                dst.write(mask.astype(arr.dtype), indexes=nbands)
+            if mask is not None:
+                dst.write(mask.astype(tile.dtype), indexes=count + 1)
 
         return memfile.read()
-
-
-def get_colormap(name="cfastie", format="pil"):
-    """
-    Return Pillow or GDAL compatible colormap array.
-
-    Attributes
-    ----------
-        name : str, optional
-            Colormap name (default: cfastie)
-        format: str, optional
-            Compatiblity library, should be "pil" or "gdal" (default: pil).
-
-    Returns
-    -------
-        colormap : list or numpy.array
-            Color map list in a Pillow friendly format
-            more info: http://pillow.readthedocs.io/en/3.4.x/reference/Image.html#PIL.Image.Image.putpalette
-            or
-            Color map array in GDAL friendly format
-
-    """
-    cmap_file = os.path.join(os.path.dirname(__file__), "cmap", "{0}.npy".format(name))
-    cmap = list(numpy.load(cmap_file).flatten())
-
-    if format.lower() == "pil":
-        return cmap
-    elif format.lower() == "gdal":
-        return numpy.array(list(_chunks(cmap, 3)))
-    else:
-        raise Exception("Unsupported {} colormap format".format(format))
 
 
 def mapzen_elevation_rgb(arr):
