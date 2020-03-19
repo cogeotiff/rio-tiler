@@ -93,7 +93,7 @@ def _read(
         indexes = non_alpha_indexes(src_dst)
         if indexes != src_dst.indexes:
             warnings.warn(
-                "Alpha band was removed from the output data aray", AlphaBandWarning
+                "Alpha band was removed from the output data array", AlphaBandWarning
             )
 
     vrt_params.update(vrt_options)
@@ -376,7 +376,7 @@ def metadata(
         indexes = non_alpha_indexes(src_dst)
         if indexes != src_dst.indexes:
             warnings.warn(
-                "Alpha band was removed from the output data aray", AlphaBandWarning
+                "Alpha band was removed from the output data array", AlphaBandWarning
             )
 
     if bounds:
