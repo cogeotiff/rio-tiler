@@ -20,7 +20,6 @@ from rio_tiler import constants
 from rio_tiler.errors import InvalidBandName, InvalidSentinelSceneId
 
 REGION = os.environ.get("AWS_REGION", "eu-central-1")
-SENTINEL_BUCKET = "s3://sentinel-s1-l1c"
 SENTINEL_BANDS = ["vv", "vh"]
 
 

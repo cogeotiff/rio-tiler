@@ -15,7 +15,6 @@ Additional support is provided for the following satellite missions hosted on **
 
 **Starting with version 2.0 rio-tiler only supports Python>=3.**
 
-
 ## Install
 
 You can install rio-tiler using pip
@@ -66,19 +65,19 @@ print(mask.shape)
 Create image from tile
 
 ```python
-from rio_tiler.utils import array_to_image
+from rio_tiler.utils import render
 
-buffer = array_to_image(tile, mask=mask) # this returns a buffer (PNG by default)
+buffer = render(tile, mask=mask) # this returns a buffer (PNG by default)
 ```
 
 Use creation options to match `mapnik` default
 
 ```python
-from rio_tiler.utils import array_to_image
+from rio_tiler.utils import render
 from rio_tiler.profiles import img_profiles
 
 options = img_profiles["webp"]
-buffer = array_to_image(tile, mask=mask, img_format="webp", **options)
+buffer = render(tile, mask=mask, img_format="webp", **options)
 ```
 
 Write image to file
@@ -147,7 +146,7 @@ landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
 The primary purpose for calculating minimum and maximum values of an image is to rescale pixel values from their original range (e.g. 0 to 65,535) to the range used by computer screens (i.e. 0 and 255) through a linear transformation.
 This will make images look good on display.
 
-#### Working with STAC items 
+#### Working with multiple assets (STAC) 
 
 `rio_tiler.reader` submodule has `multi_*` functions (tile, preview, point, metadata) allowing to fetch and merge info 
 from multiple dataset (think about multiple bands stored in separated files).
@@ -180,6 +179,38 @@ It's important to note that **Sentinel-2 scenes hosted on AWS are not in Cloud O
 When performing partial reading of JPEG2000 dataset GDAL (rasterio backend library) will need to make a lot of **GET requests** and transfer a lot of data.
 
 Ref: [Do you really want people using your data](https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f) blog post.
+
+
+## Create an AWS Lambda package
+
+The easiest way to make sure the package will work on AWS is to use docker
+
+```dockerfile
+FROM lambci/lambda:build-python3.7
+
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CFLAGS="--std=c99"
+
+RUN pip3 install rio-tiler --no-binary numpy -t /tmp/python -U
+
+RUN cd /tmp/python && zip -r9q /tmp/package.zip *
+```
+
+Ref: https://github.com/vincentsarago/simple-rio-lambda
+
+
+## Plugins
+- [rio-tiler-mosaic](https://github.com/cogeotiff/rio-tiler-mosaic)
+- [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt)
+- [rio-tiler-crs](https://github.com/cogeotiff/rio-tiler-crs)
+- [rio-viz](https://github.com/developmentseed/rio-viz)
+
+## Implementations
+- [remotepixel-tiler](https://github.com/RemotePixel/remotepixel-tiler)
+- [CosmiQ/solaris](https://github.com/CosmiQ/solaris)
+- [lambda-tiler](https://github.com/vincentsarago/lambda-tiler)
+- [cogeo-mosaic](https://github.com/developmentseed/cogeo-mosaic)
+- [titiler](https://github.com/developmentseed/titiler)
+
 
 ## Contribution & Development
 
@@ -215,30 +246,3 @@ See [AUTHORS.txt](https://github.com/cogeotiff/rio-tiler/blob/master/AUTHORS.txt
 
 See [CHANGES.txt](https://github.com/cogeotiff/rio-tiler/blob/master/CHANGES.txt).
 
-
-## Create an AWS Lambda package
-
-The easiest way to make sure the package will work on AWS is to use docker
-
-```dockerfile
-FROM lambci/lambda:build-python3.6
-
-ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CFLAGS="--std=c99"
-
-RUN pip3 install rio-tiler --no-binary numpy -t /tmp/python -U
-
-RUN cd /tmp/python && zip -r9q /tmp/package.zip *
-```
-
-Ref: https://github.com/vincentsarago/simple-rio-lambda
-
-
-## Plugins
-- [rio-tiler-mosaic](https://github.com/cogeotiff/rio-tiler-mosaic)
-- [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt)
-
-## Implementations
-- [remotepixel-tiler](https://github.com/RemotePixel/remotepixel-tiler)
-- [CosmiQ/solaris](https://github.com/CosmiQ/solaris)
-- [lambda-tiler](https://github.com/vincentsarago/lambda-tiler)
-- [cogeo-mosaic](https://github.com/developmentseed/cogeo-mosaic)

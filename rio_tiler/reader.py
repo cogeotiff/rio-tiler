@@ -43,7 +43,7 @@ def _read(
     vrt_options: Dict = {},
 ):
     """
-    Read part of an image.
+    Create WarpedVRT and read data and mask.
 
     Attributes
     ----------
@@ -76,7 +76,7 @@ def _read(
 
     """
     if isinstance(indexes, int):
-        indexes = [indexes]
+        indexes = (indexes,)
 
     vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
