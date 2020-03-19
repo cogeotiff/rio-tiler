@@ -3,6 +3,7 @@
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import math
+import warnings
 from concurrent import futures
 
 import numpy
@@ -23,11 +24,13 @@ from rio_tiler import constants
 from rio_tiler.utils import (
     get_vrt_transform,
     has_alpha_band,
+    has_mask_band,
+    non_alpha_indexes,
     _stats as raster_stats,
     _requested_tile_aligned_with_internal_tile as is_aligned,
     tile_exists,
 )
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, AlphaBandWarning
 
 
 def _read(
@@ -86,13 +89,17 @@ def _read(
     if has_alpha_band(src_dst):
         vrt_params.update(dict(add_alpha=False))
 
-    indexes = indexes if indexes is not None else src_dst.indexes
-    out_shape = (len(indexes), height, width)
+    if indexes is None:
+        indexes = non_alpha_indexes(src_dst)
+        if indexes != src_dst.indexes:
+            warnings.warn(
+                "Alpha band was removed from the output data aray", AlphaBandWarning
+            )
 
     vrt_params.update(vrt_options)
     with WarpedVRT(src_dst, **vrt_params) as vrt:
         data = vrt.read(
-            out_shape=out_shape,
+            out_shape=(len(indexes), height, width),
             indexes=indexes,
             window=out_window,
             resampling=Resampling[resampling_method],
@@ -365,7 +372,12 @@ def metadata(
     if isinstance(indexes, int):
         indexes = (indexes,)
 
-    indexes = indexes if indexes is not None else src_dst.indexes
+    if indexes is None:
+        indexes = non_alpha_indexes(src_dst)
+        if indexes != src_dst.indexes:
+            warnings.warn(
+                "Alpha band was removed from the output data aray", AlphaBandWarning
+            )
 
     if bounds:
         asp_ratio = abs((bounds[2] - bounds[0]) / (bounds[1] - bounds[3]))
@@ -391,7 +403,7 @@ def metadata(
         )
 
     else:
-        data, mask = preview(src_dst, max_size=max_size, **kwargs)
+        data, mask = preview(src_dst, max_size=max_size, indexes=indexes, **kwargs)
         bounds = transform_bounds(
             src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
         )
@@ -418,6 +430,15 @@ def metadata(
         other_meta.update(dict(scale=src_dst.scales[0]))
         other_meta.update(dict(offset=src_dst.offsets[0]))
 
+    if has_alpha_band(src_dst):
+        nodata_type = "Alpha"
+    elif has_mask_band(src_dst):
+        nodata_type = "Mask"
+    elif src_dst.nodata is not None:
+        nodata_type = "Nodata"
+    else:
+        nodata_type = "None"
+
     try:
         cmap = src_dst.colormap(1)
         other_meta.update(dict(colormap=cmap))
@@ -429,7 +450,8 @@ def metadata(
         statistics=statistics,
         band_descriptions=band_descriptions,
         dtype=src_dst.meta["dtype"],
-        colorinterp=[c.name for c in src_dst.colorinterp],
+        colorinterp=[src_dst.colorinterp[ix - 1].name for ix in indexes],
+        nodata_type=nodata_type,
         **other_meta,
     )
 

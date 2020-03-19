@@ -83,7 +83,6 @@ with rasterio.open("my_tif.tif") as src_dst:
 
     t, m = rio_tiler.utils._tile_read(src, tile_bounds, 256)
 
-
 # v2
 with rasterio.open("my_tif.tif") as src_dst:
     t, m = rio_tiler.reader.tile(src_dst, tile_x, tile_y, tile_z, 256) # Will check if tile is valid
@@ -111,6 +110,21 @@ with rasterio.open("my_tif.tif") as src_dst:
 # v2
 with rasterio.open("my_tif.tif") as src_dst:
     t, m = rio_tiler.reader.tile(src_dst, tile_x, tile_y, tile_z, 256, padding=4, minimum_overlap=0.3)
+```
+
+#### Alpha band
+
+Since the first version, rio-tiler returns a tuple of **(data, mask)** in most of the `reading` function. This design was made early and without thinking about dataset with an alpha channel, which resulted in issue like [#126](https://github.com/cogeotiff/rio-tiler/pull/126), where an user get a 4 bands data array + a mask (instead of 3 bands + mask). In *rio-tiler=2.*, when no `indexes` options is passed, we remove the alpha channel from the output data array.
+
+```python
+# v1
+with rasterio.open("my_tif_alpha.tif") as src_dst:
+    t, m = rio_tiler.utils._tile_read(src, tile_bounds, 256, indexes=(1,2,3))
+
+# v2
+with rasterio.open("my_tif_alpha.tif") as src_dst:
+    # because rio-tiler will remove the alpha band we don't need to use the indexes option
+    t, m = rio_tiler.reader.tile(src_dst, tile_x, tile_y, tile_z, 256)
 ```
 
 ### metadata
@@ -186,6 +200,7 @@ with rasterio.open("my_tif.tif") as src_dst:
             ]
         }
     },
+    "nodata_type": "Nodata",
     "band_descriptions": [[1, "band1"]],
     "dtype": "int8",
     "colorinterp": ["palette"],
