@@ -1,6 +1,6 @@
 """rio_tiler.utils: utility functions."""
 
-from typing import Any, Dict, Optional, Iterable, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import re
 import math
@@ -258,18 +258,14 @@ def has_mask_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> bo
     return False
 
 
-def non_alpha_indexes(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]
-) -> Iterable[int]:
+def non_alpha_indexes(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> Tuple:
     """Return indexes of non-alpha bands."""
     return tuple(
-        (
-            b
-            for ix, b in enumerate(src_dst.indexes)
-            if (
-                src_dst.mask_flag_enums[ix] is not MaskFlags.alpha
-                and src_dst.colorinterp[ix] is not ColorInterp.alpha
-            )
+        b
+        for ix, b in enumerate(src_dst.indexes)
+        if (
+            src_dst.mask_flag_enums[ix] is not MaskFlags.alpha
+            and src_dst.colorinterp[ix] is not ColorInterp.alpha
         )
     )
 

@@ -28,6 +28,7 @@ Breaking Changes:
 - replaced `rio_tiler.utils._apply_discrete_colormap` by `rio_tiler.colormap.apply_discrete_cmap`
 - removed `histogram_bins` and `histogram_range` in options in metadata reader.
   Should now be passed in `hist_options` (e.g: hist_options={bins=10, range=(0, 10)})
+- remove alpha band value from output data array in tile/preview/metadata #127
 
 1.4.0 (2020-02-19)
 ------------------

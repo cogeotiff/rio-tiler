@@ -10,7 +10,7 @@ import rasterio
 
 from rio_tiler import reader
 from rio_tiler import constants
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import TileOutsideBounds, AlphaBandWarning
 
 
 LANDSAT_SCENE_C1 = "LC08_L1TP_016037_20170813_20170814_01_RT"
@@ -195,6 +195,14 @@ def test_tile_read_alpha():
         arr, mask = reader.tile(
             src_dst, 876432, 1603670, 22, tilesize=256, indexes=(1, 2, 3)
         )
+    assert arr.shape == (3, 256, 256)
+    assert not mask.all()
+
+    with pytest.warns(AlphaBandWarning):
+        with rasterio.open(S3_ALPHA_PATH) as src_dst:
+            nb = src_dst.count
+            arr, mask = reader.tile(src_dst, 876432, 1603670, 22, tilesize=256)
+    assert not nb == arr.shape[0]
     assert arr.shape == (3, 256, 256)
     assert not mask.all()
 
@@ -453,6 +461,19 @@ def test_read_unscale():
         assert round(p[0], 3) == 1000.892
 
 
+def test_point():
+    """Read point values"""
+    with rasterio.open(COG_SCALE) as src_dst:
+        p = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs, indexes=1)
+        assert p == [8917]
+
+        p = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
+        assert p == [8917]
+
+        with pytest.raises(Exception):
+            reader.point(src_dst, [810000, 4100000], coord_crs=src_dst.crs)
+
+
 def test_metadata():
     """Should return correct metadata."""
     with rasterio.open(COG_CMAP) as src_dst:
@@ -471,3 +492,28 @@ def test_metadata():
         assert meta["offset"] == 1000.0
         assert meta["band_descriptions"] == [(1, "Green")]
         assert not meta.get("colormap")
+        assert meta["nodata_type"] == "Nodata"
+
+        meta = reader.metadata(src_dst, indexes=1)
+        assert meta["colorinterp"] == ["gray"]
+
+        bounds = mercantile.bounds(mercantile.Tile(x=218, y=99, z=8))
+        meta = reader.metadata(src_dst, bounds)
+        assert meta["colorinterp"] == ["gray"]
+        assert meta["bounds"] == bounds
+
+    with rasterio.open(S3_ALPHA_PATH) as src_dst:
+        with pytest.warns(AlphaBandWarning):
+            meta = reader.metadata(src_dst)
+            assert len(meta["band_descriptions"]) == 3
+            assert meta["colorinterp"] == ["red", "green", "blue"]
+            assert meta["nodata_type"] == "Alpha"
+
+        meta = reader.metadata(src_dst, indexes=(1, 2, 3, 4))
+        assert len(meta["band_descriptions"]) == 4
+        assert meta["colorinterp"] == ["red", "green", "blue", "alpha"]
+        assert meta["nodata_type"] == "Alpha"
+
+    with rasterio.open(S3_MASK_PATH) as src_dst:
+        meta = reader.metadata(src_dst)
+        assert meta["nodata_type"] == "Mask"
