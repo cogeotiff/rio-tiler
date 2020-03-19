@@ -1,6 +1,6 @@
 """Image file profiles."""
 
-from rasterio.profiles import Profile
+from rasterio.profiles import Profile  # type: ignore
 
 
 class JPEGProfile(Profile):

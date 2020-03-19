@@ -49,7 +49,7 @@ def cbers_parser(sceneid: str) -> Dict:
         r"(?P<processingCorrectionLevel>L[0-9]{1})$"
     )
 
-    meta = re.match(cbers_pattern, sceneid, re.IGNORECASE).groupdict()
+    meta: Dict[str, Any] = re.match(cbers_pattern, sceneid, re.IGNORECASE).groupdict()
     meta["scene"] = sceneid
 
     instrument = meta["instrument"]
@@ -155,7 +155,7 @@ def metadata(
         **kwargs,
     )
 
-    info = dict(sceneid=sceneid)
+    info: Dict[str, Any] = dict(sceneid=sceneid)
     info["instrument"] = scene_params["instrument"]
     info["band_descriptions"] = [(ix + 1, b) for ix, b in enumerate(bands)]
 

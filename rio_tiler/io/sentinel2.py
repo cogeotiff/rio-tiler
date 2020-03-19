@@ -83,7 +83,9 @@ def sentinel2_parser(sceneid: str) -> Dict:
         r"(?P<num>[0-9]{1})$"
     )
 
-    meta = re.match(sentinel_pattern, sceneid, re.IGNORECASE).groupdict()
+    meta: Dict[str, Any] = re.match(
+        sentinel_pattern, sceneid, re.IGNORECASE
+    ).groupdict()
     meta["scene"] = sceneid
 
     utm_zone = meta["utm"].lstrip("0")
@@ -203,7 +205,7 @@ def metadata(
         hist_options=hist_options,
         **kwargs,
     )
-    info = dict(sceneid=sceneid)
+    info: Dict[str, Any] = dict(sceneid=sceneid)
     info["band_descriptions"] = [(ix + 1, b) for ix, b in enumerate(bands)]
     info["bounds"] = responses[0]["bounds"]
     info["statistics"] = {

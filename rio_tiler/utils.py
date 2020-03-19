@@ -1,6 +1,6 @@
 """rio_tiler.utils: utility functions."""
 
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Optional, Iterable, Sequence, Tuple, Union
 
 import re
 import math
@@ -72,7 +72,7 @@ def _stats(
 
 
 # https://github.com/OSGeo/gdal/blob/b1c9c12ad373e40b955162b45d704070d4ebf7b0/gdal/frmts/ingr/IngrTypes.cpp#L191
-def _div_round_up(a, b):
+def _div_round_up(a: int, b: int) -> int:
     return (a // b) if (a % b) == 0 else (a // b) + 1
 
 
@@ -251,14 +251,16 @@ def has_alpha_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> b
     return False
 
 
-def has_mask_band(src_dst):
+def has_mask_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> bool:
     """Check for mask band in source."""
     if any([MaskFlags.per_dataset in flags for flags in src_dst.mask_flag_enums]):
         return True
     return False
 
 
-def non_alpha_indexes(src_dst):
+def non_alpha_indexes(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]
+) -> Iterable[int]:
     """Return indexes of non-alpha bands."""
     return tuple(
         (
@@ -272,7 +274,11 @@ def non_alpha_indexes(src_dst):
     )
 
 
-def linear_rescale(image, in_range=(0, 1), out_range=(1, 255)):
+def linear_rescale(
+    image: numpy.ndarray,
+    in_range: Tuple[Union[int, float], Union[int, float]] = (0, 1),
+    out_range: Tuple[Union[int, float], Union[int, float]] = (1, 255),
+) -> numpy.ndarray:
     """
     Linear rescaling.
 
@@ -298,7 +304,9 @@ def linear_rescale(image, in_range=(0, 1), out_range=(1, 255)):
     return image * (omax - omin) + omin
 
 
-def tile_exists(bounds, tile_z, tile_x, tile_y):
+def tile_exists(
+    bounds: Tuple[float, float, float, float], tile_z: int, tile_x: int, tile_y: int
+) -> bool:
     """
     Check if a mercatile tile is inside a given bounds.
 
@@ -330,7 +338,12 @@ def tile_exists(bounds, tile_z, tile_x, tile_y):
     )
 
 
-def _requested_tile_aligned_with_internal_tile(src_dst, bounds, height, width):
+def _requested_tile_aligned_with_internal_tile(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    bounds: Tuple[float, float, float, float],
+    height: int,
+    width: int,
+) -> bool:
     """Check if tile is aligned with internal tiles."""
     if not src_dst.is_tiled:
         return False
@@ -355,7 +368,11 @@ def _requested_tile_aligned_with_internal_tile(src_dst, bounds, height, width):
 
 
 def geotiff_options(
-    x, y, z, tilesize: int = 256, dst_crs: CRS = constants.WEB_MERCATOR_CRS
+    x: int,
+    y: int,
+    z: int,
+    tilesize: int = 256,
+    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
 ) -> Dict:
     """
     GeoTIFF options.
@@ -458,7 +475,7 @@ def render(
         return memfile.read()
 
 
-def mapzen_elevation_rgb(arr):
+def mapzen_elevation_rgb(arr: numpy.ndarray) -> numpy.ndarray:
     """
     Encode elevation value to RGB values compatible with Mapzen tangram.
 
@@ -480,7 +497,9 @@ def mapzen_elevation_rgb(arr):
     return numpy.stack([r, g, b]).astype(numpy.uint8)
 
 
-def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
+def expression(
+    sceneid: str, tile_x: int, tile_y: int, tile_z: int, expr: str, **kwargs: Any,
+) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
     Apply expression on data.
 
@@ -504,10 +523,7 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
             Returns processed pixel value.
 
     """
-    if not expr:
-        raise Exception("Missing expression")
-
-    bands_names = tuple(set(re.findall(r"b(?P<bands>[0-9A]{1,2})", expr)))
+    bands_names = list(set(re.findall(r"b(?P<bands>[0-9A]{1,2})", expr)))
     rgb = expr.split(",")
 
     if sceneid.startswith("L"):
@@ -548,7 +564,9 @@ def expression(sceneid, tile_x, tile_y, tile_z, expr=None, **kwargs):
     )
 
 
-def pansharpening_brovey(rgb, pan, weight, pan_dtype):
+def pansharpening_brovey(
+    rgb: numpy.ndarray, pan: numpy.ndarray, weight: float, pan_dtype: str
+) -> numpy.ndarray:
     """
     Brovey Method: Each resampled, multispectral pixel is
     multiplied by the ratio of the corresponding
@@ -558,7 +576,9 @@ def pansharpening_brovey(rgb, pan, weight, pan_dtype):
     Original code from https://github.com/mapbox/rio-pansharpen
     """
 
-    def _calculateRatio(rgb, pan, weight):
+    def _calculateRatio(
+        rgb: numpy.ndarray, pan: numpy.ndarray, weight: float
+    ) -> numpy.ndarray:
         return pan / ((rgb[0] + rgb[1] + rgb[2] * weight) / (2 + weight))
 
     with numpy.errstate(invalid="ignore", divide="ignore"):

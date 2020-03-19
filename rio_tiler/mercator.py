@@ -1,27 +1,31 @@
 """rio-tiler: mercator utility functions."""
 
+from typing import Tuple, Union
+
 import math
+from rasterio.io import DatasetReader, DatasetWriter
+from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds, calculate_default_transform
 
 from rio_tiler import constants
 
 
-def _meters_per_pixel(zoom, lat=0.0, tilesize=256):
+def _meters_per_pixel(zoom: int, lat: float = 0.0, tilesize: int = 256) -> float:
     """
     Return the pixel resolution for a given mercator tile zoom and lattitude.
 
     Parameters
     ----------
-    zoom: int
-        Mercator zoom level
-    lat: float, optional
-        Latitude in decimal degree (default: 0)
-    tilesize: int, optional
-        Mercator tile size (default: 256).
+        zoom: int
+            Mercator zoom level
+        lat: float, optional
+            Latitude in decimal degree (default: 0)
+        tilesize: int, optional
+            Mercator tile size (default: 256).
 
     Returns
     -------
-    Pixel resolution in meters
+        Pixel resolution in meters
 
     """
     return (math.cos(lat * math.pi / 180.0) * 2 * math.pi * 6378137) / (
@@ -29,7 +33,7 @@ def _meters_per_pixel(zoom, lat=0.0, tilesize=256):
     )
 
 
-def zoom_for_pixelsize(pixel_size, max_z=24, tilesize=256):
+def zoom_for_pixelsize(pixel_size: float, max_z: int = 24, tilesize: int = 256) -> int:
     """
     Get mercator zoom level corresponding to a pixel resolution.
 
@@ -38,16 +42,16 @@ def zoom_for_pixelsize(pixel_size, max_z=24, tilesize=256):
 
     Parameters
     ----------
-    pixel_size: float
-        Pixel size
-    max_z: int, optional (default: 24)
-        Max mercator zoom level allowed
-    tilesize: int, optional
-        Mercator tile size (default: 256).
+        pixel_size: float
+            Pixel size
+        max_z: int, optional (default: 24)
+            Max mercator zoom level allowed
+        tilesize: int, optional
+            Mercator tile size (default: 256).
 
     Returns
     -------
-    Mercator zoom level corresponding to the pixel resolution
+        Mercator zoom level corresponding to the pixel resolution
 
     """
     for z in range(max_z):
@@ -57,7 +61,11 @@ def zoom_for_pixelsize(pixel_size, max_z=24, tilesize=256):
     return max_z - 1
 
 
-def get_zooms(src_dst, ensure_global_max_zoom=False, tilesize=256):
+def get_zooms(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    ensure_global_max_zoom: bool = False,
+    tilesize: int = 256,
+) -> Tuple[int, int]:
     """
     Calculate raster min/max mercator zoom level.
 

@@ -23,7 +23,12 @@ REGION = os.environ.get("AWS_REGION", "eu-central-1")
 SENTINEL_BANDS = ["vv", "vh"]
 
 
-def _aws_get_object(bucket, key, request_pays=True, client=None):
+def _aws_get_object(
+    bucket: str,
+    key: str,
+    request_pays: bool = True,
+    client: boto3_session.client = None,
+) -> bytes:
     """AWS s3 get object content."""
     if not client:
         session = boto3_session(region_name=REGION)
@@ -84,7 +89,9 @@ def sentinel1_parser(sceneid: str) -> Dict:
         r"(?P<product_id>[0-9A-Z]{4})$"
     )
 
-    meta = re.match(sentinel_pattern, sceneid, re.IGNORECASE).groupdict()
+    meta: Dict[str, Any] = re.match(
+        sentinel_pattern, sceneid, re.IGNORECASE
+    ).groupdict()
 
     meta["scene"] = sceneid
     year = meta["startDateTime"][0:4]

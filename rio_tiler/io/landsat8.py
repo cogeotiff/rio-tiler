@@ -27,7 +27,7 @@ from rio_tiler.errors import (
 LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "QA"]
 
 
-def landsat_parser(sceneid):
+def landsat_parser(sceneid: str) -> Dict:
     """
     Parse Landsat-8 scene id.
 
@@ -84,11 +84,10 @@ def landsat_parser(sceneid):
         r"(?P<collectionCategory>\w{2})$"
     )
 
-    meta = None
     for pattern in [collection_pattern, precollection_pattern]:
         match = re.match(pattern, sceneid, re.IGNORECASE)
         if match:
-            meta = match.groupdict()
+            meta: Dict[str, Any] = match.groupdict()
             break
 
     meta["scene"] = sceneid
@@ -258,7 +257,7 @@ def metadata(
     with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
         responses = list(executor.map(worker, LANDSAT_BANDS))
 
-    info = dict(sceneid=sceneid)
+    info: Dict[str, Any] = dict(sceneid=sceneid)
     info["band_descriptions"] = [(ix + 1, b) for ix, b in enumerate(LANDSAT_BANDS)]
     info["bounds"] = [
         r["bounds"] for b, r in zip(LANDSAT_BANDS, responses) if b == "8"
