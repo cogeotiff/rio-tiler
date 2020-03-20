@@ -17,7 +17,11 @@ from rasterio.vrt import WarpedVRT
 from rasterio.enums import MaskFlags, ColorInterp
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.transform import from_bounds
-from rasterio.warp import transform, transform_bounds
+from rasterio.warp import (
+    transform,
+    transform_bounds,
+    calculate_default_transform as gdal_cdt,
+)
 
 from rio_tiler import constants
 from rio_tiler.colormap import apply_cmap
@@ -200,6 +204,11 @@ def calculate_default_transform(
     dst_width = math.ceil((dst_bounds[2] - dst_bounds[0]) / target_res[0])
     dst_height = math.ceil((dst_bounds[1] - dst_bounds[3]) / target_res[1])
     dst_transform = from_bounds(*dst_bounds, width=dst_width, height=dst_height)
+
+    # This version of calculate_default_transform doesn't work for dataset crossing
+    # the dateline separation line so we fall back to GDAL/rasterio one. (See #164)
+    if dst_width < 0 or dst_height < 0:
+        return gdal_cdt(src_crs, dst_crs, width, height, *bounds)
 
     return dst_transform, dst_width, dst_height
 
