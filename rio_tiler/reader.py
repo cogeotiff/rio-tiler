@@ -183,16 +183,24 @@ def part(
 
     bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
 
-    src_bounds = transform_bounds(src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21)
-    x_overlap = max(0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0]))
-    y_overlap = max(0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1]))
-    cover_ratio = (x_overlap * y_overlap) / (
-        (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
-    )
-    if minimum_overlap and cover_ratio < minimum_overlap:
-        raise TileOutsideBounds(
-            "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
+    if minimum_overlap:
+        src_bounds = transform_bounds(
+            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21
         )
+        x_overlap = max(
+            0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
+        )
+        y_overlap = max(
+            0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1])
+        )
+        cover_ratio = (x_overlap * y_overlap) / (
+            (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
+        )
+
+        if cover_ratio < minimum_overlap:
+            raise TileOutsideBounds(
+                "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
+            )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(
         src_dst, bounds, dst_crs=dst_crs
