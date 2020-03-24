@@ -589,3 +589,35 @@ def pansharpening_brovey(
     with numpy.errstate(invalid="ignore", divide="ignore"):
         ratio = _calculateRatio(rgb, pan, weight)
         return numpy.clip(ratio * rgb, 0, numpy.iinfo(pan_dtype).max).astype(pan_dtype)
+
+
+def intersect_bounds(
+    bounds1: Tuple[float, float, float, float],
+    bounds2: Tuple[float, float, float, float],
+) -> Optional[Tuple[float, float, float, float]]:
+    """Find intersection of two bounding boxes
+
+    Attributes
+    ----------
+    bounds1 : list
+        bounds (left, bottom, right, top).
+    bounds2 : list
+        bounds (left, bottom, right, top).
+
+    Returns
+    -------
+    bounds : list or None
+        bounds (left, bottom, right, top).
+
+        Returns None if the boxes do not intersect
+    """
+
+    minx = max(bounds1[0], bounds2[0])
+    miny = max(bounds1[1], bounds2[1])
+    maxx = min(bounds1[2], bounds2[2])
+    maxy = min(bounds1[3], bounds2[3])
+
+    if minx >= maxx or miny >= maxy:
+        return None
+
+    return [minx, miny, maxx, maxy]

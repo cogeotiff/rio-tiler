@@ -25,6 +25,7 @@ from rio_tiler.utils import (
     get_vrt_transform,
     has_alpha_band,
     has_mask_band,
+    intersect_bounds,
     non_alpha_indexes,
     _stats as raster_stats,
     _requested_tile_aligned_with_internal_tile as is_aligned,
@@ -462,6 +463,7 @@ def tile(
     y: int,
     z: int,
     tilesize: int = 256,
+    minimal_subset: bool = False,
     **kwargs,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
@@ -479,23 +481,55 @@ def tile(
             Mercator tile ZOOM level.
         tilesize : int, optional
             Output tile size. Default is 256.
+        minimal_subset : bool, optional
+            Load only subset of mercator tile overlapping with source bounds
         kwargs : Any, optional
             Additional options to forward to part()
 
     Returns
     -------
         data : numpy ndarray
-        mask: numpy array
+        mask : numpy array
+
+        If minimal_subset is True, a third argument is returned:
+
+        pixel_bounds : [left, bottom, right, top] in mercator tile pixel
+        coordinates, corresponding to the bounds of the returned data and mask
+        arrays
 
     """
     bounds = transform_bounds(
-        src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
+        src_dst.crs, constants.WEB_MERCATOR_CRS, *src_dst.bounds, densify_pts=21
     )
-    if not tile_exists(bounds, z, x, y):
-        raise TileOutsideBounds(f"Tile {z}/{x}/{y} is outside image bounds")
 
     tile_bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
-    return part(src_dst, tile_bounds, tilesize, tilesize, **kwargs)
+
+    intersection_bounds = intersect_bounds(bounds, tile_bounds)
+    if intersection_bounds is None:
+        raise TileOutsideBounds(f"Tile {z}/{x}/{y} is outside image bounds")
+
+    if not minimal_subset:
+        return part(src_dst, tile_bounds, tilesize, tilesize, **kwargs)
+    else:
+        merc_width = tile_bounds[2] - tile_bounds[0]
+        merc_height = tile_bounds[3] - tile_bounds[1]
+
+        # Find bounding box in mercator pixel coordinates
+        # Should this be math.ceil/floor instead?
+        minx = round((intersection_bounds[0] - tile_bounds[0]) / merc_width * tilesize)
+        miny = round((intersection_bounds[1] - tile_bounds[1]) / merc_height * tilesize)
+        maxx = round(
+            (1 - (tile_bounds[2] - intersection_bounds[2]) / merc_width) * tilesize
+        )
+        maxy = round(
+            (1 - (tile_bounds[3] - intersection_bounds[3]) / merc_height) * tilesize
+        )
+
+        pixel_bounds = [minx, miny, maxx, maxy]
+        data, mask = part(
+            src_dst, intersection_bounds, maxy - miny, maxx - minx, **kwargs
+        )
+        return data, mask, pixel_bounds
 
 
 def multi_tile(
