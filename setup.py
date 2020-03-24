@@ -22,7 +22,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="2.0a2",
+    version="2.0a3",
     python_requires=">=3",
     description=u"""Get mercator tile from CloudOptimized GeoTIFF and other cloud hosted raster such as CBERS-4, Sentinel-2, Sentinel-1 and Landsat-8 AWS PDS""",
     long_description=readme,
