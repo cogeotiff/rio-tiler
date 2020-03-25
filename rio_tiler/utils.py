@@ -17,11 +17,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.enums import MaskFlags, ColorInterp
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.transform import from_bounds
-from rasterio.warp import (
-    transform,
-    transform_bounds,
-    calculate_default_transform as gdal_cdt,
-)
+from rasterio.warp import calculate_default_transform
 
 from rio_tiler import constants
 from rio_tiler.colormap import apply_cmap
@@ -139,83 +135,11 @@ def get_overview_level(
     return ovr_idx
 
 
-# from DHI-GRAS/terracotta
-# https://github.com/DHI-GRAS/terracotta/blob/8ad22ca812678c9a08f26abefb63b220579b18f7/terracotta/drivers/raster_base.py#L398
-def calculate_default_transform(
-    src_crs: CRS,
-    dst_crs: CRS,
-    width: int,
-    height: int,
-    *bounds: Tuple[float, float, float, float],
-) -> Tuple[Affine, int, int]:
-    """
-    A more stable version of GDAL's default transform.
-
-    Ensures that the number of pixels along the image's shortest diagonal remains
-    the same in both CRS, without enforcing square pixels.
-    Bounds are in order (west, south, east, north).
-
-    Attributes
-    ----------
-        src_crs: CRS
-            Source coordinate reference system, in rasterio dict format.
-        dst_crs: CRS
-            Target coordinate reference system.
-        width, height: int
-            Source raster width and height.
-        left, bottom, right, top: float, optional
-            Bounding coordinates in src_crs, from the bounds property of a
-            raster. Required unless using gcps.
-
-    Returns
-    -------
-        transform: Affine
-            Output affine transformation matrix
-        width, height: int
-            Output dimensions
-
-    """
-    # transform image corners to target CRS
-    dst_corner_sw, dst_corner_nw, dst_corner_se, dst_corner_ne = list(
-        zip(
-            *transform(
-                src_crs,
-                dst_crs,
-                [bounds[0], bounds[0], bounds[2], bounds[2]],
-                [bounds[1], bounds[3], bounds[1], bounds[3]],
-            )
-        )
-    )
-
-    # determine inner bounding box of corners in target CRS
-    dst_corner_bounds = [
-        max(dst_corner_sw[0], dst_corner_nw[0]),
-        max(dst_corner_sw[1], dst_corner_se[1]),
-        min(dst_corner_se[0], dst_corner_ne[0]),
-        min(dst_corner_nw[1], dst_corner_ne[1]),
-    ]
-
-    # compute target resolution
-    dst_corner_transform = from_bounds(*dst_corner_bounds, width=width, height=height)
-    target_res = (dst_corner_transform.a, dst_corner_transform.e)
-
-    # get transform spanning whole bounds (not just projected corners)
-    dst_bounds = transform_bounds(src_crs, dst_crs, *bounds)
-    dst_width = math.ceil((dst_bounds[2] - dst_bounds[0]) / target_res[0])
-    dst_height = math.ceil((dst_bounds[1] - dst_bounds[3]) / target_res[1])
-    dst_transform = from_bounds(*dst_bounds, width=dst_width, height=dst_height)
-
-    # This version of calculate_default_transform doesn't work for dataset crossing
-    # the dateline separation line so we fall back to GDAL/rasterio one. (See #164)
-    if dst_width < 0 or dst_height < 0:
-        return gdal_cdt(src_crs, dst_crs, width, height, *bounds)
-
-    return dst_transform, dst_width, dst_height
-
-
 def get_vrt_transform(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
+    height: int,
+    width: int,
     dst_crs: CRS = constants.WEB_MERCATOR_CRS,
 ) -> Tuple[Affine, int, int]:
     """
@@ -227,6 +151,10 @@ def get_vrt_transform(
             Rasterio io.DatasetReader object
         bounds : list
             Bounds (left, bottom, right, top) in target crs ("dst_crs").
+        height : int
+            Desired output height of the array for the bounds.
+        width : int
+            Desired output width of the array for the bounds.
         dst_crs: CRS or str, optional
             Target coordinate reference system (default "epsg:3857").
 
@@ -241,9 +169,23 @@ def get_vrt_transform(
     dst_transform, _, _ = calculate_default_transform(
         src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
     )
+
     w, s, e, n = bounds
-    vrt_width = math.ceil((e - w) / dst_transform.a)
-    vrt_height = math.ceil((s - n) / dst_transform.e)
+    tile_transform = from_bounds(w, s, e, n, width, height)
+
+    w_res = (
+        tile_transform.a
+        if abs(tile_transform.a) < abs(dst_transform.a)
+        else dst_transform.a
+    )
+    h_res = (
+        tile_transform.e
+        if abs(tile_transform.e) < abs(dst_transform.e)
+        else dst_transform.e
+    )
+
+    vrt_width = math.ceil((e - w) / w_res)
+    vrt_height = math.ceil((s - n) / h_res)
 
     vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
 

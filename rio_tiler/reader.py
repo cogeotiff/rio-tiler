@@ -203,7 +203,7 @@ def part(
             )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(
-        src_dst, bounds, dst_crs=dst_crs
+        src_dst, bounds, width, height, dst_crs=dst_crs
     )
 
     out_window = Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
