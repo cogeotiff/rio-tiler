@@ -227,11 +227,21 @@ def test_get_vrt_transform_valid():
     )
 
     with rasterio.open(S3_PATH) as src:
-        vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(src, bounds)
-    assert vrt_transform[2] == -11663507.036777973
-    assert vrt_transform[5] == 4715037.199028169
-    assert vrt_width == 100
-    assert vrt_height == 100
+        vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
+            src, bounds, 64, 64
+        )
+        assert vrt_transform[2] == -11663507.036777973
+        assert vrt_transform[5] == 4715037.199028169
+        assert vrt_width == 100
+        assert vrt_height == 100
+
+        vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
+            src, bounds, 256, 256
+        )
+        assert vrt_transform[2] == -11663507.036777973
+        assert vrt_transform[5] == 4715037.199028169
+        assert vrt_width == 256
+        assert vrt_height == 256
 
 
 def test_get_vrt_transform_valid4326():
@@ -244,16 +254,13 @@ def test_get_vrt_transform_valid4326():
     )
     with rasterio.open(S3_PATH) as src:
         vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
-            src, bounds, dst_crs=constants.WGS84_CRS
+            src, bounds, 256, 256, dst_crs=constants.WGS84_CRS
         )
 
     assert vrt_transform[2] == -104.77523803710938
     assert vrt_transform[5] == 38.954069293441066
-    assert vrt_width == 399
-    assert vrt_height == 397
-    # With rasterio.warp.calculate_default_transform
-    # assert vrt_width == 420
-    # assert vrt_height == 327
+    assert vrt_width == 420
+    assert vrt_height == 327
 
 
 def test_statsFunction_valid():

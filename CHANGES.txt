@@ -1,7 +1,10 @@
-2.0a3 (TBD)
+2.0a3 (2020-03-25)
 ------------------
 - only use `transform_bounds` when needed in rio_tiler.reader.part
 
+Breaking Changes:
+- switch back to gdal/rasterio calculate_default_transform (#164). Thanks to Terracotta core developper @dionhaefner.
+- refactor `rio_tiler.utils.get_vrt_transform` to get width and height input.
 
 2.0a2 (2020-03-20)
 ------------------
