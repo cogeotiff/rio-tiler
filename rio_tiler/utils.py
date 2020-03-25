@@ -361,7 +361,7 @@ def render(
     -----
         tile, mask = rio_tiler.utils.tile_read(......)
         with open('test.jpg', 'wb') as f:
-            f.write(array_to_image(tile, mask, img_format="jpeg"))
+            f.write(render(tile, mask, img_format="jpeg"))
 
     Attributes
     ----------

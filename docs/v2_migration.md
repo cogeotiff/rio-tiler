@@ -62,10 +62,6 @@ landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
 
 Internal tile/data reading functions have been refactored and moved to a new `rio_tiler.reader` submodule.
 
-### calculate_default_transform
-
-When creating warped virtual raster dataset (WarpedVRT) we need to be able to predict both Affine matrix and size of the resulting array (height x width). For this in *rio-tiler==1* we used `rasterio.warp.calculate_default_transform` but our friends from TerraCotta project pointed out that it wasn't performing well at high latittude (and for non-squared pixel). In *rio-tiler==2* we switched to their implementation of `calculate_default_transform`, which should improve the global performance of the reads ([#155](https://github.com/cogeotiff/rio-tiler/pull/155)).
-
 ### tile
 
 In *rio_tiler==1* most of the magic was happening in [`rio_tiler.utils._tile_read`](https://github.com/cogeotiff/rio-tiler/blob/master/rio_tiler/utils.py#L337-L349). In *rio_tiler==2* this function is now splited in 2 `rio_tiler.reader.part` and `rio_tiler_reader._read` to reduce code reutilisation and make code more robust. The `part` function now takes `height` and `width` instead of a unique `tilesize` to specify the output array size. 
