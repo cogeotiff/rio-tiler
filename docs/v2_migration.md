@@ -36,7 +36,7 @@ Recent changes in rasterio makes masking more reliable.
 
 ## New **rio_tiler.io** submodules
 
-Mostly to gain in code clarity, we moved the mission specific submodules (e.g. rio_tiler.landsat8) to an `rio_tiler.io` submodule. `rio_tiler.main` has also be renamed `rio_tiler.io.cogeo`.
+Mostly to gain in code clarity, we moved the mission specific submodules (e.g. rio_tiler.landsat8) to a `rio_tiler.io` submodule. `rio_tiler.main` has also been renamed `rio_tiler.io.cogeo`.
 
 ```python
 # v1
@@ -64,9 +64,9 @@ Internal tile/data reading functions have been refactored and moved to a new `ri
 
 ### tile
 
-In *rio_tiler==1* most of the magic was happening in [`rio_tiler.utils._tile_read`](https://github.com/cogeotiff/rio-tiler/blob/master/rio_tiler/utils.py#L337-L349). In *rio_tiler==2* this function is now splited in 2 `rio_tiler.reader.part` and `rio_tiler_reader._read` to reduce code reutilisation and make code more robust. The `part` function now takes `height` and `width` instead of a unique `tilesize` to specify the output array size. 
+In *rio_tiler==1* most of the magic was happening in [`rio_tiler.utils._tile_read`](https://github.com/cogeotiff/rio-tiler/blob/master/rio_tiler/utils.py#L337-L349). In *rio_tiler==2* this function is now split in two, `rio_tiler.reader.part` and `rio_tiler_reader._read`, to reduce code reutilisation and to make the code more robust. The `part` function now takes `height` and `width` instead of a unique `tilesize` to specify the output array size. 
 
-To ease the transition we added `rio_tiler.reader.tile` function.
+To ease the transition we added a `rio_tiler.reader.tile` function.
 
 Note: The new `rio_tiler.reader.part` function enables to perform non-squared data cropping of different.
 
@@ -110,7 +110,7 @@ with rasterio.open("my_tif.tif") as src_dst:
 
 #### Alpha band
 
-Since the first version, rio-tiler returns a tuple of **(data, mask)** in most of the `reading` function. This design was made early and without thinking about dataset with an alpha channel, which resulted in issue like [#126](https://github.com/cogeotiff/rio-tiler/pull/126), where an user get a 4 bands data array + a mask (instead of 3 bands + mask). In *rio-tiler=2.*, when no `indexes` options is passed, we remove the alpha channel from the output data array.
+Since the first version, rio-tiler returns a tuple of **(data, mask)** in most of the `reading` function. This design was made early and without thinking about datasets with an alpha channel, which resulted in issues like [#126](https://github.com/cogeotiff/rio-tiler/pull/126), where a user gets a 4 bands data array + a mask (instead of 3 bands + mask). In *rio-tiler=2.*, when no `indexes` options are passed, we remove the alpha channel from the output data array.
 
 ```python
 # v1
@@ -125,7 +125,7 @@ with rasterio.open("my_tif_alpha.tif") as src_dst:
 
 ### metadata
 
-`rio_tiler.utils._raster_get_stats` has been replace by `rio_tiler.reader.metadata` which uses the new `reader.part` and `reader.preview` functions. Meaning that now you can get metadata for a specific area by passing a bbox. To limit the data transfer (with the idea of getting the metadata from the COG overviews) we uses only the `max_size` options, meaning the `overview_level` options has been removed (at least for version 2.0.0).
+`rio_tiler.utils._raster_get_stats` has been replaced by `rio_tiler.reader.metadata` which uses the new `reader.part` and `reader.preview` functions. Meaning that now you can get metadata for a specific area by passing a bbox. To limit the data transfer (with the idea of getting the metadata from the COG overviews) we use only the `max_size` options, meaning the `overview_level` options have been removed (at least for version 2.0.0).
 
 ```python
 # v1 
@@ -145,8 +145,7 @@ with rasterio.open("my_tif.tif") as src_dst:
 
 *Output*
 
-The output has also been updated. The new `metadata` output doesn't 
-return min/max zoom and bounds is return in WGS84 by default.
+The output has also been updated. The new `metadata` output doesn't return min/max zoom and bounds is return in WGS84 by default.
 
 
 ```python
@@ -210,6 +209,7 @@ with rasterio.open("my_tif.tif") as src_dst:
 ```
 
 ## colormaps
+
 In addition to a new colormap specific submodule (`rio_tiler.colormap`), in *rio-tiler==2*, colormaps are now RGBA values.
 
 We also removed `PIL` colormap compatibility.
@@ -228,7 +228,7 @@ print(cmap[0])
 
 ## render
 
-In *rio-tiler==1.** to create image blob from an array we used `rio_tiler.utils.array_to_image` function. We have renamed and slightly refactor the function but it works the same.
+In *rio-tiler==1.** to create an image blob from an array we used the `rio_tiler.utils.array_to_image` function. We have renamed and slightly refactored the function but it works the same.
 
 ```python
 # v1
@@ -240,7 +240,7 @@ img = rio_tiler.utils.render(tile, mask, img_format="PNG")
 
 ## Mission specific changes
 
-Each `rio_tiler.io.{mission}` **scene id parsers** (e.g cbers_parser) have been refactored and now return aws s3 path information.
+Each `rio_tiler.io.{mission}` **scene id parser** (e.g cbers_parser) has been refactored and now return AWS S3 path information.
 
 ```python
 rio_tiler.io.landsat8.landsat_parser("LC08_L1TP_016037_20170813_20170814_01_RT")) 
