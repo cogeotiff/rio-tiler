@@ -1,3 +1,9 @@
+
+2.0a4 (TBD)
+------------------
+- add `rio_tiler.io.cogeo.info` to retrieve simple file metadata (no image statistics)
+- add band metadata tag info in `rio_tiler.render.metadata` output
+
 2.0a3 (2020-03-25)
 ------------------
 - only use `transform_bounds` when needed in rio_tiler.reader.part
