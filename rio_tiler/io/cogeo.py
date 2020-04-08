@@ -19,12 +19,12 @@ def spatial_info(address: str) -> Dict:
 
     Attributes
     ----------
-    address : str or PathLike object
-        A dataset path or URL. Will be opened in "r" mode.
+        address : str or PathLike object
+            A dataset path or URL. Will be opened in "r" mode.
 
     Returns
     -------
-    out : dict.
+        out : dict.
 
     """
     with rasterio.open(address) as src_dst:
@@ -45,13 +45,13 @@ def bounds(address: str) -> Dict:
 
     Attributes
     ----------
-    address : str
-        file url.
+        address : str
+            file url.
 
     Returns
     -------
-    out : dict
-        dictionary with image bounds.
+        out : dict
+            dictionary with image bounds.
 
     """
     with rasterio.open(address) as src_dst:
@@ -178,23 +178,23 @@ def tile(
 
     Attributes
     ----------
-    address : str
-        file url.
-    tile_x : int
-        Mercator tile X index.
-    tile_y : int
-        Mercator tile Y index.
-    tile_z : int
-        Mercator tile ZOOM level.
-    tilesize : int, optional (default: 256)
-        Output image size.
-    kwargs: dict, optional
-        These will be passed to the 'rio_tiler.reader.tile' function.
+        address : str
+            file url.
+        tile_x : int
+            Mercator tile X index.
+        tile_y : int
+            Mercator tile Y index.
+        tile_z : int
+            Mercator tile ZOOM level.
+        tilesize : int, optional (default: 256)
+            Output image size.
+        kwargs: dict, optional
+            These will be passed to the 'rio_tiler.reader.tile' function.
 
     Returns
     -------
-    data : numpy ndarray
-    mask: numpy array
+        data : numpy ndarray
+        mask: numpy array
 
     """
     with rasterio.open(address) as src_dst:

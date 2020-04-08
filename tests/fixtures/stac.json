@@ -1,0 +1,67 @@
+{
+  "stac_version": "0.9.0",
+  "stac_extensions": [],
+  "type": "Feature",
+  "id": "JQT-123456789",
+  "bbox": [-81.3085227080129, 32.10817938759764, -78.81735409341113, 34.22870275071835],
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+        [
+            [
+                -81.3085227080129,
+                32.10817938759764
+            ],
+            [
+                -78.81735409341113,
+                32.10817938759764
+            ],
+            [
+                -78.81735409341113,
+                34.22870275071835
+            ],
+            [
+                -81.3085227080129,
+                34.22870275071835
+            ],
+            [
+                -81.3085227080129,
+                32.10817938759764
+            ]
+        ]
+    ]
+  },
+  "properties": {
+    "datetime": "2016-05-03T13:21:30.040Z",
+    "collection": "JQT"
+  },
+  "links": [
+    {
+      "rel": "self",
+      "href": "http://cool-sat.com/catalog/JQT/a-fake-item.json"
+    },
+    {
+      "rel": "collection",
+      "href": "http://cool-sat.com/catalog.json"
+    }
+  ],
+  "assets": {
+    "red": {
+      "href": "http://somewhere-over-the-rainbow.io/red.tif",
+      "title": "red"
+    },
+    "green": {
+        "href": "http://somewhere-over-the-rainbow.io/green.tif",
+        "title": "green"
+    },
+    "blue": {
+        "href": "http://somewhere-over-the-rainbow.io/blue.tif",
+        "title": "blue"
+    },
+    "thumbnail": {
+      "href": "http://cool-sat.com/catalog/a-fake-item/thumbnail.png",
+      "title": "Thumbnail",
+      "roles": [ "thumbnail" ]
+    }
+  }
+}

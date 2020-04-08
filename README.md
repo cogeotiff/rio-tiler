@@ -146,7 +146,26 @@ landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
 The primary purpose for calculating minimum and maximum values of an image is to rescale pixel values from their original range (e.g. 0 to 65,535) to the range used by computer screens (i.e. 0 and 255) through a linear transformation.
 This will make images look good on display.
 
-#### Working with multiple assets (STAC) 
+#### Working SpatioTemporal Asset Catalog (STAC) 
+
+In rio-tiler v2, we added a `rio_tiler.io.stac` submodule to allow tile/metadata fetching of assets withing a STAC item.
+
+```python
+from typing import Dict 
+from rio_tiler.io import stac as STACReader
+
+item: Dict = ... # a STAC Item
+
+# Name of assets to read
+assets = ["red", "green", "blue"]
+
+tile, mask = STACReader.tile(item, assets, x, y, z, tilesize=256)
+
+print(tile.shape)
+> (3, 256, 256)
+```
+
+#### Working with multiple assets
 
 `rio_tiler.reader` submodule has `multi_*` functions (tile, preview, point, metadata) allowing to fetch and merge info 
 from multiple dataset (think about multiple bands stored in separated files).
@@ -155,13 +174,7 @@ from multiple dataset (think about multiple bands stored in separated files).
 from typing import Dict 
 from rio_tiler import reader
 
-item: Dict = ... # a STAC Items
-
-# Name of assets to read
-names = ["red", "green", "blue"]
-
-assets = [item["assets"][name]["href"] for name in names]
-
+assets = ["b1.tif", "b2.tif", "b3.tif"]
 tile, mask = reader.multi_tile(assets, x, y, z, tilesize=256)
 
 print(tile.shape)
