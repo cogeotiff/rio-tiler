@@ -419,6 +419,11 @@ def metadata(
     data = numpy.ma.array(data)
     data.mask = mask == 0
 
+    statistics = {
+        indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
+        for b in range(data.shape[0])
+    }
+
     def _get_descr(ix):
         """Return band description."""
         name = src_dst.descriptions[ix - 1]
@@ -427,11 +432,7 @@ def metadata(
         return name
 
     band_descriptions = [(ix, _get_descr(ix)) for ix in indexes]
-
-    statistics = {
-        indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
-        for b in range(data.shape[0])
-    }
+    tags = [(ix, src_dst.tags(ix)) for ix in indexes]
 
     other_meta = dict()
     if src_dst.scales[0] and src_dst.offsets[0]:
@@ -456,6 +457,7 @@ def metadata(
     return dict(
         bounds=bounds,
         statistics=statistics,
+        band_metadata=tags,
         band_descriptions=band_descriptions,
         dtype=src_dst.meta["dtype"],
         colorinterp=[src_dst.colorinterp[ix - 1].name for ix in indexes],
