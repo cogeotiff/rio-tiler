@@ -1,4 +1,4 @@
-"""rio_tiler.io.cogeo: raster processing."""
+"""rio_tiler.io.stac: STAC reader."""
 
 from typing import Any, Dict, Sequence, Tuple
 

@@ -1,8 +1,9 @@
 
-2.0a4 (TBD)
+2.0a4 (2020-04-08)
 ------------------
 - add `rio_tiler.io.cogeo.info` to retrieve simple file metadata (no image statistics)
 - add band metadata tag info in `rio_tiler.render.metadata` output
+- add `rio_tiler.io.stac` STAC compliant rio_tiler.colormap.apply_discrete_cmap
 
 2.0a3 (2020-03-25)
 ------------------
