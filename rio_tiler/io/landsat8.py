@@ -358,7 +358,6 @@ def tile(
             data = pansharpening_brovey(data, pan_data, 0.2, pan_data.dtype)
 
         if bands[0] != "QA" or len(bands) != 1:
-            data = data.astype("float32", casting="unsafe")
             for bdx, band in enumerate(bands):
                 data[bdx] = _convert(data[bdx], band, meta)
 

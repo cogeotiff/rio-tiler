@@ -105,7 +105,7 @@ def test_tile_valid(landsat_get_mtl, rio):
 
     data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
-    assert data.dtype == numpy.float32
+    assert data.dtype == numpy.uint16
     assert mask.shape == (256, 256)
     assert not mask.all()
 
@@ -117,7 +117,7 @@ def test_tile_valid(landsat_get_mtl, rio):
 
     data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands="10")
     assert data.shape == (1, 256, 256)
-    assert data.dtype == numpy.float32
+    assert data.dtype == numpy.uint16
     assert mask.shape == (256, 256)
 
     data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, bands="QA")
@@ -128,6 +128,7 @@ def test_tile_valid(landsat_get_mtl, rio):
 
     data, mask = landsat8.tile(LANDSAT_SCENE_C1, tile_x, tile_y, tile_z, pan=True)
     assert data.shape == (3, 256, 256)
+    assert data.dtype == numpy.uint16
     assert mask.shape == (256, 256)
 
 
