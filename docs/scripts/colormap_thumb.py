@@ -164,6 +164,7 @@ def plot_color_gradients(cmap_category, cmap_list):
 
 
 def main():
+    """Create thumbnails"""
     for cmap_category, cmap_list in cmaps:
         plot_color_gradients(cmap_category, cmap_list)
 
