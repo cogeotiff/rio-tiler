@@ -15,9 +15,9 @@ render(tile, mask, colormap=colormap)
 ```
 
 ![](img/geographic.png)
-![](img/perceptually\ uniform\ sequential.png)
+![](img/perceptually_uniform_sequential.png)
 ![](img/sequential.png)
-![](img/sequential\ (2).png)
+![](img/sequential_(2).png)
 ![](img/diverging.png)
 ![](img/cyclic.png)
 ![](img/qualitative.png)

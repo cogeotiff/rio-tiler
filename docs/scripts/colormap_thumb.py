@@ -169,7 +169,10 @@ def main():
 
         # Export fig
         out_path = (
-            Path(__file__).parents[0] / ".." / "img" / (cmap_category.lower() + ".png")
+            Path(__file__).parents[0]
+            / ".."
+            / "img"
+            / (cmap_category.replace(" ", "_").lower() + ".png")
         )
         out_path.parents[0].mkdir(exist_ok=True)
         plt.savefig(out_path, dpi=200)
