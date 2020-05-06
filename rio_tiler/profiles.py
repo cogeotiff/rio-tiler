@@ -1,5 +1,7 @@
 """Image file profiles."""
 
+from collections import UserDict
+
 from rasterio.profiles import Profile  # type: ignore
 
 
@@ -27,7 +29,7 @@ class WEBPProfile(Profile):
     defaults = {"quality": 75, "lossless": False}
 
 
-class ImagesProfiles(dict):
+class ImagesProfiles(UserDict):
     """
     GDAL Image creation options.
 
@@ -37,7 +39,8 @@ class ImagesProfiles(dict):
 
     def __init__(self):
         """Initialize COGProfiles dict."""
-        self.update(
+        self.data = {}
+        self.data.update(
             {
                 "jpeg": JPEGProfile(),
                 "png": PNGProfile(),
@@ -45,6 +48,14 @@ class ImagesProfiles(dict):
                 "webp": WEBPProfile(),
             }
         )
+
+    def get(self, key):
+        """Like normal item access but return a copy of the key."""
+        return self.data.get(key, {}).copy()
+
+    def __getitem__(self, key):
+        """Like normal item access but return a copy of the key."""
+        return self.data[key].copy()
 
 
 img_profiles = ImagesProfiles()
