@@ -50,7 +50,7 @@ def get_colormap(name: str) -> Dict:
             GDAL RGBA Color Table dictionary.
 
     """
-    cmap_file = os.path.join(os.path.dirname(__file__), "cmap", f"{name}.npy")
+    cmap_file = os.path.join(os.path.dirname(__file__), "cmap", f"{name.lower()}.npy")
     cmap = numpy.load(cmap_file)
     assert cmap.shape == (256, 4)
     assert cmap.dtype == numpy.uint8
