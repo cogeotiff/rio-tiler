@@ -1,6 +1,8 @@
-NEXT (TBD)
+2.0a5 (2020-05-06)
 ------------------
-- make `rio_tiler.io.landsat8.tile` return Uint16 data and not float32
+- make `rio_tiler.io.landsat8.tile` return Uint16 data and not float32 (#173)
+- `rio_tiler.profiles.img_profiles` item access return `copy` of the items (#177)
+- better colormap docs (#176, author @kylebarron)
 
 2.0a4 (2020-04-08)
 ------------------

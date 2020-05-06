@@ -146,7 +146,7 @@ landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
 The primary purpose for calculating minimum and maximum values of an image is to rescale pixel values from their original range (e.g. 0 to 65,535) to the range used by computer screens (i.e. 0 and 255) through a linear transformation.
 This will make images look good on display.
 
-#### Working SpatioTemporal Asset Catalog (STAC) 
+#### Working with SpatioTemporal Asset Catalog (STAC) 
 
 In rio-tiler v2, we added a `rio_tiler.io.stac` submodule to allow tile/metadata fetching of assets withing a STAC item.
 

@@ -68,7 +68,7 @@ In *rio_tiler==1* most of the magic was happening in [`rio_tiler.utils._tile_rea
 
 To ease the transition we added a `rio_tiler.reader.tile` function.
 
-Note: The new `rio_tiler.reader.part` function enables to perform non-squared data cropping of different.
+Note: The new `rio_tiler.reader.part` function enables to perform non-squared data cropping by passing output width and height (instead of just tilesize).
 
 ```python
 # v1
