@@ -14,7 +14,7 @@ colormap = get_colormap('cfastie')
 render(tile, mask, colormap=colormap)
 ```
 
-![](img/geographic.png)
+![](img/custom.png)
 
 References:
 - cfastie: http://publiclab.org/notes/cfastie/08-26-2014/new-ndvi-colormap
