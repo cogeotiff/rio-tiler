@@ -13,7 +13,7 @@ from rio_tiler.colormap import get_colormap, make_lut
 
 
 cmaps = [
-    ("Geographic", ["cfastie", "rplumbo", "schwarzwald"]),
+    ("Custom", ["cfastie", "rplumbo", "schwarzwald"]),
     (
         "Perceptually Uniform Sequential",
         ["viridis", "plasma", "inferno", "magma", "cividis"],
