@@ -23,3 +23,6 @@ def test_gdal_profiles():
     prof["test"] = True
     new_prof = img_profiles["jpeg"]
     assert not new_prof.get("test")
+
+    prof = img_profiles.get("jpe", {"a": "b"})
+    assert prof == {"a": "b"}
