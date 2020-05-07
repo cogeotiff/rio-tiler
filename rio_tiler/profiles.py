@@ -49,9 +49,11 @@ class ImagesProfiles(UserDict):
             }
         )
 
-    def get(self, key):
+    def get(self, key, default=None):
         """Like normal item access but return a copy of the key."""
-        return self.data.get(key, {}).copy()
+        if key in (self.keys()):
+            return self.data[key].copy()
+        return default
 
     def __getitem__(self, key):
         """Like normal item access but return a copy of the key."""
