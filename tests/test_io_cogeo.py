@@ -32,7 +32,6 @@ def test_spatial_info_valid():
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
     assert meta.get("center")
-    print(meta.get("center"))
     assert len(meta.get("bounds")) == 4
 
 
