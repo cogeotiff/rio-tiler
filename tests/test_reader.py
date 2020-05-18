@@ -1,17 +1,14 @@
 """tests rio_tiler.reader"""
 
 import os
-import pytest
 
-import numpy
 import mercantile
-
+import numpy
+import pytest
 import rasterio
 
-from rio_tiler import reader
-from rio_tiler import constants
-from rio_tiler.errors import TileOutsideBounds, AlphaBandWarning
-
+from rio_tiler import constants, reader
+from rio_tiler.errors import AlphaBandWarning, TileOutsideBounds
 
 LANDSAT_SCENE_C1 = "LC08_L1TP_016037_20170813_20170814_01_RT"
 LANDSAT_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "landsat-pds")

@@ -1,8 +1,7 @@
 """tests rio_tiler colormaps"""
 
-import pytest
-
 import numpy
+import pytest
 
 from rio_tiler import colormap
 from rio_tiler.cmap import cmap_list

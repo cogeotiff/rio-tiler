@@ -1,10 +1,11 @@
 """Benchmark."""
 
 import os
-import pytest
 
-import rasterio
 import mercantile
+import pytest
+import rasterio
+
 from rio_tiler import reader
 
 from . import benchmark_dataset, benchmark_tiles

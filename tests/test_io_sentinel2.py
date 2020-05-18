@@ -1,18 +1,13 @@
 """tests rio_tiler.sentinel2"""
 
 import os
-import pytest
 
+import pytest
+import rasterio
 from mock import patch
 
-import rasterio
+from rio_tiler.errors import InvalidBandName, InvalidSentinelSceneId, TileOutsideBounds
 from rio_tiler.io import sentinel2
-
-from rio_tiler.errors import (
-    TileOutsideBounds,
-    InvalidBandName,
-    InvalidSentinelSceneId,
-)
 
 SENTINEL_SCENE = "S2A_L1C_20170729_19UDP_0"
 SENTINEL_SCENE_L2 = "S2A_L2A_20170729_19UDP_0"

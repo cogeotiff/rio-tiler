@@ -1,11 +1,11 @@
 """rio-tiler: mercator utility functions."""
 
+import math
 from typing import Tuple, Union
 
-import math
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import transform_bounds, calculate_default_transform
+from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler import constants
 

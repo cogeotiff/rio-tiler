@@ -1,7 +1,7 @@
 """rio-tiler constant values."""
 
-import os
 import multiprocessing
+import os
 
 from rasterio.crs import CRS
 

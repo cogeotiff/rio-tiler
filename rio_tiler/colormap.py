@@ -1,11 +1,9 @@
 """rio-tiler colormap functions."""
 
+import os
 from typing import Dict, Sequence, Tuple
 
-import os
-
 import numpy
-
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 

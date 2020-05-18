@@ -1,21 +1,16 @@
 """tests rio_tiler.utils"""
 
 import os
-import pytest
 
+import mercantile
+import numpy as np
+import pytest
+import rasterio
 from mock import patch
 
-import numpy as np
-import mercantile
-
-import rasterio
-
-from rio_tiler import utils
-from rio_tiler import colormap
-from rio_tiler import constants
+from rio_tiler import colormap, constants, utils
 
 from .conftest import requires_webp
-
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"

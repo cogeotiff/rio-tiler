@@ -1,22 +1,18 @@
 """rio_tiler.io.sentinel1: Sentinel-1 processing."""
 
-from typing import Any, Dict, Sequence, Tuple, Union
-
+import json
 import os
 import re
-import json
 from concurrent import futures
+from typing import Any, Dict, Sequence, Tuple, Union
 
 import numpy
-
-from boto3.session import Session as boto3_session
-
 import rasterio
+from boto3.session import Session as boto3_session
 from rasterio import transform
 from rasterio.vrt import WarpedVRT
 
-from rio_tiler import reader
-from rio_tiler import constants
+from rio_tiler import constants, reader
 from rio_tiler.errors import InvalidBandName, InvalidSentinelSceneId
 
 REGION = os.environ.get("AWS_REGION", "eu-central-1")

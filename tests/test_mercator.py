@@ -3,8 +3,8 @@
 import os
 
 import rasterio
-from rio_tiler import mercator
 
+from rio_tiler import mercator
 
 dataset = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 

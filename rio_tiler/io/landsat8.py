@@ -1,28 +1,21 @@
 """rio_tiler.io.landsat8: Landsat-8 processing."""
 
-from typing import Any, Dict, Sequence, Tuple, Union
-
+import datetime
 import os
 import re
-import datetime
 from concurrent import futures
-
+from typing import Any, Dict, Sequence, Tuple, Union
 from urllib.request import urlopen
 
 import numpy
-
 import rasterio
 from rasterio.warp import transform_bounds
-from rio_toa import reflectance, brightness_temp, toa_utils
+from rio_toa import brightness_temp, reflectance, toa_utils
 
-from rio_tiler import reader
-from rio_tiler import constants
-from rio_tiler.utils import _stats as raster_stats, tile_exists, pansharpening_brovey
-from rio_tiler.errors import (
-    TileOutsideBounds,
-    InvalidBandName,
-    InvalidLandsatSceneId,
-)
+from rio_tiler import constants, reader
+from rio_tiler.errors import InvalidBandName, InvalidLandsatSceneId, TileOutsideBounds
+from rio_tiler.utils import _stats as raster_stats
+from rio_tiler.utils import pansharpening_brovey, tile_exists
 
 LANDSAT_BANDS = ["1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "QA"]
 

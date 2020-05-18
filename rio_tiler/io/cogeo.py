@@ -1,17 +1,15 @@
 """rio_tiler.io.cogeo: raster processing."""
 
-from typing import Any, Dict, Tuple, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy
-
 import rasterio
 from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
 
-from rio_tiler import reader
-from rio_tiler import constants
-from rio_tiler.utils import has_alpha_band, has_mask_band
+from rio_tiler import constants, reader
 from rio_tiler.mercator import get_zooms
+from rio_tiler.utils import has_alpha_band, has_mask_band
 
 
 def spatial_info(address: str) -> Dict:

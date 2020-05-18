@@ -1,11 +1,12 @@
 """tests rio_tiler.base"""
 
 import os
+
 import pytest
 
-from rio_tiler.io import cogeo
-from rio_tiler.errors import TileOutsideBounds
 from rio_tiler import constants
+from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.io import cogeo
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 ADDRESS = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif".format(

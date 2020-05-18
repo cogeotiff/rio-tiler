@@ -1,36 +1,32 @@
 """rio-tiler.reader: image utility functions."""
 
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
-
 import math
 import warnings
 from concurrent import futures
-
-import numpy
-
-from affine import Affine
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import mercantile
-
+import numpy
 import rasterio
-from rasterio.io import DatasetReader, DatasetWriter
-from rasterio.crs import CRS
-from rasterio.vrt import WarpedVRT
-from rasterio.warp import transform_bounds, transform
-from rasterio.enums import Resampling, ColorInterp
+from affine import Affine
 from rasterio import windows
+from rasterio.crs import CRS
+from rasterio.enums import ColorInterp, Resampling
+from rasterio.io import DatasetReader, DatasetWriter
+from rasterio.vrt import WarpedVRT
+from rasterio.warp import transform, transform_bounds
 
 from rio_tiler import constants
+from rio_tiler.errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
+from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
+from rio_tiler.utils import _stats as raster_stats
 from rio_tiler.utils import (
     get_vrt_transform,
     has_alpha_band,
     has_mask_band,
     non_alpha_indexes,
-    _stats as raster_stats,
-    _requested_tile_aligned_with_internal_tile as is_aligned,
     tile_exists,
 )
-from rio_tiler.errors import TileOutsideBounds, AlphaBandWarning, DeprecationWarning
 
 
 def _read(

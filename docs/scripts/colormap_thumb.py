@@ -9,8 +9,8 @@ from pathlib import Path
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
-from rio_tiler.colormap import get_colormap, make_lut
 
+from rio_tiler.colormap import get_colormap, make_lut
 
 cmaps = [
     ("Custom", ["cfastie", "rplumbo", "schwarzwald"]),

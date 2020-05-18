@@ -21,8 +21,8 @@ Code inspired from our friends https://github.com/DHI-GRAS/terracotta/blob/maste
 """
 
 import os
-from pkg_resources import resource_listdir, Requirement, DistributionNotFound
 
+from pkg_resources import DistributionNotFound, Requirement, resource_listdir
 
 SUFFIX = ".npy"
 

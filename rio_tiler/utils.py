@@ -1,22 +1,19 @@
 """rio_tiler.utils: utility functions."""
 
+import math
+import re
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
-import re
-import math
-
-import numpy
-import numexpr
-
-from affine import Affine
 import mercantile
-
+import numexpr
+import numpy
+from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
-from rasterio.vrt import WarpedVRT
-from rasterio.enums import MaskFlags, ColorInterp
+from rasterio.enums import ColorInterp, MaskFlags
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.transform import from_bounds
+from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform
 
 from rio_tiler import constants

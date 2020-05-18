@@ -1,22 +1,18 @@
 """rio_tiler.reader.sentinel2: Sentinel-2 processing."""
 
-from typing import Any, Dict, Sequence, Tuple, Union
-
+import itertools
 import os
 import re
-import itertools
 from collections import OrderedDict
+from typing import Any, Dict, Sequence, Tuple, Union
 
 import numpy
-
 import rasterio
 from rasterio.warp import transform_bounds
 
-from rio_tiler import reader
-from rio_tiler import constants
+from rio_tiler import constants, reader
+from rio_tiler.errors import InvalidBandName, InvalidSentinelSceneId, TileOutsideBounds
 from rio_tiler.utils import tile_exists
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidSentinelSceneId
-
 
 SENTINEL_L1_BANDS = OrderedDict(
     [
