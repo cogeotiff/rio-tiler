@@ -1,17 +1,15 @@
 """test masks."""
 
 import os
-import pytest
 
-import numpy
 import mercantile
-
+import numpy
+import pytest
 import rasterio
-from rasterio.crs import CRS
 from rasterio.coords import BoundingBox
+from rasterio.crs import CRS
 
 from rio_tiler import reader
-
 
 tiles = {
     "masked": mercantile.Tile(x=535, y=498, z=10),

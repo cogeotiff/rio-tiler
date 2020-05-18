@@ -1,18 +1,15 @@
 """rio_tiler.cbers: cbers processing."""
 
+import re
 from typing import Any, Dict, Sequence, Tuple, Union
 
-import re
-
 import numpy
-
 import rasterio
 from rasterio.warp import transform_bounds
 
-from rio_tiler import reader
-from rio_tiler import constants
+from rio_tiler import constants, reader
+from rio_tiler.errors import InvalidBandName, InvalidCBERSSceneId, TileOutsideBounds
 from rio_tiler.utils import tile_exists
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidCBERSSceneId
 
 
 def cbers_parser(sceneid: str) -> Dict:

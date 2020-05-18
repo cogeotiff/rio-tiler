@@ -2,18 +2,14 @@
 
 import os
 
-import pytest
-
 import numpy
-
+import pytest
 import rasterio
+from rasterio.enums import ColorInterp
 from rasterio.io import MemoryFile
 from rasterio.transform import from_bounds
-from rasterio.enums import ColorInterp
-
 from rio_cogeo.cogeo import cog_translate
 from rio_cogeo.profiles import cog_profiles
-
 
 with rasterio.Env() as env:
     drivers = env.drivers()

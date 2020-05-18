@@ -3,11 +3,11 @@
 import os
 
 import pytest
+import rasterio
 from mock import patch
 
-import rasterio
+from rio_tiler.errors import InvalidBandName, InvalidCBERSSceneId, TileOutsideBounds
 from rio_tiler.io import cbers
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidCBERSSceneId
 
 CBERS_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "cbers-pds")
 CBERS_MUX_SCENE = "CBERS_4_MUX_20171121_057_094_L2"

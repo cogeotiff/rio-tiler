@@ -237,9 +237,9 @@ $ cd rio-tiler
 $ pip install -e .[dev]
 ```
 
-**Python3.6 only**
+**Python3.7 only**
 
-This repo is set to use `pre-commit` to run *flake8*, *pydocstring* and *black* ("uncompromising Python code formatter") when commiting new code.
+This repo is set to use `pre-commit` to run *isort*, *flake8*, *pydocstring*, *black* ("uncompromising Python code formatter") and mypy when committing new code.
 
 ```bash
 $ pre-commit install

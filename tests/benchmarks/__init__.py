@@ -1,9 +1,8 @@
 """rio-tiler.tests.benchmarks."""
 
 import mercantile
-from rasterio.crs import CRS
 from rasterio.coords import BoundingBox
-
+from rasterio.crs import CRS
 
 benchmark_tiles = {
     "north": {

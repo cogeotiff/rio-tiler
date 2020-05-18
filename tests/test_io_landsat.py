@@ -1,17 +1,15 @@
 """tests rio_tiler.landsat8"""
 
 import os
-import pytest
 
 import numpy
+import pytest
+import rasterio
 from mock import patch
-
 from rio_toa import toa_utils
 
-import rasterio
+from rio_tiler.errors import InvalidBandName, InvalidLandsatSceneId, TileOutsideBounds
 from rio_tiler.io import landsat8
-from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidLandsatSceneId
-
 
 LANDSAT_SCENE_C1 = "LC08_L1TP_016037_20170813_20170814_01_RT"
 LANDSAT_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "landsat-pds")

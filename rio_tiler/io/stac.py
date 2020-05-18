@@ -5,8 +5,8 @@ from typing import Any, Dict, Sequence, Tuple
 import numpy
 
 from rio_tiler import reader
-from rio_tiler.utils import tile_exists
 from rio_tiler.errors import InvalidBandName, TileOutsideBounds
+from rio_tiler.utils import tile_exists
 
 
 def _get_href(stac: Dict, assets: Sequence[str]) -> Sequence[str]:

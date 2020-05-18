@@ -1,11 +1,12 @@
 """tests rio_tiler.io.stac"""
 
-import os
 import json
+import os
+
 import pytest
+import rasterio
 from mock import patch
 
-import rasterio
 from rio_tiler.errors import InvalidBandName, TileOutsideBounds
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
