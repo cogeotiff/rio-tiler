@@ -18,7 +18,7 @@ from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds, transform
 from rasterio.enums import Resampling, ColorInterp
-from rasterio.windows import Window
+from rasterio import windows
 
 from rio_tiler import constants
 from rio_tiler.utils import (
@@ -30,15 +30,16 @@ from rio_tiler.utils import (
     _requested_tile_aligned_with_internal_tile as is_aligned,
     tile_exists,
 )
-from rio_tiler.errors import TileOutsideBounds, AlphaBandWarning
+from rio_tiler.errors import TileOutsideBounds, AlphaBandWarning, DeprecationWarning
 
 
 def _read(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    height: int,
-    width: int,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
     indexes: Optional[Union[Sequence[int], int]] = None,
-    out_window: Optional[Window] = None,
+    out_window: Optional[windows.Window] = None,  # DEPRECATED
+    window: Optional[windows.Window] = None,
     nodata: Optional[Union[float, int, str]] = None,
     resampling_method: Resampling = "bilinear",
     force_binary_mask: bool = True,
@@ -50,36 +51,46 @@ def _read(
 
     Attributes
     ----------
-        src_dst : rasterio.io.DatasetReader
-            rasterio.io.DatasetReader object
-        height : int
-            Output height of the array.
-        width : int
-            Output width of the array.
-        indexes : list of ints or a single int, optional
-            Band indexes
-        out_window: rasterio.windows.Window, optional
-            Output window to read.
-        nodata: int or float, optional
-        resampling_method : str, optional
-            Resampling algorithm. Default is "bilinear".
-        force_binary_mask, bool, optional
-            If True, rio-tiler makes sure mask has only 0 or 255 values.
-            Default is set to True.
-        unscale, bool, optional
-            If True, apply scale and offset to the data array.
-            Default is set to False.
-        vrt_options: dict, optional
-            These will be passed to the rasterio.warp.WarpedVRT class.
+    src_dst: rasterio.io.DatasetReader
+        rasterio.io.DatasetReader object
+    height: int, optional
+        Output height of the array.
+    width: int, optional
+        Output width of the array.
+    indexes: list of ints or a single int, optional
+        Band indexes
+    out_window: rasterio.windows.Window, optional DEPRECATED
+        Output window to read.
+    window: rasterio.windows.Window, optional
+        Window to read.
+    nodata: int or float, optional
+    resampling_method: str, optional
+        Resampling algorithm. Default is "bilinear".
+    force_binary_mask: bool, optional
+        If True, rio-tiler makes sure mask has only 0 or 255 values.
+        Default is set to True.
+    unscale: bool, optional
+        If True, apply scale and offset to the data array.
+        Default is set to False.
+    vrt_options: dict, optional
+        These will be passed to the rasterio.warp.WarpedVRT class.
 
     Returns
     -------
-        data : numpy ndarray
-        mask: numpy array
+    data : numpy ndarray
+    mask: numpy array
 
     """
     if isinstance(indexes, int):
         indexes = (indexes,)
+
+    # Deprecate out_window.
+    if out_window is not None:
+        warnings.warn(
+            "out_window will be removed in 2.0, use window", DeprecationWarning
+        )
+        if window is None:
+            window = out_window
 
     vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
@@ -96,28 +107,27 @@ def _read(
                 "Alpha band was removed from the output data array", AlphaBandWarning
             )
 
+    out_shape = (len(indexes), height, width) if height and width else None
+    mask_out_shape = (height, width) if height and width else None
+    resampling = Resampling[resampling_method]
+
     vrt_params.update(vrt_options)
     with WarpedVRT(src_dst, **vrt_params) as vrt:
         data = vrt.read(
-            out_shape=(len(indexes), height, width),
-            indexes=indexes,
-            window=out_window,
-            resampling=Resampling[resampling_method],
+            indexes=indexes, window=window, out_shape=out_shape, resampling=resampling,
         )
         if ColorInterp.alpha in vrt.colorinterp:
             idx = vrt.colorinterp.index(ColorInterp.alpha) + 1
             mask = vrt.read(
                 indexes=idx,
-                out_shape=(height, width),
-                window=out_window,
-                resampling=Resampling[resampling_method],
+                window=window,
+                out_shape=mask_out_shape,
+                resampling=resampling,
                 out_dtype="uint8",
             )
         else:
             mask = vrt.dataset_mask(
-                out_shape=(height, width),
-                window=out_window,
-                resampling=Resampling[resampling_method],
+                window=window, out_shape=mask_out_shape, resampling=resampling,
             )
 
         if force_binary_mask:
@@ -134,13 +144,14 @@ def _read(
 def part(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
-    height: int,
-    width: int,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
     padding: int = 0,
     dst_crs: CRS = constants.WEB_MERCATOR_CRS,
     bounds_crs: Optional[CRS] = None,
     minimum_overlap: Optional[float] = None,
     warp_vrt_option: Dict = {},
+    max_size: Optional[int] = None,
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
@@ -148,40 +159,46 @@ def part(
 
     Attributes
     ----------
-        src_dst : rasterio.io.DatasetReader
-            rasterio.io.DatasetReader object
-        bounds : tuple
-            Output bounds (left, bottom, right, top) in target crs ("dst_crs").
-        height : int
-            Output height of the array.
-        width : int
-            Output width of the array.
-        padding : int, optional
-            Padding to apply to each edge of the tile when retrieving data
-            to assist in reducing resampling artefacts along edges.
-        dst_crs: CRS or str, optional
-            Target coordinate reference system, default is "epsg:3857".
-        bounds_crs: CRS or str, optional
-            Overwrite bounds coordinate reference system, default is equal
-            to the output CRS (dst_crs).
-        minimum_tile_cover: float, optional
-            Minimum % overlap for which to raise an error with dataset not
-            covering enought of the tile.
-        warp_vrt_option: dict, optional
-            These will be passed to the rasterio.warp.WarpedVRT class.
-        kwargs : Any, optional
-            Additional options to forward to reader._read()
+    src_dst: rasterio.io.DatasetReader
+        rasterio.io.DatasetReader object
+    bounds: tuple
+        Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+    height: int, optional
+        Output height of the array.
+    width: int, optional
+        Output width of the array.
+    padding: int, optional
+        Padding to apply to each edge of the tile when retrieving data
+        to assist in reducing resampling artefacts along edges.
+    dst_crs: CRS or str, optional
+        Target coordinate reference system, default is "epsg:3857".
+    bounds_crs: CRS or str, optional
+        Overwrite bounds coordinate reference system, default is equal
+        to the output CRS (dst_crs).
+    minimum_tile_cover: float, optional
+        Minimum % overlap for which to raise an error with dataset not
+        covering enought of the tile.
+    warp_vrt_option: dict, optional
+        These will be passed to the rasterio.warp.WarpedVRT class.
+    max_size: int, optional
+        Limit output size array if not widht and height.
+    kwargs: Any, optional
+        Additional options to forward to reader._read()
 
     Returns
     -------
-        data : numpy ndarray
-        mask: numpy array
+    data : numpy ndarray
+    mask: numpy array
 
     """
-    if not bounds_crs:
-        bounds_crs = dst_crs
+    if max_size and width and height:
+        warnings.warn(
+            "'max_size' will be ignored with with 'height' and 'width' set.",
+            UserWarning,
+        )
 
-    bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
+    if bounds_crs:
+        bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
 
     if minimum_overlap:
         src_bounds = transform_bounds(
@@ -203,18 +220,30 @@ def part(
             )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(
-        src_dst, bounds, width, height, dst_crs=dst_crs
+        src_dst, bounds, height, width, dst_crs=dst_crs
     )
 
-    out_window = Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
+    window = windows.Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
 
-    if padding > 0 and not is_aligned(src_dst, bounds, height, width):
+    if max_size and not (width and height):
+        if max(vrt_width, vrt_height) > max_size:
+            ratio = vrt_height / vrt_width
+            if ratio > 1:
+                height = max_size
+                width = math.ceil(height / ratio)
+            else:
+                width = max_size
+                height = math.ceil(width * ratio)
+
+    out_height = height or vrt_height
+    out_width = width or vrt_width
+    if padding > 0 and not is_aligned(src_dst, bounds, out_height, out_width):
         vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
         orig_vrt_height = vrt_height
         orig_vrt_width = vrt_width
         vrt_height = vrt_height + 2 * padding
         vrt_width = vrt_width + 2 * padding
-        out_window = Window(
+        window = windows.Window(
             col_off=padding,
             row_off=padding,
             width=orig_vrt_width,
@@ -223,9 +252,9 @@ def part(
 
     return _read(
         src_dst,
-        height,
-        width,
-        out_window=out_window,
+        out_height,
+        out_width,
+        window=window,
         vrt_options=dict(
             crs=dst_crs,
             transform=vrt_transform,
@@ -388,19 +417,10 @@ def metadata(
             )
 
     if bounds:
-        asp_ratio = abs((bounds[2] - bounds[0]) / (bounds[1] - bounds[3]))
-        if asp_ratio > 1:
-            width = max_size
-            height = math.ceil(max_size / asp_ratio)
-        else:
-            width = math.ceil(max_size * asp_ratio)
-            height = max_size
-
         data, mask = part(
             src_dst,
             bounds,
-            height,
-            width,
+            max_size=max_size,
             indexes=indexes,
             dst_crs=src_dst.crs,
             bounds_crs=bounds_crs,

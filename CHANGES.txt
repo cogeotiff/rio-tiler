@@ -1,3 +1,13 @@
+2.0a7 (TBD)
+------------------
+- allow reading high resolution part of a raster (by making height, width args optional)
+- add `max_size` option in `rio_tiler.reader.part` to set a maximum output size when height and width are not set
+- add point and area function in rio_tiler.io.cogeo
+- fix width-height height-widht bug in `rio_tiler.reader.part`
+
+**depreciation**
+- deprecated `out_window` option in favor of `window` in rio_tiler.reader._read
+
 2.0a6 (2020-05-06)
 ------------------
 - fix unwanted breacking change with `img_profiles.get` not allowing default values

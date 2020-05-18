@@ -67,6 +67,31 @@ def test_tile_read_valid():
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
 
+    # Read bounds at full resolution
+    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+        arr, mask = reader.part(src_dst, bounds)
+    assert arr.shape == (1, 73, 73)
+    assert mask.shape == (73, 73)
+
+    # set max_size for the returned array
+    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+        arr, mask = reader.part(src_dst, bounds, max_size=50)
+    assert arr.shape == (1, 50, 50)
+    assert mask.shape == (50, 50)
+
+    # If max_size is bigger than actual size, there is no effect
+    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+        arr, mask = reader.part(src_dst, bounds, max_size=80)
+    assert arr.shape == (1, 73, 73)
+    assert mask.shape == (73, 73)
+
+    # Incompatible max_size with height and width
+    with pytest.warns(UserWarning):
+        with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+            arr, mask = reader.part(src_dst, bounds, max_size=50, width=25, height=25)
+    assert arr.shape == (1, 25, 25)
+    assert mask.shape == (25, 25)
+
 
 def test_tile_read_validResampling():
     """Should return a 1 band array and a mask."""

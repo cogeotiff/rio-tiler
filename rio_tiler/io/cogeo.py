@@ -1,10 +1,11 @@
 """rio_tiler.io.cogeo: raster processing."""
 
-from typing import Any, Dict, Tuple
+from typing import Any, Dict, Tuple, List, Optional
 
 import numpy
 
 import rasterio
+from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
 
 from rio_tiler import reader
@@ -199,3 +200,75 @@ def tile(
     """
     with rasterio.open(address) as src_dst:
         return reader.tile(src_dst, tile_x, tile_y, tile_z, tilesize, **kwargs)
+
+
+def point(address: str, lon: float, lat: float, **kwargs: Any) -> List:
+    """
+    Read point value from a file.
+
+    Attributes
+    ----------
+    address: str
+        file url.
+    lon: float
+        Longitude
+    lat: float
+        Latittude.
+    kwargs: dict, optional
+        These will be passed to the 'rio_tiler.reader.point' function.
+
+    Returns
+    -------
+    point: list
+        List of pixel values per bands indexes.
+
+    """
+    with rasterio.open(address) as src_dst:
+        return reader.point(src_dst, (lon, lat), **kwargs)
+
+
+def area(
+    address: str,
+    bbox: Tuple[float, float, float, float],
+    dst_crs: Optional[CRS] = None,
+    bounds_crs: CRS = constants.WGS84_CRS,
+    max_size: int = 1024,
+    **kwargs: Any,
+) -> Tuple[numpy.ndarray, numpy.ndarray]:
+
+    """
+    Read value from a bbox.
+
+    Attributes
+    ----------
+    address: str
+        file url.
+    bbox: tuple
+        bounds to read (left, bottom, right, top) in "bounds_crs".
+    dst_crs: CRS or str, optional
+        Target coordinate reference system, default is the dataset CRS.
+    bounds_crs: CRS or str, optional
+        bounds coordinate reference system, default is "epsg:4326"
+    max_size: int, optional
+        Limit output size array, default is 1024.
+    kwargs: dict, optional
+        These will be passed to the 'rio_tiler.reader.part' function.
+
+    Returns
+    -------
+    data : numpy ndarray
+    mask: numpy array
+
+    """
+    with rasterio.open(address) as src_dst:
+        if not dst_crs:
+            dst_crs = src_dst.crs
+
+        return reader.part(
+            src_dst,
+            bbox,
+            max_size=max_size,
+            bounds_crs=bounds_crs,
+            dst_crs=dst_crs,
+            **kwargs,
+        )
