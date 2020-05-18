@@ -1,4 +1,4 @@
-2.0a7 (TBD)
+2.0a7 (2020-05-17)
 ------------------
 - allow reading high resolution part of a raster (by making height, width args optional)
 - add `max_size` option in `rio_tiler.reader.part` to set a maximum output size when height and width are not set
