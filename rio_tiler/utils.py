@@ -23,10 +23,10 @@ from rio_tiler import constants
 from rio_tiler.colormap import apply_cmap
 
 
-def _chunks(l: Sequence, n: int):
+def _chunks(my_list: Sequence, chuck_size: int):
     """Yield successive n-sized chunks from l."""
-    for i in range(0, len(l), n):
-        yield l[i : i + n]
+    for i in range(0, len(my_list), chuck_size):
+        yield my_list[i : i + chuck_size]
 
 
 def _stats(
