@@ -5,6 +5,7 @@ import pytest
 
 from rio_tiler.io import cogeo
 from rio_tiler.errors import TileOutsideBounds
+from rio_tiler import constants
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 ADDRESS = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif".format(
@@ -31,6 +32,7 @@ def test_spatial_info_valid():
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
     assert meta.get("center")
+    print(meta.get("center"))
     assert len(meta.get("bounds")) == 4
 
 
@@ -101,3 +103,28 @@ def test_tile_invalid_bounds():
 
     with pytest.raises(TileOutsideBounds):
         cogeo.tile(ADDRESS, tile_x, tile_y, tile_z)
+
+
+def test_point_valid():
+    """Read point."""
+    lon = -104.77499638118547
+    lat = 38.953606785685125
+    assert cogeo.point(ADDRESS, lon, lat)
+
+
+def test_area_valid():
+    """Read part of an image."""
+    bbox = (
+        -104.77506637573242,
+        38.95353532141205,
+        -104.77472305297852,
+        38.95366881479647,
+    )
+    data, mask = cogeo.area(ADDRESS, bbox)
+    assert data.shape == (3, 100, 199)
+
+    data, mask = cogeo.area(ADDRESS, bbox, max_size=100)
+    assert data.shape == (3, 51, 100)
+
+    data, mask = cogeo.area(ADDRESS, bbox, dst_crs=constants.WGS84_CRS)
+    assert data.shape == (3, 82, 210)

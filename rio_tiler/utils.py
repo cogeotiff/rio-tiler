@@ -114,8 +114,7 @@ def get_overview_level(
 
     # Compute what the "natural" output resolution
     # (in pixels) would be for this input dataset
-    w, s, e, n = bounds
-    vrt_transform = from_bounds(w, s, e, n, height, width)
+    vrt_transform = from_bounds(*bounds, width, height)
     target_res = vrt_transform.a
 
     ovr_idx = -1
@@ -138,8 +137,8 @@ def get_overview_level(
 def get_vrt_transform(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
-    height: int,
-    width: int,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
     dst_crs: CRS = constants.WEB_MERCATOR_CRS,
 ) -> Tuple[Affine, int, int]:
     """
@@ -147,32 +146,37 @@ def get_vrt_transform(
 
     Attributes
     ----------
-        src_dst : rasterio.io.DatasetReader
-            Rasterio io.DatasetReader object
-        bounds : list
-            Bounds (left, bottom, right, top) in target crs ("dst_crs").
-        height : int
-            Desired output height of the array for the bounds.
-        width : int
-            Desired output width of the array for the bounds.
-        dst_crs: CRS or str, optional
-            Target coordinate reference system (default "epsg:3857").
+    src_dst : rasterio.io.DatasetReader
+        Rasterio io.DatasetReader object
+    bounds : list
+        Bounds (left, bottom, right, top) in target crs ("dst_crs").
+    height : int, optional
+        Desired output height of the array for the bounds.
+    width : int, optional
+        Desired output width of the array for the bounds.
+    dst_crs: CRS or str, optional
+        Target coordinate reference system (default "epsg:3857").
 
     Returns
     -------
-        vrt_transform: Affine
-            Output affine transformation matrix
-        vrt_width, vrt_height: int
-            Output dimensions
+    vrt_transform: Affine
+        Output affine transformation matrix
+    vrt_width, vrt_height: int
+        Output dimensions
 
     """
     dst_transform, _, _ = calculate_default_transform(
         src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
     )
-
     w, s, e, n = bounds
-    tile_transform = from_bounds(w, s, e, n, width, height)
 
+    if not height or not width:
+        vrt_width = math.ceil((e - w) / dst_transform.a)
+        vrt_height = math.ceil((s - n) / dst_transform.e)
+        vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
+        return vrt_transform, vrt_width, vrt_height
+
+    tile_transform = from_bounds(w, s, e, n, width, height)
     w_res = (
         tile_transform.a
         if abs(tile_transform.a) < abs(dst_transform.a)
@@ -186,7 +190,6 @@ def get_vrt_transform(
 
     vrt_width = math.ceil((e - w) / w_res)
     vrt_height = math.ceil((s - n) / h_res)
-
     vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
 
     return vrt_transform, vrt_width, vrt_height
