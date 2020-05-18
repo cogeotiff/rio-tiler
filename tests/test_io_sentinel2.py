@@ -6,9 +6,9 @@ import pytest
 from mock import patch
 
 import rasterio
-from rio_tiler import sentinel2
+from rio_tiler.io import sentinel2
+
 from rio_tiler.errors import (
-    DeprecationWarning,
     TileOutsideBounds,
     InvalidBandName,
     InvalidSentinelSceneId,
@@ -32,12 +32,12 @@ def testing_env_var(monkeypatch):
 
 def mock_rasterio_open(asset):
     """Mock rasterio Open for Sentinel2 dataset."""
-    assert asset.startswith("s3://sentinel-s2")
+    assert asset.startswith("s3://sentinel-s2-l")
     asset = asset.replace("s3://sentinel-s2", SENTINEL_BUCKET)
     return rasterio.open(asset)
 
 
-@patch("rio_tiler.sentinel2.rasterio")
+@patch("rio_tiler.io.sentinel2.rasterio")
 def test_bounds_valid(rio):
     """Should work as expected (get bounds)."""
     rio.open = mock_rasterio_open
@@ -47,47 +47,49 @@ def test_bounds_valid(rio):
     assert len(meta.get("bounds")) == 4
 
 
-@patch("rio_tiler.sentinel2.rasterio")
+@patch("rio_tiler.reader.rasterio")
 def test_metadata_valid_default(rio):
     """Get bounds and get stats for all bands."""
     rio.open = mock_rasterio_open
 
     meta = sentinel2.metadata(SENTINEL_SCENE)
     assert meta["sceneid"] == SENTINEL_SCENE
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 13
-    assert meta["statistics"]["01"]["pc"] == [1088, 8235]
+    assert meta["statistics"]["01"]["pc"] == [1094, 8170]
 
 
-@patch("rio_tiler.sentinel2.rasterio")
+@patch("rio_tiler.reader.rasterio")
 def test_metadata_valid_custom(rio):
     """Get bounds and get stats for all bands with custom percentiles."""
     rio.open = mock_rasterio_open
 
     meta = sentinel2.metadata(SENTINEL_SCENE, pmin=5, pmax=95)
     assert meta["sceneid"] == SENTINEL_SCENE
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 13
-    assert meta["statistics"]["01"]["pc"] == [1110, 7236]
-
-    meta = sentinel2.metadata(SENTINEL_SCENE, pmin=5, pmax=95, histogram_bins=20)
-    assert meta["sceneid"] == SENTINEL_SCENE
-    assert len(meta["bounds"]["value"]) == 4
-    assert len(meta["statistics"].items()) == 13
-    assert meta["statistics"]["01"]["pc"] == [1110, 7236]
-    assert len(meta["statistics"]["01"]["histogram"][0]) == 20
+    assert meta["statistics"]["01"]["pc"] == [1116, 7166]
 
     meta = sentinel2.metadata(
-        SENTINEL_SCENE, histogram_bins=None, histogram_range=[1000, 4000]
+        SENTINEL_SCENE, pmin=5, pmax=95, hist_options=dict(bins=20)
     )
+    assert meta["sceneid"] == SENTINEL_SCENE
+    assert len(meta["bounds"]) == 4
+    assert len(meta["statistics"].items()) == 13
+    assert meta["statistics"]["01"]["pc"] == [1116, 7166]
+    assert len(meta["statistics"]["01"]["histogram"][0]) == 20
+
+    meta = sentinel2.metadata(SENTINEL_SCENE, hist_options=dict(range=[1000, 4000]))
     assert meta["sceneid"] == SENTINEL_SCENE
     assert len(meta["statistics"]["01"]["histogram"][0]) == 10
 
 
-@patch("rio_tiler.sentinel2.rasterio")
-def test_tile_valid_default(rio):
+@patch("rio_tiler.io.sentinel2.rasterio")
+@patch("rio_tiler.reader.rasterio")
+def test_tile_valid_default(rio, srio):
     """Should work as expected."""
     rio.open = mock_rasterio_open
+    srio.open = mock_rasterio_open
 
     tile_z = 8
     tile_x = 77
@@ -97,56 +99,18 @@ def test_tile_valid_default(rio):
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
 
-
-@patch("rio_tiler.sentinel2.rasterio")
-def test_tile_valid_nrg(rio):
-    """Should work as expected"""
-    rio.open = mock_rasterio_open
-
-    tile_z = 8
-    tile_x = 77
-    tile_y = 89
-    bands = ("08", "04", "03")
-
-    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=bands)
+    data, mask = sentinel2.tile(
+        SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=("08", "04", "03")
+    )
     assert data.shape == (3, 256, 256)
     assert mask.shape == (256, 256)
 
-
-@patch("rio_tiler.sentinel2.rasterio")
-def test_tile_valid_oneband(rio):
-    """Test when passing a string instead of a tuple."""
-    rio.open = mock_rasterio_open
-
-    tile_z = 8
-    tile_x = 77
-    tile_y = 89
-    bands = "08"
-
-    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=bands)
+    data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands="08")
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
 
-
-@patch("rio_tiler.sentinel2.rasterio")
-def test_tile_invalid_band(rio):
-    """Should raise an error on invalid band name."""
-    rio.open = mock_rasterio_open
-
-    tile_z = 8
-    tile_x = 77
-    tile_y = 89
-    bands = "9A"
-
     with pytest.raises(InvalidBandName):
-        data, mask = sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands=bands)
-    rio.assert_not_called()
-
-
-@patch("rio_tiler.sentinel2.rasterio")
-def test_tile_invalid_bounds(rio):
-    """Should raise an error with invalid tile."""
-    rio.open = mock_rasterio_open
+        sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z, bands="9A")
 
     tile_z = 8
     tile_x = 177
@@ -154,149 +118,33 @@ def test_tile_invalid_bounds(rio):
 
     with pytest.raises(TileOutsideBounds):
         sentinel2.tile(SENTINEL_SCENE, tile_x, tile_y, tile_z)
-    assert rio.called_once()
 
 
 def test_sentinel_id_invalid():
     """Raises error on invalid sentinel-2 sceneid."""
     with pytest.raises(InvalidSentinelSceneId):
-        sentinel2._sentinel_parse_scene_id("S2A_tile_20170323_17SNC")
-
-
-def test_sentinel_id_valid():
-    """Parse sentinel-2 valid sceneid and return metadata."""
-    expected_content = {
-        "acquisitionDay": "23",
-        "acquisitionMonth": "03",
-        "acquisitionYear": "2017",
-        "aws_bucket": "s3://sentinel-s2-l1c",
-        "aws_prefix": "tiles/17/S/NC/2017/3/23/0",
-        "key": "tiles/17/S/NC/2017/3/23/0",
-        "lat": "S",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_tile_20170323_17SNC_0",
-        "sensor": "2",
-        "sq": "NC",
-        "utm": "17",
-        "processingLevel": "L1C",
-        "preview_file": "preview.jp2",
-        "preview_prefix": "preview",
-        "bands": [
-            "02",
-            "03",
-            "04",
-            "08",
-            "05",
-            "06",
-            "07",
-            "11",
-            "12",
-            "8A",
-            "01",
-            "09",
-            "10",
-        ],
-        "valid_bands": [
-            "02",
-            "03",
-            "04",
-            "08",
-            "05",
-            "06",
-            "07",
-            "11",
-            "12",
-            "8A",
-            "01",
-            "09",
-            "10",
-        ],
-    }
-    with pytest.warns(DeprecationWarning):
-        assert (
-            sentinel2._sentinel_parse_scene_id("S2A_tile_20170323_17SNC_0")
-            == expected_content
-        )
-
-
-def test_sentinel_id_valid_strip():
-    """Parse sentinel-2 valid sceneid with leading 0 and return metadata."""
-    expected_content = {
-        "acquisitionDay": "23",
-        "acquisitionMonth": "03",
-        "acquisitionYear": "2017",
-        "aws_bucket": "s3://sentinel-s2-l1c",
-        "aws_prefix": "tiles/7/S/NC/2017/3/23/0",
-        "key": "tiles/7/S/NC/2017/3/23/0",
-        "lat": "S",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_tile_20170323_07SNC_0",
-        "sensor": "2",
-        "sq": "NC",
-        "utm": "07",
-        "processingLevel": "L1C",
-        "preview_file": "preview.jp2",
-        "preview_prefix": "preview",
-        "bands": [
-            "02",
-            "03",
-            "04",
-            "08",
-            "05",
-            "06",
-            "07",
-            "11",
-            "12",
-            "8A",
-            "01",
-            "09",
-            "10",
-        ],
-        "valid_bands": [
-            "02",
-            "03",
-            "04",
-            "08",
-            "05",
-            "06",
-            "07",
-            "11",
-            "12",
-            "8A",
-            "01",
-            "09",
-            "10",
-        ],
-    }
-
-    with pytest.warns(DeprecationWarning):
-        assert (
-            sentinel2._sentinel_parse_scene_id("S2A_tile_20170323_07SNC_0")
-            == expected_content
-        )
+        sentinel2.sentinel2_parser("S2A_tile_20170323_17SNC")
 
 
 def test_sentinel_newid_valid():
     """Parse sentinel-2 valid sceneid and return metadata."""
     expected_content = {
-        "acquisitionDay": "29",
-        "acquisitionMonth": "07",
-        "acquisitionYear": "2017",
-        "aws_bucket": "s3://sentinel-s2-l1c",
-        "aws_prefix": "tiles/19/U/DP/2017/7/29/0",
-        "key": "tiles/19/U/DP/2017/7/29/0",
-        "lat": "U",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_L1C_20170729_19UDP_0",
         "sensor": "2",
-        "sq": "DP",
-        "utm": "19",
+        "satellite": "A",
         "processingLevel": "L1C",
+        "acquisitionYear": "2017",
+        "acquisitionMonth": "07",
+        "acquisitionDay": "29",
+        "utm": "19",
+        "lat": "U",
+        "sq": "DP",
+        "num": "0",
+        "scene": "S2A_L1C_20170729_19UDP_0",
+        "scheme": "s3",
+        "bucket": "sentinel-s2-l1c",
+        "prefix": "tiles/19/U/DP/2017/7/29/0",
         "preview_file": "preview.jp2",
-        "preview_prefix": "preview",
+        "preview_prefix": "",
         "bands": [
             "02",
             "03",
@@ -328,26 +176,26 @@ def test_sentinel_newid_valid():
             "10",
         ],
     }
-    assert sentinel2._sentinel_parse_scene_id(SENTINEL_SCENE) == expected_content
+    assert sentinel2.sentinel2_parser(SENTINEL_SCENE) == expected_content
 
 
 def test_sentinel_newidl2a_valid():
     """Parse sentinel-2 valid sceneid and return metadata."""
     expected_content = {
-        "acquisitionDay": "29",
-        "acquisitionMonth": "07",
-        "acquisitionYear": "2017",
-        "aws_bucket": "s3://sentinel-s2-l2a",
-        "aws_prefix": "tiles/19/U/DP/2017/7/29/0",
-        "key": "tiles/19/U/DP/2017/7/29/0",
-        "lat": "U",
-        "num": "0",
-        "satellite": "A",
-        "scene": "S2A_L2A_20170729_19UDP_0",
         "sensor": "2",
-        "sq": "DP",
-        "utm": "19",
+        "satellite": "A",
         "processingLevel": "L2A",
+        "acquisitionYear": "2017",
+        "acquisitionMonth": "07",
+        "acquisitionDay": "29",
+        "utm": "19",
+        "lat": "U",
+        "sq": "DP",
+        "num": "0",
+        "scene": "S2A_L2A_20170729_19UDP_0",
+        "scheme": "s3",
+        "bucket": "sentinel-s2-l2a",
+        "prefix": "tiles/19/U/DP/2017/7/29/0",
         "preview_file": "R60m/TCI.jp2",
         "preview_prefix": "R60m",
         "bands": [
@@ -382,10 +230,10 @@ def test_sentinel_newidl2a_valid():
             "WVP",
         ],
     }
-    assert sentinel2._sentinel_parse_scene_id(SENTINEL_SCENE_L2) == expected_content
+    assert sentinel2.sentinel2_parser(SENTINEL_SCENE_L2) == expected_content
 
 
-@patch("rio_tiler.sentinel2.rasterio")
+@patch("rio_tiler.io.sentinel2.rasterio")
 def test_boundsl2_valid(rio):
     """Should work as expected (get bounds)."""
     rio.open = mock_rasterio_open
@@ -395,22 +243,24 @@ def test_boundsl2_valid(rio):
     assert len(meta.get("bounds")) == 4
 
 
-@patch("rio_tiler.sentinel2.rasterio")
+@patch("rio_tiler.reader.rasterio")
 def test_metadatal2_valid_default(rio):
     """Get bounds and get stats for all bands."""
     rio.open = mock_rasterio_open
 
     meta = sentinel2.metadata(SENTINEL_SCENE_L2)
     assert meta["sceneid"] == SENTINEL_SCENE_L2
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 12
     assert meta["statistics"]["01"]["pc"] == [1094, 8170]
 
 
-@patch("rio_tiler.sentinel2.rasterio")
-def test_tile_validl2_default(rio):
+@patch("rio_tiler.io.sentinel2.rasterio")
+@patch("rio_tiler.reader.rasterio")
+def test_tile_validl2_default(rio, srio):
     """Should work as expected."""
     rio.open = mock_rasterio_open
+    srio.open = mock_rasterio_open
 
     tile_z = 8
     tile_x = 77

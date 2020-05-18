@@ -1,3 +1,73 @@
+2.0a7 (2020-05-17)
+------------------
+- allow reading high resolution part of a raster (by making height, width args optional)
+- add `max_size` option in `rio_tiler.reader.part` to set a maximum output size when height and width are not set
+- add point and area function in rio_tiler.io.cogeo
+- fix width-height height-widht bug in `rio_tiler.reader.part`
+
+**depreciation**
+- deprecated `out_window` option in favor of `window` in rio_tiler.reader._read
+
+2.0a6 (2020-05-06)
+------------------
+- fix unwanted breacking change with `img_profiles.get` not allowing default values
+
+2.0a5 (2020-05-06)
+------------------
+- make `rio_tiler.io.landsat8.tile` return Uint16 data and not float32 (#173)
+- `rio_tiler.profiles.img_profiles` item access return `copy` of the items (#177)
+- better colormap docs (#176, author @kylebarron)
+
+2.0a4 (2020-04-08)
+------------------
+- add `rio_tiler.io.cogeo.info` to retrieve simple file metadata (no image statistics)
+- add band metadata tag info in `rio_tiler.render.metadata` output
+- add `rio_tiler.io.stac` STAC compliant rio_tiler.colormap.apply_discrete_cmap
+
+2.0a3 (2020-03-25)
+------------------
+- only use `transform_bounds` when needed in rio_tiler.reader.part
+
+Breaking Changes:
+- switch back to gdal/rasterio calculate_default_transform (#164). Thanks to Terracotta core developper @dionhaefner.
+- refactor `rio_tiler.utils.get_vrt_transform` to get width and height input.
+
+2.0a2 (2020-03-20)
+------------------
+- Fall back to gdal/rasterio calculate_default_transform for dateline separation crossing dataset (ref #164)
+
+2.0a1 (2020-03-19)
+------------------
+- added `reader.preview`, `reader.point` methods
+- added multi_* functions to rio_tiler.reader to support multiple assets addresses
+- added `rio_tiler.utils.has_mask_band` function
+- added `rio_tiler.utils.get_overview_level` to calculate the overview level needed for partial reading.
+- added type hints
+- added scale, offsets, colormap, datatype and colorinterp in reader.metadata output (#158)
+- new `rio_tiler.colormap` submodule
+- added `unscale` options to rio_tiler.reader._read function apply internal scale/offset (#157)
+
+Breaking Changes:
+- removed python 2 support
+- new package architecture (.io submodule)
+- introduced new rio_tiler.reader functions (part, preview, metadata...)
+- renamed rio_tiler.main to rio_tiler.io.cogeo
+- bucket and prefixes are defined in rio_tiler.io.dataset.`{dataset}_parse` function from 
+  AWS supported Public Dataset
+- renamed `minimum_tile_cover` to `minimum_overlap`
+- renamed `tile_edge_padding` to `padding`
+- padding is set to 0 by default.
+- use terracotta calculate_default_transform (see https://github.com/cogeotiff/rio-tiler/issues/56#issuecomment-442484999)
+- colormaps are now have an alpha value
+- `rio_tiler.utils.get_colormap` replaced by `rio_tiler.colormap.get_colormap` 
+- new `rio_tiler.colormap.get_colormap` supports only GDAL like colormap
+- replaced `rio_tiler.utils.array_to_image` by `rio_tiler.utils.render`
+- replaced `rio_tiler.utils.apply_cmap` by `rio_tiler.colormap.apply_cmap`
+- replaced `rio_tiler.utils._apply_discrete_colormap` by `rio_tiler.colormap.apply_discrete_cmap`
+- removed `histogram_bins` and `histogram_range` in options in metadata reader.
+  Should now be passed in `hist_options` (e.g: hist_options={bins=10, range=(0, 10)})
+- remove alpha band value from output data array in tile/preview/metadata #127
+
 1.4.0 (2020-02-19)
 ------------------
 - Add Sentinel2-L2A support (#137)
@@ -15,7 +85,7 @@ allow more custom VRT Warping. (ref: https://github.com/OSGeo/gdal/issues/1989#i
 - add `minimum_tile_cover` option to filter dataset not covering a certain amount of the tile.
 - add Sentinel-1 submodule
 
-Breacking Changes:
+Breaking Changes:
 - need rasterio>=1.1
 
 1.2.11 (2019-09-18)
@@ -35,62 +105,50 @@ in `rio_tiler.utils.get_vrt_transform`
 
 1.2.8 (2019-07-08)
 ------------------
-
 - Add kwargs options in landsat8.tile, sentinel2.tile and cbers.tile functions to 
 allow `resampling_method` and `tile_edge_padding` options forwarding to utils._tile_read.
 - Add Input (bounds_crs) and Output (dst_crs) option to `utils._tile_read` function (#108)
 
 1.2.7 (2019-05-14)
 ------------------
-
 - Revert changes introduced in #106 (see #105)
 - Refactor tests
 
 1.2.6 (2019-05-10) - DELETED
 ------------------
-
 - Use same resampling method for mask and for data (#105)
-
 
 1.2.5 (2019-05-08)
 ------------------
-
 - add tile_edge_padding option to be passed to rio_tiler.utils._tile_read to reduce sharp edges that occur due to resampling (#104)
 
 1.2.4 (2019-04-16)
 ------------------
-
 - add histogram_range options to be passed to rio_tiler.{module}.metadata function (#102)
 
 1.2.3 (2019-04-04)
 ------------------
-
 - add histogram_bins options to be passed to rio_tiler.{module}.metadata function (#98)
 
 Bug fixes:
-
 - return index number with band descriptions (#99)
 
 1.2.2 (2019-04-03)
 ------------------
-
 - add mercator min/max zoom info in metadata output from rio_tiler.utils.raster_get_stats (#96)
 - add band description (band name) in metadata output from rio_tiler.utils.raster_get_stats (#96)
 
 1.2.1 (2019-03-26)
 ------------------
-
 - Replace rio-pansharpen dependency with a fork of the brovey function directly
 into `rio_tiler.utils` (rio-pansharpen is unmaintened and not compatible with 
 rasterio>=1) (#94).
 
 1.2.0 (2019-03-26)
 ------------------
-
 - `rio_tiler.utils.array_to_image`'s color_map arg can be a dictionary of discrete values (#91)
 
-Breacking Changes:
-
+Breaking Changes:
 - `expr` argument is now a required option in `rio_tiler.utils.expression`. (#88)
 
 1.1.4 (2019-03-11)
@@ -99,9 +157,7 @@ Breacking Changes:
 
 1.1.3 (2019-03-06)
 ------------------
-
 Bug fixes:
-
 - Fix casting to integer for MAX_THREADS environment variable.
 
 1.1.1 (2019-02-21)
@@ -109,26 +165,21 @@ Bug fixes:
 - Minor typo correction and harmonization of the use of src/src_dst/src_path in `rio_tiler.utils`
 
 Bug fixes:
-
 - Fix nodata handling in `utils.raster_get_stats`
 
 1.1.0 (2019-02-15)
 ------------------
-
 - Allow options forwarding to `tile_read` from `main.tile` function (#86)
 - Add `resampling_method` options in `rio_tiler.utils.tile_read` to allow user set
 resampling. Default is now bilinear (#85)
 
 Bug fixes:
-
 - Fix nodata option forwarding to tile_read when source is a path (#83)
 
 Refactoring:
-
 - Refactor `rio_tiler.utils.tile_read` to reduce code complexity (#84)
 
-Breacking Changes:
-
+Breaking Changes:
 - `indexes` options is now set to **None** in `rio_tiler.utils.tile_read`.
 Default will now be the dataset indexes.
 
@@ -151,7 +202,7 @@ and to return more statistics (#66)
 - add GDAL compatible Image creation profile (#29)
 - add max threads number settings via "MAX_THREADS" environment variable (#71)
 
-**Breacking Changes**
+Breaking Changes:
 - update `metadata` structure returned by `landsat8.metadata`, `sentinel2.metadata`, `cbers.metadata`
 - force sentinel, landsat and cbers band names to be string and add validation (#65)
 - moved landsat utility functions from `rio_tiler.utils` to `rio_tiler.landsat8`
@@ -192,7 +243,7 @@ and to return more statistics (#66)
 - fix custom nodata handling
 - fix performances issue
 
-:Breacking Changes:
+Breaking Changes:
 - removed alpha band options to select a custom alpha band number
 
 1.0a8 (2018-06-20)
@@ -211,7 +262,7 @@ and to return more statistics (#66)
 ------------------
 - adds DatasetReader input option for utils.tile_read (do not close the dataset on each read)
 
-:Breacking Changes:
+Breaking Changes:
 - `utils.tile_band_worker` renamed to `utils.tile_read`
 - `main.tile` **rgb** option renamed **indexes**
 - `sentinel2.tile`, `landsat8.tile`,  `cbers.tile` **rgb** option renamed **bands**
@@ -222,7 +273,7 @@ and to return more statistics (#66)
 - adds utils.b64_encode_img function to encode an image object into a base64 string
 - add tiles profiles (jpeg, png, webp) based on https://github.com/mapnik/mapnik/wiki/Image-IO#default-output-details
 
-:Breacking Changes:
+Breaking Changes:
 - Refactor `rio_tiler.utils.array_to_img` to return PIL image object
 
 1.0a3 (2018-02-05)
@@ -234,18 +285,16 @@ and to return more statistics (#66)
 - add "expression" utility function
 - better nodata/mask/alpha band definition and support
 
-:Breacking Changes:
+Breaking Changes:
 - tile functions now return an associated mask (Landsat, Sentinel, CBERS, main)
 - remove nodata support in utils.image_to_array function
 - add mask support in utils.image_to_array function
 - utils.tile_band_worker will always return a (Band, Width, Height) array (e.g 1x256x256 or 3x256x256)
 
-
 1.0a1 (2018-01-04)
 ------------------
 - remove aws.py sub-module (replaced by main.py)
 - no default bands value for main.py tiles.
-
 
 1.0a.0 (2018-01-03)
 ------------------
@@ -257,7 +306,7 @@ and to return more statistics (#66)
 - removing internal caching
 - update to rasterio 1.0a12
 
-:Breacking Changes:
+Breaking Changes:
 - remove data value rescaling in `landsat8.tile` and `sentinel2.tile`
 - fix wrong lat/grid_square value in `utils.sentinel_parse_scene_id`
 - rename `utils.sentinel_min_max_worker` to `utils.band_min_max_worker`

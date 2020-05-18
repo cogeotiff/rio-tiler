@@ -6,7 +6,7 @@ with open("README.md") as f:
     readme = f.read()
 
 # Runtime requirements.
-inst_reqs = ["numpy", "numexpr", "mercantile", "boto3", "rasterio[s3]>=1.1", "rio-toa"]
+inst_reqs = ["numpy", "numexpr", "mercantile", "rasterio[s3]>=1.1.3", "rio-toa"]
 
 extra_reqs = {
     "test": ["mock", "pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
@@ -22,7 +22,8 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="1.4.0",
+    version="2.0a7",
+    python_requires=">=3",
     description=u"""Get mercator tile from CloudOptimized GeoTIFF and other cloud hosted raster such as CBERS-4, Sentinel-2, Sentinel-1 and Landsat-8 AWS PDS""",
     long_description=readme,
     long_description_content_type="text/markdown",
@@ -30,8 +31,8 @@ setup(
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
+        "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.6",
-        "Programming Language :: Python :: 2.7",
         "Topic :: Scientific/Engineering :: GIS",
     ],
     keywords="COG cogeo raster aws map tiler gdal rasterio",

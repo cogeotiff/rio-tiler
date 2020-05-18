@@ -1,9 +1,12 @@
 """tests rio_tiler.sentinel2"""
 
 import os
-import pytest
 
-from rio_tiler import cbers
+import pytest
+from mock import patch
+
+import rasterio
+from rio_tiler.io import cbers
 from rio_tiler.errors import TileOutsideBounds, InvalidBandName, InvalidCBERSSceneId
 
 CBERS_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "cbers-pds")
@@ -28,12 +31,17 @@ def testing_env_var(monkeypatch):
     monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "TRUE")
 
 
-def test_bounds_valid(monkeypatch):
-    """
-    Should work as expected (get bounds)
-    """
+def mock_rasterio_open(asset):
+    """Mock rasterio Open."""
+    assert asset.startswith("s3://cbers-pds")
+    asset = asset.replace("s3://cbers-pds", CBERS_BUCKET)
+    return rasterio.open(asset)
 
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+
+@patch("rio_tiler.io.cbers.rasterio")
+def test_bounds_valid(rio):
+    """Should work as expected (get bounds)"""
+    rio.open = mock_rasterio_open
 
     meta = cbers.bounds(CBERS_MUX_SCENE)
     assert meta.get("sceneid") == CBERS_MUX_SCENE
@@ -52,63 +60,65 @@ def test_bounds_valid(monkeypatch):
     assert len(meta.get("bounds")) == 4
 
 
-def test_metadata_valid_default(monkeypatch):
-    """Should work as expected.
+@patch("rio_tiler.reader.rasterio")
+def test_metadata_valid_default(rio):
+    """
+    Should work as expected.
 
     Get bounds and get histogram cuts values for all bands
 
     """
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+    rio.open = mock_rasterio_open
 
     meta = cbers.metadata(CBERS_MUX_SCENE)
     assert meta["sceneid"] == CBERS_MUX_SCENE
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 4
-    assert meta["statistics"]["5"]["pc"] == [28, 91]
+    assert meta["statistics"]["5"]["pc"] == [28, 98]
 
-    meta = cbers.metadata(CBERS_MUX_SCENE, histogram_bins=20)
+    meta = cbers.metadata(CBERS_MUX_SCENE, hist_options=dict(bins=20))
     assert meta["sceneid"] == CBERS_MUX_SCENE
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 4
     assert len(meta["statistics"]["5"]["histogram"][0]) == 20
-    assert meta["statistics"]["5"]["pc"] == [28, 91]
+    assert meta["statistics"]["5"]["pc"] == [28, 98]
 
     meta = cbers.metadata(CBERS_AWFI_SCENE)
     assert meta["sceneid"] == CBERS_AWFI_SCENE
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 4
 
     meta = cbers.metadata(CBERS_PAN10M_SCENE)
     assert meta["sceneid"] == CBERS_PAN10M_SCENE
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 3
 
     meta = cbers.metadata(CBERS_PAN5M_SCENE)
     assert meta["sceneid"] == CBERS_PAN5M_SCENE
-    assert len(meta["bounds"]["value"]) == 4
+    assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 1
 
 
-def test_metadata_valid_custom(monkeypatch):
+@patch("rio_tiler.reader.rasterio")
+def test_metadata_valid_custom(rio):
     """
     Should work as expected (get bounds and get histogram cuts values
     for all bands)
     """
-
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+    rio.open = mock_rasterio_open
 
     meta = cbers.metadata(CBERS_MUX_SCENE, pmin=5, pmax=95)
     assert meta.get("sceneid") == CBERS_MUX_SCENE
-    assert len(meta["bounds"]["value"]) == 4
-    assert meta["statistics"]["5"]["pc"] == [29, 60]
+    assert len(meta["bounds"]) == 4
+    assert meta["statistics"]["5"]["pc"] == [30, 61]
 
 
-def test_tile_valid_default(monkeypatch):
-    """
-    Should work as expected
-    """
-
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+@patch("rio_tiler.reader.rasterio")
+@patch("rio_tiler.io.cbers.rasterio")
+def test_tile_valid_default(crio, rio):
+    """Should work as expected"""
+    crio.open = mock_rasterio_open
+    rio.open = mock_rasterio_open
 
     tile_z = 10
     tile_x = 664
@@ -139,9 +149,12 @@ def test_tile_valid_default(monkeypatch):
     assert mask.shape == (256, 256)
 
 
-def test_tile_valid_custom(monkeypatch):
+@patch("rio_tiler.reader.rasterio")
+@patch("rio_tiler.io.cbers.rasterio")
+def test_tile_valid_custom(crio, rio):
     """Should return custom band combination tiles."""
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+    crio.open = mock_rasterio_open
+    rio.open = mock_rasterio_open
 
     tile_z = 10
     tile_x = 664
@@ -176,9 +189,12 @@ def test_tile_valid_custom(monkeypatch):
     assert mask.shape == (256, 256)
 
 
-def test_tile_valid_oneband(monkeypatch):
+@patch("rio_tiler.reader.rasterio")
+@patch("rio_tiler.io.cbers.rasterio")
+def test_tile_valid_oneband(crio, rio):
     """Test when passing a string instead of a tuple."""
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+    crio.open = mock_rasterio_open
+    rio.open = mock_rasterio_open
 
     tile_z = 10
     tile_x = 390
@@ -190,9 +206,12 @@ def test_tile_valid_oneband(monkeypatch):
     assert mask.shape == (256, 256)
 
 
-def test_tile_invalid_band(monkeypatch):
+@patch("rio_tiler.reader.rasterio")
+@patch("rio_tiler.io.cbers.rasterio")
+def test_tile_invalid_band(crio, rio):
     """Should raise an error on invalid band name."""
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+    crio.open = mock_rasterio_open
+    rio.open = mock_rasterio_open
 
     tile_z = 10
     tile_x = 390
@@ -200,15 +219,15 @@ def test_tile_invalid_band(monkeypatch):
     bands = "21"
 
     with pytest.raises(InvalidBandName):
-        data, mask = cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z, bands=bands)
+        cbers.tile(CBERS_PAN5M_SCENE, tile_x, tile_y, tile_z, bands=bands)
 
 
-def test_tile_invalid_bounds(monkeypatch):
-    """
-    Should raise an error with invalid tile
-    """
-
-    monkeypatch.setattr(cbers, "CBERS_BUCKET", CBERS_BUCKET)
+@patch("rio_tiler.reader.rasterio")
+@patch("rio_tiler.io.cbers.rasterio")
+def test_tile_invalid_bounds(crio, rio):
+    """Should raise an error with invalid tile."""
+    crio.open = mock_rasterio_open
+    rio.open = mock_rasterio_open
 
     tile_z = 10
     tile_x = 694
@@ -222,87 +241,95 @@ def test_cbers_id_invalid():
     """Raises error on invalid cbers sceneid."""
     scene = "CBERS_4_MUX_20171121_057_094"
     with pytest.raises(InvalidCBERSSceneId):
-        cbers._cbers_parse_scene_id(scene)
+        cbers.cbers_parser(scene)
 
 
 def test_cbers_id_valid():
     """Parse valid CBERS sceneids and return metadata."""
     scene = "CBERS_4_MUX_20171121_057_094_L2"
     expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "MUX",
-        "key": "CBERS4/MUX/057/094/CBERS_4_MUX_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
+        "satellite": "CBERS",
         "mission": "4",
+        "instrument": "MUX",
+        "acquisitionYear": "2017",
+        "acquisitionMonth": "11",
+        "acquisitionDay": "21",
+        "path": "057",
+        "row": "094",
+        "processingCorrectionLevel": "L2",
         "scene": "CBERS_4_MUX_20171121_057_094_L2",
         "reference_band": "6",
-        "bands": ["5", "6", "7", "8"],
+        "bands": ("5", "6", "7", "8"),
         "rgb": ("7", "6", "5"),
-        "satellite": "CBERS",
+        "scheme": "s3",
+        "bucket": "cbers-pds",
+        "prefix": "CBERS4/MUX/057/094/CBERS_4_MUX_20171121_057_094_L2",
     }
 
-    assert cbers._cbers_parse_scene_id(scene) == expected_content
+    assert cbers.cbers_parser(scene) == expected_content
 
     scene = "CBERS_4_AWFI_20171121_057_094_L2"
     expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "AWFI",
-        "key": "CBERS4/AWFI/057/094/CBERS_4_AWFI_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
+        "satellite": "CBERS",
         "mission": "4",
+        "instrument": "AWFI",
+        "acquisitionYear": "2017",
+        "acquisitionMonth": "11",
+        "acquisitionDay": "21",
+        "path": "057",
+        "row": "094",
+        "processingCorrectionLevel": "L2",
         "scene": "CBERS_4_AWFI_20171121_057_094_L2",
         "reference_band": "14",
-        "bands": ["13", "14", "15", "16"],
+        "bands": ("13", "14", "15", "16"),
         "rgb": ("15", "14", "13"),
-        "satellite": "CBERS",
+        "scheme": "s3",
+        "bucket": "cbers-pds",
+        "prefix": "CBERS4/AWFI/057/094/CBERS_4_AWFI_20171121_057_094_L2",
     }
 
-    assert cbers._cbers_parse_scene_id(scene) == expected_content
+    assert cbers.cbers_parser(scene) == expected_content
 
     scene = "CBERS_4_PAN10M_20171121_057_094_L2"
     expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "PAN10M",
-        "key": "CBERS4/PAN10M/057/094/CBERS_4_PAN10M_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
+        "satellite": "CBERS",
         "mission": "4",
+        "instrument": "PAN10M",
+        "acquisitionYear": "2017",
+        "acquisitionMonth": "11",
+        "acquisitionDay": "21",
+        "path": "057",
+        "row": "094",
+        "processingCorrectionLevel": "L2",
         "scene": "CBERS_4_PAN10M_20171121_057_094_L2",
         "reference_band": "4",
-        "bands": ["2", "3", "4"],
+        "bands": ("2", "3", "4"),
         "rgb": ("3", "4", "2"),
-        "satellite": "CBERS",
+        "scheme": "s3",
+        "bucket": "cbers-pds",
+        "prefix": "CBERS4/PAN10M/057/094/CBERS_4_PAN10M_20171121_057_094_L2",
     }
 
-    assert cbers._cbers_parse_scene_id(scene) == expected_content
+    assert cbers.cbers_parser(scene) == expected_content
 
     scene = "CBERS_4_PAN5M_20171121_057_094_L2"
     expected_content = {
-        "acquisitionDay": "21",
-        "acquisitionMonth": "11",
-        "acquisitionYear": "2017",
-        "instrument": "PAN5M",
-        "key": "CBERS4/PAN5M/057/094/CBERS_4_PAN5M_20171121_057_094_L2",
-        "path": "057",
-        "processingCorrectionLevel": "L2",
-        "row": "094",
+        "satellite": "CBERS",
         "mission": "4",
+        "instrument": "PAN5M",
+        "acquisitionYear": "2017",
+        "acquisitionMonth": "11",
+        "acquisitionDay": "21",
+        "path": "057",
+        "row": "094",
+        "processingCorrectionLevel": "L2",
         "scene": "CBERS_4_PAN5M_20171121_057_094_L2",
         "reference_band": "1",
-        "bands": ["1"],
+        "bands": ("1"),
         "rgb": ("1", "1", "1"),
-        "satellite": "CBERS",
+        "scheme": "s3",
+        "bucket": "cbers-pds",
+        "prefix": "CBERS4/PAN5M/057/094/CBERS_4_PAN5M_20171121_057_094_L2",
     }
 
-    assert cbers._cbers_parse_scene_id(scene) == expected_content
+    assert cbers.cbers_parser(scene) == expected_content

@@ -33,5 +33,9 @@ class DeprecationWarning(UserWarning):
     """Rio-tiler module deprecations warning."""
 
 
+class AlphaBandWarning(UserWarning):
+    """Automaticaly removed Alpha band from output array."""
+
+
 class NoOverviewWarning(UserWarning):
     """Dataset has no overviews."""
