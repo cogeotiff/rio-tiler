@@ -21,7 +21,7 @@ You can install rio-tiler using pip
 
 ```bash
 $ pip install -U pip
-$ pip install rio-tiler
+$ pip install rio-tiler --pre
 ```
 
 or install from source:
