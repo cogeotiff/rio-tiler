@@ -1,3 +1,7 @@
+2.0a8 (2020-05-25)
+------------------
+- add `preview` method to `rio_tiler.io.cogeo`
+
 2.0a7 (2020-05-17)
 ------------------
 - allow reading high resolution part of a raster (by making height, width args optional)
