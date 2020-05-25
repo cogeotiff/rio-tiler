@@ -128,3 +128,9 @@ def test_area_valid():
 
     data, mask = cogeo.area(ADDRESS, bbox, dst_crs=constants.WGS84_CRS)
     assert data.shape == (3, 82, 210)
+
+
+def test_preview_valid():
+    """Read preview."""
+    data, mask = cogeo.preview(ADDRESS, max_size=128)
+    assert data.shape == (3, 78, 128)
