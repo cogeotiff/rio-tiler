@@ -200,6 +200,27 @@ def tile(
         return reader.tile(src_dst, tile_x, tile_y, tile_z, tilesize, **kwargs)
 
 
+def preview(address: str, **kwargs: Any,) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    """
+    Return small version of a raster.
+
+    Attributes
+    ----------
+    address: str
+        file url.
+    kwargs: dict, optional
+        These will be passed to the 'rio_tiler.reader.preview' function.
+
+    Returns
+    -------
+    data : numpy ndarray
+    mask: numpy array
+
+    """
+    with rasterio.open(address) as src_dst:
+        return reader.preview(src_dst, **kwargs)
+
+
 def point(address: str, lon: float, lat: float, **kwargs: Any) -> List:
     """
     Read point value from a file.
