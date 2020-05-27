@@ -199,7 +199,7 @@ class ColorMaps(object):
 
         """
         if name in self._data.keys():
-            raise Exception("{name} is already registered")
+            raise Exception(f"{name} is already registered")
 
         self._data[name] = custom_cmap
 
