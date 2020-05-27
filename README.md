@@ -74,17 +74,12 @@ Rescale non-byte data and apply colormap
 
 ```python
 from rio_tiler.colormap import cmap
-from rio_tiler.utis import linear_rescale
+from rio_tiler.utils import linear_rescale
 
-for bdx in range(tile.shape[0]):
-    tile[bdx] = numpy.where(
-        mask,
-        linear_rescale(
-            tile[bdx], in_range=(0, 1000), out_range=[0, 255]
-        ),
-        0,
-    )
-tile = tile.astype(numpy.uint8)
+# Rescale the tile array only where mask is valid and cast it to byte
+tile = numpy.where(
+  mask, linear_rescale(tile, in_range=(0, 1000), out_range=[0, 255]), 0
+).astype(numpy.uint8)
 
 cm = cmap.get("viridis")
 
