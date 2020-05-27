@@ -29,6 +29,10 @@ class InvalidBandName(RioTilerError):
     """Invalid band name."""
 
 
+class InvalidColorMapName(Exception):
+    """Invalid colormap name."""
+
+
 class DeprecationWarning(UserWarning):
     """Rio-tiler module deprecations warning."""
 

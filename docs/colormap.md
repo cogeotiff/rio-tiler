@@ -7,10 +7,10 @@ You can load a colormap with `rio_tiler.colormap.get_colormap`, and then pass it
 to `rio_tiler.utils.render`:
 
 ```py
-from rio_tiler.colormap import get_colormap
+from rio_tiler.colormap import cmap
 from rio_tiler.utils import render
 
-colormap = get_colormap('cfastie')
+colormap = cmap.get('cfastie')
 render(tile, mask, colormap=colormap)
 ```
 
