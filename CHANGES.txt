@@ -1,4 +1,4 @@
-2.0a9 (TBD)
+2.0a9 (2020-05-27)
 ------------------
 - Refactor colormap and add method to register custom colormap
 
