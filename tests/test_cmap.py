@@ -4,25 +4,49 @@ import numpy
 import pytest
 
 from rio_tiler import colormap
-from rio_tiler.cmap import cmap_list
+from rio_tiler.cmap_data import _default_cmaps
+from rio_tiler.errors import DeprecationWarning, InvalidColorMapName
 
 
 def test_get_cmaplist():
     """Should work as expected return all rio-tiler colormaps."""
-    assert len(cmap_list) == 167
+    assert len(_default_cmaps) == 167
+
+
+def test_depreciation():
+    """Should warn when using get_colormap."""
+    with pytest.warns(DeprecationWarning):
+        colormap.get_colormap("viridis")
+
+
+def test_cmapObject():
+    """Test Colormap object handler."""
+    cmap = colormap.cmap
+    assert len(cmap.list()) == 167
+
+    with pytest.raises(InvalidColorMapName):
+        cmap.get("something")
+
+    cmap.register("empty", colormap.EMPTY_COLORMAP)
+    assert len(cmap.list()) == 168
+
+    with pytest.raises(Exception):
+        cmap.register("empty", colormap.EMPTY_COLORMAP)
+
+    assert cmap.get("empty")
 
 
 def test_valid_cmaps():
     """Make sure all colormaps have 4 values and 256 items."""
-    for c in cmap_list:
-        cm = colormap.get_colormap(c)
+    for c in colormap.cmap.list():
+        cm = colormap.cmap.get(c)
         assert len(cm[0]) == 4
         assert len(cm.items()) == 256
 
 
 def test_update_alpha():
     """Should update the alpha channel."""
-    cm = colormap.get_colormap("viridis")
+    cm = colormap.cmap.get("viridis")
     idx = 1
     assert cm[idx][-1] == 255
     colormap._update_alpha(cm, idx)
@@ -41,7 +65,7 @@ def test_update_alpha():
 
 def test_remove_value():
     """Should remove cmap value."""
-    cm = colormap.get_colormap("viridis")
+    cm = colormap.cmap.get("viridis")
     idx = 1
     colormap._remove_value(cm, idx)
     assert not cm.get(1)
@@ -54,7 +78,7 @@ def test_remove_value():
 
 def test_update_cmap():
     """Should update the colormap."""
-    cm = colormap.get_colormap("viridis")
+    cm = colormap.cmap.get("viridis")
     val = {1: [0, 0, 0], 2: [255, 255, 255, 255]}
     colormap._update_cmap(cm, val)
     assert cm[1] == [0, 0, 0, 255]

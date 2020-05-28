@@ -21,7 +21,7 @@ You can install rio-tiler using pip
 
 ```bash
 $ pip install -U pip
-$ pip install rio-tiler --pre
+$ pip install rio-tiler --pre # version 2.0 is in development
 ```
 
 or install from source:
@@ -43,7 +43,7 @@ Each tilling modules have a method to return image metadata (e.g bounds).
 
 ## Usage
 
-Read a tile from a file over the internet
+#### Read a tile from a file over the internet
 
 ```python
 from rio_tiler.io import cogeo
@@ -62,12 +62,28 @@ print(mask.shape)
 > (256, 256)
 ```
 
-Create image from tile
+#### Create image from tile
 
 ```python
 from rio_tiler.utils import render
 
 buffer = render(tile, mask=mask) # this returns a buffer (PNG by default)
+```
+
+Rescale non-byte data and apply colormap
+
+```python
+from rio_tiler.colormap import cmap
+from rio_tiler.utils import linear_rescale
+
+# Rescale the tile array only where mask is valid and cast it to byte
+tile = numpy.where(
+  mask, linear_rescale(tile, in_range=(0, 1000), out_range=[0, 255]), 0
+).astype(numpy.uint8)
+
+cm = cmap.get("viridis")
+
+buffer = render(tile, mask=mask, colormap=cm)
 ```
 
 Use creation options to match `mapnik` default
@@ -87,7 +103,7 @@ with open("my.png", "wb") as f:
   f.write(buffer)
 ```
 
-Get a Sentinel2 tile and its nodata mask.
+#### Read Sentinel2 tile
 
 ```python
 from rio_tiler.io import sentinel2
@@ -97,7 +113,7 @@ print(tile.shape)
 > (3, 256, 256)
 ```
 
-Get bounds for a Landsat scene (WGS84).
+#### Use Landsat submodule
 
 ```python
 from rio_tiler.io import landsat8
