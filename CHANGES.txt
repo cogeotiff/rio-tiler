@@ -1,6 +1,6 @@
 2.0a11 (2020-05-29)
 ------------------
-- refactor `rio_tiler.utils.tile_exits` to allow raster bounds latitude == -90,90
+- refactor `rio_tiler.utils.tile_exists` to allow raster bounds latitude == -90,90
 
 2.0a10 (2020-05-29)
 ------------------

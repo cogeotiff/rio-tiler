@@ -54,7 +54,20 @@ def test_linear_rescale_valid():
 def test_tile_exists_valid():
     """Should work as expected (return true)."""
     bounds = [-80, 34, -75, 40]
-    assert utils.tile_exists(bounds, 7, 36, 50)
+    # Contains
+    assert utils.tile_exists(bounds, 7, 36, 50)  # bounds contains tile bounds
+    assert utils.tile_exists(bounds, 3, 2, 3)  # tile bounds contains bounds
+
+    # Intersects
+    assert utils.tile_exists(bounds, 7, 35, 50)
+    assert utils.tile_exists(bounds, 7, 37, 50)
+    assert utils.tile_exists(bounds, 7, 36, 51)
+    assert utils.tile_exists(bounds, 7, 37, 51)
+    assert utils.tile_exists(bounds, 7, 35, 51)
+    assert utils.tile_exists(bounds, 7, 35, 48)
+    assert utils.tile_exists(bounds, 7, 37, 48)
+
+    # Outside tiles
     assert not utils.tile_exists(bounds, 7, 36, 40)
     assert not utils.tile_exists(bounds, 7, 36, 60)
     assert not utils.tile_exists(bounds, 7, 25, 50)
