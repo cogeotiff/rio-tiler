@@ -38,6 +38,7 @@ COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
 COG_DLINE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_dateline.tif")
+COG_EARTH = os.path.join(os.path.dirname(__file__), "fixtures", "cog_fullearth.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -594,6 +595,16 @@ def test_metadata():
 def test_dateline():
     """Should return correct metadata."""
     with rasterio.open(COG_DLINE) as src_dst:
+        tile, _ = reader.tile(src_dst, 1, 42, 7, tilesize=64)
+        assert tile.shape == (1, 64, 64)
+
+        tile, _ = reader.tile(src_dst, 127, 42, 7, tilesize=64)
+        assert tile.shape == (1, 64, 64)
+
+
+def test_fullEarth():
+    """Should read tile for COG spanning the whole earth."""
+    with rasterio.open(COG_EARTH) as src_dst:
         tile, _ = reader.tile(src_dst, 1, 42, 7, tilesize=64)
         assert tile.shape == (1, 64, 64)
 

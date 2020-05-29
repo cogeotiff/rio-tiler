@@ -53,10 +53,12 @@ def test_linear_rescale_valid():
 
 def test_tile_exists_valid():
     """Should work as expected (return true)."""
-    tile = "7-36-50"
-    tile_z, tile_x, tile_y = map(int, tile.split("-"))
-    bounds = [-78.75, 34.30714385628803, -75.93749999999999, 36.59788913307021]
-    assert utils.tile_exists(bounds, tile_z, tile_x, tile_y)
+    bounds = [-80, 34, -75, 40]
+    assert utils.tile_exists(bounds, 7, 36, 50)
+    assert not utils.tile_exists(bounds, 7, 36, 40)
+    assert not utils.tile_exists(bounds, 7, 36, 60)
+    assert not utils.tile_exists(bounds, 7, 25, 50)
+    assert not utils.tile_exists(bounds, 7, 70, 50)
 
 
 def test_mapzen_elevation_rgb():
