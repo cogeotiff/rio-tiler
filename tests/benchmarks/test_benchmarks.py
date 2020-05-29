@@ -6,7 +6,7 @@ import mercantile
 import pytest
 import rasterio
 
-from rio_tiler import reader
+from rio_tiler import constants, reader
 
 from . import benchmark_dataset, benchmark_tiles
 
@@ -20,7 +20,12 @@ def read_tile(src_path, tile):
     with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
         with rasterio.open(src_path) as src_dst:
             return reader.part(
-                src_dst, tile_bounds, 256, 256, resampling_method="nearest"
+                src_dst,
+                tile_bounds,
+                256,
+                256,
+                resampling_method="nearest",
+                dst_crs=constants.WEB_MERCATOR_CRS,
             )
 
 

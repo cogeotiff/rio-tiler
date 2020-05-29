@@ -78,8 +78,8 @@ def test_metadata(rio):
     assert meta["sceneid"] == SENTINEL_SCENE
     assert len(meta["bounds"]) == 4
     assert len(meta["statistics"].items()) == 2
-    assert meta["statistics"]["vv"]["min"] == 1
-    assert meta["statistics"]["vh"]["max"] == 507
+    assert meta["statistics"]["vv"]["min"] == 4
+    assert meta["statistics"]["vh"]["max"] == 623
 
     meta = sentinel1.metadata(SENTINEL_SCENE, bands="vv")
     assert len(meta["statistics"].items()) == 1

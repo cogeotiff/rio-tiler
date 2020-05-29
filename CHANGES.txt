@@ -1,3 +1,9 @@
+2.0a10 (2020-05-29)
+------------------
+- Change default resampling to nearest for `_read` (#187)
+- add `rio_tiler.reader.stats` (return only array statistics)
+- remove default `dst_crs` in `rio_tiler.reader.part` to to fallback to dataset CRS.
+
 2.0a9 (2020-05-27)
 ------------------
 - Refactor colormap and add method to register custom colormap
