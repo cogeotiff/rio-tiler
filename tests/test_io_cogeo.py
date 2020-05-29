@@ -70,7 +70,7 @@ def test_metadata_valid():
     assert len(meta["band_descriptions"]) == 3
     assert (1, "band1") == meta["band_descriptions"][0]
     assert len(meta["statistics"].items()) == 3
-    assert meta["statistics"][1]["pc"] == [12, 198]
+    assert meta["statistics"][1]["pc"] == [10, 199]
 
 
 def test_metadata_valid_custom():
@@ -81,7 +81,7 @@ def test_metadata_valid_custom():
     assert meta["address"] == ADDRESS
     assert len(meta["statistics"].items()) == 3
     assert len(meta["statistics"][1]["histogram"][0]) == 20
-    assert meta["statistics"][1]["pc"] == [41, 184]
+    assert meta["statistics"][1]["pc"] == [29, 192]
 
 
 def test_tile_valid_default():

@@ -37,7 +37,7 @@ def _read(
     out_window: Optional[windows.Window] = None,  # DEPRECATED
     window: Optional[windows.Window] = None,
     nodata: Optional[Union[float, int, str]] = None,
-    resampling_method: Resampling = "bilinear",
+    resampling_method: Resampling = "nearest",
     force_binary_mask: bool = True,
     unscale: bool = False,
     vrt_options: Dict = {},
@@ -61,7 +61,7 @@ def _read(
         Window to read.
     nodata: int or float, optional
     resampling_method: str, optional
-        Resampling algorithm. Default is "bilinear".
+        Resampling algorithm. Default is "nearest".
     force_binary_mask: bool, optional
         If True, rio-tiler makes sure mask has only 0 or 255 values.
         Default is set to True.
@@ -143,7 +143,7 @@ def part(
     height: Optional[int] = None,
     width: Optional[int] = None,
     padding: int = 0,
-    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+    dst_crs: Optional[CRS] = None,
     bounds_crs: Optional[CRS] = None,
     minimum_overlap: Optional[float] = None,
     warp_vrt_option: Dict = {},
@@ -187,6 +187,9 @@ def part(
     mask: numpy array
 
     """
+    if not dst_crs:
+        dst_crs = src_dst.crs
+
     if max_size and width and height:
         warnings.warn(
             "'max_size' will be ignored with with 'height' and 'width' set.",
@@ -364,6 +367,75 @@ def point(
     return point_values.tolist()
 
 
+def stats(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    bounds: Optional[Tuple[float, float, float, float]] = None,
+    indexes: Optional[Union[Sequence[int], int]] = None,
+    max_size: int = 1024,
+    bounds_crs: CRS = constants.WGS84_CRS,
+    percentiles: Tuple[float, float] = (2.0, 98.0),
+    hist_options: Dict = {},
+    **kwargs: Any,
+) -> Dict:
+    """
+    Retrieve statistics from an image.
+
+    Attributes
+    ----------
+    src_dst : rasterio.io.DatasetReader
+        rasterio.io.DatasetReader object
+    bounds : tuple, optional
+        Bounding box coordinates from which to calculate image statistics.
+    max_size : int
+        `max_size` of the longest dimension, respecting
+        bounds X/Y aspect ratio.
+    indexes : list of ints or a single int, optional
+        Band indexes.
+    bounds_crs: CRS or str, optional
+        Specify bounds coordinate reference system, default WGS84/EPSG4326.
+    percentiles: tuple, optional
+        Tuple of Min/Max percentiles to compute. Default is (2, 98).
+    hist_options : dict, optional
+        Options to forward to numpy.histogram function.
+    kwargs : Any, optional
+        Additional options to forward to part or preview
+
+    Returns
+    -------
+    dict
+
+    """
+    if isinstance(indexes, int):
+        indexes = (indexes,)
+
+    if indexes is None:
+        indexes = non_alpha_indexes(src_dst)
+        if indexes != src_dst.indexes:
+            warnings.warn(
+                "Alpha band was removed from the output data array", AlphaBandWarning
+            )
+
+    if bounds:
+        data, mask = part(
+            src_dst,
+            bounds,
+            max_size=max_size,
+            indexes=indexes,
+            bounds_crs=bounds_crs,
+            **kwargs,
+        )
+    else:
+        data, mask = preview(src_dst, max_size=max_size, indexes=indexes, **kwargs)
+
+    data = numpy.ma.array(data)
+    data.mask = mask == 0
+
+    return {
+        indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
+        for b in range(data.shape[0])
+    }
+
+
 def metadata(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Optional[Tuple[float, float, float, float]] = None,
@@ -375,7 +447,7 @@ def metadata(
     **kwargs: Any,
 ) -> Dict:
     """
-    Retrieve statistics from multiple sentinel bands.
+    Retrieve metadata and statistics from an image.
 
     Attributes
     ----------
@@ -418,7 +490,6 @@ def metadata(
             bounds,
             max_size=max_size,
             indexes=indexes,
-            dst_crs=src_dst.crs,
             bounds_crs=bounds_crs,
             **kwargs,
         )
@@ -521,7 +592,14 @@ def tile(
         raise TileOutsideBounds(f"Tile {z}/{x}/{y} is outside image bounds")
 
     tile_bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
-    return part(src_dst, tile_bounds, tilesize, tilesize, **kwargs)
+    return part(
+        src_dst,
+        tile_bounds,
+        tilesize,
+        tilesize,
+        dst_crs=constants.WEB_MERCATOR_CRS,
+        **kwargs,
+    )
 
 
 def multi_tile(

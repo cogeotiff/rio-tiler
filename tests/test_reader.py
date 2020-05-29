@@ -60,32 +60,45 @@ def test_tile_read_valid():
         3835304.331237001,
     )
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds, 16, 16)
+        arr, mask = reader.part(
+            src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS
+        )
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
 
     # Read bounds at full resolution
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds)
+        arr, mask = reader.part(src_dst, bounds, dst_crs=constants.WEB_MERCATOR_CRS)
     assert arr.shape == (1, 73, 73)
     assert mask.shape == (73, 73)
 
     # set max_size for the returned array
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds, max_size=50)
+        arr, mask = reader.part(
+            src_dst, bounds, max_size=50, dst_crs=constants.WEB_MERCATOR_CRS
+        )
     assert arr.shape == (1, 50, 50)
     assert mask.shape == (50, 50)
 
     # If max_size is bigger than actual size, there is no effect
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds, max_size=80)
+        arr, mask = reader.part(
+            src_dst, bounds, max_size=80, dst_crs=constants.WEB_MERCATOR_CRS
+        )
     assert arr.shape == (1, 73, 73)
     assert mask.shape == (73, 73)
 
     # Incompatible max_size with height and width
     with pytest.warns(UserWarning):
         with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-            arr, mask = reader.part(src_dst, bounds, max_size=50, width=25, height=25)
+            arr, mask = reader.part(
+                src_dst,
+                bounds,
+                max_size=50,
+                width=25,
+                height=25,
+                dst_crs=constants.WEB_MERCATOR_CRS,
+            )
     assert arr.shape == (1, 25, 25)
     assert mask.shape == (25, 25)
 
@@ -99,7 +112,7 @@ def test_tile_read_validResampling():
         3835304.331237001,
     )
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds, 16, 16, resampling_method="nearest")
+        arr, mask = reader.part(src_dst, bounds, 16, 16, resampling_method="bilinear")
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
 
@@ -112,8 +125,17 @@ def test_resampling_returns_different_results():
         3835304.331237001,
     )
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 16, 16)
-        arr2, _ = reader.part(src_dst, bounds, 16, 16, resampling_method="nearest")
+        arr, _ = reader.part(
+            src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS
+        )
+        arr2, _ = reader.part(
+            src_dst,
+            bounds,
+            16,
+            16,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+            resampling_method="bilinear",
+        )
 
     assert not numpy.array_equal(arr, arr2)
 
@@ -126,8 +148,25 @@ def test_resampling_with_diff_padding_returns_different_results():
         3835304.331237001,
     )
     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 32, 32, nodata=0)
-        arr2, _ = reader.part(src_dst, bounds, 32, 32, nodata=0, padding=2)
+        arr, _ = reader.part(
+            src_dst,
+            bounds,
+            32,
+            32,
+            nodata=0,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+            resampling_method="bilinear",
+        )
+        arr2, _ = reader.part(
+            src_dst,
+            bounds,
+            32,
+            32,
+            nodata=0,
+            padding=10,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+            resampling_method="bilinear",
+        )
 
     assert not numpy.array_equal(arr, arr2)
 
@@ -151,8 +190,18 @@ def test_resampling_with_diff_padding_returns_different_results():
 def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
     """Ignore Padding when COG is aligned."""
     with rasterio.open(COG_WEB_TILED) as src_dst:
-        arr, _ = reader.tile(src_dst, 147, 182, 9, tilesize=256, padding=0)
-        arr2, _ = reader.tile(src_dst, 147, 182, 9, tilesize=256, padding=100)
+        arr, _ = reader.tile(
+            src_dst, 147, 182, 9, tilesize=256, padding=0, resampling_method="bilinear"
+        )
+        arr2, _ = reader.tile(
+            src_dst,
+            147,
+            182,
+            9,
+            tilesize=256,
+            padding=100,
+            resampling_method="bilinear",
+        )
     assert numpy.array_equal(arr, arr2)
 
 
