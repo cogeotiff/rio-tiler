@@ -558,6 +558,16 @@ def test_point():
             reader.point(src_dst, [-95.530, 19.8882], masked=True, nodata=100)[0] == 0
         )
 
+    with rasterio.open(S3_MASK_PATH) as src_dst:
+        # Test with COG + internal mask
+        assert not reader.point(src_dst, [-104.7753105, 38.953548])[0]
+        assert reader.point(src_dst, [-104.7753105415, 38.953548], masked=False)[0] == 0
+
+    with rasterio.open(S3_ALPHA_PATH) as src_dst:
+        # Test with COG + Alpha Band
+        assert not reader.point(src_dst, [-104.77519499, 38.95367054])[0]
+        assert reader.point(src_dst, [-104.77519499, 38.95367054], masked=False)[0] == 0
+
 
 def test_metadata():
     """Should return correct metadata."""
