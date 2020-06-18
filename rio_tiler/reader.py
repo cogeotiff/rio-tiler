@@ -316,7 +316,9 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Union[Sequence[int], int]] = None,
     coord_crs: CRS = constants.WGS84_CRS,
+    nodata: Optional[Union[float, int, str]] = None,
     unscale: bool = False,
+    masked: bool = True,
 ) -> List:
     """
     Read point value
@@ -331,11 +333,13 @@ def point(
             Band indexes
         coord_crs : rasterio.crs.CRS, optional
             (X, Y) coordinate system. Default is WGS84/EPSG:4326.
+        nodata: int or float, optional
         unscale, bool, optional
             If True, apply scale and offset to the data.
             Default is set to False.
-        kwargs : Any, optional
-            Additional options to forward to src_dst.sample()
+        masked : bool
+            Whether to mask samples that fall outside the extent of the dataset.
+            Default is set to True.
 
     Returns
     -------
@@ -355,14 +359,26 @@ def point(
 
     indexes = indexes if indexes is not None else src_dst.indexes
 
-    point_values = list(src_dst.sample([(lon[0], lat[0])], indexes=indexes))[0]
+    vrt_params: Dict[str, Any] = {"add_alpha": True}
+    nodata = nodata if nodata is not None else src_dst.nodata
+    if nodata is not None:
+        vrt_params.update({"nodata": nodata, "add_alpha": False, "src_nodata": nodata})
 
-    if unscale:
-        point_values = point_values.astype("float32", casting="unsafe")
-        numpy.multiply(
-            point_values, src_dst.scales[0], out=point_values, casting="unsafe"
-        )
-        numpy.add(point_values, src_dst.offsets[0], out=point_values, casting="unsafe")
+    if has_alpha_band(src_dst):
+        vrt_params.update({"add_alpha": False})
+
+    with WarpedVRT(src_dst, **vrt_params) as vrt_dst:
+        point_values = list(
+            vrt_dst.sample([(lon[0], lat[0])], indexes=indexes, masked=masked)
+        )[0]
+        if unscale:
+            point_values = point_values.astype("float32", casting="unsafe")
+            numpy.multiply(
+                point_values, vrt_dst.scales[0], out=point_values, casting="unsafe"
+            )
+            numpy.add(
+                point_values, vrt_dst.offsets[0], out=point_values, casting="unsafe"
+            )
 
     return point_values.tolist()
 
