@@ -61,6 +61,7 @@
     "thumbnail": {
       "href": "http://cool-sat.com/catalog/a-fake-item/thumbnail.png",
       "title": "Thumbnail",
+      "type": "image/png",
       "roles": [ "thumbnail" ]
     }
   }

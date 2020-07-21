@@ -4,32 +4,28 @@ import os
 
 import pytest
 
-from rio_tiler import constants
 from rio_tiler.errors import TileOutsideBounds
-from rio_tiler.io import cogeo
+from rio_tiler.io import COGReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
-ADDRESS = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif".format(
-    PREFIX
-)
-COG_TAGS = os.path.join(os.path.dirname(__file__), "fixtures", "cog_tags.tif")
 
+KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
+KEY_MASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_mask.tif"
 
-@pytest.fixture(autouse=True)
-def testing_env_var(monkeypatch):
-    """Set fake env to make sure we don't hit AWS services."""
-    monkeypatch.setenv("AWS_ACCESS_KEY_ID", "jqt")
-    monkeypatch.setenv("AWS_SECRET_ACCESS_KEY", "rde")
-    monkeypatch.delenv("AWS_PROFILE", raising=False)
-    monkeypatch.setenv("AWS_CONFIG_FILE", "/tmp/noconfigheere")
-    monkeypatch.setenv("AWS_SHARED_CREDENTIALS_FILE", "/tmp/noconfighereeither")
-    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "EMPTY_DIR")
+COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
+COG_MASK = os.path.join(PREFIX, "my-bucket", KEY_MASK)
+
+COGEO = os.path.join(PREFIX, "cog.tif")
+COG_CMAP = os.path.join(PREFIX, "cog_cmap.tif")
+COG_TAGS = os.path.join(PREFIX, "cog_tags.tif")
+COG_NODATA = os.path.join(PREFIX, "cog_nodata.tif")
+COG_SCALE = os.path.join(PREFIX, "cog_scale.tif")
 
 
 def test_spatial_info_valid():
     """Should work as expected (get spatial info)"""
-    meta = cogeo.spatial_info(ADDRESS)
-    assert meta.get("address")
+    with COGReader(COG_NODATA) as cog:
+        meta = cog.spatial_info()
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
     assert meta.get("center")
@@ -38,15 +34,24 @@ def test_spatial_info_valid():
 
 def test_bounds_valid():
     """Should work as expected (get bounds)"""
-    meta = cogeo.bounds(ADDRESS)
-    assert meta.get("address") == ADDRESS
-    assert len(meta.get("bounds")) == 4
+    with COGReader(COG_NODATA) as cog:
+        assert len(cog.bounds) == 4
 
 
 def test_info_valid():
     """Should work as expected (get file info)"""
-    meta = cogeo.info(COG_TAGS)
-    assert meta.get("address") == COG_TAGS
+    with COGReader(COG_SCALE) as cog:
+        meta = cog.info
+    assert meta.get("scale")
+    assert meta.get("offset")
+
+    with COGReader(COG_CMAP) as cog:
+        assert cog.colormap
+        meta = cog.info
+    assert meta.get("colormap")
+
+    with COGReader(COG_TAGS) as cog:
+        meta = cog.info
     assert meta.get("bounds")
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
@@ -62,75 +67,149 @@ def test_info_valid():
     assert bmeta.get("STATISTICS_MEAN")
     assert bmeta.get("STATISTICS_MINIMUM")
 
+    with COGReader(COG_ALPHA) as cog:
+        meta = cog.info
+    assert meta.get("nodata_type") == "Alpha"
+
+    with COGReader(COG_MASK) as cog:
+        meta = cog.info
+    assert meta.get("nodata_type") == "Mask"
+
+    with COGReader(COGEO) as cog:
+        meta = cog.info
+    assert meta.get("nodata_type") == "None"
+
+    with COGReader(COG_NODATA) as cog:
+        meta = cog.info
+    assert meta.get("nodata_type") == "Nodata"
+
 
 def test_metadata_valid():
     """Get bounds and get stats for all bands."""
-    meta = cogeo.metadata(ADDRESS)
-    assert meta["address"] == ADDRESS
-    assert len(meta["band_descriptions"]) == 3
+    with COGReader(COGEO) as cog:
+        meta = cog.metadata()
+    assert len(meta["band_descriptions"]) == 1
     assert (1, "band1") == meta["band_descriptions"][0]
-    assert len(meta["statistics"].items()) == 3
-    assert meta["statistics"][1]["pc"] == [10, 199]
+    assert len(meta["statistics"].items()) == 1
+    assert meta["statistics"][1]["pc"] == [1, 6896]
 
+    with COGReader(COGEO) as cog:
+        meta = cog.stats()
+    assert len(meta.items()) == 1
+    assert meta[1]["pc"] == [1, 6896]
 
-def test_metadata_valid_custom():
-    """Get bounds and get stats for all bands with custom percentiles."""
-    meta = cogeo.metadata(
-        ADDRESS, pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128
-    )
-    assert meta["address"] == ADDRESS
-    assert len(meta["statistics"].items()) == 3
+    with COGReader(COGEO) as cog:
+        meta = cog.metadata(pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128)
+    assert len(meta["statistics"].items()) == 1
     assert len(meta["statistics"][1]["histogram"][0]) == 20
-    assert meta["statistics"][1]["pc"] == [29, 192]
+    assert meta["statistics"][1]["pc"] == [1, 3776]
+
+    with COGReader(COG_CMAP) as cog:
+        assert cog.colormap
+        meta = cog.metadata()
+        assert meta["statistics"][1]["histogram"][1] == list(range(20))
 
 
 def test_tile_valid_default():
     """Should return a 3 bands array and a full valid mask."""
-    tile_z = 21
-    tile_x = 438217
-    tile_y = 801835
+    with COGReader(COG_NODATA) as cog:
+        # Full tile
+        data, mask = cog.tile(43, 24, 7)
+        assert data.shape == (1, 256, 256)
+        assert mask.all()
 
-    data, mask = cogeo.tile(ADDRESS, tile_x, tile_y, tile_z)
-    assert data.shape == (3, 256, 256)
-    assert mask.all()
+        # Partial tile
+        data, mask = cog.tile(42, 24, 7)
+        assert data.shape == (1, 256, 256)
+        assert not mask.all()
+
+        # Expression
+        data, mask = cog.tile(43, 24, 7, expression="b1*2,b1-100")
+        assert data.shape == (2, 256, 256)
+
+        data, mask = cog.tile(43, 24, 7, indexes=1)
+        assert data.shape == (1, 256, 256)
+
+        data, mask = cog.tile(43, 24, 7, indexes=(1, 1,))
+        assert data.shape == (2, 256, 256)
 
 
 def test_tile_invalid_bounds():
     """Should raise an error with invalid tile."""
-    tile_z = 19
-    tile_x = 554
-    tile_y = 200458
-
     with pytest.raises(TileOutsideBounds):
-        cogeo.tile(ADDRESS, tile_x, tile_y, tile_z)
+        with COGReader(COGEO) as cog:
+            cog.tile(38, 24, 7)
 
 
 def test_point_valid():
     """Read point."""
-    lon = -104.77499638118547
-    lat = 38.953606785685125
-    assert cogeo.point(ADDRESS, lon, lat)
+    lon = -56.624124590533825
+    lat = 73.52687881825946
+    with COGReader(COG_NODATA) as cog:
+        pts = cog.point(lon, lat)
+        assert len(pts) == 1
+
+        pts = cog.point(lon, lat, expression="b1*2,b1-100")
+        assert len(pts) == 2
+
+        pts = cog.point(lon, lat, indexes=1)
+        assert len(pts) == 1
+
+        pts = cog.point(lon, lat, indexes=(1, 1,))
+        assert len(pts) == 2
 
 
 def test_area_valid():
     """Read part of an image."""
     bbox = (
-        -104.77506637573242,
-        38.95353532141205,
-        -104.77472305297852,
-        38.95366881479647,
+        -56.624124590533825,
+        73.52687881825946,
+        -56.530950796449005,
+        73.50183615350426,
     )
-    data, mask = cogeo.area(ADDRESS, bbox)
-    assert data.shape == (3, 100, 199)
+    with COGReader(COG_NODATA) as cog:
+        data, mask = cog.part(bbox)
+    assert data.shape == (1, 11, 41)
 
-    data, mask = cogeo.area(ADDRESS, bbox, max_size=100)
-    assert data.shape == (3, 51, 100)
+    with COGReader(COG_NODATA) as cog:
+        data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
+    assert data.shape == (1, 29, 30)
 
-    data, mask = cogeo.area(ADDRESS, bbox, dst_crs=constants.WGS84_CRS)
-    assert data.shape == (3, 82, 210)
+    with COGReader(COG_NODATA) as cog:
+        data, mask = cog.part(bbox, max_size=30)
+    assert data.shape == (1, 9, 30)
+
+    with COGReader(COG_NODATA) as cog:
+        data, mask = cog.part(bbox, expression="b1*2,b1-100")
+    assert data.shape == (2, 11, 41)
+
+    with COGReader(COG_NODATA) as cog:
+        data, mask = cog.part(bbox, indexes=1)
+    assert data.shape == (1, 11, 41)
+
+    with COGReader(COG_NODATA) as cog:
+        data, mask = cog.part(bbox, indexes=(1, 1,))
+    assert data.shape == (2, 11, 41)
 
 
 def test_preview_valid():
     """Read preview."""
-    data, mask = cogeo.preview(ADDRESS, max_size=128)
-    assert data.shape == (3, 78, 128)
+    with COGReader(COGEO) as cog:
+        data, mask = cog.preview(max_size=128)
+    assert data.shape == (1, 128, 128)
+
+    with COGReader(COGEO) as cog:
+        data, mask = cog.preview()
+    assert data.shape == (1, 1024, 1021)
+
+    with COGReader(COGEO) as cog:
+        data, mask = cog.preview(max_size=128, expression="b1*2,b1-100")
+    assert data.shape == (2, 128, 128)
+
+    with COGReader(COGEO) as cog:
+        data, mask = cog.preview(max_size=128, indexes=1)
+    assert data.shape == (1, 128, 128)
+
+    with COGReader(COGEO) as cog:
+        data, mask = cog.preview(max_size=128, indexes=(1, 1,))
+    assert data.shape == (2, 128, 128)

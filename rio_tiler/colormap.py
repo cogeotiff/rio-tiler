@@ -6,9 +6,8 @@ from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy
 
-from rio_tiler.errors import DeprecationWarning, InvalidColorMapName
-
 from .cmap_data import _default_cmaps
+from .errors import DeprecationWarning, InvalidColorMapName
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
