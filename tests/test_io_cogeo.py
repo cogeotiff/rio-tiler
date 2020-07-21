@@ -4,9 +4,8 @@ import os
 
 import pytest
 
-from rio_tiler import constants
 from rio_tiler.errors import TileOutsideBounds
-from rio_tiler.io import cogeo
+from rio_tiler.io import COGReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 ADDRESS = "{}/my-bucket/hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif".format(
@@ -28,8 +27,8 @@ def testing_env_var(monkeypatch):
 
 def test_spatial_info_valid():
     """Should work as expected (get spatial info)"""
-    meta = cogeo.spatial_info(ADDRESS)
-    assert meta.get("address")
+    with COGReader(ADDRESS) as cog:
+        meta = cog.spatial_info()
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
     assert meta.get("center")
@@ -38,15 +37,14 @@ def test_spatial_info_valid():
 
 def test_bounds_valid():
     """Should work as expected (get bounds)"""
-    meta = cogeo.bounds(ADDRESS)
-    assert meta.get("address") == ADDRESS
-    assert len(meta.get("bounds")) == 4
+    with COGReader(ADDRESS) as cog:
+        assert len(cog.bounds) == 4
 
 
 def test_info_valid():
     """Should work as expected (get file info)"""
-    meta = cogeo.info(COG_TAGS)
-    assert meta.get("address") == COG_TAGS
+    with COGReader(COG_TAGS) as cog:
+        meta = cog.info
     assert meta.get("bounds")
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
@@ -65,20 +63,23 @@ def test_info_valid():
 
 def test_metadata_valid():
     """Get bounds and get stats for all bands."""
-    meta = cogeo.metadata(ADDRESS)
-    assert meta["address"] == ADDRESS
+    with COGReader(ADDRESS) as cog:
+        meta = cog.metadata()
     assert len(meta["band_descriptions"]) == 3
     assert (1, "band1") == meta["band_descriptions"][0]
     assert len(meta["statistics"].items()) == 3
     assert meta["statistics"][1]["pc"] == [10, 199]
 
+    with COGReader(ADDRESS) as cog:
+        meta = cog.stats()
+    assert len(meta.items()) == 3
+    assert meta[1]["pc"] == [10, 199]
+
 
 def test_metadata_valid_custom():
     """Get bounds and get stats for all bands with custom percentiles."""
-    meta = cogeo.metadata(
-        ADDRESS, pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128
-    )
-    assert meta["address"] == ADDRESS
+    with COGReader(ADDRESS) as cog:
+        meta = cog.metadata(pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128)
     assert len(meta["statistics"].items()) == 3
     assert len(meta["statistics"][1]["histogram"][0]) == 20
     assert meta["statistics"][1]["pc"] == [29, 192]
@@ -89,8 +90,8 @@ def test_tile_valid_default():
     tile_z = 21
     tile_x = 438217
     tile_y = 801835
-
-    data, mask = cogeo.tile(ADDRESS, tile_x, tile_y, tile_z)
+    with COGReader(ADDRESS) as cog:
+        data, mask = cog.tile(tile_x, tile_y, tile_z)
     assert data.shape == (3, 256, 256)
     assert mask.all()
 
@@ -100,16 +101,18 @@ def test_tile_invalid_bounds():
     tile_z = 19
     tile_x = 554
     tile_y = 200458
-
     with pytest.raises(TileOutsideBounds):
-        cogeo.tile(ADDRESS, tile_x, tile_y, tile_z)
+        with COGReader(ADDRESS) as cog:
+            cog.tile(tile_x, tile_y, tile_z)
 
 
 def test_point_valid():
     """Read point."""
     lon = -104.77499638118547
     lat = 38.953606785685125
-    assert cogeo.point(ADDRESS, lon, lat)
+    with COGReader(ADDRESS) as cog:
+        pts = cog.point(lon, lat)
+        assert len(pts) == 3
 
 
 def test_area_valid():
@@ -120,17 +123,21 @@ def test_area_valid():
         -104.77472305297852,
         38.95366881479647,
     )
-    data, mask = cogeo.area(ADDRESS, bbox)
+    with COGReader(ADDRESS) as cog:
+        data, mask = cog.part(bbox)
+    assert data.shape == (3, 82, 210)
+
+    with COGReader(ADDRESS) as cog:
+        data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
     assert data.shape == (3, 100, 199)
 
-    data, mask = cogeo.area(ADDRESS, bbox, max_size=100)
-    assert data.shape == (3, 51, 100)
-
-    data, mask = cogeo.area(ADDRESS, bbox, dst_crs=constants.WGS84_CRS)
-    assert data.shape == (3, 82, 210)
+    with COGReader(ADDRESS) as cog:
+        data, mask = cog.part(bbox, max_size=100)
+    assert data.shape == (3, 40, 100)
 
 
 def test_preview_valid():
     """Read preview."""
-    data, mask = cogeo.preview(ADDRESS, max_size=128)
+    with COGReader(ADDRESS) as cog:
+        data, mask = cog.preview(max_size=128)
     assert data.shape == (3, 78, 128)

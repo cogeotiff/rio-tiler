@@ -1,151 +1,376 @@
 """rio_tiler.io.stac: STAC reader."""
 
-from typing import Any, Dict, Sequence, Tuple
+import functools
+import json
+import re
+from dataclasses import dataclass, field
+from typing import Any, Dict, Iterator, List, Optional, Sequence, Set, Tuple, Union
+from urllib.parse import urlparse
 
 import numpy
+import requests
 
-from rio_tiler import reader
-from rio_tiler.errors import InvalidBandName, TileOutsideBounds
-from rio_tiler.utils import tile_exists
+from ..errors import InvalidBandName
+from ..expression import apply_expression
+from ..utils import aws_get_object
+from .cogeo import (
+    multi_info,
+    multi_metadata,
+    multi_part,
+    multi_point,
+    multi_preview,
+    multi_stats,
+    multi_tile,
+)
+
+DEFAULT_VALID_TYPE = {
+    "image/tiff; application=geotiff",
+    "image/tiff; application=geotiff; profile=cloud-optimized",
+    "image/vnd.stac.geotiff; cloud-optimized=true",
+    "image/tiff",
+    "image/x.geotiff",
+    "image/jp2",
+    "application/x-hdf5",
+    "application/x-hdf",
+}
 
 
-def _get_href(stac: Dict, assets: Sequence[str]) -> Sequence[str]:
-    """Validate asset names and return asset's url."""
-    _assets = list(stac["assets"].keys())
-    for asset in assets:
-        if asset not in _assets:
-            raise InvalidBandName(f"{asset} is not a valid asset name.")
+@functools.lru_cache(maxsize=512)
+def fetch(filepath: str) -> Dict:
+    """Fetch items."""
+    parsed = urlparse(filepath)
+    if parsed.scheme == "s3":
+        bucket = parsed.netloc
+        key = parsed.path.strip("/")
+        return json.loads(aws_get_object(bucket, key))
 
-    return [stac["assets"][asset]["href"] for asset in assets]
+    elif parsed.scheme in ["https", "http", "ftp"]:
+        return requests.get(filepath).json()
+
+    else:
+        with open(filepath, "r") as f:
+            return json.load(f)
 
 
-def spatial_info(stac: Dict) -> Dict:
+def _get_assets(
+    item: Dict,
+    include: Optional[Set[str]] = None,
+    exclude: Optional[Set[str]] = None,
+    include_asset_types: Optional[Set[str]] = None,
+    exclude_asset_types: Optional[Set[str]] = None,
+) -> Iterator:
+    """Get Asset list."""
+    for asset, asset_info in item["assets"].items():
+        _type = asset_info.get("type")
+
+        if exclude and asset in exclude:
+            continue
+
+        if (
+            _type
+            and (exclude_asset_types and _type in exclude_asset_types)
+            or (include and asset not in include)
+        ):
+            continue
+
+        if (
+            _type
+            and (include_asset_types and _type not in include_asset_types)
+            or (include and asset not in include)
+        ):
+            continue
+
+        yield asset
+
+
+@dataclass
+class STACReader:
     """
-    Return STAC spatial info.
+    STAC + Cloud Optimized GeoTIFF Reader.
+
+    Examples
+    --------
+    with STACReader(stac_path) as stac:
+        stac.tile(...)
+
+    my_stac = {
+        "type": "Feature",
+        "stac_version": "1.0.0",
+        ...
+    }
+    with STACReader(None, item=my_stac) as stac:
+        stac.tile(...)
 
     Attributes
     ----------
-        stac : dict
-            STAC item.
+    filepath: str
+        STAC Item path, URL or S3 URL.
+    item: Dict, optional
+        STAC Item dict.
+    minzoom: int, optional
+        Set minzoom for the tiles.
+    minzoom: int, optional
+        Set maxzoom for the tiles.
+    include_assets: Set, optional
+        Only accept some assets.
+    exclude_assets: Set, optional
+        Exclude some assets.
+    include_asset_types: Set, optional
+        Only include some assets base on their type
+    include_asset_types: Set, optional
+        Exclude some assets base on their type
 
-    Returns
-    -------
-        out : dict.
-
-    """
-    raise Exception("Not implemented")
-
-
-def bounds(stac: Dict) -> Dict:
-    """
-    Return STAC bounds.
-
-    Attributes
+    Properties
     ----------
-        stac : dict
-            STAC item.
+    bounds: tuple[float]
+        STAC bounds in WGS84 crs.
+    center: tuple[float, float, int]
+        STAC item center + minzoom
 
-    Returns
+    Methods
     -------
-        out : dict
-            dictionary with image bounds.
+    tile(0, 0, 0, assets="B01", expression="B01/B02")
+        Read a map tile from the COG.
+    part((0,10,0,10), assets="B01", expression="B1/B20", max_size=1024)
+        Read part of the COG.
+    preview(assets="B01", max_size=1024)
+        Read preview of the COG.
+    point((10, 10), assets="B01")
+        Read a point value from the COG.
+    stats(assets="B01", pmin=5, pmax=95)
+        Get Raster statistics.
+    info(assets="B01")
+        Get Assets raster info.
+    metadata(assets="B01", pmin=5, pmax=95)
+        info + stats
 
     """
-    return dict(id=stac["id"], bounds=stac["bbox"])
 
+    filepath: str
+    item: Optional[Dict] = None
+    minzoom: int = 0
+    maxzoom: int = 30
+    include_assets: Optional[Set[str]] = None
+    exclude_assets: Optional[Set[str]] = None
+    include_asset_types: Set[str] = field(default_factory=lambda: DEFAULT_VALID_TYPE)
+    exclude_asset_types: Optional[Set[str]] = None
 
-def metadata(
-    stac: Dict,
-    assets: Sequence[str],
-    pmin: float = 2.0,
-    pmax: float = 98.0,
-    hist_options: Dict = {},
-    **kwargs: Any,
-) -> Dict:
-    """
-    Return STAC assets statistics.
+    def __enter__(self):
+        """Support using with Context Managers."""
+        self.item = self.item or fetch(self.filepath)
 
-    Attributes
-    ----------
-        stac : dict
-            STAC item.
-        assets : list
-            Asset names.
-        pmin : int, optional, (default: 2)
-            Histogram minimum cut.
-        pmax : int, optional, (default: 98)
-            Histogram maximum cut.
-        hist_options : dict, optional
-            Options to forward to numpy.histogram function.
-            e.g: {bins=20, range=(0, 1000)}
-        kwargs : optional
-            These are passed to 'rio_tiler.reader.preview'
+        # Get Zooms from proj: ?
+        self.bounds: Tuple[float, float, float, float] = self.item["bbox"]
 
-    Returns
-    -------
-        out : dict
-            Dictionary with image bounds and bands statistics.
-
-    """
-    if isinstance(assets, str):
-        assets = (assets,)
-
-    assets_url = _get_href(stac, assets)
-    responses = reader.multi_metadata(
-        assets_url, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs
-    )
-
-    info: Dict[str, Any] = dict(id=stac["id"])
-    info["band_descriptions"] = [(ix + 1, b) for ix, b in enumerate(assets)]
-    info["bounds"] = stac["bbox"]
-    info["statistics"] = {b: d["statistics"][1] for b, d in zip(assets, responses)}
-    info["dtypes"] = {b: d["dtype"] for b, d in zip(assets, responses)}
-    info["nodata_types"] = {b: d["nodata_type"] for b, d in zip(assets, responses)}
-    return info
-
-
-def tile(
-    stac: Dict,
-    assets: Sequence[str],
-    tile_x: int,
-    tile_y: int,
-    tile_z: int,
-    tilesize: int = 256,
-    **kwargs: Any,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Create mercator tile from any images.
-
-    Attributes
-    ----------
-        stac : dict
-            STAC item.
-        assets : list
-            Asset names.
-        tile_x : int
-            Mercator tile X index.
-        tile_y : int
-            Mercator tile Y index.
-        tile_z : int
-            Mercator tile ZOOM level.
-        tilesize : int, optional (default: 256)
-            Output image size.
-        kwargs: dict, optional
-            These will be passed to the 'rio_tiler.reader.tile' function.
-
-    Returns
-    -------
-        data : numpy ndarray
-        mask: numpy array
-
-    """
-    if isinstance(assets, str):
-        assets = (assets,)
-
-    if not tile_exists(stac["bbox"], tile_z, tile_x, tile_y):
-        raise TileOutsideBounds(
-            f"Tile {tile_z}/{tile_x}/{tile_y} is outside item bounds"
+        self.assets = list(
+            _get_assets(
+                self.item,
+                include=self.include_assets,
+                exclude=self.exclude_assets,
+                include_asset_types=self.include_asset_types,
+                exclude_asset_types=self.exclude_asset_types,
+            )
         )
 
-    assets_url = _get_href(stac, assets)
-    return reader.multi_tile(assets_url, tile_x, tile_y, tile_z, **kwargs)
+        return self
+
+    def __exit__(self, *args):
+        """Support using with Context Managers."""
+        pass
+
+    def _get_href(self, assets: Sequence[str]) -> Sequence[str]:
+        """Validate asset names and return asset's url."""
+        for asset in assets:
+            if asset not in self.assets:
+                raise InvalidBandName(f"{asset} is not a valid asset name.")
+
+        return [self.item["assets"][asset]["href"] for asset in assets]
+
+    def _parse_expression(self, expression: str) -> Sequence[str]:
+        """Parse rio-tiler band math expression."""
+        _re = re.compile("|".join(sorted(self.assets, reverse=True)))
+        assets = list(set(re.findall(_re, expression)))
+        return assets
+
+    @property
+    def center(self) -> Tuple[float, float, int]:
+        """Return COG center + minzoom."""
+        return (
+            (self.bounds[0] + self.bounds[2]) / 2,
+            (self.bounds[1] + self.bounds[3]) / 2,
+            self.minzoom,
+        )
+
+    def tile(
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        tilesize: int = 256,
+        assets: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",  # Expression based on asset names
+        asset_expression: Optional[
+            str
+        ] = "",  # Expression for each asset based on index names
+        **kwargs: Any,
+    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        """Read a Mercator Map tile from a COGs."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        if expression:
+            assets = self._parse_expression(expression)
+
+        if not assets:
+            raise InvalidBandName(
+                "assets must be passed either via expression or assets options."
+            )
+
+        asset_urls = self._get_href(assets)
+        data, mask = multi_tile(
+            asset_urls, tile_x, tile_y, tile_z, expression=asset_expression, **kwargs,
+        )
+
+        if expression:
+            blocks = expression.split(",")
+            data = apply_expression(blocks, assets, data)
+
+        return data, mask
+
+    def part(
+        self,
+        bbox: Tuple[float, float, float, float],
+        max_size: int = 1024,
+        assets: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",  # Expression based on asset names
+        asset_expression: Optional[
+            str
+        ] = "",  # Expression for each asset based on index names
+        **kwargs: Any,
+    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        """Read part of COGs."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        if expression:
+            assets = self._parse_expression(expression)
+
+        if not assets:
+            raise InvalidBandName(
+                "assets must be passed either via expression or assets options."
+            )
+
+        asset_urls = self._get_href(assets)
+        data, mask = multi_part(
+            asset_urls, bbox, max_size=max_size, expression=asset_expression, **kwargs
+        )
+
+        if expression:
+            blocks = expression.split(",")
+            data = apply_expression(blocks, assets, data)
+
+        return data, mask
+
+    def preview(
+        self,
+        assets: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",  # Expression based on asset names
+        asset_expression: Optional[
+            str
+        ] = "",  # Expression for each asset based on index names
+        **kwargs: Any,
+    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        """Return a preview of COGs."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        if expression:
+            assets = self._parse_expression(expression)
+
+        if not assets:
+            raise InvalidBandName(
+                "assets must be passed either via expression or assets options."
+            )
+
+        asset_urls = self._get_href(assets)
+        data, mask = multi_preview(asset_urls, expression=asset_expression, **kwargs)
+
+        if expression:
+            blocks = expression.split(",")
+            data = apply_expression(blocks, assets, data)
+
+        return data, mask
+
+    def point(
+        self,
+        lon: float,
+        lat: float,
+        assets: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",  # Expression based on asset names
+        asset_expression: Optional[
+            str
+        ] = "",  # Expression for each asset based on index names
+        **kwargs: Any,
+    ) -> List:
+        """Read a value from COGs."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        if expression:
+            assets = self._parse_expression(expression)
+
+        if not assets:
+            raise InvalidBandName(
+                "assets must be passed either via expression or assets options."
+            )
+
+        asset_urls = self._get_href(assets)
+        point = multi_point(asset_urls, lon, lat, expression=asset_expression, **kwargs)
+
+        if expression:
+            blocks = expression.split(",")
+            point = apply_expression(blocks, assets, point).tolist()
+
+        return point
+
+    def stats(
+        self,
+        assets: Union[Sequence[str], str],
+        pmin: float = 2.0,
+        pmax: float = 98.0,
+        **kwargs: Any,
+    ) -> Dict:
+        """Return array statistics from COGs."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        asset_urls = self._get_href(assets)
+
+        stats = multi_stats(asset_urls, pmin, pmax, **kwargs)
+        return {asset: stats[ix] for ix, asset in enumerate(assets)}
+
+    def info(self, assets: Union[Sequence[str], str]) -> Dict:
+        """Return info from COGs."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        asset_urls = self._get_href(assets)
+
+        infos = multi_info(asset_urls)
+        return {asset: infos[ix] for ix, asset in enumerate(assets)}
+
+    def metadata(
+        self,
+        assets: Union[Sequence[str], str],
+        pmin: float = 2.0,
+        pmax: float = 98.0,
+        **kwargs: Any,
+    ) -> Dict:
+        """Return array statistics from COGs."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        asset_urls = self._get_href(assets)
+
+        stats = multi_metadata(asset_urls, pmin, pmax, **kwargs)
+        return {asset: stats[ix] for ix, asset in enumerate(assets)}

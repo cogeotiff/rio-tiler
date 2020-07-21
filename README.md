@@ -46,15 +46,11 @@ Each tilling modules have a method to return image metadata (e.g bounds).
 #### Read a tile from a file over the internet
 
 ```python
-from rio_tiler.io import cogeo
+from rio_tiler.io import COGReader
 
-tile, mask = cogeo.tile(
-  'http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif',
-  691559,
-  956905,
-  21,
-  tilesize=256
-)
+with COGReader("http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif") as cog:
+    tile, mask = cog.tile(691559, 956905, 21, tilesize=256)
+
 print(tile.shape)
 > (3, 256, 256)
 
@@ -164,31 +160,53 @@ This will make images look good on display.
 
 #### Working with SpatioTemporal Asset Catalog (STAC) 
 
-In rio-tiler v2, we added a `rio_tiler.io.stac` submodule to allow tile/metadata fetching of assets withing a STAC item.
+In rio-tiler v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item.
 
 ```python
 from typing import Dict 
-from rio_tiler.io import stac as STACReader
+from rio_tiler.io import STACReader
 
-item: Dict = ... # a STAC Item
+with STACReader(
+    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A", 
+    exclude_assets={"thumbnail"} 
+) as stac: 
+    print(stac.bounds)
+    print(stac.assets)
+
+> [23.293255090449595, 31.505183020453355, 24.296453548295318, 32.51147809805106]
+> ['overview', 'visual', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'AOT', 'WVP', 'SCL']
 
 # Name of assets to read
-assets = ["red", "green", "blue"]
+assets = ["B01", "B02"]
 
-tile, mask = STACReader.tile(item, assets, x, y, z, tilesize=256)
+with STACReader(
+    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A", 
+    exclude_assets={"thumbnail"} 
+) as stac:
+    tile, mask = stac.tile(145, 103, 8, tilesize=256, assets=assets)
 
 print(tile.shape)
-> (3, 256, 256)
+> (2, 256, 256)
+
+# With expression
+with STACReader(
+    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A", 
+    exclude_assets={"thumbnail"} 
+) as stac:
+    tile, mask = stac.tile(145, 103, 8, tilesize=256, expression="B01/B02")
+
+print(tile.shape)
+> (1, 256, 256)
 ```
 
 #### Working with multiple assets
 
-`rio_tiler.reader` submodule has `multi_*` functions (tile, preview, point, metadata) allowing to fetch and merge info 
+`rio_tiler.io.cogeo` submodule has `multi_*` functions (tile, part, preview, point, metadata, info, stats) allowing to fetch and merge info 
 from multiple dataset (think about multiple bands stored in separated files).
 
 ```python
 from typing import Dict 
-from rio_tiler import reader
+from rio_tiler.io.cogeo import multi_tile
 
 assets = ["b1.tif", "b2.tif", "b3.tif"]
 tile, mask = reader.multi_tile(assets, x, y, z, tilesize=256)

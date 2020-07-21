@@ -8,6 +8,7 @@ import mercantile
 import numexpr
 import numpy
 from affine import Affine
+from boto3.session import Session as boto3_session
 from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags
@@ -24,6 +25,24 @@ def _chunks(my_list: Sequence, chuck_size: int):
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(my_list), chuck_size):
         yield my_list[i : i + chuck_size]
+
+
+def aws_get_object(
+    bucket: str,
+    key: str,
+    request_pays: bool = False,
+    client: boto3_session.client = None,
+) -> bytes:
+    """AWS s3 get object content."""
+    if not client:
+        session = boto3_session()
+        client = session.client("s3")
+
+    params = {"Bucket": bucket, "Key": key}
+    if request_pays:
+        params["RequestPayer"] = "requester"
+    response = client.get_object(**params)
+    return response["Body"].read()
 
 
 def _stats(
@@ -442,6 +461,7 @@ def mapzen_elevation_rgb(arr: numpy.ndarray) -> numpy.ndarray:
     return numpy.stack([r, g, b]).astype(numpy.uint8)
 
 
+# deprecated
 def expression(
     sceneid: str, tile_x: int, tile_y: int, tile_z: int, expr: str, **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -489,11 +509,11 @@ def expression(
         arr, mask = cbers_tile(
             sceneid, tile_x, tile_y, tile_z, bands=bands_names, **kwargs
         )
-    else:
-        from rio_tiler.io.cogeo import tile as main_tile
+    # else:
+    #     from rio_tiler.io.cogeo import tile as main_tile
 
-        bands = tuple(map(int, bands_names))
-        arr, mask = main_tile(sceneid, tile_x, tile_y, tile_z, indexes=bands, **kwargs)
+    #     bands = tuple(map(int, bands_names))
+    #     arr, mask = main_tile(sceneid, tile_x, tile_y, tile_z, indexes=bands, **kwargs)
 
     bands_names = ["b{}".format(b) for b in bands_names]
     arr = dict(zip(bands_names, arr))

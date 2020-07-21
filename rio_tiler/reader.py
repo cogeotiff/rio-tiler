@@ -14,7 +14,8 @@ from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import transform, transform_bounds
+from rasterio.warp import transform as transform_coords
+from rasterio.warp import transform_bounds
 
 from rio_tiler import constants
 from rio_tiler.errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
@@ -350,7 +351,9 @@ def point(
     if isinstance(indexes, int):
         indexes = (indexes,)
 
-    lon, lat = transform(coord_crs, src_dst.crs, [coordinates[0]], [coordinates[1]])
+    lon, lat = transform_coords(
+        coord_crs, src_dst.crs, [coordinates[0]], [coordinates[1]]
+    )
     if not (
         (src_dst.bounds[0] < lon[0] < src_dst.bounds[2])
         and (src_dst.bounds[1] < lat[0] < src_dst.bounds[3])
@@ -618,6 +621,7 @@ def tile(
     )
 
 
+# deprecated
 def multi_tile(
     assets: Sequence[str], *args: Any, **kwargs: Any
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -634,6 +638,7 @@ def multi_tile(
         return data, mask
 
 
+# deprecated
 def multi_preview(
     assets: Sequence[str], *args: Any, **kwargs: Any
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -650,6 +655,7 @@ def multi_preview(
         return data, mask
 
 
+# deprecated
 def multi_point(assets: Sequence[str], *args: Any, **kwargs: Any) -> Sequence:
     """Assemble multiple rio_tiler.reader.point."""
 
@@ -661,6 +667,7 @@ def multi_point(assets: Sequence[str], *args: Any, **kwargs: Any) -> Sequence:
         return list(executor.map(worker, assets))
 
 
+# deprecated
 def multi_metadata(assets: Sequence[str], *args: Any, **kwargs: Any) -> Sequence:
     """Assemble multiple rio_tiler.reader.metadata."""
 
