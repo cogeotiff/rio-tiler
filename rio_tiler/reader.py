@@ -17,11 +17,11 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
-from rio_tiler import constants
-from rio_tiler.errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
-from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
-from rio_tiler.utils import _stats as raster_stats
-from rio_tiler.utils import (
+from . import constants
+from .errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
+from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
+from .utils import _stats as raster_stats
+from .utils import (
     get_vrt_transform,
     has_alpha_band,
     has_mask_band,

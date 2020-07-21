@@ -7,7 +7,7 @@ from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
-from rio_tiler import constants
+from . import constants
 
 
 def _meters_per_pixel(zoom: int, lat: float = 0.0, tilesize: int = 256) -> float:

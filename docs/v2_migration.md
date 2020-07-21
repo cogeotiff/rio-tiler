@@ -33,10 +33,14 @@ def get_vrt_transform(
 ## Rasterio >= **1.1.3**
 
 Recent changes in rasterio makes masking more reliable.
-
+96
 ## New **rio_tiler.io** submodules
 
-Mostly to gain in code clarity, we moved the mission specific submodules (e.g. rio_tiler.landsat8) to a `rio_tiler.io` submodule. `rio_tiler.main` has also been renamed `rio_tiler.io.cogeo`.
+Mostly to gain in code clarity, we created specific submodule for COG and STAC. 
+- rio_tiler.io.cogeo 
+- rio_tiler.io.stac
+
+We also switched to [ContextManager](https://docs.python.org/3.6/library/stdtypes.html#typecontextmanager) to keep the ability to access the rasterio dataset.
 
 ```python
 # v1
@@ -44,21 +48,84 @@ from rio_tiler.main import tile as cogTiler
 tile, mask = cogTiler('my_tif.tif', 691559, 956905, 21, tilesize=256)
 
 # v2
-from rio_tiler.io.cogeo import tile as cogTiler
-tile, mask = cogTiler('my_tif.tif', 691559, 956905, 21, tilesize=256)
+from rio_tiler.io import COGReader
+with COGReader("my_tif.tif") as cog:
+    tile, mask = cog.tile(691559, 956905, 21)
+    
+    print(cog.dataset) # rasterio dataset (returned by rasterio.open())
+    print(cog.dataset.meta) # rasterio metadata
+    print(cog.bounds)       # WGS84 bounds
+    print(cog.colormap)     # internal colormap
 ```
+
+Note: Expression is now directly available in the `Reader`
 
 ```python
-# v1
-from rio_tiler import landsat8
-landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
-
-# v2
-from rio_tiler.io import landsat8
-landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
+with COGReader("my_tif.tif") as cog:
+    tile, mask = cog.tile(691559, 956905, 21, expression="b1/b2")
 ```
 
-## **rio_tiler.reader**
+##### COGReader description
+```python
+class COGReader:
+    """
+    Cloud Optimized GeoTIFF Reader.
+
+    Examples
+    --------
+    with COGReader(src_path) as cog:
+        cog.tile(...)
+
+    with rasterio.open(src_path) as src_dst:
+        with WarpedVRT(src_dst, ...) as vrt_dst:
+            with COGReader(None, dataset=vrt_dst) as cog:
+                cog.tile(...)
+
+    with rasterio.open(src_path) as src_dst:
+        with COGReader(None, dataset=src_dst) as cog:
+            cog.tile(...)
+
+    Attributes
+    ----------
+    filepath: str
+        Cloud Optimized GeoTIFF path.
+    dataset: rasterio.DatasetReader, optional
+        Rasterio dataset.
+
+    Properties
+    ----------
+    minzoom: int
+        COG minimum zoom level.
+    maxzoom: int
+        COG maximum zoom level.
+    bounds: tuple[float]
+        COG bounds in WGS84 crs.
+    center: tuple[float, float, int]
+        COG center + minzoom
+    colormap: dict
+        COG internal colormap.
+    info: dict
+        General information about the COG (datatype, indexes, ...)
+
+    Methods
+    -------
+    tile(0, 0, 0, indexes=(1,2,3), expression="B1/B2", tilesize=512, resampling_methods="nearest")
+        Read a map tile from the COG.
+    part((0,10,0,10), indexes=(1,2,3,), expression="B1/B20", max_size=1024)
+        Read part of the COG.
+    preview(max_size=1024)
+        Read preview of the COG.
+    point((10, 10), indexes=1)
+        Read a point value from the COG.
+    stats(pmin=5, pmax=95)
+        Get Raster statistics.
+    meta(pmin=5, pmax=95)
+        Get info + raster statistics
+
+    """
+```
+
+## Internal API: **rio_tiler.reader**
 
 Internal tile/data reading functions have been refactored and moved to a new `rio_tiler.reader` submodule.
 

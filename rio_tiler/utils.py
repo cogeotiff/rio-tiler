@@ -17,8 +17,8 @@ from rasterio.transform import from_bounds
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform
 
-from rio_tiler import constants
-from rio_tiler.colormap import apply_cmap
+from . import constants
+from .colormap import apply_cmap
 
 
 def _chunks(my_list: Sequence, chuck_size: int):
