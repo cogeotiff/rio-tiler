@@ -171,6 +171,8 @@ class STACReader:
                 exclude_asset_types=self.exclude_asset_types,
             )
         )
+        if not self.assets:
+            raise Exception("No valid asset found")
 
         return self
 

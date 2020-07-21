@@ -290,9 +290,15 @@ class COGReader:
                 "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
             )
 
-        tile_bounds = mercantile.xy_bounds(*tile)
+        tile_bounds = mercantile.xy_bounds(tile)
         tile, mask = reader.part(
-            self.dataset, tile_bounds, tilesize, tilesize, indexes=indexes, **kwargs,
+            self.dataset,
+            tile_bounds,
+            tilesize,
+            tilesize,
+            indexes=indexes,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+            **kwargs,
         )
         if expression:
             blocks = expression.lower().split(",")
