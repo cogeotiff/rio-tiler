@@ -1,19 +1,31 @@
 # Rio-tiler
 
-Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF dataset.
-
-[![Packaging status](https://badge.fury.io/py/rio-tiler.svg)](https://badge.fury.io/py/rio-tiler)
-[![CircleCI](https://circleci.com/gh/cogeotiff/rio-tiler.svg?style=svg)](https://circleci.com/gh/cogeotiff/rio-tiler)
-[![codecov](https://codecov.io/gh/cogeotiff/rio-tiler/branch/master/graph/badge.svg?token=zuHupC20cG)](https://codecov.io/gh/cogeotiff/rio-tiler)
-
-Additional support is provided for the following satellite missions hosted on **AWS Public Dataset**:
-
-- [Sentinel2](https://registry.opendata.aws/sentinel-2/) (**requester-pays**) (please read [this](https://github.com/cogeotiff/rio-tiler#Partial-reading-on-Cloud-hosted-dataset))
-- [Sentinel1](https://registry.opendata.aws/sentinel-1/) (**requester-pays**)
-- [Landsat8](https://aws.amazon.com/fr/public-datasets/landsat)
-- [CBERS](https://registry.opendata.aws/cbers/)  (**requester-pays**)
-
-**Starting with version 2.0 rio-tiler only supports Python>=3.**
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/10407788/88133997-77560f00-cbb1-11ea-874c-a8f1d123a9df.jpg" style="max-width: 800px;" alt="rio-tiler"></a>
+</p>
+<p align="center">
+  <em>Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.</em>
+</p>
+<p align="center">
+  <a href="https://circleci.com/gh/cogeotiff/rio-tiler" target="_blank">
+      <img src="https://circleci.com/gh/cogeotiff/rio-tiler.svg?style=svg" alt="Test">
+  </a>
+  <a href="https://codecov.io/gh/cogeotiff/rio-tiler" target="_blank">
+      <img src="https://codecov.io/gh/cogeotiff/rio-tiler/branch/master/graph/badge.svg" alt="Coverage">
+  </a>
+  <a href="https://pypi.org/project/rio-tiler" target="_blank">
+      <img src="https://img.shields.io/pypi/v/rio-tiler?color=%2334D058&label=pypi%20package" alt="Package version">
+  </a>
+  <a href="https://anaconda.org/conda-forge/rio-tiler)" target="_blank">
+      <img src="https://img.shields.io/conda/v/conda-forge/rio-tiler.svg" alt="Conda Forge">
+  </a>
+  <a href="https://pypistats.org/packages/rio-tiler" target="_blank">
+      <img src="https://img.shields.io/pypi/dm/rio-tiler.svg" alt="Downloads">
+  </a>
+  <a href="https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE.txt" target="_blank">
+      <img src="https://img.shields.io/github/license/cogeotiff/rio-tiler.svg" alt="Downloads">
+  </a>
+</p>
 
 ## Install
 
@@ -33,17 +45,11 @@ $ pip install -U pip
 $ pip install -e .
 ```
 
-## Overview
-
-Create tiles using one of these rio_tiler `io` submodules: `cogeo`, `sentinel2`, `sentinel1`, `landsat8`, `cbers`.
-
-The `rio_tiler.io.cogeo` module can create mercator tiles from any raster source supported by Rasterio (i.e. local files, http, s3, gcs etc.). The mission specific modules make it easier to extract tiles from AWS S3 buckets (i.e. only a scene ID is required); They can also be used to return metadata.
-
-Each tilling modules have a method to return image metadata (e.g bounds).
-
 ## Usage
 
-#### Read a tile from a file over the internet
+The `rio_tiler` module can create mercator tiles from any raster source supported by Rasterio/GDAL (i.e. local files, http, s3, gcs etc.). Additional method are availables (see [COGReader](#COGReader))
+
+#### Read a tile from a file
 
 ```python
 from rio_tiler.io import COGReader
@@ -58,7 +64,7 @@ print(mask.shape)
 > (256, 256)
 ```
 
-#### Create image from tile
+#### Render the array as an image (PNG/JPEG)
 
 ```python
 from rio_tiler.utils import render
@@ -66,7 +72,7 @@ from rio_tiler.utils import render
 buffer = render(tile, mask=mask) # this returns a buffer (PNG by default)
 ```
 
-Rescale non-byte data and apply colormap
+Rescale non-byte data and/or apply colormap
 
 ```python
 from rio_tiler.colormap import cmap
@@ -74,7 +80,9 @@ from rio_tiler.utils import linear_rescale
 
 # Rescale the tile array only where mask is valid and cast it to byte
 tile = numpy.where(
-  mask, linear_rescale(tile, in_range=(0, 1000), out_range=[0, 255]), 0
+    mask,
+    linear_rescale(tile, in_range=(0, 1000), out_range=[0, 255]),
+    0
 ).astype(numpy.uint8)
 
 cm = cmap.get("viridis")
@@ -82,13 +90,13 @@ cm = cmap.get("viridis")
 buffer = render(tile, mask=mask, colormap=cm)
 ```
 
-Use creation options to match `mapnik` default
+Use creation options to match `mapnik` defaults.
 
 ```python
 from rio_tiler.utils import render
 from rio_tiler.profiles import img_profiles
 
-options = img_profiles["webp"]
+options = img_profiles.get("webp")
 buffer = render(tile, mask=mask, img_format="webp", **options)
 ```
 
@@ -99,68 +107,231 @@ with open("my.png", "wb") as f:
   f.write(buffer)
 ```
 
-#### Read Sentinel2 tile
+### COGReader
+
+<details>
 
 ```python
-from rio_tiler.io import sentinel2
+class COGReader:
+    """
+    Cloud Optimized GeoTIFF Reader.
 
-tile, mask = sentinel2.tile('S2A_L1C_20170729_19UDP_0', 77, 89, 8)
-print(tile.shape)
-> (3, 256, 256)
+    Examples
+    --------
+    with COGReader(src_path) as cog:
+        cog.tile(...)
+
+    with rasterio.open(src_path) as src_dst:
+        with WarpedVRT(src_dst, ...) as vrt_dst:
+            with COGReader(None, dataset=vrt_dst) as cog:
+                cog.tile(...)
+
+    with rasterio.open(src_path) as src_dst:
+        with COGReader(None, dataset=src_dst) as cog:
+            cog.tile(...)
+
+    Attributes
+    ----------
+    filepath: str
+        Cloud Optimized GeoTIFF path.
+    dataset: rasterio.DatasetReader, optional
+        Rasterio dataset.
+
+    Properties
+    ----------
+    minzoom: int
+        COG minimum zoom level.
+    maxzoom: int
+        COG maximum zoom level.
+    bounds: tuple[float]
+        COG bounds in WGS84 crs.
+    center: tuple[float, float, int]
+        COG center + minzoom
+    colormap: dict
+        COG internal colormap.
+    info: dict
+        General information about the COG (datatype, indexes, ...)
+
+    Methods
+    -------
+    tile(0, 0, 0, indexes=(1,2,3), expression="B1/B2", tilesize=512, resampling_methods="nearest")
+        Read a map tile from the COG.
+    part((0,10,0,10), indexes=(1,2,3,), expression="B1/B20", max_size=1024)
+        Read part of the COG.
+    preview(max_size=1024)
+        Read preview of the COG.
+    point((10, 10), indexes=1)
+        Read a point value from the COG.
+    stats(pmin=5, pmax=95)
+        Get Raster statistics.
+    meta(pmin=5, pmax=95)
+        Get info + raster statistics
+    """
 ```
 
-#### Use Landsat submodule
+</details>
+
+#### Properties
+
+- **dataset**: Return the rasterio dataset
+- **colormap**: Return the dataset's internal colormap
+- **minzoom**: Return minimum Mercator Zoom
+- **maxzoom**: Return maximum Mercator Zoom
+- **bounds**: Return the dataset bounds in WGS84
+- **center**: Return the center of the dataset + minzoom
+- **spatial_info**: Return the bounds, center and zoom infos
+- **info**: Return simple metadata about the dataset
 
 ```python
-from rio_tiler.io import landsat8
-
-landsat8.bounds('LC08_L1TP_016037_20170813_20170814_01_RT')
-> {'bounds': [-81.30836, 32.10539, -78.82045, 34.22818],
->  'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT'}
-```
-
-Get metadata of a Landsat scene (i.e. percentiles (pc) min/max values, histograms, and bounds in WGS84) .
-
-```python
-from rio_tiler.io import landsat8
-
-landsat8.metadata('LC08_L1TP_016037_20170813_20170814_01_RT', pmin=5, pmax=95)
+with COGReader("myfile.tif") as cog:
+    print(cog.info)
 {
-  'sceneid': 'LC08_L1TP_016037_20170813_20170814_01_RT',
-  'bounds':(-81.30844102941015, 32.105321365706104,  -78.82036599673634, 34.22863519772504),
-  'statistics': {
-    '1': {
-      'pc': [1251.297607421875, 5142.0126953125],
-      'min': -1114.7020263671875,
-      'max': 11930.634765625,
-      'std': 1346.6463388957156,
-      'histogram': [
-        [1716, 257951, 174296, 36184, 20828, 11783, 6862, 2941, 635, 99],
-        [-1114.7020263671875, 189.83164978027344, 1494.3653564453125, 2798.89892578125, 4103.4326171875, 5407.96630859375, 6712.5, 8017.03369140625, 9321.5673828125, 10626.1015625, 11930.634765625]
-      ]
-    },
-    ...
-    ...
-    '11': {
-      'pc': [278.3393859863281, 293.4466247558594],
-      'min': 147.27650451660156,
-      'max': 297.4621276855469,
-      'std': 7.660112832018338,
-      'histogram': [
-        [207, 201, 204, 271, 350, 944, 1268, 2383, 43085, 453084],
-        [147.27650451660156, 162.29507446289062, 177.31362915039062, 192.33218383789062, 207.3507537841797, 222.36932373046875, 237.38787841796875, 252.40643310546875, 267.42498779296875, 282.4435729980469, 297.4621276855469]
-      ]
+    "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
+    "center": [-101.98868496889182, 23.548959503763047, 3],
+    "minzoom": 3,
+    "maxzoom": 12,
+    "band_metadata": [[1, {}]],
+    "band_descriptions": [[1,"band1"]],
+    "dtype": "int8",
+    "colorinterp": ["palette"],
+    "nodata_type": "Nodata",
+    "colormap": {
+        "0": [0, 0, 0, 0],
+        "1": [0, 61, 0, 255],
+        ...
     }
-  }
 }
 ```
 
-The primary purpose for calculating minimum and maximum values of an image is to rescale pixel values from their original range (e.g. 0 to 65,535) to the range used by computer screens (i.e. 0 and 255) through a linear transformation.
-This will make images look good on display.
+#### Methods
 
-#### Working with SpatioTemporal Asset Catalog (STAC) 
+- **tile()**: Read map tile from a raster
 
-In rio-tiler v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item.
+```python
+with COGReader("myfile.tif") as cog:
+    tile, mask = cog.tile(1, 2, 3, tilesize=256)
+
+# With indexes
+with COGReader("myfile.tif") as cog:
+    tile, mask = cog.tile(1, 2, 3, tilesize=256, indexes=1)
+
+# With expression
+with COGReader("myfile.tif"s) as cog:
+    tile, mask = cog.tile(1, 2, 3, tilesize=256, expression="B1/B2")
+```
+
+- **part()**: Read part of a raster
+
+```python
+with COGReader("myfile.tif") as cog:
+    data, mask = cog.part((10, 10, 20, 20))
+
+# Limit output size (default is set to 1024)
+with COGReader("myfile.tif") as cog:
+    data, mask = cog.part((10, 10, 20, 20), max_size=2000)
+
+# Read high resolution
+with COGReader("myfile.tif") as cog:
+    data, mask = cog.part((10, 10, 20, 20), max_size=None)
+
+# With indexes
+with COGReader("myfile.tif") as cog:
+     data, mask = cog.part((10, 10, 20, 20), indexes=1)
+
+# With expression
+with COGReader("myfile.tif") as cog:
+    data, mask = cog.part((10, 10, 20, 20), expression="B1/B2")
+```
+
+- **preview()**: Read a preview of a raster
+
+```python
+with COGReader("myfile.tif") as cog: 
+    data, mask = cog.preview()
+
+# With indexes
+with COGReader("myfile.tif") as cog: 
+    data, mask = cog.preview(indexes=1)
+
+# With expression
+with COGReader("myfile.tif") as cog: 
+    data, mask = cog.preview(expression="B1+2,B1*4")
+```
+
+- **point()**: Read point value of a raster
+
+```python
+with COGReader("myfile.tif") as cog: 
+    print(cog.point(-100, 25))
+
+# With indexes
+with COGReader("myfile.tif") as cog: 
+    print(cog.point(-100, 25, indexes=1)) 
+[1]
+
+# With expression
+with COGReader("myfile.tif") as cog: 
+    print(cog.point(-100, 25, expression="B1+2,B1*4"))
+[3, 4]
+```
+
+- **stats()**: Return image statistics (Min/Max/Stdev)
+
+```python
+with COGReader("myfile.tif") as cog:
+    print(cog.stats())
+{
+    "1": {
+        "pc": [1, 16],
+        "min": 1,
+        "max": 18,
+        "std": 4.069636227214257,
+        "histogram": [
+            [...],
+            [...]
+        ]
+    }
+}
+```
+
+- **metadata()**: Return COG info + statistics
+
+```python
+with COGReader("myfile.tif") as cog:
+    print(cog.metadata())
+{
+    "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
+    "center": [-101.98868496889182, 23.548959503763047, 3],
+    "minzoom": 3,
+    "maxzoom": 12,
+    "band_metadata": [[1, {}]],
+    "band_descriptions": [[1,"band1"]],
+    "dtype": "int8",
+    "colorinterp": ["palette"],
+    "nodata_type": "Nodata",
+    "colormap": {
+        "0": [0, 0, 0, 0],
+        "1": [0, 61, 0, 255],
+        ...
+    }
+    "statistics" : {
+        1: {
+            "pc": [1, 16],
+            "min": 1,
+            "max": 18,
+            "std": 4.069636227214257,
+            "histogram": [
+                [...],
+                [...]
+            ]
+        }
+    }
+}
+```
+
+### STACReader
+
+In rio-tiler v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item. The STACReader objects has the same properties/methods as the COGReader.
 
 ```python
 from typing import Dict 
@@ -215,10 +386,6 @@ print(tile.shape)
 > (3, 256, 256)
 ```
 
-## Requester-pays Buckets 
-
-On AWS, `sentinel2`, `sentinel1`, and `cbers` dataset are stored in a `requester-pays` bucket, meaning the cost of GET, LIST requests will be charged to the users. For rio-tiler to work with those buckets, you'll need to set `AWS_REQUEST_PAYER="requester"` in your environement.
-
 ## Partial reading on Cloud hosted dataset
 
 Rio-tiler perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
@@ -245,6 +412,9 @@ RUN cd /tmp/python && zip -r9q /tmp/package.zip *
 Ref: https://github.com/vincentsarago/simple-rio-lambda
 
 
+## Mission Specific tiler
+In rio-tiler v2 we choosed to remove the mission specific tilers (Sentinel2, Sentinel1, Landsat8 and CBERS). Those are now in a specific plugin: [rio-tiler-pds](https://github.com/cogeotiff/rio-tiler-pds).
+
 ## Plugins
 - [rio-tiler-mosaic](https://github.com/cogeotiff/rio-tiler-mosaic)
 - [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt)
@@ -252,10 +422,8 @@ Ref: https://github.com/vincentsarago/simple-rio-lambda
 - [rio-viz](https://github.com/developmentseed/rio-viz)
 
 ## Implementations
-- [remotepixel-tiler](https://github.com/RemotePixel/remotepixel-tiler)
 - [CosmiQ/solaris](https://github.com/CosmiQ/solaris)
-- [lambda-tiler](https://github.com/vincentsarago/lambda-tiler)
-- [cogeo-mosaic](https://github.com/developmentseed/cogeo-mosaic)
+- [cogeo-tiler](https://github.com/developmentseed/cogeo-tiler)
 - [titiler](https://github.com/developmentseed/titiler)
 
 

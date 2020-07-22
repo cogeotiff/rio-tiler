@@ -6,7 +6,6 @@ import mercantile
 import numpy as np
 import pytest
 import rasterio
-from mock import patch
 
 from rio_tiler import colormap, constants, utils
 
@@ -78,88 +77,6 @@ def test_mapzen_elevation_rgb():
     """Should work as expected."""
     arr = np.random.randint(0, 3000, size=(512, 512))
     assert utils.mapzen_elevation_rgb(arr).shape == (3, 512, 512)
-
-
-@patch("rio_tiler.io.landsat8.tile")
-def test_expression_ndvi(landsat_tile):
-    """Should work as expected"""
-    landsat_tile.return_value = [
-        np.random.randint(0, 255, size=(2, 256, 256), dtype=np.uint8),
-        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255,
-    ]
-
-    expr = "(b5 - b4) / (b5 + b4)"
-
-    tile_z = 8
-    tile_x = 71
-    tile_y = 102
-
-    sceneid = "LC08_L1TP_016037_20170813_20170814_01_RT"
-    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
-    data.shape == (1, 256, 256)
-    mask.shape == (256, 256)
-    assert len(landsat_tile.call_args[1].get("bands")) == 2
-
-
-@patch("rio_tiler.io.sentinel2.tile")
-def test_expression_sentinel2(sentinel2):
-    """Should work as expected."""
-    sentinel2.return_value = [
-        np.random.randint(0, 255, size=(2, 256, 256), dtype=np.uint8),
-        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255,
-    ]
-
-    expr = "(b8A - b12) / (b8A + b12)"
-
-    tile_z = 8
-    tile_x = 71
-    tile_y = 102
-
-    sceneid = "S2A_tile_20170323_17SNC_0"
-    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
-    data.shape == (1, 256, 256)
-    mask.shape == (256, 256)
-    assert sorted(list(sentinel2.call_args[1].get("bands"))) == ["12", "8A"]
-
-
-@patch("rio_tiler.io.landsat8.tile")
-def test_expression_landsat_rgb(landsat_tile):
-    """Should work as expected."""
-    landsat_tile.return_value = [
-        np.random.randint(0, 255, size=(3, 256, 256), dtype=np.uint8),
-        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255,
-    ]
-
-    expr = "b5*0.8, b4*1.1, b3*0.8"
-    tile_z = 8
-    tile_x = 71
-    tile_y = 102
-
-    sceneid = "LC08_L1TP_016037_20170813_20170814_01_RT"
-    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
-    data.shape == (3, 512, 512)
-    mask.shape == (512, 512)
-    assert len(landsat_tile.call_args[1].get("bands")) == 3
-
-
-@patch("rio_tiler.io.cbers.tile")
-def test_expression_cbers_rgb(cbers_tile):
-    """Should read tile from CBERS data."""
-    cbers_tile.return_value = [
-        np.random.randint(0, 255, size=(3, 256, 256), dtype=np.uint8),
-        np.random.randint(0, 1, size=(256, 256), dtype=np.uint8) * 255,
-    ]
-
-    expr = "b8*0.8, b7*1.1, b6*0.8"
-    tile_z = 10
-    tile_x = 664
-    tile_y = 495
-
-    sceneid = "CBERS_4_MUX_20171121_057_094_L2"
-    data, mask = utils.expression(sceneid, tile_x, tile_y, tile_z, expr)
-    data.shape == (3, 512, 512)
-    mask.shape == (512, 512)
-    assert len(cbers_tile.call_args[1].get("bands")) == 3
 
 
 def test_get_vrt_transform_valid():

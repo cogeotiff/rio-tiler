@@ -1,11 +1,9 @@
 """rio_tiler.utils: utility functions."""
 
 import math
-import re
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import mercantile
-import numexpr
 import numpy
 from affine import Affine
 from boto3.session import Session as boto3_session
@@ -459,74 +457,6 @@ def mapzen_elevation_rgb(arr: numpy.ndarray) -> numpy.ndarray:
     g = arr % 256
     b = (arr * 256) % 256
     return numpy.stack([r, g, b]).astype(numpy.uint8)
-
-
-# deprecated
-def expression(
-    sceneid: str, tile_x: int, tile_y: int, tile_z: int, expr: str, **kwargs: Any,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Apply expression on data.
-
-    Attributes
-    ----------
-        sceneid : str
-            Landsat id, Sentinel id, CBERS ids or file url.
-        tile_x : int
-            Mercator tile X index.
-        tile_y : int
-            Mercator tile Y index.
-        tile_z : int
-            Mercator tile ZOOM level.
-        expr : str, required
-            Expression to apply (e.g '(b5+b4)/(b5-b4)')
-            Band name should start with 'b'.
-
-    Returns
-    -------
-        out : ndarray
-            Returns processed pixel value.
-
-    """
-    bands_names = list(set(re.findall(r"b(?P<bands>[0-9A]{1,2})", expr)))
-    rgb = expr.split(",")
-
-    if sceneid.startswith("L"):
-        from rio_tiler.io.landsat8 import tile as l8_tile
-
-        arr, mask = l8_tile(
-            sceneid, tile_x, tile_y, tile_z, bands=bands_names, **kwargs
-        )
-    elif sceneid.startswith("S2"):
-        from rio_tiler.io.sentinel2 import tile as s2_tile
-
-        arr, mask = s2_tile(
-            sceneid, tile_x, tile_y, tile_z, bands=bands_names, **kwargs
-        )
-    elif sceneid.startswith("CBERS"):
-        from rio_tiler.io.cbers import tile as cbers_tile
-
-        arr, mask = cbers_tile(
-            sceneid, tile_x, tile_y, tile_z, bands=bands_names, **kwargs
-        )
-    # else:
-    #     from rio_tiler.io.cogeo import tile as main_tile
-
-    #     bands = tuple(map(int, bands_names))
-    #     arr, mask = main_tile(sceneid, tile_x, tile_y, tile_z, indexes=bands, **kwargs)
-
-    bands_names = ["b{}".format(b) for b in bands_names]
-    arr = dict(zip(bands_names, arr))
-
-    return (
-        numpy.array(
-            [
-                numpy.nan_to_num(numexpr.evaluate(bloc.strip(), local_dict=arr))
-                for bloc in rgb
-            ]
-        ),
-        mask,
-    )
 
 
 def pansharpening_brovey(
