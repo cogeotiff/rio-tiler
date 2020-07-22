@@ -2,12 +2,10 @@
 
 import math
 import warnings
-from concurrent import futures
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import mercantile
 import numpy
-import rasterio
 from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
@@ -18,7 +16,7 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from . import constants
-from .errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
+from .errors import AlphaBandWarning, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -35,7 +33,6 @@ def _read(
     height: Optional[int] = None,
     width: Optional[int] = None,
     indexes: Optional[Union[Sequence[int], int]] = None,
-    out_window: Optional[windows.Window] = None,  # DEPRECATED
     window: Optional[windows.Window] = None,
     nodata: Optional[Union[float, int, str]] = None,
     resampling_method: Resampling = "nearest",
@@ -56,8 +53,6 @@ def _read(
         Output width of the array.
     indexes: list of ints or a single int, optional
         Band indexes
-    out_window: rasterio.windows.Window, optional DEPRECATED
-        Output window to read.
     window: rasterio.windows.Window, optional
         Window to read.
     nodata: int or float, optional
@@ -80,14 +75,6 @@ def _read(
     """
     if isinstance(indexes, int):
         indexes = (indexes,)
-
-    # Deprecate out_window.
-    if out_window is not None:
-        warnings.warn(
-            "out_window will be removed in 2.0, use window", DeprecationWarning
-        )
-        if window is None:
-            window = out_window
 
     vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
@@ -619,61 +606,3 @@ def tile(
         dst_crs=constants.WEB_MERCATOR_CRS,
         **kwargs,
     )
-
-
-# deprecated
-def multi_tile(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple rio_tiler.reader.tile."""
-
-    def worker(asset: str):
-        with rasterio.open(asset) as src_dst:
-            return tile(src_dst, *args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
-
-
-# deprecated
-def multi_preview(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple rio_tiler.reader.preview."""
-
-    def worker(asset: str):
-        with rasterio.open(asset) as src_dst:
-            return preview(src_dst, *args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
-
-
-# deprecated
-def multi_point(assets: Sequence[str], *args: Any, **kwargs: Any) -> Sequence:
-    """Assemble multiple rio_tiler.reader.point."""
-
-    def worker(asset: str):
-        with rasterio.open(asset) as src_dst:
-            return point(src_dst, *args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(worker, assets))
-
-
-# deprecated
-def multi_metadata(assets: Sequence[str], *args: Any, **kwargs: Any) -> Sequence:
-    """Assemble multiple rio_tiler.reader.metadata."""
-
-    def worker(asset: str):
-        with rasterio.open(asset) as src_dst:
-            return metadata(src_dst, *args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(worker, assets))

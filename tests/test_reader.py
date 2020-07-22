@@ -35,6 +35,7 @@ KEY_PIX4D = "pix4d/pix4d_alpha_nodata.tif"
 PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
 COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
+COG = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
 COG_DLINE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_dateline.tif")
@@ -54,13 +55,14 @@ def testing_env_var(monkeypatch):
 
 def test_tile_read_valid():
     """Should work as expected (read landsat band)."""
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+    # Tile 7-43-24 - Full tile
+    bounds = [
+        -6574807.42497772,
+        12210356.646387195,
+        -6261721.357121638,
+        12523442.714243278,
+    ]
+    with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(
             src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS
         )
@@ -68,13 +70,13 @@ def test_tile_read_valid():
     assert mask.shape == (16, 16)
 
     # Read bounds at full resolution
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+    with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(src_dst, bounds, dst_crs=constants.WEB_MERCATOR_CRS)
-    assert arr.shape == (1, 73, 73)
-    assert mask.shape == (73, 73)
+    assert arr.shape == (1, 893, 893)
+    assert mask.shape == (893, 893)
 
     # set max_size for the returned array
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+    with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(
             src_dst, bounds, max_size=50, dst_crs=constants.WEB_MERCATOR_CRS
         )
@@ -82,16 +84,16 @@ def test_tile_read_valid():
     assert mask.shape == (50, 50)
 
     # If max_size is bigger than actual size, there is no effect
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+    with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(
-            src_dst, bounds, max_size=80, dst_crs=constants.WEB_MERCATOR_CRS
+            src_dst, bounds, max_size=1000, dst_crs=constants.WEB_MERCATOR_CRS
         )
-    assert arr.shape == (1, 73, 73)
-    assert mask.shape == (73, 73)
+    assert arr.shape == (1, 893, 893)
+    assert mask.shape == (893, 893)
 
     # Incompatible max_size with height and width
     with pytest.warns(UserWarning):
-        with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+        with rasterio.open(COG) as src_dst:
             arr, mask = reader.part(
                 src_dst,
                 bounds,
@@ -104,28 +106,14 @@ def test_tile_read_valid():
     assert mask.shape == (25, 25)
 
 
-def test_tile_read_validResampling():
-    """Should return a 1 band array and a mask."""
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds, 16, 16, resampling_method="bilinear")
-    assert arr.shape == (1, 16, 16)
-    assert mask.shape == (16, 16)
-
-
 def test_resampling_returns_different_results():
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+    bounds = [
+        -6574807.42497772,
+        12210356.646387195,
+        -6261721.357121638,
+        12523442.714243278,
+    ]
+    with rasterio.open(COG) as src_dst:
         arr, _ = reader.part(
             src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS
         )
@@ -142,13 +130,14 @@ def test_resampling_returns_different_results():
 
 
 def test_resampling_with_diff_padding_returns_different_results():
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+    """Test result is different with different padding."""
+    bounds = [
+        -6574807.42497772,
+        12210356.646387195,
+        -6261721.357121638,
+        12523442.714243278,
+    ]
+    with rasterio.open(COG) as src_dst:
         arr, _ = reader.part(
             src_dst,
             bounds,
@@ -172,16 +161,16 @@ def test_resampling_with_diff_padding_returns_different_results():
     assert not numpy.array_equal(arr, arr2)
 
 
-# This is NOT TRUE, padding affects the whole array not just the border.
+# # This is NOT TRUE, padding affects the whole array not just the border.
 # def test_tile_padding_only_effects_edge_pixels():
 #     """Adding tile padding should effect edge pixels only."""
-#     bounds = (
-#         -8844681.416934313,
-#         3757032.814272982,
-#         -8766409.899970293,
-#         3835304.331237001,
-#     )
-#     with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+#     bounds = [
+#         -6574807.42497772,
+#         12210356.646387195,
+#         -6261721.357121638,
+#         12523442.714243278
+#     ]
+#     with rasterio.open(COG) as src_dst:
 #         arr, _ = reader.part(src_dst, bounds, 32, 32, nodata=0)
 #         arr2, _ = reader.part(src_dst, bounds, 32, 32, nodata=0, padding=2)
 #     assert not np.array_equal(arr[0][0], arr2[0][0])
@@ -208,14 +197,14 @@ def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
 
 def test_tile_read_invalidResampling():
     """Should raise an error on invalid resampling method name."""
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
+    bounds = [
+        -6574807.42497772,
+        12210356.646387195,
+        -6261721.357121638,
+        12523442.714243278,
+    ]
     with pytest.raises(KeyError):
-        with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+        with rasterio.open(COG) as src_dst:
             reader.part(src_dst, bounds, 16, 16, resampling_method="jacques")
 
 
@@ -350,16 +339,16 @@ def test_tile_read_extmask():
 
 def test_tile_read_nodata():
     """Should work as expected when forcing nodata value."""
-    bounds = (
-        -9040360.209344367,
-        3991847.365165044,
-        -9001224.450862356,
-        4030983.1236470537,
-    )
-
+    # Partial Tile 7-42-24
+    bounds = [
+        -6887893.4928338025,
+        12210356.646387195,
+        -6574807.424977721,
+        12523442.714243278,
+    ]
     tilesize = 16
-    with rasterio.open(f"{LANDSAT_PATH}_B4.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=0)
+    with rasterio.open(COG) as src_dst:
+        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=1)
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
     assert not mask.all()
@@ -382,22 +371,6 @@ def test_tile_read_nodata_and_alpha():
     assert not mask.all()
 
 
-def test_tile_read_dataset():
-    """Should work as expected"""
-    address = f"{LANDSAT_PATH}_B2.TIF"
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
-    tilesize = 16
-    with rasterio.open(address) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize)
-    assert arr.shape == (1, 16, 16)
-    assert mask.shape == (16, 16)
-
-
 def test_tile_read_dataset_nodata():
     """Should work as expected (read rgb)"""
     # non-boundless tile covering the nodata part 22-876431-1603670
@@ -417,31 +390,31 @@ def test_tile_read_dataset_nodata():
 def test_tile_read_not_covering_the_whole_tile():
     """Should raise an error when dataset doesn't cover more than 50% of the tile."""
     bounds = (
-        -9079495.967826376,
-        3991847.365165044,
-        -9001224.450862356,
-        4070118.882129065,
+        -11271098.442818949,
+        12210356.646387195,
+        -10958012.374962866,
+        12523442.714243278,
     )
     tilesize = 16
     with pytest.raises(TileOutsideBounds):
-        with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+        with rasterio.open(COG) as src_dst:
             reader.part(src_dst, bounds, tilesize, tilesize, minimum_overlap=0.6)
 
 
 # See https://github.com/cogeotiff/rio-tiler/issues/105#issuecomment-492268836
 def test_tile_read_validMask():
     """Dataset mask should be the same as the actual mask."""
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
+    bounds = [
+        -6887893.4928338025,
+        12210356.646387195,
+        -6574807.424977721,
+        12523442.714243278,
+    ]
     tilesize = 128
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
-        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=0)
+    with rasterio.open(COG) as src_dst:
+        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=1)
 
-    masknodata = (arr[0] != 0).astype(numpy.uint8) * 255
+    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
     numpy.testing.assert_array_equal(mask, masknodata)
 
 
@@ -489,14 +462,14 @@ def test_tile_read_crs():
 
 def test_tile_read_vrt_option():
     """Should work as expected (read landsat band)."""
-    bounds = (
-        -8844681.416934313,
-        3757032.814272982,
-        -8766409.899970293,
-        3835304.331237001,
-    )
+    bounds = [
+        -6887893.4928338025,
+        12210356.646387195,
+        -6574807.424977721,
+        12523442.714243278,
+    ]
     tilesize = 16
-    with rasterio.open(f"{LANDSAT_PATH}_B2.TIF") as src_dst:
+    with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(
             src_dst,
             bounds,

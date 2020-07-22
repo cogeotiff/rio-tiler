@@ -11,7 +11,6 @@ inst_reqs = [
     "numexpr",
     "mercantile",
     "rasterio[s3]>=1.1.3",
-    "rio-toa",
     "dataclasses>=0.6;python_version<'3.7'",
     "requests",
 ]

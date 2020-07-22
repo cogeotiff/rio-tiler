@@ -1,11 +1,14 @@
 2.0b1 (TBD)
 ------------------
-- switch to ContextManager for COG and STAC (rio_cogeo.io.COGReader, rio_cogeo.io.STACReader)
-- COGReader.part and STACReader.part return data in BBOX CRS by default
-- STACReader now accept URL (https, s3)
-- add more method for STAC (prewiew/point/part/info/stats)
-- add expression for COG/STAC preview/point/part
+- switch to ContextManager for COG and STAC (rio_cogeo.io.COGReader, rio_cogeo.io.STACReader).
+- COGReader.part and STACReader.part return data in BBOX CRS by default.
+- STACReader now accept URL (https, s3).
+- add more method for STAC (prewiew/point/part/info/stats).
+- add expression for COG/STAC preview/point/part.
 - add `masked` option in `rio_tiler.reader.point` to control weither or not it should return None or a value.
+- remove mission specific tilers (#195).
+- remove `rio_tiler.reader.multi_*` functions (replaced by rio_tiler.io.cogeo.multi_*).
+- remove `rio_tiler.utils.expression` (replaced by expression options in tilers).
 
 2.0a11 (2020-05-29)
 ------------------
