@@ -1,4 +1,4 @@
-2.0b1 (TBD)
+2.0b1 (2020-07-22)
 ------------------
 - switch to ContextManager for COG and STAC (rio_cogeo.io.COGReader, rio_cogeo.io.STACReader).
 - COGReader.part and STACReader.part return data in BBOX CRS by default.

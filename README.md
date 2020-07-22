@@ -380,10 +380,18 @@ from typing import Dict
 from rio_tiler.io.cogeo import multi_tile
 
 assets = ["b1.tif", "b2.tif", "b3.tif"]
-tile, mask = reader.multi_tile(assets, x, y, z, tilesize=256)
+tile, mask = multi_tile(assets, x, y, z, tilesize=256)
 
 print(tile.shape)
 > (3, 256, 256)
+
+# Others
+metadata = multi_info(assets)
+stats = multi_stats(assets, pmin=2, pmax=98, ...)
+metadata = multi_metadata(assets, pmin=2, pmax=98, ...)
+values = multi_points(assets, lon, lat, ...)
+data, mask = multi_part(assets, bbox, ...)
+data, mask = multi_preview(assets, ...)
 ```
 
 ## Partial reading on Cloud hosted dataset
