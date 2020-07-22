@@ -3,7 +3,9 @@ numpy
 numexpr
 
 mercantile
-boto3
 
-rasterio[s3]~=1.1
-rio-toa
+rasterio[s3]>=1.1.3
+
+dataclasses>=0.6;python_version<'3.7'
+
+requests
