@@ -31,7 +31,7 @@ setup(
     name="rio-tiler",
     version="2.0b1",
     python_requires=">=3",
-    description=u"""Get mercator tile from CloudOptimized GeoTIFF and other cloud hosted raster such as CBERS-4, Sentinel-2, Sentinel-1 and Landsat-8 AWS PDS""",
+    description=u"""Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.""",
     long_description=readme,
     long_description_content_type="text/markdown",
     classifiers=[
@@ -42,7 +42,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS",
     ],
-    keywords="COG cogeo raster aws map tiler gdal rasterio",
+    keywords="COG cogeo raster aws map tiles gdal rasterio",
     author=u"Vincent Sarago",
     author_email="vincent@developmentseed.org",
     url="https://github.com/cogeotiff/rio-tiler",
