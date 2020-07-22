@@ -297,7 +297,7 @@ class COGReader:
             tilesize,
             tilesize,
             indexes=indexes,
-            bounds_crs=constants.WEB_MERCATOR_CRS,
+            dst_crs=constants.WEB_MERCATOR_CRS,
             **kwargs,
         )
         if expression:

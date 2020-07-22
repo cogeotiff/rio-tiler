@@ -1,7 +1,9 @@
-"""tests rio_tiler.base"""
+"""tests rio_tiler.io.cogeo.COGReader"""
 
 import os
 
+import mercantile
+import numpy
 import pytest
 
 from rio_tiler.errors import TileOutsideBounds
@@ -117,6 +119,12 @@ def test_tile_valid_default():
         data, mask = cog.tile(43, 24, 7)
         assert data.shape == (1, 256, 256)
         assert mask.all()
+
+        tile_bounds = mercantile.xy_bounds(43, 24, 7)
+        data_part, _ = cog.part(
+            tile_bounds, bounds_crs="epsg:3857", width=256, height=256, max_size=None
+        )
+        assert numpy.array_equal(data, data_part)
 
         # Partial tile
         data, mask = cog.tile(42, 24, 7)
