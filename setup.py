@@ -7,29 +7,23 @@ with open("README.md") as f:
 
 # Runtime requirements.
 inst_reqs = [
-    "numpy",
-    "numexpr",
-    "mercantile",
-    "rasterio[s3]>=1.1.3",
+    "boto3",
     "dataclasses>=0.6;python_version<'3.7'",
+    "numexpr",
+    "numpy",
+    "mercantile",
+    "rasterio>=1.1.3",
     "requests",
 ]
 
 extra_reqs = {
-    "test": ["mock", "pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
-    "dev": [
-        "mock",
-        "pytest",
-        "pytest-benchmark",
-        "pytest-cov",
-        "rio-cogeo",
-        "pre-commit",
-    ],
+    "test": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
+    "dev": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo", "pre-commit"],
 }
 
 setup(
     name="rio-tiler",
-    version="2.0b1",
+    version="2.0b2",
     python_requires=">=3",
     description=u"""Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.""",
     long_description=readme,
