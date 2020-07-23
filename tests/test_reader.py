@@ -10,12 +10,6 @@ import rasterio
 from rio_tiler import constants, reader
 from rio_tiler.errors import AlphaBandWarning, TileOutsideBounds
 
-LANDSAT_SCENE_C1 = "LC08_L1TP_016037_20170813_20170814_01_RT"
-LANDSAT_BUCKET = os.path.join(os.path.dirname(__file__), "fixtures", "landsat-pds")
-LANDSAT_PATH = os.path.join(
-    LANDSAT_BUCKET, "c1", "L8", "016", "037", LANDSAT_SCENE_C1, LANDSAT_SCENE_C1
-)
-
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 S3_KEY_NODATA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif"
