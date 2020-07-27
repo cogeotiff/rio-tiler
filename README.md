@@ -390,8 +390,6 @@ assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
 tile, mask = mosaic_reader(assets, tiler, 1, 1, 1)
 ```
 
-You can also 
-
 Learn more about `rio_tiler.mosaic` in [doc/mosaic.md](doc/mosaic.md).
 
 Notebook: [WorkingWithMosaic](Notebook/Using-rio-tiler-mosaic.ipynb)
