@@ -370,9 +370,35 @@ print(tile.shape)
 > (1, 256, 256)
 ```
 
-#### Working with multiple assets
+## Working with multiple assets
 
-`rio_tiler.io.cogeo` submodule has `multi_*` functions (tile, part, preview, point, metadata, info, stats) allowing to fetch and merge info 
+#### Mosaic
+
+Starting in rio-tiler 2.0, we've transfered the [rio-tiler-mosaic](https://github.com/cogeotiff/rio-tiler-mosaic) plugin to be a rio-tiler submodule.
+
+```python
+from rio_tiler.io import COGReader
+from rio_tiler.mosaic import mosaic_reader
+from rio_tiler.mosaic.methods import defaults
+
+
+def tiler(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    with COGReader(src_path) as cog:
+        return cog.tile(*args, **kwargs)
+
+assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
+tile, mask = mosaic_reader(assets, tiler, 1, 1, 1)
+```
+
+You can also 
+
+Learn more about `rio_tiler.mosaic` in [doc/mosaic.md](doc/mosaic.md).
+
+Notebook: [WorkingWithMosaic](Notebook/Using-rio-tiler-mosaic.ipynb)
+
+#### Merge assets
+
+`rio_tiler.io.cogeo` submodule has `multi_*` functions (tile, part, preview, point, metadata, info, stats) allowing to fetch and merge info/data 
 from multiple dataset (think about multiple bands stored in separated files).
 
 ```python
@@ -424,10 +450,9 @@ Ref: https://github.com/vincentsarago/simple-rio-lambda
 In rio-tiler v2 we choosed to remove the mission specific tilers (Sentinel2, Sentinel1, Landsat8 and CBERS). Those are now in a specific plugin: [rio-tiler-pds](https://github.com/cogeotiff/rio-tiler-pds).
 
 ## Plugins
-- [rio-tiler-mosaic](https://github.com/cogeotiff/rio-tiler-mosaic)
-- [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt)
-- [rio-tiler-crs](https://github.com/cogeotiff/rio-tiler-crs)
-- [rio-viz](https://github.com/developmentseed/rio-viz)
+- [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt): Create Mapbox Vector Tile from numpy array (tile/mask)
+- [rio-tiler-crs](https://github.com/cogeotiff/rio-tiler-crs): Create Map Tiles using other TileMatrixSets
+- [rio-viz](https://github.com/developmentseed/rio-viz): Visualize Cloud Optimized GeoTIFF in browser locally
 
 ## Implementations
 - [CosmiQ/solaris](https://github.com/CosmiQ/solaris)
