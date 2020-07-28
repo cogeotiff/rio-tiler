@@ -17,10 +17,11 @@ from ..errors import TileOutsideBounds
 from ..expression import apply_expression, parse_expression
 from ..mercator import get_zooms
 from ..utils import has_alpha_band, has_mask_band, tile_exists
+from .base import BaseReader
 
 
 @dataclass
-class COGReader:
+class COGReader(BaseReader):
     """
     Cloud Optimized GeoTIFF Reader.
 
@@ -135,15 +136,6 @@ class COGReader:
         return self._maxzoom
 
     @property
-    def center(self) -> Tuple[float, float, int]:
-        """Return COG center + minzoom."""
-        return (
-            (self.bounds[0] + self.bounds[2]) / 2,
-            (self.bounds[1] + self.bounds[3]) / 2,
-            self.minzoom,
-        )
-
-    @property
     def info(self) -> Dict:
         """Return COG info."""
 
@@ -232,15 +224,6 @@ class COGReader:
         info = self.info.copy()
         info["statistics"] = self.stats(pmin, pmax, **kwargs)
         return info
-
-    def spatial_info(self) -> Dict:
-        """Return COG spatial info.."""
-        return {
-            "bounds": self.bounds,
-            "center": self.center,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
-        }
 
     def tile(
         self,
