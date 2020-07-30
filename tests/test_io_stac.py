@@ -229,12 +229,12 @@ def test_stats_valid(rio):
 
     with STACReader(STAC_PATH) as stac:
         with pytest.raises(InvalidBandName):
-            stac.stats("vert")
+            stac.stats(assets="vert")
 
-        stats = stac.stats("green")
+        stats = stac.stats(assets="green")
         assert stats["green"]
 
-        stats = stac.stats(("green", "red"))
+        stats = stac.stats(assets=("green", "red"))
         assert stats["green"]
         assert stats["red"]
 
@@ -246,12 +246,12 @@ def test_info_valid(rio):
 
     with STACReader(STAC_PATH) as stac:
         with pytest.raises(InvalidBandName):
-            stac.info("vert")
+            stac.info(assets="vert")
 
-        meta = stac.info("green")
+        meta = stac.info(assets="green")
         assert meta["green"]
 
-        meta = stac.info(("green", "red"))
+        meta = stac.info(assets=("green", "red"))
         assert meta["green"]
         assert meta["red"]
 
@@ -263,11 +263,11 @@ def test_metadata_valid(rio):
 
     with STACReader(STAC_PATH) as stac:
         with pytest.raises(InvalidBandName):
-            stac.metadata("vert")
+            stac.metadata(assets="vert")
 
-        meta = stac.metadata("green")
+        meta = stac.metadata(assets="green")
         assert meta["green"]
 
-        meta = stac.metadata(("green", "red"))
+        meta = stac.metadata(assets=("green", "red"))
         assert meta["green"]
         assert meta["red"]

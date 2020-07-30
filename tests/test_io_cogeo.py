@@ -27,7 +27,7 @@ COG_SCALE = os.path.join(PREFIX, "cog_scale.tif")
 def test_spatial_info_valid():
     """Should work as expected (get spatial info)"""
     with COGReader(COG_NODATA) as cog:
-        meta = cog.spatial_info()
+        meta = cog.spatial_info
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
     assert meta.get("center")

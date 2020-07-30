@@ -1,3 +1,11 @@
+2.0b4 (TBD)
+------------------
+- add rio_tiler.io.base.BaseReader abstract class for COGReader and STACReader to inherit from
+
+Breaking Changes:
+- Reader.spatial_info is a property (#203)
+- assets is a keyword argument in STACReader stats/info/metadata
+
 2.0b3 (2020-07-27)
 ------------------
 - add `rio_tiler.mosaic` submodule (ref: https://github.com/cogeotiff/rio-tiler-mosaic/issues/16)

@@ -13,6 +13,7 @@ import requests
 from ..errors import InvalidBandName
 from ..expression import apply_expression
 from ..utils import aws_get_object
+from .base import BaseReader
 from .cogeo import (
     multi_info,
     multi_metadata,
@@ -84,7 +85,7 @@ def _get_assets(
 
 
 @dataclass
-class STACReader:
+class STACReader(BaseReader):
     """
     STAC + Cloud Optimized GeoTIFF Reader.
 
@@ -193,15 +194,6 @@ class STACReader:
         _re = re.compile("|".join(sorted(self.assets, reverse=True)))
         assets = list(set(re.findall(_re, expression)))
         return assets
-
-    @property
-    def center(self) -> Tuple[float, float, int]:
-        """Return COG center + minzoom."""
-        return (
-            (self.bounds[0] + self.bounds[2]) / 2,
-            (self.bounds[1] + self.bounds[3]) / 2,
-            self.minzoom,
-        )
 
     def tile(
         self,
@@ -337,22 +329,29 @@ class STACReader:
 
     def stats(
         self,
-        assets: Union[Sequence[str], str],
         pmin: float = 2.0,
         pmax: float = 98.0,
+        hist_options: Dict = {},
+        assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Dict:
         """Return array statistics from COGs."""
+        if not assets:
+            raise InvalidBandName("Missing 'assets'")
+
         if isinstance(assets, str):
             assets = (assets,)
 
         asset_urls = self._get_href(assets)
 
-        stats = multi_stats(asset_urls, pmin, pmax, **kwargs)
+        stats = multi_stats(asset_urls, pmin, pmax, hist_options=hist_options, **kwargs)
         return {asset: stats[ix] for ix, asset in enumerate(assets)}
 
-    def info(self, assets: Union[Sequence[str], str]) -> Dict:
+    def info(self, assets: Union[Sequence[str], str] = None) -> Dict:
         """Return info from COGs."""
+        if not assets:
+            raise InvalidBandName("Missing 'assets'")
+
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -363,12 +362,15 @@ class STACReader:
 
     def metadata(
         self,
-        assets: Union[Sequence[str], str],
         pmin: float = 2.0,
         pmax: float = 98.0,
+        assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Dict:
         """Return array statistics from COGs."""
+        if not assets:
+            raise InvalidBandName("Missing 'assets'")
+
         if isinstance(assets, str):
             assets = (assets,)
 
