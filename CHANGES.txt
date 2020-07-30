@@ -1,6 +1,5 @@
 2.0b4 (TBD)
 ------------------
-- add `rio_tiler.mosaic.MosaicReader` (#205)
 - add rio_tiler.io.base.BaseReader abstract class for COGReader and STACReader to inherit from
 
 Breaking Changes:
