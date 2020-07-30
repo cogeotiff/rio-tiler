@@ -1,7 +1,7 @@
 2.0b4 (TBD)
 ------------------
 - add rio_tiler.io.base.BaseReader abstract class for COGReader and STACReader to inherit from
-- update rio_tiler.mosaic.reader.mosaic_reader to not use threadPool is thread < 1 (#207)
+- update rio_tiler.mosaic.reader.mosaic_reader to not use threadPool if threads <= 1 (#207)
 
 Breaking Changes:
 - Reader.spatial_info is a property (#203)

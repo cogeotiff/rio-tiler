@@ -87,7 +87,7 @@ def mosaic_reader(
     chunk_size: int, optional
         Control the number of asset to process per loop (default = threads).
     threads: int, optional
-        Number of threads to use. If < 1, runs single threaded without an event
+        Number of threads to use. If <= 1, runs single threaded without an event
         loop. By default reads from the MAX_THREADS environment variable, and if
         not found defaults to multiprocessing.cpu_count() * 5.
     kwargs: dict, optional
