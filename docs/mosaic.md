@@ -106,4 +106,32 @@ By default the chunck_size is equal to the number or threads (or the number of a
 #### More on threading
 
 The number of threads used can be set in the function call with the `threads=` options. By default it will be equal to `multiprocessing.cpu_count() * 5` or to the MAX_THREADS environment variable.
-In some case, threading can slow down your application. You can set threads to `0` to run the tiler in a loop without using a ThreadPool.
+In some case, threading can slow down your application. You can set threads to `0` or `1` to run the tiler in a loop without using a ThreadPool.
+
+Benchmark:
+```
+--------------------------------- benchmark '1images': 6 tests ---------------------------------
+Name (time in ms)         Min                Max               Mean             Median          
+------------------------------------------------------------------------------------------------
+1images-0threads      64.3108 (1.0)      66.9192 (1.0)      65.0202 (1.0)      64.9370 (1.0)    
+1images-4threads      69.0893 (1.07)     70.9919 (1.06)     69.6718 (1.07)     69.5102 (1.07)   
+1images-1threads      69.4884 (1.08)     71.8967 (1.07)     70.0853 (1.08)     69.9804 (1.08)   
+1images-5threads      69.5552 (1.08)     75.5498 (1.13)     71.7882 (1.10)     70.9849 (1.09)   
+1images-3threads      69.7684 (1.08)     74.4098 (1.11)     70.6282 (1.09)     70.2353 (1.08)   
+1images-2threads      69.9258 (1.09)     73.8798 (1.10)     70.8861 (1.09)     70.3682 (1.08)   
+------------------------------------------------------------------------------------------------
+
+----------------------------------- benchmark '5images': 6 tests -----------------------------------
+Name (time in ms)          Min                 Max                Mean              Median          
+----------------------------------------------------------------------------------------------------
+5images-5threads      104.1609 (1.0)      123.4442 (1.0)      110.4130 (1.0)      110.0683 (1.0)    
+5images-4threads      160.0952 (1.54)     170.7994 (1.38)     163.6062 (1.48)     161.8923 (1.47)   
+5images-3threads      161.2354 (1.55)     172.0363 (1.39)     165.1222 (1.50)     164.6513 (1.50)   
+5images-2threads      214.2413 (2.06)     220.7737 (1.79)     217.7740 (1.97)     217.9166 (1.98)   
+5images-0threads      228.2062 (2.19)     242.9397 (1.97)     231.9848 (2.10)     229.2843 (2.08)   
+5images-1threads      248.6630 (2.39)     251.8809 (2.04)     250.5195 (2.27)     251.2667 (2.28)   
+----------------------------------------------------------------------------------------------------
+```
+ref: https://github.com/cogeotiff/rio-tiler/issues/207#issuecomment-665958838
+
+As mentioned in #207, using ThreadPool with 1 thread is always slower than not using thread.

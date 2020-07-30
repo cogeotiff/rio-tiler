@@ -22,8 +22,8 @@ def _filter_tasks(tasks: TaskType):
 
     Attributes
     ----------
-    tasks : list or tuple
-        Sequence of 'concurrent.futures._base.Future' or 'partial'
+    tasks : list or generator
+        Sequence of 'concurrent.futures._base.Future' or 'callable'
 
     Yields
     ------
@@ -39,6 +39,17 @@ def _filter_tasks(tasks: TaskType):
         except Exception as err:
             logging.error(err)
             pass
+
+
+def _create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType:
+    """Create Future Tasks."""
+    tasks: TaskType
+
+    if threads and threads > 1:
+        with futures.ThreadPoolExecutor(max_workers=threads) as executor:
+            return [executor.submit(reader, asset, *args, **kwargs) for asset in assets]
+    else:
+        return (reader(asset, *args, **kwargs) for asset in assets)
 
 
 def mosaic_reader(
@@ -76,7 +87,7 @@ def mosaic_reader(
     chunk_size: int, optional
         Control the number of asset to process per loop (default = threads).
     threads: int, optional
-        Number of threads to use. If <=1, runs single threaded without an event
+        Number of threads to use. If < 1, runs single threaded without an event
         loop. By default reads from the MAX_THREADS environment variable, and if
         not found defaults to multiprocessing.cpu_count() * 5.
     kwargs: dict, optional
@@ -100,17 +111,8 @@ def mosaic_reader(
     if not chunk_size:
         chunk_size = threads or len(assets)
 
-    tasks: TaskType
-
     for chunks in _chunks(assets, chunk_size):
-        if threads:
-            with futures.ThreadPoolExecutor(max_workers=threads) as executor:
-                tasks = [
-                    executor.submit(reader, asset, *args, **kwargs) for asset in chunks
-                ]
-        else:
-            tasks = (reader(asset, *args, **kwargs) for asset in chunks)
-
+        tasks = _create_tasks(reader, chunks, threads, *args, **kwargs)
         for t, m in _filter_tasks(tasks):
             t = numpy.ma.array(t)
             t.mask = m == 0
