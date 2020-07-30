@@ -2,13 +2,11 @@
 
 import logging
 from concurrent import futures
-from dataclasses import dataclass
 from typing import Any, Callable, Generator, Optional, Sequence, Tuple, Union
 
 import numpy
 
 from ..constants import MAX_THREADS
-from ..io.base import BaseReader
 from ..utils import _chunks
 from .methods.base import MosaicMethodBase
 from .methods.defaults import FirstMethod
@@ -41,76 +39,6 @@ def _filter_tasks(tasks: TaskType):
         except Exception as err:
             logging.error(err)
             pass
-
-
-@dataclass
-class MosaicReader:
-    """
-    Mosaic Reader.
-
-    Examples
-    --------
-    with MosaicReader(assets, reader=COGReader) as mosaic:
-        mosaic.tile(...)
-
-    with MosaicReader(assets, reader=STACReader) as mosaic:
-        mosaic.tile(...)
-
-    Attributes
-    ----------
-    assets: str
-        Cloud Optimized GeoTIFF path.
-    reader: rio_tiler.io.BaseReader, optional
-        Rio-tiler reader class.
-
-    Methods
-    -------
-    tile(0, 0, 0, i**kwargs)
-        Return map tile from multiple observation.
-    part((0,10,0,10), **kwargs)
-        Return array for a specific bbox from multiple observation.
-    preview(**kwargs)
-        Return a preview from multiple observation.
-
-    """
-
-    assets: Sequence[str]
-    reader: BaseReader
-
-    def __enter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
-
-    def tile(self, x: int, y: int, z: int, **kwargs: Any):
-        """Get Tile from multiple observation."""
-
-        def _reader(asset, *args: int, **kwargs: Any):
-            with self.reader(asset) as src_dst:  # type: ignore
-                return src_dst.tile(*args, **kwargs)
-
-        return mosaic_reader(self.assets, _reader, x, y, z, **kwargs)
-
-    def part(self, bbox: Tuple[float, float, float, float], **kwargs: Any):
-        """Get Part from multiple observation."""
-
-        def _reader(asset, *args, **kwargs: Any):
-            with self.reader(asset) as src_dst:  # type: ignore
-                return src_dst.part(*args, **kwargs)
-
-        return mosaic_reader(self.assets, _reader, bbox, **kwargs)
-
-    def preview(self, **kwargs: Any):
-        """Get Preview from multiple observation."""
-
-        def _reader(asset, **kwargs):
-            with self.reader(asset) as src_dst:
-                return src_dst.preview(**kwargs)
-
-        return mosaic_reader(self.assets, _reader, **kwargs)
 
 
 def mosaic_reader(

@@ -8,7 +8,6 @@ import pytest
 
 from rio_tiler import mosaic
 from rio_tiler.io import COGReader
-from rio_tiler.mosaic import MosaicReader
 from rio_tiler.mosaic.methods import defaults
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
@@ -196,100 +195,3 @@ def test_threads():
     assert t.shape == (3, 256, 256)
     t, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=2, chunk_size=4)
     assert t.shape == (3, 256, 256)
-
-
-def test_mosaic_Reader():
-    """Test MosaicReader."""
-    # test with mosaic_tiler for compatibility
-    with MosaicReader(assets, COGReader) as mr:
-        t, m = mr.tile(x, y, z)
-        assert t.shape == (3, 256, 256)
-        assert m.shape == (256, 256)
-        assert m.all()
-        assert t[0][-1][-1] == 8682
-
-    assetsr = list(reversed(assets))
-    with MosaicReader(assetsr, COGReader) as mr:
-        t, m = mr.tile(x, y, z)
-        assert t.shape == (3, 256, 256)
-        assert m.shape == (256, 256)
-        assert m.all()
-        assert t[0][-1][-1] == 8057
-
-    with MosaicReader(assets, COGReader) as mr:
-        t, m = mr.tile(x, y, z, indexes=1)
-        assert t.shape == (1, 256, 256)
-        assert m.shape == (256, 256)
-        assert t.all()
-        assert m.all()
-        assert t[0][-1][-1] == 8682
-
-    with MosaicReader(assets, COGReader) as mr:
-        # Test darkest pixel selection
-        t, m = mr.tile(x, y, z, pixel_selection=defaults.LowestMethod())
-        assert m.all()
-        assert t[0][-1][-1] == 8057
-
-    with MosaicReader(assets_order, COGReader) as mr:
-        to, mo = mr.tile(x, y, z, pixel_selection=defaults.LowestMethod())
-        numpy.testing.assert_array_equal(t[0, m], to[0, mo])
-
-    with MosaicReader(assets, COGReader) as mr:
-        # Test brightest pixel selection
-        t, m = mr.tile(x, y, z, pixel_selection=defaults.HighestMethod())
-        assert m.all()
-        assert t[0][-1][-1] == 8682
-
-    with MosaicReader(assets_order, COGReader) as mr:
-        to, mo = mr.tile(x, y, z, pixel_selection=defaults.HighestMethod())
-        numpy.testing.assert_array_equal(to, t)
-        numpy.testing.assert_array_equal(mo, m)
-
-    with MosaicReader(assets, COGReader) as mr:
-        # test with default and partially covered tile
-        t, m = mr.tile(xp, yp, zp, pixel_selection=defaults.HighestMethod())
-        assert t.any()
-        assert not m.all()
-
-        # Test mean pixel selection
-        t, m = mr.tile(x, y, z, pixel_selection=defaults.MeanMethod())
-        assert t.shape == (3, 256, 256)
-        assert m.shape == (256, 256)
-        assert m.all()
-        assert t[0][-1][-1] == 8369
-
-        # Test mean pixel selection
-        t, m = mr.tile(
-            x, y, z, pixel_selection=defaults.MeanMethod(enforce_data_type=False),
-        )
-        assert m.all()
-        assert t[0][-1][-1] == 8369.5
-
-        # Test median pixel selection
-        t, m = mr.tile(x, y, z, pixel_selection=defaults.MedianMethod())
-        assert t.shape == (3, 256, 256)
-        assert m.shape == (256, 256)
-        assert m.all()
-        assert t[0][-1][-1] == 8369
-
-        # Test median pixel selection
-        t, m = mr.tile(
-            x, y, z, pixel_selection=defaults.MedianMethod(enforce_data_type=False),
-        )
-        assert m.all()
-        assert t[0][-1][-1] == 8369.5
-
-        # Test invalid Pixel Selection class
-        with pytest.raises(Exception):
-
-            class aClass(object):
-                pass
-
-            mr.tile(x, y, z, pixel_selection=aClass())
-
-        # test with preview
-        # NOTE: We need to fix the output width and height because each preview could have different size
-
-        t, m = mr.preview(width=256, height=256)
-        assert t.shape == (3, 256, 256)
-        assert m.shape == (256, 256)
