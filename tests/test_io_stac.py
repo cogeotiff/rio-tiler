@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 import rasterio
 
-from rio_tiler.errors import InvalidBandName, TileOutsideBounds
+from rio_tiler.errors import InvalidAssetName, MissingAssets, TileOutsideBounds
 from rio_tiler.io import STACReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -119,11 +119,11 @@ def test_tile_valid(rio):
         with pytest.raises(TileOutsideBounds):
             stac.tile(701, 102, 8, assets="green")
 
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(InvalidAssetName):
             stac.tile(71, 102, 8, assets="vert")
 
         # missing asset/expression
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(MissingAssets):
             stac.tile(71, 102, 8)
 
         data, mask = stac.tile(71, 102, 8, assets="green")
@@ -153,11 +153,11 @@ def test_part_valid(rio):
     bbox = (-80.477, 33.4453, -79.737, 32.7988)
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(InvalidAssetName):
             stac.part(bbox, assets="vert")
 
         # missing asset/expression
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(MissingAssets):
             stac.part(bbox)
 
         data, mask = stac.part(bbox, assets="green")
@@ -179,11 +179,11 @@ def test_preview_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(InvalidAssetName):
             stac.preview(assets="vert")
 
         # missing asset/expression
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(MissingAssets):
             stac.preview()
 
         data, mask = stac.preview(assets="green")
@@ -205,11 +205,11 @@ def test_point_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(InvalidAssetName):
             stac.point(-80.477, 33.4453, assets="vert")
 
         # missing asset/expression
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(MissingAssets):
             stac.point(-80.477, 33.4453)
 
         data = stac.point(-80.477, 33.4453, assets="green")
@@ -228,7 +228,7 @@ def test_stats_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(InvalidAssetName):
             stac.stats(assets="vert")
 
         stats = stac.stats(assets="green")
@@ -245,7 +245,7 @@ def test_info_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(InvalidAssetName):
             stac.info(assets="vert")
 
         meta = stac.info(assets="green")
@@ -262,7 +262,7 @@ def test_metadata_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(InvalidBandName):
+        with pytest.raises(InvalidAssetName):
             stac.metadata(assets="vert")
 
         meta = stac.metadata(assets="green")
