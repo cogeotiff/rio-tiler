@@ -183,9 +183,9 @@ class STACReader(BaseReader):
 
     def _get_href(self, assets: Sequence[str]) -> Sequence[str]:
         """Validate asset names and return asset's url."""
-        for asset in assets:
-            if asset not in self.assets:
-                raise InvalidAssetName(f"{asset} is not a valid asset name.")
+        invalid_assets = set(assets) - set(self.assets)
+        if invalid_assets:
+            raise InvalidAssetName(f"{invalid_assets} is/are not valid")
 
         return [self.item["assets"][asset]["href"] for asset in assets]
 
