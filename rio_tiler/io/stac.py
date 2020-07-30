@@ -10,7 +10,7 @@ from urllib.parse import urlparse
 import numpy
 import requests
 
-from ..errors import InvalidBandName
+from ..errors import InvalidAssetName, MissingAssets
 from ..expression import apply_expression
 from ..utils import aws_get_object
 from .base import BaseReader
@@ -185,7 +185,7 @@ class STACReader(BaseReader):
         """Validate asset names and return asset's url."""
         for asset in assets:
             if asset not in self.assets:
-                raise InvalidBandName(f"{asset} is not a valid asset name.")
+                raise InvalidAssetName(f"{asset} is not a valid asset name.")
 
         return [self.item["assets"][asset]["href"] for asset in assets]
 
@@ -216,7 +216,7 @@ class STACReader(BaseReader):
             assets = self._parse_expression(expression)
 
         if not assets:
-            raise InvalidBandName(
+            raise MissingAssets(
                 "assets must be passed either via expression or assets options."
             )
 
@@ -250,7 +250,7 @@ class STACReader(BaseReader):
             assets = self._parse_expression(expression)
 
         if not assets:
-            raise InvalidBandName(
+            raise MissingAssets(
                 "assets must be passed either via expression or assets options."
             )
 
@@ -282,7 +282,7 @@ class STACReader(BaseReader):
             assets = self._parse_expression(expression)
 
         if not assets:
-            raise InvalidBandName(
+            raise MissingAssets(
                 "assets must be passed either via expression or assets options."
             )
 
@@ -314,7 +314,7 @@ class STACReader(BaseReader):
             assets = self._parse_expression(expression)
 
         if not assets:
-            raise InvalidBandName(
+            raise MissingAssets(
                 "assets must be passed either via expression or assets options."
             )
 
@@ -337,7 +337,7 @@ class STACReader(BaseReader):
     ) -> Dict:
         """Return array statistics from COGs."""
         if not assets:
-            raise InvalidBandName("Missing 'assets'")
+            raise MissingAssets("Missing 'assets'")
 
         if isinstance(assets, str):
             assets = (assets,)
@@ -350,7 +350,7 @@ class STACReader(BaseReader):
     def info(self, assets: Union[Sequence[str], str] = None) -> Dict:
         """Return info from COGs."""
         if not assets:
-            raise InvalidBandName("Missing 'assets'")
+            raise MissingAssets("Missing 'assets'")
 
         if isinstance(assets, str):
             assets = (assets,)
@@ -369,7 +369,7 @@ class STACReader(BaseReader):
     ) -> Dict:
         """Return array statistics from COGs."""
         if not assets:
-            raise InvalidBandName("Missing 'assets'")
+            raise MissingAssets("Missing 'assets'")
 
         if isinstance(assets, str):
             assets = (assets,)

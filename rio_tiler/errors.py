@@ -31,3 +31,11 @@ class AlphaBandWarning(UserWarning):
 
 class NoOverviewWarning(UserWarning):
     """Dataset has no overviews."""
+
+
+class InvalidAssetName(RioTilerError):
+    """Invalid Asset name."""
+
+
+class MissingAssets(RioTilerError):
+    """Missing Assets."""
