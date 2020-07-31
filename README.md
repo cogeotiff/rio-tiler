@@ -387,7 +387,7 @@ def tiler(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]
         return cog.tile(*args, **kwargs)
 
 assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
-tile, mask = mosaic_reader(assets, tiler, 1, 1, 1)
+(tile, mask), assets_used = mosaic_reader(assets, tiler, 1, 1, 1)
 ```
 
 Learn more about `rio_tiler.mosaic` in [doc/mosaic.md](doc/mosaic.md).

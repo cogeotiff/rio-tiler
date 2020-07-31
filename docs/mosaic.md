@@ -25,7 +25,7 @@ Inputs:
 - **kwargs: tiler specific keyword arguments.
 
 Returns:
-- tile, mask : tuple of ndarray Return tile and mask data.
+- (tile, mask), assets_used : tuple of ndarray Return (tile and mask) data and the list of used assets.
 
 #### Examples
 
@@ -99,7 +99,7 @@ for chunks in _chunks(assets, chunk_size):
     
     # 2nd level loop - Uses threads for process each `chunck`
     with futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
-        future_tasks = [executor.submit(_tiler, asset) for asset in chunks]
+        future_tasks = [(executor.submit(_tiler, asset), asset) for asset in chunks]
 ```
 By default the chunck_size is equal to the number or threads (or the number of assets if no threads=0)
 
