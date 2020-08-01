@@ -1,3 +1,9 @@
+2.0b5 (TBD)
+------------------
+
+Breaking Changes:
+- `rio_tiler.mosaic.reader.mosaic_reader` return `((tile, mask), assets_used)`
+
 2.0b4 (2020-07-30)
 ------------------
 - add rio_tiler.io.base.BaseReader abstract class for COGReader and STACReader to inherit from

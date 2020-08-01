@@ -45,14 +45,15 @@ def _read_preview(
 def test_mosaic_tiler():
     """Test mosaic tiler."""
     # test with mosaic_tiler for compatibility
-    t, m = mosaic.mosaic_tiler(assets, x, y, z, _read_tile)
+    (t, m), assets_used = mosaic.mosaic_tiler(assets, x, y, z, _read_tile)
+    assert len(assets_used) == 1
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8682
 
     # test with default and full covered tile and default options
-    t, m = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
+    (t, m), assets_used = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
     assert m.all()
@@ -60,13 +61,13 @@ def test_mosaic_tiler():
 
     # Test last pixel selection
     assetsr = list(reversed(assets))
-    t, m = mosaic.mosaic_reader(assetsr, _read_tile, x, y, z)
+    (t, m), _ = mosaic.mosaic_reader(assetsr, _read_tile, x, y, z)
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8057
 
-    t, m = mosaic.mosaic_reader(assets, _read_tile, x, y, z, indexes=1)
+    (t, m), _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, indexes=1)
     assert t.shape == (1, 256, 256)
     assert m.shape == (256, 256)
     assert t.all()
@@ -74,44 +75,45 @@ def test_mosaic_tiler():
     assert t[0][-1][-1] == 8682
 
     # Test darkest pixel selection
-    t, m = mosaic.mosaic_reader(
+    (t, m), assets_used = mosaic.mosaic_reader(
         assets, _read_tile, x, y, z, pixel_selection=defaults.LowestMethod()
     )
+    assert len(assets_used) == 2
     assert m.all()
     assert t[0][-1][-1] == 8057
 
-    to, mo = mosaic.mosaic_reader(
+    (to, mo), _ = mosaic.mosaic_reader(
         assets_order, _read_tile, x, y, z, pixel_selection=defaults.LowestMethod()
     )
     numpy.testing.assert_array_equal(t[0, m], to[0, mo])
 
     # Test brightest pixel selection
-    t, m = mosaic.mosaic_reader(
+    (t, m), _ = mosaic.mosaic_reader(
         assets, _read_tile, x, y, z, pixel_selection=defaults.HighestMethod()
     )
     assert m.all()
     assert t[0][-1][-1] == 8682
 
-    to, mo = mosaic.mosaic_reader(
+    (to, mo), _ = mosaic.mosaic_reader(
         assets_order, _read_tile, x, y, z, pixel_selection=defaults.HighestMethod()
     )
     numpy.testing.assert_array_equal(to, t)
     numpy.testing.assert_array_equal(mo, m)
 
     # test with default and partially covered tile
-    t, m = mosaic.mosaic_reader(
+    (t, m), _ = mosaic.mosaic_reader(
         assets, _read_tile, xp, yp, zp, pixel_selection=defaults.HighestMethod()
     )
     assert t.any()
     assert not m.all()
 
     # test when tiler raise errors (outside bounds)
-    t, m = mosaic.mosaic_reader(assets, _read_tile, 150, 300, 9)
+    (t, m), _ = mosaic.mosaic_reader(assets, _read_tile, 150, 300, 9)
     assert not t
     assert not m
 
     # Test mean pixel selection
-    t, m = mosaic.mosaic_reader(
+    (t, m), _ = mosaic.mosaic_reader(
         assets, _read_tile, x, y, z, pixel_selection=defaults.MeanMethod()
     )
     assert t.shape == (3, 256, 256)
@@ -120,7 +122,7 @@ def test_mosaic_tiler():
     assert t[0][-1][-1] == 8369
 
     # Test mean pixel selection
-    t, m = mosaic.mosaic_reader(
+    (t, m), _ = mosaic.mosaic_reader(
         assets,
         _read_tile,
         x,
@@ -132,7 +134,7 @@ def test_mosaic_tiler():
     assert t[0][-1][-1] == 8369.5
 
     # Test median pixel selection
-    t, m = mosaic.mosaic_reader(
+    (t, m), _ = mosaic.mosaic_reader(
         assets, _read_tile, x, y, z, pixel_selection=defaults.MedianMethod()
     )
     assert t.shape == (3, 256, 256)
@@ -141,7 +143,7 @@ def test_mosaic_tiler():
     assert t[0][-1][-1] == 8369
 
     # Test median pixel selection
-    t, m = mosaic.mosaic_reader(
+    (t, m), _ = mosaic.mosaic_reader(
         assets,
         _read_tile,
         x,
@@ -162,7 +164,7 @@ def test_mosaic_tiler():
 
     # test with preview
     # NOTE: We need to fix the output width and height because each preview could have different size
-    t, m = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
+    (t, m), _ = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
 
@@ -172,7 +174,7 @@ def test_mosaic_tiler_Stdev():
     tile1, _ = _read_tile(assets[0], x, y, z)
     tile2, _ = _read_tile(assets[1], x, y, z)
 
-    t, m = mosaic.mosaic_reader(
+    (t, m), _ = mosaic.mosaic_reader(
         assets, _read_tile, x, y, z, pixel_selection=defaults.StdevMethod()
     )
     assert t.shape == (3, 256, 256)
@@ -187,11 +189,17 @@ def test_threads():
     """Test mosaic tiler."""
     assets = [asset1, asset2, asset1, asset2, asset1, asset2]
 
-    tnothread, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=0)
-    tmulti_threads, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=1)
+    (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=0)
+    (tmulti_threads, _), _ = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, threads=1
+    )
     numpy.testing.assert_array_equal(tnothread, tmulti_threads)
 
-    t, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=0, chunk_size=2)
+    (t, _), _ = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, threads=0, chunk_size=2
+    )
     assert t.shape == (3, 256, 256)
-    t, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=2, chunk_size=4)
+    (t, _), _ = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, threads=2, chunk_size=4
+    )
     assert t.shape == (3, 256, 256)

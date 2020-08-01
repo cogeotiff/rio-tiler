@@ -2,7 +2,7 @@
 
 import logging
 from concurrent import futures
-from typing import Any, Callable, Generator, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Generator, List, Optional, Sequence, Tuple, Union
 
 import numpy
 
@@ -13,7 +13,9 @@ from .methods.defaults import FirstMethod
 
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
-TaskType = Union[Generator[Callable, None, None], Sequence[futures.Future]]
+TaskType = Union[
+    Generator[Tuple[Callable, str], None, None], Sequence[Tuple[futures.Future, str]]
+]
 
 
 def _filter_tasks(tasks: TaskType):
@@ -30,12 +32,12 @@ def _filter_tasks(tasks: TaskType):
     Successful task's result
 
     """
-    for future in tasks:
+    for future, asset in tasks:
         try:
             if isinstance(future, futures.Future):
-                yield future.result()
+                yield future.result(), asset
             else:
-                yield future
+                yield future, asset
         except Exception as err:
             logging.error(err)
             pass
@@ -47,9 +49,12 @@ def _create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskTyp
 
     if threads and threads > 1:
         with futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            return [executor.submit(reader, asset, *args, **kwargs) for asset in assets]
+            return [
+                (executor.submit(reader, asset, *args, **kwargs), asset)
+                for asset in assets
+            ]
     else:
-        return (reader(asset, *args, **kwargs) for asset in assets)
+        return ((reader(asset, *args, **kwargs), asset) for asset in assets)
 
 
 def mosaic_reader(
@@ -60,7 +65,7 @@ def mosaic_reader(
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
     **kwargs,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+) -> Tuple[Tuple[numpy.ndarray, numpy.ndarray], Sequence[str]]:
     """
     Merge multiple assets.
 
@@ -95,8 +100,8 @@ def mosaic_reader(
 
     Returns
     -------
-    tile, mask : tuple of ndarray
-        Return tile and mask data.
+    (tile, mask), assets_used : tuple of ndarray, sequence of str
+        Return (tile, mask) data and list of assets used.
 
     """
     if pixel_selection is None:
@@ -111,17 +116,20 @@ def mosaic_reader(
     if not chunk_size:
         chunk_size = threads or len(assets)
 
+    assets_used: List[str] = []
+
     for chunks in _chunks(assets, chunk_size):
         tasks = _create_tasks(reader, chunks, threads, *args, **kwargs)
-        for t, m in _filter_tasks(tasks):
+        for (t, m), asset in _filter_tasks(tasks):
+            assets_used.append(asset)
             t = numpy.ma.array(t)
             t.mask = m == 0
 
             pixel_selection.feed(t)
             if pixel_selection.is_done:
-                return pixel_selection.data
+                return pixel_selection.data, assets_used
 
-    return pixel_selection.data
+    return pixel_selection.data, assets_used
 
 
 def mosaic_tiler(
@@ -134,7 +142,7 @@ def mosaic_tiler(
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
     **kwargs,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+) -> Tuple[Tuple[numpy.ndarray, numpy.ndarray], Sequence[str]]:
     """Wrapper around mosaic_reader from compatibility with previous rio_tiler_mosaic."""
     return mosaic_reader(
         assets,
