@@ -135,7 +135,6 @@ class COGReader(BaseReader):
             self._get_zooms()
         return self._maxzoom
 
-    @property
     def info(self) -> Dict:
         """Return COG info."""
 
@@ -221,7 +220,7 @@ class COGReader(BaseReader):
 
     def metadata(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict:
         """Return COG info and statistics."""
-        info = self.info.copy()
+        info = self.info()
         info["statistics"] = self.stats(pmin, pmax, **kwargs)
         return info
 
@@ -514,7 +513,7 @@ def multi_info(assets: Sequence[str]) -> List:
 
     def _worker(asset: str) -> Dict:
         with COGReader(asset) as cog:
-            return cog.info
+            return cog.info()
 
     with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
         return list(executor.map(_worker, assets))
