@@ -1,5 +1,6 @@
 2.0b5 (2020-07-31)
 ------------------
+- add more verbosity to mosaic error (#214)
 
 Breaking Changes:
 - `rio_tiler.mosaic.reader.mosaic_reader` return `((tile, mask), assets_used)`
