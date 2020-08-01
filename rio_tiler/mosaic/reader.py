@@ -39,7 +39,7 @@ def _filter_tasks(tasks: TaskType):
             else:
                 yield future, asset
         except Exception as err:
-            logging.error(err)
+            logging.error(err, exc_info=True)
             pass
 
 
