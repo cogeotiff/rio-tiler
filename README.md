@@ -184,7 +184,7 @@ class COGReader:
 
 ```python
 with COGReader("myfile.tif") as cog:
-    print(cog.info)
+    print(cog.info())
 {
     "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
     "center": [-101.98868496889182, 23.548959503763047, 3],

@@ -4,6 +4,7 @@
 
 Breaking Changes:
 - `rio_tiler.mosaic.reader.mosaic_reader` return `((tile, mask), assets_used)`
+- `COGReader.info` is now a method instead of a property to align with other reader (#211)
 
 2.0b4 (2020-07-30)
 ------------------

@@ -43,17 +43,17 @@ def test_bounds_valid():
 def test_info_valid():
     """Should work as expected (get file info)"""
     with COGReader(COG_SCALE) as cog:
-        meta = cog.info
+        meta = cog.info()
     assert meta.get("scale")
     assert meta.get("offset")
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
-        meta = cog.info
+        meta = cog.info()
     assert meta.get("colormap")
 
     with COGReader(COG_TAGS) as cog:
-        meta = cog.info
+        meta = cog.info()
     assert meta.get("bounds")
     assert meta.get("minzoom")
     assert meta.get("maxzoom")
@@ -70,19 +70,19 @@ def test_info_valid():
     assert bmeta.get("STATISTICS_MINIMUM")
 
     with COGReader(COG_ALPHA) as cog:
-        meta = cog.info
+        meta = cog.info()
     assert meta.get("nodata_type") == "Alpha"
 
     with COGReader(COG_MASK) as cog:
-        meta = cog.info
+        meta = cog.info()
     assert meta.get("nodata_type") == "Mask"
 
     with COGReader(COGEO) as cog:
-        meta = cog.info
+        meta = cog.info()
     assert meta.get("nodata_type") == "None"
 
     with COGReader(COG_NODATA) as cog:
-        meta = cog.info
+        meta = cog.info()
     assert meta.get("nodata_type") == "Nodata"
 
 

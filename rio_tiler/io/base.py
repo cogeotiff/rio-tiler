@@ -43,7 +43,7 @@ class BaseReader(metaclass=abc.ABCMeta):
             self.minzoom,
         )
 
-    @property
+    @abc.abstractmethod
     def info(self) -> Dict:
         """Return Dataset's info."""
         ...
@@ -72,7 +72,7 @@ class BaseReader(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def metadata(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,) -> Dict:
         """Return Dataset's statistics and info."""
-        info = self.info.copy()
+        info = self.info()
         info["statistics"] = self.stats(pmin, pmax, **kwargs)
         return info
 
