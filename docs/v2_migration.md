@@ -1,27 +1,35 @@
 # rio-tiler 1.0 to 2.0 migration
 
-rio-tiler version 2.0 introduced a lot of breaking changes [see](https://github.com/cogeotiff/rio-tiler/blob/f55134b383b14e5ed0a79f3dc27da0d9adbb21a4/CHANGES.txt#L10-L26). This documents aims to help with migrating your code to use rio-tiler 2.0.
+`rio-tiler` version 2.0 introduced [many breaking changes](../CHANGES.txt). This
+document aims to help with migrating your code to use `rio-tiler` 2.0.
 
 ## Python **3** only
 
-First and main change is the drop of python 2 support. To be honest we first started this lib as a python 3 only and then switch back to support python 2. Now we are in 2020 and python 2 is [officially dead](https://pythonclock.org) we decided to remove python 2 support and to continue with only python 3.
+First and foremost is the drop of Python 2 support. We are in 2020 and Python 2
+is [officially dead](https://pythonclock.org). For ease of maintenance we
+decided to remove Python 2 support and to continue with only Python 3. **Python
+3.5 or later is required.**
 
-If you need help moving from python 2 to 3 checkout the official [doc](https://docs.python.org/3/howto/pyporting.html).
+If you need help moving from Python 2 to 3 check out the official transition
+[documentation](https://docs.python.org/3/howto/pyporting.html).
 
 ### Type hints
 
-By switching to python 3 we also embrace new code style with the adoption of type hints:
+As part of switching to Python 3, we also embraced modern code style with the
+adoption of type hints. Python 3.6+ has new syntax support for optional "type
+hinting" -- declaring the type of a variable -- which enables an improved
+development experience in editors and tools.
 
-    Python 3.6+ has support for optional "type hints".
-    These "type hints" are a new syntax (since Python 3.6+) that allow declaring the type of a variable.
-    By declaring types for your variables, editors and tools can give you better support.
-from:  https://fastapi.tiangolo.com/python-types/
+**This does not require any changes to your code as long as you're using Python 3.6+.**
 
-Other docs:
-- https://kishstats.com/python/2019/01/07/python-type-hinting.html
-- https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html
+For more information see:
 
-Example:
+- <https://fastapi.tiangolo.com/python-types/>
+- <https://kishstats.com/python/2019/01/07/python-type-hinting.html>
+- <https://mypy.readthedocs.io/en/stable/cheat_sheet_py3.html>
+
+Typing example:
+
 ```python
 def get_vrt_transform(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
@@ -32,15 +40,18 @@ def get_vrt_transform(
 
 ## Rasterio >= **1.1.3**
 
-Recent changes in rasterio makes masking more reliable.
-96
+Rasterio 1.1.3 or newer is required. Recent changes in rasterio makes masking more reliable.
+
 ## New **rio_tiler.io** submodules
 
-Mostly to gain in code clarity, we created specific submodule for COG and STAC. 
-- rio_tiler.io.cogeo 
-- rio_tiler.io.stac
+We created revised submodules for working with COGs and STAC:
 
-We also switched to [ContextManager](https://docs.python.org/3.6/library/stdtypes.html#typecontextmanager) to keep the ability to access the rasterio dataset.
+- `rio_tiler.io.cogeo` is a modified version of the previous `rio_tiler.main.tile`.
+- `rio_tiler.io.stac` is a new module to work with [SpatioTemporal Asset Catalogs (STAC)](https://stacspec.org/).
+
+We now support reading files through a
+[`ContextManager`](https://docs.python.org/3.6/library/stdtypes.html#typecontextmanager)
+to enable accessing the source rasterio dataset.
 
 ```python
 # v1
@@ -50,15 +61,15 @@ tile, mask = cogTiler('my_tif.tif', 691559, 956905, 21, tilesize=256)
 # v2
 from rio_tiler.io import COGReader
 with COGReader("my_tif.tif") as cog:
-    tile, mask = cog.tile(691559, 956905, 21)
-    
+    tile, mask = cog.tile(691559, 956905, 21, tilesize=256)
+
     print(cog.dataset) # rasterio dataset (returned by rasterio.open())
     print(cog.dataset.meta) # rasterio metadata
     print(cog.bounds)       # WGS84 bounds
     print(cog.colormap)     # internal colormap
 ```
 
-Note: Expression is now directly available in the `Reader`
+Expression support is now directly available in the `COGReader`
 
 ```python
 with COGReader("my_tif.tif") as cog:
@@ -66,6 +77,7 @@ with COGReader("my_tif.tif") as cog:
 ```
 
 ##### COGReader description
+
 ```python
 class COGReader:
     """
@@ -131,7 +143,7 @@ Internal tile/data reading functions have been refactored and moved to a new `ri
 
 ### tile
 
-In *rio_tiler==1* most of the magic was happening in [`rio_tiler.utils._tile_read`](https://github.com/cogeotiff/rio-tiler/blob/master/rio_tiler/utils.py#L337-L349). In *rio_tiler==2* this function is now split in two, `rio_tiler.reader.part` and `rio_tiler_reader._read`, to reduce code reutilisation and to make the code more robust. The `part` function now takes `height` and `width` instead of a unique `tilesize` to specify the output array size. 
+In *rio_tiler==1* most of the magic was happening in [`rio_tiler.utils._tile_read`](https://github.com/cogeotiff/rio-tiler/blob/master/rio_tiler/utils.py#L337-L349). In *rio_tiler==2* this function is now split in two, `rio_tiler.reader.part` and `rio_tiler_reader._read`, to reduce code reutilisation and to make the code more robust. The `part` function now takes `height` and `width` instead of a unique `tilesize` to specify the output array size.
 
 To ease the transition we added a `rio_tiler.reader.tile` function.
 
@@ -195,13 +207,13 @@ with rasterio.open("my_tif_alpha.tif") as src_dst:
 `rio_tiler.utils._raster_get_stats` has been replaced by `rio_tiler.reader.metadata` which uses the new `reader.part` and `reader.preview` functions. Meaning that now you can get metadata for a specific area by passing a bbox. To limit the data transfer (with the idea of getting the metadata from the COG overviews) we use only the `max_size` options, meaning the `overview_level` options have been removed (at least for version 2.0.0).
 
 ```python
-# v1 
+# v1
 import rio_tiler
 with rasterio.open("my_tif.tif") as src_dst:
     meta = rio_tiler.utils._raster_get_stats(src_dst)
 
 # v2
-with rasterio.open("my_tif.tif") as src_dst: 
+with rasterio.open("my_tif.tif") as src_dst:
     rio_tiler.reader.metadata(src_dst)
 ```
 
@@ -244,8 +256,8 @@ with rasterio.open("my_tif.tif") as src_dst:
     }
 }
 
-# v2 
-with rasterio.open("my_tif.tif") as src_dst: 
+# v2
+with rasterio.open("my_tif.tif") as src_dst:
     rio_tiler.reader.metadata(src_dst)
 
 > {
@@ -310,7 +322,7 @@ img = rio_tiler.utils.render(tile, mask, img_format="PNG")
 Each `rio_tiler.io.{mission}` **scene id parser** (e.g cbers_parser) has been refactored and now return AWS S3 path information.
 
 ```python
-rio_tiler.io.landsat8.landsat_parser("LC08_L1TP_016037_20170813_20170814_01_RT")) 
+rio_tiler.io.landsat8.landsat_parser("LC08_L1TP_016037_20170813_20170814_01_RT"))
 {
     "sensor": "C",
     "satellite": "08",

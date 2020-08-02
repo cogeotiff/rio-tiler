@@ -24,8 +24,8 @@ extra_reqs = {
 setup(
     name="rio-tiler",
     version="2.0b5",
-    python_requires=">=3",
-    description=u"""Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.""",
+    python_requires=">=3.5",
+    description="Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.",
     long_description=readme,
     long_description_content_type="text/markdown",
     classifiers=[
@@ -37,7 +37,7 @@ setup(
         "Topic :: Scientific/Engineering :: GIS",
     ],
     keywords="COG cogeo raster aws map tiles gdal rasterio",
-    author=u"Vincent Sarago",
+    author="Vincent Sarago",
     author_email="vincent@developmentseed.org",
     url="https://github.com/cogeotiff/rio-tiler",
     license="BSD",

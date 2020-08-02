@@ -168,18 +168,17 @@ class ColorMaps(object):
 
     def get(self, name: str) -> Dict:
         """Fetch a colormap."""
-        try:
-            cmap = self._data[name]
-            if isinstance(cmap, str):
-                cmap = numpy.load(cmap)
-                assert cmap.shape == (256, 4)
-                assert cmap.dtype == numpy.uint8
-                return {idx: value.tolist() for idx, value in enumerate(cmap)}
-            else:
-                return cmap
-
-        except KeyError:
+        cmap = self._data.get(name)
+        if cmap is None:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
+
+        if isinstance(cmap, str):
+            cmap = numpy.load(cmap)
+            assert cmap.shape == (256, 4)
+            assert cmap.dtype == numpy.uint8
+            return {idx: value.tolist() for idx, value in enumerate(cmap)}
+        else:
+            return cmap
 
     def list(self) -> List[str]:
         """List registered Colormaps."""

@@ -1,26 +1,39 @@
-# Create a dynamic tiler
+# Dynamic Tiling
 
-rio-tiler aim to be a lightweight plugin for rasterio with sole goal is to read `Mercator Tile` from raster dataset.
+`rio-tiler` aims to be a lightweight plugin for `rasterio` whose sole goal is to
+read a Mercator Tile from a raster dataset.
 
-If you can read `Tile` you can then create a **Dynamic Tile Server** to display raster tiles on a web map.
+Given that `rio-tiler` allows for simple, efficient reading of tiles, you can
+then leverage `rio-tiler` to create a **dynamic tile server** to display raster
+tiles on a web map.
 
-There are couple tile servers built on top of rio-tiler: 
-- [cogeo-tiler](https://github.com/developmentseed/cogeo-tiler)
-- [titiler](https://github.com/developmentseed/titiler)
-- [rio-viz](https://github.com/developmentseed/rio-viz)
+There are couple tile servers built on top of rio-tiler:
 
+- [`titiler`](https://github.com/developmentseed/titiler)
+- [`cogeo-tiler`](https://github.com/developmentseed/cogeo-tiler)
+- [`cogeo-mosaic-tiler`](https://github.com/developmentseed/cogeo-mosaic-tiler)
+- [`rio-viz`](https://github.com/developmentseed/rio-viz)
 
-## Application
+## Example Application
 
-To built a simple API we can use [FastAPI](https://github.com/tiangolo/fastapi). The 
-
+To build a simple dynamic tiling application, we can use
+[FastAPI](https://github.com/tiangolo/fastapi). Note that `titiler` uses
+`FastAPI` internally, so you might consider using `titiler` instead of making
+your own API.
 
 ### Requirements
-- rio-tiler ~= 2.0b
-- fastapi
-- uvicorn
 
-`app.py`
+- `rio-tiler ~= 2.0b`
+- `fastapi`
+- `uvicorn`
+
+Install with
+
+```bash
+pip install fastapi uvicorn 'rio-tiler~=2.0b'
+```
+
+### `app.py`
 
 ```python
 """rio-tiler tile server."""
@@ -157,6 +170,12 @@ def tilejson(
     return tjson
 ```
 
-## Launch
+## Launch Example
 
-`uvicorn app:app --reload`
+Use `uvicorn` to launch the application. Note that `app:app` tells `uvicorn` to
+call the `app` function within `app.py`, so you must be in the same directory as
+`app.py`.
+
+```
+uvicorn app:app --reload
+```
