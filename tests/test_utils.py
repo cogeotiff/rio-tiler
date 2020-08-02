@@ -6,8 +6,11 @@ import mercantile
 import numpy as np
 import pytest
 import rasterio
+from rasterio.features import bounds as featureBounds
 
 from rio_tiler import colormap, constants, utils
+from rio_tiler.errors import RioTilerError
+from rio_tiler.io import COGReader
 
 from .conftest import requires_webp
 
@@ -27,6 +30,7 @@ COG_DST = os.path.join(os.path.dirname(__file__), "fixtures", "cog_name.tif")
 COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 COG_NOWEB = os.path.join(os.path.dirname(__file__), "fixtures", "noweb.tif")
 NOCOG = os.path.join(os.path.dirname(__file__), "fixtures", "nocog.tif")
+COGEO = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -312,3 +316,55 @@ def test_ovr_level():
             )
             == -1
         )
+
+
+def test_cutline():
+    """Test rio_tiler.utils.create_cutline."""
+    feat = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-52.6025390625, 73.86761239709705],
+                    [-52.6025390625, 73.59679245247814],
+                    [-51.591796875, 73.60299628304274],
+                    [-51.591796875, 73.90420357134279],
+                    [-52.4267578125, 74.0437225981325],
+                    [-52.6025390625, 73.86761239709705],
+                ]
+            ],
+        },
+    }
+
+    feature_bounds = featureBounds(feat)
+
+    with COGReader(COGEO) as cog:
+        cutline = utils.create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
+        data, mask = cog.part(feature_bounds, warp_vrt_option={"cutline": cutline})
+        assert not mask.all()
+
+        cutline = utils.create_cutline(
+            cog.dataset, feat["geometry"], geometry_crs="epsg:4326"
+        )
+        data, mask = cog.part(feature_bounds, warp_vrt_option={"cutline": cutline})
+        assert not mask.all()
+
+    feat_line = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "LineString",
+            "coordinates": [
+                [-55.37109374999999, 74.17607298699065],
+                [-53.85498046874999, 75.06734898853098],
+                [-54.16259765625, 75.11822201684025],
+                [-54.228515625, 75.23066741281573],
+            ],
+        },
+    }
+
+    with COGReader(COGEO) as cog:
+        with pytest.raises(RioTilerError):
+            utils.create_cutline(cog.dataset, feat_line, geometry_crs="epsg:4326")

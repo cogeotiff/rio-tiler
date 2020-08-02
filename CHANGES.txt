@@ -1,3 +1,7 @@
+NEXT (TBD)
+------------------
+- add `utils.create_cutline` helper (#218)
+
 2.0b5 (2020-07-31)
 ------------------
 - add more verbosity to mosaic error (#214)
