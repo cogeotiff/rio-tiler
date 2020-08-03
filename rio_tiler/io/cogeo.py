@@ -186,7 +186,7 @@ class COGReader(BaseReader):
         self,
         pmin: float = 2.0,
         pmax: float = 98.0,
-        hist_options: Dict = {},
+        hist_options: Optional[Dict] = None,
         **kwargs: Any,
     ) -> Dict:
         """
@@ -210,6 +210,8 @@ class COGReader(BaseReader):
             Dictionary with bands statistics.
 
         """
+        hist_options = hist_options or {}
+
         if self.colormap and not hist_options.get("bins"):
             hist_options["bins"] = [
                 k for k, v in self.colormap.items() if v != (0, 0, 0, 255)

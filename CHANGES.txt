@@ -1,5 +1,6 @@
 NEXT (TBD)
 ------------------
+- fix any mutable default argument
 
 **depreciation**
 - `warp_vrt_option` is replaced by `vrt_options` in rio_tiler.reader.part (#221)
