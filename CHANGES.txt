@@ -1,3 +1,9 @@
+NEXT (TBD)
+------------------
+
+**depreciation**
+- `warp_vrt_option` is replaced by `vrt_options` in rio_tiler.reader.part (#221)
+
 2.0b5 (2020-07-31)
 ------------------
 - add more verbosity to mosaic error (#214)
