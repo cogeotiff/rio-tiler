@@ -331,7 +331,7 @@ class STACReader(BaseReader):
         self,
         pmin: float = 2.0,
         pmax: float = 98.0,
-        hist_options: Dict = {},
+        hist_options: Optional[Dict] = None,
         assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Dict:
