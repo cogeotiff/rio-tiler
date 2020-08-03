@@ -8,6 +8,7 @@ import pytest
 import rasterio
 
 from rio_tiler import colormap, constants, utils
+from rio_tiler.errors import DeprecationWarning
 
 from .conftest import requires_webp
 
@@ -155,8 +156,14 @@ def test_render_valid_colormap():
     """Creates 'colormaped' PNG image buffer from one band array."""
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8)
-    cmap = colormap.get_colormap("cfastie")
+    cmap = colormap.cmap.get("cfastie")
     assert utils.render(arr, mask, colormap=cmap, img_format="jpeg")
+
+
+def test_cmap_depreciation():
+    """Make sure we warns for depreciation warning of get_colormap."""
+    with pytest.warns(DeprecationWarning):
+        colormap.get_colormap("cfastie")
 
 
 def test_render_valid_colormapDict():

@@ -16,7 +16,7 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from . import constants
-from .errors import AlphaBandWarning, TileOutsideBounds
+from .errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -135,6 +135,7 @@ def part(
     bounds_crs: Optional[CRS] = None,
     minimum_overlap: Optional[float] = None,
     warp_vrt_option: Dict = {},
+    vrt_options: Dict = {},
     max_size: Optional[int] = None,
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -162,7 +163,9 @@ def part(
     minimum_tile_cover: float, optional
         Minimum % overlap for which to raise an error with dataset not
         covering enought of the tile.
-    warp_vrt_option: dict, optional
+    warp_vrt_option: dict, DEPRECATED
+        These will be passed to the rasterio.warp.WarpedVRT class.
+    vrt_options: dict, optional
         These will be passed to the rasterio.warp.WarpedVRT class.
     max_size: int, optional
         Limit output size array if not widht and height.
@@ -237,18 +240,28 @@ def part(
             height=orig_vrt_height,
         )
 
+    if warp_vrt_option:
+        warnings.warn(
+            "warp_vrt_option will be removed in 2.0, use vrt_options",
+            DeprecationWarning,
+        )
+        vrt_options = warp_vrt_option.copy()
+
+    vrt_options.update(
+        {
+            "crs": dst_crs,
+            "transform": vrt_transform,
+            "width": vrt_width,
+            "height": vrt_height,
+        }
+    )
+
     return _read(
         src_dst,
         out_height,
         out_width,
         window=window,
-        vrt_options=dict(
-            crs=dst_crs,
-            transform=vrt_transform,
-            width=vrt_width,
-            height=vrt_height,
-            **warp_vrt_option,
-        ),
+        vrt_options=vrt_options,
         **kwargs,
     )
 
