@@ -38,7 +38,7 @@ def _read(
     resampling_method: Resampling = "nearest",
     force_binary_mask: bool = True,
     unscale: bool = False,
-    vrt_options: Dict = None,
+    vrt_options: Optional[Dict] = None,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
     Create WarpedVRT and read data and mask.
