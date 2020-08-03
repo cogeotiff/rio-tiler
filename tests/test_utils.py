@@ -9,7 +9,7 @@ import rasterio
 from rasterio.features import bounds as featureBounds
 
 from rio_tiler import colormap, constants, utils
-from rio_tiler.errors import RioTilerError
+from rio_tiler.errors import DeprecationWarning, RioTilerError
 from rio_tiler.io import COGReader
 
 from .conftest import requires_webp
@@ -159,8 +159,14 @@ def test_render_valid_colormap():
     """Creates 'colormaped' PNG image buffer from one band array."""
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8)
-    cmap = colormap.get_colormap("cfastie")
+    cmap = colormap.cmap.get("cfastie")
     assert utils.render(arr, mask, colormap=cmap, img_format="jpeg")
+
+
+def test_cmap_depreciation():
+    """Make sure we warns for depreciation warning of get_colormap."""
+    with pytest.warns(DeprecationWarning):
+        colormap.get_colormap("cfastie")
 
 
 def test_render_valid_colormapDict():
@@ -342,13 +348,13 @@ def test_cutline():
 
     with COGReader(COGEO) as cog:
         cutline = utils.create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
-        data, mask = cog.part(feature_bounds, warp_vrt_option={"cutline": cutline})
+        data, mask = cog.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
 
         cutline = utils.create_cutline(
             cog.dataset, feat["geometry"], geometry_crs="epsg:4326"
         )
-        data, mask = cog.part(feature_bounds, warp_vrt_option={"cutline": cutline})
+        data, mask = cog.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
 
     feat_line = {

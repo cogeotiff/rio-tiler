@@ -16,7 +16,7 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from . import constants
-from .errors import AlphaBandWarning, TileOutsideBounds
+from .errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -38,7 +38,7 @@ def _read(
     resampling_method: Resampling = "nearest",
     force_binary_mask: bool = True,
     unscale: bool = False,
-    vrt_options: Dict = {},
+    vrt_options: Optional[Dict] = None,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
     Create WarpedVRT and read data and mask.
@@ -95,7 +95,9 @@ def _read(
     mask_out_shape = (height, width) if height and width else None
     resampling = Resampling[resampling_method]
 
-    vrt_params.update(vrt_options)
+    if vrt_options:
+        vrt_params.update(vrt_options)
+
     with WarpedVRT(src_dst, **vrt_params) as vrt:
         data = vrt.read(
             indexes=indexes, window=window, out_shape=out_shape, resampling=resampling,
@@ -134,7 +136,8 @@ def part(
     dst_crs: Optional[CRS] = None,
     bounds_crs: Optional[CRS] = None,
     minimum_overlap: Optional[float] = None,
-    warp_vrt_option: Dict = {},
+    warp_vrt_option: Optional[Dict] = None,
+    vrt_options: Optional[Dict] = None,
     max_size: Optional[int] = None,
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -162,7 +165,9 @@ def part(
     minimum_tile_cover: float, optional
         Minimum % overlap for which to raise an error with dataset not
         covering enought of the tile.
-    warp_vrt_option: dict, optional
+    warp_vrt_option: dict, DEPRECATED
+        These will be passed to the rasterio.warp.WarpedVRT class.
+    vrt_options: dict, optional
         These will be passed to the rasterio.warp.WarpedVRT class.
     max_size: int, optional
         Limit output size array if not widht and height.
@@ -237,18 +242,29 @@ def part(
             height=orig_vrt_height,
         )
 
+    if warp_vrt_option:
+        warnings.warn(
+            "warp_vrt_option will be removed in 2.0, use vrt_options",
+            DeprecationWarning,
+        )
+        vrt_options = vrt_options or warp_vrt_option
+
+    vrt_options = vrt_options or {}
+    vrt_options.update(
+        {
+            "crs": dst_crs,
+            "transform": vrt_transform,
+            "width": vrt_width,
+            "height": vrt_height,
+        }
+    )
+
     return _read(
         src_dst,
         out_height,
         out_width,
         window=window,
-        vrt_options=dict(
-            crs=dst_crs,
-            transform=vrt_transform,
-            width=vrt_width,
-            height=vrt_height,
-            **warp_vrt_option,
-        ),
+        vrt_options=vrt_options,
         **kwargs,
     )
 
@@ -380,7 +396,7 @@ def stats(
     max_size: int = 1024,
     bounds_crs: CRS = constants.WGS84_CRS,
     percentiles: Tuple[float, float] = (2.0, 98.0),
-    hist_options: Dict = {},
+    hist_options: Optional[Dict] = None,
     **kwargs: Any,
 ) -> Dict:
     """
@@ -436,6 +452,7 @@ def stats(
     data = numpy.ma.array(data)
     data.mask = mask == 0
 
+    hist_options = hist_options or {}
     return {
         indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
         for b in range(data.shape[0])
@@ -449,7 +466,7 @@ def metadata(
     max_size: int = 1024,
     bounds_crs: CRS = constants.WGS84_CRS,
     percentiles: Tuple[float, float] = (2.0, 98.0),
-    hist_options: Dict = {},
+    hist_options: Optional[Dict] = None,
     **kwargs: Any,
 ) -> Dict:
     """
@@ -512,6 +529,7 @@ def metadata(
     data = numpy.ma.array(data)
     data.mask = mask == 0
 
+    hist_options = hist_options or {}
     statistics = {
         indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
         for b in range(data.shape[0])

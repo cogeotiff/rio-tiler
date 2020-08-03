@@ -455,7 +455,7 @@ with COGReader("my_tif.tif") as cog:
     cutline = create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
 
     # Read part of the data (bbox) and use the cutline to mask the data
-    data, mask = cog.part(bbox, warp_vrt_option={'cutline': cutline})
+    data, mask = cog.part(bbox, vrt_options={'cutline': cutline})
 ```
 
 ## Partial reading on Cloud hosted dataset
