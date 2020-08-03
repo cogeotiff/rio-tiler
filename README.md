@@ -458,6 +458,27 @@ with COGReader("my_tif.tif") as cog:
     data, mask = cog.part(bbox, vrt_options={'cutline': cutline})
 ```
 
+The previous example uses the `.part` method but any method that uses the `rio_tiler.reader._read` function will accept the `cutline` options.
+
+```python
+
+bbox = featureBounds(feat)
+
+# Use COGReader to open and read the dataset
+with COGReader("my_tif.tif") as cog:
+    # Create WTT Cutline
+    cutline = create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
+
+    # Get a preview of the whole geotiff but use the cutline to mask the data
+    data, mask = cog.preview(vrt_options={'cutline': cutline})
+
+    # Read a mercator tile and use the cutline to mask the data
+    data, mask = cog.tile(1, 1, 1, vrt_options={'cutline': cutline})
+
+    # Get image statistics over a bbox and use the cutline as mask
+    stats = cog.stats(bounds=bbox, vrt_options={'cutline': cutline})
+```
+
 ## Partial reading on Cloud hosted dataset
 
 Rio-tiler perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
