@@ -450,7 +450,7 @@ feat =     {
 bbox = featureBounds(feat)
 
 # Use COGReader to open and read the dataset
-with COGReader(COGEO) as cog:
+with COGReader("my_tif.tif") as cog:
     # Create WTT Cutline
     cutline = create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
 
