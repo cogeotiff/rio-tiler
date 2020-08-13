@@ -1,3 +1,12 @@
+NEXT (TBD)
+------------------
+- add `rio_tiler.io.base.MultiAssetsReader` class (#225)
+- refactor `rio_tiler.io.stac.STACReader` to use MultiAssetsReader (#225)
+- add `rio_tiler.task` submodule to share tools for handling rio-tiler's future tasks.
+
+Breaking Changes:
+- replace dataclass wiht attr to support more flexible class definition (see #225)
+
 2.0b6 (2020-08-04)
 ------------------
 - add `utils.create_cutline` helper (#218)

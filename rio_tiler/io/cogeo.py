@@ -1,9 +1,9 @@
 """rio_tiler.io.cogeo: raster processing."""
 
 from concurrent import futures
-from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
+import attr
 import mercantile
 import numpy
 import rasterio
@@ -20,7 +20,7 @@ from ..utils import has_alpha_band, has_mask_band, tile_exists
 from .base import BaseReader
 
 
-@dataclass
+@attr.s
 class COGReader(BaseReader):
     """
     Cloud Optimized GeoTIFF Reader.
@@ -78,11 +78,13 @@ class COGReader(BaseReader):
 
     """
 
-    filepath: str
-    dataset: Optional[Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]] = None
-    _minzoom: Optional[int] = None
-    _maxzoom: Optional[int] = None
-    _colormap: Optional[Dict] = None
+    filepath: str = attr.ib()
+    dataset: Optional[
+        Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]
+    ] = attr.ib(default=None)
+    _minzoom: Optional[int] = attr.ib(default=None)
+    _maxzoom: Optional[int] = attr.ib(default=None)
+    _colormap: Optional[Dict] = attr.ib(default=None)
 
     def __enter__(self):
         """Support using with Context Managers."""

@@ -371,6 +371,8 @@ print(tile.shape)
 > (1, 256, 256)
 ```
 
+Note: STACReader is based on `rio_tiler.io.base.MultiAssetsReader` class.
+
 ## Working with multiple assets
 
 #### Mosaic
@@ -397,7 +399,7 @@ Notebook: [WorkingWithMosaic](Notebook/Using-rio-tiler-mosaic.ipynb)
 
 #### Merge assets
 
-`rio_tiler.io.base` submodule has `multi_*` functions (tile, part, preview, point, metadata, info, stats) allowing to fetch and merge info/data 
+`rio_tiler.io.cogeo` submodule has `multi_*` functions (tile, part, preview, point, metadata, info, stats) allowing to fetch and merge info/data 
 from multiple dataset (think about multiple bands stored in separated files).
 
 ```python
@@ -419,24 +421,19 @@ data, mask = multi_part(assets, bbox, ...)
 data, mask = multi_preview(assets, ...)
 ```
 
-You could also use `rio_tiler.io.base.MultiAssetsReader` to build a custom asset reader:
+You can also use `rio_tiler.io.base.MultiAssetsReader` to build a custom asset reader:
 
 ```python
+import attr
 from rio_tiler.io.base import MultiAssetsReader
 from rio_tiler.io import COGReader, BaseReader
 
 
+@attr.s
 class CustomReader(MultiAssetsReader):
 
-    def __init__(
-        self,
-        directory: str,
-        reader: BaseReader = COGReader,
-        **kwargs: Any,
-    ):
-        self.directory = directory
-        self.reader = reader
-        self.reader_options = kwargs
+    directory: str = attr.ib() # required arg
+    reader: Type[BaseReader] = attr.ib(default=COGReader) # the default reader is COGReader
 
     def __enter__(self):
         # List files in directory
@@ -453,10 +450,6 @@ class CustomReader(MultiAssetsReader):
             self.bounds = cog.bounds
 
         return self
-
-    def __exit__(self, *args):
-        """Support using with Context Managers."""
-        pass
 
     def _get_asset_url(self, asset: str) -> str:
         """Validate asset names and return asset's url."""

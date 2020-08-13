@@ -2,9 +2,9 @@
 
 import abc
 import re
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
+import attr
 import numpy
 
 from ..errors import MissingAssets, TileOutsideBounds
@@ -14,11 +14,11 @@ from ..utils import tile_exists
 
 
 # ref: https://github.com/python/mypy/issues/5374
-@dataclass  # type: ignore
+@attr.s
 class BaseReader(metaclass=abc.ABCMeta):
     """Rio-tiler.io BaseReader."""
 
-    bounds: Tuple[float, float, float, float] = field(init=False)
+    bounds: Tuple[float, float, float, float] = attr.ib(init=False)
 
     @abc.abstractmethod
     def __enter__(self):
@@ -107,14 +107,14 @@ class BaseReader(metaclass=abc.ABCMeta):
         ...
 
 
-@dataclass  # type: ignore
+@attr.s
 class MultiAssetsReader(metaclass=abc.ABCMeta):
     """MultiAssets Reader."""
 
-    bounds: Tuple[float, float, float, float] = field(init=False)
-    assets: Sequence[str] = field(init=False)
-    reader: Type[BaseReader] = field(init=False)
-    reader_options: Optional[Dict] = field(init=False, default_factory=dict)
+    reader: Type[BaseReader] = attr.ib()
+    reader_options: Dict = attr.ib(factory=dict)
+    bounds: Tuple[float, float, float, float] = attr.ib(init=False)
+    assets: Sequence[str] = attr.ib(init=False)
 
     @abc.abstractmethod
     def __enter__(self):
@@ -123,7 +123,7 @@ class MultiAssetsReader(metaclass=abc.ABCMeta):
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Support using with Context Managers."""
-        ...
+        pass
 
     @abc.abstractmethod
     def _get_asset_url(self, asset: str) -> str:

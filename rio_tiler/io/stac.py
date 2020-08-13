@@ -2,10 +2,10 @@
 
 import functools
 import json
-from dataclasses import dataclass
-from typing import Any, Dict, Iterator, Optional, Set, Tuple, Type
+from typing import Dict, Iterator, Optional, Set, Tuple, Type
 from urllib.parse import urlparse
 
+import attr
 import requests
 
 from ..errors import InvalidAssetName
@@ -73,7 +73,7 @@ def _get_assets(
         yield asset
 
 
-@dataclass(init=False)
+@attr.s
 class STACReader(MultiAssetsReader):
     """
     STAC + Cloud Optimized GeoTIFF Reader.
@@ -81,6 +81,9 @@ class STACReader(MultiAssetsReader):
     Examples
     --------
     with STACReader(stac_path) as stac:
+        stac.tile(...)
+
+    with STACReader(stac_path, reader=MyCustomReader, reader_options={...}) as stac:
         stac.tile(...)
 
     my_stac = {
@@ -109,6 +112,10 @@ class STACReader(MultiAssetsReader):
         Only include some assets base on their type
     include_asset_types: Set, optional
         Exclude some assets base on their type
+    reader: BaseReader, optional
+        rio-tiler Reader (default is set to rio_tiler.io.COGReader)
+    reader_options: dict, optional
+        additional option to forward to the Reader (default is {}).
 
     Properties
     ----------
@@ -116,6 +123,8 @@ class STACReader(MultiAssetsReader):
         STAC bounds in WGS84 crs.
     center: tuple[float, float, int]
         STAC item center + minzoom
+    spatial_info: dict
+        STAC spatial info (zoom, bounds and center)
 
     Methods
     -------
@@ -136,30 +145,16 @@ class STACReader(MultiAssetsReader):
 
     """
 
-    def __init__(
-        self,
-        filepath: str,
-        item: Optional[Dict] = None,
-        minzoom: int = 0,
-        maxzoom: int = 30,
-        include_assets: Optional[Set[str]] = None,
-        exclude_assets: Optional[Set[str]] = None,
-        include_asset_types: Set[str] = None,
-        exclude_asset_types: Optional[Set[str]] = None,
-        reader: Type[BaseReader] = COGReader,
-        **kwargs: Any,
-    ):
-        """Create STACReader instance."""
-        self.filepath = filepath
-        self.item = item
-        self.minzoom = minzoom
-        self.maxzoom = maxzoom
-        self.include_assets = include_assets
-        self.exclude_assets = exclude_assets
-        self.include_asset_types = include_asset_types or DEFAULT_VALID_TYPE
-        self.exclude_asset_types = exclude_asset_types
-        self.reader = reader
-        self.reader_options = kwargs
+    filepath: str = attr.ib()
+    item: Optional[Dict] = attr.ib(default=None)
+    minzoom: int = attr.ib(default=0)
+    maxzoom: int = attr.ib(default=30)
+    include_assets: Optional[Set[str]] = attr.ib(default=None)
+    exclude_assets: Optional[Set[str]] = attr.ib(default=None)
+    include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
+    exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
+    reader: Type[BaseReader] = attr.ib(default=COGReader)
+    reader_options: Dict = attr.ib(factory=dict)
 
     def __enter__(self):
         """Support using with Context Managers."""
@@ -181,10 +176,6 @@ class STACReader(MultiAssetsReader):
             raise Exception("No valid asset found")
 
         return self
-
-    def __exit__(self, *args):
-        """Support using with Context Managers."""
-        pass
 
     def _get_asset_url(self, asset: str) -> str:
         """Validate asset names and return asset's url."""
