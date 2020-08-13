@@ -25,7 +25,7 @@ how to handle these cases for each pixel:
 Inputs:
 
 - assets : list, tuple of rio-tiler compatible assets (url or sceneid)
-- tiler: Rio-tiler's tiler function (e.g rio_tiler.landsat8.tile)
+- tiler: Callable that returns a tuple of `numpy.array` (e.g `tile, mask = rio_tiler.reader.tile(x, y, z, **kwargs)`)
 - *args: tiler specific arguments.
 - pixel_selection : optional **pixel selection** algorithm (default: "first").
 - chunk_size: optional, control the number of asset to process per loop.

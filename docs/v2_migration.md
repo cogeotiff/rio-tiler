@@ -319,6 +319,10 @@ img = rio_tiler.utils.render(tile, mask, img_format="PNG")
 
 ## Mission specific changes
 
+**Mission-specific tilers have been moved to the [`rio-tiler-pds`][rio-tiler-pds] package.**
+
+[rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
+
 Each `rio_tiler.io.{mission}` **scene id parser** (e.g cbers_parser) has been refactored and now return AWS S3 path information.
 
 ```python
