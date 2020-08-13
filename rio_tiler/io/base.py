@@ -2,7 +2,7 @@
 
 import abc
 from dataclasses import dataclass, field
-from typing import Any, Dict, List, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import numpy
 
@@ -63,7 +63,7 @@ class BaseReader(metaclass=abc.ABCMeta):
         self,
         pmin: float = 2.0,
         pmax: float = 98.0,
-        hist_options: Dict = {},
+        hist_options: Optional[Dict] = None,
         **kwargs: Any,
     ) -> Dict:
         """Return Dataset's statistics."""

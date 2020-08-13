@@ -11,12 +11,16 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
-from rasterio.transform import from_bounds
+from rasterio.rio.helpers import coords
+from rasterio.transform import from_bounds, rowcol
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform
+from rasterio.warp import calculate_default_transform, transform_geom
 
 from . import constants
 from .colormap import apply_cmap
+from .errors import RioTilerError
+
+DataSet = Union[DatasetReader, DatasetWriter, WarpedVRT]
 
 
 def _chunks(my_list: Sequence, chuck_size: int):
@@ -479,3 +483,44 @@ def pansharpening_brovey(
     with numpy.errstate(invalid="ignore", divide="ignore"):
         ratio = _calculateRatio(rgb, pan, weight)
         return numpy.clip(ratio * rgb, 0, numpy.iinfo(pan_dtype).max).astype(pan_dtype)
+
+
+def create_cutline(src_dst: DataSet, geometry: Dict, geometry_crs: CRS = None) -> str:
+    """
+    Create WKT Polygon Cutline for GDALWarpOptions.
+
+    Ref: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions
+
+    Attributes
+    ----------
+    src_dst: rasterio.io.DatasetReader
+        rasterio.io.DatasetReader object
+    geometry: dict
+        GeoJSON feature or GeoJSON geometry
+    geometry_crs: CRS or str, optional
+            Specify bounds coordinate reference system, default is same as input dataset.
+
+    Returns
+    -------
+    wkt: str
+        Cutline WKT geometry in form of `POLYGON ((x y, x y, ...)))
+
+    """
+    if "geometry" in geometry:
+        geometry = geometry["geometry"]
+
+    geom_type = geometry["type"]
+    if not geom_type == "Polygon":
+        raise RioTilerError("Invalid geometry type: {geom_type}. Should be Polygon")
+
+    if geometry_crs:
+        geometry = transform_geom(geometry_crs, src_dst.crs, geometry)
+
+    xs, ys = zip(*coords(geometry))
+    src_y, src_x = rowcol(src_dst.transform, xs, ys)
+
+    src_x = [max(0, min(src_dst.width, x)) for x in src_x]
+    src_y = [max(0, min(src_dst.height, y)) for y in src_y]
+
+    poly = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
+    return f"POLYGON (({poly}))"
