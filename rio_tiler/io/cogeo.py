@@ -80,6 +80,9 @@ class COGReader(BaseReader):
 
     filepath: str
     dataset: Optional[Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]] = None
+    nodata: Optional[Union[float, int, str]] = None
+    unscale: bool = False
+    vrt_options: Optional[Dict] = None
     _minzoom: Optional[int] = None
     _maxzoom: Optional[int] = None
     _colormap: Optional[Dict] = None
@@ -134,6 +137,19 @@ class COGReader(BaseReader):
         if self._maxzoom is None:
             self._get_zooms()
         return self._maxzoom
+
+    def _update_kwargs(self, kwargs: Dict):
+        nodata = kwargs.get("nodata", self.nodata)
+        if nodata is not None:
+            kwargs["nodata"] = nodata
+
+        vrt_options = kwargs.get("vrt_options", self.vrt_options)
+        if vrt_options is not None:
+            kwargs["vrt_options"] = vrt_options
+
+        unscale = kwargs.get("unscale", self.unscale)
+        if unscale is not None:
+            kwargs["unscale"] = unscale
 
     def info(self) -> Dict:
         """Return COG info."""
@@ -210,12 +226,15 @@ class COGReader(BaseReader):
             Dictionary with bands statistics.
 
         """
+        self._update_kwargs(kwargs)
+
         hist_options = hist_options or {}
 
         if self.colormap and not hist_options.get("bins"):
             hist_options["bins"] = [
                 k for k, v in self.colormap.items() if v != (0, 0, 0, 255)
             ]
+
         return reader.stats(
             self.dataset, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs,
         )
@@ -262,6 +281,8 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
+        self._update_kwargs(kwargs)
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -327,6 +348,8 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
+        self._update_kwargs(kwargs)
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -377,6 +400,8 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
+        self._update_kwargs(kwargs)
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -424,6 +449,8 @@ class COGReader(BaseReader):
             List of pixel values per bands indexes.
 
         """
+        self._update_kwargs(kwargs)
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
