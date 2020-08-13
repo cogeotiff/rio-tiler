@@ -81,7 +81,7 @@ class COGReader(BaseReader):
     filepath: str
     dataset: Optional[Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]] = None
     nodata: Optional[Union[float, int, str]] = None
-    unscale: bool = False
+    unscale: Optional[bool] = None
     vrt_options: Optional[Dict] = None
     _minzoom: Optional[int] = None
     _maxzoom: Optional[int] = None
