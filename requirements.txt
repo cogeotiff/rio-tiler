@@ -1,4 +1,4 @@
-attr
+attrs
 
 boto3
 
