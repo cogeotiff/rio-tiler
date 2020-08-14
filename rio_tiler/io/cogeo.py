@@ -232,7 +232,7 @@ class COGReader(BaseReader):
             Dictionary with bands statistics.
 
         """
-        kwargs = {**kwargs, **self._kwargs}
+        kwargs = {**self._kwargs, **kwargs}
 
         hist_options = hist_options or {}
 
@@ -287,7 +287,7 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
-        kwargs = {**kwargs, **self._kwargs}
+        kwargs = {**self._kwargs, **kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)
@@ -354,7 +354,7 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
-        kwargs = {**kwargs, **self._kwargs}
+        kwargs = {**self._kwargs, **kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)
@@ -406,7 +406,7 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
-        kwargs = {**kwargs, **self._kwargs}
+        kwargs = {**self._kwargs, **kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)
@@ -455,7 +455,7 @@ class COGReader(BaseReader):
             List of pixel values per bands indexes.
 
         """
-        kwargs = {**kwargs, **self._kwargs}
+        kwargs = {**self._kwargs, **kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)

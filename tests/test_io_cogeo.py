@@ -237,14 +237,9 @@ def test_COGReader_Options():
         p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
         assert round(p[0], 3) == 1000.892
 
-        # passing unscale in method should be ignored
+        # passing unscale in method should overwrite the defaults
         p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
-        assert round(p[0], 3) == 1000.892
-
-    # Validate without scaling
-    with COGReader(COG_SCALE) as cog:
-        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
-        assert round(p[0], 3) == 8917
+        assert p[0] == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
     with COGReader(COGEO, vrt_options={"cutline": cutline}) as cog:
