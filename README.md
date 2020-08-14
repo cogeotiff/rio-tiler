@@ -340,7 +340,7 @@ COGReader accept several options which will be forwarded to the `rio_tiler.reade
 - `unscale`: Apply internal rescaling factors
 - `vrt_options`: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
 
-Note: Those options could already be passed on each `method` called 
+Note: Those options could already be passed on each `method` call.
 
 ```python
 with COGReader("my_cog.tif", nodata=0) as cog:
