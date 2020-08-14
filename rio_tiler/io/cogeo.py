@@ -1,7 +1,7 @@
 """rio_tiler.io.cogeo: raster processing."""
 
 from concurrent import futures
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import mercantile
@@ -28,6 +28,10 @@ class COGReader(BaseReader):
     Examples
     --------
     with COGReader(src_path) as cog:
+        cog.tile(...)
+
+    # Set global options
+    with COGReader(src_path, unscale=True, nodata=0) as cog:
         cog.tile(...)
 
     with rasterio.open(src_path) as src_dst:
@@ -83,6 +87,24 @@ class COGReader(BaseReader):
     _minzoom: Optional[int] = None
     _maxzoom: Optional[int] = None
     _colormap: Optional[Dict] = None
+
+    # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
+    nodata: Optional[Union[float, int, str]] = None
+    unscale: Optional[bool] = None
+    vrt_options: Optional[Dict] = None
+
+    # We use _kwargs to store values of nodata, unscale and vrt_options.
+    # _kwargs is used avoid having to set those values on each method call.
+    _kwargs: Dict[str, Any] = field(init=False, default_factory=dict)
+
+    def __post_init__(self):
+        """Define _kwargs."""
+        if self.nodata is not None:
+            self._kwargs["nodata"] = self.nodata
+        if self.unscale is not None:
+            self._kwargs["unscale"] = self.unscale
+        if self.vrt_options is not None:
+            self._kwargs["vrt_options"] = self.vrt_options
 
     def __enter__(self):
         """Support using with Context Managers."""
@@ -210,12 +232,15 @@ class COGReader(BaseReader):
             Dictionary with bands statistics.
 
         """
+        kwargs = {**self._kwargs, **kwargs}
+
         hist_options = hist_options or {}
 
         if self.colormap and not hist_options.get("bins"):
             hist_options["bins"] = [
                 k for k, v in self.colormap.items() if v != (0, 0, 0, 255)
             ]
+
         return reader.stats(
             self.dataset, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs,
         )
@@ -262,6 +287,8 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
+        kwargs = {**self._kwargs, **kwargs}
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -327,6 +354,8 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
+        kwargs = {**self._kwargs, **kwargs}
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -377,6 +406,8 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
+        kwargs = {**self._kwargs, **kwargs}
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -424,6 +455,8 @@ class COGReader(BaseReader):
             List of pixel values per bands indexes.
 
         """
+        kwargs = {**self._kwargs, **kwargs}
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 

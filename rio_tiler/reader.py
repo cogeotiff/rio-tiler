@@ -323,6 +323,7 @@ def point(
     nodata: Optional[Union[float, int, str]] = None,
     unscale: bool = False,
     masked: bool = True,
+    vrt_options: Optional[Dict] = None,
 ) -> List:
     """
     Read point value
@@ -344,6 +345,8 @@ def point(
         masked : bool
             Whether to mask samples that fall outside the extent of the dataset.
             Default is set to True.
+        vrt_options: dict, optional
+            These will be passed to the rasterio.warp.WarpedVRT class.
 
     Returns
     -------
@@ -372,6 +375,9 @@ def point(
 
     if has_alpha_band(src_dst):
         vrt_params.update({"add_alpha": False})
+
+    if vrt_options:
+        vrt_params.update(vrt_options)
 
     with WarpedVRT(src_dst, **vrt_params) as vrt_dst:
         point_values = list(

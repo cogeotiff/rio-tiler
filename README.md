@@ -121,6 +121,10 @@ class COGReader:
     with COGReader(src_path) as cog:
         cog.tile(...)
 
+    # Set global options
+    with COGReader(src_path, unscale=True, nodata=0) as cog:
+        cog.tile(...)
+
     with rasterio.open(src_path) as src_dst:
         with WarpedVRT(src_dst, ...) as vrt_dst:
             with COGReader(None, dataset=vrt_dst) as cog:
@@ -327,6 +331,25 @@ with COGReader("myfile.tif") as cog:
         }
     }
 }
+```
+
+##### Global Options
+
+COGReader accept several options which will be forwarded to the `rio_tiler.reader._read` function (low level function accessing the data):
+- `nodata`: Overwrite the nodata value (or set in not present)
+- `unscale`: Apply internal rescaling factors
+- `vrt_options`: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
+
+Note: Those options could already be passed on each `method` call.
+
+```python
+with COGReader("my_cog.tif", nodata=0) as cog:
+    tile, mask = cog.tile(1, 1, 1)
+
+# is equivalent to 
+
+with COGReader("my_cog.tif") as cog:
+    tile, mask = cog.tile(1, 1, 1, nodata=0)
 ```
 
 ### STACReader
