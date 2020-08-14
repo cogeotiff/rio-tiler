@@ -172,7 +172,9 @@ class MultiAssetsReader(metaclass=abc.ABCMeta):
             with self.reader(url, **self.reader_options) as cog:  # type: ignore
                 return cog.stats(*args, **kwargs)
 
-        return multi_values(assets, _reader, pmin, pmax, **kwargs)
+        return multi_values(
+            assets, _reader, pmin, pmax, hist_options=hist_options, **kwargs
+        )
 
     def metadata(
         self,
