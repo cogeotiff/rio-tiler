@@ -244,7 +244,7 @@ class MultiAssetsReader(metaclass=abc.ABCMeta):
         )
 
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = expression.split(",")
             data = apply_expression(blocks, assets, data)
 
         return data, mask
@@ -284,7 +284,7 @@ class MultiAssetsReader(metaclass=abc.ABCMeta):
         )
 
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = expression.split(",")
             data = apply_expression(blocks, assets, data)
 
         return data, mask
@@ -320,7 +320,7 @@ class MultiAssetsReader(metaclass=abc.ABCMeta):
         )
 
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = expression.split(",")
             data = apply_expression(blocks, assets, data)
 
         return data, mask
@@ -359,7 +359,7 @@ class MultiAssetsReader(metaclass=abc.ABCMeta):
 
         values = [d for _, d in data.items()]
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = expression.split(",")
             values = apply_expression(blocks, assets, values).tolist()
 
         return values
