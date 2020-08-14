@@ -1,7 +1,7 @@
 """rio_tiler.io.cogeo: raster processing."""
 
 from concurrent import futures
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import mercantile
@@ -28,6 +28,10 @@ class COGReader(BaseReader):
     Examples
     --------
     with COGReader(src_path) as cog:
+        cog.tile(...)
+
+    # Set global options
+    with COGReader(src_path, unscale=True, nodata=0) as cog:
         cog.tile(...)
 
     with rasterio.open(src_path) as src_dst:
@@ -80,12 +84,27 @@ class COGReader(BaseReader):
 
     filepath: str
     dataset: Optional[Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]] = None
-    nodata: Optional[Union[float, int, str]] = None
-    unscale: Optional[bool] = None
-    vrt_options: Optional[Dict] = None
     _minzoom: Optional[int] = None
     _maxzoom: Optional[int] = None
     _colormap: Optional[Dict] = None
+
+    # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
+    nodata: Optional[Union[float, int, str]] = None
+    unscale: Optional[bool] = None
+    vrt_options: Optional[Dict] = None
+
+    # We use _kwargs to store values of nodata, unscale and vrt_options.
+    # _kwargs is used avoid having to set those values on each method call.
+    _kwargs: Dict[str, Any] = field(init=False, default_factory=dict)
+
+    def __post_init__(self):
+        """Define _kwargs."""
+        if self.nodata is not None:
+            self._kwargs["nodata"] = self.nodata
+        if self.unscale is not None:
+            self._kwargs["unscale"] = self.unscale
+        if self.vrt_options is not None:
+            self._kwargs["vrt_options"] = self.vrt_options
 
     def __enter__(self):
         """Support using with Context Managers."""
@@ -137,19 +156,6 @@ class COGReader(BaseReader):
         if self._maxzoom is None:
             self._get_zooms()
         return self._maxzoom
-
-    def _update_kwargs(self, kwargs: Dict):
-        nodata = kwargs.get("nodata", self.nodata)
-        if nodata is not None:
-            kwargs["nodata"] = nodata
-
-        vrt_options = kwargs.get("vrt_options", self.vrt_options)
-        if vrt_options is not None:
-            kwargs["vrt_options"] = vrt_options
-
-        unscale = kwargs.get("unscale", self.unscale)
-        if unscale is not None:
-            kwargs["unscale"] = unscale
 
     def info(self) -> Dict:
         """Return COG info."""
@@ -226,7 +232,7 @@ class COGReader(BaseReader):
             Dictionary with bands statistics.
 
         """
-        self._update_kwargs(kwargs)
+        kwargs = {**kwargs, **self._kwargs}
 
         hist_options = hist_options or {}
 
@@ -281,7 +287,7 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
-        self._update_kwargs(kwargs)
+        kwargs = {**kwargs, **self._kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)
@@ -348,7 +354,7 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
-        self._update_kwargs(kwargs)
+        kwargs = {**kwargs, **self._kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)
@@ -400,7 +406,7 @@ class COGReader(BaseReader):
         mask: numpy array
 
         """
-        self._update_kwargs(kwargs)
+        kwargs = {**kwargs, **self._kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)
@@ -449,7 +455,7 @@ class COGReader(BaseReader):
             List of pixel values per bands indexes.
 
         """
-        self._update_kwargs(kwargs)
+        kwargs = {**kwargs, **self._kwargs}
 
         if isinstance(indexes, int):
             indexes = (indexes,)

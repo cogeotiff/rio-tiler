@@ -227,23 +227,24 @@ def test_COGReader_Options():
     """Set options in reader."""
     with COGReader(COGEO, nodata=1) as cog:
         meta = cog.metadata()
-
-    assert meta["statistics"][1]["pc"] == [2720, 6896]
+        assert meta["statistics"][1]["pc"] == [2720, 6896]
 
     with COGReader(COGEO, nodata=1) as cog:
         _, mask = cog.tile(43, 25, 7)
         assert not mask.all()
 
-        # Set Nodata in kwargs, should overwrite nodata passed in Reader
-        _, mask = cog.tile(43, 25, 7, nodata=None)
-        assert mask.all()
-
     with COGReader(COG_SCALE, unscale=True) as cog:
         p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
         assert round(p[0], 3) == 1000.892
 
+        # passing unscale in method should be ignored
         p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
-        assert p[0] == 8917
+        assert round(p[0], 3) == 1000.892
+
+    # Validate without scaling
+    with COGReader(COG_SCALE) as cog:
+        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
+        assert round(p[0], 3) == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
     with COGReader(COGEO, vrt_options={"cutline": cutline}) as cog:
