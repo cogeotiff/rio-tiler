@@ -19,6 +19,8 @@ class BaseReader(metaclass=abc.ABCMeta):
     """Rio-tiler.io BaseReader."""
 
     bounds: Tuple[float, float, float, float] = attr.ib(init=False)
+    minzoom: int = attr.ib(init=False)
+    maxzoom: int = attr.ib(init=False)
 
     @abc.abstractmethod
     def __enter__(self):
@@ -28,16 +30,6 @@ class BaseReader(metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def __exit__(self, exc_type, exc_value, traceback):
         """Support using with Context Managers."""
-        ...
-
-    @property
-    def minzoom(self) -> int:
-        """Dataset Min zoom."""
-        ...
-
-    @property
-    def maxzoom(self) -> int:
-        """Dataset Max zoom."""
         ...
 
     @property
@@ -108,8 +100,8 @@ class BaseReader(metaclass=abc.ABCMeta):
 
 
 @attr.s
-class MultiAssetsReader(metaclass=abc.ABCMeta):
-    """MultiAssets Reader."""
+class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
+    """MultiBaseReader Reader."""
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
