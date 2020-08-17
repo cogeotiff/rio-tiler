@@ -7,10 +7,9 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 import attr
 import numpy
 
-from ..errors import MissingAssets, TileOutsideBounds
+from ..errors import MissingAssets
 from ..expression import apply_expression
 from ..tasks import multi_arrays, multi_values
-from ..utils import tile_exists
 
 
 # ref: https://github.com/python/mypy/issues/5374
@@ -202,11 +201,6 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         **kwargs: Any,
     ) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Read a Mercator Map tile multiple assets."""
-        if not tile_exists(self.bounds, tile_z, tile_x, tile_y):
-            raise TileOutsideBounds(
-                "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
-            )
-
         if isinstance(assets, str):
             assets = (assets,)
 
