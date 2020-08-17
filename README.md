@@ -337,7 +337,7 @@ with COGReader("myfile.tif") as cog:
 ##### Global Options
 
 COGReader accept several options which will be forwarded to the `rio_tiler.reader._read` function (low level function accessing the data):
-- `nodata`: Overwrite the nodata value (or set in not present)
+- `nodata`: Overwrite the nodata value (or set if not present)
 - `unscale`: Apply internal rescaling factors
 - `vrt_options`: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
 
