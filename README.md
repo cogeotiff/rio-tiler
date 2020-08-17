@@ -394,7 +394,7 @@ print(tile.shape)
 > (1, 256, 256)
 ```
 
-Note: STACReader is based on `rio_tiler.io.base.MultiAssetsReader` class.
+Note: STACReader is based on `rio_tiler.io.base.MultiBaseReader` class.
 
 ## Working with multiple assets
 
@@ -444,16 +444,16 @@ data, mask = multi_part(assets, bbox, ...)
 data, mask = multi_preview(assets, ...)
 ```
 
-You can also use `rio_tiler.io.base.MultiAssetsReader` to build a custom asset reader:
+You can also use `rio_tiler.io.base.MultiBaseReader` to build a custom asset reader:
 
 ```python
 import attr
-from rio_tiler.io.base import MultiAssetsReader
+from rio_tiler.io.base import MultiBaseReader
 from rio_tiler.io import COGReader, BaseReader
 
 
 @attr.s
-class CustomReader(MultiAssetsReader):
+class CustomReader(MultiBaseReader):
 
     directory: str = attr.ib() # required arg
     reader: Type[BaseReader] = attr.ib(default=COGReader) # the default reader is COGReader

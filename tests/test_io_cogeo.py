@@ -28,10 +28,25 @@ def test_spatial_info_valid():
     """Should work as expected (get spatial info)"""
     with COGReader(COG_NODATA) as cog:
         meta = cog.spatial_info
-    assert meta.get("minzoom")
-    assert meta.get("maxzoom")
+    assert meta.get("minzoom") == 5
+    assert meta.get("maxzoom") == 8
     assert meta.get("center")
     assert len(meta.get("bounds")) == 4
+
+    with COGReader(COG_NODATA, minzoom=3) as cog:
+        meta = cog.spatial_info
+    assert meta.get("minzoom") == 3
+    assert meta.get("maxzoom") == 8
+
+    with COGReader(COG_NODATA, maxzoom=12) as cog:
+        meta = cog.spatial_info
+    assert meta.get("minzoom") == 5
+    assert meta.get("maxzoom") == 12
+
+    with COGReader(COG_NODATA, minzoom=3, maxzoom=12) as cog:
+        meta = cog.spatial_info
+    assert meta.get("minzoom") == 3
+    assert meta.get("maxzoom") == 12
 
 
 def test_bounds_valid():
@@ -48,6 +63,11 @@ def test_info_valid():
     assert meta.get("offset")
 
     with COGReader(COG_CMAP) as cog:
+        assert cog.colormap
+        meta = cog.info()
+    assert meta.get("colormap")
+
+    with COGReader(COG_NODATA, colormap={1: [0, 0, 0, 0]}) as cog:
         assert cog.colormap
         meta = cog.info()
     assert meta.get("colormap")

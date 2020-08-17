@@ -86,9 +86,9 @@ class COGReader(BaseReader):
     dataset: Optional[
         Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]
     ] = attr.ib(default=None)
-    _minzoom: Optional[int] = attr.ib(default=None)
-    _maxzoom: Optional[int] = attr.ib(default=None)
-    _colormap: Optional[Dict] = attr.ib(default=None)
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
+    colormap: Dict = attr.ib(default=None)
 
     # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
     nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
@@ -115,6 +115,11 @@ class COGReader(BaseReader):
         self.bounds: Tuple[float, float, float, float] = transform_bounds(
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
+        if self.minzoom is None or self.maxzoom is None:
+            self._get_zooms()
+
+        if self.colormap is None:
+            self._get_colormap()
 
         return self
 
@@ -126,38 +131,17 @@ class COGReader(BaseReader):
     def _get_zooms(self):
         """Calculate raster min/max zoom level."""
         minzoom, maxzoom = get_zooms(self.dataset)
-        self._minzoom = self._minzoom or minzoom
-        self._maxzoom = self._maxzoom or maxzoom
+        self.minzoom = self.minzoom or minzoom
+        self.maxzoom = self.maxzoom or maxzoom
         return
 
     def _get_colormap(self):
         """Retrieve the internal colormap."""
         try:
-            self._colormap = self.dataset.colormap(1)
+            self.colormap = self.dataset.colormap(1)
         except ValueError:
-            self._colormap = {}
+            self.colormap = {}
             pass
-
-    @property
-    def colormap(self) -> Dict[int, Tuple[int, int, int, int]]:
-        """COG internal Colormap."""
-        if self._colormap is None:
-            self._get_colormap()
-        return self._colormap
-
-    @property
-    def minzoom(self) -> int:
-        """COG Min zoom."""
-        if self._minzoom is None:
-            self._get_zooms()
-        return self._minzoom
-
-    @property
-    def maxzoom(self) -> int:
-        """COG Max zoom."""
-        if self._maxzoom is None:
-            self._get_zooms()
-        return self._maxzoom
 
     def info(self) -> Dict:
         """Return COG info."""

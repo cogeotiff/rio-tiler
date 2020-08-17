@@ -10,7 +10,7 @@ import requests
 
 from ..errors import InvalidAssetName
 from ..utils import aws_get_object
-from .base import BaseReader, MultiAssetsReader
+from .base import BaseReader, MultiBaseReader
 from .cogeo import COGReader
 
 DEFAULT_VALID_TYPE = {
@@ -74,7 +74,7 @@ def _get_assets(
 
 
 @attr.s
-class STACReader(MultiAssetsReader):
+class STACReader(MultiBaseReader):
     """
     STAC + Cloud Optimized GeoTIFF Reader.
 
