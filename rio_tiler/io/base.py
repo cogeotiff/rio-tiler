@@ -238,7 +238,6 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
     def part(
         self,
         bbox: Tuple[float, float, float, float],
-        max_size: int = 1024,
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = "",
         asset_expression: Optional[

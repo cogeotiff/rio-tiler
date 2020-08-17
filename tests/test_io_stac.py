@@ -172,6 +172,10 @@ def test_part_valid(rio):
         assert data.shape == (1, 73, 84)
         assert mask.shape == (73, 84)
 
+        data, mask = stac.part(bbox, assets="green", max_size=30)
+        assert data.shape == (1, 27, 30)
+        assert mask.shape == (27, 30)
+
 
 @patch("rio_tiler.io.cogeo.rasterio")
 def test_preview_valid(rio):
