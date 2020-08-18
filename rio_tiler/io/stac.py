@@ -62,23 +62,18 @@ def _get_assets(
 ) -> Iterator:
     """Get Asset list."""
     for asset, asset_info in item["assets"].items():
-        _type = asset_info.get("type")
+        if include and asset in include:
+            yield asset
+            continue
 
         if exclude and asset in exclude:
             continue
 
-        if (
-            _type
-            and (exclude_asset_types and _type in exclude_asset_types)
-            or (include and asset not in include)
-        ):
+        _type = asset_info.get("type")
+        if _type and (exclude_asset_types and _type in exclude_asset_types):
             continue
 
-        if (
-            _type
-            and (include_asset_types and _type not in include_asset_types)
-            or (include and asset not in include)
-        ):
+        if _type and (include_asset_types and _type not in include_asset_types):
             continue
 
         yield asset
