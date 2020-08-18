@@ -49,8 +49,6 @@ def filter_tasks(
 
 def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType:
     """Create Future Tasks."""
-    tasks: TaskType
-
     if threads and threads > 1:
         with futures.ThreadPoolExecutor(max_workers=threads) as executor:
             return [

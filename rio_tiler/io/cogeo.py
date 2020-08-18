@@ -83,9 +83,9 @@ class COGReader(BaseReader):
     """
 
     filepath: str = attr.ib()
-    dataset: Optional[
-        Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]
-    ] = attr.ib(default=None)
+    dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
+        default=None
+    )
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
@@ -112,7 +112,7 @@ class COGReader(BaseReader):
         """Support using with Context Managers."""
         self.dataset = self.dataset or rasterio.open(self.filepath)
 
-        self.bounds: Tuple[float, float, float, float] = transform_bounds(
+        self.bounds = transform_bounds(
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
         if self.minzoom is None or self.maxzoom is None:

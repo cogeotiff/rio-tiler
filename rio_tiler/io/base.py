@@ -12,7 +12,6 @@ from ..expression import apply_expression
 from ..tasks import multi_arrays, multi_values
 
 
-# ref: https://github.com/python/mypy/issues/5374
 @attr.s
 class BaseReader(metaclass=abc.ABCMeta):
     """Rio-tiler.io BaseReader."""
@@ -121,10 +120,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         """Validate asset name and construct url."""
         ...
 
-    def parse_expression(self, expression: str) -> Sequence[str]:
+    def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
         _re = re.compile("|".join(sorted(self.assets, reverse=True)))
-        return list(set(re.findall(_re, expression)))
+        return tuple(set(re.findall(_re, expression)))
 
     def info(
         self, assets: Union[Sequence[str], str] = None, *args, **kwargs: Any

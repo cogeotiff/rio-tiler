@@ -146,7 +146,7 @@ class STACReader(MultiBaseReader):
     """
 
     filepath: str = attr.ib()
-    item: Optional[Dict] = attr.ib(default=None)
+    item: Dict = attr.ib(default=None)
     minzoom: int = attr.ib(default=0)
     maxzoom: int = attr.ib(default=30)
     include_assets: Optional[Set[str]] = attr.ib(default=None)
@@ -161,7 +161,7 @@ class STACReader(MultiBaseReader):
         self.item = self.item or fetch(self.filepath)
 
         # Get Zooms from proj: ?
-        self.bounds: Tuple[float, float, float, float] = self.item["bbox"]
+        self.bounds = self.item["bbox"]
 
         self.assets = list(
             _get_assets(

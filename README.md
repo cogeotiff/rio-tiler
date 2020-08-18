@@ -452,6 +452,9 @@ from rio_tiler.io.base import MultiBaseReader
 from rio_tiler.io import COGReader, BaseReader
 
 
+# CustomReader is a subclass of MultiBaseReader.
+# To ease the creation of the class and because MultiBaseReader is built with `attr`
+# we also need to add the `@attr.s` wrapper on top of our custom class.
 @attr.s
 class CustomReader(MultiBaseReader):
 
