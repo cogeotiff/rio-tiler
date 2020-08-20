@@ -7,8 +7,8 @@ with open("README.md") as f:
 
 # Runtime requirements.
 inst_reqs = [
+    "attrs",
     "boto3",
-    "dataclasses>=0.6;python_version<'3.7'",
     "numexpr",
     "numpy",
     "mercantile",

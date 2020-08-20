@@ -1,9 +1,9 @@
 """rio_tiler.io.cogeo: raster processing."""
 
 from concurrent import futures
-from dataclasses import dataclass, field
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
+import attr
 import mercantile
 import numpy
 import rasterio
@@ -20,7 +20,7 @@ from ..utils import has_alpha_band, has_mask_band, tile_exists
 from .base import BaseReader
 
 
-@dataclass
+@attr.s
 class COGReader(BaseReader):
     """
     Cloud Optimized GeoTIFF Reader.
@@ -82,22 +82,24 @@ class COGReader(BaseReader):
 
     """
 
-    filepath: str
-    dataset: Optional[Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT]] = None
-    _minzoom: Optional[int] = None
-    _maxzoom: Optional[int] = None
-    _colormap: Optional[Dict] = None
+    filepath: str = attr.ib()
+    dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
+        default=None
+    )
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
+    colormap: Dict = attr.ib(default=None)
 
     # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
-    nodata: Optional[Union[float, int, str]] = None
-    unscale: Optional[bool] = None
-    vrt_options: Optional[Dict] = None
+    nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
+    unscale: Optional[bool] = attr.ib(default=None)
+    vrt_options: Optional[Dict] = attr.ib(default=None)
 
     # We use _kwargs to store values of nodata, unscale and vrt_options.
     # _kwargs is used avoid having to set those values on each method call.
-    _kwargs: Dict[str, Any] = field(init=False, default_factory=dict)
+    _kwargs: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
-    def __post_init__(self):
+    def __attrs_post_init__(self):
         """Define _kwargs."""
         if self.nodata is not None:
             self._kwargs["nodata"] = self.nodata
@@ -110,9 +112,14 @@ class COGReader(BaseReader):
         """Support using with Context Managers."""
         self.dataset = self.dataset or rasterio.open(self.filepath)
 
-        self.bounds: Tuple[float, float, float, float] = transform_bounds(
+        self.bounds = transform_bounds(
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
+        if self.minzoom is None or self.maxzoom is None:
+            self._get_zooms()
+
+        if self.colormap is None:
+            self._get_colormap()
 
         return self
 
@@ -124,38 +131,17 @@ class COGReader(BaseReader):
     def _get_zooms(self):
         """Calculate raster min/max zoom level."""
         minzoom, maxzoom = get_zooms(self.dataset)
-        self._minzoom = self._minzoom or minzoom
-        self._maxzoom = self._maxzoom or maxzoom
+        self.minzoom = self.minzoom or minzoom
+        self.maxzoom = self.maxzoom or maxzoom
         return
 
     def _get_colormap(self):
         """Retrieve the internal colormap."""
         try:
-            self._colormap = self.dataset.colormap(1)
+            self.colormap = self.dataset.colormap(1)
         except ValueError:
-            self._colormap = {}
+            self.colormap = {}
             pass
-
-    @property
-    def colormap(self) -> Dict[int, Tuple[int, int, int, int]]:
-        """COG internal Colormap."""
-        if self._colormap is None:
-            self._get_colormap()
-        return self._colormap
-
-    @property
-    def minzoom(self) -> int:
-        """COG Min zoom."""
-        if self._minzoom is None:
-            self._get_zooms()
-        return self._minzoom
-
-    @property
-    def maxzoom(self) -> int:
-        """COG Max zoom."""
-        if self._maxzoom is None:
-            self._get_zooms()
-        return self._maxzoom
 
     def info(self) -> Dict:
         """Return COG info."""

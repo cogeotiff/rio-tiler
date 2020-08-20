@@ -153,8 +153,6 @@ class COGReader:
         COG center + minzoom
     colormap: dict
         COG internal colormap.
-    info: dict
-        General information about the COG (datatype, indexes, ...)
 
     Methods
     -------
@@ -166,6 +164,8 @@ class COGReader:
         Read preview of the COG.
     point((10, 10), indexes=1)
         Read a point value from the COG.
+    info: dict
+        General information about the COG (datatype, indexes, ...)
     stats(pmin=5, pmax=95)
         Get Raster statistics.
     meta(pmin=5, pmax=95)
@@ -184,28 +184,6 @@ class COGReader:
 - **bounds**: Return the dataset bounds in WGS84
 - **center**: Return the center of the dataset + minzoom
 - **spatial_info**: Return the bounds, center and zoom infos
-- **info**: Return simple metadata about the dataset
-
-```python
-with COGReader("myfile.tif") as cog:
-    print(cog.info())
-{
-    "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
-    "center": [-101.98868496889182, 23.548959503763047, 3],
-    "minzoom": 3,
-    "maxzoom": 12,
-    "band_metadata": [[1, {}]],
-    "band_descriptions": [[1,"band1"]],
-    "dtype": "int8",
-    "colorinterp": ["palette"],
-    "nodata_type": "Nodata",
-    "colormap": {
-        "0": [0, 0, 0, 0],
-        "1": [0, 61, 0, 255],
-        ...
-    }
-}
-```
 
 #### Methods
 
@@ -279,6 +257,29 @@ with COGReader("myfile.tif") as cog:
 [3, 4]
 ```
 
+- **info()**: Return simple metadata about the dataset
+
+```python
+with COGReader("myfile.tif") as cog:
+    print(cog.info())
+{
+    "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
+    "center": [-101.98868496889182, 23.548959503763047, 3],
+    "minzoom": 3,
+    "maxzoom": 12,
+    "band_metadata": [[1, {}]],
+    "band_descriptions": [[1,"band1"]],
+    "dtype": "int8",
+    "colorinterp": ["palette"],
+    "nodata_type": "Nodata",
+    "colormap": {
+        "0": [0, 0, 0, 0],
+        "1": [0, 61, 0, 255],
+        ...
+    }
+}
+```
+
 - **stats()**: Return image statistics (Min/Max/Stdev)
 
 ```python
@@ -336,7 +337,7 @@ with COGReader("myfile.tif") as cog:
 ##### Global Options
 
 COGReader accept several options which will be forwarded to the `rio_tiler.reader._read` function (low level function accessing the data):
-- `nodata`: Overwrite the nodata value (or set in not present)
+- `nodata`: Overwrite the nodata value (or set if not present)
 - `unscale`: Apply internal rescaling factors
 - `vrt_options`: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
 
@@ -393,6 +394,8 @@ print(tile.shape)
 > (1, 256, 256)
 ```
 
+Note: STACReader is based on `rio_tiler.io.base.MultiBaseReader` class.
+
 ## Working with multiple assets
 
 #### Mosaic
@@ -439,6 +442,57 @@ metadata = multi_metadata(assets, pmin=2, pmax=98, ...)
 values = multi_points(assets, lon, lat, ...)
 data, mask = multi_part(assets, bbox, ...)
 data, mask = multi_preview(assets, ...)
+```
+
+You can also use `rio_tiler.io.base.MultiBaseReader` to build a custom asset reader:
+
+```python
+import attr
+from rio_tiler.io.base import MultiBaseReader
+from rio_tiler.io import COGReader, BaseReader
+
+
+# CustomReader is a subclass of MultiBaseReader.
+# To ease the creation of the class and because MultiBaseReader is built with `attr`
+# we also need to add the `@attr.s` wrapper on top of our custom class.
+@attr.s
+class CustomReader(MultiBaseReader):
+
+    directory: str = attr.ib() # required arg
+    reader: Type[BaseReader] = attr.ib(default=COGReader) # the default reader is COGReader
+
+    def __enter__(self):
+        # List files in directory
+        dirs = os.listdir(self.directory) 
+
+        # get list of tifs
+        tiff = [f for f in dirs if f.endswith(".tif")]
+
+        # create list of assets names - REQUIRED
+        self.assets = [os.path.basename(f).split(".")[0] for f in tiff]
+        
+        # `self.bounds` needs to be set! - REQUIRED
+        with self.reader(tiff[0]) as cog:
+            self.bounds = cog.bounds
+
+        return self
+
+    def _get_asset_url(self, asset: str) -> str:
+        """Validate asset names and return asset's url."""
+        if asset not in self.assets:
+            raise InvalidAssetName(f"{asset} is not valid")
+        
+        return os.path.join(self.directory, f"{asset}.tif")
+
+# we have a directoty with "b1.tif", "b2.tif", "b3.tif"
+with CustomReader("my_dir/") as cr:
+    print(cr.assets)
+    tile, mask = cr.tile(x, y, z, assets="b1")
+
+> ["b1", "b2", "b3"]
+
+print(tile.shape)
+> (3, 256, 256)
 ```
 
 #### Reading asset with a GeoJSON Polygon

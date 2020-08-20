@@ -172,6 +172,10 @@ def test_part_valid(rio):
         assert data.shape == (1, 73, 84)
         assert mask.shape == (73, 84)
 
+        data, mask = stac.part(bbox, assets="green", max_size=30)
+        assert data.shape == (1, 27, 30)
+        assert mask.shape == (27, 30)
+
 
 @patch("rio_tiler.io.cogeo.rasterio")
 def test_preview_valid(rio):
@@ -234,8 +238,9 @@ def test_stats_valid(rio):
         stats = stac.stats(assets="green")
         assert stats["green"]
 
-        stats = stac.stats(assets=("green", "red"))
+        stats = stac.stats(assets=("green", "red"), hist_options={"bins": 20})
         assert stats["green"]
+        assert len(stats["green"][1]["histogram"][0]) == 20
         assert stats["red"]
 
 
@@ -271,3 +276,13 @@ def test_metadata_valid(rio):
         meta = stac.metadata(assets=("green", "red"))
         assert meta["green"]
         assert meta["red"]
+
+
+def test_parse_expression():
+    """."""
+    with STACReader(STAC_PATH) as stac:
+        assert sorted(stac.parse_expression("green*red+red/blue+2.0")) == [
+            "blue",
+            "green",
+            "red",
+        ]

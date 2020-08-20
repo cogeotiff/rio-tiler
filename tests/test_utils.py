@@ -10,6 +10,7 @@ from rasterio.features import bounds as featureBounds
 
 from rio_tiler import colormap, constants, utils
 from rio_tiler.errors import DeprecationWarning, RioTilerError
+from rio_tiler.expression import parse_expression
 from rio_tiler.io import COGReader
 
 from .conftest import requires_webp
@@ -374,3 +375,15 @@ def test_cutline():
     with COGReader(COGEO) as cog:
         with pytest.raises(RioTilerError):
             utils.create_cutline(cog.dataset, feat_line, geometry_crs="epsg:4326")
+
+
+def test_parse_expression():
+    """test parsing rio-tiler expression."""
+    assert sorted(parse_expression("b1*b11+b3,b1*b2+B4")) == [1, 2, 3, 4, 11]
+    assert sorted(parse_expression("b1*b11+b3,b1*b2+B4", cast=False)) == [
+        "1",
+        "11",
+        "2",
+        "3",
+        "4",
+    ]

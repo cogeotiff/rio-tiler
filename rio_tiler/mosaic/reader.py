@@ -1,60 +1,15 @@
 """rio_tiler.mosaic: create tile from multiple assets."""
 
-import logging
-from concurrent import futures
-from typing import Any, Callable, Generator, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, List, Optional, Sequence, Tuple
 
 import numpy
 
 from ..constants import MAX_THREADS
+from ..errors import TileOutsideBounds
+from ..tasks import create_tasks, filter_tasks
 from ..utils import _chunks
 from .methods.base import MosaicMethodBase
 from .methods.defaults import FirstMethod
-
-logger = logging.getLogger()
-logger.setLevel(logging.ERROR)
-TaskType = Union[
-    Generator[Tuple[Callable, str], None, None], Sequence[Tuple[futures.Future, str]]
-]
-
-
-def _filter_tasks(tasks: TaskType):
-    """
-    Filter tasks to remove Exceptions.
-
-    Attributes
-    ----------
-    tasks : list or generator
-        Sequence of 'concurrent.futures._base.Future' or 'callable'
-
-    Yields
-    ------
-    Successful task's result
-
-    """
-    for future, asset in tasks:
-        try:
-            if isinstance(future, futures.Future):
-                yield future.result(), asset
-            else:
-                yield future, asset
-        except Exception as err:
-            logging.error(err, exc_info=True)
-            pass
-
-
-def _create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType:
-    """Create Future Tasks."""
-    tasks: TaskType
-
-    if threads and threads > 1:
-        with futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            return [
-                (executor.submit(reader, asset, *args, **kwargs), asset)
-                for asset in assets
-            ]
-    else:
-        return ((reader(asset, *args, **kwargs), asset) for asset in assets)
 
 
 def mosaic_reader(
@@ -119,8 +74,10 @@ def mosaic_reader(
     assets_used: List[str] = []
 
     for chunks in _chunks(assets, chunk_size):
-        tasks = _create_tasks(reader, chunks, threads, *args, **kwargs)
-        for (t, m), asset in _filter_tasks(tasks):
+        tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
+        for (t, m), asset in filter_tasks(
+            tasks, allowed_exceptions=(TileOutsideBounds,)
+        ):
             assets_used.append(asset)
             t = numpy.ma.array(t)
             t.mask = m == 0
