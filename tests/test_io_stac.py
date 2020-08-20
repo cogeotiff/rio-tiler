@@ -276,3 +276,13 @@ def test_metadata_valid(rio):
         meta = stac.metadata(assets=("green", "red"))
         assert meta["green"]
         assert meta["red"]
+
+
+def test_parse_expression():
+    """."""
+    with STACReader(STAC_PATH) as stac:
+        assert sorted(stac.parse_expression("green*red+red/blue+2.0")) == [
+            "blue",
+            "green",
+            "red",
+        ]

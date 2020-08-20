@@ -5,6 +5,7 @@ NEXT (TBD)
 - add `rio_tiler.io.base.MultiBaseReader` class (#225)
 - refactor `rio_tiler.io.stac.STACReader` to use MultiBaseReader (#225)
 - add `rio_tiler.task` submodule to share tools for handling rio-tiler's future tasks.
+- fix regex parsing for rio-tiler expression
 
 Breaking Changes:
 - replace dataclass wiht attr to support more flexible class definition (see #225)

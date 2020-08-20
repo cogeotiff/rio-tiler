@@ -122,7 +122,8 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
-        _re = re.compile("|".join(sorted(self.assets, reverse=True)))
+        assets = "|".join([fr"\b{asset}\b" for asset in self.assets])
+        _re = re.compile(assets.replace("\\\\", "\\"))
         return tuple(set(re.findall(_re, expression)))
 
     def info(
@@ -208,7 +209,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "bands must be passed either via expression or assets options."
+                "assets must be passed either via expression or assets options."
             )
 
         def _reader(
@@ -253,7 +254,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "bands must be passed either via expression or assets options."
+                "assets must be passed either via expression or assets options."
             )
 
         def _reader(
@@ -291,7 +292,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "bands must be passed either via expression or assets options."
+                "assets must be passed either via expression or assets options."
             )
 
         def _reader(asset: str, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
@@ -329,7 +330,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "bands must be passed either via expression or assets options."
+                "assets must be passed either via expression or assets options."
             )
 
         def _reader(asset: str, *args, **kwargs: Any) -> Dict:

@@ -21,7 +21,7 @@ def parse_expression(expression: str, cast: bool = True) -> Tuple:
     bands: Tuple
 
     """
-    bands = set(re.findall(r"b(?P<bands>[0-9A-Z]+)", expression, re.IGNORECASE))
+    bands = set(re.findall(r"\bb(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE))
     return tuple(map(int, bands)) if cast else tuple(bands)
 
 
