@@ -1,4 +1,4 @@
-NEXT (TBD)
+2.0b7 (2020-08-21)
 ------------------
 - allow setting default kwargs in COGReader __init__ (#227)
 - allow `vrt_options` in COGReader.point
