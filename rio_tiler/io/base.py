@@ -2,12 +2,13 @@
 
 import abc
 import re
+import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
 import numpy
 
-from ..errors import MissingAssets
+from ..errors import ExpressionMixingWarning, MissingAssets
 from ..expression import apply_expression
 from ..tasks import multi_arrays, multi_values
 
@@ -204,6 +205,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
+        if assets and expression:
+            warnings.warn(
+                "Both expression and assets passed; expression will overwrite assets parameter.",
+                ExpressionMixingWarning,
+            )
+
         if expression:
             assets = self.parse_expression(expression)
 
@@ -249,6 +256,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
+        if assets and expression:
+            warnings.warn(
+                "Both expression and assets passed; expression will overwrite assets parameter.",
+                ExpressionMixingWarning,
+            )
+
         if expression:
             assets = self.parse_expression(expression)
 
@@ -287,6 +300,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
+        if assets and expression:
+            warnings.warn(
+                "Both expression and assets passed; expression will overwrite assets parameter.",
+                ExpressionMixingWarning,
+            )
+
         if expression:
             assets = self.parse_expression(expression)
 
@@ -324,6 +343,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         """Read a value from COGs."""
         if isinstance(assets, str):
             assets = (assets,)
+
+        if assets and expression:
+            warnings.warn(
+                "Both expression and assets passed; expression will overwrite assets parameter.",
+                ExpressionMixingWarning,
+            )
 
         if expression:
             assets = self.parse_expression(expression)

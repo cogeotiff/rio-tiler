@@ -2,7 +2,7 @@
 
 import functools
 import json
-from typing import Dict, Iterator, Optional, Set, Tuple, Type
+from typing import Dict, Iterator, Optional, Set, Type
 from urllib.parse import urlparse
 
 import attr
@@ -183,22 +183,3 @@ class STACReader(MultiBaseReader):
             raise InvalidAssetName(f"{asset} is not valid")
 
         return self.item["assets"][asset]["href"]
-
-    @property
-    def center(self) -> Tuple[float, float, int]:
-        """Dataset center + minzoom."""
-        return (
-            (self.bounds[0] + self.bounds[2]) / 2,
-            (self.bounds[1] + self.bounds[3]) / 2,
-            self.minzoom,
-        )
-
-    @property
-    def spatial_info(self) -> Dict:
-        """Return Dataset's spatial info."""
-        return {
-            "bounds": self.bounds,
-            "center": self.center,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
-        }

@@ -1,5 +1,6 @@
 """rio_tiler.io.cogeo: raster processing."""
 
+import warnings
 from concurrent import futures
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -13,7 +14,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 
 from .. import constants, reader
-from ..errors import TileOutsideBounds
+from ..errors import ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
 from ..mercator import get_zooms
 from ..utils import has_alpha_band, has_mask_band, tile_exists
@@ -278,6 +279,12 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
         if expression:
             indexes = parse_expression(expression)
 
@@ -345,6 +352,12 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
         if expression:
             indexes = parse_expression(expression)
 
@@ -397,6 +410,12 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
         if expression:
             indexes = parse_expression(expression)
 
@@ -445,6 +464,12 @@ class COGReader(BaseReader):
 
         if isinstance(indexes, int):
             indexes = (indexes,)
+
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
 
         if expression:
             indexes = parse_expression(expression)

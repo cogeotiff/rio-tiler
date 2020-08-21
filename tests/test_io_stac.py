@@ -7,7 +7,12 @@ from unittest.mock import patch
 import pytest
 import rasterio
 
-from rio_tiler.errors import InvalidAssetName, MissingAssets, TileOutsideBounds
+from rio_tiler.errors import (
+    ExpressionMixingWarning,
+    InvalidAssetName,
+    MissingAssets,
+    TileOutsideBounds,
+)
 from rio_tiler.io import STACReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -33,6 +38,7 @@ def test_fetch_stac(requests, s3_get):
         assert stac.maxzoom == 30
         assert stac.bounds
         assert stac.center
+        assert stac.spatial_info
         assert stac.filepath == STAC_PATH
         assert stac.assets == ["red", "green", "blue"]
     requests.assert_not_called()
@@ -138,6 +144,12 @@ def test_tile_valid(rio):
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
 
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = stac.tile(
+                71, 102, 8, assets=("green", "red"), expression="green/red"
+            )
+            assert data.shape == (1, 256, 256)
+
         data, mask = stac.tile(
             71, 102, 8, assets=("green", "red"), asset_expression="b1*2,b1"
         )
@@ -176,6 +188,10 @@ def test_part_valid(rio):
         assert data.shape == (1, 27, 30)
         assert mask.shape == (27, 30)
 
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = stac.part(bbox, assets=("green", "red"), expression="green/red")
+            assert data.shape == (1, 73, 84)
+
 
 @patch("rio_tiler.io.cogeo.rasterio")
 def test_preview_valid(rio):
@@ -202,6 +218,10 @@ def test_preview_valid(rio):
         assert data.shape == (1, 259, 255)
         assert mask.shape == (259, 255)
 
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = stac.preview(assets=("green", "red"), expression="green/red")
+            assert data.shape == (1, 259, 255)
+
 
 @patch("rio_tiler.io.cogeo.rasterio")
 def test_point_valid(rio):
@@ -224,6 +244,12 @@ def test_point_valid(rio):
 
         data = stac.point(-80.477, 33.4453, expression="green/red")
         assert len(data) == 1
+
+        with pytest.warns(ExpressionMixingWarning):
+            data = stac.point(
+                -80.477, 33.4453, assets=("green", "red"), expression="green/red"
+            )
+            assert len(data) == 1
 
 
 @patch("rio_tiler.io.cogeo.rasterio")

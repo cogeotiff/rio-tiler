@@ -6,7 +6,7 @@ import mercantile
 import numpy
 import pytest
 
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
 from rio_tiler.io import COGReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -28,25 +28,25 @@ def test_spatial_info_valid():
     """Should work as expected (get spatial info)"""
     with COGReader(COG_NODATA) as cog:
         meta = cog.spatial_info
-    assert meta.get("minzoom") == 5
-    assert meta.get("maxzoom") == 8
-    assert meta.get("center")
-    assert len(meta.get("bounds")) == 4
+        assert meta.get("minzoom") == 5
+        assert meta.get("maxzoom") == 8
+        assert meta.get("center")
+        assert len(meta.get("bounds")) == 4
 
     with COGReader(COG_NODATA, minzoom=3) as cog:
         meta = cog.spatial_info
-    assert meta.get("minzoom") == 3
-    assert meta.get("maxzoom") == 8
+        assert meta.get("minzoom") == 3
+        assert meta.get("maxzoom") == 8
 
     with COGReader(COG_NODATA, maxzoom=12) as cog:
         meta = cog.spatial_info
-    assert meta.get("minzoom") == 5
-    assert meta.get("maxzoom") == 12
+        assert meta.get("minzoom") == 5
+        assert meta.get("maxzoom") == 12
 
     with COGReader(COG_NODATA, minzoom=3, maxzoom=12) as cog:
         meta = cog.spatial_info
-    assert meta.get("minzoom") == 3
-    assert meta.get("maxzoom") == 12
+        assert meta.get("minzoom") == 3
+        assert meta.get("maxzoom") == 12
 
 
 def test_bounds_valid():
@@ -59,72 +59,70 @@ def test_info_valid():
     """Should work as expected (get file info)"""
     with COGReader(COG_SCALE) as cog:
         meta = cog.info()
-    assert meta.get("scale")
-    assert meta.get("offset")
+        assert meta.get("scale")
+        assert meta.get("offset")
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
         meta = cog.info()
-    assert meta.get("colormap")
+        assert meta.get("colormap")
 
     with COGReader(COG_NODATA, colormap={1: [0, 0, 0, 0]}) as cog:
         assert cog.colormap
         meta = cog.info()
-    assert meta.get("colormap")
+        assert meta.get("colormap")
 
     with COGReader(COG_TAGS) as cog:
         meta = cog.info()
-    assert meta.get("bounds")
-    assert meta.get("minzoom")
-    assert meta.get("maxzoom")
-    assert meta.get("band_descriptions")
-    assert meta.get("dtype") == "int16"
-    assert meta.get("colorinterp") == ["gray"]
-    assert meta.get("nodata_type") == "Nodata"
-    assert meta.get("scale")
-    assert meta.get("offset")
-    assert meta.get("band_metadata")
-    bmeta = meta.get("band_metadata")[0][1]
-    assert bmeta.get("STATISTICS_MAXIMUM")
-    assert bmeta.get("STATISTICS_MEAN")
-    assert bmeta.get("STATISTICS_MINIMUM")
+        assert meta.get("bounds")
+        assert meta.get("minzoom")
+        assert meta.get("maxzoom")
+        assert meta.get("band_descriptions")
+        assert meta.get("dtype") == "int16"
+        assert meta.get("colorinterp") == ["gray"]
+        assert meta.get("nodata_type") == "Nodata"
+        assert meta.get("scale")
+        assert meta.get("offset")
+        assert meta.get("band_metadata")
+        bmeta = meta.get("band_metadata")[0][1]
+        assert bmeta.get("STATISTICS_MAXIMUM")
+        assert bmeta.get("STATISTICS_MEAN")
+        assert bmeta.get("STATISTICS_MINIMUM")
 
     with COGReader(COG_ALPHA) as cog:
         meta = cog.info()
-    assert meta.get("nodata_type") == "Alpha"
+        assert meta.get("nodata_type") == "Alpha"
 
     with COGReader(COG_MASK) as cog:
         meta = cog.info()
-    assert meta.get("nodata_type") == "Mask"
+        assert meta.get("nodata_type") == "Mask"
 
     with COGReader(COGEO) as cog:
         meta = cog.info()
-    assert meta.get("nodata_type") == "None"
+        assert meta.get("nodata_type") == "None"
 
     with COGReader(COG_NODATA) as cog:
         meta = cog.info()
-    assert meta.get("nodata_type") == "Nodata"
+        assert meta.get("nodata_type") == "Nodata"
 
 
 def test_metadata_valid():
     """Get bounds and get stats for all bands."""
     with COGReader(COGEO) as cog:
         meta = cog.metadata()
-    assert len(meta["band_descriptions"]) == 1
-    assert (1, "band1") == meta["band_descriptions"][0]
-    assert len(meta["statistics"].items()) == 1
-    assert meta["statistics"][1]["pc"] == [1, 6896]
+        assert len(meta["band_descriptions"]) == 1
+        assert (1, "band1") == meta["band_descriptions"][0]
+        assert len(meta["statistics"].items()) == 1
+        assert meta["statistics"][1]["pc"] == [1, 6896]
 
-    with COGReader(COGEO) as cog:
         meta = cog.stats()
-    assert len(meta.items()) == 1
-    assert meta[1]["pc"] == [1, 6896]
+        assert len(meta.items()) == 1
+        assert meta[1]["pc"] == [1, 6896]
 
-    with COGReader(COGEO) as cog:
         meta = cog.metadata(pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128)
-    assert len(meta["statistics"].items()) == 1
-    assert len(meta["statistics"][1]["histogram"][0]) == 20
-    assert meta["statistics"][1]["pc"] == [1, 3776]
+        assert len(meta["statistics"].items()) == 1
+        assert len(meta["statistics"][1]["histogram"][0]) == 20
+        assert meta["statistics"][1]["pc"] == [1, 3776]
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
@@ -155,6 +153,10 @@ def test_tile_valid_default():
         data, mask = cog.tile(43, 24, 7, expression="b1*2,b1-100")
         assert data.shape == (2, 256, 256)
 
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = cog.tile(43, 24, 7, indexes=(1, 2, 3), expression="b1*2")
+            assert data.shape == (1, 256, 256)
+
         data, mask = cog.tile(43, 24, 7, indexes=1)
         assert data.shape == (1, 256, 256)
 
@@ -180,6 +182,10 @@ def test_point_valid():
         pts = cog.point(lon, lat, expression="b1*2,b1-100")
         assert len(pts) == 2
 
+        with pytest.warns(ExpressionMixingWarning):
+            pts = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
+            assert len(pts) == 1
+
         pts = cog.point(lon, lat, indexes=1)
         assert len(pts) == 1
 
@@ -197,50 +203,49 @@ def test_area_valid():
     )
     with COGReader(COG_NODATA) as cog:
         data, mask = cog.part(bbox)
-    assert data.shape == (1, 11, 41)
+        assert data.shape == (1, 11, 41)
 
-    with COGReader(COG_NODATA) as cog:
         data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
-    assert data.shape == (1, 29, 30)
+        assert data.shape == (1, 29, 30)
 
-    with COGReader(COG_NODATA) as cog:
         data, mask = cog.part(bbox, max_size=30)
-    assert data.shape == (1, 9, 30)
+        assert data.shape == (1, 9, 30)
 
-    with COGReader(COG_NODATA) as cog:
         data, mask = cog.part(bbox, expression="b1*2,b1-100")
-    assert data.shape == (2, 11, 41)
+        assert data.shape == (2, 11, 41)
 
-    with COGReader(COG_NODATA) as cog:
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = cog.part(bbox, indexes=(1, 2, 3), expression="b1*2")
+            assert data.shape == (1, 11, 41)
+
         data, mask = cog.part(bbox, indexes=1)
-    assert data.shape == (1, 11, 41)
+        assert data.shape == (1, 11, 41)
 
-    with COGReader(COG_NODATA) as cog:
         data, mask = cog.part(bbox, indexes=(1, 1,))
-    assert data.shape == (2, 11, 41)
+        assert data.shape == (2, 11, 41)
 
 
 def test_preview_valid():
     """Read preview."""
     with COGReader(COGEO) as cog:
         data, mask = cog.preview(max_size=128)
-    assert data.shape == (1, 128, 128)
+        assert data.shape == (1, 128, 128)
 
-    with COGReader(COGEO) as cog:
         data, mask = cog.preview()
-    assert data.shape == (1, 1024, 1021)
+        assert data.shape == (1, 1024, 1021)
 
-    with COGReader(COGEO) as cog:
         data, mask = cog.preview(max_size=128, expression="b1*2,b1-100")
-    assert data.shape == (2, 128, 128)
+        assert data.shape == (2, 128, 128)
 
-    with COGReader(COGEO) as cog:
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = cog.preview(max_size=128, indexes=(1, 2, 3), expression="b1*2")
+            assert data.shape == (1, 128, 128)
+
         data, mask = cog.preview(max_size=128, indexes=1)
-    assert data.shape == (1, 128, 128)
+        assert data.shape == (1, 128, 128)
 
-    with COGReader(COGEO) as cog:
         data, mask = cog.preview(max_size=128, indexes=(1, 1,))
-    assert data.shape == (2, 128, 128)
+        assert data.shape == (2, 128, 128)
 
 
 def test_COGReader_Options():
