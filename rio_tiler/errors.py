@@ -39,3 +39,7 @@ class InvalidAssetName(RioTilerError):
 
 class MissingAssets(RioTilerError):
     """Missing Assets."""
+
+
+class ExpressionMixingWarning(UserWarning):
+    """Expression and assets/indexes mixing."""
