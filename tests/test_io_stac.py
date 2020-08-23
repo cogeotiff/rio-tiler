@@ -48,19 +48,19 @@ def test_fetch_stac(requests, s3_get):
     s3_get.assert_not_called()
 
     # Exclude red
-    with STACReader(STAC_PATH, exclude_assets={"red"}) as stac:
+    with STACReader(STAC_PATH, exclude_assets={"red", "thumbnail"}) as stac:
         assert stac.assets == ["green", "blue"]
     requests.assert_not_called()
     s3_get.assert_not_called()
 
     # Only include red asset
-    with STACReader(STAC_PATH, include_assets={"red"}) as stac:
+    with STACReader(STAC_PATH, include_assets={"red"}, exclude_assets={'*'}) as stac:
         assert stac.assets == ["red"]
     requests.assert_not_called()
     s3_get.assert_not_called()
 
     # Only include png
-    with STACReader(STAC_PATH, include_asset_types={"image/png"}) as stac:
+    with STACReader(STAC_PATH, exclude_assets={}, include_asset_types={"image/png"}, exclude_asset_types={'*'}) as stac:
         assert "thumbnail" in stac.assets
     requests.assert_not_called()
     s3_get.assert_not_called()
@@ -70,6 +70,7 @@ def test_fetch_stac(requests, s3_get):
         STAC_PATH,
         include_assets={"thumbnail", "overview"},
         include_asset_types={"image/png"},
+        exclude_asset_types={"*"}
     ) as stac:
         assert stac.assets == ["thumbnail"]
     requests.assert_not_called()
@@ -77,7 +78,7 @@ def test_fetch_stac(requests, s3_get):
 
     # No valid assets
     with pytest.raises(Exception):
-        with STACReader(STAC_PATH, include_assets={"B1"}) as stac:
+        with STACReader(STAC_PATH, include_assets={"B1"}, exclude_assets={"*"}) as stac:
             pass
     requests.assert_not_called()
     s3_get.assert_not_called()

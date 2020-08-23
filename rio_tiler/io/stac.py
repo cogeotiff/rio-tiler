@@ -34,7 +34,7 @@ DEFAULT_VALID_TYPE = {
     "application/x-hdf5",
     "application/x-hdf",
 }
-
+DEFAULT_EXCLUDE = ("thumbnail", )
 
 @functools.lru_cache(maxsize=512)
 def fetch(filepath: str) -> Dict:
@@ -55,25 +55,36 @@ def fetch(filepath: str) -> Dict:
 
 def _get_assets(
     item: Dict,
-    include: Optional[Set[str]] = None,
-    exclude: Optional[Set[str]] = None,
-    include_asset_types: Optional[Set[str]] = None,
-    exclude_asset_types: Optional[Set[str]] = None,
+    include: Set[str] = {},
+    exclude: Set[str] = {},
+    include_asset_types: Set[str] = {},
+    exclude_asset_types: Set[str] = {},
 ) -> Iterator:
-    """Get Asset list."""
+    """Get Asset list.
+
+    Order of operations:
+    1. `include`
+    2. `exclude`
+    3. `include_asset_types`
+    4. `exclude_asset_types`
+    """
     for asset, asset_info in item["assets"].items():
         if include and asset in include:
             yield asset
             continue
 
-        if exclude and asset in exclude:
+        # exclude = {'*'} implies exclude anything not in include
+        if exclude and asset in exclude or '*' in exclude:
             continue
 
         _type = asset_info.get("type")
-        if _type and (exclude_asset_types and _type in exclude_asset_types):
+        if _type and include_asset_types and _type in include_asset_types:
+            yield asset
             continue
 
-        if _type and (include_asset_types and _type not in include_asset_types):
+        # exclude_asset_types = {'*'} implies exclude any type not in
+        # include_asset_types
+        if exclude_asset_types and _type in exclude_asset_types or '*' in exclude_asset_types:
             continue
 
         yield asset
@@ -146,10 +157,10 @@ class STACReader(BaseReader):
     item: Optional[Dict] = None
     minzoom: int = 0
     maxzoom: int = 30
-    include_assets: Optional[Set[str]] = None
-    exclude_assets: Optional[Set[str]] = None
+    include_assets: Set[str] = {}
+    exclude_assets: Set[str], bool] = DEFAULT_EXCLUDE
     include_asset_types: Set[str] = field(default_factory=lambda: DEFAULT_VALID_TYPE)
-    exclude_asset_types: Optional[Set[str]] = None
+    exclude_asset_types: Optional[Union[Set[str], bool]] = None
 
     def __enter__(self):
         """Support using with Context Managers."""
