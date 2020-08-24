@@ -16,7 +16,12 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from . import constants
-from .errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
+from .errors import (
+    AlphaBandWarning,
+    DeprecationWarning,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -364,7 +369,7 @@ def point(
         (src_dst.bounds[0] < lon[0] < src_dst.bounds[2])
         and (src_dst.bounds[1] < lat[0] < src_dst.bounds[3])
     ):
-        raise Exception("Point is outside dataset bounds")
+        raise PointOutsideBounds("Point is outside dataset bounds")
 
     indexes = indexes if indexes is not None else src_dst.indexes
 
