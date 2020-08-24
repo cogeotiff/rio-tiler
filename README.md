@@ -7,8 +7,8 @@
   <em>Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.</em>
 </p>
 <p align="center">
-  <a href="https://circleci.com/gh/cogeotiff/rio-tiler" target="_blank">
-      <img src="https://circleci.com/gh/cogeotiff/rio-tiler.svg?style=svg" alt="Test">
+  <a href="https://github.com/cogeotiff/rio-tiler/actions?query=workflow%3ACI" target="_blank">
+      <img src="https://github.com/cogeotiff/rio-tiler/workflows/CI/badge.svg" alt="Test">
   </a>
   <a href="https://codecov.io/gh/cogeotiff/rio-tiler" target="_blank">
       <img src="https://codecov.io/gh/cogeotiff/rio-tiler/branch/master/graph/badge.svg" alt="Coverage">
