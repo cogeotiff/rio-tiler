@@ -16,7 +16,7 @@
   <a href="https://pypi.org/project/rio-tiler" target="_blank">
       <img src="https://img.shields.io/pypi/v/rio-tiler?color=%2334D058&label=pypi%20package" alt="Package version">
   </a>
-  <a href="https://anaconda.org/conda-forge/rio-tiler)" target="_blank">
+  <a href="https://anaconda.org/conda-forge/rio-tiler" target="_blank">
       <img src="https://img.shields.io/conda/v/conda-forge/rio-tiler.svg" alt="Conda Forge">
   </a>
   <a href="https://pypistats.org/packages/rio-tiler" target="_blank">
