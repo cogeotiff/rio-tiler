@@ -8,7 +8,12 @@ import pytest
 import rasterio
 
 from rio_tiler import constants, reader
-from rio_tiler.errors import AlphaBandWarning, DeprecationWarning, TileOutsideBounds
+from rio_tiler.errors import (
+    AlphaBandWarning,
+    DeprecationWarning,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
@@ -522,7 +527,7 @@ def test_point():
         p = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
         assert p == [8917]
 
-        with pytest.raises(Exception):
+        with pytest.raises(PointOutsideBounds):
             reader.point(src_dst, [810000, 4100000], coord_crs=src_dst.crs)
 
     with rasterio.open(COG_CMAP) as src_dst:

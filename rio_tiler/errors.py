@@ -13,6 +13,10 @@ class TileOutsideBounds(RioTilerError):
     """Z-X-Y Tile is outside image bounds."""
 
 
+class PointOutsideBounds(RioTilerError):
+    """Point is outside image bounds."""
+
+
 class InvalidBandName(RioTilerError):
     """Invalid band name."""
 
