@@ -228,31 +228,31 @@ with COGReader("myfile.tif") as cog:
 - **preview()**: Read a preview of a raster
 
 ```python
-with COGReader("myfile.tif") as cog: 
+with COGReader("myfile.tif") as cog:
     data, mask = cog.preview()
 
 # With indexes
-with COGReader("myfile.tif") as cog: 
+with COGReader("myfile.tif") as cog:
     data, mask = cog.preview(indexes=1)
 
 # With expression
-with COGReader("myfile.tif") as cog: 
+with COGReader("myfile.tif") as cog:
     data, mask = cog.preview(expression="B1+2,B1*4")
 ```
 
 - **point()**: Read point value of a raster
 
 ```python
-with COGReader("myfile.tif") as cog: 
+with COGReader("myfile.tif") as cog:
     print(cog.point(-100, 25))
 
 # With indexes
-with COGReader("myfile.tif") as cog: 
-    print(cog.point(-100, 25, indexes=1)) 
+with COGReader("myfile.tif") as cog:
+    print(cog.point(-100, 25, indexes=1))
 [1]
 
 # With expression
-with COGReader("myfile.tif") as cog: 
+with COGReader("myfile.tif") as cog:
     print(cog.point(-100, 25, expression="B1+2,B1*4"))
 [3, 4]
 ```
@@ -347,7 +347,7 @@ Note: Those options could already be passed on each `method` call.
 with COGReader("my_cog.tif", nodata=0) as cog:
     tile, mask = cog.tile(1, 1, 1)
 
-# is equivalent to 
+# is equivalent to
 
 with COGReader("my_cog.tif") as cog:
     tile, mask = cog.tile(1, 1, 1, nodata=0)
@@ -358,13 +358,13 @@ with COGReader("my_cog.tif") as cog:
 In rio-tiler v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item. The STACReader objects has the same properties/methods as the COGReader.
 
 ```python
-from typing import Dict 
+from typing import Dict
 from rio_tiler.io import STACReader
 
 with STACReader(
-    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A", 
-    exclude_assets={"thumbnail"} 
-) as stac: 
+    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A",
+    exclude_assets={"thumbnail"}
+) as stac:
     print(stac.bounds)
     print(stac.assets)
 
@@ -375,8 +375,8 @@ with STACReader(
 assets = ["B01", "B02"]
 
 with STACReader(
-    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A", 
-    exclude_assets={"thumbnail"} 
+    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A",
+    exclude_assets={"thumbnail"}
 ) as stac:
     tile, mask = stac.tile(145, 103, 8, tilesize=256, assets=assets)
 
@@ -385,8 +385,8 @@ print(tile.shape)
 
 # With expression
 with STACReader(
-    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A", 
-    exclude_assets={"thumbnail"} 
+    "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A",
+    exclude_assets={"thumbnail"}
 ) as stac:
     tile, mask = stac.tile(145, 103, 8, tilesize=256, expression="B01/B02")
 
@@ -416,17 +416,17 @@ assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
 (tile, mask), assets_used = mosaic_reader(assets, tiler, 1, 1, 1)
 ```
 
-Learn more about `rio_tiler.mosaic` in [doc/mosaic.md](doc/mosaic.md).
+Learn more about `rio_tiler.mosaic` in [docs/mosaic.md](/docs/mosaic.md).
 
 Notebook: [WorkingWithMosaic](Notebook/Using-rio-tiler-mosaic.ipynb)
 
 #### Merge assets
 
-`rio_tiler.io.cogeo` submodule has `multi_*` functions (tile, part, preview, point, metadata, info, stats) allowing to fetch and merge info/data 
+`rio_tiler.io.cogeo` submodule has `multi_*` functions (tile, part, preview, point, metadata, info, stats) allowing to fetch and merge info/data
 from multiple dataset (think about multiple bands stored in separated files).
 
 ```python
-from typing import Dict 
+from typing import Dict
 from rio_tiler.io.cogeo import multi_tile
 
 assets = ["b1.tif", "b2.tif", "b3.tif"]
@@ -463,14 +463,14 @@ class CustomReader(MultiBaseReader):
 
     def __enter__(self):
         # List files in directory
-        dirs = os.listdir(self.directory) 
+        dirs = os.listdir(self.directory)
 
         # get list of tifs
         tiff = [f for f in dirs if f.endswith(".tif")]
 
         # create list of assets names - REQUIRED
         self.assets = [os.path.basename(f).split(".")[0] for f in tiff]
-        
+
         # `self.bounds` needs to be set! - REQUIRED
         with self.reader(tiff[0]) as cog:
             self.bounds = cog.bounds
@@ -481,7 +481,7 @@ class CustomReader(MultiBaseReader):
         """Validate asset names and return asset's url."""
         if asset not in self.assets:
             raise InvalidAssetName(f"{asset} is not valid")
-        
+
         return os.path.join(self.directory, f"{asset}.tif")
 
 # we have a directoty with "b1.tif", "b2.tif", "b3.tif"
@@ -598,23 +598,7 @@ In rio-tiler v2 we choosed to remove the mission specific tilers (Sentinel2, Sen
 
 ## Contribution & Development
 
-Issues and pull requests are more than welcome.
-
-**dev install**
-
-```bash
-$ git clone https://github.com/cogeotiff/rio-tiler.git
-$ cd rio-tiler
-$ pip install -e .[dev]
-```
-
-**Python3.7 only**
-
-This repo is set to use `pre-commit` to run *isort*, *flake8*, *pydocstring*, *black* ("uncompromising Python code formatter") and mypy when committing new code.
-
-```bash
-$ pre-commit install
-```
+See [CONTRIBUTING.md](https://github.com/cogeotiff/rio-tiler/blob/master/CONTRIBUTING.md)
 
 ## License
 
