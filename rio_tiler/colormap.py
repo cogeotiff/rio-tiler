@@ -11,6 +11,8 @@ from .errors import DeprecationWarning, InvalidColorMapName
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
+__all__ = ["make_lut", "apply_cmap", "apply_discrete_cmap", "ColorMaps"]
+
 
 def _update_alpha(cmap: Dict, idx: Sequence[int], alpha: int = 0) -> None:
     """Update the alpha value of a colormap index."""

@@ -14,6 +14,8 @@ TaskType = Union[
     Generator[Tuple[Callable, str], None, None], Sequence[Tuple[futures.Future, str]]
 ]
 
+__all__ = ["filter_tasks", "create_tasks", "multi_arrays", "multi_values"]
+
 
 def filter_tasks(
     tasks: TaskType, allowed_exceptions: Optional[Tuple] = None,

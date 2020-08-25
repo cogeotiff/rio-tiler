@@ -11,6 +11,8 @@ from ..utils import _chunks
 from .methods.base import MosaicMethodBase
 from .methods.defaults import FirstMethod
 
+__all__ = ["mosaic_reader", "mosaic_tiler"]
+
 
 def mosaic_reader(
     assets: Sequence[str],
