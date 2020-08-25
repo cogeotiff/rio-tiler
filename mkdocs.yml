@@ -1,0 +1,79 @@
+# Project Information
+site_name: 'rio-tiler'
+site_description: 'Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF'
+
+docs_dir: 'docs'
+site_dir: 'build'
+
+# Repository
+repo_name: 'cogeotiff/rio-tiler'
+repo_url: 'https://github.com/cogeotiff/rio-tiler'
+edit_uri: 'blob/master/docs/src/'
+site_url: 'https://cogeotiff.github.io/rio-tiler/'
+
+# Social links
+extra:
+  social:
+    - icon: 'fontawesome/brands/github'
+      link: 'https://github.com/cogeotiff'
+    - icon: 'fontawesome/brands/twitter'
+      link: 'https://twitter.com/cogeotiff'
+    - icon: 'fontawesome/solid/globe'
+      link: 'https://www.cogeo.org/'
+
+# Layout
+nav:
+  - Home: 'index.md'
+  - v2 Migration: 'v2_migration.md'
+  - Mosaic: 'mosaic.md'
+  - Dynamic Tiling: 'dynamic_tiler.md'
+  - Colormaps: 'colormap.md'
+
+# Theme
+theme:
+  icon:
+    logo: 'material/home'
+    repo: 'fontawesome/brands/github'
+  name: 'material'
+  language: 'en'
+  palette:
+    primary: 'blue'
+    accent:  'light blue'
+  font:
+    text: 'Nunito Sans'
+    code: 'Fira Code'
+
+# Uncomment if I use math in the docs in the future
+# extra_javascript:
+#     - helpers/helpers.js
+#     - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
+
+# These extensions are chosen to be a superset of Pandoc's Markdown.
+# This way, I can write in Pandoc's Markdown and have it be supported here.
+# https://pandoc.org/MANUAL.html
+markdown_extensions:
+    - admonition
+    - attr_list
+    - codehilite:
+        guess_lang: false
+    - def_list
+    - footnotes
+    - pymdownx.arithmatex
+    - pymdownx.betterem
+    - pymdownx.caret:
+        insert: false
+    - pymdownx.details
+    - pymdownx.emoji
+    - pymdownx.escapeall:
+        hardbreak: true
+        nbsp: true
+    - pymdownx.magiclink:
+        hide_protocol: true
+        repo_url_shortener: true
+    - pymdownx.smartsymbols
+    - pymdownx.superfences
+    - pymdownx.tasklist:
+        custom_checkbox: true
+    - pymdownx.tilde
+    - toc:
+        permalink: true
