@@ -15,7 +15,6 @@ pdocs as_markdown \
     --exclude_source \
     --overwrite \
     rio_tiler.colormap \
-    rio_tiler.constants \
     rio_tiler.errors \
     rio_tiler.expression \
     rio_tiler.io.base \

@@ -39,7 +39,6 @@ nav:
         - Base: 'rio_tiler/mosaic/methods/base.md'
         - Defaults: 'rio_tiler/mosaic/methods/defaults.md'
     - Colormap: 'rio_tiler/colormap.md'
-    - Constants: 'rio_tiler/constants.md'
     - Errors: 'rio_tiler/errors.md'
     - Expression: 'rio_tiler/expression.md'
     - Mercator: 'rio_tiler/mercator.md'
