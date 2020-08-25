@@ -28,6 +28,25 @@ nav:
   - Mosaic: 'mosaic.md'
   - Dynamic Tiling: 'dynamic_tiler.md'
   - Colormaps: 'colormap.md'
+  - API:
+    - io:
+      - Base: 'rio_tiler/io/base.md'
+      - COG: 'rio_tiler/io/cogeo.md'
+      - STAC: 'rio_tiler/io/stac.md'
+    - Mosaic:
+      - Reader: 'rio_tiler/mosaic/reader.md'
+      - Methods:
+        - Base: 'rio_tiler/mosaic/methods/base.md'
+        - Defaults: 'rio_tiler/mosaic/methods/defaults.md'
+    - Colormap: 'rio_tiler/colormap.md'
+    - Constants: 'rio_tiler/constants.md'
+    - Errors: 'rio_tiler/errors.md'
+    - Expression: 'rio_tiler/expression.md'
+    - Mercator: 'rio_tiler/mercator.md'
+    - Profiles: 'rio_tiler/profiles.md'
+    - Reader: 'rio_tiler/reader.md'
+    - Tasks: 'rio_tiler/tasks.md'
+    - Utils: 'rio_tiler/utils.md'
 
 # Theme
 theme:
