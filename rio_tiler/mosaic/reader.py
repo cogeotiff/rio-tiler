@@ -1,6 +1,7 @@
 """rio_tiler.mosaic: create tile from multiple assets."""
 
-from typing import Any, Callable, List, Optional, Sequence, Tuple
+from inspect import isclass
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, cast
 
 import numpy
 
@@ -16,7 +17,7 @@ def mosaic_reader(
     assets: Sequence[str],
     reader: Callable,
     *args: Any,
-    pixel_selection: Optional[MosaicMethodBase] = None,
+    pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
     **kwargs,
@@ -59,12 +60,15 @@ def mosaic_reader(
         Return (tile, mask) data and list of assets used.
 
     """
-    if pixel_selection is None:
-        pixel_selection = FirstMethod()
+    if isclass(pixel_selection):
+        pixel_selection = cast(Type[MosaicMethodBase], pixel_selection)
+
+        if issubclass(pixel_selection, MosaicMethodBase):
+            pixel_selection = pixel_selection()
 
     if not isinstance(pixel_selection, MosaicMethodBase):
         raise Exception(
-            "Mosaic filling algorithm should be an instance of"
+            "Mosaic filling algorithm should be an instance of "
             "'rio_tiler.mosaic.methods.base.MosaicMethodBase'"
         )
 

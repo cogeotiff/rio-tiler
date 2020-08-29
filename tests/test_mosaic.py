@@ -146,6 +146,15 @@ def test_mosaic_tiler():
     assert m.all()
     assert t[0][-1][-1] == 8369.5
 
+    # Test pixel selection as _class_, not instance of class
+    (t, m), assets_used = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, pixel_selection=defaults.FirstMethod
+    )
+    assert t.shape == (3, 256, 256)
+    assert m.shape == (256, 256)
+    assert m.all()
+    assert t[0][-1][-1] == 8682
+
     # Test invalid Pixel Selection class
     with pytest.raises(Exception):
 
