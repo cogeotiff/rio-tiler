@@ -44,14 +44,6 @@ def _read_preview(
 
 def test_mosaic_tiler():
     """Test mosaic tiler."""
-    # test with mosaic_tiler for compatibility
-    (t, m), assets_used = mosaic.mosaic_tiler(assets, x, y, z, _read_tile)
-    assert len(assets_used) == 1
-    assert t.shape == (3, 256, 256)
-    assert m.shape == (256, 256)
-    assert m.all()
-    assert t[0][-1][-1] == 8682
-
     # test with default and full covered tile and default options
     (t, m), assets_used = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
     assert t.shape == (3, 256, 256)
