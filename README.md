@@ -25,6 +25,9 @@
   <a href="https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE.txt" target="_blank">
       <img src="https://img.shields.io/github/license/cogeotiff/rio-tiler.svg" alt="Downloads">
   </a>
+  <a href="https://mybinder.org/v2/gh/cogeotiff/rio-tiler/master?filepath=docs%2Fexamples%2F" target="_blank" alt="Binder">
+      <img src="https://mybinder.org/badge_logo.svg" alt="Binder">
+  </a>
 </p>
 
 ## Install
@@ -613,4 +616,3 @@ See [AUTHORS.txt](https://github.com/cogeotiff/rio-tiler/blob/master/AUTHORS.txt
 ## Changes
 
 See [CHANGES.txt](https://github.com/cogeotiff/rio-tiler/blob/master/CHANGES.txt).
-
