@@ -5,18 +5,12 @@ import pytest
 
 from rio_tiler import colormap
 from rio_tiler.cmap_data import _default_cmaps
-from rio_tiler.errors import DeprecationWarning, InvalidColorMapName
+from rio_tiler.errors import InvalidColorMapName
 
 
 def test_get_cmaplist():
     """Should work as expected return all rio-tiler colormaps."""
     assert len(_default_cmaps) == 167
-
-
-def test_depreciation():
-    """Should warn when using get_colormap."""
-    with pytest.warns(DeprecationWarning):
-        colormap.get_colormap("viridis")
 
 
 def test_cmapObject():
