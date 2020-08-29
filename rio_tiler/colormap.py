@@ -154,7 +154,7 @@ class ColorMaps(object):
         """List registered Colormaps."""
         return list(self._data.keys())
 
-    def register(self, name: str, custom_cmap: Union[Dict, str]):
+    def register(self, name: str, custom_cmap: Union[Dict, str], force: bool = False):
         """
         Register a custom colormap.
 
@@ -164,10 +164,14 @@ class ColorMaps(object):
             Name of the colormap.
         custom_cmap: dict or str
             A dict or a path to a numpy file
+        force: bool
+            Overwrite existing colormap with same key (default: False)
 
         """
-        if name in self._data.keys():
-            raise Exception(f"{name} is already registered")
+        if not force and name in self._data.keys():
+            raise Exception(
+                f"{name} is already registered. Use force=True to overwrite."
+            )
 
         self._data[name] = custom_cmap
 
