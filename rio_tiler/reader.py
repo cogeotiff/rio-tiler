@@ -16,11 +16,7 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from . import constants
-from .errors import (
-    AlphaBandWarning,
-    PointOutsideBounds,
-    TileOutsideBounds,
-)
+from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -140,7 +136,6 @@ def part(
     dst_crs: Optional[CRS] = None,
     bounds_crs: Optional[CRS] = None,
     minimum_overlap: Optional[float] = None,
-    warp_vrt_option: Optional[Dict] = None,
     vrt_options: Optional[Dict] = None,
     max_size: Optional[int] = None,
     **kwargs: Any,
@@ -169,8 +164,6 @@ def part(
     minimum_tile_cover: float, optional
         Minimum % overlap for which to raise an error with dataset not
         covering enought of the tile.
-    warp_vrt_option: dict, DEPRECATED
-        These will be passed to the rasterio.warp.WarpedVRT class.
     vrt_options: dict, optional
         These will be passed to the rasterio.warp.WarpedVRT class.
     max_size: int, optional
