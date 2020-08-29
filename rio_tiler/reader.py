@@ -247,13 +247,6 @@ def part(
             height=orig_vrt_height,
         )
 
-    if warp_vrt_option:
-        warnings.warn(
-            "warp_vrt_option will be removed in 2.0, use vrt_options",
-            DeprecationWarning,
-        )
-        vrt_options = vrt_options or warp_vrt_option
-
     vrt_options = vrt_options or {}
     vrt_options.update(
         {
