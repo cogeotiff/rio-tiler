@@ -24,10 +24,16 @@ extra:
 # Layout
 nav:
   - Home: 'index.md'
+  - Examples:
+    - Mosaic: 'examples/Using-rio-tiler-mosaic.ipynb'
   - v2 Migration: 'v2_migration.md'
   - Mosaic: 'mosaic.md'
   - Dynamic Tiling: 'dynamic_tiler.md'
   - Colormaps: 'colormap.md'
+
+plugins:
+  - mkdocs-jupyter:
+      include_source: True
 
 # Theme
 theme:
@@ -42,6 +48,7 @@ theme:
   font:
     text: 'Nunito Sans'
     code: 'Fira Code'
+  custom_dir: 'docs/overrides'
 
 # Uncomment if I use math in the docs in the future
 # extra_javascript:

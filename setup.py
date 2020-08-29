@@ -19,7 +19,7 @@ inst_reqs = [
 extra_reqs = {
     "test": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
     "dev": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo", "pre-commit"],
-    "docs": ["mkdocs", "mkdocs-material"],
+    "docs": ["mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
 }
 
 setup(
