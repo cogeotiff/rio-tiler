@@ -71,7 +71,7 @@ def mosaic_reader(
 
     if not isinstance(pixel_selection, MosaicMethodBase):
         raise Exception(
-            "Mosaic filling algorithm should be an instance of"
+            "Mosaic filling algorithm should be an instance of "
             "'rio_tiler.mosaic.methods.base.MosaicMethodBase'"
         )
 

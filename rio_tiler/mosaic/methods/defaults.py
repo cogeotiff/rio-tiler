@@ -109,7 +109,7 @@ class MedianMethod(MosaicMethodBase):
 
 
 class StdevMethod(MosaicMethodBase):
-    """Stack the tiles and return the Standart Deviation value."""
+    """Stack the tiles and return the Standard Deviation value."""
 
     def __init__(self, enforce_data_type=True):
         """Overwrite base and init Stdev method."""
