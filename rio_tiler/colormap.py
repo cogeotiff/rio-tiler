@@ -1,13 +1,12 @@
 """rio-tiler colormap functions."""
 
 import os
-import warnings
 from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy
 
 from .cmap_data import _default_cmaps
-from .errors import DeprecationWarning, InvalidColorMapName
+from .errors import InvalidColorMapName
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
@@ -35,35 +34,6 @@ def _update_cmap(cmap: Dict, values: Dict) -> None:
         if len(color) == 3:
             color += [255]
         cmap[i] = color
-
-
-def get_colormap(name: str) -> Dict:
-    """
-    Return colormap dict.
-
-    Attributes
-    ----------
-    name : str, optional
-        Colormap name (default: cfastie)
-
-    Returns
-    -------
-    colormap : dict
-        GDAL RGBA Color Table dictionary.
-
-    """
-    warnings.warn(
-        "`rio_tiler.colormap.get_colormap` will be removed in version 2.0, Please use rio_tiler.colormap.cmap.get",
-        DeprecationWarning,
-    )
-    cmap_file = os.path.join(
-        os.path.dirname(__file__), "cmap_data", f"{name.lower()}.npy"
-    )
-    cmap = numpy.load(cmap_file)
-    assert cmap.shape == (256, 4)
-    assert cmap.dtype == numpy.uint8
-
-    return {idx: value.tolist() for idx, value in enumerate(cmap)}
 
 
 # From https://github.com/mojodna/marblecutter/blob/5b9040ba6c83562a465eabdbb6e8959e6a8bf041/marblecutter/utils.py#L35

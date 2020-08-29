@@ -87,28 +87,3 @@ def mosaic_reader(
                 return pixel_selection.data, assets_used
 
     return pixel_selection.data, assets_used
-
-
-def mosaic_tiler(
-    assets: Sequence[str],
-    tile_x: int,
-    tile_y: int,
-    tile_z: int,
-    reader: Callable,
-    pixel_selection: Optional[MosaicMethodBase] = None,
-    chunk_size: Optional[int] = None,
-    threads: int = MAX_THREADS,
-    **kwargs,
-) -> Tuple[Tuple[numpy.ndarray, numpy.ndarray], Sequence[str]]:
-    """Wrapper around mosaic_reader from compatibility with previous rio_tiler_mosaic."""
-    return mosaic_reader(
-        assets,
-        reader,
-        tile_x,
-        tile_y,
-        tile_z,
-        pixel_selection=pixel_selection,
-        chunk_size=chunk_size,
-        threads=threads,
-        **kwargs,
-    )
