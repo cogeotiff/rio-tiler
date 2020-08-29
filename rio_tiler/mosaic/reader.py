@@ -59,6 +59,9 @@ def mosaic_reader(
         Return (tile, mask) data and list of assets used.
 
     """
+    if issubclass(pixel_selection, MosaicMethodBase):
+        pixel_selection = pixel_selection()
+
     if pixel_selection is None:
         pixel_selection = FirstMethod()
 
