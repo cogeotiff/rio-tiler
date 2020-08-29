@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.colors import ListedColormap
 
-from rio_tiler.colormap import get_colormap, make_lut
+from rio_tiler.colormap import cmap, make_lut
 
 cmaps = [
     ("Custom", ["cfastie", "rplumbo", "schwarzwald"]),
@@ -128,9 +128,9 @@ gradient = np.vstack((gradient, gradient))
 def make_colormap(name):
     """Use rio-tiler colormap to create matplotlib colormap
     """
-    cmap = make_lut(get_colormap(name))
+    colormap = make_lut(cmap.get(name))
     # rescale to 0-1
-    return ListedColormap(cmap / 255, name=name)
+    return ListedColormap(colormap / 255, name=name)
 
 
 def plot_color_gradients(cmap_category, cmap_list):

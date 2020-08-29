@@ -1,7 +1,6 @@
 """rio-tiler colormap functions."""
 
 import os
-import warnings
 from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy
