@@ -18,14 +18,7 @@ inst_reqs = [
 
 extra_reqs = {
     "test": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
-    "dev": [
-        "pytest",
-        "pytest-benchmark",
-        "pytest-cov",
-        "rio-cogeo",
-        "pre-commit",
-        "isort>=5.4.0",
-    ],
+    "dev": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo", "pre-commit"],
     "docs": ["mkdocs", "mkdocs-material"],
 }
 
