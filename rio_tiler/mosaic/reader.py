@@ -1,5 +1,6 @@
 """rio_tiler.mosaic: create tile from multiple assets."""
 
+from inspect import isclass
 from typing import Any, Callable, List, Optional, Sequence, Tuple
 
 import numpy
@@ -59,7 +60,7 @@ def mosaic_reader(
         Return (tile, mask) data and list of assets used.
 
     """
-    if issubclass(pixel_selection, MosaicMethodBase):
+    if isclass(pixel_selection) and issubclass(pixel_selection, MosaicMethodBase):
         pixel_selection = pixel_selection()
 
     if pixel_selection is None:
