@@ -17,7 +17,7 @@ def mosaic_reader(
     assets: Sequence[str],
     reader: Callable,
     *args: Any,
-    pixel_selection: Optional[Union[Type[MosaicMethodBase], MosaicMethodBase]] = None,
+    pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
     **kwargs,
@@ -65,9 +65,6 @@ def mosaic_reader(
 
         if issubclass(pixel_selection, MosaicMethodBase):
             pixel_selection = pixel_selection()
-
-    if pixel_selection is None:
-        pixel_selection = FirstMethod()
 
     if not isinstance(pixel_selection, MosaicMethodBase):
         raise Exception(
