@@ -17,7 +17,7 @@ def mosaic_reader(
     assets: Sequence[str],
     reader: Callable,
     *args: Any,
-    pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase, None] = None,
+    pixel_selection: Optional[Union[Type[MosaicMethodBase], MosaicMethodBase]] = None,
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
     **kwargs,
