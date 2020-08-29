@@ -1,3 +1,4 @@
 """rio-tiler.mosaic."""
 
-from .reader import mosaic_reader, mosaic_tiler  # noqa
+from . import methods  # noqa
+from .reader import mosaic_reader  # noqa

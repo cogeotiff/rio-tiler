@@ -9,7 +9,7 @@ import rasterio
 from rasterio.features import bounds as featureBounds
 
 from rio_tiler import colormap, constants, utils
-from rio_tiler.errors import DeprecationWarning, RioTilerError
+from rio_tiler.errors import RioTilerError
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import COGReader
 
@@ -162,12 +162,6 @@ def test_render_valid_colormap():
     mask = np.zeros((512, 512), dtype=np.uint8)
     cmap = colormap.cmap.get("cfastie")
     assert utils.render(arr, mask, colormap=cmap, img_format="jpeg")
-
-
-def test_cmap_depreciation():
-    """Make sure we warns for depreciation warning of get_colormap."""
-    with pytest.warns(DeprecationWarning):
-        colormap.get_colormap("cfastie")
 
 
 def test_render_valid_colormapDict():

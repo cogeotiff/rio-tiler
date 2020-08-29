@@ -8,12 +8,7 @@ import pytest
 import rasterio
 
 from rio_tiler import constants, reader
-from rio_tiler.errors import (
-    AlphaBandWarning,
-    DeprecationWarning,
-    PointOutsideBounds,
-    TileOutsideBounds,
-)
+from rio_tiler.errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
@@ -468,18 +463,6 @@ def test_tile_read_vrt_option():
         12523442.714243278,
     ]
     tilesize = 16
-    with pytest.warns(DeprecationWarning):
-        with rasterio.open(COG) as src_dst:
-            arr, mask = reader.part(
-                src_dst,
-                bounds,
-                tilesize,
-                tilesize,
-                warp_vrt_option=dict(source_extra=10, num_threads=10),
-            )
-        assert arr.shape == (1, 16, 16)
-        assert mask.shape == (16, 16)
-
     with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(
             src_dst,
