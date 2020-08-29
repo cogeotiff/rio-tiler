@@ -18,7 +18,6 @@ from rasterio.warp import transform_bounds
 from . import constants
 from .errors import (
     AlphaBandWarning,
-    DeprecationWarning,
     PointOutsideBounds,
     TileOutsideBounds,
 )

@@ -7,7 +7,7 @@ from typing import Dict, List, Sequence, Tuple, Union
 import numpy
 
 from .cmap_data import _default_cmaps
-from .errors import DeprecationWarning, InvalidColorMapName
+from .errors import InvalidColorMapName
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
