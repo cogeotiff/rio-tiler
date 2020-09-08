@@ -1,3 +1,16 @@
+2.0b9 (Unreleased)
+------------------
+- restore Mkdocs search bar (#255)
+- Allow class (not just instance) to be passed to pixel_selection (#250)
+- Add Binder link/badge to README (#254)
+- Add mkdocs-jupyter to show notebooks in website (#253)
+- Remove deprecated functions (#247)
+- Export modules from top-level package (#246)
+- Allow overwriting colormap with force=True (#249)
+- Pin black version (#251)
+- Add contributing.md (#242)
+- Add mkdocs config (#240)
+
 2.0b8 (2020-08-24)
 ------------------
 - raise specific `PointOutsideBounds` in rio_tiler.reader.point (#236)
@@ -133,14 +146,14 @@ Breaking Changes:
 - new package architecture (.io submodule)
 - introduced new rio_tiler.reader functions (part, preview, metadata...)
 - renamed rio_tiler.main to rio_tiler.io.cogeo
-- bucket and prefixes are defined in rio_tiler.io.dataset.`{dataset}_parse` function from 
+- bucket and prefixes are defined in rio_tiler.io.dataset.`{dataset}_parse` function from
   AWS supported Public Dataset
 - renamed `minimum_tile_cover` to `minimum_overlap`
 - renamed `tile_edge_padding` to `padding`
 - padding is set to 0 by default.
 - use terracotta calculate_default_transform (see https://github.com/cogeotiff/rio-tiler/issues/56#issuecomment-442484999)
 - colormaps are now have an alpha value
-- `rio_tiler.utils.get_colormap` replaced by `rio_tiler.colormap.get_colormap` 
+- `rio_tiler.utils.get_colormap` replaced by `rio_tiler.colormap.get_colormap`
 - new `rio_tiler.colormap.get_colormap` supports only GDAL like colormap
 - replaced `rio_tiler.utils.array_to_image` by `rio_tiler.utils.render`
 - replaced `rio_tiler.utils.apply_cmap` by `rio_tiler.colormap.apply_cmap`
@@ -181,12 +194,12 @@ Breaking Changes:
 
 1.2.9 (2019-07-11)
 ------------------
-- fix issue #113, adds depreciation warning for `bounds_crs` in favor of `dst_crs` 
+- fix issue #113, adds depreciation warning for `bounds_crs` in favor of `dst_crs`
 in `rio_tiler.utils.get_vrt_transform`
 
 1.2.8 (2019-07-08)
 ------------------
-- Add kwargs options in landsat8.tile, sentinel2.tile and cbers.tile functions to 
+- Add kwargs options in landsat8.tile, sentinel2.tile and cbers.tile functions to
 allow `resampling_method` and `tile_edge_padding` options forwarding to utils._tile_read.
 - Add Input (bounds_crs) and Output (dst_crs) option to `utils._tile_read` function (#108)
 
@@ -222,7 +235,7 @@ Bug fixes:
 1.2.1 (2019-03-26)
 ------------------
 - Replace rio-pansharpen dependency with a fork of the brovey function directly
-into `rio_tiler.utils` (rio-pansharpen is unmaintened and not compatible with 
+into `rio_tiler.utils` (rio-pansharpen is unmaintened and not compatible with
 rasterio>=1) (#94).
 
 1.2.0 (2019-03-26)
