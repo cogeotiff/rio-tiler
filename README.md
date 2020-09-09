@@ -110,6 +110,20 @@ with open("my.png", "wb") as f:
   f.write(buffer)
 ```
 
+##### NumpyTile
+
+You can also export image data to a numpy binary format (`NPY`)
+
+```python
+from io import BytesIO
+import numpy
+from rio_tiler.utils import render
+
+buffer = render(tile, mask=mask, img_format="npy")
+npy_tile = numpy.load(BytesIO(buffer))
+assert npy_tile.shape == (4, 256, 256)  # mask is appened to the end of the data
+```
+
 ### COGReader
 
 <details>
@@ -343,6 +357,7 @@ COGReader accept several options which will be forwarded to the `rio_tiler.reade
 - `nodata`: Overwrite the nodata value (or set if not present)
 - `unscale`: Apply internal rescaling factors
 - `vrt_options`: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
+- `resampling_method`: Set default `resampling_method`
 
 Note: Those options could already be passed on each `method` call.
 

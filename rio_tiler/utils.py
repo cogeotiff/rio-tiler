@@ -426,10 +426,10 @@ def render(
         if mask is not None:
             mask = numpy.expand_dims(mask, axis=0)
             tile = numpy.concatenate((tile, mask))
-        sio = BytesIO()
-        numpy.save(sio, tile)
-        sio.seek(0)
-        return sio.getvalue()
+        bio = BytesIO()
+        numpy.save(bio, tile)
+        bio.seek(0)
+        return bio.getvalue()
 
     count, height, width = tile.shape
 
