@@ -1,6 +1,7 @@
 """tests rio_tiler.utils"""
 
 import os
+from io import BytesIO
 
 import mercantile
 import numpy as np
@@ -381,3 +382,19 @@ def test_parse_expression():
         "3",
         "4",
     ]
+
+
+def test_render_numpy():
+    """Save data to numpy binary."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+    res = utils.render(arr, mask=mask, img_format="npy")
+    arr_res = np.load(BytesIO(res))
+    assert arr_res.shape == (4, 512, 512)
+    np.array_equal(arr, arr_res[0:3])
+    np.array_equal(mask, arr_res[-1])
+
+    res = utils.render(arr, img_format="npy")
+    arr_res = np.load(BytesIO(res))
+    assert arr_res.shape == (3, 512, 512)
+    np.array_equal(arr, arr_res)

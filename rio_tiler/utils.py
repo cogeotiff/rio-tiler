@@ -1,6 +1,7 @@
 """rio_tiler.utils: utility functions."""
 
 import math
+from io import BytesIO
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
 import mercantile
@@ -419,6 +420,16 @@ def render(
         tile = numpy.repeat(tile, 3, axis=0)
     elif img_format == "JPEG":
         mask = None
+
+    if img_format == "NPY":
+        # If mask is not None we add it as the last band
+        if mask is not None:
+            mask = numpy.expand_dims(mask, axis=0)
+            tile = numpy.concatenate((tile, mask))
+        sio = BytesIO()
+        numpy.save(sio, tile)
+        sio.seek(0)
+        return sio.getvalue()
 
     count, height, width = tile.shape
 
