@@ -47,3 +47,11 @@ class MissingAssets(RioTilerError):
 
 class ExpressionMixingWarning(UserWarning):
     """Expression and assets/indexes mixing."""
+
+
+class InvalidMosaicMethod(RioTilerError):
+    """Invalid Pixel Selection method for mosaic."""
+
+
+class ColorMapAlreadyRegistered(Exception):
+    """ColorMap is already registered."""

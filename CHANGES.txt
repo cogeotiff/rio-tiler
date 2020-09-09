@@ -11,6 +11,7 @@
 - Add contributing.md (#242)
 - Add mkdocs config (#240)
 - Add `NPY` support in `rio_tiler.utils.render` to save tile in numpy binary format (#256)
+- Remove bare `Exception` and add more detailed errors (#248)
 
 2.0b8 (2020-08-24)
 ------------------

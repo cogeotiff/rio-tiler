@@ -82,7 +82,7 @@ def test_fetch_stac(requests, s3_get):
     s3_get.assert_not_called()
 
     # No valid assets
-    with pytest.raises(Exception):
+    with pytest.raises(MissingAssets):
         with STACReader(STAC_PATH, include_assets={"B1"}) as stac:
             pass
     requests.assert_not_called()
