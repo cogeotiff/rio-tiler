@@ -169,7 +169,7 @@ class ColorMaps(object):
 
         """
         if not force and name in self._data.keys():
-            raise AlreadyRegistered(
+            raise CmapAlreadyRegistered(
                 f"{name} is already registered. Use force=True to overwrite."
             )
 
