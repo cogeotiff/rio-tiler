@@ -6,7 +6,7 @@ from typing import Dict, List, Sequence, Tuple, Union
 import numpy
 
 from .cmap_data import _default_cmaps
-from .errors import InvalidColorMapName
+from .errors import AlreadyRegistered, InvalidColorMapName, InvalidFormat
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
@@ -81,7 +81,7 @@ def apply_cmap(
 
     """
     if data.shape[0] > 1:
-        raise Exception("Source data must be 1 band")
+        raise InvalidFormat("Source data must be 1 band")
 
     lookup_table = make_lut(colormap)
     data = lookup_table[data[0], :]
@@ -169,7 +169,7 @@ class ColorMaps(object):
 
         """
         if not force and name in self._data.keys():
-            raise Exception(
+            raise AlreadyRegistered(
                 f"{name} is already registered. Use force=True to overwrite."
             )
 

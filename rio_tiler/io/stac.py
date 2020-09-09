@@ -8,7 +8,7 @@ from urllib.parse import urlparse
 import attr
 import requests
 
-from ..errors import InvalidAssetName
+from ..errors import InvalidAssetName, MissingAssets
 from ..utils import aws_get_object
 from .base import BaseReader, MultiBaseReader
 from .cogeo import COGReader
@@ -173,7 +173,7 @@ class STACReader(MultiBaseReader):
             )
         )
         if not self.assets:
-            raise Exception("No valid asset found")
+            raise MissingAssets("No valid asset found")
 
         return self
 

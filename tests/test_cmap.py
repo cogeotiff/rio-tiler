@@ -5,7 +5,7 @@ import pytest
 
 from rio_tiler import colormap
 from rio_tiler.cmap_data import _default_cmaps
-from rio_tiler.errors import InvalidColorMapName
+from rio_tiler.errors import InvalidColorMapName, InvalidFormat
 
 
 def test_get_cmaplist():
@@ -103,7 +103,7 @@ def test_apply_cmap():
     mask[5:, 5:] = 255
     numpy.testing.assert_array_equal(m, mask)
 
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidFormat):
         data = numpy.repeat(data, 3, axis=0)
         colormap.apply_cmap(data, cm)
 

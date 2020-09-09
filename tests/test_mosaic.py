@@ -7,6 +7,7 @@ import numpy
 import pytest
 
 from rio_tiler import mosaic
+from rio_tiler.errors import InvalidMosaicMethod
 from rio_tiler.io import COGReader
 from rio_tiler.mosaic.methods import defaults
 
@@ -156,7 +157,7 @@ def test_mosaic_tiler():
     assert t[0][-1][-1] == 8682
 
     # Test invalid Pixel Selection class
-    with pytest.raises(Exception):
+    with pytest.raises(InvalidMosaicMethod):
 
         class aClass(object):
             pass

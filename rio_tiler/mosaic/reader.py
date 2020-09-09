@@ -6,7 +6,7 @@ from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, 
 import numpy
 
 from ..constants import MAX_THREADS
-from ..errors import TileOutsideBounds
+from ..errors import InvalidMosaicMethod, TileOutsideBounds
 from ..tasks import create_tasks, filter_tasks
 from ..utils import _chunks
 from .methods.base import MosaicMethodBase
@@ -67,7 +67,7 @@ def mosaic_reader(
             pixel_selection = pixel_selection()
 
     if not isinstance(pixel_selection, MosaicMethodBase):
-        raise Exception(
+        raise InvalidMosaicMethod(
             "Mosaic filling algorithm should be an instance of "
             "'rio_tiler.mosaic.methods.base.MosaicMethodBase'"
         )
