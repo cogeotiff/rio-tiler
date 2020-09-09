@@ -5,7 +5,7 @@ import pytest
 
 from rio_tiler import colormap
 from rio_tiler.cmap_data import _default_cmaps
-from rio_tiler.errors import InvalidColorMapName, InvalidFormat
+from rio_tiler.errors import CmapAlreadyRegistered, InvalidColorMapName, InvalidFormat
 
 
 def test_get_cmaplist():
@@ -24,7 +24,7 @@ def test_cmapObject():
     cmap.register("empty", colormap.EMPTY_COLORMAP)
     assert len(cmap.list()) == 168
 
-    with pytest.raises(Exception):
+    with pytest.raises(CmapAlreadyRegistered):
         cmap.register("empty", colormap.EMPTY_COLORMAP)
 
     assert cmap.get("empty")
