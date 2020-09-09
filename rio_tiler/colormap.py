@@ -6,7 +6,7 @@ from typing import Dict, List, Sequence, Tuple, Union
 import numpy
 
 from .cmap_data import _default_cmaps
-from .errors import CmapAlreadyRegistered, InvalidColorMapName, InvalidFormat
+from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidFormat
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
@@ -169,7 +169,7 @@ class ColorMaps(object):
 
         """
         if not force and name in self._data.keys():
-            raise CmapAlreadyRegistered(
+            raise ColorMapAlreadyRegistered(
                 f"{name} is already registered. Use force=True to overwrite."
             )
 

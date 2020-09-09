@@ -53,5 +53,5 @@ class InvalidMosaicMethod(RioTilerError):
     """Invalid Pixel Selection method for mosaic."""
 
 
-class CmapAlreadyRegistered(Exception):
-    """Value is already registered."""
+class ColorMapAlreadyRegistered(Exception):
+    """ColorMap is already registered."""
