@@ -9,6 +9,7 @@ import mercantile
 import numpy
 import rasterio
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
@@ -95,8 +96,9 @@ class COGReader(BaseReader):
     nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
     unscale: Optional[bool] = attr.ib(default=None)
     vrt_options: Optional[Dict] = attr.ib(default=None)
+    resampling_method: Optional[Resampling] = attr.ib(default=None)
 
-    # We use _kwargs to store values of nodata, unscale and vrt_options.
+    # We use _kwargs to store values of nodata, unscale, vrt_options and resampling_method.
     # _kwargs is used avoid having to set those values on each method call.
     _kwargs: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
@@ -108,6 +110,8 @@ class COGReader(BaseReader):
             self._kwargs["unscale"] = self.unscale
         if self.vrt_options is not None:
             self._kwargs["vrt_options"] = self.vrt_options
+        if self.resampling_method is not None:
+            self._kwargs["resampling_method"] = self.resampling_method
 
     def __enter__(self):
         """Support using with Context Managers."""

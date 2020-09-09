@@ -258,6 +258,10 @@ def test_COGReader_Options():
         _, mask = cog.tile(43, 25, 7)
         assert not mask.all()
 
+    with COGReader(COGEO, nodata=1, resampling_method="bilinear") as cog:
+        data, _ = cog.tile(43, 25, 7)
+        assert data[0, 100, 100] == 3774  # 3776 with nearest
+
     with COGReader(COG_SCALE, unscale=True) as cog:
         p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
         assert round(p[0], 3) == 1000.892

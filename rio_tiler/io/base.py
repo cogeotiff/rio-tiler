@@ -56,13 +56,7 @@ class BaseReader(metaclass=abc.ABCMeta):
         }
 
     @abc.abstractmethod
-    def stats(
-        self,
-        pmin: float = 2.0,
-        pmax: float = 98.0,
-        hist_options: Optional[Dict] = None,
-        **kwargs: Any,
-    ) -> Dict:
+    def stats(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict:
         """Return Dataset's statistics."""
         ...
 
@@ -148,7 +142,6 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         self,
         pmin: float = 2.0,
         pmax: float = 98.0,
-        hist_options: Optional[Dict] = None,
         assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Dict:
@@ -164,9 +157,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, **self.reader_options) as cog:  # type: ignore
                 return cog.stats(*args, **kwargs)
 
-        return multi_values(
-            assets, _reader, pmin, pmax, hist_options=hist_options, **kwargs
-        )
+        return multi_values(assets, _reader, pmin, pmax, **kwargs)
 
     def metadata(
         self,
