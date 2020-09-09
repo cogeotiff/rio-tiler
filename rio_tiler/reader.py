@@ -34,10 +34,10 @@ def _read(
     width: Optional[int] = None,
     indexes: Optional[Union[Sequence[int], int]] = None,
     window: Optional[windows.Window] = None,
-    nodata: Optional[Union[float, int, str]] = None,
-    resampling_method: Resampling = "nearest",
     force_binary_mask: bool = True,
+    nodata: Optional[Union[float, int, str]] = None,
     unscale: bool = False,
+    resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
@@ -310,9 +310,10 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Union[Sequence[int], int]] = None,
     coord_crs: CRS = constants.WGS84_CRS,
+    masked: bool = True,
     nodata: Optional[Union[float, int, str]] = None,
     unscale: bool = False,
-    masked: bool = True,
+    resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
 ) -> List:
     """
@@ -358,7 +359,10 @@ def point(
 
     indexes = indexes if indexes is not None else src_dst.indexes
 
-    vrt_params: Dict[str, Any] = {"add_alpha": True}
+    vrt_params: Dict[str, Any] = {
+        "add_alpha": True,
+        "resampling": Resampling[resampling_method],
+    }
     nodata = nodata if nodata is not None else src_dst.nodata
     if nodata is not None:
         vrt_params.update({"nodata": nodata, "add_alpha": False, "src_nodata": nodata})
