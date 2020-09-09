@@ -1,4 +1,4 @@
-2.0b9 (Unreleased)
+2.0b9 (2020-09-09)
 ------------------
 - restore Mkdocs search bar (#255)
 - Allow class (not just instance) to be passed to pixel_selection (#250)
