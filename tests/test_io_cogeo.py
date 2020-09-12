@@ -274,3 +274,23 @@ def test_COGReader_Options():
     with COGReader(COGEO, vrt_options={"cutline": cutline}) as cog:
         _, mask = cog.preview()
         assert not mask.all()
+
+    def callback(data, mask):
+        mask.fill(255)
+        data = data * 2
+        return data, mask
+
+    with COGReader(COGEO, nodata=1, post_process=callback) as cog:
+        data_init, _ = cog.tile(43, 25, 7, post_process=None)
+        data, mask = cog.tile(43, 25, 7)
+        assert mask.all()
+        assert data[0, 0, 0] == data_init[0, 0, 0] * 2
+
+    lon = -56.624124590533825
+    lat = 73.52687881825946
+    with COGReader(COG_NODATA, post_process=callback) as cog:
+        pts = cog.point(lon, lat)
+
+    with COGReader(COG_NODATA) as cog:
+        pts_init = cog.point(lon, lat)
+    assert pts[0] == pts_init[0] * 2

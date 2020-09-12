@@ -2,7 +2,7 @@
 
 import math
 import warnings
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import mercantile
 import numpy
@@ -39,6 +39,9 @@ def _read(
     unscale: bool = False,
     resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
+    post_process: Optional[
+        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+    ] = None,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
     Create WarpedVRT and read data and mask.
@@ -123,6 +126,9 @@ def _read(
             data = data.astype("float32", casting="unsafe")
             numpy.multiply(data, vrt.scales[0], out=data, casting="unsafe")
             numpy.add(data, vrt.offsets[0], out=data, casting="unsafe")
+
+    if post_process:
+        data, mask = post_process(data, mask)
 
     return data, mask
 
@@ -315,6 +321,9 @@ def point(
     unscale: bool = False,
     resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
+    post_process: Optional[
+        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+    ] = None,
 ) -> List:
     """
     Read point value
@@ -374,9 +383,12 @@ def point(
         vrt_params.update(vrt_options)
 
     with WarpedVRT(src_dst, **vrt_params) as vrt_dst:
-        point_values = list(
+        values = list(
             vrt_dst.sample([(lon[0], lat[0])], indexes=indexes, masked=masked)
         )[0]
+        point_values = values.data
+        mask = values.mask * 255 if masked else numpy.zeros(point_values.shape)
+
         if unscale:
             point_values = point_values.astype("float32", casting="unsafe")
             numpy.multiply(
@@ -385,6 +397,9 @@ def point(
             numpy.add(
                 point_values, vrt_dst.offsets[0], out=point_values, casting="unsafe"
             )
+
+    if post_process:
+        point_values, _ = post_process(point_values, mask)
 
     return point_values.tolist()
 
