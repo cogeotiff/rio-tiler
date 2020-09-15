@@ -1,4 +1,4 @@
-2.0b10 (TBD)
+2.0b10 (2020-09-15)
 ------------------
 - add `post_process` callback to `rio_tiler.render._read` and `rio_tiler.render.point` to apply
 specific operation ouput arrays.
