@@ -2,7 +2,7 @@
 
 import warnings
 from concurrent import futures
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
 import mercantile
@@ -95,8 +95,11 @@ class COGReader(BaseReader):
     # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
     nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
     unscale: Optional[bool] = attr.ib(default=None)
-    vrt_options: Optional[Dict] = attr.ib(default=None)
     resampling_method: Optional[Resampling] = attr.ib(default=None)
+    vrt_options: Optional[Dict] = attr.ib(default=None)
+    post_process: Optional[
+        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+    ] = attr.ib(default=None)
 
     # We use _kwargs to store values of nodata, unscale, vrt_options and resampling_method.
     # _kwargs is used avoid having to set those values on each method call.
@@ -108,10 +111,12 @@ class COGReader(BaseReader):
             self._kwargs["nodata"] = self.nodata
         if self.unscale is not None:
             self._kwargs["unscale"] = self.unscale
-        if self.vrt_options is not None:
-            self._kwargs["vrt_options"] = self.vrt_options
         if self.resampling_method is not None:
             self._kwargs["resampling_method"] = self.resampling_method
+        if self.vrt_options is not None:
+            self._kwargs["vrt_options"] = self.vrt_options
+        if self.post_process is not None:
+            self._kwargs["post_process"] = self.post_process
 
     def __enter__(self):
         """Support using with Context Managers."""
