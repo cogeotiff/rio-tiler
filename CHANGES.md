@@ -1,3 +1,7 @@
+## 2.0b11 (2020-09-24)
+
+* reduce verbosity in `rio_tiler.tasks.filter_tasks` exception logging (#266).
+
 2.0b10 (2020-09-15)
 ------------------
 - add `post_process` callback to `rio_tiler.render._read` and `rio_tiler.render.point` to apply
