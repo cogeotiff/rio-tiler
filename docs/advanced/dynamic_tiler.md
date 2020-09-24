@@ -1,4 +1,3 @@
-# Dynamic Tiling
 
 `rio-tiler` aims to be a lightweight plugin for `rasterio` whose sole goal is to
 read a Mercator Tile from a raster dataset.
@@ -179,3 +178,20 @@ call the `app` function within `app.py`, so you must be in the same directory as
 ```
 uvicorn app:app --reload
 ```
+
+## Create an AWS Lambda package
+
+The easiest way to make sure the package will work on AWS is to use docker
+
+```dockerfile
+FROM lambci/lambda:build-python3.7
+
+ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CFLAGS="--std=c99"
+
+RUN pip3 install rio-tiler --no-binary numpy -t /tmp/python -U
+
+RUN cd /tmp/python && zip -r9q /tmp/package.zip *
+```
+
+Ref: https://github.com/vincentsarago/simple-rio-lambda
+

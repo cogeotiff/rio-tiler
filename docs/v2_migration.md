@@ -1,6 +1,5 @@
-# rio-tiler 1.0 to 2.0 migration
 
-`rio-tiler` version 2.0 introduced [many breaking changes](../CHANGES.txt). This
+`rio-tiler` version 2.0 introduced [many breaking changes](release-notes.md). This
 document aims to help with migrating your code to use `rio-tiler` 2.0.
 
 ## Python **3** only
