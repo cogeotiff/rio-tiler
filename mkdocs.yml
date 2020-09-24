@@ -59,11 +59,6 @@ theme:
     code: 'Fira Code'
   custom_dir: 'docs/overrides'
 
-# Uncomment if I use math in the docs in the future
-# extra_javascript:
-#     - helpers/helpers.js
-#     - https://cdnjs.cloudflare.com/ajax/libs/mathjax/2.7.4/MathJax.js?config=TeX-AMS-MML_HTMLorMML
-
 # These extensions are chosen to be a superset of Pandoc's Markdown.
 # This way, I can write in Pandoc's Markdown and have it be supported here.
 # https://pandoc.org/MANUAL.html
