@@ -24,12 +24,20 @@ extra:
 # Layout
 nav:
   - Home: 'index.md'
+  - User Guide:
+    - Intro: 'intro.md'
+    - COG/STAC Readers: 'readers.md'
+    - Mosaic: 'mosaic.md'
+    - Colormaps: 'colormap.md'
+  - Advanced User Guide:
+    - Working with multiple assets: 'advanced/multi_assets.md'
+    - Use a Feature to read a COG: 'advanced/feature.md'
+    - Create a Dynamic Tiler: 'advanced/dynamic_tiler.md'
   - Examples:
     - Mosaic: 'examples/Using-rio-tiler-mosaic.ipynb'
-  - v2 Migration: 'v2_migration.md'
-  - Mosaic: 'mosaic.md'
-  - Dynamic Tiling: 'dynamic_tiler.md'
-  - Colormaps: 'colormap.md'
+  - Migration from v1.0 to v2.0: 'v2_migration.md'
+  - Development - Contributing: 'contributing.md'
+  - Release Notes: 'release-notes.md'
 
 plugins:
   - search
