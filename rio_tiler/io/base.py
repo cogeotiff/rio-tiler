@@ -117,16 +117,6 @@ class AsyncBaseReader(metaclass=abc.ABCMeta):
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
 
-    @abc.abstractmethod
-    async def __aenter__(self):
-        """Support using with Async Context Managers."""
-        ...
-
-    @abc.abstractmethod
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Support using with Async Context Managers."""
-        ...
-
     @property
     def center(self) -> Tuple[float, float, int]:
         """Dataset center + minzoom."""
