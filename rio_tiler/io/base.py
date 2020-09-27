@@ -148,7 +148,6 @@ class AsyncBaseReader(metaclass=abc.ABCMeta):
         """Return Dataset's statistics."""
         ...
 
-    @abc.abstractmethod
     async def metadata(
         self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
     ) -> Coroutine[Any, Any, Dict]:
