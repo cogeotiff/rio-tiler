@@ -252,6 +252,7 @@ def test_has_alpha():
     """Check if rasters have alpha bands."""
     with rasterio.open(S3_ALPHA_PATH) as src_dst:
         assert utils.has_alpha_band(src_dst)
+        assert not utils.has_mask_band(src_dst)
 
     with rasterio.open(COG_DST) as src_dst:
         assert not utils.has_alpha_band(src_dst)
@@ -261,6 +262,7 @@ def test_has_mask():
     """Should return True."""
     with rasterio.open(S3_MASK_PATH) as src_dst:
         assert utils.has_mask_band(src_dst)
+        assert not utils.has_alpha_band(src_dst)
 
     with rasterio.open(COG_DST) as src_dst:
         assert not utils.has_mask_band(src_dst)
