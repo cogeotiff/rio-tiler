@@ -30,7 +30,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="2.0b11",
+    version="2.0b12",
     python_requires=">=3.5",
     description="Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.",
     long_description=readme,

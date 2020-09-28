@@ -1,3 +1,7 @@
+## 2.0b12 (2020-09-28)
+
+* Make sure Alpha band isn't considered as an internal mask by `utils.has_mask_band`
+
 ## 2.0b11 (2020-09-24)
 
 * reduce verbosity in `rio_tiler.tasks.filter_tasks` exception logging (#266).
