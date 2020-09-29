@@ -98,8 +98,7 @@ class MedianMethod(MosaicMethodBase):
         """Return data and mask."""
         if self.tile:
             tile = numpy.ma.median(numpy.ma.stack(self.tile, axis=0), axis=0)
-            if self.enforce_data_type:
-                tile = tile.astype(self.tile[0].dtype)
+            tile = tile.astype(self.tile[0].dtype) if self.enforce_data_type else tile
             return tile.data, ~tile.mask[0] * 255
         else:
             return None, None
@@ -115,6 +114,7 @@ class StdevMethod(MosaicMethodBase):
     def __init__(self, enforce_data_type=True):
         """Overwrite base and init Stdev method."""
         super(StdevMethod, self).__init__()
+        self.enforce_data_type = enforce_data_type
         self.tile = []
 
     @property
@@ -122,6 +122,7 @@ class StdevMethod(MosaicMethodBase):
         """Return data and mask."""
         if self.tile:
             tile = numpy.ma.std(numpy.ma.stack(self.tile, axis=0), axis=0)
+            tile = tile.astype(self.tile[0].dtype) if self.enforce_data_type else tile
             return tile.data, ~tile.mask[0] * 255
         else:
             return None, None
@@ -134,22 +135,26 @@ class GeoMedianMethod(MosaicMethodBase):
 
     def __init__(self, enforce_data_type=True):
         super(GeoMedianMethod, self).__init__()
+        self.enforce_data_type = enforce_data_type
         self.tile = []
 
     @property
     def data(self):
         """Return data and mask."""
         if self.tile:
-            # Call Dale's function here
+            # Convert with rescaling factor to float32 for input to Dale's hdmedians
             stacked_tile = (numpy.ma.stack(self.tile, axis=1) / 10000).astype(numpy.float32)
             b, t, y, x = stacked_tile.shape
             tile = numpy.ma.zeros((b, y, x)).astype(numpy.float32)
 
+            # TODO: How to implement geomedian without introducing too many new dependencies?
             for xid in range(x):     # for each x-axis
                 for yid in range(y): # for each y-axis
                     tile[:, yid, xid] = hd.geomedian(stacked_tile[:, :, yid, xid])
 
-            return (tile * 10000).astype(numpy.uint16), (tile[0] != 0) * 255
+            # Convert back to uint16
+            tile = (tile * 10000).astype(self.tile[0].dtype) if self.enforce_data_type else (tile * 10000)
+            return tile.data, (tile[0] != 0) * 255
         else:
             return None, None
 
@@ -162,6 +167,7 @@ class MaxIndexMethod(MosaicMethodBase):
     def __init__(self, enforce_data_type=True, formula='(b2-b1)/(b2+b1)'):
         super(MaxIndexMethod, self).__init__()
         self.tile = []
+        self.enforce_data_type = enforce_data_type
         self.formula = formula
 
     @property
@@ -182,7 +188,9 @@ class MaxIndexMethod(MosaicMethodBase):
             argmax_index = numpy.ma.argmax(index, axis=0)
             ixgrid = numpy.ix_(numpy.arange(t), numpy.arange(y), numpy.arange(x))
             tile = tile[argmax_index, :, ixgrid[1], ixgrid[2]].squeeze(axis=0)
-            return numpy.moveaxis(tile.data, -1, 0), numpy.moveaxis(~tile.mask, -1, 0)[0] * 255
+            tile = numpy.moveaxis(tile, -1, 0).astype(self.tile[0].dtype) if self.enforce_data_type \
+                else numpy.moveaxis(tile, -1, 0)
+            return tile.data, ~tile.mask[0] * 255
         else:
             return None, None
 
