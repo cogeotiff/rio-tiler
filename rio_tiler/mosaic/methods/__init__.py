@@ -7,4 +7,6 @@ from .defaults import (  # noqa
     MeanMethod,
     MedianMethod,
     StdevMethod,
+    GeoMedianMethod,
+    MaxIndexMethod
 )

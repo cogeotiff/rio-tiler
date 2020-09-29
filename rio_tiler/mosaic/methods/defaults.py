@@ -3,6 +3,7 @@
 import numpy
 
 from .base import MosaicMethodBase
+import hdmedians as hd
 
 
 class FirstMethod(MosaicMethodBase):
@@ -122,6 +123,66 @@ class StdevMethod(MosaicMethodBase):
         if self.tile:
             tile = numpy.ma.std(numpy.ma.stack(self.tile, axis=0), axis=0)
             return tile.data, ~tile.mask[0] * 255
+        else:
+            return None, None
+
+    def feed(self, tile):
+        """Add data to tile."""
+        self.tile.append(tile)
+
+class GeoMedianMethod(MosaicMethodBase):
+
+    def __init__(self, enforce_data_type=True):
+        super(GeoMedianMethod, self).__init__()
+        self.tile = []
+
+    @property
+    def data(self):
+        """Return data and mask."""
+        if self.tile:
+            # Call Dale's function here
+            stacked_tile = (numpy.ma.stack(self.tile, axis=1) / 10000).astype(numpy.float32)
+            b, t, y, x = stacked_tile.shape
+            tile = numpy.ma.zeros((b, y, x)).astype(numpy.float32)
+
+            for xid in range(x):     # for each x-axis
+                for yid in range(y): # for each y-axis
+                    tile[:, yid, xid] = hd.geomedian(stacked_tile[:, :, yid, xid])
+
+            return (tile * 10000).astype(numpy.uint16), (tile[0] != 0) * 255
+        else:
+            return None, None
+
+    def feed(self, tile):
+        """Add data to tile."""
+        self.tile.append(tile)
+
+class MaxIndexMethod(MosaicMethodBase):
+
+    def __init__(self, enforce_data_type=True, formula='(b2-b1)/(b2+b1)'):
+        super(MaxIndexMethod, self).__init__()
+        self.tile = []
+        self.formula = formula
+
+    @property
+    def data(self):
+        """Return data and mask."""
+        if self.tile:
+            tile = numpy.ma.stack(self.tile, axis=0)
+            t, b, y, x = tile.shape
+
+            for n in range(b):
+               self.formula = self.formula.replace(f'b{n+1}', f'tile[:, {n}, ...]')
+            try:
+                index = eval(self.formula)
+            except NameError:
+                raise NameError("the provided formula is invalid. "
+                                 " bands must be specified with the letter 'b' followed with the band number, eg. 'b1'")
+
+            argmax_index = numpy.ma.argmax(index, axis=0)
+            ixgrid = numpy.ix_(numpy.arange(t), numpy.arange(y), numpy.arange(x))
+            tile = tile[argmax_index, :, ixgrid[1], ixgrid[2]].squeeze(axis=0)
+            return numpy.moveaxis(tile.data, -1, 0), numpy.moveaxis(~tile.mask, -1, 0)[0] * 255
         else:
             return None, None
 

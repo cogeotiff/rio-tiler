@@ -156,6 +156,24 @@ def test_mosaic_tiler():
     assert m.all()
     assert t[0][-1][-1] == 8682
 
+    # Test max index pixel selection
+    (t, m), assets_used = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, pixel_selection=defaults.MaxIndexMethod
+    )
+    assert t.shape == (3, 256, 256)
+    assert m.shape == (256, 256)
+    assert m.all()
+    assert t[0][-1][-1] == 8057
+
+    # Test geomedian index selection
+    (t, m), assets_used = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, pixel_selection=defaults.GeoMedianMethod
+    )
+    assert t.shape == (3, 256, 256)
+    assert m.shape == (256, 256)
+    assert m.all()
+    assert t[0][-1][-1] == 8369
+
     # Test invalid Pixel Selection class
     with pytest.raises(InvalidMosaicMethod):
 
@@ -163,6 +181,12 @@ def test_mosaic_tiler():
             pass
 
         mosaic.mosaic_reader(assets, _read_tile, x, y, z, pixel_selection=aClass())
+
+    # Test invalid Pixel Selection class
+    with pytest.raises(NameError):
+
+        mosaic.mosaic_reader(assets, _read_tile, x, y, z,
+                             pixel_selection=defaults.MaxIndexMethod(formula='(t2-t1)/(t2+t1)'))
 
     # test with preview
     # NOTE: We need to fix the output width and height because each preview could have different size
