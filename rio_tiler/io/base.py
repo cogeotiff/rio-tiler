@@ -21,16 +21,6 @@ class BaseReader(metaclass=abc.ABCMeta):
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
 
-    @abc.abstractmethod
-    def __enter__(self):
-        """Support using with Context Managers."""
-        ...
-
-    @abc.abstractmethod
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        ...
-
     @property
     def center(self) -> Tuple[float, float, int]:
         """Dataset center + minzoom."""
@@ -100,15 +90,6 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
     reader_options: Dict = attr.ib(factory=dict)
     bounds: Tuple[float, float, float, float] = attr.ib(init=False)
     assets: Sequence[str] = attr.ib(init=False)
-
-    @abc.abstractmethod
-    def __enter__(self):
-        """Support using with Context Managers."""
-        ...
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
 
     @abc.abstractmethod
     def _get_asset_url(self, asset: str) -> str:
