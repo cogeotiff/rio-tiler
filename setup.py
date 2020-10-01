@@ -19,18 +19,12 @@ inst_reqs = [
 extra_reqs = {
     "test": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
     "dev": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo", "pre-commit"],
-    "docs": [
-        "nbconvert==5.6.1",
-        "mkdocs",
-        "mkdocs-material",
-        "pygments",
-        "mkdocs-jupyter",
-    ],
+    "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
 }
 
 setup(
     name="rio-tiler",
-    version="2.0b12",
+    version="2.0b13",
     python_requires=">=3.5",
     description="Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.",
     long_description=readme,

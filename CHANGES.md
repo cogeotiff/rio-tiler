@@ -1,4 +1,4 @@
-## Next (TBD) - Master
+## 2.0b13 (2020-10-01)
 
 * remove ContextManager requirement for `rio_tiler.io.base.BaseReader` and `rio_tiler.io.base.MultiBaseReader` base classes.
 * move ContextManager properties definition to `__attrs_post_init__` method in `rio_tiler.io.STACReader` and `rio_tiler.io.COGReader` (ref: https://github.com/cogeotiff/rio-tiler-pds/issues/21)
