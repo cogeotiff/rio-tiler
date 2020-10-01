@@ -140,8 +140,7 @@ class COGReader(BaseReader):
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Support using with Context Managers."""
-        if self.filepath:
-            self.dataset.close()
+        self.close()
 
     def _get_zooms(self):
         """Calculate raster min/max zoom level."""
