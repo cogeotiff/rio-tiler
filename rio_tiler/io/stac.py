@@ -153,16 +153,14 @@ class STACReader(MultiBaseReader):
     exclude_assets: Optional[Set[str]] = attr.ib(default=None)
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
+
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
 
-    def __enter__(self):
-        """Support using with Context Managers."""
+    def __attrs_post_init__(self):
+        """Define _kwargs, open dataset and get info."""
         self.item = self.item or fetch(self.filepath)
-
-        # Get Zooms from proj: ?
         self.bounds = self.item["bbox"]
-
         self.assets = list(
             _get_assets(
                 self.item,
@@ -175,7 +173,13 @@ class STACReader(MultiBaseReader):
         if not self.assets:
             raise MissingAssets("No valid asset found")
 
+    def __enter__(self):
+        """Support using with Context Managers."""
         return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
 
     def _get_asset_url(self, asset: str) -> str:
         """Validate asset names and return asset's url."""

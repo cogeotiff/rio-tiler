@@ -106,7 +106,7 @@ class COGReader(BaseReader):
     _kwargs: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     def __attrs_post_init__(self):
-        """Define _kwargs."""
+        """Define _kwargs, open dataset and get info."""
         if self.nodata is not None:
             self._kwargs["nodata"] = self.nodata
         if self.unscale is not None:
@@ -118,8 +118,6 @@ class COGReader(BaseReader):
         if self.post_process is not None:
             self._kwargs["post_process"] = self.post_process
 
-    def __enter__(self):
-        """Support using with Context Managers."""
         self.dataset = self.dataset or rasterio.open(self.filepath)
 
         self.bounds = transform_bounds(
@@ -131,6 +129,13 @@ class COGReader(BaseReader):
         if self.colormap is None:
             self._get_colormap()
 
+    def close(self):
+        """Close rasterio dataset."""
+        if self.filepath:
+            self.dataset.close()
+
+    def __enter__(self):
+        """Support using with Context Managers."""
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):

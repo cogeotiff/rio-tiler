@@ -1,3 +1,8 @@
+## Next (TBD) - Master
+
+* remove ContextManager requirement for `rio_tiler.io.base.BaseReader` and `rio_tiler.io.base.MultiBaseReader` base classes.
+* move ContextManager properties definition to `__attrs_post_init__` method in `rio_tiler.io.STACReader` and `rio_tiler.io.COGReader` (ref: https://github.com/cogeotiff/rio-tiler-pds/issues/21)
+
 ## 2.0b12 (2020-09-28)
 
 * Make sure Alpha band isn't considered as an internal mask by `utils.has_mask_band`
