@@ -45,6 +45,10 @@ class MissingAssets(RioTilerError):
     """Missing Assets."""
 
 
+class MissingBands(RioTilerError):
+    """Missing bands."""
+
+
 class ExpressionMixingWarning(UserWarning):
     """Expression and assets/indexes mixing."""
 

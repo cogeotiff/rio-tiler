@@ -8,6 +8,7 @@ import attr
 import mercantile
 import numpy
 import rasterio
+from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
@@ -587,3 +588,52 @@ def multi_metadata(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
 
     with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
         return list(executor.map(_worker, assets))
+
+
+@attr.s
+class GCPCOGReader(COGReader):
+    """Custom COG Reader with GCPS support.
+
+    Attributes:
+        src_dataset (DatasetReader): rasterio openned dataset.
+        dataset (WarpedVRT): rasterio WarpedVRT dataset.
+
+    """
+
+    def __attrs_post_init__(self):
+        """Define _kwargs, open dataset and get info."""
+        if self.nodata is not None:
+            self._kwargs["nodata"] = self.nodata
+        if self.unscale is not None:
+            self._kwargs["unscale"] = self.unscale
+        if self.resampling_method is not None:
+            self._kwargs["resampling_method"] = self.resampling_method
+        if self.vrt_options is not None:
+            self._kwargs["vrt_options"] = self.vrt_options
+        if self.post_process is not None:
+            self._kwargs["post_process"] = self.post_process
+
+        self.src_dataset = rasterio.open(self.filepath)
+        self.dataset = WarpedVRT(
+            self.src_dataset,
+            src_crs=self.src_dataset.gcps[1],
+            src_transform=transform.from_gcps(self.src_dataset.gcps[0]),
+            src_nodata=0,
+        )
+
+        self.bounds = transform_bounds(
+            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
+        )
+
+        if self.minzoom is None or self.maxzoom is None:
+            self._get_zooms()
+
+        if self.colormap is None:
+            self._get_colormap()
+
+        return self
+
+    def close(self):
+        """Close rasterio dataset."""
+        self.dataset.close()
+        self.src_dataset.close()
