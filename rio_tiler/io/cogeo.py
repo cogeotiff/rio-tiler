@@ -614,7 +614,6 @@ class GCPCOGReader(COGReader):
             self.src_dataset,
             src_crs=self.src_dataset.gcps[1],
             src_transform=transform.from_gcps(self.src_dataset.gcps[0]),
-            src_nodata=0,
         )
 
         self.bounds = transform_bounds(

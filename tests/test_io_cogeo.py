@@ -5,9 +5,11 @@ import os
 import mercantile
 import numpy
 import pytest
+from rasterio.io import DatasetReader
+from rasterio.vrt import WarpedVRT
 
 from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
-from rio_tiler.io import COGReader
+from rio_tiler.io import COGReader, GCPCOGReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -22,6 +24,7 @@ COG_CMAP = os.path.join(PREFIX, "cog_cmap.tif")
 COG_TAGS = os.path.join(PREFIX, "cog_tags.tif")
 COG_NODATA = os.path.join(PREFIX, "cog_nodata.tif")
 COG_SCALE = os.path.join(PREFIX, "cog_scale.tif")
+COG_GCPS = os.path.join(PREFIX, "cog_gcps.tif")
 
 
 def test_spatial_info_valid():
@@ -301,3 +304,27 @@ def test_COGReader_Options():
     with COGReader(COG_NODATA) as cog:
         pts_init = cog.point(lon, lat)
     assert pts[0] == pts_init[0] * 2
+
+
+def test_cog_with_internal_gcps():
+    """Make sure file gets re-projected using gcps."""
+    with GCPCOGReader(COG_GCPS, nodata=0) as cog:
+        assert cog.bounds
+        assert isinstance(cog.src_dataset, DatasetReader)
+        assert isinstance(cog.dataset, WarpedVRT)
+
+        assert cog.minzoom == 7
+        assert cog.maxzoom == 9
+
+        metadata = cog.info()
+        assert len(metadata["band_metadata"]) == 1
+        assert metadata["band_descriptions"] == [(1, "band1")]
+        metadata = cog.stats()
+        assert metadata[1]["max"] == 623
+
+        tile_z = 8
+        tile_x = 183
+        tile_y = 120
+        data, mask = cog.tile(tile_x, tile_y, tile_z)
+        assert data.shape == (1, 256, 256)
+        assert mask.shape == (256, 256)

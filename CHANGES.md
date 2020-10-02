@@ -1,3 +1,8 @@
+## 2.0b14.post2 (2020-10-02)
+
+* Fix bug in `MultiBandReader` (ref: https://github.com/cogeotiff/rio-tiler/issues/275) and add tests.
+
+
 ## 2.0b14.post1 (2020-10-02)
 
 * add `MultiBandReader` and `GCPCOGReader` in `rio_tiler.io` init.
