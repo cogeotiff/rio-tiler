@@ -421,7 +421,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, **self.reader_options) as cog:  # type: ignore
                 return cog.stats(*args, **kwargs)[1]
 
-        return multi_values(bands, _reader, pmin, pmax, *kwargs)
+        return multi_values(bands, _reader, pmin, pmax, **kwargs)
 
     def metadata(
         self,
