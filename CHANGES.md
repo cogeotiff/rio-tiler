@@ -1,3 +1,8 @@
+## 2.0b14 (2020-10-02)
+
+* Added back the Conctext Manager methods in `rio_tiler.io.base.BaseReader` but not as `@abc.abstractmethod` (ref: https://github.com/cogeotiff/rio-tiler/pull/273#discussion_r498937943)
+* Move `rio_tiler_pds.reader.MultiBandReader` and `rio_tiler_pds.reader.GCPCOGReader` to rio-tiler (https://github.com/cogeotiff/rio-tiler/pull/273)
+
 ## 2.0b13 (2020-10-01)
 
 * remove ContextManager requirement for `rio_tiler.io.base.BaseReader` and `rio_tiler.io.base.MultiBaseReader` base classes.

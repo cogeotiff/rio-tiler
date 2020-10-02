@@ -173,14 +173,6 @@ class STACReader(MultiBaseReader):
         if not self.assets:
             raise MissingAssets("No valid asset found")
 
-    def __enter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
-
     def _get_asset_url(self, asset: str) -> str:
         """Validate asset names and return asset's url."""
         if asset not in self.assets:

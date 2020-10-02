@@ -135,10 +135,6 @@ class COGReader(BaseReader):
         if self.filepath:
             self.dataset.close()
 
-    def __enter__(self):
-        """Support using with Context Managers."""
-        return self
-
     def __exit__(self, exc_type, exc_value, traceback):
         """Support using with Context Managers."""
         self.close()
