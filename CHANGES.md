@@ -1,3 +1,7 @@
+## 2.0b14.post1 (2020-10-02)
+
+* add `MultiBandReader` and `GCPCOGReader` in `rio_tiler.io` init.
+
 ## 2.0b14 (2020-10-02)
 
 * Added back the Conctext Manager methods in `rio_tiler.io.base.BaseReader` but not as `@abc.abstractmethod` (ref: https://github.com/cogeotiff/rio-tiler/pull/273#discussion_r498937943)
