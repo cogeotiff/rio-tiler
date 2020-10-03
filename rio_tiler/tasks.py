@@ -20,10 +20,10 @@ class TaskManager(abc.ABC):
     max_threads: int = attr.ib()
 
     @classmethod
-    def create_from_env(cls):
+    def create_from_env(cls) -> "TaskManager":
         """Create from environment."""
         if MAX_THREADS == 1:
-            return SingleThreadedManager()
+            return SingleThreadedManager(max_threads=MAX_THREADS)
         else:
             return MultiThreadedManager(max_threads=MAX_THREADS)
 
@@ -116,7 +116,7 @@ class MultiThreadedManager(TaskManager):
                 logger.info(err)
 
 
-manager = TaskManager.create_from_env()
+manager: TaskManager = TaskManager.create_from_env()
 
 
 def multi_arrays(
