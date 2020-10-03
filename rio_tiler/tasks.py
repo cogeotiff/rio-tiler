@@ -2,7 +2,7 @@
 
 import logging
 from concurrent import futures
-from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, Generator, Sequence, Tuple, Union
 
 import numpy
 
@@ -15,9 +15,7 @@ TaskType = Union[
 ]
 
 
-def filter_tasks(
-    tasks: TaskType, allowed_exceptions: Optional[Tuple] = None,
-) -> Generator:
+def filter_tasks(tasks: TaskType, allowed_exceptions: Tuple = (),) -> Generator:
     """
     Filter tasks to remove Exceptions.
 
@@ -33,9 +31,6 @@ def filter_tasks(
     Successful task's result
 
     """
-    if not allowed_exceptions:
-        allowed_exceptions = ()
-
     for future, asset in tasks:
         try:
             if isinstance(future, futures.Future):
@@ -44,10 +39,11 @@ def filter_tasks(
                 yield future, asset
         except allowed_exceptions as err:
             logging.info(err)
-            pass
 
 
-def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType:
+def create_tasks(
+    reader: Callable, assets, threads, *args, allowed_exceptions: Tuple = (), **kwargs
+) -> TaskType:
     """Create Future Tasks."""
     if threads and threads > 1:
         with futures.ThreadPoolExecutor(max_workers=threads) as executor:
@@ -56,7 +52,11 @@ def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType
                 for asset in assets
             ]
     else:
-        return ((reader(asset, *args, **kwargs), asset) for asset in assets)
+        for asset in assets:
+            try:
+                yield (reader(asset, *args, **kwargs), asset)
+            except allowed_exceptions as err:
+                logging.info(err)
 
 
 def multi_arrays(

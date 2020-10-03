@@ -78,7 +78,14 @@ def mosaic_reader(
     assets_used: List[str] = []
 
     for chunks in _chunks(assets, chunk_size):
-        tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
+        tasks = create_tasks(
+            reader,
+            chunks,
+            threads,
+            *args,
+            allowed_exceptions=(TileOutsideBounds,),
+            **kwargs,
+        )
         for (t, m), asset in filter_tasks(
             tasks, allowed_exceptions=(TileOutsideBounds,)
         ):
