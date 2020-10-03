@@ -117,7 +117,7 @@ class MultiThreadedManager(TaskManager):
                 logger.info(err)
 
 
-manager: TaskManager = TaskManager.create_from_env()
+task_manager: TaskManager = TaskManager.create_from_env()
 
 
 def multi_arrays(
@@ -128,8 +128,8 @@ def multi_arrays(
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Multi array."""
-    tasks = manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
-    data, masks = zip(*[r for r, _ in manager.filter_tasks(tasks)])
+    tasks = task_manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
+    data, masks = zip(*[r for r, _ in task_manager.filter_tasks(tasks)])
     data = numpy.concatenate(data)
     mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
     return data, mask
@@ -143,5 +143,5 @@ def multi_values(
     **kwargs: Any,
 ) -> Dict:
     """Multi Values."""
-    tasks = manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
-    return {asset: val for val, asset in manager.filter_tasks(tasks)}
+    tasks = task_manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
+    return {asset: val for val, asset in task_manager.filter_tasks(tasks)}

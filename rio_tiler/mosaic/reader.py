@@ -7,7 +7,7 @@ import numpy
 
 from ..constants import MAX_THREADS
 from ..errors import InvalidMosaicMethod, TileOutsideBounds
-from ..tasks import manager
+from ..tasks import task_manager
 from ..utils import _chunks
 from .methods.base import MosaicMethodBase
 from .methods.defaults import FirstMethod
@@ -78,8 +78,10 @@ def mosaic_reader(
     assets_used: List[str] = []
 
     for chunks in _chunks(assets, chunk_size):
-        tasks = manager.create_tasks(reader, chunks, *args, threads=threads, **kwargs)
-        for (t, m), asset in manager.filter_tasks(
+        tasks = task_manager.create_tasks(
+            reader, chunks, *args, threads=threads, **kwargs
+        )
+        for (t, m), asset in task_manager.filter_tasks(
             tasks, allowed_exceptions=(TileOutsideBounds,)
         ):
             assets_used.append(asset)
