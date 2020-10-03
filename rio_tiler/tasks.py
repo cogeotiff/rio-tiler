@@ -19,10 +19,6 @@ class TaskManager(abc.ABC):
 
     max_threads: int = attr.ib()
 
-    def _filter_kwargs(self, d: Dict) -> Dict:
-        """Prevent certain kwargs from being passed to the callable"""
-        return {k: v for k, v in d.items() if k != "threads"}
-
     @classmethod
     def create_from_env(cls) -> "TaskManager":
         """Create from environment."""
@@ -48,13 +44,10 @@ class SingleThreadedManager(TaskManager):
     max_threads: int = 1
 
     def create_tasks(
-        self, reader: Callable, assets, *args, **kwargs
+        self, reader: Callable, assets, *args, threads: int = None, **kwargs
     ) -> Generator[Tuple[Callable, str], None, None]:
         """Create Future Tasks."""
-        return (
-            (reader(asset, *args, **self._filter_kwargs(kwargs)), asset)
-            for asset in assets
-        )
+        return ((reader(asset, *args, **kwargs), asset) for asset in assets)
 
     def filter_tasks(
         self, tasks: Iterable, allowed_exceptions: Tuple = ()
@@ -89,18 +82,13 @@ class MultiThreadedManager(TaskManager):
     max_threads: int
 
     def create_tasks(
-        self, reader: Callable, assets, *args, **kwargs
+        self, reader: Callable, assets, *args, threads: int = None, **kwargs
     ) -> Sequence[Tuple[futures.Future, str]]:
         """Create Future Tasks."""
-        max_workers = kwargs.get("threads", None) or self.max_threads
+        max_workers = threads or self.max_threads
         with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             return [
-                (
-                    executor.submit(
-                        reader, asset, *args, **self._filter_kwargs(kwargs)
-                    ),
-                    asset,
-                )
+                (executor.submit(reader, asset, *args, **kwargs), asset,)
                 for asset in assets
             ]
 
