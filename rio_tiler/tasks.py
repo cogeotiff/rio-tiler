@@ -85,7 +85,8 @@ class MultiThreadedManager(TaskManager):
         self, reader: Callable, assets, *args, **kwargs
     ) -> Sequence[Tuple[futures.Future, str]]:
         """Create Future Tasks."""
-        with futures.ThreadPoolExecutor(max_workers=self.max_threads) as executor:
+        max_workers = kwargs.pop("threads", None) or self.max_threads
+        with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             return [
                 (executor.submit(reader, asset, *args, **kwargs), asset)
                 for asset in assets
@@ -120,10 +121,14 @@ manager: TaskManager = TaskManager.create_from_env()
 
 
 def multi_arrays(
-    assets: Sequence[str], reader: Callable, *args: Any, **kwargs: Any,
+    assets: Sequence[str],
+    reader: Callable,
+    *args: Any,
+    threads: int = MAX_THREADS,
+    **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Multi array."""
-    tasks = manager.create_tasks(reader, assets, *args, **kwargs)
+    tasks = manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
     data, masks = zip(*[r for r, _ in manager.filter_tasks(tasks)])
     data = numpy.concatenate(data)
     mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
@@ -131,8 +136,12 @@ def multi_arrays(
 
 
 def multi_values(
-    assets: Sequence[str], reader: Callable, *args: Any, **kwargs: Any,
+    assets: Sequence[str],
+    reader: Callable,
+    *args: Any,
+    threads: int = MAX_THREADS,
+    **kwargs: Any,
 ) -> Dict:
     """Multi Values."""
-    tasks = manager.create_tasks(reader, assets, *args, **kwargs)
+    tasks = manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
     return {asset: val for val, asset in manager.filter_tasks(tasks)}
