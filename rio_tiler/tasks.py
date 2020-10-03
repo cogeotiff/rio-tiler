@@ -2,7 +2,7 @@
 import abc
 import logging
 from concurrent import futures
-from typing import Any, Callable, Dict, Generator, Iterable, Sequence, Tuple
+from typing import Any, Callable, Dict, Generator, Iterable, Optional, Sequence, Tuple
 
 import attr
 import numpy
@@ -22,7 +22,7 @@ class TaskManager(abc.ABC):
     @classmethod
     def create_from_env(cls) -> "TaskManager":
         """Create from environment."""
-        if MAX_THREADS == 1:
+        if MAX_THREADS <= 1:
             return SingleThreadedManager(max_threads=MAX_THREADS)
         else:
             return MultiThreadedManager(max_threads=MAX_THREADS)
@@ -44,7 +44,7 @@ class SingleThreadedManager(TaskManager):
     max_threads: int = 1
 
     def create_tasks(
-        self, reader: Callable, assets, *args, threads: int = None, **kwargs
+        self, reader: Callable, assets, *args, threads: Optional[int] = None, **kwargs
     ) -> Generator[Tuple[Callable, str], None, None]:
         """Create Future Tasks."""
         return ((reader(asset, *args, **kwargs), asset) for asset in assets)
@@ -82,7 +82,7 @@ class MultiThreadedManager(TaskManager):
     max_threads: int
 
     def create_tasks(
-        self, reader: Callable, assets, *args, threads: int = None, **kwargs
+        self, reader: Callable, assets, *args, threads: Optional[int] = None, **kwargs
     ) -> Sequence[Tuple[futures.Future, str]]:
         """Create Future Tasks."""
         max_workers = threads or self.max_threads
