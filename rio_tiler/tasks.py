@@ -2,7 +2,17 @@
 
 import logging
 from concurrent import futures
-from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    Iterator,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy
 
@@ -11,7 +21,7 @@ from .constants import MAX_THREADS
 logger = logging.getLogger()
 logger.setLevel(logging.ERROR)
 TaskType = Union[
-    Generator[Tuple[Callable, str], None, None], Sequence[Tuple[futures.Future, str]]
+    Generator[Tuple[Callable, str], None, None], Iterator[Tuple[futures.Future, str]],
 ]
 
 
@@ -36,12 +46,15 @@ def filter_tasks(
     if not allowed_exceptions:
         allowed_exceptions = ()
 
-    for future, asset in tasks:
+    while True:
         try:
+            future, asset = next(tasks)  # type: ignore
             if isinstance(future, futures.Future):
                 yield future.result(), asset
             else:
                 yield future, asset
+        except StopIteration:
+            break
         except allowed_exceptions as err:
             logging.info(err)
             pass
@@ -51,10 +64,12 @@ def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType
     """Create Future Tasks."""
     if threads and threads > 1:
         with futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            return [
-                (executor.submit(reader, asset, *args, **kwargs), asset)
-                for asset in assets
-            ]
+            return iter(
+                [
+                    (executor.submit(reader, asset, *args, **kwargs), asset)
+                    for asset in assets
+                ]
+            )
     else:
         return ((reader(asset, *args, **kwargs), asset) for asset in assets)
 

@@ -26,6 +26,11 @@ xp = 150
 yp = 180
 zp = 9
 
+# Outside tile
+xo = 200
+yo = 180
+zo = 9
+
 
 def _read_tile(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Read tile from an asset"""
@@ -190,6 +195,13 @@ def test_mosaic_tiler_Stdev():
 def test_threads():
     """Test mosaic tiler."""
     assets = [asset1, asset2, asset1, asset2, asset1, asset2]
+
+    # TileOutSide bounds should be ignore and thus Tile is None
+    (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=2)
+    assert not tnothread
+
+    (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=0)
+    assert not tnothread
 
     (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=0)
     (tmulti_threads, _), _ = mosaic.mosaic_reader(
