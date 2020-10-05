@@ -301,7 +301,7 @@ class COGReader(BaseReader):
         tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
         if not tile_exists(self.bounds, tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
-                "Tile {}/{}/{} is outside image bounds".format(tile_z, tile_x, tile_y)
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
             )
 
         tile_bounds = mercantile.xy_bounds(tile)
