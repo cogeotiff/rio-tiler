@@ -17,15 +17,15 @@ logger.setLevel(logging.ERROR)
 class TaskManager(abc.ABC):
     """Task manager base class"""
 
-    max_threads: int = attr.ib()
+    threads: int = attr.ib(init=False)
 
     @classmethod
-    def create_from_env(cls) -> "TaskManager":
+    def create(cls, threads) -> "TaskManager":
         """Create from environment."""
-        if MAX_THREADS <= 1:
-            return SingleThreadedManager(max_threads=MAX_THREADS)
+        if threads <= 1:
+            return SingleThreadedManager(threads=threads)
         else:
-            return MultiThreadedManager(max_threads=MAX_THREADS)
+            return MultiThreadedManager(threads=threads)
 
     @abc.abstractmethod
     def create_tasks(self, reader: Callable, assets, *args, **kwargs) -> Iterable:
@@ -41,7 +41,7 @@ class TaskManager(abc.ABC):
 class SingleThreadedManager(TaskManager):
     """Single threaded task management"""
 
-    max_threads: int = 1
+    threads: int = attr.ib(default=1)
 
     def create_tasks(
         self, reader: Callable, assets, *args, threads: Optional[int] = None, **kwargs
@@ -67,25 +67,28 @@ class SingleThreadedManager(TaskManager):
         Successful task's result
 
         """
-        for ret, asset in tasks:
+        while True:
             try:
+                ret, asset = next(tasks)  # type: ignore
                 yield ret, asset
             except allowed_exceptions as err:
                 logging.info(err)
                 pass
+            except StopIteration:
+                break
 
 
 @attr.s
 class MultiThreadedManager(TaskManager):
     """Multi threaded task management"""
 
-    max_threads: int
+    threads: int = attr.ib()
 
     def create_tasks(
         self, reader: Callable, assets, *args, threads: Optional[int] = None, **kwargs
     ) -> Sequence[Tuple[futures.Future, str]]:
         """Create Future Tasks."""
-        max_workers = threads or self.max_threads
+        max_workers = threads or self.threads
         with futures.ThreadPoolExecutor(max_workers=max_workers) as executor:
             return [
                 (executor.submit(reader, asset, *args, **kwargs), asset,)
@@ -117,9 +120,6 @@ class MultiThreadedManager(TaskManager):
                 logger.info(err)
 
 
-task_manager: TaskManager = TaskManager.create_from_env()
-
-
 def multi_arrays(
     assets: Sequence[str],
     reader: Callable,
@@ -128,7 +128,9 @@ def multi_arrays(
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Multi array."""
-    tasks = task_manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
+    task_manager = TaskManager.create(threads=threads)
+    tasks = task_manager.create_tasks(reader, assets, *args, **kwargs)
+
     data, masks = zip(*[r for r, _ in task_manager.filter_tasks(tasks)])
     data = numpy.concatenate(data)
     mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
@@ -143,5 +145,7 @@ def multi_values(
     **kwargs: Any,
 ) -> Dict:
     """Multi Values."""
-    tasks = task_manager.create_tasks(reader, assets, *args, threads=threads, **kwargs)
+    task_manager = TaskManager.create(threads=threads)
+    tasks = task_manager.create_tasks(reader, assets, *args, **kwargs)
+
     return {asset: val for val, asset in task_manager.filter_tasks(tasks)}
