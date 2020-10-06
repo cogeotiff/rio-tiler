@@ -1,6 +1,5 @@
 """rio_tiler.tasks: tools for handling rio-tiler's future tasks."""
 
-import logging
 from concurrent import futures
 from typing import (
     Any,
@@ -17,9 +16,8 @@ from typing import (
 import numpy
 
 from .constants import MAX_THREADS
+from .logger import logger
 
-logger = logging.getLogger()
-logger.setLevel(logging.ERROR)
 TaskType = Union[
     Generator[Tuple[Callable, str], None, None], Iterator[Tuple[futures.Future, str]],
 ]
@@ -56,7 +54,7 @@ def filter_tasks(
         except StopIteration:
             break
         except allowed_exceptions as err:
-            logging.info(err)
+            logger.info(err)
             pass
 
 

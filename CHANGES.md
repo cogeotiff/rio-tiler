@@ -1,7 +1,11 @@
+## 2.0b15 (2020-10-05)
+
+* Fix missing Exception catching when running task outside threads (ref: https://github.com/developmentseed/titiler/issues/130).
+* add rio-tiler logger (https://github.com/cogeotiff/rio-tiler/issues/277).
+
 ## 2.0b14.post2 (2020-10-02)
 
 * Fix bug in `MultiBandReader` (ref: https://github.com/cogeotiff/rio-tiler/issues/275) and add tests.
-
 
 ## 2.0b14.post1 (2020-10-02)
 
