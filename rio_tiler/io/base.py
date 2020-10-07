@@ -8,15 +8,22 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 import attr
 import numpy
 
-from ..errors import ExpressionMixingWarning, MissingAssets, MissingBands
+from ..errors import (
+    ExpressionMixingWarning,
+    MissingAssets,
+    MissingBands,
+    TileOutsideBounds,
+)
 from ..expression import apply_expression
 from ..tasks import multi_arrays, multi_values
+from ..tms import TileMatrixSet, default_tms
 
 
 @attr.s
 class BaseReader(metaclass=abc.ABCMeta):
     """Rio-tiler.io BaseReader."""
 
+    tms: TileMatrixSet = attr.ib(default=default_tms)
     bounds: Tuple[float, float, float, float] = attr.ib(init=False)
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
@@ -89,6 +96,16 @@ class BaseReader(metaclass=abc.ABCMeta):
         """Read a value from a Dataset."""
         ...
 
+    def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
+        """Check if a tile is inside a the dataset bounds."""
+        tile_bounds = self.tms.bounds(tile_x, tile_y, tile_z)
+        return (
+            (tile_bounds[0] < self.bounds[2])
+            and (tile_bounds[2] > self.bounds[0])
+            and (tile_bounds[3] > self.bounds[1])
+            and (tile_bounds[1] < self.bounds[3])
+        )
+
 
 @attr.s
 class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
@@ -96,6 +113,8 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
+    tms: TileMatrixSet = attr.ib(default=default_tms)
+
     assets: Sequence[str] = attr.ib(init=False)
 
     @abc.abstractmethod
@@ -121,7 +140,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.info()
 
         return multi_values(assets, _reader, *args, **kwargs)
@@ -142,7 +161,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.stats(*args, **kwargs)
 
         return multi_values(assets, _reader, pmin, pmax, **kwargs)
@@ -163,7 +182,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.metadata(*args, **kwargs)
 
         return multi_values(assets, _reader, pmin, pmax, **kwargs)
@@ -181,6 +200,11 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         **kwargs: Any,
     ) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Read a Mercator Map tile multiple assets."""
+        if not self.tile_exists(tile_z, tile_x, tile_y):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
+            )
+
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -202,7 +226,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             asset: str, *args: Any, **kwargs: Any
         ) -> Tuple[numpy.ndarray, numpy.ndarray]:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
 
         data, mask = multi_arrays(
@@ -253,7 +277,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             asset: str, *args: Any, **kwargs: Any
         ) -> Tuple[numpy.ndarray, numpy.ndarray]:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
 
         data, mask = multi_arrays(
@@ -295,7 +319,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
 
         data, mask = multi_arrays(
@@ -339,7 +363,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs: Any) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.point(*args, **kwargs)
 
         data = multi_values(
@@ -360,6 +384,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
+    tms: TileMatrixSet = attr.ib(default=default_tms)
+
     bands: Sequence[str] = attr.ib(init=False)
 
     @abc.abstractmethod
@@ -385,7 +411,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> Dict:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.info()
 
         bands_metadata = multi_values(bands, _reader, *args, **kwargs)
@@ -418,7 +444,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args, **kwargs) -> Dict:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.stats(*args, **kwargs)[1]
 
         return multi_values(bands, _reader, pmin, pmax, **kwargs)
@@ -439,7 +465,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args, **kwargs) -> Dict:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 meta = cog.metadata(*args, **kwargs)
                 meta["statistics"] = meta["statistics"][1]
                 return meta
@@ -475,6 +501,11 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         **kwargs: Any,
     ) -> Tuple[numpy.ndarray, numpy.ndarray]:
         """Read a Mercator Map tile multiple bands."""
+        if not self.tile_exists(tile_z, tile_x, tile_y):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
+            )
+
         if isinstance(bands, str):
             bands = (bands,)
 
@@ -496,7 +527,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             band: str, *args: Any, **kwargs: Any
         ) -> Tuple[numpy.ndarray, numpy.ndarray]:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
 
         data, mask = multi_arrays(
@@ -547,7 +578,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             band: str, *args: Any, **kwargs: Any
         ) -> Tuple[numpy.ndarray, numpy.ndarray]:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
 
         data, mask = multi_arrays(
@@ -589,7 +620,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
 
         data, mask = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
@@ -631,7 +662,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args, **kwargs: Any) -> Dict:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.point(*args, **kwargs)[0]  # We only return the firt value
 
         data = multi_values(
