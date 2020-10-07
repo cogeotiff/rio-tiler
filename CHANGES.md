@@ -1,3 +1,10 @@
+## 2.0.0b16 (2020-10-07)
+
+* remove `pkg_resources` (https://github.com/pypa/setuptools/issues/510)
+* refactor default colormap lookup to use pathlib instead of pkg_resources.
+
+Note: We changed the versioning scheme to `{major}.{minor}.{path}{pre}{prenum}`
+
 ## 2.0b15 (2020-10-05)
 
 * Fix missing Exception catching when running task outside threads (ref: https://github.com/developmentseed/titiler/issues/130).
