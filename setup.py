@@ -17,6 +17,7 @@ inst_reqs = [
 ]
 
 extra_reqs = {
+    "tms": ["morecantile"],
     "test": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
     "dev": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo", "pre-commit"],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
