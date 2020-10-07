@@ -1,14 +1,16 @@
 """rio-tiler colormap functions."""
 
-import os
+import pathlib
 from typing import Dict, List, Sequence, Tuple, Union
 
 import numpy
 
-from .cmap_data import _default_cmaps
 from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidFormat
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
+
+
+_default_cmaps = list(pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy"))
 
 
 def _update_alpha(cmap: Dict, idx: Sequence[int], alpha: int = 0) -> None:
@@ -132,9 +134,7 @@ class ColorMaps(object):
 
     def __init__(self):
         """Load default CMAP names in a dict."""
-        self._data = {
-            os.path.splitext(os.path.basename(f))[0]: f for f in _default_cmaps
-        }
+        self._data = {f.stem: str(f) for f in _default_cmaps}
 
     def get(self, name: str) -> Dict:
         """Fetch a colormap."""

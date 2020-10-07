@@ -4,7 +4,7 @@ import numpy
 import pytest
 
 from rio_tiler import colormap
-from rio_tiler.cmap_data import _default_cmaps
+from rio_tiler.colormap import _default_cmaps
 from rio_tiler.errors import (
     ColorMapAlreadyRegistered,
     InvalidColorMapName,

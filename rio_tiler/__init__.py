@@ -1,7 +1,5 @@
 """rio-tiler."""
 
-import pkg_resources
-
 from . import (  # noqa
     colormap,
     constants,
@@ -16,4 +14,4 @@ from . import (  # noqa
     utils,
 )
 
-version = pkg_resources.get_distribution(__package__).version
+__version__ = "2.0.0-beta.15"
