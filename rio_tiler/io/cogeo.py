@@ -322,7 +322,7 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        tile_bounds = self.tms.xy_bounds(tile_x, tile_z, tile_z)
+        tile_bounds = self.tms.xy_bounds(tile_x, tile_y, tile_z)
         tile, mask = reader.part(
             self.dataset,
             tile_bounds,

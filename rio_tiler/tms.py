@@ -18,7 +18,7 @@ try:
 
 except ImportError:
 
-    Tile = mercantile.Tile
+    Tile = namedtuple("Tile", ["x", "y", "z"])  # type: ignore
     CoordsBbox = namedtuple("CoordsBbox", ["xmin", "ymin", "xmax", "ymax"])
     Coords = namedtuple("Coords", ["x", "y"])
 

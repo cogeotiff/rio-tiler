@@ -4,6 +4,7 @@ import math
 from typing import Tuple, Union
 
 from rasterio.io import DatasetReader, DatasetWriter
+from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
@@ -58,7 +59,7 @@ def zoom_for_pixelsize(pixel_size: float, max_z: int = 24, tilesize: int = 256) 
         if pixel_size > _meters_per_pixel(z, 0, tilesize=tilesize):
             return max(0, z - 1)  # We don't want to scale up
 
-    return max_z - 1
+    return max_z
 
 
 def get_zooms(
@@ -107,7 +108,8 @@ def get_zooms(
 
     max_zoom = zoom_for_pixelsize(adjusted_resolution, tilesize=tilesize)
 
-    ovr_resolution = adjusted_resolution * max(h, w) / tilesize
+    overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
+    ovr_resolution = adjusted_resolution * (2 ** overview_level)
     min_zoom = zoom_for_pixelsize(ovr_resolution, tilesize=tilesize)
 
     return (min_zoom, max_zoom)

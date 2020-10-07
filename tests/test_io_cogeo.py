@@ -50,7 +50,7 @@ def test_spatial_info_valid():
 
     with COGReader(COG_NODATA, maxzoom=12) as cog:
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 5
+        assert meta.get("minzoom") == 4
         assert meta.get("maxzoom") == 12
 
     with COGReader(COG_NODATA, minzoom=3, maxzoom=12) as cog:
