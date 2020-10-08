@@ -35,6 +35,25 @@ nav:
     - Create a Dynamic Tiler: 'advanced/dynamic_tiler.md'
   - Examples:
     - Mosaic: 'examples/Using-rio-tiler-mosaic.ipynb'
+  - API:
+    - rio_tiler.colormap: rio_tiler/colormap.md
+    - rio_tiler.constants: rio_tiler/constants.md
+    - rio_tiler.errors: rio_tiler/errors.md
+    - rio_tiler.expression: rio_tiler/expression.md
+    - rio_tiler.io:
+      - rio_tiler.io.base: rio_tiler/io/base.md
+      - rio_tiler.io.cogeo: rio_tiler/io/cogeo.md
+      - rio_tiler.io.stac: rio_tiler/io/stac.md
+    - rio_tiler.mercator: rio_tiler/mercator.md
+    - rio_tiler.mosaic:
+      - rio_tiler.mosaic.reader: rio_tiler/mosaic/reader.md
+      - rio_tiler.mosaic.methods:
+        - rio_tiler.mosaic.methods.base: rio_tiler/mosaic/methods/base.md
+        - rio_tiler.mosaic.methods.defaults: rio_tiler/mosaic/methods/defaults.md
+    - rio_tiler.profiles: rio_tiler/profiles.md
+    - rio_tiler.reader: rio_tiler/reader.md
+    - rio_tiler.tasks: rio_tiler/tasks.md
+    - rio_tiler.utils: rio_tiler/utils.md
   - Migration from v1.0 to v2.0: 'v2_migration.md'
   - Development - Contributing: 'contributing.md'
   - Release Notes: 'release-notes.md'
