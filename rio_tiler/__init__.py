@@ -14,4 +14,4 @@ from . import (  # noqa
     utils,
 )
 
-__version__ = "2.0.0-beta.16"
+__version__ = "2.0.0b16"
