@@ -12,12 +12,12 @@ inst_reqs = [
     "numexpr",
     "numpy",
     "mercantile",
-    "rasterio>=1.1.3",
+    "morecantile>=1.1,<2.0",
+    "rasterio>=1.1.7",
     "requests",
 ]
 
 extra_reqs = {
-    "tms": ["morecantile"],
     "test": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
     "dev": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo", "pre-commit"],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],

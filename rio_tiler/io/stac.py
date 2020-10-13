@@ -6,10 +6,10 @@ from typing import Dict, Iterator, Optional, Set, Type
 from urllib.parse import urlparse
 
 import attr
+import morecantile
 import requests
 
 from ..errors import InvalidAssetName, MissingAssets
-from ..tms import TileMatrixSet, default_tms
 from ..utils import aws_get_object
 from .base import BaseReader, MultiBaseReader
 from .cogeo import COGReader
@@ -24,6 +24,8 @@ DEFAULT_VALID_TYPE = {
     "application/x-hdf5",
     "application/x-hdf",
 }
+
+default_tms = morecantile.tms.get("WebMercatorQuad")
 
 
 @functools.lru_cache(maxsize=512)
@@ -148,7 +150,7 @@ class STACReader(MultiBaseReader):
 
     filepath: str = attr.ib()
     item: Dict = attr.ib(default=None)
-    tms: TileMatrixSet = attr.ib(default=default_tms)
+    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
     minzoom: int = attr.ib(default=0)
     maxzoom: int = attr.ib(default=30)
     include_assets: Optional[Set[str]] = attr.ib(default=None)

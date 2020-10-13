@@ -1,3 +1,18 @@
+## 2.0.0b17 (2020-10-13)
+
+* switch to morecantile for TMS definition (ref: https://github.com/cogeotiff/rio-tiler/issues/283)
+* add tms options in Readers (breaking change if you create custom Reader from BaseReader)
+* add tile_bounds vs bounds check in tile methods for MultiBands and MultiBase classes
+* add tile_exists method in BaseReader (take tms in account)
+* adapt zooms calculation in COGReader
+
+Deprecated function
+
+- rio_tiler.reader.tile
+- rio_tiler.utils.geotiff_options
+- rio_tiler.utils.tile_exists
+- rio_tiler.io.multi_*
+
 ## 2.0.0b16 (2020-10-07)
 
 * remove `pkg_resources` (https://github.com/pypa/setuptools/issues/510)

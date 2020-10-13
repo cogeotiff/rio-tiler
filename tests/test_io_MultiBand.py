@@ -5,13 +5,15 @@ import pathlib
 from typing import Dict, Type
 
 import attr
+import morecantile
 import pytest
 
 from rio_tiler.errors import ExpressionMixingWarning, MissingBands
 from rio_tiler.io import BaseReader, COGReader, MultiBandReader
-from rio_tiler.tms import TileMatrixSet, default_tms
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
+
+default_tms = morecantile.tms.get("WebMercatorQuad")
 
 
 @attr.s
@@ -21,7 +23,7 @@ class BandFileReader(MultiBandReader):
     path: str = attr.ib()
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
-    tms: TileMatrixSet = attr.ib(default=default_tms)
+    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
