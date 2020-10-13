@@ -5,9 +5,9 @@ from concurrent import futures
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
-import morecantile
 import numpy
 import rasterio
+from morecantile import TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -21,8 +21,6 @@ from ..errors import DeprecationWarning, ExpressionMixingWarning, TileOutsideBou
 from ..expression import apply_expression, parse_expression
 from ..utils import has_alpha_band, has_mask_band
 from .base import BaseReader
-
-default_tms = morecantile.tms.get("WebMercatorQuad")
 
 
 @attr.s
@@ -91,7 +89,7 @@ class COGReader(BaseReader):
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
-    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
+    tms: TileMatrixSet = attr.ib(default=constants.WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)

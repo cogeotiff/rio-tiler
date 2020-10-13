@@ -6,9 +6,10 @@ import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
-import morecantile
 import numpy
+from morecantile import TileMatrixSet
 
+from ..constants import WEB_MERCATOR_TMS
 from ..errors import (
     ExpressionMixingWarning,
     MissingAssets,
@@ -18,14 +19,12 @@ from ..errors import (
 from ..expression import apply_expression
 from ..tasks import multi_arrays, multi_values
 
-default_tms = morecantile.tms.get("WebMercatorQuad")
-
 
 @attr.s
 class BaseReader(metaclass=abc.ABCMeta):
     """Rio-tiler.io BaseReader."""
 
-    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     bounds: Tuple[float, float, float, float] = attr.ib(init=False)
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
@@ -115,7 +114,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
-    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     assets: Sequence[str] = attr.ib(init=False)
 
@@ -386,7 +385,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
-    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     bands: Sequence[str] = attr.ib(init=False)
 
