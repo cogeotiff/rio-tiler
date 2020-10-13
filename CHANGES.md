@@ -5,6 +5,7 @@
 * add tile_bounds vs bounds check in tile methods for MultiBands and MultiBase classes
 * add tile_exists method in BaseReader (take tms in account)
 * adapt zooms calculation in COGReader
+* add `LastBandHigh` and `LastBandLow` pixel selection (ref: https://github.com/cogeotiff/rio-tiler/pull/270)
 
 Deprecated function
 

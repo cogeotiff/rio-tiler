@@ -3,6 +3,8 @@
 from .defaults import (  # noqa
     FirstMethod,
     HighestMethod,
+    LastBandHigh,
+    LastBandLow,
     LowestMethod,
     MeanMethod,
     MedianMethod,

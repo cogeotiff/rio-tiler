@@ -152,6 +152,34 @@ def test_mosaic_tiler():
     assert m.all()
     assert t[0][-1][-1] == 8369.5
 
+    (t, m), _ = mosaic.mosaic_reader(
+        assets_order,
+        _read_tile,
+        x,
+        y,
+        z,
+        pixel_selection=defaults.LastBandHigh(),
+        indexes=(1, 2, 3, 1),
+    )
+    assert t.shape == (3, 256, 256)
+    assert m.shape == (256, 256)
+    assert m.all()
+    assert t[0][-1][-1] == 8682
+
+    (t, m), _ = mosaic.mosaic_reader(
+        assets_order,
+        _read_tile,
+        x,
+        y,
+        z,
+        pixel_selection=defaults.LastBandLow(),
+        indexes=(1, 2, 3, 1),
+    )
+    assert t.shape == (3, 256, 256)
+    assert m.shape == (256, 256)
+    assert m.all()
+    assert t[0][-1][-1] == 8057
+
     # Test pixel selection as _class_, not instance of class
     (t, m), assets_used = mosaic.mosaic_reader(
         assets, _read_tile, x, y, z, pixel_selection=defaults.FirstMethod

@@ -17,6 +17,9 @@ how to handle these cases for each pixel:
 - **Lowest**: loop though all the assets and return the lowest value
 - **Mean**: compute the mean value of the whole stack
 - **Median**: compute the median value of the whole stack
+- **Stdev**: compute the standard deviation value of the whole stack
+- **LastBandHigh**: Use last band (highest) as a decision factor (note: the last band will be excluded from in the output)
+- **LastBandLow**: Use last band (lowest) as a decision factor (note: the last band will be excluded from in the output)
 
 ### API
 
