@@ -12,7 +12,8 @@ inst_reqs = [
     "numexpr",
     "numpy",
     "mercantile",
-    "rasterio>=1.1.3",
+    "morecantile>=1.1,<2.0",
+    "rasterio>=1.1.7",
     "requests",
 ]
 

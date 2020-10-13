@@ -16,7 +16,12 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from . import constants
-from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from .errors import (
+    AlphaBandWarning,
+    DeprecationWarning,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -624,6 +629,11 @@ def tile(
         mask: numpy array
 
     """
+    warnings.warn(
+        "'rio_tiler.reader.tile' will be deprecated in rio-tiler 2.0",
+        DeprecationWarning,
+    )
+
     bounds = transform_bounds(
         src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
     )

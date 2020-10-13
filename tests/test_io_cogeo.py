@@ -32,7 +32,7 @@ def test_spatial_info_valid():
     with COGReader(COG_NODATA) as cog:
         assert not cog.dataset.closed
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 5
+        assert meta.get("minzoom") == 4
         assert meta.get("maxzoom") == 8
         assert meta.get("center")
         assert len(meta.get("bounds")) == 4
@@ -50,7 +50,7 @@ def test_spatial_info_valid():
 
     with COGReader(COG_NODATA, maxzoom=12) as cog:
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 5
+        assert meta.get("minzoom") == 4
         assert meta.get("maxzoom") == 12
 
     with COGReader(COG_NODATA, minzoom=3, maxzoom=12) as cog:
@@ -313,7 +313,7 @@ def test_cog_with_internal_gcps():
         assert isinstance(cog.src_dataset, DatasetReader)
         assert isinstance(cog.dataset, WarpedVRT)
 
-        assert cog.minzoom == 7
+        assert cog.minzoom == 6
         assert cog.maxzoom == 9
 
         metadata = cog.info()

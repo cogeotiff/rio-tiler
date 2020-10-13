@@ -1,6 +1,7 @@
 """rio_tiler.utils: utility functions."""
 
 import math
+import warnings
 from io import BytesIO
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
@@ -19,7 +20,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 
 from . import constants
 from .colormap import apply_cmap
-from .errors import RioTilerError
+from .errors import DeprecationWarning, RioTilerError
 
 DataSet = Union[DatasetReader, DatasetWriter, WarpedVRT]
 
@@ -301,6 +302,11 @@ def tile_exists(
             if True, the z-x-y mercator tile in inside the bounds.
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.tile_exists' will be deprecated in rio-tiler 2.0",
+        DeprecationWarning,
+    )
+
     tile_bounds = mercantile.bounds(mercantile.Tile(tile_x, tile_y, tile_z))
     return (
         (tile_bounds[0] < bounds[2])
@@ -367,6 +373,11 @@ def geotiff_options(
         dict
 
     """
+    warnings.warn(
+        "'rio_tiler.utils.geotiff_options' will be deprecated in rio-tiler 2.0",
+        DeprecationWarning,
+    )
+
     bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
     dst_transform = from_bounds(*bounds, tilesize, tilesize)
     return dict(crs=dst_crs, transform=dst_transform)

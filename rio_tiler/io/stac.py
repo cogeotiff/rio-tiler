@@ -7,7 +7,9 @@ from urllib.parse import urlparse
 
 import attr
 import requests
+from morecantile import TileMatrixSet
 
+from ..constants import WEB_MERCATOR_TMS
 from ..errors import InvalidAssetName, MissingAssets
 from ..utils import aws_get_object
 from .base import BaseReader, MultiBaseReader
@@ -147,6 +149,7 @@ class STACReader(MultiBaseReader):
 
     filepath: str = attr.ib()
     item: Dict = attr.ib(default=None)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=0)
     maxzoom: int = attr.ib(default=30)
     include_assets: Optional[Set[str]] = attr.ib(default=None)

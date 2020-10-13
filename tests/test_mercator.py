@@ -13,15 +13,15 @@ def test_get_zooms_valid():
     """Should work as expected (return zooms)."""
     with rasterio.open(dataset) as src_dst:
         minzoom, maxzoom = mercator.get_zooms(src_dst)
-        assert minzoom == 5
+        assert minzoom == 4
         assert maxzoom == 8
 
         minzoom, maxzoom = mercator.get_zooms(src_dst, tilesize=512)
-        assert minzoom == 5
+        assert minzoom == 4
         assert maxzoom == 7
 
         minzoom, maxzoom = mercator.get_zooms(src_dst, ensure_global_max_zoom=True)
-        assert minzoom == 7
+        assert minzoom == 6
         assert maxzoom == 10
 
 
@@ -38,4 +38,4 @@ def test_zoom_for_pixelsize_valid():
     assert mercator.zoom_for_pixelsize(res, tilesize=512) == 11
 
     # Return max zoom
-    assert mercator.zoom_for_pixelsize(0.00001) == 23
+    assert mercator.zoom_for_pixelsize(0.00001) == 24

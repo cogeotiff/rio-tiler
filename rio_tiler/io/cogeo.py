@@ -5,21 +5,21 @@ from concurrent import futures
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
-import mercantile
 import numpy
 import rasterio
+from morecantile import TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
+from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import transform_bounds
+from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import constants, reader
-from ..errors import ExpressionMixingWarning, TileOutsideBounds
+from ..errors import DeprecationWarning, ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
-from ..mercator import get_zooms
-from ..utils import has_alpha_band, has_mask_band, tile_exists
+from ..utils import has_alpha_band, has_mask_band
 from .base import BaseReader
 
 
@@ -89,6 +89,7 @@ class COGReader(BaseReader):
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
+    tms: TileMatrixSet = attr.ib(default=constants.WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
@@ -125,7 +126,7 @@ class COGReader(BaseReader):
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
         if self.minzoom is None or self.maxzoom is None:
-            self._get_zooms()
+            self._set_zooms()
 
         if self.colormap is None:
             self._get_colormap()
@@ -139,11 +140,29 @@ class COGReader(BaseReader):
         """Support using with Context Managers."""
         self.close()
 
-    def _get_zooms(self):
+    def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
         """Calculate raster min/max zoom level."""
-        minzoom, maxzoom = get_zooms(self.dataset)
-        self.minzoom = self.minzoom or minzoom
-        self.maxzoom = self.maxzoom or maxzoom
+        dst_affine, w, h = calculate_default_transform(
+            self.dataset.crs,
+            self.tms.crs,
+            self.dataset.width,
+            self.dataset.height,
+            *self.dataset.bounds,
+        )
+        resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+        maxzoom = self.tms.zoom_for_res(resolution)
+
+        overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
+        ovr_resolution = resolution * (2 ** overview_level)
+        minzoom = self.tms.zoom_for_res(ovr_resolution)
+
+        return minzoom, maxzoom
+
+    def _set_zooms(self):
+        """Calculate raster min/max zoom level."""
+        minzoom, maxzoom = self.get_zooms()
+        self.minzoom = self.minzoom if self.minzoom is not None else minzoom
+        self.maxzoom = self.maxzoom if self.maxzoom is not None else maxzoom
         return
 
     def _get_colormap(self):
@@ -286,6 +305,11 @@ class COGReader(BaseReader):
         """
         kwargs = {**self._kwargs, **kwargs}
 
+        if not self.tile_exists(tile_z, tile_x, tile_y):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
+            )
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -298,20 +322,14 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
-        if not tile_exists(self.bounds, tile_z, tile_x, tile_y):
-            raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
-            )
-
-        tile_bounds = mercantile.xy_bounds(tile)
+        tile_bounds = self.tms.xy_bounds(tile_x, tile_y, tile_z)
         tile, mask = reader.part(
             self.dataset,
             tile_bounds,
             tilesize,
             tilesize,
             indexes=indexes,
-            dst_crs=constants.WEB_MERCATOR_CRS,
+            dst_crs=self.tms.crs,
             **kwargs,
         )
         if expression:
@@ -498,6 +516,10 @@ def multi_tile(
     assets: Sequence[str], *args: Any, **kwargs: Any
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Assemble multiple tiles."""
+    warnings.warn(
+        "'rio_tiler.io.cogeo.multi_tile' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_arrays'.",
+        DeprecationWarning,
+    )
 
     def _worker(asset: str):
         with COGReader(asset) as cog:
@@ -514,6 +536,10 @@ def multi_part(
     assets: Sequence[str], *args: Any, **kwargs: Any
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Assemble multiple COGReader.part."""
+    warnings.warn(
+        "'rio_tiler.io.cogeo.multi_part' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_arrays'.",
+        DeprecationWarning,
+    )
 
     def _worker(asset: str):
         with COGReader(asset) as cog:
@@ -530,6 +556,10 @@ def multi_preview(
     assets: Sequence[str], *args: Any, **kwargs: Any
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Assemble multiple COGReader.preview."""
+    warnings.warn(
+        "'rio_tiler.io.cogeo.multi_preview' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_arrays'.",
+        DeprecationWarning,
+    )
 
     def _worker(asset: str):
         with COGReader(asset) as cog:
@@ -544,6 +574,10 @@ def multi_preview(
 
 def multi_point(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
     """Assemble multiple COGReader.point."""
+    warnings.warn(
+        "'rio_tiler.io.cogeo.multi_point' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
+        DeprecationWarning,
+    )
 
     def _worker(asset: str) -> List:
         with COGReader(asset) as cog:
@@ -555,6 +589,10 @@ def multi_point(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
 
 def multi_stats(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
     """Assemble multiple COGReader.stats."""
+    warnings.warn(
+        "'rio_tiler.io.cogeo.multi_stats' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
+        DeprecationWarning,
+    )
 
     def _worker(asset: str) -> Dict:
         with COGReader(asset) as cog:
@@ -566,6 +604,10 @@ def multi_stats(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
 
 def multi_info(assets: Sequence[str]) -> List:
     """Assemble multiple COGReader.info."""
+    warnings.warn(
+        "'rio_tiler.io.cogeo.multi_info' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
+        DeprecationWarning,
+    )
 
     def _worker(asset: str) -> Dict:
         with COGReader(asset) as cog:
@@ -577,6 +619,10 @@ def multi_info(assets: Sequence[str]) -> List:
 
 def multi_metadata(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
     """Assemble multiple COGReader.metadata."""
+    warnings.warn(
+        "'rio_tiler.io.cogeo.multi_metadata' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
+        DeprecationWarning,
+    )
 
     def _worker(asset: str) -> Dict:
         with COGReader(asset) as cog:
@@ -621,7 +667,7 @@ class GCPCOGReader(COGReader):
         )
 
         if self.minzoom is None or self.maxzoom is None:
-            self._get_zooms()
+            self._set_zooms()
 
         if self.colormap is None:
             self._get_colormap()
