@@ -35,8 +35,7 @@ zo = 9
 def _read_tile(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Read tile from an asset"""
     with COGReader(src_path) as cog:
-        tile, mask = cog.tile(*args, **kwargs)
-    return tile, mask
+        return cog.tile(*args, **kwargs)
 
 
 def _read_preview(
@@ -222,18 +221,64 @@ def test_mosaic_tiler_Stdev():
 
 def test_threads():
     """Test mosaic tiler."""
-    assets = [asset1, asset2, asset1, asset2, asset1, asset2]
+    assets = [asset2, asset1, asset1, asset2, asset1, asset2]
 
     # TileOutSide bounds should be ignore and thus Tile is None
     (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=2)
     assert not tnothread
 
+    # TileOutSide bounds should be ignore and thus Tile is None
     (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=0)
     assert not tnothread
 
-    (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=0)
+    # Only cover asset1
+    xpp = 147
+    ypp = 180
+    zpp = 9
+
+    # Partial tile, some assets should Error with TileOutside bounds
+    (tnothread, _), a = mosaic.mosaic_reader(
+        assets,
+        _read_tile,
+        xpp,
+        ypp,
+        zpp,
+        threads=0,
+        pixel_selection=defaults.MedianMethod,
+    )
+    assert len(a) == 3
+    assert tnothread.shape
+
+    # Partial tile, some assets should Error with TileOutside bounds
+    (tnothread, _), a = mosaic.mosaic_reader(
+        assets,
+        _read_tile,
+        xpp,
+        ypp,
+        zpp,
+        threads=1,
+        pixel_selection=defaults.MedianMethod,
+    )
+    assert len(a) == 3
+    assert tnothread.shape
+
+    (tnothread, _), _ = mosaic.mosaic_reader(
+        assets,
+        _read_tile,
+        xpp,
+        ypp,
+        zpp,
+        threads=0,
+        pixel_selection=defaults.MedianMethod,
+    )
     (tmulti_threads, _), _ = mosaic.mosaic_reader(
-        assets, _read_tile, x, y, z, threads=1
+        assets,
+        _read_tile,
+        xpp,
+        ypp,
+        zpp,
+        threads=3,
+        pixel_selection=defaults.MedianMethod,
     )
     numpy.testing.assert_array_equal(tnothread, tmulti_threads)
 
