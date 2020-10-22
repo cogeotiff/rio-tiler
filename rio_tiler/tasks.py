@@ -1,6 +1,7 @@
 """rio_tiler.tasks: tools for handling rio-tiler's future tasks."""
 
 from concurrent import futures
+from functools import partial
 from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Union
 
 import numpy
@@ -8,22 +9,7 @@ import numpy
 from .constants import MAX_THREADS
 from .logger import logger
 
-
-class LikeFuture:
-    """Wrap Functions in a future like object."""
-
-    def __init__(self, f: Callable, *args: Any, **kwargs: Any):
-        """Init Object."""
-        self.func = f
-        self.args = args
-        self.kwargs = kwargs
-
-    def result(self):
-        """Run function with args and kwargs."""
-        return self.func(*self.args, **self.kwargs)
-
-
-TaskType = Sequence[Tuple[Union[futures.Future, LikeFuture], str]]
+TaskType = Sequence[Tuple[Union[futures.Future, Callable], str]]
 
 
 def filter_tasks(
@@ -35,7 +21,7 @@ def filter_tasks(
     Attributes
     ----------
     tasks: list
-        Sequence of 'concurrent.futures._base.Future' or 'LikeFuture'
+        Sequence of 'concurrent.futures._base.Future' or 'Callable'
     allowed_exceptions: Tuple, optional
         List of exceptions which won't be raised.
 
@@ -49,7 +35,10 @@ def filter_tasks(
 
     for (future, asset) in tasks:
         try:
-            yield future.result(), asset
+            if isinstance(future, futures.Future):
+                yield future.result(), asset
+            else:
+                yield future(), asset
         except allowed_exceptions as err:
             logger.info(err)
             pass
@@ -66,7 +55,7 @@ def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType
             ]
     else:
         logger.debug(f"Running tasks outside ThreadsPool (max_workers={threads})")
-        return [(LikeFuture(reader, asset, *args, **kwargs), asset) for asset in assets]
+        return [(partial(reader, asset, *args, **kwargs), asset) for asset in assets]
 
 
 def multi_arrays(
