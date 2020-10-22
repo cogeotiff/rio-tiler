@@ -1,3 +1,8 @@
+## 2.0.0b18 (2020-10-22)
+
+* surface dataset.nodata in COGReader.nodata property (https://github.com/cogeotiff/rio-tiler/pull/292)
+* fix non-threaded tasks scheduler/filter (https://github.com/cogeotiff/rio-tiler/pull/291)
+
 ## 2.0.0b17 (2020-10-13)
 
 * switch to morecantile for TMS definition (ref: https://github.com/cogeotiff/rio-tiler/issues/283)
