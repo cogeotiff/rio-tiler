@@ -73,7 +73,7 @@ def mosaic_reader(
         )
 
     if not chunk_size:
-        chunk_size = threads or len(assets)
+        chunk_size = threads if threads > 1 else len(assets)
 
     assets_used: List[str] = []
 
