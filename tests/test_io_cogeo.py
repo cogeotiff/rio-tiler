@@ -36,6 +36,7 @@ def test_spatial_info_valid():
         assert meta.get("maxzoom") == 8
         assert meta.get("center")
         assert len(meta.get("bounds")) == 4
+        assert cog.nodata == cog.dataset.nodata
     assert cog.dataset.closed
 
     cog = COGReader(COG_NODATA)
@@ -261,8 +262,14 @@ def test_preview_valid():
 def test_COGReader_Options():
     """Set options in reader."""
     with COGReader(COGEO, nodata=1) as cog:
+        assert cog.nodata == 1
         meta = cog.metadata()
         assert meta["statistics"][1]["pc"] == [2720, 6896]
+        assert cog.info()["nodata_type"] == "Nodata"
+
+    with COGReader(COGEO) as cog:
+        assert not cog.nodata
+        assert cog.info()["nodata_type"] == "None"
 
     with COGReader(COGEO, nodata=1) as cog:
         _, mask = cog.tile(43, 25, 7)
@@ -310,6 +317,7 @@ def test_cog_with_internal_gcps():
     """Make sure file gets re-projected using gcps."""
     with GCPCOGReader(COG_GCPS, nodata=0) as cog:
         assert cog.bounds
+        assert cog.nodata == 0
         assert isinstance(cog.src_dataset, DatasetReader)
         assert isinstance(cog.dataset, WarpedVRT)
 

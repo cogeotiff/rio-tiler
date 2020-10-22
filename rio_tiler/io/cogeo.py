@@ -122,6 +122,8 @@ class COGReader(BaseReader):
 
         self.dataset = self.dataset or rasterio.open(self.filepath)
 
+        self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
+
         self.bounds = transform_bounds(
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
@@ -192,7 +194,7 @@ class COGReader(BaseReader):
             nodata_type = "Alpha"
         elif has_mask_band(self.dataset):
             nodata_type = "Mask"
-        elif self.dataset.nodata is not None:
+        elif self.nodata is not None:
             nodata_type = "Nodata"
         else:
             nodata_type = "None"
@@ -661,6 +663,8 @@ class GCPCOGReader(COGReader):
             src_crs=self.src_dataset.gcps[1],
             src_transform=transform.from_gcps(self.src_dataset.gcps[0]),
         )
+
+        self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
         self.bounds = transform_bounds(
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
