@@ -30,7 +30,7 @@ def filter_tasks(
     Successful task's result
 
     """
-    if not allowed_exceptions:
+    if allowed_exceptions is None:
         allowed_exceptions = ()
 
     for (future, asset) in tasks:
@@ -63,11 +63,14 @@ def multi_arrays(
     reader: Callable,
     *args: Any,
     threads: int = MAX_THREADS,
+    allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Multi array."""
     tasks = create_tasks(reader, assets, threads, *args, **kwargs)
-    data, masks = zip(*[r for r, _ in filter_tasks(tasks)])
+    data, masks = zip(
+        *[r for r, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
+    )
     data = numpy.concatenate(data)
     mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
     return data, mask
@@ -78,8 +81,12 @@ def multi_values(
     reader: Callable,
     *args: Any,
     threads: int = MAX_THREADS,
+    allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any,
 ) -> Dict:
     """Multi Values."""
     tasks = create_tasks(reader, assets, threads, *args, **kwargs)
-    return {asset: val for val, asset in filter_tasks(tasks)}
+    return {
+        asset: val
+        for val, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)
+    }

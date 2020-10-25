@@ -1,3 +1,8 @@
+
+## NEXT (TBD)
+
+* surface `allowed_exceptions` options in `rio_tiler.mosaic.reader.mosaic_reader` (https://github.com/cogeotiff/rio-tiler/issues/293)
+
 ## 2.0.0b18 (2020-10-22)
 
 * surface dataset.nodata in COGReader.nodata property (https://github.com/cogeotiff/rio-tiler/pull/292)
