@@ -20,11 +20,11 @@ from .. import constants, reader
 from ..errors import DeprecationWarning, ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
 from ..utils import has_alpha_band, has_mask_band
-from .base import BaseReader
+from .base import BaseReader, SpatialMixin
 
 
 @attr.s
-class COGReader(BaseReader):
+class COGReader(BaseReader, SpatialMixin):
     """
     Cloud Optimized GeoTIFF Reader.
 
