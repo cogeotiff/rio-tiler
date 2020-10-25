@@ -61,7 +61,7 @@ class SpatialMixin:
 
 
 @attr.s
-class BaseReader(metaclass=abc.ABCMeta):
+class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """Rio-tiler.io BaseReader."""
 
     def __enter__(self):
@@ -115,7 +115,7 @@ class BaseReader(metaclass=abc.ABCMeta):
 
 
 @attr.s
-class MultiBaseReader(BaseReader, SpatialMixin, metaclass=abc.ABCMeta):
+class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
     """MultiBaseReader Reader."""
 
     reader: Type[BaseReader] = attr.ib()
@@ -386,7 +386,7 @@ class MultiBaseReader(BaseReader, SpatialMixin, metaclass=abc.ABCMeta):
 
 
 @attr.s
-class MultiBandReader(BaseReader, SpatialMixin, metaclass=abc.ABCMeta):
+class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
     """Multi Band Reader."""
 
     reader: Type[BaseReader] = attr.ib()
