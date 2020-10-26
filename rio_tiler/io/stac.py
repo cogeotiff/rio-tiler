@@ -13,7 +13,7 @@ from ..constants import WEB_MERCATOR_TMS
 from ..errors import InvalidAssetName, MissingAssets
 from ..utils import aws_get_object
 from .base import BaseReader, MultiBaseReader
-from .cogeo import COGReader, SpatialMixin
+from .cogeo import COGReader
 
 DEFAULT_VALID_TYPE = {
     "image/tiff; application=geotiff",
@@ -76,7 +76,7 @@ def _get_assets(
 
 
 @attr.s
-class STACReader(MultiBaseReader, SpatialMixin):
+class STACReader(MultiBaseReader):
     """
     STAC + Cloud Optimized GeoTIFF Reader.
 
