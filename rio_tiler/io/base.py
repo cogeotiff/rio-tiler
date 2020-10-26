@@ -7,7 +7,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
 import numpy
-from morecantile import TileMatrixSet
+from morecantile import Tile, TileMatrixSet
 
 from ..constants import WEB_MERCATOR_TMS
 from ..errors import (
@@ -21,21 +21,13 @@ from ..tasks import multi_arrays, multi_values
 
 
 @attr.s
-class BaseReader(metaclass=abc.ABCMeta):
-    """Rio-tiler.io BaseReader."""
+class SpatialMixin:
+    """Spatial Info Mixin."""
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     bounds: Tuple[float, float, float, float] = attr.ib(init=False)
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
-
-    def __enter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
 
     @property
     def center(self) -> Tuple[float, float, int]:
@@ -46,11 +38,6 @@ class BaseReader(metaclass=abc.ABCMeta):
             self.minzoom,
         )
 
-    @abc.abstractmethod
-    def info(self) -> Dict:
-        """Return Dataset's info."""
-        ...
-
     @property
     def spatial_info(self) -> Dict:
         """Return Dataset's spatial info."""
@@ -60,6 +47,35 @@ class BaseReader(metaclass=abc.ABCMeta):
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
         }
+
+    def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
+        """Check if a tile is inside a the dataset bounds."""
+        tile = Tile(x=tile_x, y=tile_y, z=tile_z)
+        tile_bounds = self.tms.bounds(*tile)
+        return (
+            (tile_bounds[0] < self.bounds[2])
+            and (tile_bounds[2] > self.bounds[0])
+            and (tile_bounds[3] > self.bounds[1])
+            and (tile_bounds[1] < self.bounds[3])
+        )
+
+
+@attr.s
+class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
+    """Rio-tiler.io BaseReader."""
+
+    def __enter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
+
+    @abc.abstractmethod
+    def info(self) -> Dict:
+        """Return Dataset's info."""
+        ...
 
     @abc.abstractmethod
     def stats(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict:
@@ -96,16 +112,6 @@ class BaseReader(metaclass=abc.ABCMeta):
     def point(self, lon: float, lat: float, **kwargs: Any) -> List:
         """Read a value from a Dataset."""
         ...
-
-    def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
-        """Check if a tile is inside a the dataset bounds."""
-        tile_bounds = self.tms.bounds(tile_x, tile_y, tile_z)
-        return (
-            (tile_bounds[0] < self.bounds[2])
-            and (tile_bounds[2] > self.bounds[0])
-            and (tile_bounds[3] > self.bounds[1])
-            and (tile_bounds[1] < self.bounds[3])
-        )
 
 
 @attr.s
