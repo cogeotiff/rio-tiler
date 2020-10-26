@@ -53,7 +53,8 @@ def mosaic_reader(
         loop. By default reads from the MAX_THREADS environment variable, and if
         not found defaults to multiprocessing.cpu_count() * 5.
     allowed_exceptions: Tuple, optional
-        List of exceptions which will be ignored.
+        List of exceptions which will be ignored. Default is set to `(TileOutsideBounds,)`.
+        Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions.
     kwargs: dict, optional
         tiler specific options.
 
