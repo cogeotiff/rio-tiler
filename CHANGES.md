@@ -1,5 +1,5 @@
 
-## NEXT (TBD)
+## 2.0.0b19 (2020-10-26)
 
 * surface `allowed_exceptions` options in `rio_tiler.mosaic.reader.mosaic_reader` (https://github.com/cogeotiff/rio-tiler/issues/293)
 * add SpatialInfoMixin base class to reduce code duplication (co-author with @geospatial-jeff, https://github.com/cogeotiff/rio-tiler/pull/295)
