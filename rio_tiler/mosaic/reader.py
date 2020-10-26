@@ -20,6 +20,7 @@ def mosaic_reader(
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
+    allowed_exceptions: Tuple = (TileOutsideBounds,),
     **kwargs,
 ) -> Tuple[Tuple[numpy.ndarray, numpy.ndarray], Sequence[str]]:
     """
@@ -51,6 +52,9 @@ def mosaic_reader(
         Number of threads to use. If <= 1, runs single threaded without an event
         loop. By default reads from the MAX_THREADS environment variable, and if
         not found defaults to multiprocessing.cpu_count() * 5.
+    allowed_exceptions: Tuple, optional
+        List of exceptions which will be ignored. Default is set to `(TileOutsideBounds,)`.
+        Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions.
     kwargs: dict, optional
         tiler specific options.
 
@@ -80,7 +84,7 @@ def mosaic_reader(
     for chunks in _chunks(assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
         for (t, m), asset in filter_tasks(
-            tasks, allowed_exceptions=(TileOutsideBounds,)
+            tasks, allowed_exceptions=allowed_exceptions,
         ):
             assets_used.append(asset)
             t = numpy.ma.array(t)

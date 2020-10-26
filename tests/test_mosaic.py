@@ -7,7 +7,7 @@ import numpy
 import pytest
 
 from rio_tiler import mosaic
-from rio_tiler.errors import InvalidMosaicMethod
+from rio_tiler.errors import InvalidMosaicMethod, TileOutsideBounds
 from rio_tiler.io import COGReader
 from rio_tiler.mosaic.methods import defaults
 
@@ -235,6 +235,17 @@ def test_threads():
     xpp = 147
     ypp = 180
     zpp = 9
+
+    with pytest.raises(TileOutsideBounds):
+        mosaic.mosaic_reader(
+            assets,
+            _read_tile,
+            xpp,
+            ypp,
+            zpp,
+            pixel_selection=defaults.MedianMethod,
+            allowed_exceptions=None,
+        )
 
     # Partial tile, some assets should Error with TileOutside bounds
     (tnothread, _), a = mosaic.mosaic_reader(
