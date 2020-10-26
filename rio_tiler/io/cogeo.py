@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import attr
 import numpy
 import rasterio
-from morecantile import TileMatrixSet
+from morecantile import Tile, TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -324,7 +324,7 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        tile_bounds = self.tms.xy_bounds(tile_x, tile_y, tile_z)
+        tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
         tile, mask = reader.part(
             self.dataset,
             tile_bounds,
