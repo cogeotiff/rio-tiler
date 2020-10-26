@@ -1,9 +1,10 @@
 """rio_tiler.io.base: ABC class for rio-tiler readers."""
 
 import abc
+import asyncio
 import re
 import warnings
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
 import numpy
@@ -110,6 +111,69 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def point(self, lon: float, lat: float, **kwargs: Any) -> List:
+        """Read a value from a Dataset."""
+        ...
+
+
+@attr.s
+class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
+    """Rio-tiler.io AsyncBaseReader."""
+
+    async def __aenter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
+
+    @abc.abstractmethod
+    async def info(self) -> Coroutine[Any, Any, Dict]:
+        """Return Dataset's info."""
+        ...
+
+    @abc.abstractmethod
+    async def stats(
+        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any
+    ) -> Coroutine[Any, Any, Dict]:
+        """Return Dataset's statistics."""
+        ...
+
+    async def metadata(
+        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
+    ) -> Coroutine[Any, Any, Dict]:
+        """Return Dataset's statistics and info."""
+        info, stats = await asyncio.gather(
+            *[self.info(), self.stats(pmin, pmax, **kwargs)]
+        )
+        info["statistics"] = stats
+        return info
+
+    @abc.abstractmethod
+    async def tile(
+        self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
+    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+        """Read a Map tile from the Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def part(
+        self, bbox: Tuple[float, float, float, float], **kwargs: Any
+    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+        """Read a Part of a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def preview(
+        self, **kwargs: Any
+    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+        """Return a preview of a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def point(
+        self, lon: float, lat: float, **kwargs: Any
+    ) -> Coroutine[Any, Any, List]:
         """Read a value from a Dataset."""
         ...
 

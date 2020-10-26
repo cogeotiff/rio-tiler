@@ -156,7 +156,6 @@ class STACReader(MultiBaseReader):
     exclude_assets: Optional[Set[str]] = attr.ib(default=None)
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
-
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
 
