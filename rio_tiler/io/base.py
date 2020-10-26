@@ -116,13 +116,8 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
 
 @attr.s
-class AsyncBaseReader(metaclass=abc.ABCMeta):
+class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """Rio-tiler.io AsyncBaseReader."""
-
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    bounds: Tuple[float, float, float, float] = attr.ib(init=False)
-    minzoom: int = attr.ib(init=False)
-    maxzoom: int = attr.ib(init=False)
 
     async def __aenter__(self):
         """Support using with Context Managers."""
@@ -132,29 +127,10 @@ class AsyncBaseReader(metaclass=abc.ABCMeta):
         """Support using with Context Managers."""
         pass
 
-    @property
-    def center(self) -> Tuple[float, float, int]:
-        """Dataset center + minzoom."""
-        return (
-            (self.bounds[0] + self.bounds[2]) / 2,
-            (self.bounds[1] + self.bounds[3]) / 2,
-            self.minzoom,
-        )
-
     @abc.abstractmethod
     async def info(self) -> Coroutine[Any, Any, Dict]:
         """Return Dataset's info."""
         ...
-
-    @property
-    def spatial_info(self) -> Dict:
-        """Return Dataset's spatial info."""
-        return {
-            "bounds": self.bounds,
-            "center": self.center,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
-        }
 
     @abc.abstractmethod
     async def stats(
@@ -200,16 +176,6 @@ class AsyncBaseReader(metaclass=abc.ABCMeta):
     ) -> Coroutine[Any, Any, List]:
         """Read a value from a Dataset."""
         ...
-
-    def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
-        """Check if a tile is inside a the dataset bounds."""
-        tile_bounds = self.tms.bounds(tile_x, tile_y, tile_z)
-        return (
-            (tile_bounds[0] < self.bounds[2])
-            and (tile_bounds[2] > self.bounds[0])
-            and (tile_bounds[3] > self.bounds[1])
-            and (tile_bounds[1] < self.bounds[3])
-        )
 
 
 @attr.s
