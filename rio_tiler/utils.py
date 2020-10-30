@@ -253,7 +253,7 @@ def non_alpha_indexes(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -
 
 def linear_rescale(
     image: numpy.ndarray,
-    in_range: Optional[Tuple[NumType, NumType]] = None,
+    in_range: Tuple[NumType, NumType],
     out_range: Optional[Tuple[NumType, NumType]] = None,
 ) -> numpy.ndarray:
     """
@@ -261,26 +261,19 @@ def linear_rescale(
 
     Attributes
     ----------
-        image : numpy ndarray
-            Image array to rescale.
-        in_range : list, int, optional, (default: [0,1])
-            Image min/max value to rescale.
-        out_range : list, int, optional, (default: [1,255])
-            output min/max bounds to rescale to.
+    image: numpy ndarray
+        Image array to rescale.
+    in_range: Tuple, int
+        Image min/max value to rescale.
+    out_range: Tuple, optional, (default: (0,255))
+        output min/max bounds to rescale to.
 
     Returns
     -------
-        out : numpy ndarray
-            returns rescaled image array.
+    out: numpy ndarray
+        returns rescaled image array.
 
     """
-    if in_range is None:
-        in_range = (image.min(), image.max())
-        warnings.warn(
-            f"No input range set, using image min/max values ({in_range[0], in_range[1]})",
-            UserWarning,
-        )
-
     if out_range is None:
         warnings.warn(
             "No output range set, using image (0, 255)", UserWarning,
