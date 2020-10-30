@@ -1,7 +1,6 @@
 """rio_tiler.io.cogeo: raster processing."""
 
 import warnings
-from concurrent import futures
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
@@ -17,8 +16,9 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import constants, reader
-from ..errors import DeprecationWarning, ExpressionMixingWarning, TileOutsideBounds
+from ..errors import ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
+from ..models import ImageStatistics, Info
 from ..utils import has_alpha_band, has_mask_band
 from .base import BaseReader
 
@@ -175,19 +175,16 @@ class COGReader(BaseReader):
             self.colormap = {}
             pass
 
-    def info(self) -> Dict:
+    def info(self) -> Info:
         """Return COG info."""
 
         def _get_descr(ix):
             """Return band description."""
-            name = self.dataset.descriptions[ix - 1]
-            if not name:
-                name = "band{}".format(ix)
-            return name
+            return self.dataset.descriptions[ix - 1] or ""
 
         indexes = self.dataset.indexes
-        band_descr = [(ix, _get_descr(ix)) for ix in indexes]
-        band_meta = [(ix, self.dataset.tags(ix)) for ix in indexes]
+        band_descr = [(f"band{ix}", _get_descr(ix)) for ix in indexes]
+        band_meta = [(f"band{ix}", self.dataset.tags(ix)) for ix in indexes]
         colorinterp = [self.dataset.colorinterp[ix - 1].name for ix in indexes]
 
         if has_alpha_band(self.dataset):
@@ -220,7 +217,7 @@ class COGReader(BaseReader):
             "nodata_type": nodata_type,
         }
         meta.update(**other_meta)
-        return meta
+        return Info(**meta)
 
     def stats(
         self,
@@ -228,7 +225,7 @@ class COGReader(BaseReader):
         pmax: float = 98.0,
         hist_options: Optional[Dict] = None,
         **kwargs: Any,
-    ) -> Dict:
+    ) -> Dict[str, ImageStatistics]:
         """
         Return bands statistics from a COG.
 
@@ -262,12 +259,6 @@ class COGReader(BaseReader):
         return reader.stats(
             self.dataset, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs,
         )
-
-    def metadata(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict:
-        """Return COG info and statistics."""
-        info = self.info()
-        info["statistics"] = self.stats(pmin, pmax, **kwargs)
-        return info
 
     def tile(
         self,
@@ -512,126 +503,6 @@ class COGReader(BaseReader):
             point = apply_expression(blocks, bands, point).tolist()
 
         return point
-
-
-def multi_tile(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple tiles."""
-    warnings.warn(
-        "'rio_tiler.io.cogeo.multi_tile' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_arrays'.",
-        DeprecationWarning,
-    )
-
-    def _worker(asset: str):
-        with COGReader(asset) as cog:
-            return cog.tile(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(_worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
-
-
-def multi_part(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple COGReader.part."""
-    warnings.warn(
-        "'rio_tiler.io.cogeo.multi_part' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_arrays'.",
-        DeprecationWarning,
-    )
-
-    def _worker(asset: str):
-        with COGReader(asset) as cog:
-            return cog.part(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(_worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
-
-
-def multi_preview(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple COGReader.preview."""
-    warnings.warn(
-        "'rio_tiler.io.cogeo.multi_preview' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_arrays'.",
-        DeprecationWarning,
-    )
-
-    def _worker(asset: str):
-        with COGReader(asset) as cog:
-            return cog.preview(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(_worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
-
-
-def multi_point(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
-    """Assemble multiple COGReader.point."""
-    warnings.warn(
-        "'rio_tiler.io.cogeo.multi_point' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
-        DeprecationWarning,
-    )
-
-    def _worker(asset: str) -> List:
-        with COGReader(asset) as cog:
-            return cog.point(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
-
-
-def multi_stats(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
-    """Assemble multiple COGReader.stats."""
-    warnings.warn(
-        "'rio_tiler.io.cogeo.multi_stats' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
-        DeprecationWarning,
-    )
-
-    def _worker(asset: str) -> Dict:
-        with COGReader(asset) as cog:
-            return cog.stats(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
-
-
-def multi_info(assets: Sequence[str]) -> List:
-    """Assemble multiple COGReader.info."""
-    warnings.warn(
-        "'rio_tiler.io.cogeo.multi_info' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
-        DeprecationWarning,
-    )
-
-    def _worker(asset: str) -> Dict:
-        with COGReader(asset) as cog:
-            return cog.info()
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
-
-
-def multi_metadata(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
-    """Assemble multiple COGReader.metadata."""
-    warnings.warn(
-        "'rio_tiler.io.cogeo.multi_metadata' will be deprecated in rio-tiler 2.0. Please use 'rio_tiler.tasks.multi_values'.",
-        DeprecationWarning,
-    )
-
-    def _worker(asset: str) -> Dict:
-        with COGReader(asset) as cog:
-            return cog.metadata(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
 
 
 @attr.s

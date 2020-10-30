@@ -266,7 +266,7 @@ def test_stats_valid(rio):
 
         stats = stac.stats(assets=("green", "red"), hist_options={"bins": 20})
         assert stats["green"]
-        assert len(stats["green"][1]["histogram"][0]) == 20
+        assert len(stats["green"]["band1"].histogram[0]) == 20
         assert stats["red"]
 
 

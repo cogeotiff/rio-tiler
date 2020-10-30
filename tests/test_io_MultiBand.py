@@ -44,11 +44,7 @@ def test_MultiBandReader():
     """Should work as expected."""
     with BandFileReader(PREFIX) as cog:
         assert cog.bands == ["b1", "b2"]
-        meta = cog.spatial_info
-        assert meta.get("minzoom")
-        assert meta.get("maxzoom")
-        assert meta.get("center")
-        assert len(meta.get("bounds")) == 4
+        assert cog.spatial_info
 
         assert sorted(cog.parse_expression("b1/b2")) == ["b1", "b2"]
 
@@ -56,10 +52,10 @@ def test_MultiBandReader():
             cog.info()
 
         meta = cog.info(bands="b1")
-        assert meta["band_descriptions"] == [(1, "b1")]
+        assert meta.band_descriptions == [("b1", "")]
 
         meta = cog.info(bands=("b1", "b2"))
-        assert meta["band_descriptions"] == [(1, "b1"), (2, "b2")]
+        assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
         with pytest.raises(MissingBands):
             cog.stats()
@@ -75,12 +71,12 @@ def test_MultiBandReader():
             cog.metadata()
 
         meta = cog.metadata(bands="b1")
-        assert meta["statistics"]["b1"]
+        assert meta.statistics["b1"]
 
         meta = cog.metadata(bands=("b1", "b2"))
-        assert meta["statistics"]["b1"]
-        assert meta["statistics"]["b2"]
-        assert meta["band_descriptions"] == [(1, "b1"), (2, "b2")]
+        assert meta.statistics["b1"]
+        assert meta.statistics["b2"]
+        assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
         with pytest.raises(MissingBands):
             cog.tile(238, 218, 9)

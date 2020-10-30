@@ -1,4 +1,58 @@
 
+## 2.0.0rc1 (TBD)
+
+* add pydantic models for IO outputs (Metadata, Info, ...)
+
+* change output form for `band_metadata`, `band_descriptions` and do not add band description when not found.
+```python
+# Before
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    i = cog.info()
+    print(i["band_metadata"])
+    print(i["band_descriptions"])
+
+[(1, {}), (2, {}), (2, {})]
+[(1, 'band1'), (2, 'band2'), (2, 'band3')]
+
+# Now
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    i = cog.info()
+    print(i.band_metadata)
+    print(i.band_descriptions)
+
+[('band1', {}), ('band2', {}), ('band3', {})]
+[('band1', ''), ('band2', ''), ('band3', '')]
+```
+
+* change output form for `stats`
+```python
+# Before
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats())
+{
+    1: {...},
+    2: {...},
+    3: {...}
+}
+
+# Now
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats())
+{
+    "band1": {...},
+    "band2": {...},
+    "band3": {...}
+}
+```
+
+* updated `rio_tiler.utils._stats` function to return a `rio_tiler.models.ImageStatistics` model. which replace `pc` by `percentiles`
+
+```python
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats()["band1"].json())
+{"percentiles": [19.0, 168.0], "min": 0.0, "max": 255.0, ...}
+```
+
 ## 2.0.0b19 (2020-10-26)
 
 * surface `allowed_exceptions` options in `rio_tiler.mosaic.reader.mosaic_reader` (https://github.com/cogeotiff/rio-tiler/issues/293)

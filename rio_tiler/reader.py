@@ -22,6 +22,7 @@ from .errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
+from .models import ImageStatistics
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -418,7 +419,7 @@ def stats(
     percentiles: Tuple[float, float] = (2.0, 98.0),
     hist_options: Optional[Dict] = None,
     **kwargs: Any,
-) -> Dict:
+) -> Dict[str, ImageStatistics]:
     """
     Retrieve statistics from an image.
 
@@ -474,7 +475,9 @@ def stats(
 
     hist_options = hist_options or {}
     return {
-        indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
+        f"band{indexes[b]}": raster_stats(
+            data[b], percentiles=percentiles, **hist_options
+        )
         for b in range(data.shape[0])
     }
 
@@ -551,16 +554,15 @@ def metadata(
 
     hist_options = hist_options or {}
     statistics = {
-        indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
+        f"band{indexes[b]}": raster_stats(
+            data[b], percentiles=percentiles, **hist_options
+        )
         for b in range(data.shape[0])
     }
 
     def _get_descr(ix):
         """Return band description."""
-        name = src_dst.descriptions[ix - 1]
-        if not name:
-            name = "band{}".format(ix)
-        return name
+        return src_dst.descriptions[ix - 1] or ""
 
     band_descriptions = [(ix, _get_descr(ix)) for ix in indexes]
     tags = [(ix, src_dst.tags(ix)) for ix in indexes]

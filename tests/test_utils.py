@@ -137,18 +137,18 @@ def test_statsFunction_valid():
         arr = src.read(indexes=[1], masked=True)
 
     stats = utils._stats(arr)
-    assert stats["pc"] == [10, 200]
-    assert stats["min"] == 0
-    assert stats["max"] == 254
-    assert int(stats["std"]) == 55
-    assert len(stats["histogram"]) == 2
-    assert len(stats["histogram"][0]) == 10
+    assert stats.percentiles == [10, 200]
+    assert stats.min == 0
+    assert stats.max == 254
+    assert int(stats.std) == 55
+    assert len(stats.histogram) == 2
+    assert len(stats.histogram[0]) == 10
 
     stats = utils._stats(arr, percentiles=(5, 95))
-    assert stats["pc"] == [31, 195]
+    assert stats.percentiles == [31, 195]
 
     stats = utils._stats(arr, percentiles=(5, 95), bins=20)
-    assert len(stats["histogram"][0]) == 20
+    assert len(stats.histogram[0]) == 20
 
 
 def test_render_valid_1band():

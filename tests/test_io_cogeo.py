@@ -32,10 +32,8 @@ def test_spatial_info_valid():
     with COGReader(COG_NODATA) as cog:
         assert not cog.dataset.closed
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 4
-        assert meta.get("maxzoom") == 8
-        assert meta.get("center")
-        assert len(meta.get("bounds")) == 4
+        assert meta.minzoom == 4
+        assert meta.maxzoom == 8
         assert cog.nodata == cog.dataset.nodata
     assert cog.dataset.closed
 
@@ -46,18 +44,18 @@ def test_spatial_info_valid():
 
     with COGReader(COG_NODATA, minzoom=3) as cog:
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 3
-        assert meta.get("maxzoom") == 8
+        assert meta.minzoom == 3
+        assert meta.maxzoom == 8
 
     with COGReader(COG_NODATA, maxzoom=12) as cog:
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 4
-        assert meta.get("maxzoom") == 12
+        assert meta.minzoom == 4
+        assert meta.maxzoom == 12
 
     with COGReader(COG_NODATA, minzoom=3, maxzoom=12) as cog:
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 3
-        assert meta.get("maxzoom") == 12
+        assert meta.minzoom == 3
+        assert meta.maxzoom == 12
 
 
 def test_bounds_valid():
@@ -70,75 +68,81 @@ def test_info_valid():
     """Should work as expected (get file info)"""
     with COGReader(COG_SCALE) as cog:
         meta = cog.info()
-        assert meta.get("scale")
-        assert meta.get("offset")
+        assert meta.scale
+        assert meta.offset
+        assert not meta.colormap
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
         meta = cog.info()
-        assert meta.get("colormap")
+        assert meta.colormap
 
     with COGReader(COG_NODATA, colormap={1: [0, 0, 0, 0]}) as cog:
         assert cog.colormap
         meta = cog.info()
-        assert meta.get("colormap")
+        assert meta.colormap
 
     with COGReader(COG_TAGS) as cog:
         meta = cog.info()
-        assert meta.get("bounds")
-        assert meta.get("minzoom")
-        assert meta.get("maxzoom")
-        assert meta.get("band_descriptions")
-        assert meta.get("dtype") == "int16"
-        assert meta.get("colorinterp") == ["gray"]
-        assert meta.get("nodata_type") == "Nodata"
-        assert meta.get("scale")
-        assert meta.get("offset")
-        assert meta.get("band_metadata")
-        bmeta = meta.get("band_metadata")[0][1]
-        assert bmeta.get("STATISTICS_MAXIMUM")
-        assert bmeta.get("STATISTICS_MEAN")
-        assert bmeta.get("STATISTICS_MINIMUM")
+        assert meta.bounds
+        assert meta.minzoom
+        assert meta.maxzoom
+        assert meta.band_descriptions
+        assert meta.dtype == "int16"
+        assert meta.colorinterp == ["gray"]
+        assert meta.nodata_type == "Nodata"
+        assert meta.scale
+        assert meta.offset
+        assert meta.band_metadata
+        band_meta = meta.band_metadata[0]
+        assert band_meta[0] == "band1"
+        assert "STATISTICS_MAXIMUM" in band_meta[1]
 
     with COGReader(COG_ALPHA) as cog:
         meta = cog.info()
-        assert meta.get("nodata_type") == "Alpha"
+        assert meta.nodata_type == "Alpha"
 
     with COGReader(COG_MASK) as cog:
         meta = cog.info()
-        assert meta.get("nodata_type") == "Mask"
+        assert meta.nodata_type == "Mask"
 
     with COGReader(COGEO) as cog:
         meta = cog.info()
-        assert meta.get("nodata_type") == "None"
+        assert meta.nodata_type == "None"
 
     with COGReader(COG_NODATA) as cog:
         meta = cog.info()
-        assert meta.get("nodata_type") == "Nodata"
+        assert meta.nodata_type == "Nodata"
 
 
 def test_metadata_valid():
     """Get bounds and get stats for all bands."""
     with COGReader(COGEO) as cog:
         meta = cog.metadata()
-        assert len(meta["band_descriptions"]) == 1
-        assert (1, "band1") == meta["band_descriptions"][0]
-        assert len(meta["statistics"].items()) == 1
-        assert meta["statistics"][1]["pc"] == [1, 6896]
+        assert len(meta.band_descriptions) == 1
+        assert ("band1", "") == meta.band_descriptions[0]
 
-        meta = cog.stats()
-        assert len(meta.items()) == 1
-        assert meta[1]["pc"] == [1, 6896]
+        stats = meta.statistics
+        assert len(stats.items()) == 1
+        b1_stats = meta.statistics["band1"]
+        assert b1_stats.percentiles == [1, 6896]
+
+        stats = cog.stats()
+        assert len(stats.items()) == 1
+        b1_stats = stats["band1"]
+        assert b1_stats.percentiles == [1, 6896]
 
         meta = cog.metadata(pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128)
-        assert len(meta["statistics"].items()) == 1
-        assert len(meta["statistics"][1]["histogram"][0]) == 20
-        assert meta["statistics"][1]["pc"] == [1, 3776]
+        stats = meta.statistics
+        assert len(stats.items()) == 1
+        b1_stats = stats["band1"]
+        assert len(b1_stats.histogram[0]) == 20
+        assert b1_stats.percentiles == [1, 3776]
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
-        meta = cog.metadata()
-        assert meta["statistics"][1]["histogram"][1] == list(range(20))
+        b1_stats = cog.metadata().statistics["band1"]
+        assert b1_stats.histogram[1] == list(range(20))
 
 
 def test_tile_valid_default():
@@ -263,13 +267,13 @@ def test_COGReader_Options():
     """Set options in reader."""
     with COGReader(COGEO, nodata=1) as cog:
         assert cog.nodata == 1
-        meta = cog.metadata()
-        assert meta["statistics"][1]["pc"] == [2720, 6896]
-        assert cog.info()["nodata_type"] == "Nodata"
+        b1_stats = cog.metadata().statistics["band1"]
+        assert b1_stats.percentiles == [2720, 6896]
+        assert cog.info().nodata_type == "Nodata"
 
     with COGReader(COGEO) as cog:
         assert not cog.nodata
-        assert cog.info()["nodata_type"] == "None"
+        assert cog.info().nodata_type == "None"
 
     with COGReader(COGEO, nodata=1) as cog:
         _, mask = cog.tile(43, 25, 7)
@@ -325,10 +329,10 @@ def test_cog_with_internal_gcps():
         assert cog.maxzoom == 9
 
         metadata = cog.info()
-        assert len(metadata["band_metadata"]) == 1
-        assert metadata["band_descriptions"] == [(1, "band1")]
-        metadata = cog.stats()
-        assert metadata[1]["max"] == 623
+        assert len(metadata.band_metadata) == 1
+        assert metadata.band_descriptions == [("band1", "")]
+        b1_stats = cog.stats()["band1"]
+        assert b1_stats.max == 623
 
         tile_z = 8
         tile_x = 183

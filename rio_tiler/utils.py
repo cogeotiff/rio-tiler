@@ -21,6 +21,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 from . import constants
 from .colormap import apply_cmap
 from .errors import DeprecationWarning, RioTilerError
+from .models import ImageStatistics
 
 DataSet = Union[DatasetReader, DatasetWriter, WarpedVRT]
 
@@ -51,7 +52,7 @@ def aws_get_object(
 
 def _stats(
     arr: numpy.ma.array, percentiles: Tuple[float, float] = (2, 98), **kwargs: Any
-) -> Dict:
+) -> ImageStatistics:
     """
     Calculate array statistics.
 
@@ -66,7 +67,7 @@ def _stats(
 
     Returns
     -------
-    dict
+    rio_tiler.models.ImageStatistics
         numpy array statistics: percentiles, min, max, stdev, histogram
 
         e.g.
@@ -82,13 +83,15 @@ def _stats(
         }
     """
     sample, edges = numpy.histogram(arr[~arr.mask], **kwargs)
-    return {
-        "pc": numpy.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
-        "min": arr.min().item(),
-        "max": arr.max().item(),
-        "std": arr.std().item(),
-        "histogram": [sample.tolist(), edges.tolist()],
-    }
+    return ImageStatistics(
+        percentiles=numpy.percentile(arr[~arr.mask], percentiles)
+        .astype(arr.dtype)
+        .tolist(),
+        min=arr.min().item(),
+        max=arr.max().item(),
+        std=arr.std().item(),
+        histogram=[sample.tolist(), edges.tolist()],
+    )
 
 
 # https://github.com/OSGeo/gdal/blob/b1c9c12ad373e40b955162b45d704070d4ebf7b0/gdal/frmts/ingr/IngrTypes.cpp#L191
