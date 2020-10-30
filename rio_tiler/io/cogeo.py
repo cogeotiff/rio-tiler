@@ -256,9 +256,10 @@ class COGReader(BaseReader):
                 k for k, v in self.colormap.items() if v != (0, 0, 0, 255)
             ]
 
-        return reader.stats(
+        stats = reader.stats(
             self.dataset, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs,
         )
+        return {b: ImageStatistics(**s) for b, s in stats.items()}
 
     def tile(
         self,

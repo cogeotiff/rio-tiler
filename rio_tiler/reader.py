@@ -22,7 +22,6 @@ from .errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
-from .models import ImageStatistics
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import (
@@ -419,7 +418,7 @@ def stats(
     percentiles: Tuple[float, float] = (2.0, 98.0),
     hist_options: Optional[Dict] = None,
     **kwargs: Any,
-) -> Dict[str, ImageStatistics]:
+) -> Dict[str, Any]:
     """
     Retrieve statistics from an image.
 

@@ -45,7 +45,7 @@ with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
 }
 ```
 
-* updated `rio_tiler.utils._stats` function to return a `rio_tiler.models.ImageStatistics` model. which replace `pc` by `percentiles`
+* updated `rio_tiler.utils._stats` function to replace `pc` by `percentiles`
 
 ```python
 with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:

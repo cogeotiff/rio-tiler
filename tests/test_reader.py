@@ -487,10 +487,10 @@ def test_read_unscale():
         numpy.testing.assert_array_equal(mask, maskS)
 
         meta = reader.metadata(src_dst)
-        assert meta["statistics"]["band1"].min == -894.0
+        assert meta["statistics"]["band1"]["min"] == -894.0
 
         meta = reader.metadata(src_dst, unscale=True)
-        assert round(meta["statistics"]["band1"].min, 1) == 999.9
+        assert round(meta["statistics"]["band1"]["min"], 1) == 999.9
 
         p = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
         assert p == [8917]
