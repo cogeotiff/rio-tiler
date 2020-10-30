@@ -8,12 +8,11 @@ from typing import Any, Coroutine, Dict, List, Tuple, Type
 
 import attr
 import morecantile
-import numpy
 import pytest
 
 from rio_tiler import constants
 from rio_tiler.io import AsyncBaseReader, COGReader
-from rio_tiler.models import ImageStatistics, Info
+from rio_tiler.models import ImageData, ImageStatistics, Info
 
 try:
     import contextvars  # Python 3.7+ only or via contextvars backport.
@@ -70,7 +69,7 @@ class AsyncCOGReader(AsyncBaseReader):
 
     async def tile(
         self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> Coroutine[Any, Any, ImageData]:
         """Read a Map tile from the Dataset."""
         return await run_in_threadpool(
             self.dataset.tile, tile_x, tile_y, tile_z, **kwargs  # type: ignore
@@ -78,13 +77,11 @@ class AsyncCOGReader(AsyncBaseReader):
 
     async def part(
         self, bbox: Tuple[float, float, float, float], **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> Coroutine[Any, Any, ImageData]:
         """Read a Part of a Dataset."""
         return await run_in_threadpool(self.dataset.part, bbox, **kwargs)  # type: ignore
 
-    async def preview(
-        self, **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
         """Return a preview of a Dataset."""
         return await run_in_threadpool(self.dataset.preview, **kwargs)  # type: ignore
 

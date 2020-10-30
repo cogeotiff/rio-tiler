@@ -7,7 +7,6 @@ import warnings
 from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
-import numpy
 from morecantile import Tile, TileMatrixSet
 
 from ..constants import WEB_MERCATOR_TMS
@@ -18,7 +17,7 @@ from ..errors import (
     TileOutsideBounds,
 )
 from ..expression import apply_expression
-from ..models import ImageStatistics, Info, Metadata, SpatialInfo
+from ..models import ImageData, ImageStatistics, Info, Metadata, SpatialInfo
 from ..tasks import multi_arrays, multi_values
 
 
@@ -95,21 +94,17 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         return Metadata(statistics=stats, **info.dict())
 
     @abc.abstractmethod
-    def tile(
-        self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    def tile(self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any) -> ImageData:
         """Read a Map tile from the Dataset."""
         ...
 
     @abc.abstractmethod
-    def part(
-        self, bbox: Tuple[float, float, float, float], **kwargs: Any
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    def part(self, bbox: Tuple[float, float, float, float], **kwargs: Any) -> ImageData:
         """Read a Part of a Dataset."""
         ...
 
     @abc.abstractmethod
-    def preview(self, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    def preview(self, **kwargs: Any) -> ImageData:
         """Return a preview of a Dataset."""
         ...
 
@@ -155,21 +150,19 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     async def tile(
         self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> Coroutine[Any, Any, ImageData]:
         """Read a Map tile from the Dataset."""
         ...
 
     @abc.abstractmethod
     async def part(
         self, bbox: Tuple[float, float, float, float], **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> Coroutine[Any, Any, ImageData]:
         """Read a Part of a Dataset."""
         ...
 
     @abc.abstractmethod
-    async def preview(
-        self, **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
         """Return a preview of a Dataset."""
         ...
 
@@ -272,7 +265,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read a Mercator Map tile multiple assets."""
         if not self.tile_exists(tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
@@ -296,9 +289,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 "assets must be passed either via expression or assets options."
             )
 
-        def _reader(
-            asset: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
@@ -317,7 +308,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             blocks = expression.split(",")
             data = apply_expression(blocks, assets, data)
 
-        return data, mask
+        return ImageData(data, mask)
 
     def part(
         self,
@@ -328,7 +319,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read part of multiple assets."""
         if isinstance(assets, str):
             assets = (assets,)
@@ -347,9 +338,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 "assets must be passed either via expression or assets options."
             )
 
-        def _reader(
-            asset: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
@@ -362,7 +351,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             blocks = expression.split(",")
             data = apply_expression(blocks, assets, data)
 
-        return data, mask
+        return ImageData(data, mask)
 
     def preview(
         self,
@@ -372,7 +361,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Return a preview from multiple assets."""
         if isinstance(assets, str):
             assets = (assets,)
@@ -391,7 +380,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 "assets must be passed either via expression or assets options."
             )
 
-        def _reader(asset: str, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(asset: str, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
@@ -404,7 +393,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             blocks = expression.split(",")
             data = apply_expression(blocks, assets, data)
 
-        return data, mask
+        return ImageData(data, mask)
 
     def point(
         self,
@@ -582,7 +571,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read a Mercator Map tile multiple bands."""
         if not self.tile_exists(tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
@@ -606,9 +595,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(
-            band: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
@@ -627,7 +614,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             blocks = expression.split(",")
             data = apply_expression(blocks, bands, data)
 
-        return data, mask
+        return ImageData(data, mask)
 
     def part(
         self,
@@ -638,7 +625,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read part of multiple bands."""
         if isinstance(bands, str):
             bands = (bands,)
@@ -657,9 +644,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(
-            band: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
@@ -672,7 +657,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             blocks = expression.split(",")
             data = apply_expression(blocks, bands, data)
 
-        return data, mask
+        return ImageData(data, mask)
 
     def preview(
         self,
@@ -682,7 +667,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Return a preview from multiple bands."""
         if isinstance(bands, str):
             bands = (bands,)
@@ -701,7 +686,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(band: str, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(band: str, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
@@ -712,7 +697,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             blocks = expression.split(",")
             data = apply_expression(blocks, bands, data)
 
-        return data, mask
+        return ImageData(data, mask)
 
     def point(
         self,
