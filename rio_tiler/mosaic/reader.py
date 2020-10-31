@@ -3,10 +3,9 @@
 from inspect import isclass
 from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, cast
 
-import numpy
-
 from ..constants import MAX_THREADS
 from ..errors import InvalidMosaicMethod, TileOutsideBounds
+from ..models import ImageData
 from ..tasks import create_tasks, filter_tasks
 from ..utils import _chunks
 from .methods.base import MosaicMethodBase
@@ -15,14 +14,14 @@ from .methods.defaults import FirstMethod
 
 def mosaic_reader(
     assets: Sequence[str],
-    reader: Callable,
+    reader: Callable[[Any], ImageData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
     allowed_exceptions: Tuple = (TileOutsideBounds,),
     **kwargs,
-) -> Tuple[Tuple[numpy.ndarray, numpy.ndarray], Sequence[str]]:
+) -> Tuple[ImageData, List[str]]:
     """
     Merge multiple assets.
 
@@ -83,15 +82,10 @@ def mosaic_reader(
 
     for chunks in _chunks(assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
-        for (t, m), asset in filter_tasks(
-            tasks, allowed_exceptions=allowed_exceptions,
-        ):
+        for img, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions,):
             assets_used.append(asset)
-            t = numpy.ma.array(t)
-            t.mask = m == 0
-
-            pixel_selection.feed(t)
+            pixel_selection.feed(img.as_masked())
             if pixel_selection.is_done:
-                return pixel_selection.data, assets_used
+                return ImageData(*pixel_selection.data, assets=assets_used), assets_used  # type: ignore
 
-    return pixel_selection.data, assets_used
+    return ImageData(*pixel_selection.data, assets=assets_used), assets_used  # type: ignore

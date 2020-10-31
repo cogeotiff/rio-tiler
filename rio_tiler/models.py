@@ -1,12 +1,15 @@
 """rio-tiler models."""
 
 from enum import Enum
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Sequence, Tuple
 
 import attr
 import numpy
+from affine import Affine
 from pydantic import BaseModel
+from rasterio.crs import CRS
 from rasterio.plot import reshape_as_image
+from rasterio.transform import from_bounds
 from rio_color.operations import parse_operations
 from rio_color.utils import scale_dtype, to_math_type
 
@@ -80,11 +83,28 @@ class ImageData:
     data: numpy.ndarray = attr.ib()
     mask: numpy.ndarray = attr.ib()
     assets: Optional[List[str]] = attr.ib(default=None)
+    bounds: Optional[BBox] = attr.ib(default=None)
+    crs: Optional[CRS] = attr.ib(default=None)
 
     def __iter__(self):
         """Allow for variable expansion (``arr, mask = ImageData``)"""
         for i in (self.data, self.mask):
             yield i
+
+    @classmethod
+    def create_from_list(cls, data: Sequence):
+        """Create ImageData from a sequence of ImageData objects."""
+        arr = numpy.concatenate([img.data for img in data])
+        mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
+        assets = [img.assets[0] for img in data if img.assets]
+
+        bounds_values = [img.bounds for img in data if img.bounds]
+        bounds = list(set(bounds_values))[0] if bounds_values else None
+
+        crs_values = [img.crs for img in data if img.crs]
+        crs = list(set(crs_values))[0] if crs_values else None
+
+        return cls(arr, mask, assets=assets, crs=crs, bounds=bounds)
 
     def as_masked(self):
         """return a numpy masked array."""
@@ -111,6 +131,15 @@ class ImageData:
         """Number of band."""
         return self.data.shape[0]
 
+    @property
+    def transform(self):
+        """Returns the affine transform."""
+        return (
+            from_bounds(*self.bounds, self.width, self.height)
+            if self.bounds
+            else Affine.scale(self.width, -self.height)
+        )
+
     def post_process(
         self,
         in_range: Optional[Tuple[NumType, NumType]] = None,
@@ -131,17 +160,22 @@ class ImageData:
                     ),
                     0,
                 )
-            self.data = self.data.astype(numpy.uint8)
 
         if color_formula:
             self.data[self.data < 0] = 0
             for ops in parse_operations(color_formula):
                 self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
 
-    def render(self, add_mask: bool = True, **kwargs) -> bytes:
+    def render(self, add_mask: bool = True, img_format: str = "PNG", **kwargs) -> bytes:
         """Render data to image blob."""
+        if img_format.lower() == "gtiff":
+            if "transform" not in kwargs:
+                kwargs.update({"transform": self.transform})
+            if "crs" not in kwargs and self.crs:
+                kwargs.update({"crs": self.crs})
+
         return (
-            render(self.data, self.mask, **kwargs)
+            render(self.data, self.mask, img_format=img_format, **kwargs)
             if add_mask
-            else render(self.data, **kwargs)
+            else render(self.data, img_format=img_format, **kwargs)
         )

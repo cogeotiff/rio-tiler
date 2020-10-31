@@ -1,13 +1,16 @@
 """tests rio_tiler.io.cogeo.COGReader"""
 
 import os
+from io import BytesIO
+from typing import Any, Dict
 
 import mercantile
 import numpy
 import pytest
-from rasterio.io import DatasetReader
+from rasterio.io import DatasetReader, MemoryFile
 from rasterio.vrt import WarpedVRT
 
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
 from rio_tiler.io import COGReader, GCPCOGReader
 
@@ -340,3 +343,70 @@ def test_cog_with_internal_gcps():
         data, mask = cog.tile(tile_x, tile_y, tile_z)
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
+
+
+def parse_img(content: bytes) -> Dict[Any, Any]:
+    """Read tile image and return metadata."""
+    with MemoryFile(content) as mem:
+        with mem.open() as dst:
+            return dst.meta
+
+
+def test_imageData_output():
+    """Test ImageData output."""
+    with COGReader(COG_NODATA) as cog:
+        img = cog.tile(43, 24, 7)
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.all()
+        assert img.count == 1
+        assert img.data_as_image().shape == (256, 256, 1)
+
+        assert numpy.array_equal(~img.as_masked().mask[0] * 255, img.mask)
+
+        assert img.crs == WEB_MERCATOR_TMS.crs
+        assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
+
+        meta = parse_img(img.render(img_format="GTiff"))
+        assert meta["driver"] == "GTiff"
+        assert meta["crs"] == WEB_MERCATOR_TMS.crs
+        assert meta["transform"]
+        assert meta["count"] == 2
+
+        res = img.render(img_format="NPY")
+        arr = numpy.load(BytesIO(res))
+        numpy.array_equal(arr[0], img.data)
+        numpy.array_equal(arr[1], img.mask)
+
+        img = cog.tile(43, 24, 7)
+        assert img.data.dtype == "uint16"
+        img.post_process(in_range=(img.data.min(), img.data.max()))
+        assert img.data.dtype == "uint16"
+        assert img.data.min() == 0
+        assert img.data.max() == 255
+
+        img.post_process(color_formula="Gamma R 3.1")
+        assert img.data.dtype == "uint8"
+
+        bbox = (
+            -56.624124590533825,
+            73.52687881825946,
+            -56.530950796449005,
+            73.50183615350426,
+        )
+        img = cog.part(bbox)
+        assert img.data.shape == (1, 11, 41)
+        meta = parse_img(img.render(img_format="GTiff"))
+        assert meta["crs"] == WGS84_CRS
+        assert img.bounds == bbox
+
+        img = cog.part(bbox, dst_crs=cog.dataset.crs)
+        assert img.data.shape == (1, 29, 30)
+        meta = parse_img(img.render(img_format="GTiff"))
+        assert meta["crs"] == cog.dataset.crs
+        assert not img.bounds == bbox
+
+        img = cog.preview(max_size=128)
+        assert img.data.shape == (1, 128, 128)
+        assert img.bounds == cog.dataset.bounds
+        meta = parse_img(img.render(img_format="GTiff"))
+        assert meta["crs"] == cog.dataset.crs

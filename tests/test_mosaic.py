@@ -1,7 +1,6 @@
 """tests ard_tiler.mosaic."""
 
 import os
-from typing import Tuple
 
 import numpy
 import pytest
@@ -9,6 +8,7 @@ import pytest
 from rio_tiler import mosaic
 from rio_tiler.errors import InvalidMosaicMethod, TileOutsideBounds
 from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
@@ -32,19 +32,16 @@ yo = 180
 zo = 9
 
 
-def _read_tile(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def _read_tile(src_path: str, *args, **kwargs) -> ImageData:
     """Read tile from an asset"""
     with COGReader(src_path) as cog:
         return cog.tile(*args, **kwargs)
 
 
-def _read_preview(
-    src_path: str, *args, **kwargs
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def _read_preview(src_path: str, *args, **kwargs) -> ImageData:
     """Read preview from an asset"""
     with COGReader(src_path) as cog:
-        data, mask = cog.preview(*args, **kwargs)
-    return data, mask
+        return cog.preview(*args, **kwargs)
 
 
 def test_mosaic_tiler():

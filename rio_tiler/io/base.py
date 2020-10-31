@@ -294,7 +294,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             assets,
             _reader,
             tile_x,
@@ -306,9 +306,9 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, assets, data)
+            output.data = apply_expression(blocks, assets, output.data)
 
-        return ImageData(data, mask)
+        return output
 
     def part(
         self,
@@ -343,15 +343,15 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             assets, _reader, bbox, expression=asset_expression, **kwargs,
         )
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, assets, data)
+            output.data = apply_expression(blocks, assets, output.data)
 
-        return ImageData(data, mask)
+        return output
 
     def preview(
         self,
@@ -385,15 +385,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
 
-        data, mask = multi_arrays(
-            assets, _reader, expression=asset_expression, **kwargs
-        )
+        output = multi_arrays(assets, _reader, expression=asset_expression, **kwargs)
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, assets, data)
+            output.data = apply_expression(blocks, assets, output.data)
 
-        return ImageData(data, mask)
+        return output
 
     def point(
         self,
@@ -600,7 +598,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             bands,
             _reader,
             tile_x,
@@ -612,9 +610,9 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, bands, data)
+            output.data = apply_expression(blocks, bands, output.data)
 
-        return ImageData(data, mask)
+        return output
 
     def part(
         self,
@@ -649,15 +647,15 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             bands, _reader, bbox, expression=band_expression, **kwargs,
         )
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, bands, data)
+            output.data = apply_expression(blocks, bands, output.data)
 
-        return ImageData(data, mask)
+        return output
 
     def preview(
         self,
@@ -691,13 +689,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
 
-        data, mask = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
+        output = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, bands, data)
+            output.data = apply_expression(blocks, bands, output.data)
 
-        return ImageData(data, mask)
+        return output
 
     def point(
         self,

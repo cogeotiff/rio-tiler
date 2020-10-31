@@ -331,7 +331,9 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             tile = apply_expression(blocks, bands, tile)
 
-        return ImageData(tile, mask)
+        return ImageData(
+            tile, mask, bounds=tile_bounds, crs=self.tms.crs, assets=[self.filepath]
+        )
 
     def part(
         self,
@@ -401,7 +403,17 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
-        return ImageData(data, mask)
+        return ImageData(
+            data,
+            mask,
+            bounds=(
+                bbox
+                if dst_crs == bounds_crs
+                else transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+            ),
+            crs=dst_crs,
+            assets=[self.filepath],
+        )
 
     def preview(
         self,
@@ -448,7 +460,13 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
-        return ImageData(data, mask)
+        return ImageData(
+            data,
+            mask,
+            bounds=self.dataset.bounds,
+            crs=self.dataset.crs,
+            assets=[self.filepath],
+        )
 
     def point(
         self,
