@@ -32,6 +32,7 @@ def test_spatial_info_valid():
     with COGReader(COG_NODATA) as cog:
         assert not cog.dataset.closed
         meta = cog.spatial_info
+        assert meta["minzoom"] == 4
         assert meta.minzoom == 4
         assert meta.maxzoom == 8
         assert cog.nodata == cog.dataset.nodata
@@ -68,6 +69,7 @@ def test_info_valid():
     """Should work as expected (get file info)"""
     with COGReader(COG_SCALE) as cog:
         meta = cog.info()
+        assert meta["scale"]
         assert meta.scale
         assert meta.offset
         assert not meta.colormap
@@ -75,6 +77,7 @@ def test_info_valid():
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
         meta = cog.info()
+        assert meta["colormap"]
         assert meta.colormap
 
     with COGReader(COG_NODATA, colormap={1: [0, 0, 0, 0]}) as cog:
@@ -119,11 +122,13 @@ def test_metadata_valid():
     """Get bounds and get stats for all bands."""
     with COGReader(COGEO) as cog:
         meta = cog.metadata()
+        assert len(meta["band_descriptions"]) == 1
         assert len(meta.band_descriptions) == 1
         assert ("band1", "") == meta.band_descriptions[0]
 
-        stats = meta.statistics
+        stats = meta["statistics"]
         assert len(stats.items()) == 1
+        assert meta["statistics"]["band1"]["percentiles"]
         b1_stats = meta.statistics["band1"]
         assert b1_stats.percentiles == [1, 6896]
 

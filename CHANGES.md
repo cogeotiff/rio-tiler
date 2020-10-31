@@ -1,7 +1,7 @@
 
 ## 2.0.0rc1 (TBD)
 
-* add pydantic models for IO outputs (Metadata, Info, ...)
+* add pydantic models for IO outputs (Metadata, Info, ...).
 
 * change output form for `band_metadata`, `band_descriptions` and do not add band description when not found.
 ```python
