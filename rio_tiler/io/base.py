@@ -510,9 +510,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(band: str, *args, **kwargs) -> Dict:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.stats(*args, **kwargs)[
-                    "band1"
-                ]  # We only return statistics for Band `1` of each dataset.
+                # We only return statistics for Band `1` of each dataset.
+                return cog.stats(*args, **kwargs)["band1"]
 
         return multi_values(bands, _reader, pmin, pmax, **kwargs)
 

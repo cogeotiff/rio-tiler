@@ -83,6 +83,9 @@ def mosaic_reader(
     for chunks in _chunks(assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
         for img, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions,):
+            if isinstance(img, tuple):
+                img = ImageData(*img)
+
             assets_used.append(asset)
             pixel_selection.feed(img.as_masked())
             if pixel_selection.is_done:

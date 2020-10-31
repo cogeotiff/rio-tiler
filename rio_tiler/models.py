@@ -27,7 +27,15 @@ class NodataTypes(str, Enum):
     Empty = "None"
 
 
-class Bounds(BaseModel):
+class RioTilerBaseModel(BaseModel):
+    """Base Model for rio-tiler models."""
+
+    def __getitem__(self, item):
+        """Keep `getter` access for compatibility."""
+        return self.__dict__[item]
+
+
+class Bounds(RioTilerBaseModel):
     """Dataset Bounding box"""
 
     bounds: BBox
@@ -60,7 +68,7 @@ class Info(SpatialInfo):
         use_enum_values = True
 
 
-class ImageStatistics(BaseModel):
+class ImageStatistics(RioTilerBaseModel):
     """Image statistics"""
 
     percentiles: List[NumType]

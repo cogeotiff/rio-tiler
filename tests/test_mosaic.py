@@ -1,6 +1,7 @@
 """tests ard_tiler.mosaic."""
 
 import os
+from typing import Tuple
 
 import numpy
 import pytest
@@ -38,10 +39,13 @@ def _read_tile(src_path: str, *args, **kwargs) -> ImageData:
         return cog.tile(*args, **kwargs)
 
 
-def _read_preview(src_path: str, *args, **kwargs) -> ImageData:
+def _read_preview(
+    src_path: str, *args, **kwargs
+) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Read preview from an asset"""
     with COGReader(src_path) as cog:
-        return cog.preview(*args, **kwargs)
+        data, mask = cog.preview(*args, **kwargs)
+    return data, mask
 
 
 def test_mosaic_tiler():
