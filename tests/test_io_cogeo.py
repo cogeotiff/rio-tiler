@@ -98,7 +98,7 @@ def test_info_valid():
         assert meta.offset
         assert meta.band_metadata
         band_meta = meta.band_metadata[0]
-        assert band_meta[0] == "band1"
+        assert band_meta[0] == "1"
         assert "STATISTICS_MAXIMUM" in band_meta[1]
 
     with COGReader(COG_ALPHA) as cog:
@@ -124,29 +124,29 @@ def test_metadata_valid():
         meta = cog.metadata()
         assert len(meta["band_descriptions"]) == 1
         assert len(meta.band_descriptions) == 1
-        assert ("band1", "") == meta.band_descriptions[0]
+        assert ("1", "") == meta.band_descriptions[0]
 
         stats = meta["statistics"]
         assert len(stats.items()) == 1
-        assert meta["statistics"]["band1"]["percentiles"]
-        b1_stats = meta.statistics["band1"]
+        assert meta["statistics"]["1"]["percentiles"]
+        b1_stats = meta.statistics["1"]
         assert b1_stats.percentiles == [1, 6896]
 
         stats = cog.stats()
         assert len(stats.items()) == 1
-        b1_stats = stats["band1"]
+        b1_stats = stats["1"]
         assert b1_stats.percentiles == [1, 6896]
 
         meta = cog.metadata(pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128)
         stats = meta.statistics
         assert len(stats.items()) == 1
-        b1_stats = stats["band1"]
+        b1_stats = stats["1"]
         assert len(b1_stats.histogram[0]) == 20
         assert b1_stats.percentiles == [1, 3776]
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
-        b1_stats = cog.metadata().statistics["band1"]
+        b1_stats = cog.metadata().statistics["1"]
         assert b1_stats.histogram[1] == list(range(20))
 
 
@@ -272,7 +272,7 @@ def test_COGReader_Options():
     """Set options in reader."""
     with COGReader(COGEO, nodata=1) as cog:
         assert cog.nodata == 1
-        b1_stats = cog.metadata().statistics["band1"]
+        b1_stats = cog.metadata().statistics["1"]
         assert b1_stats.percentiles == [2720, 6896]
         assert cog.info().nodata_type == "Nodata"
 
@@ -335,8 +335,8 @@ def test_cog_with_internal_gcps():
 
         metadata = cog.info()
         assert len(metadata.band_metadata) == 1
-        assert metadata.band_descriptions == [("band1", "")]
-        b1_stats = cog.stats()["band1"]
+        assert metadata.band_descriptions == [("1", "")]
+        b1_stats = cog.stats()["1"]
         assert b1_stats.max == 623
 
         tile_z = 8

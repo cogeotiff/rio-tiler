@@ -491,6 +491,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         bands_metadata = multi_values(bands, _reader, *args, **kwargs)
 
         meta = self.spatial_info.dict()
+
+        # We only keep the value for the first band.
         meta["band_metadata"] = [
             (band, bands_metadata[band].band_metadata[0][1])
             for ix, band in enumerate(bands)
@@ -524,7 +526,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 # We only return statistics for Band `1` of each dataset.
-                return cog.stats(*args, **kwargs)["band1"]
+                stats = cog.stats(*args, **kwargs)
+                return stats.get(list(stats)[0])
 
         return multi_values(bands, _reader, pmin, pmax, **kwargs)
 
@@ -565,7 +568,9 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         meta["nodata_type"] = bands_metadata[bands[0]].nodata_type
         meta["statistics"] = {
             # We only keep statistics for Band `1` of each dataset.
-            band: bands_metadata[band].statistics["band1"]
+            band: bands_metadata[band].statistics.get(
+                list(bands_metadata[band].statistics)[0]
+            )
             for _, band in enumerate(bands)
         }
         return Metadata(**meta)

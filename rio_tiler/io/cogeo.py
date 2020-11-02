@@ -183,8 +183,8 @@ class COGReader(BaseReader):
             return self.dataset.descriptions[ix - 1] or ""
 
         indexes = self.dataset.indexes
-        band_descr = [(f"band{ix}", _get_descr(ix)) for ix in indexes]
-        band_meta = [(f"band{ix}", self.dataset.tags(ix)) for ix in indexes]
+        band_descr = [(f"{ix}", _get_descr(ix)) for ix in indexes]
+        band_meta = [(f"{ix}", self.dataset.tags(ix)) for ix in indexes]
         colorinterp = [self.dataset.colorinterp[ix - 1].name for ix in indexes]
 
         if has_alpha_band(self.dataset):
