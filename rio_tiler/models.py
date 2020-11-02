@@ -182,8 +182,7 @@ class ImageData:
             if "crs" not in kwargs and self.crs:
                 kwargs.update({"crs": self.crs})
 
-        return (
-            render(self.data, self.mask, img_format=img_format, **kwargs)
-            if add_mask
-            else render(self.data, img_format=img_format, **kwargs)
-        )
+        if add_mask:
+            return render(self.data, self.mask, img_format=img_format, **kwargs)
+
+        return render(self.data, img_format=img_format, **kwargs)
