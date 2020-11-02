@@ -5,10 +5,13 @@ from typing import Tuple
 
 import numpy
 import pytest
+from rasterio.warp import transform_bounds
 
 from rio_tiler import mosaic
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import InvalidMosaicMethod, TileOutsideBounds
 from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
@@ -32,10 +35,16 @@ yo = 180
 zo = 9
 
 
-def _read_tile(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def _read_tile(src_path: str, *args, **kwargs) -> ImageData:
     """Read tile from an asset"""
     with COGReader(src_path) as cog:
         return cog.tile(*args, **kwargs)
+
+
+def _read_part(src_path: str, *args, **kwargs) -> ImageData:
+    """Read part from an asset"""
+    with COGReader(src_path) as cog:
+        return cog.part(*args, **kwargs)
 
 
 def _read_preview(
@@ -198,6 +207,7 @@ def test_mosaic_tiler():
 
     # test with preview
     # NOTE: We need to fix the output width and height because each preview could have different size
+    # Also because the 2 assets cover different bbox, getting the preview merged together doesn't make real sense
     (t, m), _ = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
@@ -301,3 +311,55 @@ def test_threads():
         assets, _read_tile, x, y, z, threads=2, chunk_size=4
     )
     assert t.shape == (3, 256, 256)
+
+
+def test_mosaic_tiler_with_imageDataClass():
+    """Test mosaic tiler."""
+    img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
+    assert img.data.shape == (3, 256, 256)
+    assert img.mask.shape == (256, 256)
+    assert img.mask.all()
+    assert img.data[0][-1][-1] == 8682
+    assert len(img.assets) == 1
+
+    assert img.crs == WEB_MERCATOR_TMS.crs
+    assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(x, y, z)
+
+    img, assets_used = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, pixel_selection=defaults.LowestMethod()
+    )
+    assert assets_used == img.assets == assets
+    assert img.crs == WEB_MERCATOR_TMS.crs
+    assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(x, y, z)
+
+    img, assets_used = mosaic.mosaic_reader(
+        assets,
+        _read_preview,
+        width=256,
+        height=256,
+        pixel_selection=defaults.LowestMethod(),
+    )
+    assert img.data.shape == (3, 256, 256)
+    assert img.mask.shape == (256, 256)
+    assert assets_used == img.assets == assets
+    assert not img.crs
+    assert not img.bounds
+
+    bbox = [-75.98703377413767, 44.93504283293786, -71.337604723999, 47.09685599202324]
+    with COGReader(assets[0]) as cog:
+        crs1 = cog.dataset.crs
+
+    with COGReader(assets[0]) as cog:
+        crs2 = cog.dataset.crs
+
+    img, assets_used = mosaic.mosaic_reader(
+        assets, _read_part, bbox=bbox, dst_crs=crs1, bounds_crs=WGS84_CRS, max_size=1024
+    )
+    assert img.data.shape == (3, 690, 1024)
+    assert img.mask.shape == (690, 1024)
+    assert img.mask.any()
+    assert assets_used == img.assets == assets
+    assert img.crs == crs1 == crs2
+    assert not img.bounds == bbox
+    bbox_in_crs = transform_bounds(WGS84_CRS, crs1, *bbox, densify_pts=21)
+    assert img.bounds == bbox_in_crs

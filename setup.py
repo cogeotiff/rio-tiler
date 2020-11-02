@@ -15,6 +15,7 @@ inst_reqs = [
     "morecantile>=1.1,<2.0",
     "rasterio>=1.1.7",
     "requests",
+    "rio-color",
 ]
 
 extra_reqs = {

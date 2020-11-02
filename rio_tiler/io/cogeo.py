@@ -18,7 +18,7 @@ from rasterio.warp import calculate_default_transform, transform_bounds
 from .. import constants, reader
 from ..errors import ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
-from ..models import ImageStatistics, Info
+from ..models import ImageData, ImageStatistics, Info
 from ..utils import has_alpha_band, has_mask_band
 from .base import BaseReader
 
@@ -270,7 +270,7 @@ class COGReader(BaseReader):
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = "",
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """
         Read a Mercator Map tile from a COG.
 
@@ -331,7 +331,9 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             tile = apply_expression(blocks, bands, tile)
 
-        return tile, mask
+        return ImageData(
+            tile, mask, bounds=tile_bounds, crs=self.tms.crs, assets=[self.filepath]
+        )
 
     def part(
         self,
@@ -342,7 +344,7 @@ class COGReader(BaseReader):
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = "",
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """
         Read part of a COG.
 
@@ -401,14 +403,21 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
-        return data, mask
+        if dst_crs == bounds_crs:
+            bounds = bbox
+        else:
+            bounds = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        return ImageData(
+            data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
+        )
 
     def preview(
         self,
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = "",
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """
         Return a preview of a COG.
 
@@ -448,7 +457,13 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
-        return data, mask
+        return ImageData(
+            data,
+            mask,
+            bounds=self.dataset.bounds,
+            crs=self.dataset.crs,
+            assets=[self.filepath],
+        )
 
     def point(
         self,

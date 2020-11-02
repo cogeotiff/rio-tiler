@@ -1,7 +1,22 @@
 
 ## 2.0.0rc1 (TBD)
 
-* add pydantic models for IO outputs (Metadata, Info, ...).
+* added `ImageData` output class for all `rio_tiler.io` classes returning numpy array-like types (`tile, mask = method()`)
+
+```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    r = cog.preview()
+    assert isinstance(r, ImageData)
+
+    data, mask = r
+    assert data.shape == (3, 892, 1024)
+```
+**Note**: the class keeps the compatibility with previous notation: `tile, mask = ImageData`
+
+* add pydantic models for IO outputs (Metadata, Info, ...)
 
 * change output form for `band_metadata`, `band_descriptions` and do not add band description when not found.
 ```python
