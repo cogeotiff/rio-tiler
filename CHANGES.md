@@ -20,8 +20,8 @@ with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
     print(i.band_metadata)
     print(i.band_descriptions)
 
-[('band1', {}), ('band2', {}), ('band3', {})]
-[('band1', ''), ('band2', ''), ('band3', '')]
+[('1', {}), ('2', {}), ('3', {})]
+[('1', ''), ('2', ''), ('3', '')]
 ```
 
 * change output form for `stats`
@@ -39,9 +39,9 @@ with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
 with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
     print(cog.stats())
 {
-    "band1": {...},
-    "band2": {...},
-    "band3": {...}
+    "1": {...},
+    "2": {...},
+    "3": {...}
 }
 ```
 
@@ -49,7 +49,7 @@ with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
 
 ```python
 with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
-    print(cog.stats()["band1"].json())
+    print(cog.stats()["1"].json())
 {"percentiles": [19.0, 168.0], "min": 0.0, "max": 255.0, ...}
 ```
 
