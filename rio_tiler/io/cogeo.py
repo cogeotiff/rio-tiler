@@ -403,16 +403,13 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
+        if dst_crs == bounds_crs:
+            bounds = bbox
+        else:
+            bounds = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
         return ImageData(
-            data,
-            mask,
-            bounds=(
-                bbox
-                if dst_crs == bounds_crs
-                else transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
-            ),
-            crs=dst_crs,
-            assets=[self.filepath],
+            data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
         )
 
     def preview(

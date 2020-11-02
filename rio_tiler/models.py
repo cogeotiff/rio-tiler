@@ -100,7 +100,7 @@ class ImageData:
             yield i
 
     @classmethod
-    def create_from_list(cls, data: Sequence):
+    def create_from_list(cls, data: Sequence["ImageData"]):
         """Create ImageData from a sequence of ImageData objects."""
         arr = numpy.concatenate([img.data for img in data])
         mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
@@ -114,14 +114,18 @@ class ImageData:
 
         return cls(arr, mask, assets=assets, crs=crs, bounds=bounds)
 
-    def as_masked(self):
+    def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
         data = numpy.ma.array(self.data)
         data.mask = self.mask == 0
         return data
 
     def data_as_image(self) -> numpy.ndarray:
-        """return a numpy masked array."""
+        """Return the data array reshaped into an image processing/visualization software friendly order.
+
+        (bands, rows, columns) -> (rows, columns, bands).
+
+        """
         return reshape_as_image(self.data)
 
     @property
