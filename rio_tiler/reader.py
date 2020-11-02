@@ -474,9 +474,7 @@ def stats(
 
     hist_options = hist_options or {}
     return {
-        f"band{indexes[b]}": raster_stats(
-            data[b], percentiles=percentiles, **hist_options
-        )
+        f"{indexes[b]}": raster_stats(data[b], percentiles=percentiles, **hist_options)
         for b in range(data.shape[0])
     }
 
@@ -553,9 +551,7 @@ def metadata(
 
     hist_options = hist_options or {}
     statistics = {
-        f"band{indexes[b]}": raster_stats(
-            data[b], percentiles=percentiles, **hist_options
-        )
+        f"{indexes[b]}": raster_stats(data[b], percentiles=percentiles, **hist_options)
         for b in range(data.shape[0])
     }
 
@@ -563,8 +559,8 @@ def metadata(
         """Return band description."""
         return src_dst.descriptions[ix - 1] or ""
 
-    band_descriptions = [(ix, _get_descr(ix)) for ix in indexes]
-    tags = [(ix, src_dst.tags(ix)) for ix in indexes]
+    band_descriptions = [(f"{ix}", _get_descr(ix)) for ix in indexes]
+    tags = [(f"{ix}", src_dst.tags(ix)) for ix in indexes]
 
     other_meta = dict()
     if src_dst.scales[0] and src_dst.offsets[0]:
