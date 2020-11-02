@@ -157,26 +157,34 @@ class ImageData:
         in_range: Optional[Tuple[NumType, NumType]] = None,
         out_range: Optional[Tuple[NumType, NumType]] = None,
         color_formula: Optional[str] = None,
-    ):
+    ) -> "ImageData":
         """Post-process image data."""
+        data = self.data.copy()
+        mask = self.mask.copy()
+
         if in_range:
             rescale_arr = tuple(_chunks(in_range, 2))
             if len(rescale_arr) != self.count:
                 rescale_arr = ((rescale_arr[0]),) * self.count
 
             for bdx in range(self.count):
-                self.data[bdx] = numpy.where(
+                data[bdx] = numpy.where(
                     self.mask,
                     linear_rescale(
-                        self.data[bdx], in_range=rescale_arr[bdx], out_range=out_range
+                        data[bdx], in_range=rescale_arr[bdx], out_range=out_range
                     ),
                     0,
                 )
 
         if color_formula:
-            self.data[self.data < 0] = 0
+            data = data.astype(numpy.uint8)
+            data[data < 0] = 0
             for ops in parse_operations(color_formula):
-                self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
+                data = scale_dtype(ops(to_math_type(data)), numpy.uint8)
+
+        return ImageData(
+            data, mask, crs=self.crs, bounds=self.bounds, assets=self.assets
+        )
 
     def render(self, add_mask: bool = True, img_format: str = "PNG", **kwargs) -> bytes:
         """Render data to image blob."""

@@ -379,18 +379,32 @@ def test_imageData_output():
 
         res = img.render(img_format="NPY")
         arr = numpy.load(BytesIO(res))
-        numpy.array_equal(arr[0], img.data)
-        numpy.array_equal(arr[1], img.mask)
+        assert numpy.array_equal(arr[0:1], img.data)
+        assert numpy.array_equal(arr[1], img.mask)
 
         img = cog.tile(43, 24, 7)
         assert img.data.dtype == "uint16"
-        img.post_process(in_range=(img.data.min(), img.data.max()))
-        assert img.data.dtype == "uint16"
-        assert img.data.min() == 0
-        assert img.data.max() == 255
 
-        img.post_process(color_formula="Gamma R 3.1")
-        assert img.data.dtype == "uint8"
+        imgr = img.post_process(in_range=(img.data.min(), img.data.max()))
+        assert not numpy.array_equal(img.data, imgr.data)
+        assert imgr.data.dtype == "uint16"
+        assert imgr.data.min() == 0
+        assert imgr.data.max() == 255
+        assert imgr.bounds == img.bounds
+        assert imgr.crs == img.crs
+        assert imgr.assets == img.assets
+
+        imgc = imgr.post_process(color_formula="Gamma R 3.1")
+        assert not numpy.array_equal(imgc.data, imgr.data)
+        assert imgc.data.dtype == "uint8"
+        assert imgc.bounds == img.bounds
+        assert imgc.crs == img.crs
+        assert imgc.assets == img.assets
+
+        imgrc = img.post_process(
+            in_range=(img.data.min(), img.data.max()), color_formula="Gamma R 3.1"
+        )
+        assert numpy.array_equal(imgc.data, imgrc.data)
 
         bbox = (
             -56.624124590533825,
