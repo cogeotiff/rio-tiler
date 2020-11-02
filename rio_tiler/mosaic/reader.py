@@ -3,7 +3,9 @@
 from inspect import isclass
 from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, cast
 
-from ..constants import MAX_THREADS
+from rasterio.crs import CRS
+
+from ..constants import MAX_THREADS, BBox
 from ..errors import InvalidMosaicMethod, TileOutsideBounds
 from ..models import ImageData
 from ..tasks import create_tasks, filter_tasks
@@ -80,15 +82,22 @@ def mosaic_reader(
 
     assets_used: List[str] = []
 
+    crs: Optional[CRS] = None
+    bounds: Optional[BBox] = None
+
     for chunks in _chunks(assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
         for img, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions,):
             if isinstance(img, tuple):
                 img = ImageData(*img)
 
+            crs = img.crs
+            bounds = img.bounds
+
             assets_used.append(asset)
             pixel_selection.feed(img.as_masked())
-            if pixel_selection.is_done:
-                return ImageData(*pixel_selection.data, assets=assets_used), assets_used  # type: ignore
 
-    return ImageData(*pixel_selection.data, assets=assets_used), assets_used  # type: ignore
+            if pixel_selection.is_done:
+                return ImageData(*pixel_selection.data, assets=assets_used, crs=crs, bounds=bounds), assets_used  # type: ignore
+
+    return ImageData(*pixel_selection.data, assets=assets_used, crs=crs, bounds=bounds), assets_used  # type: ignore

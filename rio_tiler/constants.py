@@ -8,7 +8,7 @@ import morecantile
 from rasterio.crs import CRS
 
 NumType = Union[float, int]
-BBox = Tuple[NumType, NumType, NumType, NumType]
+BBox = Tuple[float, float, float, float]
 ColorTuple = Tuple[int, int, int, int]
 
 MAX_THREADS = int(os.environ.get("MAX_THREADS", multiprocessing.cpu_count() * 5))
