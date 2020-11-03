@@ -387,7 +387,7 @@ def test_imageData_output():
 
         imgr = img.post_process(in_range=(img.data.min(), img.data.max()))
         assert not numpy.array_equal(img.data, imgr.data)
-        assert imgr.data.dtype == "uint16"
+        assert imgr.data.dtype == "uint8"
         assert imgr.data.min() == 0
         assert imgr.data.max() == 255
         assert imgr.bounds == img.bounds

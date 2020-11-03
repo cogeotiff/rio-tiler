@@ -1,7 +1,7 @@
 """rio-tiler models."""
 
 from enum import Enum
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple
 
 import attr
 import numpy
@@ -155,10 +155,27 @@ class ImageData:
     def post_process(
         self,
         in_range: Optional[Tuple[NumType, NumType]] = None,
-        out_range: Optional[Tuple[NumType, NumType]] = None,
+        out_dtype: str = "uint8",
         color_formula: Optional[str] = None,
+        **kwargs: Any,
     ) -> "ImageData":
-        """Post-process image data."""
+        """Post-process image data.
+
+        Args:
+            in_range (tuple): input min/max bounds value to rescale from.
+            out_dtype (str): output datatype after rescaling (default is 'uint8')
+            color_formula (str): rio-color formula (see: https://github.com/mapbox/rio-color)
+            kwargs (any): keyword arguments to forward to `rio_tiler.utils.linear_rescale`
+
+        Returns:
+            ImageData: new ImageData object with the updated data.
+
+        Examples:
+            >>> img.post_process(in_range=(0, 16000))
+
+            >>> img.post_process(color_formula="Gamma RGB 4.1")
+
+        """
         data = self.data.copy()
         mask = self.mask.copy()
 
@@ -170,11 +187,10 @@ class ImageData:
             for bdx in range(self.count):
                 data[bdx] = numpy.where(
                     self.mask,
-                    linear_rescale(
-                        data[bdx], in_range=rescale_arr[bdx], out_range=out_range
-                    ),
+                    linear_rescale(data[bdx], in_range=rescale_arr[bdx], **kwargs,),
                     0,
                 )
+            data = data.astype(out_dtype)
 
         if color_formula:
             data = data.astype(numpy.uint8)
