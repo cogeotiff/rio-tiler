@@ -254,7 +254,7 @@ def non_alpha_indexes(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -
 def linear_rescale(
     image: numpy.ndarray,
     in_range: Tuple[NumType, NumType],
-    out_range: Optional[Tuple[NumType, NumType]] = None,
+    out_range: Tuple[NumType, NumType] = (0, 255),
 ) -> numpy.ndarray:
     """
     Linear rescaling.
@@ -274,12 +274,6 @@ def linear_rescale(
         returns rescaled image array.
 
     """
-    if out_range is None:
-        warnings.warn(
-            "No output range set, using image (0, 255)", UserWarning,
-        )
-        out_range = (0, 255)
-
     imin, imax = in_range
     omin, omax = out_range
     image = numpy.clip(image, imin, imax) - imin
