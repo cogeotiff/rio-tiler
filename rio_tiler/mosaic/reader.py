@@ -16,7 +16,7 @@ from .methods.defaults import FirstMethod
 
 def mosaic_reader(
     assets: Sequence[str],
-    reader: Callable[[Any], ImageData],
+    reader: Callable[..., ImageData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
     chunk_size: Optional[int] = None,

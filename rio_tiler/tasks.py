@@ -59,7 +59,7 @@ def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType
 
 def multi_arrays(
     assets: Sequence[str],
-    reader: Callable[[Any], ImageData],
+    reader: Callable[..., ImageData],
     *args: Any,
     threads: int = MAX_THREADS,
     allowed_exceptions: Optional[Tuple] = None,
