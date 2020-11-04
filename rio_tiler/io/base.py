@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 import attr
 import numpy
 
+
 from ..errors import ExpressionMixingWarning, MissingAssets, MissingBands
 from ..expression import apply_expression
 from ..tasks import multi_arrays, multi_values

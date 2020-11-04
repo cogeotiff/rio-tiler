@@ -36,7 +36,7 @@ class STACReader(
     maxzoom: int = 30,
     include_assets: Union[Set[str], NoneType] = None,
     exclude_assets: Union[Set[str], NoneType] = None,
-    include_asset_types: Set[str] = {'image/tiff; application=geotiff', 'image/jp2', 'application/x-hdf5', 'application/x-hdf', 'image/x.geotiff', 'image/tiff', 'image/tiff; application=geotiff; profile=cloud-optimized', 'image/vnd.stac.geotiff; cloud-optimized=true'},
+    include_asset_types: Set[str] = {'image/x.geotiff', 'image/vnd.stac.geotiff; cloud-optimized=true', 'image/jp2', 'image/tiff; application=geotiff', 'image/tiff', 'image/tiff; application=geotiff; profile=cloud-optimized', 'application/x-hdf5', 'application/x-hdf'},
     exclude_asset_types: Union[Set[str], NoneType] = None,
     reader: Type[rio_tiler.io.base.BaseReader] = <class 'rio_tiler.io.cogeo.COGReader'>,
     reader_options: Dict = NOTHING

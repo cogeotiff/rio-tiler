@@ -20,7 +20,7 @@ def aws_get_object(
     bucket: str,
     key: str,
     request_pays: bool = False,
-    client: <function Session.client at 0x7fa527049050> = None
+    client: <function Session.client at 0x7feb4e95e4d0> = None
 ) -> bytes
 ```
 

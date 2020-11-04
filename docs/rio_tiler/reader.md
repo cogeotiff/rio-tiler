@@ -80,12 +80,12 @@ Read part of an image.
 | height | int | Output height of the array. | None |
 | width | int | Output width of the array. | None |
 | padding | int | Padding to apply to each edge of the tile when retrieving data
-to assist in reducing resampling artefacts along edges. | None |
+    to assist in reducing resampling artefacts along edges. | None |
 | dst_crs | CRS or str | Target coordinate reference system, default is "epsg:3857". | is |
 | bounds_crs | CRS or str | Overwrite bounds coordinate reference system, default is equal
-to the output CRS (dst_crs). | equal |
+    to the output CRS (dst_crs). | equal |
 | minimum_tile_cover | float | Minimum % overlap for which to raise an error with dataset not
-covering enought of the tile. | None |
+    covering enought of the tile. | None |
 | vrt_options | dict | These will be passed to the rasterio.warp.WarpedVRT class. | None |
 | max_size | int | Limit output size array if not widht and height. | None |
 | kwargs | Any | Additional options to forward to reader._read() | None |

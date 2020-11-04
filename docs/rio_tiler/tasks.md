@@ -14,10 +14,6 @@ MAX_THREADS
 TaskType
 ```
 
-```python3
-logger
-```
-
 ## Functions
 
     
@@ -30,7 +26,7 @@ def create_tasks(
     threads,
     *args,
     **kwargs
-) -> Union[Generator[Tuple[Callable, str], NoneType, NoneType], Sequence[Tuple[concurrent.futures._base.Future, str]]]
+) -> Union[Generator[Tuple[Callable, str], NoneType, NoneType], Iterator[Tuple[concurrent.futures._base.Future, str]]]
 ```
 
     
@@ -41,7 +37,7 @@ Create Future Tasks.
 
 ```python3
 def filter_tasks(
-    tasks: Union[Generator[Tuple[Callable, str], NoneType, NoneType], Sequence[Tuple[concurrent.futures._base.Future, str]]],
+    tasks: Union[Generator[Tuple[Callable, str], NoneType, NoneType], Iterator[Tuple[concurrent.futures._base.Future, str]]],
     allowed_exceptions: Union[Tuple, NoneType] = None
 ) -> Generator
 ```
