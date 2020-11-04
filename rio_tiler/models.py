@@ -155,7 +155,7 @@ class ImageData:
     def post_process(
         self,
         in_range: Optional[Tuple[NumType, NumType]] = None,
-        out_dtype: str = "uint8",
+        out_dtype: Union[str, numpy.number] = "uint8",
         color_formula: Optional[str] = None,
         **kwargs: Any,
     ) -> "ImageData":
