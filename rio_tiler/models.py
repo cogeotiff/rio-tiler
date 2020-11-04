@@ -107,10 +107,10 @@ class ImageData:
         assets = [img.assets[0] for img in data if img.assets]
 
         bounds_values = [img.bounds for img in data if img.bounds]
-        bounds = list(set(bounds_values))[0] if bounds_values else None
+        bounds = bounds_values[0] if bounds_values else None
 
         crs_values = [img.crs for img in data if img.crs]
-        crs = list(set(crs_values))[0] if crs_values else None
+        crs = crs_values[0] if crs_values else None
 
         return cls(arr, mask, assets=assets, crs=crs, bounds=bounds)
 
