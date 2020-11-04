@@ -315,6 +315,11 @@ def test_threads():
 
 def test_mosaic_tiler_with_imageDataClass():
     """Test mosaic tiler."""
+    img, _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo)
+    assert not img.assets
+    assert not img.data
+    assert not img.mask
+
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
     assert img.data.shape == (3, 256, 256)
     assert img.mask.shape == (256, 256)
