@@ -1,7 +1,7 @@
 """rio-tiler models."""
 
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
