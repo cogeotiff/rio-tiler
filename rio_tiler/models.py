@@ -7,13 +7,14 @@ import attr
 import numpy
 from affine import Affine
 from pydantic import BaseModel
+from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
 from rio_color.operations import parse_operations
 from rio_color.utils import scale_dtype, to_math_type
 
-from .constants import BBox, ColorTuple, NumType
+from .constants import ColorTuple, NumType
 from .utils import _chunks, linear_rescale, render
 
 
@@ -38,7 +39,7 @@ class RioTilerBaseModel(BaseModel):
 class Bounds(RioTilerBaseModel):
     """Dataset Bounding box"""
 
-    bounds: BBox
+    bounds: BoundingBox
 
 
 class SpatialInfo(Bounds):
@@ -84,6 +85,11 @@ class Metadata(Info):
     statistics: Dict[str, ImageStatistics]
 
 
+def to_coordsbbox(bbox) -> Optional[BoundingBox]:
+    """Convert bbox to CoordsBbox nameTuple."""
+    return BoundingBox(*bbox) if bbox else None
+
+
 @attr.s
 class ImageData:
     """Image Data class."""
@@ -91,7 +97,7 @@ class ImageData:
     data: numpy.ndarray = attr.ib()
     mask: numpy.ndarray = attr.ib()
     assets: Optional[List[str]] = attr.ib(default=None)
-    bounds: Optional[BBox] = attr.ib(default=None)
+    bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
     crs: Optional[CRS] = attr.ib(default=None)
 
     def __iter__(self):
