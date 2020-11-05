@@ -1,7 +1,7 @@
 """rio-tiler models."""
 
 from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
@@ -161,7 +161,7 @@ class ImageData:
     def post_process(
         self,
         in_range: Optional[Tuple[NumType, NumType]] = None,
-        out_dtype: str = "uint8",
+        out_dtype: Union[str, numpy.number] = "uint8",
         color_formula: Optional[str] = None,
         **kwargs: Any,
     ) -> "ImageData":
