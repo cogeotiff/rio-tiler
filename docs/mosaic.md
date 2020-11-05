@@ -23,19 +23,31 @@ how to handle these cases for each pixel:
 
 ### API
 
-`rio_tiler.mosaic.mosaic_reader(assets, tiler, *args* pixel_selection=None, chunk_size=None, Threads=10, **kwargs)`
-
+```python
+rio_tiler.mosaic.mosaic_reader(
+    assets: Sequence[str],
+    reader: Callable[..., ImageData],
+    *args: Any,
+    pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
+    chunk_size: Optional[int] = None,
+    threads: int = MAX_THREADS,
+    allowed_exceptions: Tuple = (TileOutsideBounds,),
+    **kwargs,
+)
+```
 Inputs:
 
-- assets : list, tuple of rio-tiler compatible assets (url or sceneid)
-- tiler: Callable that returns a tuple of `numpy.array` (e.g `tile, mask = rio_tiler.reader.tile(x, y, z, **kwargs)`)
-- *args: tiler specific arguments.
-- pixel_selection : optional **pixel selection** algorithm (default: "first").
-- chunk_size: optional, control the number of asset to process per loop.
-- **kwargs: tiler specific keyword arguments.
+- **assets** : list, tuple of rio-tiler compatible assets (url or sceneid)
+- **reader**: Callable that returns a `ImageData` instance or a tuple of `numpy.array`
+- **\*args**: arguments to be forwarded to the callable.
+- **pixel_selection** : optional **pixel selection** algorithm (default: "first").
+- **chunk_size**: optional, control the number of assets to process per loop.
+- **threads**: optional, number of threads to use in each loop.
+- **allowed_exceptions**: optional, allow some exceptions to be ignored.
+- **\**kwargs**: tiler specific keyword arguments.
 
 Returns:
-- (tile, mask), assets_used : tuple of ndarray Return (tile and mask) data and the list of used assets.
+- img, assets_used : tuple of ImageData and list of used assets to construct the output data.
 
 #### Examples
 
@@ -43,21 +55,25 @@ Returns:
 from rio_tiler.io import COGReader
 from rio_tiler.mosaic import mosaic_reader
 from rio_tiler.mosaic.methods import defaults
+from rio_tiler.models import ImageData
 
 
-def tiler(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def tiler(src_path: str, *args, **kwargs) -> ImageData:
     with COGReader(src_path) as cog:
         return cog.tile(*args, **kwargs)
 
 assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
-tile = (1000, 1000, 9)
-x, y, z = tile
+x = 1000
+y = 1000
+z = 9
 
 # Use Default First value method
-mosaic_reader(assets, tiler, x, y, z)
+img, _ = mosaic_reader(assets, tiler, x, y, z)
+assert isinstance(img, ImageData)
+assert img.data.shape == (3, 256, 256)
 
 # Use Highest value: defaults.HighestMethod()
-mosaic_reader(
+img, _ = mosaic_reader(
     assets,
     tiler,
     x,
@@ -67,7 +83,7 @@ mosaic_reader(
 )
 
 # Use Lowest value: defaults.LowestMethod()
-mosaic_reader(
+mg, _ = mosaic_reader(
     assets,
     tiler,
     x,
@@ -116,7 +132,7 @@ By default the chunck_size is equal to the number or threads (or the number of a
 #### More on threading
 
 The number of threads used can be set in the function call with the `threads=` options. By default it will be equal to `multiprocessing.cpu_count() * 5` or to the MAX_THREADS environment variable.
-In some case, threading can slow down your application. You can set threads to `0` or `1` to run the tiler in a loop without using a ThreadPool.
+In some case, threading can slow down your application. You can set threads to `0` or `1` to run the tiler in a loop without using a ThreadPool (ref: [#207](https://github.com/cogeotiff/rio-tiler/issues/207)).
 
 Benchmark:
 ```
@@ -144,4 +160,3 @@ Name (time in ms)          Min                 Max                Mean          
 ```
 ref: https://github.com/cogeotiff/rio-tiler/issues/207#issuecomment-665958838
 
-As mentioned in #207, using ThreadPool with 1 thread is always slower than not using thread.

@@ -68,6 +68,8 @@ with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
 {"percentiles": [19.0, 168.0], "min": 0.0, "max": 255.0, ...}
 ```
 
+* Update to morecantile 2.0.0
+
 ## 2.0.0b19 (2020-10-26)
 
 * surface `allowed_exceptions` options in `rio_tiler.mosaic.reader.mosaic_reader` (https://github.com/cogeotiff/rio-tiler/issues/293)
