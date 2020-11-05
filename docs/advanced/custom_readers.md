@@ -1,5 +1,5 @@
 
-rio-tiler provides multiple base classes from which it derives its main readers: [COGReader](/readers/#cogreader) and [STACReader](/readers/#stacreader). The base classes can be used by users to built custom readers (see [rio-tiler-pds](https://github.com/cogeotiff/rio-tiler-pds)).
+`rio-tiler` provides multiple base classes from which it derives its main readers: [`COGReader`](/readers/#cogreader) and [`STACReader`](/readers/#stacreader). The base classes can be used to build custom readers (see [`rio-tiler-pds`](https://github.com/cogeotiff/rio-tiler-pds)).
 
 ## Abstract Base Classes
 
