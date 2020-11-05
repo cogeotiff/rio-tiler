@@ -1,9 +1,10 @@
-## Using `rio-tiler` with Mosaics
 
-![](https://user-images.githubusercontent.com/10407788/57467798-30505800-7251-11e9-9bde-6f50801dc851.png)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/10407788/57467798-30505800-7251-11e9-9bde-6f50801dc851.png" style="max-width: 800px;" alt="rio-tiler"></a>
+</p>
 
-The `rio-tiler-mosaic` library has been moved into `rio-tiler`. The goal of the
-`rio_tiler.mosaic` module is to create a mercator tile from _multiple_
+The [`rio-tiler-mosaic`](https://github.com/cogeotiff/rio-tiler-mosaic) library has been moved into `rio-tiler`. The goal of the
+`rio_tiler.mosaic` module is to create a mercator tile from **_multiple_**
 observations. This is useful when a source image doesn't fill the entire
 mercator tile of interest.
 
@@ -23,41 +24,57 @@ how to handle these cases for each pixel:
 
 ### API
 
-`rio_tiler.mosaic.mosaic_reader(assets, tiler, *args* pixel_selection=None, chunk_size=None, Threads=10, **kwargs)`
-
+```python
+rio_tiler.mosaic.mosaic_reader(
+    assets: Sequence[str],
+    reader: Callable[..., ImageData],
+    *args: Any,
+    pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
+    chunk_size: Optional[int] = None,
+    threads: int = MAX_THREADS,
+    allowed_exceptions: Tuple = (TileOutsideBounds,),
+    **kwargs,
+)
+```
 Inputs:
 
-- assets : list, tuple of rio-tiler compatible assets (url or sceneid)
-- tiler: Callable that returns a tuple of `numpy.array` (e.g `tile, mask = rio_tiler.reader.tile(x, y, z, **kwargs)`)
-- *args: tiler specific arguments.
-- pixel_selection : optional **pixel selection** algorithm (default: "first").
-- chunk_size: optional, control the number of asset to process per loop.
-- **kwargs: tiler specific keyword arguments.
+- **assets** : list, tuple of rio-tiler compatible assets (url or sceneid)
+- **reader**: Callable that returns a `ImageData` instance or a tuple of `numpy.array`
+- **\*args**: arguments to be forwarded to the callable.
+- **pixel_selection** : optional **pixel selection** algorithm (default: "first").
+- **chunk_size**: optional, control the number of assets to process per loop.
+- **threads**: optional, number of threads to use in each loop.
+- **allowed_exceptions**: optional, allow some exceptions to be ignored.
+- **\**kwargs**: tiler specific keyword arguments.
 
 Returns:
-- (tile, mask), assets_used : tuple of ndarray Return (tile and mask) data and the list of used assets.
+- img, assets_used : tuple of ImageData and list of used assets to construct the output data.
 
-#### Examples
+### Examples
 
 ```python
 from rio_tiler.io import COGReader
 from rio_tiler.mosaic import mosaic_reader
 from rio_tiler.mosaic.methods import defaults
+from rio_tiler.models import ImageData
 
 
-def tiler(src_path: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def tiler(src_path: str, *args, **kwargs) -> ImageData:
     with COGReader(src_path) as cog:
         return cog.tile(*args, **kwargs)
 
 assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
-tile = (1000, 1000, 9)
-x, y, z = tile
+x = 1000
+y = 1000
+z = 9
 
 # Use Default First value method
-mosaic_reader(assets, tiler, x, y, z)
+img, _ = mosaic_reader(assets, tiler, x, y, z)
+assert isinstance(img, ImageData)
+assert img.data.shape == (3, 256, 256)
 
 # Use Highest value: defaults.HighestMethod()
-mosaic_reader(
+img, _ = mosaic_reader(
     assets,
     tiler,
     x,
@@ -67,7 +84,7 @@ mosaic_reader(
 )
 
 # Use Lowest value: defaults.LowestMethod()
-mosaic_reader(
+mg, _ = mosaic_reader(
     assets,
     tiler,
     x,
@@ -77,27 +94,29 @@ mosaic_reader(
 )
 ```
 
-### The `MosaicMethod` interface
+## The `MosaicMethod` interface
 
-the `rio_tiler.mosaic.methods.base.MosaicMethodBase` class defines an abstract
-interface for all `pixel selection` methods allowed by `rio_tiler.mosaic.mosaic_reader`. its methods and properties are:
+the `rio_tiler.mosaic.methods.base.MosaicMethodBase` abstract base class defines an interface for all `pixel selection` methods allowed by `rio_tiler.mosaic.mosaic_reader`. its methods and properties are:
 
-- `is_done`: property, returns a boolean indicating if the process is done filling the tile
-- `data`: property, returns the output **tile** and **mask** numpy arrays
-- `feed(tile: numpy.ma.ndarray)`: method, update the tile
+#### Properties
 
-The MosaicMethodBase class is not intended to be used directly but as an abstract base class, a template for concrete implementations.
+- **is_done**: returns a boolean indicating if the process is done filling the tile
+- **data**: returns the output **tile** and **mask** numpy arrays
+
+#### Methods
+
+- **feed(tile: numpy.ma.ndarray)**: update the tile and mask
 
 #### Writing your own Pixel Selection method
 
 The rules for writing your own `pixel selection algorithm` class are as follows:
 
-- Must inherit from MosaicMethodBase
+- Must inherit from `MosaicMethodBase`
 - Must provide concrete implementations of all the above methods.
 
-See [rio_tiler.mosaic.methods.defaults](/rio_tiler/mosaic/methods/defaults.py) classes for examples.
+See [`rio_tiler.mosaic.methods.defaults`](/rio_tiler/mosaic/methods/defaults.py) classes for examples.
 
-#### Smart Multi-Threading
+### Smart Multi-Threading
 
 When dealing with an important number of image, you might not want to process the whole stack, especially if the pixel selection method stops when the tile is filled. To allow better optimization, `rio_tiler.mosaic.mosaic_reader` is fetching the tiles in parallel (threads) but to limit the number of files we also embeded the fetching in a loop (creating 2 level of processing):
 
@@ -115,8 +134,8 @@ By default the chunck_size is equal to the number or threads (or the number of a
 
 #### More on threading
 
-The number of threads used can be set in the function call with the `threads=` options. By default it will be equal to `multiprocessing.cpu_count() * 5` or to the MAX_THREADS environment variable.
-In some case, threading can slow down your application. You can set threads to `0` or `1` to run the tiler in a loop without using a ThreadPool.
+The number of threads used can be set in the function call with the `threads=` options. By default it will be equal to `multiprocessing.cpu_count() * 5` or to the `MAX_THREADS` environment variable.
+In some case, threading can slow down your application. You can set threads to `0` or `1` to run the tiler in a loop without using a ThreadPool (ref: [#207](https://github.com/cogeotiff/rio-tiler/issues/207)).
 
 Benchmark:
 ```
@@ -144,4 +163,3 @@ Name (time in ms)          Min                 Max                Mean          
 ```
 ref: https://github.com/cogeotiff/rio-tiler/issues/207#issuecomment-665958838
 
-As mentioned in #207, using ThreadPool with 1 thread is always slower than not using thread.

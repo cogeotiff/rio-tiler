@@ -26,12 +26,13 @@ nav:
   - Home: 'index.md'
   - User Guide:
     - Intro: 'intro.md'
-    - COG/STAC Readers: 'readers.md'
+    - Readers: 'readers.md'
+    - Models: 'models.md'
     - Mosaic: 'mosaic.md'
     - Colormaps: 'colormap.md'
   - Advanced User Guide:
-    - Working with multiple assets: 'advanced/multi_assets.md'
     - Use a Feature to read a COG: 'advanced/feature.md'
+    - Base Classes and Custom Readers: 'advanced/custom_readers.md'
     - Create a Dynamic Tiler: 'advanced/dynamic_tiler.md'
     - TileMatrixSet: 'advanced/tms.md'
   - Examples:

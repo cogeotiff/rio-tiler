@@ -40,7 +40,7 @@
 
 ## Install
 
-You can install rio-tiler using pip
+You can install `rio-tiler` using pip
 
 ```bash
 $ pip install -U pip
@@ -58,25 +58,23 @@ $ pip install -e .
 
 ## Partial reading on Cloud hosted dataset
 
-Rio-tiler perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
+`rio-tiler` perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
 It's important to note that **Sentinel-2 scenes hosted on AWS are not in Cloud Optimized format but in JPEG2000**.
 When performing partial reading of JPEG2000 dataset GDAL (rasterio backend library) will need to make a lot of **GET requests** and transfer a lot of data.
 
 Ref: [Do you really want people using your data](https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f) blog post.
 
 ## Plugins
-- [rio-tiler-crs](https://github.com/cogeotiff/rio-tiler-crs): Create Map Tiles using other TileMatrixSets
 - [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt): Create Mapbox Vector Tile from numpy array (tile/mask)
 
 **Mission Specific tiler**
 
-In rio-tiler v2 we choosed to remove the mission specific tilers (Sentinel2, Sentinel1, Landsat8 and CBERS). Those are now in a specific plugin: [rio-tiler-pds](https://github.com/cogeotiff/rio-tiler-pds).
+In `rio-tiler` v2 we choosed to remove the mission specific tilers (Sentinel2, Sentinel1, Landsat8 and CBERS). Those are now in a specific plugin: [**rio-tiler-pds**](https://github.com/cogeotiff/rio-tiler-pds).
 
 ## Implementations
 - [rio-viz](https://github.com/developmentseed/rio-viz): Visualize Cloud Optimized GeoTIFF in browser locally
-- [titiler](https://github.com/developmentseed/titiler)
-- [CosmiQ/solaris](https://github.com/CosmiQ/solaris)
-- [cogeo-tiler](https://github.com/developmentseed/cogeo-tiler)
+- [titiler](https://github.com/developmentseed/titiler): A lightweight Cloud Optimized GeoTIFF dynamic tile server.
+- [cogeo-mosaic](https://github.com/developmentseed/cogeo-mosaic): Create mosaics of Cloud Optimized GeoTIFF based on mosaicJSON specification.
 
 ## Contribution & Development
 
@@ -84,7 +82,7 @@ See [CONTRIBUTING.md](https://github.com/cogeotiff/rio-tiler/blob/master/CONTRIB
 
 ## Authors
 
-The rio-tiler project was begun at Mapbox and has been transferred in January 2019.
+The `rio-tiler` project was begun at Mapbox and has been transferred in January 2019.
 
 See [AUTHORS.txt](https://github.com/cogeotiff/rio-tiler/blob/master/AUTHORS.txt) for a listing of individual contributors.
 
