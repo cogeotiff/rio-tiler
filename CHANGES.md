@@ -1,4 +1,75 @@
 
+## 2.0.0rc1 (TBD)
+
+* added `ImageData` output class for all `rio_tiler.io` classes returning numpy array-like types (`tile, mask = method()`)
+
+```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    r = cog.preview()
+    assert isinstance(r, ImageData)
+
+    data, mask = r
+    assert data.shape == (3, 892, 1024)
+```
+**Note**: the class keeps the compatibility with previous notation: `tile, mask = ImageData`
+
+* add pydantic models for IO outputs (Metadata, Info, ...)
+
+* change output form for `band_metadata`, `band_descriptions` and do not add band description when not found.
+```python
+# Before
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    i = cog.info()
+    print(i["band_metadata"])
+    print(i["band_descriptions"])
+
+[(1, {}), (2, {}), (2, {})]
+[(1, 'band1'), (2, 'band2'), (2, 'band3')]
+
+# Now
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    i = cog.info()
+    print(i.band_metadata)
+    print(i.band_descriptions)
+
+[('1', {}), ('2', {}), ('3', {})]
+[('1', ''), ('2', ''), ('3', '')]
+```
+
+* change output form for `stats`
+```python
+# Before
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats())
+{
+    1: {...},
+    2: {...},
+    3: {...}
+}
+
+# Now
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats())
+{
+    "1": {...},
+    "2": {...},
+    "3": {...}
+}
+```
+
+* updated `rio_tiler.utils._stats` function to replace `pc` by `percentiles`
+
+```python
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats()["1"].json())
+{"percentiles": [19.0, 168.0], "min": 0.0, "max": 255.0, ...}
+```
+
+* Update to morecantile 2.0.0
+
 ## 2.0.0b19 (2020-10-26)
 
 * surface `allowed_exceptions` options in `rio_tiler.mosaic.reader.mosaic_reader` (https://github.com/cogeotiff/rio-tiler/issues/293)

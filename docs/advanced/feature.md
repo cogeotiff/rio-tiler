@@ -1,5 +1,5 @@
 
-Natively rio-tiler support mostly `bbox` reading. Using GDALWarpVRT **Cutline** option, it's possible to read a dataset for a given polygon.
+Natively `rio-tiler` support mostly `bbox` reading. Using GDALWarpVRT **Cutline** option, it's possible to read a dataset for a given polygon.
 
 ```python
 

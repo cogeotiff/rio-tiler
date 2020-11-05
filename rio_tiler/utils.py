@@ -18,8 +18,8 @@ from rasterio.transform import from_bounds, rowcol
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_geom
 
-from . import constants
 from .colormap import apply_cmap
+from .constants import WEB_MERCATOR_CRS, NumType
 from .errors import DeprecationWarning, RioTilerError
 
 DataSet = Union[DatasetReader, DatasetWriter, WarpedVRT]
@@ -66,7 +66,7 @@ def _stats(
 
     Returns
     -------
-    dict
+    Dict
         numpy array statistics: percentiles, min, max, stdev, histogram
 
         e.g.
@@ -82,13 +82,15 @@ def _stats(
         }
     """
     sample, edges = numpy.histogram(arr[~arr.mask], **kwargs)
-    return {
-        "pc": numpy.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
-        "min": arr.min().item(),
-        "max": arr.max().item(),
-        "std": arr.std().item(),
-        "histogram": [sample.tolist(), edges.tolist()],
-    }
+    return dict(
+        percentiles=numpy.percentile(arr[~arr.mask], percentiles)
+        .astype(arr.dtype)
+        .tolist(),
+        min=arr.min().item(),
+        max=arr.max().item(),
+        std=arr.std().item(),
+        histogram=[sample.tolist(), edges.tolist()],
+    )
 
 
 # https://github.com/OSGeo/gdal/blob/b1c9c12ad373e40b955162b45d704070d4ebf7b0/gdal/frmts/ingr/IngrTypes.cpp#L191
@@ -101,7 +103,7 @@ def get_overview_level(
     bounds: Tuple[float, float, float, float],
     height: int,
     width: int,
-    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+    dst_crs: CRS = WEB_MERCATOR_CRS,
 ) -> int:
     """
     Return the overview level corresponding to the tile resolution.
@@ -159,7 +161,7 @@ def get_vrt_transform(
     bounds: Tuple[float, float, float, float],
     height: Optional[int] = None,
     width: Optional[int] = None,
-    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+    dst_crs: CRS = WEB_MERCATOR_CRS,
 ) -> Tuple[Affine, int, int]:
     """
     Calculate VRT transform.
@@ -251,25 +253,25 @@ def non_alpha_indexes(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -
 
 def linear_rescale(
     image: numpy.ndarray,
-    in_range: Tuple[Union[int, float], Union[int, float]] = (0, 1),
-    out_range: Tuple[Union[int, float], Union[int, float]] = (1, 255),
+    in_range: Tuple[NumType, NumType],
+    out_range: Tuple[NumType, NumType] = (0, 255),
 ) -> numpy.ndarray:
     """
     Linear rescaling.
 
     Attributes
     ----------
-        image : numpy ndarray
-            Image array to rescale.
-        in_range : list, int, optional, (default: [0,1])
-            Image min/max value to rescale.
-        out_range : list, int, optional, (default: [1,255])
-            output min/max bounds to rescale to.
+    image: numpy ndarray
+        Image array to rescale.
+    in_range: Tuple, int
+        Image min/max value to rescale.
+    out_range: Tuple, optional, (default: (0,255))
+        output min/max bounds to rescale to.
 
     Returns
     -------
-        out : numpy ndarray
-            returns rescaled image array.
+    out: numpy ndarray
+        returns rescaled image array.
 
     """
     imin, imax = in_range
@@ -326,7 +328,7 @@ def _requested_tile_aligned_with_internal_tile(
     if not src_dst.is_tiled:
         return False
 
-    if src_dst.crs != constants.WEB_MERCATOR_CRS:
+    if src_dst.crs != WEB_MERCATOR_CRS:
         return False
 
     col_off, row_off, w, h = windows.from_bounds(
@@ -346,11 +348,7 @@ def _requested_tile_aligned_with_internal_tile(
 
 
 def geotiff_options(
-    x: int,
-    y: int,
-    z: int,
-    tilesize: int = 256,
-    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+    x: int, y: int, z: int, tilesize: int = 256, dst_crs: CRS = WEB_MERCATOR_CRS,
 ) -> Dict:
     """
     GeoTIFF options.

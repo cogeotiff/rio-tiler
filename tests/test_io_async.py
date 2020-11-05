@@ -8,11 +8,11 @@ from typing import Any, Coroutine, Dict, List, Tuple, Type
 
 import attr
 import morecantile
-import numpy
 import pytest
 
 from rio_tiler import constants
 from rio_tiler.io import AsyncBaseReader, COGReader
+from rio_tiler.models import ImageData, ImageStatistics, Info
 
 try:
     import contextvars  # Python 3.7+ only or via contextvars backport.
@@ -57,19 +57,19 @@ class AsyncCOGReader(AsyncBaseReader):
         self.minzoom = self.dataset.minzoom
         self.maxzoom = self.dataset.maxzoom
 
-    async def info(self) -> Coroutine[Any, Any, Dict]:
+    async def info(self) -> Coroutine[Any, Any, Info]:
         """Return Dataset's info."""
         return await run_in_threadpool(self.dataset.info)  # type: ignore
 
     async def stats(
         self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any
-    ) -> Coroutine[Any, Any, Dict]:
+    ) -> Coroutine[Any, Any, Dict[str, ImageStatistics]]:
         """Return Dataset's statistics."""
         return await run_in_threadpool(self.dataset.stats, pmin, pmax, **kwargs)  # type: ignore
 
     async def tile(
         self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> Coroutine[Any, Any, ImageData]:
         """Read a Map tile from the Dataset."""
         return await run_in_threadpool(
             self.dataset.tile, tile_x, tile_y, tile_z, **kwargs  # type: ignore
@@ -77,13 +77,11 @@ class AsyncCOGReader(AsyncBaseReader):
 
     async def part(
         self, bbox: Tuple[float, float, float, float], **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    ) -> Coroutine[Any, Any, ImageData]:
         """Read a Part of a Dataset."""
         return await run_in_threadpool(self.dataset.part, bbox, **kwargs)  # type: ignore
 
-    async def preview(
-        self, **kwargs: Any
-    ) -> Coroutine[Any, Any, Tuple[numpy.ndarray, numpy.ndarray]]:
+    async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
         """Return a preview of a Dataset."""
         return await run_in_threadpool(self.dataset.preview, **kwargs)  # type: ignore
 
@@ -103,8 +101,8 @@ async def test_async():
         assert info == dataset.info()
 
         meta = cog.spatial_info
-        assert meta.get("minzoom") == 4
-        assert meta.get("maxzoom") == 8
+        assert meta.minzoom == 4
+        assert meta.maxzoom == 8
 
         assert await cog.stats(5, 95)
         assert await cog.metadata(2, 98)

@@ -4,10 +4,9 @@ from concurrent import futures
 from functools import partial
 from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Union
 
-import numpy
-
 from .constants import MAX_THREADS
 from .logger import logger
+from .models import ImageData
 
 TaskType = Sequence[Tuple[Union[futures.Future, Callable], str]]
 
@@ -60,20 +59,17 @@ def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType
 
 def multi_arrays(
     assets: Sequence[str],
-    reader: Callable,
+    reader: Callable[..., ImageData],
     *args: Any,
     threads: int = MAX_THREADS,
     allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+) -> ImageData:
     """Multi array."""
     tasks = create_tasks(reader, assets, threads, *args, **kwargs)
-    data, masks = zip(
-        *[r for r, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
+    return ImageData.create_from_list(
+        [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
     )
-    data = numpy.concatenate(data)
-    mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-    return data, mask
 
 
 def multi_values(
