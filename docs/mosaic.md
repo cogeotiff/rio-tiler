@@ -1,9 +1,10 @@
-## Using `rio-tiler` with Mosaics
 
-![](https://user-images.githubusercontent.com/10407788/57467798-30505800-7251-11e9-9bde-6f50801dc851.png)
+<p align="center">
+  <img src="https://user-images.githubusercontent.com/10407788/57467798-30505800-7251-11e9-9bde-6f50801dc851.png" style="max-width: 800px;" alt="rio-tiler"></a>
+</p>
 
-The `rio-tiler-mosaic` library has been moved into `rio-tiler`. The goal of the
-`rio_tiler.mosaic` module is to create a mercator tile from _multiple_
+The [`rio-tiler-mosaic`](https://github.com/cogeotiff/rio-tiler-mosaic) library has been moved into `rio-tiler`. The goal of the
+`rio_tiler.mosaic` module is to create a mercator tile from **_multiple_**
 observations. This is useful when a source image doesn't fill the entire
 mercator tile of interest.
 
@@ -49,7 +50,7 @@ Inputs:
 Returns:
 - img, assets_used : tuple of ImageData and list of used assets to construct the output data.
 
-#### Examples
+### Examples
 
 ```python
 from rio_tiler.io import COGReader
@@ -93,27 +94,29 @@ mg, _ = mosaic_reader(
 )
 ```
 
-### The `MosaicMethod` interface
+## The `MosaicMethod` interface
 
-the `rio_tiler.mosaic.methods.base.MosaicMethodBase` class defines an abstract
-interface for all `pixel selection` methods allowed by `rio_tiler.mosaic.mosaic_reader`. its methods and properties are:
+the `rio_tiler.mosaic.methods.base.MosaicMethodBase` abstract base class defines an interface for all `pixel selection` methods allowed by `rio_tiler.mosaic.mosaic_reader`. its methods and properties are:
 
-- `is_done`: property, returns a boolean indicating if the process is done filling the tile
-- `data`: property, returns the output **tile** and **mask** numpy arrays
-- `feed(tile: numpy.ma.ndarray)`: method, update the tile
+#### Properties
 
-The MosaicMethodBase class is not intended to be used directly but as an abstract base class, a template for concrete implementations.
+- **is_done**: returns a boolean indicating if the process is done filling the tile
+- **data**: returns the output **tile** and **mask** numpy arrays
+
+#### Methods
+
+- **feed(tile: numpy.ma.ndarray)**: update the tile and mask
 
 #### Writing your own Pixel Selection method
 
 The rules for writing your own `pixel selection algorithm` class are as follows:
 
-- Must inherit from MosaicMethodBase
+- Must inherit from `MosaicMethodBase`
 - Must provide concrete implementations of all the above methods.
 
-See [rio_tiler.mosaic.methods.defaults](/rio_tiler/mosaic/methods/defaults.py) classes for examples.
+See [`rio_tiler.mosaic.methods.defaults`](/rio_tiler/mosaic/methods/defaults.py) classes for examples.
 
-#### Smart Multi-Threading
+### Smart Multi-Threading
 
 When dealing with an important number of image, you might not want to process the whole stack, especially if the pixel selection method stops when the tile is filled. To allow better optimization, `rio_tiler.mosaic.mosaic_reader` is fetching the tiles in parallel (threads) but to limit the number of files we also embeded the fetching in a loop (creating 2 level of processing):
 
@@ -131,7 +134,7 @@ By default the chunck_size is equal to the number or threads (or the number of a
 
 #### More on threading
 
-The number of threads used can be set in the function call with the `threads=` options. By default it will be equal to `multiprocessing.cpu_count() * 5` or to the MAX_THREADS environment variable.
+The number of threads used can be set in the function call with the `threads=` options. By default it will be equal to `multiprocessing.cpu_count() * 5` or to the `MAX_THREADS` environment variable.
 In some case, threading can slow down your application. You can set threads to `0` or `1` to run the tiler in a loop without using a ThreadPool (ref: [#207](https://github.com/cogeotiff/rio-tiler/issues/207)).
 
 Benchmark:

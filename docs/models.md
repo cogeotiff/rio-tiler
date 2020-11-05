@@ -388,6 +388,6 @@ print(metadata.dict(exclude_none=True))
 
 ## Links
 
-Attrs - Classes Without Boilerplate [https://www.attrs.org/en/stable/](https://www.attrs.org/en/stable/)
+**Attrs** - Classes Without Boilerplate [https://www.attrs.org/en/stable/](https://www.attrs.org/en/stable/)
 
-Pydantic - Define how data should be in pure, canonical python [https://pydantic-docs.helpmanual.io](https://pydantic-docs.helpmanual.io)
+**Pydantic** - Define how data should be in pure, canonical python [https://pydantic-docs.helpmanual.io](https://pydantic-docs.helpmanual.io)

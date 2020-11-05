@@ -1,7 +1,7 @@
 
-The main goal of **rio-tiler** is to create [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) data arrays from `big` Raster data and then render them dynamically to display on a map.
+The main goal of `rio-tiler` is to create [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) data arrays from **big** raster data and then render them dynamically to display on a map.
 
-The **rio-tiler** module can read data and metadata from any raster source supported by Rasterio/GDAL (i.e. local files, http, s3, gcs etc.).
+The `rio-tiler` module can read data and metadata from any raster source supported by Rasterio/GDAL (i.e. local files, http, s3, gcs etc.).
 
 
 ## Read a tile from a file
@@ -33,7 +33,7 @@ with COGReader(
     >>> (256, 256)
 ```
 
-Additional method are availables (see [COGReader](/readers/#cogreader))
+Additional method are availables (see [`COGReader`](/readers/#cogreader))
 
 ## Render the data as an image (PNG/JPEG)
 
@@ -91,7 +91,7 @@ with open("my.png", "wb") as f:
 
 ## NumpyTile
 
-You can also export image data to a numpy binary format (`NPY`)
+You can also export image data to a numpy binary format (`NPY`).
 
 ```python
 with COGReader(

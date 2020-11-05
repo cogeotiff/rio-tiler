@@ -195,12 +195,12 @@ print(metadata.dict(exclude_none=True))
 
 #### Global Options
 
-COGReader accepts several options which will be forwarded to the `rio_tiler.reader._read` function (low level function accessing the data):
+`COGReader` accepts several options which will be forwarded to the `rio_tiler.reader._read` function (low level function accessing the data):
 
-- `nodata`: Overwrite the nodata value (or set if not present)
-- `unscale`: Apply internal rescaling factors
-- `vrt_options`: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
-- `resampling_method`: Set default `resampling_method`
+- **nodata**: Overwrite the nodata value (or set if not present)
+- **unscale**: Apply internal rescaling factors
+- **vrt_options**: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
+- **resampling_method**: Set default `resampling_method`
 
 Note: Those options could already be passed on each `method` call.
 
@@ -216,7 +216,7 @@ with COGReader("my_cog.tif") as cog:
 
 ## STACReader
 
-In rio-tiler v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item. The STACReader objects has the same properties/methods as the COGReader.
+In `rio-tiler` v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item. The STACReader objects has the same properties/methods as the COGReader.
 
 ```python
 from typing import Dict
@@ -267,4 +267,4 @@ print(img.data.shape)
 > (1, 256, 256)
 ```
 
-Note: STACReader is based on `rio_tiler.io.base.MultiBaseReader` class.
+Note: `STACReader` is based on `rio_tiler.io.base.MultiBaseReader` class.
