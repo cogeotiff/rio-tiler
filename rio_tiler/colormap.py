@@ -1,16 +1,25 @@
 """rio-tiler colormap functions."""
 
+import os
 import pathlib
+from copy import deepcopy
 from typing import Dict, List, Sequence, Tuple, Union
 
+import attr
 import numpy
 
 from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidFormat
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
+DEFAULTS_CMAPS_FILES = list(
+    pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy")
+)
+USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
+if USER_CMAPS_DIR:
+    DEFAULTS_CMAPS_FILES.extend(list(pathlib.Path(USER_CMAPS_DIR).glob("*.npy")))
 
-_default_cmaps = list(pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy"))
+DEFAULTS_CMAPS = {f.stem: str(f) for f in DEFAULTS_CMAPS_FILES}
 
 
 def _update_alpha(cmap: Dict, idx: Sequence[int], alpha: int = 0) -> None:
@@ -129,16 +138,15 @@ def apply_discrete_cmap(
     return data[:-1], data[-1]
 
 
-class ColorMaps(object):
+@attr.s(frozen=True)
+class ColorMaps:
     """Default Colormaps holder."""
 
-    def __init__(self):
-        """Load default CMAP names in a dict."""
-        self._data = {f.stem: str(f) for f in _default_cmaps}
+    data: Dict[str, Union[str, numpy.array]] = attr.ib()
 
     def get(self, name: str) -> Dict:
         """Fetch a colormap."""
-        cmap = self._data.get(name)
+        cmap = self.data.get(name, None)
         if cmap is None:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
 
@@ -152,28 +160,29 @@ class ColorMaps(object):
 
     def list(self) -> List[str]:
         """List registered Colormaps."""
-        return list(self._data.keys())
+        return list(self.data)
 
-    def register(self, name: str, custom_cmap: Union[Dict, str], force: bool = False):
+    def register(
+        self, custom_cmap: Dict[str, Union[str, Dict]], overwrite: bool = False,
+    ) -> "ColorMaps":
         """
         Register a custom colormap.
 
         Attributes
         ----------
-        name : str
-            Name of the colormap.
-        custom_cmap: dict or str
-            A dict or a path to a numpy file
-        force: bool
+        custom_cmap: dict
+            A dict in form of {"name": `{colormap} or .npy file`}
+        overwrite: bool
             Overwrite existing colormap with same key (default: False)
 
         """
-        if not force and name in self._data.keys():
-            raise ColorMapAlreadyRegistered(
-                f"{name} is already registered. Use force=True to overwrite."
-            )
+        for name, cmap in custom_cmap.items():
+            if not overwrite and name in self.data:
+                raise ColorMapAlreadyRegistered(
+                    f"{name} is already registered. Use force=True to overwrite."
+                )
 
-        self._data[name] = custom_cmap
+        return ColorMaps({**self.data, **custom_cmap})
 
 
-cmap = ColorMaps()  # noqa
+cmap = ColorMaps(deepcopy(DEFAULTS_CMAPS))  # noqa

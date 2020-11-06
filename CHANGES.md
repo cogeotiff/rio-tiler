@@ -68,6 +68,21 @@ with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
 {"percentiles": [19.0, 168.0], "min": 0.0, "max": 255.0, ...}
 ```
 
+* make `rio_tiler.colormap.ColorMap` object immutable. Registering a new colormap will new returns a now instance of ColorMap(https://github.com/cogeotiff/rio-tiler/issues/289).
+* changed the `rio_tiler.colormap.ColorMap.register()` method to take a dictionary as input (instead of name + dict).
+
+```python
+from rio_tiler.colormap import cmap # default cmap
+
+# previous
+cmap.register("acmap", {0: [0, 0, 0, 0], ...})
+
+# Now
+cmap = cmap.register({"acmap": {0: [0, 0, 0, 0], ...}})
+```
+
+* added the possibility to automatically register colormaps stored as `.npy` file in a directory, if `COLORMAP_DIRECTORY` environment variable is set with the name of the directory.
+
 * Update to morecantile 2.0.0
 
 ## 2.0.0b19 (2020-10-26)
