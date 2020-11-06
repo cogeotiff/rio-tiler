@@ -36,6 +36,7 @@ nav:
     - Create a Dynamic Tiler: 'advanced/dynamic_tiler.md'
     - TileMatrixSet: 'advanced/tms.md'
   - Examples:
+    - Introduction: 'examples/Using-rio-tiler.ipynb'
     - Mosaic: 'examples/Using-rio-tiler-mosaic.ipynb'
   - Migration from v1.0 to v2.0: 'v2_migration.md'
   - Development - Contributing: 'contributing.md'
