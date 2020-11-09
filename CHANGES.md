@@ -1,5 +1,5 @@
 
-## 2.0.0rc1 (TBD)
+## 2.0.0rc1 (2020-11-09)
 
 * added `ImageData` output class for all `rio_tiler.io` classes returning numpy array-like types (`tile, mask = method()`)
 

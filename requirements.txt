@@ -6,6 +6,9 @@ numexpr
 numpy
 
 mercantile
-rasterio>=1.1.3
+morecantile>=2.0,<2.1
+
+rasterio>=1.1.7
+rio-color
 
 requests

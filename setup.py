@@ -33,7 +33,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="2.0.0b19",
+    version="2.0.0rc1",
     python_requires=">=3.5",
     description="Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.",
     long_description=readme,
@@ -42,6 +42,7 @@ setup(
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS",
@@ -51,7 +52,7 @@ setup(
     author_email="vincent@developmentseed.org",
     url="https://github.com/cogeotiff/rio-tiler",
     license="BSD",
-    packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
+    packages=find_packages(exclude=["tests*"]),
     include_package_data=True,
     package_data={"rio_tiler": ["cmap_data/*.npy"]},
     zip_safe=False,
