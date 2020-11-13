@@ -199,7 +199,6 @@ class ImageData:
             data = data.astype(out_dtype)
 
         if color_formula:
-            data = data.astype(numpy.uint8)
             data[data < 0] = 0
             for ops in parse_operations(color_formula):
                 data = scale_dtype(ops(to_math_type(data)), numpy.uint8)

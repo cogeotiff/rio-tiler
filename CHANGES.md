@@ -1,4 +1,8 @@
 
+## 2.0.0rc1.post1 (2020-11-12)
+
+* Remove `Uint8` data casting before applying `color_formula` in ImageData.render (https://github.com/cogeotiff/rio-tiler/issues/302)
+
 ## 2.0.0rc1 (2020-11-09)
 
 * added `ImageData` output class for all `rio_tiler.io` classes returning numpy array-like types (`tile, mask = method()`)
