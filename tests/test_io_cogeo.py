@@ -385,6 +385,9 @@ def test_imageData_output():
         img = cog.tile(43, 24, 7)
         assert img.data.dtype == "uint16"
 
+        imgc = img.post_process(color_formula="Gamma R 3.1")
+        assert imgc.data.dtype == "uint8"
+
         imgr = img.post_process(in_range=(img.data.min(), img.data.max()))
         assert not numpy.array_equal(img.data, imgr.data)
         assert imgr.data.dtype == "uint8"
