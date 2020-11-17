@@ -99,6 +99,19 @@ class ImageData:
     assets: Optional[List[str]] = attr.ib(default=None)
     bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
     crs: Optional[CRS] = attr.ib(default=None)
+    metadata: Optional[Dict] = attr.ib(factory=dict)
+
+    @data.validator
+    def _validate_data(self, attribute, value):
+        """ImageData data has to be a 3d array in form of (count, height, width)"""
+        if not len(value.shape) == 3:
+            raise ValueError(
+                "ImageData data has to be an array in form of (count, height, width)"
+            )
+
+    @mask.default
+    def _default_mask(self):
+        return numpy.zeros((self.height, self.width), dtype="uint8") + 255
 
     def __iter__(self):
         """Allow for variable expansion (``arr, mask = ImageData``)"""

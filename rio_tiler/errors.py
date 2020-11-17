@@ -59,3 +59,7 @@ class InvalidMosaicMethod(RioTilerError):
 
 class ColorMapAlreadyRegistered(Exception):
     """ColorMap is already registered."""
+
+
+class EmptyMosaicError(RioTilerError):
+    """Mosaic method returned empty array."""
