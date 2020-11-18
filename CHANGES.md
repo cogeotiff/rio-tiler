@@ -1,4 +1,30 @@
 
+## 2.0.0rc2 (TBD)
+
+* add `data` validation in `rio_tiler.models.ImageData` model. Data MUST be a 3 dimensions array in form of (count, height, width).
+* `mask` is now optional for `rio_tiler.models.ImageData` model, but will be initialized to a default full valid (`255`) array.
+
+```python
+import numpy
+from rio_tiler.models import ImageData
+
+data = numpy.random.rand(3, 10, 10)
+
+img = ImageData(data)
+assert img.mask.all()
+```
+
+* add `metadata` property to `rio_tiler.models.ImageData` model
+
+```python
+img.metadata
+>>> {}
+```
+
+**breaking change**
+
+* `rio_tiler.mosaic.reader.mosaic_reader` now raises `EmptyMosaicError` instead of returning an empty `ImageData`
+
 ## 2.0.0rc1.post1 (2020-11-12)
 
 * Remove `Uint8` data casting before applying `color_formula` in ImageData.render (https://github.com/cogeotiff/rio-tiler/issues/302)

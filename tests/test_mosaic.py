@@ -9,7 +9,7 @@ from rasterio.warp import transform_bounds
 
 from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import InvalidMosaicMethod, TileOutsideBounds
+from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
 from rio_tiler.io import COGReader
 from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
@@ -114,9 +114,8 @@ def test_mosaic_tiler():
     assert not m.all()
 
     # test when tiler raise errors (outside bounds)
-    (t, m), _ = mosaic.mosaic_reader(assets, _read_tile, 150, 300, 9)
-    assert not t
-    assert not m
+    with pytest.raises(EmptyMosaicError):
+        mosaic.mosaic_reader(assets, _read_tile, 150, 300, 9)
 
     # Test mean pixel selection
     (t, m), _ = mosaic.mosaic_reader(
@@ -233,13 +232,13 @@ def test_threads():
     """Test mosaic tiler."""
     assets = [asset2, asset1, asset1, asset2, asset1, asset2]
 
-    # TileOutSide bounds should be ignore and thus Tile is None
-    (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=2)
-    assert not tnothread
+    # TileOutSide bounds should be ignored but no tile is created
+    with pytest.raises(EmptyMosaicError):
+        mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=2)
 
-    # TileOutSide bounds should be ignore and thus Tile is None
-    (tnothread, _), _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=0)
-    assert not tnothread
+    # TileOutSide bounds should be ignored but no tile is created
+    with pytest.raises(EmptyMosaicError):
+        mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo, threads=0)
 
     # Only cover asset1
     xpp = 147
@@ -315,11 +314,6 @@ def test_threads():
 
 def test_mosaic_tiler_with_imageDataClass():
     """Test mosaic tiler."""
-    img, _ = mosaic.mosaic_reader(assets, _read_tile, xo, yo, zo)
-    assert not img.assets
-    assert not img.data
-    assert not img.mask
-
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
     assert img.data.shape == (3, 256, 256)
     assert img.mask.shape == (256, 256)

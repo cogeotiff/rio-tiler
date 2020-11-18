@@ -6,7 +6,7 @@ from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, 
 from rasterio.crs import CRS
 
 from ..constants import MAX_THREADS, BBox
-from ..errors import InvalidMosaicMethod, TileOutsideBounds
+from ..errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
 from ..models import ImageData
 from ..tasks import create_tasks, filter_tasks
 from ..utils import _chunks
@@ -81,7 +81,6 @@ def mosaic_reader(
         chunk_size = threads if threads > 1 else len(assets)
 
     assets_used: List[str] = []
-
     crs: Optional[CRS] = None
     bounds: Optional[BBox] = None
 
@@ -98,6 +97,17 @@ def mosaic_reader(
             pixel_selection.feed(img.as_masked())
 
             if pixel_selection.is_done:
-                return ImageData(*pixel_selection.data, assets=assets_used, crs=crs, bounds=bounds), assets_used  # type: ignore
+                data, mask = pixel_selection.data
+                return (
+                    ImageData(data, mask, assets=assets_used, crs=crs, bounds=bounds),
+                    assets_used,
+                )
 
-    return ImageData(*pixel_selection.data, assets=assets_used, crs=crs, bounds=bounds), assets_used  # type: ignore
+    data, mask = pixel_selection.data
+    if data is None:
+        raise EmptyMosaicError("Method returned an empty array")
+
+    return (
+        ImageData(data, mask, assets=assets_used, crs=crs, bounds=bounds),
+        assets_used,
+    )
