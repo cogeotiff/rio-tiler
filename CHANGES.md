@@ -1,5 +1,5 @@
 
-## 2.0.0rc2 (TBD)
+## 2.0.0rc2 (2020-11-17)
 
 * add `data` validation in `rio_tiler.models.ImageData` model. Data MUST be a 3 dimensions array in form of (count, height, width).
 * `mask` is now optional for `rio_tiler.models.ImageData` model, but will be initialized to a default full valid (`255`) array.

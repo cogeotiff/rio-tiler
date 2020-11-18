@@ -14,4 +14,4 @@ from . import (  # noqa
     utils,
 )
 
-__version__ = "2.0.0rc1.post1"
+__version__ = "2.0.0rc2"
