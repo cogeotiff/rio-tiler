@@ -105,12 +105,17 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def preview(self, **kwargs: Any) -> ImageData:
-        """Return a preview of a Dataset."""
+        """Read a preview of a Dataset."""
         ...
 
     @abc.abstractmethod
     def point(self, lon: float, lat: float, **kwargs: Any) -> List:
         """Read a value from a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    def feature(self, shape: Dict, **kwargs: Any) -> ImageData:
+        """Read a Dataset for a GeoJSON feature."""
         ...
 
 
@@ -163,7 +168,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
-        """Return a preview of a Dataset."""
+        """Read a preview of a Dataset."""
         ...
 
     @abc.abstractmethod
@@ -171,6 +176,13 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         self, lon: float, lat: float, **kwargs: Any
     ) -> Coroutine[Any, Any, List]:
         """Read a value from a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def feature(
+        self, shape: Dict, **kwargs: Any
+    ) -> Coroutine[Any, Any, ImageData]:
+        """Read a Dataset for a GeoJSON feature."""
         ...
 
 
@@ -437,6 +449,49 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             values = apply_expression(blocks, assets, values).tolist()
 
         return values
+
+    def feature(
+        self,
+        shape: Dict,
+        assets: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",
+        asset_expression: Optional[
+            str
+        ] = "",  # Expression for each asset based on index names
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read multiple assets for a geojson feature."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        if assets and expression:
+            warnings.warn(
+                "Both expression and assets passed; expression will overwrite assets parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            assets = self.parse_expression(expression)
+
+        if not assets:
+            raise MissingAssets(
+                "assets must be passed either via expression or assets options."
+            )
+
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
+            url = self._get_asset_url(asset)
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                return cog.feature(*args, **kwargs)
+
+        output = multi_arrays(
+            assets, _reader, shape, expression=asset_expression, **kwargs,
+        )
+
+        if expression:
+            blocks = expression.split(",")
+            output.data = apply_expression(blocks, assets, output.data)
+
+        return output
 
 
 @attr.s
@@ -745,3 +800,46 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             values = apply_expression(blocks, bands, values).tolist()
 
         return values
+
+    def feature(
+        self,
+        shape: Dict,
+        bands: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",
+        band_expression: Optional[
+            str
+        ] = "",  # Expression for each band based on index names
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read part of multiple bands."""
+        if isinstance(bands, str):
+            bands = (bands,)
+
+        if bands and expression:
+            warnings.warn(
+                "Both expression and bands passed; expression will overwrite bands parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            bands = self.parse_expression(expression)
+
+        if not bands:
+            raise MissingBands(
+                "bands must be passed either via expression or bands options."
+            )
+
+        def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
+            url = self._get_band_url(band)
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                return cog.feature(*args, **kwargs)
+
+        output = multi_arrays(
+            bands, _reader, shape, expression=band_expression, **kwargs,
+        )
+
+        if expression:
+            blocks = expression.split(",")
+            output.data = apply_expression(blocks, bands, output.data)
+
+        return output
