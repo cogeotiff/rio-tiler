@@ -62,6 +62,7 @@ Abstract methods, are mehtod that **HAVE TO** be implemented in the subclass.
 - **part**: reads specific part of a dataset (`rio_tiler.models.ImageData`)
 - **preview**: creates an overview of a dataset (`rio_tiler.models.ImageData`)
 - **point**: reads pixel value for a specific point (`List`)
+- **feature**: reads data for a geojson feature (`rio_tiler.models.ImageData`)
 
 Example: [`COGReader`](/readers/#cogreader)
 

@@ -1,46 +1,37 @@
 
-Natively `rio-tiler` support mostly `bbox` reading. Using GDALWarpVRT **Cutline** option, it's possible to read a dataset for a given polygon.
+Starting with `rio-tiler==2.0.0`, we added a `.feature()` method to `rio-tiler`'s **readers** (e.g `COGReader`).
 
 ```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
 
+with COGReader("my-tif.tif") as cog:
+    # Read data for a given geojson polygon (size is maxed out to 1024)
+    img: ImageData = cog.feature(geojson_feature)
+```
+
+The low level `feature API` is using GDALWarpVRT's **Cutline** option and the `.part()` method.
+
+```python
 from rio_tiler.io import COGReader
 from rio_tiler.utils import create_cutline
 from rasterio.features import bounds as featureBounds
-
-feat =     {
-    "type": "Feature",
-    "properties": {},
-    "geometry": {
-    "type": "Polygon",
-    "coordinates": [
-        [
-        [-52.6025390625, 73.86761239709705],
-        [-52.6025390625, 73.59679245247814],
-        [-51.591796875, 73.60299628304274],
-        [-51.591796875, 73.90420357134279],
-        [-52.4267578125, 74.0437225981325],
-        [-52.6025390625, 73.86761239709705]
-        ]
-    ]
-    }
-}
-
-# Get BBOX of the polygon
-bbox = featureBounds(feat)
 
 # Use COGReader to open and read the dataset
 with COGReader("my_tif.tif") as cog:
     # Create WTT Cutline
     cutline = create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
 
+    # Get BBOX of the polygon
+    bbox = featureBounds(feat)
+
     # Read part of the data (bbox) and use the cutline to mask the data
     data, mask = cog.part(bbox, vrt_options={'cutline': cutline})
 ```
 
-The previous example uses the `.part` method but any method that uses the `rio_tiler.reader._read` function will accept the `cutline` options.
+Another interesting fact about the `cutline` option is that it can be used with other methods:
 
 ```python
-
 bbox = featureBounds(feat)
 
 # Use COGReader to open and read the dataset

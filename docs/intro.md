@@ -110,3 +110,7 @@ with COGReader(
     npy_tile = numpy.load(BytesIO(buff))
     assert npy_tile.shape == (1, 256, 256)
 ```
+
+## More
+
+`rio-tiler`'s readers have other interesting features, please see [User Guide - Readers](/readers/)
