@@ -532,7 +532,7 @@ class COGReader(BaseReader):
         **kwargs: Any,
     ) -> ImageData:
         """
-        Read part of a COG.
+        Read a COG for a geojson feature.
 
         Attributes
         ----------
