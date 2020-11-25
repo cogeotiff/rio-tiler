@@ -21,6 +21,7 @@ from rio_tiler.io import COGReader
 from rio_tiler.models import ImageData, Info, Metadata, SpatialInfo
 
 with COGReader("myfile.tif") as cog:
+    # cog.tile(tile_x, tile_y, tile_z, **kwargs)
     img = cog.tile(1, 2, 3, tilesize=256)
     assert isinstance(img, ImageData)
     assert img.crs == WEB_MERCATOR_CRS
@@ -37,10 +38,11 @@ with COGReader("myfile.tif"s) as cog:
     assert img.data.count == 1
 ```
 
-- **part()**: Read part of a raster
+- **part()**: Read a raster for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.part((minx, miny, maxx, maxy), **kwargs)
     img = cog.part((10, 10, 20, 20))
     assert isinstance(img, ImageData)
     assert img.crs == WGS84_CRS
@@ -69,6 +71,57 @@ with COGReader("myfile.tif") as cog:
     img = cog.part((10, 10, 20, 20), expression="B1/B2")
 ```
 
+- **feature()**: Read a raster for a geojson feature. By default the feature is considered to be in WGS84.
+
+```python
+
+feat = {
+    "type": "Feature",
+    "properties": {},
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-54.45, 73.05],
+                [-55.05, 72.79],
+                [-55.61, 72.46],
+                [-53.83, 72.36],
+                [-54.45, 73.05],
+            ]
+        ],
+    },
+}
+
+with COGReader("myfile.tif") as cog:
+    # cog.part(geojson_feature, **kwargs)
+    img = cog.feature(feat)
+    assert isinstance(img, ImageData)
+    assert img.crs == WGS84_CRS
+    assert img.assets == ["myfile.tif"]
+    assert img.bounds == (-55.61, 72.36, -53.83, 73.05)  # bbox of the input feature
+
+# Pass bbox in WGS84 (default) but return data in the input COG CRS
+with COGReader("myfile.tif") as cog:
+    img = cog.feature(feat, dst_crs=cog.dataset.crs)
+    assert img.crs == cog.dataset.crs
+
+# Limit output size (default is set to 1024)
+with COGReader("myfile.tif") as cog:
+    img = cog.feature(feat, max_size=2000)
+
+# Read high resolution
+with COGReader("myfile.tif") as cog:
+    img = cog.feature(feat, max_size=None)
+
+# With indexes
+with COGReader("myfile.tif") as cog:
+    img = cog.feature(feat, indexes=1)
+
+# With expression
+with COGReader("myfile.tif") as cog:
+    img = cog.feature(feat, expression="B1/B2")
+```
+
 - **preview()**: Read a preview of a raster
 
 ```python
@@ -85,10 +138,11 @@ with COGReader("myfile.tif") as cog:
     img = cog.preview(expression="B1+2,B1*4")
 ```
 
-- **point()**: Read point value of a raster
+- **point()**: Read the pixel values of a raster for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.point(lon, lat)
     print(cog.point(-100, 25))
 
 # With indexes
@@ -132,6 +186,7 @@ print(info.dict(exclude_none=True))
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.stats(min_percentile, max_percentile, **kwargs)
     stats = cog.stats()
     assert isinstance(stats, dict)
 
@@ -159,6 +214,7 @@ print(stats["1"].dict())
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.metadata(min_percentile, max_percentile, **kwargs)
     metadata = cog.metadata()
     assert isinstance(metadata, Metadata)
 
@@ -180,7 +236,7 @@ print(metadata.dict(exclude_none=True))
     }
     "statistics" : {
         "1": {
-            "pc": [1, 16],
+            "percentiles": [1, 16],
             "min": 1,
             "max": 18,
             "std": 4.069636227214257,

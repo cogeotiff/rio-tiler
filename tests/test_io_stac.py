@@ -313,3 +313,61 @@ def test_parse_expression():
             "green",
             "red",
         ]
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_feature_valid(rio):
+    """Should raise or return data."""
+    rio.open = mock_rasterio_open
+
+    feat = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-80.013427734375, 33.03169299978312],
+                    [-80.3045654296875, 32.588477769459146],
+                    [-80.05462646484375, 32.42865847084369],
+                    [-79.45037841796875, 32.6093028087336],
+                    [-79.47235107421875, 33.43602551072033],
+                    [-79.89532470703125, 33.47956309444182],
+                    [-80.1068115234375, 33.37870592138779],
+                    [-80.30181884765625, 33.27084277265288],
+                    [-80.0628662109375, 33.146750228776455],
+                    [-80.013427734375, 33.03169299978312],
+                ]
+            ],
+        },
+    }
+
+    with STACReader(STAC_PATH) as stac:
+        with pytest.raises(InvalidAssetName):
+            stac.feature(feat, assets="vert")
+
+        # missing asset/expression
+        with pytest.raises(MissingAssets):
+            stac.feature(feat)
+
+        data, mask = stac.feature(feat, assets="green")
+        assert data.shape == (1, 119, 97)
+        assert mask.shape == (119, 97)
+
+        data, mask = stac.feature(feat, assets=("green",))
+        assert data.shape == (1, 119, 97)
+        assert mask.shape == (119, 97)
+
+        data, mask = stac.feature(feat, expression="green/red")
+        assert data.shape == (1, 119, 97)
+        assert mask.shape == (119, 97)
+
+        data, mask = stac.feature(feat, assets="green", max_size=30)
+        assert data.shape == (1, 30, 25)
+        assert mask.shape == (30, 25)
+
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = stac.feature(
+                feat, assets=("green", "red"), expression="green/red"
+            )
+            assert data.shape == (1, 119, 97)

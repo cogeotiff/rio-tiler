@@ -91,6 +91,12 @@ class AsyncCOGReader(AsyncBaseReader):
         """Read a value from a Dataset."""
         return await run_in_threadpool(self.dataset.point, lon, lat, **kwargs)  # type: ignore
 
+    async def feature(
+        self, shape: Dict, **kwargs: Any
+    ) -> Coroutine[Any, Any, ImageData]:
+        """Read a Dataset for a GeoJSON feature"""
+        return await run_in_threadpool(self.dataset.feature, shape, **kwargs)  # type: ignore
+
 
 @pytest.mark.asyncio
 async def test_async():
@@ -127,3 +133,30 @@ async def test_async():
 
         data, mask = await cog.preview(max_size=128)
         assert data.shape == (1, 128, 128)
+
+        feature = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-56.4697265625, 74.17307693616263],
+                        [-57.667236328125, 73.53462847039683],
+                        [-57.59033203125, 73.13451013251789],
+                        [-56.195068359375, 72.94865294642922],
+                        [-54.964599609375, 72.96797135377102],
+                        [-53.887939453125, 73.84623016391944],
+                        [-53.97583007812499, 74.0165183926664],
+                        [-54.73388671875, 74.23289305339864],
+                        [-55.54687499999999, 74.2269213699517],
+                        [-56.129150390625, 74.21497138945001],
+                        [-56.2060546875, 74.21198251594369],
+                        [-56.4697265625, 74.17307693616263],
+                    ]
+                ],
+            },
+        }
+
+        img = await cog.feature(feature)
+        assert img.data.shape == (1, 349, 1024)

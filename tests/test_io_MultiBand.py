@@ -117,3 +117,32 @@ def test_MultiBandReader():
 
         with pytest.warns(ExpressionMixingWarning):
             assert cog.point(-11.5, 24.5, bands="b1", expression="b1*2")
+
+        feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-12.03826904296875, 24.87646991083154],
+                        [-12.14263916015625, 24.831610355586918],
+                        [-12.1563720703125, 24.709410369765177],
+                        [-12.1673583984375, 24.484648999654034],
+                        [-11.898193359375, 24.472150437226865],
+                        [-11.6729736328125, 24.542126388899305],
+                        [-11.47247314453125, 24.79920167537382],
+                        [-12.03826904296875, 24.87646991083154],
+                    ]
+                ],
+            },
+        }
+        with pytest.raises(MissingBands):
+            cog.feature(feat)
+
+        img = cog.feature(feat, bands="b1")
+        assert img.data.any()
+        assert not img.mask.all()
+
+        with pytest.warns(ExpressionMixingWarning):
+            cog.feature(feat, bands="b1", expression="b1*2")

@@ -432,3 +432,95 @@ def test_imageData_output():
         assert img.bounds == cog.dataset.bounds
         meta = parse_img(img.render(img_format="GTiff"))
         assert meta["crs"] == cog.dataset.crs
+
+
+def test_feature_valid():
+    """Read from feature."""
+    feature = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-56.4697265625, 74.17307693616263],
+                    [-57.667236328125, 73.53462847039683],
+                    [-57.59033203125, 73.13451013251789],
+                    [-56.195068359375, 72.94865294642922],
+                    [-54.964599609375, 72.96797135377102],
+                    [-53.887939453125, 73.84623016391944],
+                    [-53.97583007812499, 74.0165183926664],
+                    [-54.73388671875, 74.23289305339864],
+                    [-55.54687499999999, 74.2269213699517],
+                    [-56.129150390625, 74.21497138945001],
+                    [-56.2060546875, 74.21198251594369],
+                    [-56.4697265625, 74.17307693616263],
+                ]
+            ],
+        },
+    }
+
+    with COGReader(COG_NODATA) as cog:
+        img = cog.feature(feature)
+        assert img.data.shape == (1, 349, 1024)
+
+        img = cog.feature(feature, dst_crs=cog.dataset.crs)
+        assert img.data.shape == (1, 1024, 869)
+
+        img = cog.feature(feature, max_size=30)
+        assert img.data.shape == (1, 11, 30)
+
+        img = cog.feature(feature, expression="b1*2,b1-100")
+        assert img.data.shape == (2, 349, 1024)
+
+        with pytest.warns(ExpressionMixingWarning):
+            img = cog.feature(feature, indexes=(1, 2, 3), expression="b1*2")
+            assert img.data.shape == (1, 349, 1024)
+
+        img = cog.feature(feature, indexes=1)
+        assert img.data.shape == (1, 349, 1024)
+
+        img = cog.feature(feature, indexes=(1, 1,))
+        assert img.data.shape == (2, 349, 1024)
+
+        # feature overlaping on mask area
+        mask_feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-54.45922851562499, 73.05143929453952],
+                        [-55.052490234375, 72.79658820490461],
+                        [-55.61279296874999, 72.46203877644956],
+                        [-53.8330078125, 72.36244812858165],
+                        [-54.45922851562499, 73.05143929453952],
+                    ]
+                ],
+            },
+        }
+
+        img = cog.feature(mask_feat)
+        assert not img.mask.all()
+
+        outside_mask_feature = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-57.3486328125, 72.25226599952339],
+                        [-57.041015625, 72.1279362810559],
+                        [-56.722412109375, 72.06038062953813],
+                        [-54.86572265625, 72.07052969916067],
+                        [-54.613037109375, 72.63665259171732],
+                        [-56.14013671875, 72.90995232978632],
+                        [-57.3486328125, 72.25226599952339],
+                    ]
+                ],
+            },
+        }
+        img = cog.feature(outside_mask_feature)
+        assert not img.mask.all()

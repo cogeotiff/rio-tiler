@@ -56,6 +56,44 @@ $ pip install -U pip
 $ pip install -e .
 ```
 
+## Overview
+
+`rio-tiler` is a rasterio plugin which aims to ease the creation of [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) dynamically from any raster data.
+
+```python
+from typing import Dict, List
+
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
+with COGReader("my-tif.tif") as cog:
+    # get info
+    info: Dict = cog.info()
+
+    # get image statistics
+    stats: Dict = cog.stats()
+
+    # get metadata (info + image statistics)
+    meta: Dict = cog.metadata()
+
+    # Read data for a mercator tile
+    img: ImageData = cog.tile(tile_x, tile_y, tile_zoom, tilesize=256)
+    assert img.data
+    assert img.mask
+
+    # Read part of a data for a given bbox (size is maxed out to 1024)
+    img: ImageData = cog.part([minx, miny, maxx, maxy])
+
+    # Read data for a given geojson polygon (size is maxed out to 1024)
+    img: ImageData = cog.feature(geojson_feature)
+
+    # Get a preview (size is maxed out to 1024)
+    img: ImageData = cog.preview()
+
+    # Get pixel values for a given lon/lat coordinate
+    value: List = cog.point(lon, lat)
+```
+
 ## Partial reading on Cloud hosted dataset
 
 `rio-tiler` perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).

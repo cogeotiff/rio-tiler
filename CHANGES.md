@@ -1,4 +1,9 @@
 
+
+## 2.0.0rc3 (2020-11-24)
+
+* add `feature` method to reader classes (https://github.com/cogeotiff/rio-tiler/issues/306)
+
 ## 2.0.0rc2 (2020-11-17)
 
 * add `data` validation in `rio_tiler.models.ImageData` model. Data MUST be a 3 dimensions array in form of (count, height, width).

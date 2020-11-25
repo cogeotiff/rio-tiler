@@ -10,6 +10,7 @@ from morecantile import Tile, TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
+from rasterio.features import bounds as featureBounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
@@ -19,7 +20,7 @@ from .. import constants, reader
 from ..errors import ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
 from ..models import ImageData, ImageStatistics, Info
-from ..utils import has_alpha_band, has_mask_band
+from ..utils import create_cutline, has_alpha_band, has_mask_band
 from .base import BaseReader
 
 
@@ -519,6 +520,91 @@ class COGReader(BaseReader):
             point = apply_expression(blocks, bands, point).tolist()
 
         return point
+
+    def feature(
+        self,
+        shape: Dict,
+        dst_crs: Optional[CRS] = None,
+        shape_crs: CRS = constants.WGS84_CRS,
+        max_size: int = 1024,
+        indexes: Optional[Union[int, Sequence]] = None,
+        expression: Optional[str] = "",
+        **kwargs: Any,
+    ) -> ImageData:
+        """
+        Read a COG for a geojson feature.
+
+        Attributes
+        ----------
+        shape: dict
+            Valid GeoJSON feature.
+        dst_crs: CRS or str, optional
+            Target coordinate reference system, default is the bbox CRS.
+        shape_crs: CRS or str, optional
+            shape coordinate reference system, default is "epsg:4326"
+        max_size: int, optional
+            Limit output size array, default is 1024.
+        indexes: int or sequence of int
+            Band indexes (e.g. 1 or (1, 2, 3))
+        expression: str
+            rio-tiler expression (e.g. b1/b2+b3)
+        kwargs: dict, optional
+            These will be passed to the 'rio_tiler.reader.part' function.
+
+        Returns
+        -------
+        data: numpy ndarray
+        mask: numpy array
+
+        """
+        kwargs = {**self._kwargs, **kwargs}
+
+        if isinstance(indexes, int):
+            indexes = (indexes,)
+
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        if not dst_crs:
+            dst_crs = shape_crs
+
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
+
+        cutline = create_cutline(self.dataset, shape, geometry_crs=shape_crs)
+        vrt_options = kwargs.pop("vrt_options", {})
+        vrt_options.update({"cutline": cutline})
+
+        data, mask = reader.part(
+            self.dataset,
+            bbox,
+            max_size=max_size,
+            bounds_crs=shape_crs,
+            dst_crs=dst_crs,
+            indexes=indexes,
+            vrt_options=vrt_options,
+            **kwargs,
+        )
+
+        if expression:
+            blocks = expression.lower().split(",")
+            bands = [f"b{bidx}" for bidx in indexes]
+            data = apply_expression(blocks, bands, data)
+
+        if dst_crs == shape_crs:
+            bounds = bbox
+        else:
+            bounds = transform_bounds(shape_crs, dst_crs, *bbox, densify_pts=21)
+
+        return ImageData(
+            data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
+        )
 
 
 @attr.s
