@@ -1,6 +1,6 @@
 
 
-## 2.0.0rc3 (TBD)
+## 2.0.0rc3 (2020-11-24)
 
 * add `feature` method to reader classes (https://github.com/cogeotiff/rio-tiler/issues/306)
 
