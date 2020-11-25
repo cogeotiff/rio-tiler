@@ -21,6 +21,7 @@ from rio_tiler.io import COGReader
 from rio_tiler.models import ImageData, Info, Metadata, SpatialInfo
 
 with COGReader("myfile.tif") as cog:
+    # cog.tile(tile_x, tile_y, tile_z, **kwargs)
     img = cog.tile(1, 2, 3, tilesize=256)
     assert isinstance(img, ImageData)
     assert img.crs == WEB_MERCATOR_CRS
@@ -37,10 +38,11 @@ with COGReader("myfile.tif"s) as cog:
     assert img.data.count == 1
 ```
 
-- **part()**: Read a raster for a given bounding box (`bbox`)
+- **part()**: Read a raster for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.part((minx, miny, maxx, maxy), **kwargs)
     img = cog.part((10, 10, 20, 20))
     assert isinstance(img, ImageData)
     assert img.crs == WGS84_CRS
@@ -69,7 +71,7 @@ with COGReader("myfile.tif") as cog:
     img = cog.part((10, 10, 20, 20), expression="B1/B2")
 ```
 
-- **feature()**: Read a raster for a geojson feature
+- **feature()**: Read a raster for a geojson feature. By default the feature is considered to be in WGS84.
 
 ```python
 
@@ -91,6 +93,7 @@ feat = {
 }
 
 with COGReader("myfile.tif") as cog:
+    # cog.part(geojson_feature, **kwargs)
     img = cog.feature(feat)
     assert isinstance(img, ImageData)
     assert img.crs == WGS84_CRS
@@ -135,10 +138,11 @@ with COGReader("myfile.tif") as cog:
     img = cog.preview(expression="B1+2,B1*4")
 ```
 
-- **point()**: Read point value of a raster
+- **point()**: Read the pixel values of a raster for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.point(lon, lat)
     print(cog.point(-100, 25))
 
 # With indexes
@@ -182,6 +186,7 @@ print(info.dict(exclude_none=True))
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.stats(min_percentile, max_percentile, **kwargs)
     stats = cog.stats()
     assert isinstance(stats, dict)
 
@@ -209,6 +214,7 @@ print(stats["1"].dict())
 
 ```python
 with COGReader("myfile.tif") as cog:
+    # cog.metadata(min_percentile, max_percentile, **kwargs)
     metadata = cog.metadata()
     assert isinstance(metadata, Metadata)
 
