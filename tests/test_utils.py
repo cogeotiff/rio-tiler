@@ -390,6 +390,7 @@ def test_render_numpy():
     """Save data to numpy binary."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8)
+
     res = utils.render(arr, mask=mask, img_format="npy")
     arr_res = np.load(BytesIO(res))
     assert arr_res.shape == (4, 512, 512)
@@ -400,3 +401,17 @@ def test_render_numpy():
     arr_res = np.load(BytesIO(res))
     assert arr_res.shape == (3, 512, 512)
     np.array_equal(arr, arr_res)
+
+    res = utils.render(arr, img_format="npz")
+    arr_res = np.load(BytesIO(res))
+    assert arr_res.files == ["data"]
+    assert arr_res["data"].shape == (3, 512, 512)
+    np.array_equal(arr, arr_res["data"])
+
+    res = utils.render(arr, mask, img_format="npz")
+    arr_res = np.load(BytesIO(res))
+    assert arr_res.files == ["data", "mask"]
+    assert arr_res["data"].shape == (3, 512, 512)
+    assert arr_res["mask"].shape == (512, 512)
+    np.array_equal(arr, arr_res["data"])
+    np.array_equal(mask, arr_res["mask"])
