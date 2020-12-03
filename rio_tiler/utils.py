@@ -442,9 +442,7 @@ def render(
             mask = numpy.expand_dims(mask, axis=0)
             tile = numpy.concatenate((tile, mask))
         bio = BytesIO()
-        numpy.save(bio, tile) if img_format == "NPY" else numpy.savez_compressed(
-            bio, tile
-        )
+        numpy.save(bio, tile)
         bio.seek(0)
         return bio.getvalue()
 
