@@ -432,16 +432,28 @@ def render(
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
     if img_format == "WEBP" and tile.shape[0] == 1:
         tile = numpy.repeat(tile, 3, axis=0)
+
     elif img_format == "JPEG":
         mask = None
 
-    if img_format == "NPY":
+    elif img_format == "NPY":
         # If mask is not None we add it as the last band
         if mask is not None:
             mask = numpy.expand_dims(mask, axis=0)
             tile = numpy.concatenate((tile, mask))
         bio = BytesIO()
-        numpy.save(bio, tile)
+        numpy.save(bio, tile) if img_format == "NPY" else numpy.savez_compressed(
+            bio, tile
+        )
+        bio.seek(0)
+        return bio.getvalue()
+
+    elif img_format == "NPZ":
+        bio = BytesIO()
+        if mask is not None:
+            numpy.savez_compressed(bio, data=tile, mask=mask)
+        else:
+            numpy.savez_compressed(bio, data=tile)
         bio.seek(0)
         return bio.getvalue()
 

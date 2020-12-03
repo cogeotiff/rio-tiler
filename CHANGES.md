@@ -1,4 +1,7 @@
 
+## Next (TBD)
+
+* add `NPZ` output format (ref: https://github.com/cogeotiff/rio-tiler/issues/308)
 
 ## 2.0.0rc3 (2020-11-24)
 
