@@ -2,6 +2,7 @@
 ## Next (TBD)
 
 * add `NPZ` output format (ref: https://github.com/cogeotiff/rio-tiler/issues/308)
+* using pystac for STAC item reader (https://github.com/cogeotiff/rio-tiler/issues/212)
 
 ## 2.0.0rc3 (2020-11-24)
 
