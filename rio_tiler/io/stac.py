@@ -2,7 +2,7 @@
 
 import functools
 import json
-from typing import Dict, Iterator, Optional, Set, Type
+from typing import Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
 import attr
@@ -74,6 +74,12 @@ def _get_assets(
             continue
 
         yield asset
+
+
+def to_stac_item(item: Union[Dict, pystac.Item]) -> pystac.Item:
+    if isinstance(item, Dict):
+        return pystac.Item.from_dict(item)
+    return item
 
 
 @attr.s
@@ -151,8 +157,7 @@ class STACReader(MultiBaseReader):
     """
 
     filepath: str = attr.ib()
-    item: Dict = attr.ib(default=None)
-    stac_item: pystac.Item = attr.ib(default=None)
+    item: pystac.Item = attr.ib(default=None, converter=to_stac_item)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=0)
     maxzoom: int = attr.ib(default=30)
@@ -165,14 +170,13 @@ class STACReader(MultiBaseReader):
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
-        self.item = self.item or fetch(self.filepath)
-        self.stac_item = self.stac_item or pystac.Item.from_dict(
-            self.item, self.filepath
+        self.item = self.item or pystac.Item.from_dict(
+            fetch(self.filepath), self.filepath
         )
-        self.bounds = self.stac_item.bbox
+        self.bounds = self.item.bbox
         self.assets = list(
             _get_assets(
-                self.stac_item,
+                self.item,
                 include=self.include_assets,
                 exclude=self.exclude_assets,
                 include_asset_types=self.include_asset_types,
@@ -187,4 +191,4 @@ class STACReader(MultiBaseReader):
         if asset not in self.assets:
             raise InvalidAssetName(f"{asset} is not valid")
 
-        return self.stac_item.assets[asset].get_absolute_href()
+        return self.item.assets[asset].get_absolute_href()
