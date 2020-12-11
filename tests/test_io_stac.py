@@ -3,7 +3,6 @@
 import json
 import os
 from unittest.mock import patch
-from urllib.parse import urlparse
 
 import pytest
 import rasterio
