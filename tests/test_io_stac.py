@@ -3,6 +3,7 @@
 import json
 import os
 from unittest.mock import patch
+from urllib.parse import urlparse
 
 import pytest
 import rasterio
@@ -17,6 +18,7 @@ from rio_tiler.io import STACReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
+STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -371,3 +373,17 @@ def test_feature_valid(rio):
                 feat, assets=("green", "red"), expression="green/red"
             )
             assert data.shape == (1, 119, 97)
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_relative_assets(rio):
+    """Should return absolute href for assets"""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_REL_PATH) as stac:
+
+        for (key, asset) in stac.item.assets.items():
+            assert asset.get_absolute_href().startswith(PREFIX)
+        assert len(stac.assets) == 5
+        for asset in stac.assets:
+            assert stac._get_asset_url(asset).startswith(PREFIX)

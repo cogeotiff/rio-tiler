@@ -1,0 +1,247 @@
+{
+    "stac_extensions": [
+        "disaster",
+        "eo",
+        "sat",
+        "proj",
+        "view"
+    ],
+    "stac_version": "1.0.0-beta.2",
+    "links": [
+        {
+            "type": "application/json; profile=stac-item",
+            "rel": "derived_from",
+            "href": "786-KARI-KOMPSAT3-urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml.json"
+        }
+    ],
+    "assets": {
+        "metadata": {
+            "type": "text/xml",
+            "roles": [
+                "metadata"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_Aux.xml"
+        },
+        "MS1": {
+            "type": "image/tiff; application=geotiff",
+            "roles": [
+                "data"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_B.tif",
+            "gsd": 2.8,
+            "eo:bands": [
+                {
+                    "name": "MS1",
+                    "common_name": "blue",
+                    "center_wavelength": 0.07,
+                    "scale": 36.36363636363637,
+                    "offset": -28.4989,
+                    "eai": 2001.0
+                }
+            ]
+        },
+        "overview": {
+            "type": "image/jpeg",
+            "roles": [
+                "overview"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_br.jpg"
+        },
+        "MS2": {
+            "type": "image/tiff; application=geotiff",
+            "roles": [
+                "data"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_G.tif",
+            "gsd": 2.8,
+            "eo:bands": [
+                {
+                    "name": "MS2",
+                    "common_name": "green",
+                    "center_wavelength": 0.08,
+                    "scale": 26.17801047120419,
+                    "offset": -27.3846,
+                    "eai": 1875.0
+                }
+            ]
+        },
+        "MS4": {
+            "type": "image/tiff; application=geotiff",
+            "roles": [
+                "data"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_N.tif",
+            "gsd": 2.8,
+            "eo:bands": [
+                {
+                    "name": "MS4",
+                    "common_name": "nir",
+                    "center_wavelength": 0.14,
+                    "scale": 52.083333333333336,
+                    "offset": -13.591,
+                    "eai": 1027.0
+                }
+            ]
+        },
+        "PAN": {
+            "type": "image/tiff; application=geotiff",
+            "roles": [
+                "data"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_P.tif",
+            "gsd": 0.7,
+            "eo:bands": [
+                {
+                    "name": "PAN",
+                    "common_name": "pan",
+                    "center_wavelength": 0.45
+                }
+            ]
+        },
+        "MS3": {
+            "type": "image/tiff; application=geotiff",
+            "roles": [
+                "data"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_R.tif",
+            "gsd": 2.8,
+            "eo:bands": [
+                {
+                    "name": "MS3",
+                    "common_name": "red",
+                    "center_wavelength": 0.06,
+                    "scale": 34.013605442176875,
+                    "offset": -21.6854,
+                    "eai": 1525.0
+                }
+            ]
+        },
+        "thumbnail": {
+            "type": "image/jpeg",
+            "roles": [
+                "thumbnail"
+            ],
+            "href": "urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml-product/K3_20201112193439_45302_18521139_L1G_th.jpg"
+        }
+    },
+    "type": "Feature",
+    "id": "K3_20201112193439_45302_18521139_L1G",
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [
+                    -92.64663661,
+                    18.576395368
+                ],
+                [
+                    -92.529930348,
+                    18.57614059
+                ],
+                [
+                    -92.413226243,
+                    18.575813599
+                ],
+                [
+                    -92.412722213,
+                    18.722456862
+                ],
+                [
+                    -92.529526555,
+                    18.722786621
+                ],
+                [
+                    -92.646333063,
+                    18.723043555
+                ],
+                [
+                    -92.64663661,
+                    18.576395368
+                ]
+            ]
+        ]
+    },
+    "properties": {
+        "datetime": "2020-11-12T19:34:47.8741569+00:00",
+        "start_datetime": "2020-11-12T19:34:47.8741569+00:00",
+        "end_datetime": "2020-11-12T19:34:50.2062721+00:00",
+        "updated": "2020-12-10T21:58:38.3728271Z",
+        "platform": "kompsat-3",
+        "constellation": "kompsat-3",
+        "mission": "kompsat-3",
+        "instruments": [
+            "aeiss"
+        ],
+        "gsd": 0.7,
+        "title": "dummy",
+        "description": "<div style=\"float: left; width: 64px;\"><img width=\"64px\" src=\"https://d1nhio0ox7pgb.cloudfront.net/_img/g_collection_png/standard/128x128/satellite.png\" /></div>\n\n### dummy\n\n* Platform **kompsat-3**\n* Instruments **aeiss**\n* Sensing Time **[11/12/2020 19:34:47]**\n* Created **1/1/0001 12:00:00 AM**\n* Updated **12/10/2020 9:58:38 PM**\n",
+        "eo:cloud_cover": 0.0,
+        "sat:absolute_orbit": 45302,
+        "sat:relative_orbit": 45302,
+        "sat:orbit_state": "ascending",
+        "proj:epsg": 32615,
+        "proj:wkt2": "PROJCS[\"WGS 84 / UTM zone 15N\", GEOGCS[\"WGS 84\", DATUM[\"World Geodetic System 1984\", SPHEROID[\"WGS 84\", 6378137, 298.257223563, AUTHORITY[\"EPSG\", \"7030\"]], AUTHORITY[\"EPSG\", \"6326\"]], PRIMEM[\"Greenwich\", 0, AUTHORITY[\"EPSG\", \"8901\"]], UNIT[\"degree\", 0.017453292519943295, AUTHORITY[\"EPSG\", \"9102\"]], AUTHORITY[\"EPSG\", \"4326\"]], UNIT[\"metre\", 1, AUTHORITY[\"EPSG\", \"9001\"]], PROJECTION[\"UTM15N\", AUTHORITY[\"EPSG\", \"32615\"]], PARAMETER[\"latitude_of_origin\", 0], PARAMETER[\"central_meridian\", -93], PARAMETER[\"scale_factor\", 0.9996], PARAMETER[\"false_easting\", 500000], PARAMETER[\"false_northing\", 0], AUTHORITY[\"EPSG\", \"32615\"], AXIS[\"East\", EAST], AXIS[\"North\", NORTH]]",
+        "view:off_nadir": 30.864219939,
+        "view:incidence_angle": 34.605545581,
+        "view:azimuth": 318.194222473,
+        "view:sun_azimuth": 212.9437888826261,
+        "view:sun_elevation": 46.962222523232704,
+        "proc:level": "Level1G",
+        "product_type": "PAN_MS_L1G",
+        "eo:bands": [
+            {
+                "name": "MS1",
+                "common_name": "blue",
+                "center_wavelength": 0.07,
+                "scale": 36.36363636363637,
+                "offset": -28.4989,
+                "eai": 2001.0
+            },
+            {
+                "name": "MS2",
+                "common_name": "green",
+                "center_wavelength": 0.08,
+                "scale": 26.17801047120419,
+                "offset": -27.3846,
+                "eai": 1875.0
+            },
+            {
+                "name": "MS4",
+                "common_name": "nir",
+                "center_wavelength": 0.14,
+                "scale": 52.083333333333336,
+                "offset": -13.591,
+                "eai": 1027.0
+            },
+            {
+                "name": "PAN",
+                "common_name": "pan",
+                "center_wavelength": 0.45
+            },
+            {
+                "name": "MS3",
+                "common_name": "red",
+                "center_wavelength": 0.06,
+                "scale": 34.013605442176875,
+                "offset": -21.6854,
+                "eai": 1525.0
+            }
+        ],
+        "disaster:class": "Acquisition",
+        "status": {
+            "stage": "dataset",
+            "message": null
+        },
+        "disaster:call_ids": [
+            786
+        ],
+        "cos2:xml": null,
+        "cos2:id": "786-KARI-KOMPSAT3-urn_ogc_def_EOP_KARI_KOMPSAT3_K3_20201112193439_45302_18521139_L1G_Aux_xml"
+    },
+    "bbox": [
+        -92.64663661,
+        18.575813599,
+        -92.412722213,
+        18.723043555
+    ]
+}

@@ -183,7 +183,15 @@ def test_tile_valid_default():
         data, mask = cog.tile(43, 24, 7, indexes=1)
         assert data.shape == (1, 256, 256)
 
-        data, mask = cog.tile(43, 24, 7, indexes=(1, 1,))
+        data, mask = cog.tile(
+            43,
+            24,
+            7,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert data.shape == (2, 256, 256)
 
 
@@ -212,7 +220,14 @@ def test_point_valid():
         pts = cog.point(lon, lat, indexes=1)
         assert len(pts) == 1
 
-        pts = cog.point(lon, lat, indexes=(1, 1,))
+        pts = cog.point(
+            lon,
+            lat,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert len(pts) == 2
 
 
@@ -244,7 +259,13 @@ def test_area_valid():
         data, mask = cog.part(bbox, indexes=1)
         assert data.shape == (1, 11, 41)
 
-        data, mask = cog.part(bbox, indexes=(1, 1,))
+        data, mask = cog.part(
+            bbox,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert data.shape == (2, 11, 41)
 
 
@@ -267,7 +288,13 @@ def test_preview_valid():
         data, mask = cog.preview(max_size=128, indexes=1)
         assert data.shape == (1, 128, 128)
 
-        data, mask = cog.preview(max_size=128, indexes=(1, 1,))
+        data, mask = cog.preview(
+            max_size=128,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert data.shape == (2, 128, 128)
 
 
@@ -480,7 +507,13 @@ def test_feature_valid():
         img = cog.feature(feature, indexes=1)
         assert img.data.shape == (1, 349, 1024)
 
-        img = cog.feature(feature, indexes=(1, 1,))
+        img = cog.feature(
+            feature,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert img.data.shape == (2, 349, 1024)
 
         # feature overlaping on mask area
