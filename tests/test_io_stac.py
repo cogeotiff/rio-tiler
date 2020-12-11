@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 import rasterio
+import pystac
 
 from rio_tiler.errors import (
     ExpressionMixingWarning,
@@ -19,7 +20,7 @@ PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
 
 with open(STAC_PATH) as f:
-    stac_item = json.loads(f.read())
+    stac_item = pystac.Item.from_dict(json.loads(f.read()))
 
 
 def mock_rasterio_open(asset):

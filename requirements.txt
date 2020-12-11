@@ -12,3 +12,5 @@ rasterio>=1.1.7
 rio-color
 
 requests
+
+pystac>=0.5.3

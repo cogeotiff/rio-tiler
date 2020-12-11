@@ -16,6 +16,7 @@ inst_reqs = [
     "rasterio>=1.1.7",
     "requests",
     "rio-color",
+    "pystac>=0.5.3"
 ]
 
 extra_reqs = {
