@@ -77,6 +77,7 @@ def _get_assets(
 
 
 def to_stac_item(item: Union[Dict, pystac.Item]) -> pystac.Item:
+    """Convert to STAC item."""
     if isinstance(item, Dict):
         return pystac.Item.from_dict(item)
     return item
