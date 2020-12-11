@@ -46,14 +46,14 @@ def fetch(filepath: str) -> Dict:
 
 
 def _get_assets(
-    item: pystac.Item,
+    stac_item: pystac.Item,
     include: Optional[Set[str]] = None,
     exclude: Optional[Set[str]] = None,
     include_asset_types: Optional[Set[str]] = None,
     exclude_asset_types: Optional[Set[str]] = None,
 ) -> Iterator:
     """Get Asset list."""
-    for asset, asset_info in item.get_assets().items():
+    for asset, asset_info in stac_item.get_assets().items():
         _type = asset_info.media_type
 
         if exclude and asset in exclude:
@@ -101,6 +101,8 @@ class STACReader(MultiBaseReader):
     ----------
     filepath: str
         STAC Item path, URL or S3 URL.
+    item: Dict, optional
+        STAC Item as dictionary.
     item: pystac.Item, optional
         STAC Item.
     minzoom: int, optional
@@ -149,7 +151,8 @@ class STACReader(MultiBaseReader):
     """
 
     filepath: str = attr.ib()
-    item: pystac.Item = attr.ib(default=None)
+    item: Dict = attr.ib(default=None)
+    stac_item: pystac.Item = attr.ib(default=None)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=0)
     maxzoom: int = attr.ib(default=30)
@@ -162,11 +165,12 @@ class STACReader(MultiBaseReader):
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
-        self.item = self.item or pystac.Item.from_dict(fetch(self.filepath), self.filepath)
-        self.bounds = self.item.bbox
+        self.item = self.item or fetch(self.filepath)
+        self.stac_item = self.stac_item or pystac.Item.from_dict(self.item, self.filepath)
+        self.bounds = self.stac_item.bbox
         self.assets = list(
             _get_assets(
-                self.item,
+                self.stac_item,
                 include=self.include_assets,
                 exclude=self.exclude_assets,
                 include_asset_types=self.include_asset_types,
@@ -181,4 +185,4 @@ class STACReader(MultiBaseReader):
         if asset not in self.assets:
             raise InvalidAssetName(f"{asset} is not valid")
 
-        return self.item.assets[asset].get_absolute_href()
+        return self.stac_item.assets[asset].get_absolute_href()
