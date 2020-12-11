@@ -2,11 +2,11 @@
 
 import functools
 import json
-import pystac
 from typing import Dict, Iterator, Optional, Set, Type
 from urllib.parse import urlparse
 
 import attr
+import pystac
 import requests
 from morecantile import TileMatrixSet
 
@@ -133,9 +133,9 @@ class STACReader(MultiBaseReader):
 
     Methods
     -------
-    tile(0, 0, 0, assets="B01", expression="B01/B02")
+    tile(0, 0, 0, assets="B01", expression="B01/B02")
         Read a map tile from the COG.
-    part((0,10,0,10), assets="B01", expression="B1/B20", max_size=1024)
+    part((0,10,0,10), assets="B01", expression="B1/B20", max_size=1024)
         Read part of the COG.
     preview(assets="B01", max_size=1024)
         Read preview of the COG.
@@ -166,7 +166,9 @@ class STACReader(MultiBaseReader):
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
         self.item = self.item or fetch(self.filepath)
-        self.stac_item = self.stac_item or pystac.Item.from_dict(self.item, self.filepath)
+        self.stac_item = self.stac_item or pystac.Item.from_dict(
+            self.item, self.filepath
+        )
         self.bounds = self.stac_item.bbox
         self.assets = list(
             _get_assets(
