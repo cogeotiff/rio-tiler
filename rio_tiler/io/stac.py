@@ -108,10 +108,8 @@ class STACReader(MultiBaseReader):
     ----------
     filepath: str
         STAC Item path, URL or S3 URL.
-    item: Dict, optional
-        STAC Item as dictionary.
     item: pystac.Item, optional
-        STAC Item.
+         STAC Item.
     minzoom: int, optional
         Set minzoom for the tiles.
     minzoom: int, optional
