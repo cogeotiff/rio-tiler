@@ -8,7 +8,12 @@ from .constants import MAX_THREADS
 from .logger import logger
 from .models import ImageData
 
-TaskType = Generator[Tuple[Union[futures.Future, Callable], str], None, None]
+TaskType = Union[
+    # Sequence of futures
+    Sequence[Tuple[futures.Future, str]],
+    # Generator of functions
+    Generator[Tuple[Callable, str], None, None],
+]
 
 
 def filter_tasks(
@@ -48,10 +53,10 @@ def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType
     if threads and threads > 1:
         logger.debug(f"Running tasks in ThreadPool with max_workers={threads}")
         with futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            yield from (
+            return [
                 (executor.submit(reader, asset, *args, **kwargs), asset)
                 for asset in assets
-            )
+            ]
     else:
         logger.debug(f"Running tasks outside ThreadsPool (max_workers={threads})")
         yield from (
