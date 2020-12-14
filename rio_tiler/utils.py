@@ -1,11 +1,9 @@
 """rio_tiler.utils: utility functions."""
 
 import math
-import warnings
 from io import BytesIO
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
-import mercantile
 import numpy
 from affine import Affine
 from boto3.session import Session as boto3_session
@@ -20,7 +18,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 
 from .colormap import apply_cmap
 from .constants import WEB_MERCATOR_CRS, NumType
-from .errors import DeprecationWarning, RioTilerError
+from .errors import RioTilerError
 
 DataSet = Union[DatasetReader, DatasetWriter, WarpedVRT]
 
@@ -281,43 +279,6 @@ def linear_rescale(
     return image * (omax - omin) + omin
 
 
-def tile_exists(
-    bounds: Tuple[float, float, float, float], tile_z: int, tile_x: int, tile_y: int
-) -> bool:
-    """
-    Check if a mercatile tile is inside a given bounds.
-
-    Attributes
-    ----------
-        bounds : list
-            WGS84 bounds (left, bottom, right, top).
-        z : int
-            Mercator tile ZOOM level.
-        y : int
-            Mercator tile Y index.
-        x : int
-            Mercator tile Y index.
-
-    Returns
-    -------
-        out : boolean
-            if True, the z-x-y mercator tile in inside the bounds.
-
-    """
-    warnings.warn(
-        "'rio_tiler.utils.tile_exists' will be deprecated in rio-tiler 2.0",
-        DeprecationWarning,
-    )
-
-    tile_bounds = mercantile.bounds(mercantile.Tile(tile_x, tile_y, tile_z))
-    return (
-        (tile_bounds[0] < bounds[2])
-        and (tile_bounds[2] > bounds[0])
-        and (tile_bounds[3] > bounds[1])
-        and (tile_bounds[1] < bounds[3])
-    )
-
-
 def _requested_tile_aligned_with_internal_tile(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
@@ -345,40 +306,6 @@ def _requested_tile_aligned_with_internal_tile(
         return False
 
     return True
-
-
-def geotiff_options(
-    x: int, y: int, z: int, tilesize: int = 256, dst_crs: CRS = WEB_MERCATOR_CRS,
-) -> Dict:
-    """
-    GeoTIFF options.
-
-    Attributes
-    ----------
-        x : int
-            Mercator tile X index.
-        y : int
-            Mercator tile Y index.
-        z : int
-            Mercator tile ZOOM level.
-        tilesize : int, optional
-            Output tile size. Default is 256.
-        dst_crs: CRS, optional
-            Target coordinate reference system, default is "epsg:3857".
-
-    Returns
-    -------
-        dict
-
-    """
-    warnings.warn(
-        "'rio_tiler.utils.geotiff_options' will be deprecated in rio-tiler 2.0",
-        DeprecationWarning,
-    )
-
-    bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
-    dst_transform = from_bounds(*bounds, tilesize, tilesize)
-    return dict(crs=dst_crs, transform=dst_transform)
 
 
 def render(

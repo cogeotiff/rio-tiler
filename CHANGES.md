@@ -3,6 +3,8 @@
 
 * add `NPZ` output format (https://github.com/cogeotiff/rio-tiler/issues/308)
 * add [pystac](https://pystac.readthedocs.io/en/latest/) for STAC item reader (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/issues/212)
+* delete deprecated function: `rio_tiler.reader.tile`, `rio_tiler.utils.tile_exits` and `rio_tiler.utils.geotiff_options`
+* deprecated `rio_tiler.mercator` submodule (https://github.com/cogeotiff/rio-tiler/issues/315)
 
 ## 2.0.0rc3 (2020-11-24)
 

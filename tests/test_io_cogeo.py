@@ -7,27 +7,38 @@ from typing import Any, Dict
 import mercantile
 import numpy
 import pytest
+import rasterio
 from rasterio.io import DatasetReader, MemoryFile
 from rasterio.vrt import WarpedVRT
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
+from rio_tiler.errors import (
+    AlphaBandWarning,
+    ExpressionMixingWarning,
+    TileOutsideBounds,
+)
 from rio_tiler.io import COGReader, GCPCOGReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 
-KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
-KEY_MASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_mask.tif"
-
-COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
-COG_MASK = os.path.join(PREFIX, "my-bucket", KEY_MASK)
-
 COGEO = os.path.join(PREFIX, "cog.tif")
+COG_WEB = os.path.join(PREFIX, "web.tif")
 COG_CMAP = os.path.join(PREFIX, "cog_cmap.tif")
 COG_TAGS = os.path.join(PREFIX, "cog_tags.tif")
 COG_NODATA = os.path.join(PREFIX, "cog_nodata.tif")
 COG_SCALE = os.path.join(PREFIX, "cog_scale.tif")
 COG_GCPS = os.path.join(PREFIX, "cog_gcps.tif")
+COG_DLINE = os.path.join(PREFIX, "cog_dateline.tif")
+COG_EARTH = os.path.join(PREFIX, "cog_fullearth.tif")
+
+KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
+COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
+
+KEY_MASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_mask.tif"
+COG_MASK = os.path.join(PREFIX, "my-bucket", KEY_MASK)
+
+KEY_EXTMASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_extmask.tif"
+COG_EXTMASK = os.path.join(PREFIX, "my-bucket", KEY_EXTMASK)
 
 
 def test_spatial_info_valid():
@@ -524,3 +535,77 @@ def test_feature_valid():
         }
         img = cog.feature(outside_mask_feature)
         assert not img.mask.all()
+
+
+def test_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
+    """Ignore Padding when COG is aligned."""
+    with COGReader(COG_WEB) as cog:
+        img = cog.tile(147, 182, 9, padding=0, resampling_method="bilinear")
+        img2 = cog.tile(147, 182, 9, padding=100, resampling_method="bilinear")
+        assert numpy.array_equal(img.data, img2.data)
+
+    with COGReader(COGEO) as cog:
+        img = cog.tile(43, 24, 7, padding=0, resampling_method="bilinear")
+        img2 = cog.tile(43, 24, 7, padding=100, resampling_method="bilinear")
+        assert not numpy.array_equal(img.data, img2.data)
+
+
+def test_tile_read_alpha():
+    """Read masked area."""
+    # non-boundless tile covering the alpha masked part
+    with COGReader(COG_ALPHA) as cog:
+        with pytest.warns(AlphaBandWarning):
+            nb = cog.dataset.count
+            img = cog.tile(876432, 1603670, 22)
+            assert (
+                not nb == img.count
+            )  # rio-tiler removes the alpha band from the `data` array
+            assert img.data.shape == (3, 256, 256)
+            assert not img.mask.all()
+
+
+def test_tile_read_mask():
+    """Read masked area."""
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
+        # non-boundless tile covering the masked part
+        with COGReader(COG_MASK) as cog:
+            img = cog.tile(876431, 1603669, 22, tilesize=16)
+            assert img.data.shape == (3, 16, 16)
+            assert img.mask.shape == (16, 16)
+            assert not img.mask.all()
+
+            # boundless tile covering the masked part
+            img = cog.tile(876431, 1603668, 22, tilesize=256)
+            assert img.data.shape == (3, 256, 256)
+            assert not img.mask.all()
+
+
+def test_tile_read_extmask():
+    """Read masked area."""
+    # non-boundless tile covering the masked part
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="TRUE"):
+        with COGReader(COG_EXTMASK) as cog:
+            img = cog.tile(876431, 1603669, 22)
+            assert img.data.shape == (3, 256, 256)
+            assert img.mask.shape == (256, 256)
+            assert not img.mask.all()
+
+
+def test_dateline():
+    """Read tile from data crossing the antimeridian."""
+    with COGReader(COG_DLINE) as cog:
+        img = cog.tile(1, 42, 7, tilesize=64)
+        assert img.data.shape == (1, 64, 64)
+
+        img = cog.tile(127, 42, 7, tilesize=64)
+        assert img.data.shape == (1, 64, 64)
+
+
+def test_fullEarth():
+    """Should read tile for COG spanning the whole earth."""
+    with COGReader(COG_EARTH) as cog:
+        img = cog.tile(1, 42, 7, tilesize=64)
+        assert img.data.shape == (1, 64, 64)
+
+        img = cog.tile(127, 42, 7, tilesize=64)
+        assert img.data.shape == (1, 64, 64)

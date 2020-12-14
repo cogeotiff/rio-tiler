@@ -1,10 +1,9 @@
-"""rio-tiler.reader: image utility functions."""
+"""rio-tiler.reader: low level reader."""
 
 import math
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
-import mercantile
 import numpy
 from affine import Affine
 from rasterio import windows
@@ -16,21 +15,10 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from . import constants
-from .errors import (
-    AlphaBandWarning,
-    DeprecationWarning,
-    PointOutsideBounds,
-    TileOutsideBounds,
-)
+from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
-from .utils import (
-    get_vrt_transform,
-    has_alpha_band,
-    has_mask_band,
-    non_alpha_indexes,
-    tile_exists,
-)
+from .utils import get_vrt_transform, has_alpha_band, has_mask_band, non_alpha_indexes
 
 
 def _read(
@@ -591,58 +579,4 @@ def metadata(
         colorinterp=[src_dst.colorinterp[ix - 1].name for ix in indexes],
         nodata_type=nodata_type,
         **other_meta,
-    )
-
-
-def tile(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    x: int,
-    y: int,
-    z: int,
-    tilesize: int = 256,
-    **kwargs,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Read mercator tile from an image.
-
-    Attributes
-    ----------
-        src_dst : rasterio.io.DatasetReader
-            rasterio.io.DatasetReader object
-        x : int
-            Mercator tile X index.
-        y : int
-            Mercator tile Y index.
-        z : int
-            Mercator tile ZOOM level.
-        tilesize : int, optional
-            Output tile size. Default is 256.
-        kwargs : Any, optional
-            Additional options to forward to part()
-
-    Returns
-    -------
-        data : numpy ndarray
-        mask: numpy array
-
-    """
-    warnings.warn(
-        "'rio_tiler.reader.tile' will be deprecated in rio-tiler 2.0",
-        DeprecationWarning,
-    )
-
-    bounds = transform_bounds(
-        src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
-    )
-    if not tile_exists(bounds, z, x, y):
-        raise TileOutsideBounds(f"Tile {z}/{x}/{y} is outside image bounds")
-
-    tile_bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
-    return part(
-        src_dst,
-        tile_bounds,
-        tilesize,
-        tilesize,
-        dst_crs=constants.WEB_MERCATOR_CRS,
-        **kwargs,
     )

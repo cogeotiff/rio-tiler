@@ -1,6 +1,7 @@
 """rio-tiler: mercator utility functions."""
 
 import math
+import warnings
 from typing import Tuple, Union
 
 from rasterio.io import DatasetReader, DatasetWriter
@@ -9,6 +10,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from . import constants
+from .errors import DeprecationWarning
 
 
 def _meters_per_pixel(zoom: int, lat: float = 0.0, tilesize: int = 256) -> float:
@@ -29,6 +31,11 @@ def _meters_per_pixel(zoom: int, lat: float = 0.0, tilesize: int = 256) -> float
         Pixel resolution in meters
 
     """
+    warnings.warn(
+        "'rio_tiler.mercator' submodule will be deprecated in rio-tiler 2.0",
+        DeprecationWarning,
+    )
+
     return (math.cos(lat * math.pi / 180.0) * 2 * math.pi * 6378137) / (
         tilesize * 2 ** zoom
     )
@@ -55,6 +62,11 @@ def zoom_for_pixelsize(pixel_size: float, max_z: int = 24, tilesize: int = 256) 
         Mercator zoom level corresponding to the pixel resolution
 
     """
+    warnings.warn(
+        "'rio_tiler.mercator' submodule will be deprecated in rio-tiler 2.0",
+        DeprecationWarning,
+    )
+
     for z in range(max_z):
         if pixel_size > _meters_per_pixel(z, 0, tilesize=tilesize):
             return max(0, z - 1)  # We don't want to scale up
@@ -86,6 +98,11 @@ def get_zooms(
         Min/Max Mercator zoom levels.
 
     """
+    warnings.warn(
+        "'rio_tiler.mercator' submodule will be deprecated in rio-tiler 2.0",
+        DeprecationWarning,
+    )
+
     bounds = transform_bounds(
         src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
     )
