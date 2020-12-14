@@ -2,18 +2,17 @@
 
 import os
 
-import mercantile
+import morecantile
 import numpy
 import pytest
-import rasterio
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 
-from rio_tiler import reader
+from rio_tiler.io import COGReader
 
 tiles = {
-    "masked": mercantile.Tile(x=535, y=498, z=10),
-    "boundless": mercantile.Tile(x=540, y=497, z=10),
+    "masked": morecantile.Tile(x=535, y=498, z=10),
+    "boundless": morecantile.Tile(x=540, y=497, z=10),
 }
 equator = {
     "name": "equator",
@@ -44,9 +43,8 @@ def test_mask_bilinear(cloudoptimized_geotiff):
     src_path = cloudoptimized_geotiff(
         cog_path, **equator, dtype="uint8", nodata_type="mask"
     )
-    with rasterio.open(src_path) as src_dst:
-        data, mask = reader.tile(
-            src_dst,
+    with COGReader(src_path) as cog:
+        data, mask = cog.tile(
             535,
             498,
             10,
@@ -57,8 +55,7 @@ def test_mask_bilinear(cloudoptimized_geotiff):
         masknodata = (data[0] != 0).astype(numpy.uint8) * 255
         numpy.testing.assert_array_equal(mask, masknodata)
 
-        data, mask = reader.tile(
-            src_dst,
+        data, mask = cog.tile(
             535,
             498,
             10,
@@ -78,9 +75,8 @@ def test_mask(dataset_info, tile_name, resampling, cloudoptimized_geotiff):
     src_path = cloudoptimized_geotiff(cog_path, **dataset_info)
 
     tile = tiles[tile_name]
-    with rasterio.open(src_path) as src_dst:
-        data, mask = reader.tile(
-            src_dst,
+    with COGReader(src_path) as cog:
+        data, mask = cog.tile(
             tile.x,
             tile.y,
             tile.z,

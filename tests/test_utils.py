@@ -56,29 +56,6 @@ def test_linear_rescale_valid():
     )
 
 
-def test_tile_exists_valid():
-    """Should work as expected (return true)."""
-    bounds = [-80, 34, -75, 40]
-    # Contains
-    assert utils.tile_exists(bounds, 7, 36, 50)  # bounds contains tile bounds
-    assert utils.tile_exists(bounds, 3, 2, 3)  # tile bounds contains bounds
-
-    # Intersects
-    assert utils.tile_exists(bounds, 7, 35, 50)
-    assert utils.tile_exists(bounds, 7, 37, 50)
-    assert utils.tile_exists(bounds, 7, 36, 51)
-    assert utils.tile_exists(bounds, 7, 37, 51)
-    assert utils.tile_exists(bounds, 7, 35, 51)
-    assert utils.tile_exists(bounds, 7, 35, 48)
-    assert utils.tile_exists(bounds, 7, 37, 48)
-
-    # Outside tiles
-    assert not utils.tile_exists(bounds, 7, 36, 40)
-    assert not utils.tile_exists(bounds, 7, 36, 60)
-    assert not utils.tile_exists(bounds, 7, 25, 50)
-    assert not utils.tile_exists(bounds, 7, 70, 50)
-
-
 def test_mapzen_elevation_rgb():
     """Should work as expected."""
     arr = np.random.randint(0, 3000, size=(512, 512))
@@ -190,21 +167,6 @@ def test_render_valid_options():
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8) + 255
     assert utils.render(arr, mask=mask, img_format="png", ZLEVEL=9)
-
-
-def test_render_geotiff16Bytes():
-    """Creates GeoTIFF image buffer from 3 bands array."""
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint16)
-    mask = np.zeros((512, 512), dtype=np.uint8) + 255
-    assert utils.render(arr, mask=mask, img_format="GTiff")
-
-
-def test_render_geotiff():
-    """Creates GeoTIFF image buffer from 3 bands array."""
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    mask = np.zeros((512, 512), dtype=np.uint8) + 255
-    ops = utils.geotiff_options(1, 0, 0)
-    assert utils.render(arr, mask=mask, img_format="GTiff", **ops)
 
 
 @requires_webp
