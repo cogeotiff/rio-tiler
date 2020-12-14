@@ -184,7 +184,7 @@ class STACReader(MultiBaseReader):
             self.minzoom = self.tms.minzoom
 
         if self.maxzoom is None:
-            self.maxzoon = self.tms.maxzoom
+            self.maxzoom = self.tms.maxzoom
 
     def _get_asset_url(self, asset: str) -> str:
         """Validate asset names and return asset's url.

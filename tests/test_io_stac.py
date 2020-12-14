@@ -36,7 +36,7 @@ def test_fetch_stac(requests, s3_get):
     # Local path
     with STACReader(STAC_PATH) as stac:
         assert stac.minzoom == 0
-        assert stac.maxzoom == 30
+        assert stac.maxzoom == 24
         assert stac.bounds
         assert stac.center
         assert stac.spatial_info
@@ -48,7 +48,7 @@ def test_fetch_stac(requests, s3_get):
     # Load from dict
     with STACReader(None, item=item) as stac:
         assert stac.minzoom == 0
-        assert stac.maxzoom == 30
+        assert stac.maxzoom == 24
         assert not stac.filepath
         assert stac.assets == ["red", "green", "blue"]
     requests.assert_not_called()
