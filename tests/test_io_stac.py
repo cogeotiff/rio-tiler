@@ -17,9 +17,10 @@ from rio_tiler.io import STACReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
+STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 
 with open(STAC_PATH) as f:
-    stac_item = json.loads(f.read())
+    item = json.loads(f.read())
 
 
 def mock_rasterio_open(asset):
@@ -35,7 +36,7 @@ def test_fetch_stac(requests, s3_get):
     # Local path
     with STACReader(STAC_PATH) as stac:
         assert stac.minzoom == 0
-        assert stac.maxzoom == 30
+        assert stac.maxzoom == 24
         assert stac.bounds
         assert stac.center
         assert stac.spatial_info
@@ -45,9 +46,9 @@ def test_fetch_stac(requests, s3_get):
     s3_get.assert_not_called()
 
     # Load from dict
-    with STACReader(None, item=stac_item) as stac:
+    with STACReader(None, item=item) as stac:
         assert stac.minzoom == 0
-        assert stac.maxzoom == 30
+        assert stac.maxzoom == 24
         assert not stac.filepath
         assert stac.assets == ["red", "green", "blue"]
     requests.assert_not_called()
@@ -371,3 +372,17 @@ def test_feature_valid(rio):
                 feat, assets=("green", "red"), expression="green/red"
             )
             assert data.shape == (1, 119, 97)
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_relative_assets(rio):
+    """Should return absolute href for assets"""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_REL_PATH) as stac:
+
+        for (key, asset) in stac.item.assets.items():
+            assert asset.get_absolute_href().startswith(PREFIX)
+        assert len(stac.assets) == 5
+        for asset in stac.assets:
+            assert stac._get_asset_url(asset).startswith(PREFIX)

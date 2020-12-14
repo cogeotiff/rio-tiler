@@ -2,10 +2,11 @@
 
 import functools
 import json
-from typing import Dict, Iterator, Optional, Set, Type
+from typing import Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
 import attr
+import pystac
 import requests
 from morecantile import TileMatrixSet
 
@@ -29,7 +30,15 @@ DEFAULT_VALID_TYPE = {
 
 @functools.lru_cache(maxsize=512)
 def fetch(filepath: str) -> Dict:
-    """Fetch items."""
+    """Fetch STAC items.
+
+    Args:
+        filepath (str): STAC item URL.
+
+    Returns:
+        dict: STAC Item content.
+
+    """
     parsed = urlparse(filepath)
     if parsed.scheme == "s3":
         bucket = parsed.netloc
@@ -45,15 +54,27 @@ def fetch(filepath: str) -> Dict:
 
 
 def _get_assets(
-    item: Dict,
+    stac_item: pystac.Item,
     include: Optional[Set[str]] = None,
     exclude: Optional[Set[str]] = None,
     include_asset_types: Optional[Set[str]] = None,
     exclude_asset_types: Optional[Set[str]] = None,
 ) -> Iterator:
-    """Get Asset list."""
-    for asset, asset_info in item["assets"].items():
-        _type = asset_info.get("type")
+    """Get valid asset list.
+
+    Args:
+        stac_item (pystac.Item): STAC Item.
+        include (Optional[Set[str]]): Only Include specific assets. Defaults to None.
+        exclude (Optional[Set[str]]): Exclude specific assets. Defaults to None.
+        include_asset_types (Optional[Set[str]]): Only include some assets base on their type. Defaults to None.
+        exclude_asset_types (Optional[Set[str]]): Exclude some assets base on their type. Defaults to None.
+
+    Yields
+        str: valid STAC asset name.
+
+    """
+    for asset, asset_info in stac_item.get_assets().items():
+        _type = asset_info.media_type
 
         if exclude and asset in exclude:
             continue
@@ -75,83 +96,65 @@ def _get_assets(
         yield asset
 
 
+def to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.Item]:
+    """Attr converter to convert to Dict to pystac.Item
+
+    Args:
+        stac_item (Union[Dict, pystac.Item]): STAC Item.
+
+    Returns
+        pystac.Item: pystac STAC item object.
+
+    """
+    if isinstance(item, Dict):
+        return pystac.Item.from_dict(item)
+
+    return item
+
+
 @attr.s
 class STACReader(MultiBaseReader):
-    """
-    STAC + Cloud Optimized GeoTIFF Reader.
+    """STAC Reader.
 
-    Examples
-    --------
-    with STACReader(stac_path) as stac:
-        stac.tile(...)
+    Args:
+        filepath (str): STAC Item path, URL or S3 URL.
+        item (Dict or pystac.Item, STAC): Stac Item.
+        minzoom (Optional[int]): Set minzoom for the tiles. Defaults to tms.minzoom.
+        minzoom (Optional[int]): Set maxzoom for the tiles. Defaults to tms.maxzoom.
+        include (Optional[Set[str]]): Only Include specific assets. Defaults to None.
+        exclude (Optional[Set[str]]): Exclude specific assets. Defaults to None.
+        include_asset_types (Optional[Set[str]]): Only include some assets base on their type. Defaults to None.
+        exclude_asset_types (Optional[Set[str]]): Exclude some assets base on their type. Defaults to None.
+        reader (BaseReader): rio-tiler Reader (default is set to rio_tiler.io.COGReader).
+        reader_options (dict): additional option to forward to the Reader (default is {}).
 
-    with STACReader(stac_path, reader=MyCustomReader, reader_options={...}) as stac:
-        stac.tile(...)
+    Raises:
+        rio_tiler.errors.MissingAssets: if no valid asset is found.
 
-    my_stac = {
-        "type": "Feature",
-        "stac_version": "1.0.0",
-        ...
-    }
-    with STACReader(None, item=my_stac) as stac:
-        stac.tile(...)
+    Examples:
+        >>> with STACReader(stac_path) as stac:
+            stac.tile(...)
 
-    Attributes
-    ----------
-    filepath: str
-        STAC Item path, URL or S3 URL.
-    item: Dict, optional
-        STAC Item dict.
-    minzoom: int, optional
-        Set minzoom for the tiles.
-    minzoom: int, optional
-        Set maxzoom for the tiles.
-    include_assets: Set, optional
-        Only accept some assets.
-    exclude_assets: Set, optional
-        Exclude some assets.
-    include_asset_types: Set, optional
-        Only include some assets base on their type
-    include_asset_types: Set, optional
-        Exclude some assets base on their type
-    reader: BaseReader, optional
-        rio-tiler Reader (default is set to rio_tiler.io.COGReader)
-    reader_options: dict, optional
-        additional option to forward to the Reader (default is {}).
+        >>> with STACReader(stac_path, reader=MyCustomReader, reader_options={...}) as stac:
+            stac.tile(...)
 
-    Properties
-    ----------
-    bounds: tuple[float]
-        STAC bounds in WGS84 crs.
-    center: tuple[float, float, int]
-        STAC item center + minzoom
-    spatial_info: dict
-        STAC spatial info (zoom, bounds and center)
-
-    Methods
-    -------
-    tile(0, 0, 0, assets="B01", expression="B01/B02")
-        Read a map tile from the COG.
-    part((0,10,0,10), assets="B01", expression="B1/B20", max_size=1024)
-        Read part of the COG.
-    preview(assets="B01", max_size=1024)
-        Read preview of the COG.
-    point((10, 10), assets="B01")
-        Read a point value from the COG.
-    stats(assets="B01", pmin=5, pmax=95)
-        Get Raster statistics.
-    info(assets="B01")
-        Get Assets raster info.
-    metadata(assets="B01", pmin=5, pmax=95)
-        info + stats
+        >>> my_stac = {
+                "type": "Feature",
+                "stac_version": "1.0.0",
+                ...
+            }
+            with STACReader(None, item=my_stac) as stac:
+                # the dict will be translated to a pystac item
+                assert isinstance(stac.item, pystac.Item)
+                stac.tile(...)
 
     """
 
     filepath: str = attr.ib()
-    item: Dict = attr.ib(default=None)
+    item: pystac.Item = attr.ib(default=None, converter=to_pystac_item)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=0)
-    maxzoom: int = attr.ib(default=30)
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
     include_assets: Optional[Set[str]] = attr.ib(default=None)
     exclude_assets: Optional[Set[str]] = attr.ib(default=None)
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
@@ -160,9 +163,11 @@ class STACReader(MultiBaseReader):
     reader_options: Dict = attr.ib(factory=dict)
 
     def __attrs_post_init__(self):
-        """Define _kwargs, open dataset and get info."""
-        self.item = self.item or fetch(self.filepath)
-        self.bounds = self.item["bbox"]
+        """Fetch STAC Item and get list of valid assets."""
+        self.item = self.item or pystac.Item.from_dict(
+            fetch(self.filepath), self.filepath
+        )
+        self.bounds = self.item.bbox
         self.assets = list(
             _get_assets(
                 self.item,
@@ -175,9 +180,23 @@ class STACReader(MultiBaseReader):
         if not self.assets:
             raise MissingAssets("No valid asset found")
 
+        if self.minzoom is None:
+            self.minzoom = self.tms.minzoom
+
+        if self.maxzoom is None:
+            self.maxzoom = self.tms.maxzoom
+
     def _get_asset_url(self, asset: str) -> str:
-        """Validate asset names and return asset's url."""
+        """Validate asset names and return asset's url.
+
+        Args:
+            asset (str): STAC asset name.
+
+        Returns:
+            str: STAC asset href.
+
+        """
         if asset not in self.assets:
             raise InvalidAssetName(f"{asset} is not valid")
 
-        return self.item["assets"][asset]["href"]
+        return self.item.assets[asset].get_absolute_href()
