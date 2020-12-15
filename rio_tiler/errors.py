@@ -25,10 +25,6 @@ class InvalidColorMapName(Exception):
     """Invalid colormap name."""
 
 
-class DeprecationWarning(UserWarning):
-    """Rio-tiler module deprecations warning."""
-
-
 class AlphaBandWarning(UserWarning):
     """Automaticaly removed Alpha band from output array."""
 

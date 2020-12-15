@@ -10,7 +10,6 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from . import constants
-from .errors import DeprecationWarning
 
 
 def _meters_per_pixel(zoom: int, lat: float = 0.0, tilesize: int = 256) -> float:

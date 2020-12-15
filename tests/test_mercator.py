@@ -6,7 +6,6 @@ import pytest
 import rasterio
 
 from rio_tiler import mercator
-from rio_tiler.errors import DeprecationWarning
 
 dataset = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 

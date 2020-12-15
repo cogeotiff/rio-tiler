@@ -5,6 +5,8 @@ on:
   push:
     branches:
     - master
+    tags:
+    - '*'
   pull_request:
 
 jobs:
@@ -66,7 +68,7 @@ jobs:
   publish:
     needs: [tests]
     runs-on: ubuntu-latest
-    if: contains(github.ref, 'tags') && github.event_name == 'push'
+    if: startsWith(github.event.ref, 'refs/tags') || github.event_name == 'release'
     steps:
       - uses: actions/checkout@v2
       - name: Set up Python
