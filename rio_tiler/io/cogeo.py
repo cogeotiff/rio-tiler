@@ -145,13 +145,19 @@ class COGReader(BaseReader):
 
     def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
         """Calculate raster min/max zoom level."""
-        dst_affine, w, h = calculate_default_transform(
-            self.dataset.crs,
-            self.tms.crs,
-            self.dataset.width,
-            self.dataset.height,
-            *self.dataset.bounds,
-        )
+        if self.dataset.crs != self.tms.crs:
+            dst_affine, w, h = calculate_default_transform(
+                self.dataset.crs,
+                self.tms.crs,
+                self.dataset.width,
+                self.dataset.height,
+                *self.dataset.bounds,
+            )
+        else:
+            dst_affine = list(self.dataset.transform)
+            w = self.dataset.width
+            h = self.dataset.height
+
         resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
         maxzoom = self.tms.zoom_for_res(resolution)
 
