@@ -1,5 +1,5 @@
 
-## Next (TBD)
+## 2.0.0rc4 (2020-12-18)
 
 * add `NPZ` output format (https://github.com/cogeotiff/rio-tiler/issues/308)
 * add [pystac](https://pystac.readthedocs.io/en/latest/) for STAC item reader (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/issues/212)
