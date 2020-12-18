@@ -12,7 +12,7 @@ inst_reqs = [
     "numexpr",
     "numpy",
     "mercantile",
-    "morecantile>=2.0,<2.1",
+    "morecantile>=2.1,<2.2",
     "rasterio>=1.1.7",
     "requests",
     "rio-color",

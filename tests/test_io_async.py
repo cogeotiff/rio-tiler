@@ -107,8 +107,8 @@ async def test_async():
         assert info == dataset.info()
 
         meta = cog.spatial_info
-        assert meta.minzoom == 4
-        assert meta.maxzoom == 8
+        assert meta.minzoom == 5
+        assert meta.maxzoom == 9
 
         assert await cog.stats(5, 95)
         assert await cog.metadata(2, 98)
