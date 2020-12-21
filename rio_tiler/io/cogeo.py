@@ -14,13 +14,13 @@ from rasterio.features import bounds as featureBounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform, transform_bounds
+from rasterio.warp import calculate_default_transform
 
 from .. import constants, reader
 from ..errors import ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
 from ..models import ImageData, ImageStatistics, Info
-from ..utils import create_cutline, has_alpha_band, has_mask_band
+from ..utils import create_cutline, has_alpha_band, has_mask_band, transform_bounds
 from .base import BaseReader
 
 
@@ -94,6 +94,8 @@ class COGReader(BaseReader):
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
+    tile_coord_width: Optional[Union[int, float]] = attr.ib(default=constants.WEB_MERCATOR_COORD_WIDTH)
+    tile_opp_crs: Optional[CRS] = attr.ib(default=constants.WEB_MERCATOR_OPP_CRS)
 
     # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
     nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
@@ -126,8 +128,11 @@ class COGReader(BaseReader):
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
         self.bounds = transform_bounds(
-            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
+            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds,
+            densify_pts=21, coordinate_width=constants.WGS84_COORD_WIDTH
         )
+        self.crossing_antimeridian = self.bounds[0] > self.bounds[2]
+
         if self.minzoom is None or self.maxzoom is None:
             self._set_zooms()
 
@@ -145,10 +150,14 @@ class COGReader(BaseReader):
 
     def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
         """Calculate raster min/max zoom level."""
-        if self.dataset.crs != self.tms.crs:
+        dst_crs = self.tms.crs
+        if self.crossing_antimeridian and self.tile_opp_crs is not None:
+            dst_crs = self.tile_opp_crs
+
+        if self.dataset.crs != dst_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.dataset.crs,
-                self.tms.crs,
+                dst_crs,
                 self.dataset.width,
                 self.dataset.height,
                 *self.dataset.bounds,
@@ -323,6 +332,10 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
+        dst_opp_crs = None
+        if self.crossing_antimeridian and self.tile_opp_crs is not None:
+            dst_opp_crs = self.tile_opp_crs
+
         tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
         tile, mask = reader.part(
             self.dataset,
@@ -331,6 +344,8 @@ class COGReader(BaseReader):
             tilesize,
             indexes=indexes,
             dst_crs=self.tms.crs,
+            vrt_transform_crs=dst_opp_crs,
+            dst_coord_width=self.tile_coord_width,
             **kwargs,
         )
         if expression:

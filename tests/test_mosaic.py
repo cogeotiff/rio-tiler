@@ -5,7 +5,6 @@ from typing import Tuple
 
 import numpy
 import pytest
-from rasterio.warp import transform_bounds
 
 from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
@@ -13,6 +12,7 @@ from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideB
 from rio_tiler.io import COGReader
 from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
+from rio_tiler.utils import transform_bounds
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
 asset2 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog2.tif")

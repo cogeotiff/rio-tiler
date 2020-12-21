@@ -9,7 +9,7 @@ from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, 
 import attr
 from morecantile import Tile, TileMatrixSet
 
-from ..constants import WEB_MERCATOR_TMS
+from ..constants import WEB_MERCATOR_TMS, WGS84_COORD_LEFT, WGS84_COORD_RIGHT, WGS84_COORD_WIDTH
 from ..errors import (
     ExpressionMixingWarning,
     MissingAssets,
@@ -32,10 +32,22 @@ class SpatialMixin:
 
     @property
     def center(self) -> Tuple[float, float, int]:
-        """Dataset center + minzoom."""
+        """
+            Dataset center + minzoom.
+            Bounds are supposed to be EPSG:4326.
+        """
+        bounds = list(self.bounds)
+
+        if bounds[0] < bounds[2]:
+            lon = (bounds[0] + bounds[2]) / 2
+        else:
+            lon = (bounds[0] + bounds[2] + WGS84_COORD_WIDTH) / 2
+            if lon > WGS84_COORD_RIGHT:
+                lon -= WGS84_COORD_WIDTH
+
         return (
-            (self.bounds[0] + self.bounds[2]) / 2,
-            (self.bounds[1] + self.bounds[3]) / 2,
+            lon,
+            (bounds[1] + bounds[3]) / 2,
             self.minzoom,
         )
 
@@ -50,14 +62,24 @@ class SpatialMixin:
         )
 
     def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
-        """Check if a tile is inside a the dataset bounds."""
+        """
+            Check if a tile is inside a the dataset bounds.
+            Bounds are supposed to be EPSG:4326.
+        """
         tile = Tile(x=tile_x, y=tile_y, z=tile_z)
         tile_bounds = self.tms.bounds(*tile)
+        bounds = list(self.bounds)
+
+        if bounds[0] > bounds[2]:
+            if tile_bounds[0] < 0:
+                bounds[0] = WGS84_COORD_LEFT
+            elif tile_bounds[2] > 0:
+                bounds[2] = WGS84_COORD_RIGHT
         return (
-            (tile_bounds[0] < self.bounds[2])
-            and (tile_bounds[2] > self.bounds[0])
-            and (tile_bounds[3] > self.bounds[1])
-            and (tile_bounds[1] < self.bounds[3])
+            (tile_bounds[0] < bounds[2])
+            and (tile_bounds[2] > bounds[0])
+            and (tile_bounds[3] > bounds[1])
+            and (tile_bounds[1] < bounds[3])
         )
 
 

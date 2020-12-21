@@ -7,10 +7,10 @@ from typing import Tuple, Union
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform, transform_bounds
+from rasterio.warp import calculate_default_transform
 
 from . import constants
-
+from .utils import transform_bounds
 
 def _meters_per_pixel(zoom: int, lat: float = 0.0, tilesize: int = 256) -> float:
     """

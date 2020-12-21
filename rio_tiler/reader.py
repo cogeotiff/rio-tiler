@@ -12,13 +12,13 @@ from rasterio.enums import ColorInterp, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
-from rasterio.warp import transform_bounds
 
 from . import constants
 from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
-from .utils import get_vrt_transform, has_alpha_band, has_mask_band, non_alpha_indexes
+from .utils import get_vrt_transform, has_alpha_band, has_mask_band, \
+    non_alpha_indexes, transform_bounds
 
 
 def _read(
@@ -137,6 +137,8 @@ def part(
     minimum_overlap: Optional[float] = None,
     vrt_options: Optional[Dict] = None,
     max_size: Optional[int] = None,
+    vrt_transform_crs: Optional[CRS] = None,
+    dst_coord_width: Optional[Union[int, float]] = None,
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
@@ -167,6 +169,13 @@ def part(
         These will be passed to the rasterio.warp.WarpedVRT class.
     max_size: int, optional
         Limit output size array if not widht and height.
+    vrt_transform_crs: CRS or str, optional
+        VRT coordinate reference system, default is None.
+        If source bounds cross the antimeridian,
+        set the target opposite coordinate reference system.
+    dst_coord_width: int, float, optional
+        Width of target coordinate reference system.
+        Default is None, then not accounting for the antimeridian.
     kwargs: Any, optional
         Additional options to forward to reader._read()
 
@@ -179,19 +188,32 @@ def part(
     if not dst_crs:
         dst_crs = src_dst.crs
 
+    if not vrt_transform_crs:
+        vrt_transform_crs = dst_crs
+
     if max_size and width and height:
         warnings.warn(
             "'max_size' will be ignored with with 'height' and 'width' set.",
             UserWarning,
         )
-
     if bounds_crs:
-        bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
+        bounds = list(transform_bounds(
+            bounds_crs, dst_crs, *bounds, densify_pts=21,
+            coordinate_width=dst_coord_width
+        ))
+    else:
+        bounds = list(bounds)
+  
+    if bounds[0] > bounds[2] and dst_coord_width is not None:
+        bounds[2] += dst_coord_width
 
     if minimum_overlap:
-        src_bounds = transform_bounds(
-            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21
-        )
+        src_bounds = list(transform_bounds(
+            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21,
+            coordinate_width=dst_coord_width
+        ))
+        if src_bounds[0] > src_bounds[2] and dst_coord_width is not None:
+                src_bounds[2] += dst_coord_width
         x_overlap = max(
             0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
         )
@@ -208,7 +230,7 @@ def part(
             )
 
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(
-        src_dst, bounds, height, width, dst_crs=dst_crs
+        src_dst, bounds, height, width, dst_crs=vrt_transform_crs
     )
 
     window = windows.Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
