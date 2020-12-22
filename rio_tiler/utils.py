@@ -8,7 +8,6 @@ import numpy
 from affine import Affine
 from boto3.session import Session as boto3_session
 from rasterio import windows
-from rasterio._base import _transform
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags
 from rasterio.errors import TransformError
@@ -16,7 +15,7 @@ from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
 from rasterio.transform import from_bounds, rowcol
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform, transform_geom
+from rasterio.warp import calculate_default_transform, transform, transform_geom
 
 from .colormap import apply_cmap
 from .constants import WEB_MERCATOR_CRS, NumType
@@ -583,7 +582,7 @@ def transform_bounds(
         in_xs = numpy.array(left, right, right, left, left)
         in_ys = numpy.array(bottom, bottom, top, top, bottom)
 
-    xs, ys = _transform(src_crs, dst_crs, in_xs, in_ys, None)
+    xs, ys = transform(src_crs, dst_crs, in_xs, in_ys)
     if coordinate_width is not None and not _is_clockwise(xs, ys):
         xs = [x + coordinate_width if x < 0 else x for x in xs]
         return (min(xs), min(ys), max(xs) - coordinate_width, max(ys))
