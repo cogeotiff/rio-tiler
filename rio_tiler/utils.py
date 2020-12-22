@@ -11,6 +11,7 @@ from rasterio import windows
 from rasterio._base import _transform
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags
+from rasterio.errors import TransformError
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
 from rasterio.transform import from_bounds, rowcol
@@ -491,8 +492,8 @@ def create_cutline(src_dst: DataSet, geometry: Dict, geometry_crs: CRS = None) -
 
 def _is_clockwise(xs, ys):
     if len(xs) != len(ys):
-        raise TransformError("xs and ys arrays must be the same length") 
-    
+        raise TransformError("xs and ys arrays must be the same length")
+
     area = 0
     if len(xs) > 2:
         if xs[0] == xs[-1] and ys[0] == ys[-1]:
@@ -500,21 +501,20 @@ def _is_clockwise(xs, ys):
         else:
             length = len(xs)
         for i in range(length - 1):
-            area = area + xs[i] * ys[i+1] - ys[i] * xs[i+1]
+            area = area + xs[i] * ys[i + 1] - ys[i] * xs[i + 1]
 
         area = area + xs[length - 1] * ys[0] - ys[length - 1] * xs[0]
 
     return area >= 0
 
+
 def transform_bounds(
-        src_crs: CRS,
-        dst_crs: CRS,
-        left: Union[int, float],
-        bottom: Union[int, float],
-        right: Union[int, float],
-        top: Union[int, float],
-        densify_pts: int = 21,
-        coordinate_width: Optional[Union[int, float]] = None):
+    src_crs: CRS,
+    dst_crs: CRS,
+    bounds: Tuple[float, float, float, float],
+    densify_pts: int = 21,
+    coordinate_width: Optional[Union[int, float]] = None,
+):
     """
     Transform bounds accounting for the antimeridian.
 
@@ -524,14 +524,8 @@ def transform_bounds(
         Source coordinate reference system.
     dst_crs: str, rasterio.crs.CRS
         Target coordinate reference system.
-    left: int, float
-        Left longitude of bounds.
-    bottom: int, float
-        Bottom latitude of bounds.
-    right: int, float
-        Right longitude of bounds.
-    top: int, float
-        Top latitude of bounds.
+    bounds: Tuple
+        Left longitude, Bottom latitude, Right longitude, Top latitude of bounds.
     densify_pts: int
         Densify of points.
     coordinate_width: int, float, None
@@ -544,11 +538,13 @@ def transform_bounds(
     """
 
     if densify_pts < 0:
-        raise ValueError('densify parameter must be >= 0')
+        raise ValueError("densify parameter must be >= 0")
 
     if src_crs == dst_crs:
-        return (left, bottom, right, top)
-    
+        return bounds
+
+    (left, bottom, right, top) = bounds
+
     in_xs = []
     in_ys = []
 
@@ -556,36 +552,40 @@ def transform_bounds(
         densify_factor = 1.0 / float(densify_pts + 1)
         # left_bottom to right_bottom
         in_xs.extend(
-            left + numpy.arange(0, densify_pts + 1, dtype=numpy.float64) *
-            ((right - left) * densify_factor)
+            left
+            + numpy.arange(0, densify_pts + 1, dtype=numpy.float64)
+            * ((right - left) * densify_factor)
         )
         in_ys.extend([bottom] * (densify_pts + 1))
         # right_bottom to right_top
         in_xs.extend([right] * (densify_pts + 1))
         in_ys.extend(
-            bottom + numpy.arange(0, densify_pts + 1, dtype=numpy.float64) *
-            ((top - bottom) * densify_factor)
+            bottom
+            + numpy.arange(0, densify_pts + 1, dtype=numpy.float64)
+            * ((top - bottom) * densify_factor)
         )
         # right_top to left_top
         in_xs.extend(
-            right + numpy.arange(0, densify_pts + 1, dtype=numpy.float64) *
-            ((left - right) * densify_factor)
+            right
+            + numpy.arange(0, densify_pts + 1, dtype=numpy.float64)
+            * ((left - right) * densify_factor)
         )
         in_ys.extend([top] * (densify_pts + 1))
         # left_top to left_bottom
         in_xs.extend([left] * (densify_pts + 1))
         in_ys.extend(
-            top + numpy.arange(0, densify_pts + 1, dtype=numpy.float64) *
-            ((bottom - top) * densify_factor)
+            top
+            + numpy.arange(0, densify_pts + 1, dtype=numpy.float64)
+            * ((bottom - top) * densify_factor)
         )
 
     else:
-        in_xs = numpy.array(left, right, right, left,left)
+        in_xs = numpy.array(left, right, right, left, left)
         in_ys = numpy.array(bottom, bottom, top, top, bottom)
-        
+
     xs, ys = _transform(src_crs, dst_crs, in_xs, in_ys, None)
     if coordinate_width is not None and not _is_clockwise(xs, ys):
         xs = [x + coordinate_width if x < 0 else x for x in xs]
         return (min(xs), min(ys), max(xs) - coordinate_width, max(ys))
-    
+
     return (min(xs), min(ys), max(xs), max(ys))

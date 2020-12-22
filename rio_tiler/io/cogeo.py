@@ -94,7 +94,9 @@ class COGReader(BaseReader):
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
-    tile_coord_width: Optional[Union[int, float]] = attr.ib(default=constants.WEB_MERCATOR_COORD_WIDTH)
+    tile_coord_width: Optional[Union[int, float]] = attr.ib(
+        default=constants.WEB_MERCATOR_COORD_WIDTH
+    )
     tile_opp_crs: Optional[CRS] = attr.ib(default=constants.WEB_MERCATOR_OPP_CRS)
 
     # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
@@ -128,8 +130,11 @@ class COGReader(BaseReader):
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
         self.bounds = transform_bounds(
-            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds,
-            densify_pts=21, coordinate_width=constants.WGS84_COORD_WIDTH
+            self.dataset.crs,
+            constants.WGS84_CRS,
+            self.dataset.bounds,
+            densify_pts=21,
+            coordinate_width=constants.WGS84_COORD_WIDTH,
         )
         self.crossing_antimeridian = self.bounds[0] > self.bounds[2]
 
@@ -428,7 +433,7 @@ class COGReader(BaseReader):
         if dst_crs == bounds_crs:
             bounds = bbox
         else:
-            bounds = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+            bounds = transform_bounds(bounds_crs, dst_crs, bbox, densify_pts=21)
 
         return ImageData(
             data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
@@ -621,7 +626,7 @@ class COGReader(BaseReader):
         if dst_crs == shape_crs:
             bounds = bbox
         else:
-            bounds = transform_bounds(shape_crs, dst_crs, *bbox, densify_pts=21)
+            bounds = transform_bounds(shape_crs, dst_crs, bbox, densify_pts=21)
 
         return ImageData(
             data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
@@ -661,8 +666,11 @@ class GCPCOGReader(COGReader):
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
         self.bounds = transform_bounds(
-            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds,
-            densify_pts=21, coordinate_width=constants.WGS84_COORD_WIDTH
+            self.dataset.crs,
+            constants.WGS84_CRS,
+            self.dataset.bounds,
+            densify_pts=21,
+            coordinate_width=constants.WGS84_COORD_WIDTH,
         )
         self.crossing_antimeridian = self.bounds[0] > self.bounds[2]
 

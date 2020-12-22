@@ -360,5 +360,5 @@ def test_mosaic_tiler_with_imageDataClass():
     assert assets_used == img.assets == assets
     assert img.crs == crs1 == crs2
     assert not img.bounds == bbox
-    bbox_in_crs = transform_bounds(WGS84_CRS, crs1, *bbox, densify_pts=21)
+    bbox_in_crs = transform_bounds(WGS84_CRS, crs1, bbox, densify_pts=21)
     assert img.bounds == bbox_in_crs

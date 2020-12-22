@@ -17,8 +17,13 @@ from . import constants
 from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
-from .utils import get_vrt_transform, has_alpha_band, has_mask_band, \
-    non_alpha_indexes, transform_bounds
+from .utils import (
+    get_vrt_transform,
+    has_alpha_band,
+    has_mask_band,
+    non_alpha_indexes,
+    transform_bounds,
+)
 
 
 def _read(
@@ -198,19 +203,30 @@ def part(
         )
     if bounds_crs:
         bounds = transform_bounds(
-            bounds_crs, dst_crs, *bounds, densify_pts=21, coordinate_width=dst_coord_width
+            bounds_crs,
+            dst_crs,
+            bounds,
+            densify_pts=21,
+            coordinate_width=dst_coord_width,
         )
-  
+
     if bounds[0] > bounds[2] and dst_coord_width is not None:
         bounds = (bounds[0], bounds[1], bounds[2] + dst_coord_width, bounds[3])
 
     if minimum_overlap:
         src_bounds = transform_bounds(
-            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21, coordinate_width=dst_coord_width
+            src_dst.crs,
+            dst_crs,
+            src_dst.bounds,
+            densify_pts=21,
+            coordinate_width=dst_coord_width,
         )
         if src_bounds[0] > src_bounds[2] and dst_coord_width is not None:
-	        src_bounds = (
-                src_bounds[0], src_bounds[1], src_bounds[2] + dst_coord_width, src_bounds[3]
+            src_bounds = (
+                src_bounds[0],
+                src_bounds[1],
+                src_bounds[2] + dst_coord_width,
+                src_bounds[3],
             )
         x_overlap = max(
             0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
@@ -545,13 +561,13 @@ def metadata(
             **kwargs,
         )
         bounds = transform_bounds(
-            bounds_crs, constants.WGS84_CRS, *bounds, densify_pts=21
+            bounds_crs, constants.WGS84_CRS, bounds, densify_pts=21
         )
 
     else:
         data, mask = preview(src_dst, max_size=max_size, indexes=indexes, **kwargs)
         bounds = transform_bounds(
-            src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
+            src_dst.crs, constants.WGS84_CRS, src_dst.bounds, densify_pts=21
         )
 
     data = numpy.ma.array(data)

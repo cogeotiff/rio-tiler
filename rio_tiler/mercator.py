@@ -12,6 +12,7 @@ from rasterio.warp import calculate_default_transform
 from . import constants
 from .utils import transform_bounds
 
+
 def _meters_per_pixel(zoom: int, lat: float = 0.0, tilesize: int = 256) -> float:
     """
     Return the pixel resolution for a given mercator tile zoom and lattitude.
@@ -103,7 +104,7 @@ def get_zooms(
     )
 
     bounds = transform_bounds(
-        src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
+        src_dst.crs, constants.WGS84_CRS, src_dst.bounds, densify_pts=21
     )
     center = [(bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2]
     lat = center[1] if ensure_global_max_zoom else 0
