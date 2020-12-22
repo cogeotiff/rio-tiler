@@ -10,6 +10,7 @@ from boto3.session import Session as boto3_session
 from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags
+from rasterio.features import is_valid_geom
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
 from rasterio.transform import from_bounds, rowcol
@@ -471,18 +472,34 @@ def create_cutline(src_dst: DataSet, geometry: Dict, geometry_crs: CRS = None) -
     if "geometry" in geometry:
         geometry = geometry["geometry"]
 
+    if not is_valid_geom(geometry):
+        raise RioTilerError("Invalid geometry")
+
     geom_type = geometry["type"]
-    if not geom_type == "Polygon":
-        raise RioTilerError("Invalid geometry type: {geom_type}. Should be Polygon")
+    if geom_type not in ["Polygon", "MultiPolygon"]:
+        raise RioTilerError(
+            "Invalid geometry type: {geom_type}. Should be Polygon or MultiPolygon"
+        )
 
     if geometry_crs:
         geometry = transform_geom(geometry_crs, src_dst.crs, geometry)
 
-    xs, ys = zip(*coords(geometry))
-    src_y, src_x = rowcol(src_dst.transform, xs, ys)
+    polys = []
+    geom = (
+        [geometry["coordinates"]] if geom_type == "Polygon" else geometry["coordinates"]
+    )
+    for p in geom:
+        xs, ys = zip(*coords(p))
+        src_y, src_x = rowcol(src_dst.transform, xs, ys)
+        src_x = [max(0, min(src_dst.width, x)) for x in src_x]
+        src_y = [max(0, min(src_dst.height, y)) for y in src_y]
+        poly = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
+        polys.append(f"(({poly}))")
 
-    src_x = [max(0, min(src_dst.width, x)) for x in src_x]
-    src_y = [max(0, min(src_dst.height, y)) for y in src_y]
+    str_poly = ",".join(polys)
 
-    poly = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
-    return f"POLYGON (({poly}))"
+    return (
+        f"POLYGON {str_poly}"
+        if geom_type == "Polygon"
+        else f"MULTIPOLYGON ({str_poly})"
+    )
