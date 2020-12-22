@@ -94,6 +94,9 @@ def apply_cmap(
     if data.shape[0] > 1:
         raise InvalidFormat("Source data must be 1 band")
 
+    if len(colormap) > 256 or max(colormap) > 256:
+        return apply_discrete_cmap(data, colormap)
+
     lookup_table = make_lut(colormap)
     data = lookup_table[data[0], :]
 
