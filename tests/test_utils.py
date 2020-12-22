@@ -363,6 +363,25 @@ def test_cutline():
         c = utils.create_cutline(cog.dataset, feat_mp, geometry_crs="epsg:4326")
         assert "MULTIPOLYGON" in c
 
+    bad_poly = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [
+                    [7.305908203125, 52.14697334064471],
+                    [7.84423828125, 52.14697334064471],
+                    [7.84423828125, 52.52958999943304],
+                    [7.305908203125, 52.52958999943304],
+                    [7.305908203125, 52.14697334064471],
+                ]
+            ],
+        ],
+    }
+
+    with COGReader(COGEO) as cog:
+        with pytest.raises(RioTilerError):
+            utils.create_cutline(cog.dataset, bad_poly, geometry_crs="epsg:4326")
+
 
 def test_parse_expression():
     """test parsing rio-tiler expression."""
