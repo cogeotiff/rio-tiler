@@ -163,7 +163,7 @@ def test_part_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
 
-    bbox = (-80.477, 33.4453, -79.737, 32.7988)
+    bbox = (-80.477, 32.7988, -79.737, 33.4453)
 
     with STACReader(STAC_PATH) as stac:
         with pytest.raises(InvalidAssetName):

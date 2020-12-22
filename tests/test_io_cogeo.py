@@ -231,9 +231,9 @@ def test_area_valid():
     """Read part of an image."""
     bbox = (
         -56.624124590533825,
-        73.52687881825946,
-        -56.530950796449005,
         73.50183615350426,
+        -56.530950796449005,
+        73.52687881825946,
     )
     with COGReader(COG_NODATA) as cog:
         data, mask = cog.part(bbox)
@@ -422,9 +422,9 @@ def test_imageData_output():
 
         bbox = (
             -56.624124590533825,
-            73.52687881825946,
-            -56.530950796449005,
             73.50183615350426,
+            -56.530950796449005,
+            73.52687881825946,
         )
         img = cog.part(bbox)
         assert img.data.shape == (1, 11, 41)
