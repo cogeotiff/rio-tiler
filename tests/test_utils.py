@@ -377,3 +377,53 @@ def test_render_numpy():
     assert arr_res["mask"].shape == (512, 512)
     np.array_equal(arr, arr_res["data"])
     np.array_equal(mask, arr_res["mask"])
+
+
+def test_is_clockwise():
+    """check xs/ys points are clockwise or not."""
+    xs = [-10, 10, 10, -10, -10]
+    ys = [0, 0, 100, 100, 0]
+    assert utils._is_clockwise(xs, ys) is True
+    xs = [-10, 10, 10, -10]
+    ys = [0, 0, 100, 100]
+    assert utils._is_clockwise(xs, ys) is True
+    xs = [-10, 10, 10, -10, -10]
+    ys = [0, 0, -100, -100, 0]
+    assert utils._is_clockwise(xs, ys) is False
+
+
+def test_transform_bounds():
+    """Should return the correct bounds."""
+    bounds = (-10, -10, 10, 10)
+    assert bounds == utils.transform_bounds(
+        constants.WGS84_CRS, constants.WGS84_CRS, bounds
+    )
+
+    bounds = utils.transform_bounds(
+        "EPSG:32608", constants.WGS84_CRS, (264000, 7146900, 519300, 7404000)
+    )
+    assert bounds[0] < bounds[2]
+    assert bounds[1] < bounds[3]
+    bounds = utils.transform_bounds(
+        "EPSG:32608",
+        constants.WGS84_CRS,
+        (264000, 7146900, 519300, 7404000),
+        coordinate_width=constants.WGS84_COORD_WIDTH,
+    )
+    assert bounds[0] < bounds[2]
+    assert bounds[1] < bounds[3]
+
+    # crossing antimeridian
+    bounds = utils.transform_bounds(
+        "EPSG:32660", constants.WGS84_CRS, (488400, 7151100, 735300, 7399800)
+    )
+    assert bounds[0] < bounds[2]
+    assert bounds[1] < bounds[3]
+    bounds = utils.transform_bounds(
+        "EPSG:32660",
+        constants.WGS84_CRS,
+        (488400, 7151100, 735300, 7399800),
+        coordinate_width=constants.WGS84_COORD_WIDTH,
+    )
+    assert bounds[0] > bounds[2]
+    assert bounds[1] < bounds[3]
