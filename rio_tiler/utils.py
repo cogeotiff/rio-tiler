@@ -507,14 +507,14 @@ def _is_clockwise(xs, ys):
     return area >= 0
 
 def transform_bounds(
-        src_crs,
-        dst_crs,
-        left,
-        bottom,
-        right,
-        top,
-        densify_pts=21,
-        coordinate_width=None):
+        src_crs: CRS,
+        dst_crs: CRS,
+        left: Union[int, float],
+        bottom: Union[int, float],
+        right: Union[int, float],
+        top: Union[int, float],
+        densify_pts: int = 21,
+        coordinate_width: Optional[Union[int, float]] = None):
     """
     Transform bounds accounting for the antimeridian.
 
