@@ -661,8 +661,10 @@ class GCPCOGReader(COGReader):
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
         self.bounds = transform_bounds(
-            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
+            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds,
+            densify_pts=21, coordinate_width=constants.WGS84_COORD_WIDTH
         )
+        self.crossing_antimeridian = self.bounds[0] > self.bounds[2]
 
         if self.minzoom is None or self.maxzoom is None:
             self._set_zooms()
