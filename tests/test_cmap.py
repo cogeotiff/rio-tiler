@@ -1,5 +1,7 @@
 """tests rio_tiler colormaps"""
 
+from copy import deepcopy
+
 import numpy
 import pytest
 
@@ -141,3 +143,16 @@ def test_apply_discrete_cmap():
     mask[2:5, 2:5] = 255
     mask[5:, 5:] = 255
     numpy.testing.assert_array_equal(m, mask)
+
+    cm = {1: [0, 0, 0, 255], 1000: [255, 255, 255, 255]}
+    d, m = colormap.apply_cmap(data, cm)
+    dd, mm = colormap.apply_discrete_cmap(data, cm)
+    numpy.testing.assert_array_equal(dd, d)
+    numpy.testing.assert_array_equal(mm, m)
+
+    cm = deepcopy(colormap.EMPTY_COLORMAP)
+    cm.pop(255)
+    cm[1000] = [255, 255, 255, 255]
+
+    d, m = colormap.apply_cmap(data, cm)
+    dd, mm = colormap.apply_discrete_cmap(data, cm)
