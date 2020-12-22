@@ -547,7 +547,7 @@ def transform_bounds(
         raise ValueError('densify parameter must be >= 0')
 
     if src_crs == dst_crs:
-        return [left, bottom, right, top]
+        return (left, bottom, right, top)
     
     in_xs = []
     in_ys = []
