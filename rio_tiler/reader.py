@@ -197,23 +197,21 @@ def part(
             UserWarning,
         )
     if bounds_crs:
-        bounds = list(transform_bounds(
-            bounds_crs, dst_crs, *bounds, densify_pts=21,
-            coordinate_width=dst_coord_width
-        ))
-    else:
-        bounds = list(bounds)
+        bounds = transform_bounds(
+            bounds_crs, dst_crs, *bounds, densify_pts=21, coordinate_width=dst_coord_width
+        )
   
     if bounds[0] > bounds[2] and dst_coord_width is not None:
-        bounds[2] += dst_coord_width
+        bounds = (bounds[0], bounds[1], bounds[2] + dst_coord_width, bounds[3])
 
     if minimum_overlap:
-        src_bounds = list(transform_bounds(
-            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21,
-            coordinate_width=dst_coord_width
-        ))
+        src_bounds = transform_bounds(
+            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21, coordinate_width=dst_coord_width
+        )
         if src_bounds[0] > src_bounds[2] and dst_coord_width is not None:
-                src_bounds[2] += dst_coord_width
+	        src_bounds = (
+                src_bounds[0], src_bounds[1], src_bounds[2] + dst_coord_width, src_bounds[3]
+            )
         x_overlap = max(
             0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
         )
