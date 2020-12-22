@@ -9,7 +9,12 @@ from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, 
 import attr
 from morecantile import Tile, TileMatrixSet
 
-from ..constants import WEB_MERCATOR_TMS, WGS84_COORD_LEFT, WGS84_COORD_RIGHT, WGS84_COORD_WIDTH
+from ..constants import (
+    WEB_MERCATOR_TMS,
+    WGS84_COORD_LEFT,
+    WGS84_COORD_RIGHT,
+    WGS84_COORD_WIDTH,
+)
 from ..errors import (
     ExpressionMixingWarning,
     MissingAssets,
