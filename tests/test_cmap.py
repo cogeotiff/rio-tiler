@@ -156,3 +156,6 @@ def test_apply_discrete_cmap():
 
     d, m = colormap.apply_cmap(data, cm)
     dd, mm = colormap.apply_discrete_cmap(data, cm)
+
+    cm = {1: [0, 0, 0, 255], 256: [255, 255, 255, 255]}
+    assert colormap.apply_cmap(data, cm)
