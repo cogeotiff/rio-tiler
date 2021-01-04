@@ -6,7 +6,6 @@ from . import (  # noqa
     errors,
     expression,
     io,
-    mercator,
     mosaic,
     profiles,
     reader,

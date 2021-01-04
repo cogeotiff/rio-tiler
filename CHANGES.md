@@ -1,8 +1,9 @@
 
-## next (TBD)
+## 2.0.0 (TBD)
 
 * add MultiPolygon support in `rio_tiler.utils.create_cutline` (https://github.com/cogeotiff/rio-tiler/issues/323)
 * support discrete colormap by default in `apply_cmap` (https://github.com/cogeotiff/rio-tiler/issues/321)
+* delete deprecated `rio_tiler.mercator` submodule
 
 ## 2.0.0rc4 (2020-12-18)
 

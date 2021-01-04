@@ -11,7 +11,6 @@ inst_reqs = [
     "boto3",
     "numexpr",
     "numpy",
-    "mercantile",
     "morecantile>=2.1,<2.2",
     "rasterio>=1.1.7",
     "requests",

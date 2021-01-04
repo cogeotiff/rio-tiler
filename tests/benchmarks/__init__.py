@@ -1,29 +1,29 @@
 """rio-tiler.tests.benchmarks."""
 
-import mercantile
+import morecantile
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 
 benchmark_tiles = {
     "north": {
-        "full": mercantile.Tile(x=70, y=17, z=7),
-        "masked": mercantile.Tile(x=69, y=16, z=7),
-        "boundless": mercantile.Tile(x=68, y=17, z=7),
+        "full": morecantile.Tile(x=70, y=17, z=7),
+        "masked": morecantile.Tile(x=69, y=16, z=7),
+        "boundless": morecantile.Tile(x=68, y=17, z=7),
     },
     "south": {
-        "full": mercantile.Tile(x=124, y=108, z=7),
-        "masked": mercantile.Tile(x=125, y=109, z=7),
-        "boundless": mercantile.Tile(x=122, y=107, z=7),
+        "full": morecantile.Tile(x=124, y=108, z=7),
+        "masked": morecantile.Tile(x=125, y=109, z=7),
+        "boundless": morecantile.Tile(x=122, y=107, z=7),
     },
     "equator": {
-        "full": mercantile.Tile(x=537, y=499, z=10),
-        "masked": mercantile.Tile(x=535, y=498, z=10),
-        "boundless": mercantile.Tile(x=540, y=497, z=10),
+        "full": morecantile.Tile(x=537, y=499, z=10),
+        "masked": morecantile.Tile(x=535, y=498, z=10),
+        "boundless": morecantile.Tile(x=540, y=497, z=10),
     },
     "dateline": {
-        "full": mercantile.Tile(x=510, y=169, z=10),
-        "masked": mercantile.Tile(x=510, y=168, z=10),
-        "boundless": mercantile.Tile(x=509, y=171, z=10),
+        "full": morecantile.Tile(x=510, y=169, z=10),
+        "masked": morecantile.Tile(x=510, y=168, z=10),
+        "boundless": morecantile.Tile(x=509, y=171, z=10),
     },
 }
 

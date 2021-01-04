@@ -2,12 +2,12 @@
 
 import os
 
-import mercantile
 import numpy
 import pytest
 import rasterio
 
 from rio_tiler import constants, reader
+from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
@@ -425,7 +425,7 @@ def test_metadata():
         meta = reader.metadata(src_dst, indexes=1)
         assert meta["colorinterp"] == ["gray"]
 
-        bounds = mercantile.bounds(mercantile.Tile(x=218, y=99, z=8))
+        bounds = WEB_MERCATOR_TMS.bounds(218, 99, 8)
         meta = reader.metadata(src_dst, bounds)
         assert meta["colorinterp"] == ["gray"]
         assert meta["bounds"] == bounds
