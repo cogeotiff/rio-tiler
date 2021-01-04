@@ -130,4 +130,4 @@ See [CHANGES.md](https://github.com/cogeotiff/rio-tiler/blob/master/CHANGES.md).
 
 ## License
 
-See [LICENSE.txt](https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE.txt)
+See [LICENSE](https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE)
