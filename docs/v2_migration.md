@@ -45,7 +45,7 @@ Rasterio 1.1.7 or newer is required.
 
 With [Morecantile](https://github.com/developmentseed/morecantile) we can support more than the Web Mercator TMS.
 
-see [tms](/advanced/tms/)
+See [tms](/advanced/tms/)
 
 ## New **rio_tiler.io** submodules
 
@@ -81,7 +81,7 @@ with COGReader("my_tif.tif") as cog:
     tile, mask = cog.tile(691559, 956905, 21, expression="b1/b2")
 ```
 
-see [`COGReader`](/readers/#cogreader) amd [`STACReader`](/readers/#stacreader) for more info.
+See [`COGReader`](/readers/#cogreader) amd [`STACReader`](/readers/#stacreader) for more info.
 
 ## Internal API: **rio_tiler.reader**
 
@@ -273,7 +273,7 @@ img = rio_tiler.utils.render(tile, mask, img_format="PNG")
 
 The `.io` readers now returns pydantic models hosting the results. This enables easy API definition.
 
-see [models](/models/)
+See [models](/models/)
 
 ## Mission specific changes
 
