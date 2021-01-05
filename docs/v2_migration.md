@@ -41,6 +41,12 @@ def get_vrt_transform(
 
 Rasterio 1.1.7 or newer is required.
 
+## ~~Mercantile~~ -> Morecantile
+
+With [Morecantile](https://github.com/developmentseed/morecantile) we can support more than the Web Mercator TMS.
+
+See [tms](/advanced/tms/)
+
 ## New **rio_tiler.io** submodules
 
 We created revised submodules for working with COGs and STAC:
@@ -75,7 +81,7 @@ with COGReader("my_tif.tif") as cog:
     tile, mask = cog.tile(691559, 956905, 21, expression="b1/b2")
 ```
 
-see [`COGReader`](/readers/#cogreader) amd [`STACReader`](/readers/#stacreader) for more info.
+See [`COGReader`](/readers/#cogreader) amd [`STACReader`](/readers/#stacreader) for more info.
 
 ## Internal API: **rio_tiler.reader**
 
@@ -262,6 +268,12 @@ img = rio_tiler.utils.array_to_image(tile, mask, img_format="PNG")
 # v2
 img = rio_tiler.utils.render(tile, mask, img_format="PNG")
 ```
+
+## Pydantic models
+
+The `.io` readers now returns pydantic models hosting the results. This enables easy API definition.
+
+See [models](/models/)
 
 ## Mission specific changes
 

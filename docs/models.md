@@ -1,7 +1,7 @@
 
 ## ImageData
 
-Reader methods returning image data  (`tile`, `part` and `preview`) return a data holding class (built with [attrs](https://www.attrs.org/en/stable/)): `rio_tiler.models.ImageData`.
+Reader methods returning image data  (`tile`, `part` and `preview`) return a *data holding* class: `rio_tiler.models.ImageData`.
 
 This class has helper methods like `render` which forward internal data and mask to `rio_tiler.utils.render` method, but also helps preserving geospatial informations (`bounds` and `crs`) about the data.
 

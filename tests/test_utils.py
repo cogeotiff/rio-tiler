@@ -3,13 +3,13 @@
 import os
 from io import BytesIO
 
-import mercantile
 import numpy as np
 import pytest
 import rasterio
 from rasterio.features import bounds as featureBounds
 
-from rio_tiler import colormap, constants, utils
+from rio_tiler import colormap, utils
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import RioTilerError
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import COGReader
@@ -99,7 +99,7 @@ def test_get_vrt_transform_valid4326():
     )
     with rasterio.open(S3_PATH) as src:
         vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
-            src, bounds, 256, 256, dst_crs=constants.WGS84_CRS
+            src, bounds, 256, 256, dst_crs=WGS84_CRS
         )
 
     assert vrt_transform[2] == -104.77523803710938
@@ -178,7 +178,7 @@ def test_render_valid_1bandWebp():
 
 def test_aligned_with_internaltile():
     """Check if COG is in WebMercator and aligned with internal tiles."""
-    bounds = mercantile.bounds(43, 25, 7)
+    bounds = WEB_MERCATOR_TMS.bounds(43, 25, 7)
     with rasterio.open(COG_DST) as src_dst:
         assert not utils._requested_tile_aligned_with_internal_tile(
             src_dst, bounds, 256, 256
@@ -189,7 +189,7 @@ def test_aligned_with_internaltile():
             src_dst, bounds, 256, 256
         )
 
-    bounds = mercantile.bounds(147, 182, 9)
+    bounds = WEB_MERCATOR_TMS.bounds(147, 182, 9)
     with rasterio.open(COG_NOWEB) as src_dst:
         assert not utils._requested_tile_aligned_with_internal_tile(
             src_dst, bounds, 256, 256

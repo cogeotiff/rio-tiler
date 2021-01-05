@@ -4,7 +4,6 @@ import os
 from io import BytesIO
 from typing import Any, Dict
 
-import mercantile
 import numpy
 import pytest
 import rasterio
@@ -172,9 +171,13 @@ def test_tile_valid_default():
         assert data.shape == (1, 256, 256)
         assert mask.all()
 
-        tile_bounds = mercantile.xy_bounds(43, 24, 7)
+        tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
         data_part, _ = cog.part(
-            tile_bounds, bounds_crs="epsg:3857", width=256, height=256, max_size=None
+            tile_bounds,
+            bounds_crs=WEB_MERCATOR_TMS.crs,
+            width=256,
+            height=256,
+            max_size=None,
         )
         assert numpy.array_equal(data, data_part)
 
