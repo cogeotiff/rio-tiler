@@ -11,20 +11,29 @@ inst_reqs = [
     "boto3",
     "numexpr",
     "numpy",
-    "mercantile",
-    "rasterio>=1.1.3",
+    "morecantile>=2.1,<2.2",
+    "rasterio>=1.1.7",
     "requests",
+    "rio-color",
+    "pystac>=0.5.3",
 ]
 
 extra_reqs = {
     "test": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
-    "dev": ["pytest", "pytest-benchmark", "pytest-cov", "rio-cogeo", "pre-commit"],
+    "dev": [
+        "pytest",
+        "pytest-benchmark",
+        "pytest-cov",
+        "pytest-asyncio",
+        "rio-cogeo",
+        "pre-commit",
+    ],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
 }
 
 setup(
     name="rio-tiler",
-    version="2.0.0-beta.16",
+    version="2.0.0rc4",
     python_requires=">=3.5",
     description="Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.",
     long_description=readme,
@@ -33,6 +42,7 @@ setup(
         "Intended Audience :: Information Technology",
         "Intended Audience :: Science/Research",
         "License :: OSI Approved :: BSD License",
+        "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS",
@@ -42,7 +52,7 @@ setup(
     author_email="vincent@developmentseed.org",
     url="https://github.com/cogeotiff/rio-tiler",
     license="BSD",
-    packages=find_packages(exclude=["ez_setup", "examples", "tests"]),
+    packages=find_packages(exclude=["tests*"]),
     include_package_data=True,
     package_data={"rio_tiler": ["cmap_data/*.npy"]},
     zip_safe=False,

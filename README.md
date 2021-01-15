@@ -4,7 +4,7 @@
   <img src="https://user-images.githubusercontent.com/10407788/88133997-77560f00-cbb1-11ea-874c-a8f1d123a9df.jpg" style="max-width: 800px;" alt="rio-tiler"></a>
 </p>
 <p align="center">
-  <em>Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.</em>
+  <em>Rasterio plugin to read Web Map tiles from raster datasets.</em>
 </p>
 <p align="center">
   <a href="https://github.com/cogeotiff/rio-tiler/actions?query=workflow%3ACI" target="_blank">
@@ -40,7 +40,7 @@
 
 ## Install
 
-You can install rio-tiler using pip
+You can install `rio-tiler` using pip
 
 ```bash
 $ pip install -U pip
@@ -56,27 +56,63 @@ $ pip install -U pip
 $ pip install -e .
 ```
 
+## Overview
+
+`rio-tiler` is a rasterio plugin which aims to ease the creation of [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) dynamically from any raster data.
+
+```python
+from typing import Dict, List
+
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
+with COGReader("my-tif.tif") as cog:
+    # get info
+    info: Dict = cog.info()
+
+    # get image statistics
+    stats: Dict = cog.stats()
+
+    # get metadata (info + image statistics)
+    meta: Dict = cog.metadata()
+
+    # Read data for a mercator tile
+    img: ImageData = cog.tile(tile_x, tile_y, tile_zoom, tilesize=256)
+    assert img.data
+    assert img.mask
+
+    # Read part of a data for a given bbox (size is maxed out to 1024)
+    img: ImageData = cog.part([minx, miny, maxx, maxy])
+
+    # Read data for a given geojson polygon (size is maxed out to 1024)
+    img: ImageData = cog.feature(geojson_feature)
+
+    # Get a preview (size is maxed out to 1024)
+    img: ImageData = cog.preview()
+
+    # Get pixel values for a given lon/lat coordinate
+    value: List = cog.point(lon, lat)
+```
+
 ## Partial reading on Cloud hosted dataset
 
-Rio-tiler perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
+`rio-tiler` perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
 It's important to note that **Sentinel-2 scenes hosted on AWS are not in Cloud Optimized format but in JPEG2000**.
 When performing partial reading of JPEG2000 dataset GDAL (rasterio backend library) will need to make a lot of **GET requests** and transfer a lot of data.
 
 Ref: [Do you really want people using your data](https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f) blog post.
 
 ## Plugins
-- [rio-tiler-crs](https://github.com/cogeotiff/rio-tiler-crs): Create Map Tiles using other TileMatrixSets
 - [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt): Create Mapbox Vector Tile from numpy array (tile/mask)
 
 **Mission Specific tiler**
 
-In rio-tiler v2 we choosed to remove the mission specific tilers (Sentinel2, Sentinel1, Landsat8 and CBERS). Those are now in a specific plugin: [rio-tiler-pds](https://github.com/cogeotiff/rio-tiler-pds).
+In `rio-tiler` v2 we choosed to remove the mission specific tilers (Sentinel2, Sentinel1, Landsat8 and CBERS). Those are now in a specific plugin: [**rio-tiler-pds**](https://github.com/cogeotiff/rio-tiler-pds).
 
 ## Implementations
 - [rio-viz](https://github.com/developmentseed/rio-viz): Visualize Cloud Optimized GeoTIFF in browser locally
-- [titiler](https://github.com/developmentseed/titiler)
-- [CosmiQ/solaris](https://github.com/CosmiQ/solaris)
-- [cogeo-tiler](https://github.com/developmentseed/cogeo-tiler)
+- [titiler](https://github.com/developmentseed/titiler): A lightweight Cloud Optimized GeoTIFF dynamic tile server.
+- [cogeo-mosaic](https://github.com/developmentseed/cogeo-mosaic): Create mosaics of Cloud Optimized GeoTIFF based on mosaicJSON specification.
 
 ## Contribution & Development
 
@@ -84,7 +120,7 @@ See [CONTRIBUTING.md](https://github.com/cogeotiff/rio-tiler/blob/master/CONTRIB
 
 ## Authors
 
-The rio-tiler project was begun at Mapbox and has been transferred in January 2019.
+The `rio-tiler` project was begun at Mapbox and has been transferred in January 2019.
 
 See [AUTHORS.txt](https://github.com/cogeotiff/rio-tiler/blob/master/AUTHORS.txt) for a listing of individual contributors.
 
@@ -94,4 +130,4 @@ See [CHANGES.md](https://github.com/cogeotiff/rio-tiler/blob/master/CHANGES.md).
 
 ## License
 
-See [LICENSE.txt](https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE.txt)
+See [LICENSE](https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE)

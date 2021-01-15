@@ -1,34 +1,34 @@
 """rio_tiler.io.base: ABC class for rio-tiler readers."""
 
 import abc
+import asyncio
 import re
 import warnings
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
-import numpy
+from morecantile import Tile, TileMatrixSet
 
-
-from ..errors import ExpressionMixingWarning, MissingAssets, MissingBands
+from ..constants import WEB_MERCATOR_TMS
+from ..errors import (
+    ExpressionMixingWarning,
+    MissingAssets,
+    MissingBands,
+    TileOutsideBounds,
+)
 from ..expression import apply_expression
+from ..models import ImageData, ImageStatistics, Info, Metadata, SpatialInfo
 from ..tasks import multi_arrays, multi_values
 
 
 @attr.s
-class BaseReader(metaclass=abc.ABCMeta):
-    """Rio-tiler.io BaseReader."""
+class SpatialMixin:
+    """Spatial Info Mixin."""
 
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     bounds: Tuple[float, float, float, float] = attr.ib(init=False)
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
-
-    def __enter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
 
     @property
     def center(self) -> Tuple[float, float, int]:
@@ -39,55 +39,150 @@ class BaseReader(metaclass=abc.ABCMeta):
             self.minzoom,
         )
 
+    @property
+    def spatial_info(self) -> SpatialInfo:
+        """Return Dataset's spatial info."""
+        return SpatialInfo(
+            bounds=self.bounds,
+            center=self.center,
+            minzoom=self.minzoom,
+            maxzoom=self.maxzoom,
+        )
+
+    def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
+        """Check if a tile is inside a the dataset bounds."""
+        tile = Tile(x=tile_x, y=tile_y, z=tile_z)
+        tile_bounds = self.tms.bounds(*tile)
+        return (
+            (tile_bounds[0] < self.bounds[2])
+            and (tile_bounds[2] > self.bounds[0])
+            and (tile_bounds[3] > self.bounds[1])
+            and (tile_bounds[1] < self.bounds[3])
+        )
+
+
+@attr.s
+class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
+    """Rio-tiler.io BaseReader."""
+
+    def __enter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
+
     @abc.abstractmethod
-    def info(self) -> Dict:
+    def info(self) -> Info:
         """Return Dataset's info."""
         ...
 
-    @property
-    def spatial_info(self) -> Dict:
-        """Return Dataset's spatial info."""
-        return {
-            "bounds": self.bounds,
-            "center": self.center,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
-        }
-
     @abc.abstractmethod
-    def stats(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict:
+    def stats(
+        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
+    ) -> Dict[str, ImageStatistics]:
         """Return Dataset's statistics."""
         ...
 
-    @abc.abstractmethod
-    def metadata(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,) -> Dict:
+    def metadata(
+        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
+    ) -> Metadata:
         """Return Dataset's statistics and info."""
         info = self.info()
-        info["statistics"] = self.stats(pmin, pmax, **kwargs)
-        return info
+        stats = self.stats(pmin, pmax, **kwargs)
+        return Metadata(statistics=stats, **info.dict())
 
     @abc.abstractmethod
-    def tile(
-        self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    def tile(self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any) -> ImageData:
         """Read a Map tile from the Dataset."""
         ...
 
     @abc.abstractmethod
-    def part(
-        self, bbox: Tuple[float, float, float, float], **kwargs: Any
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    def part(self, bbox: Tuple[float, float, float, float], **kwargs: Any) -> ImageData:
         """Read a Part of a Dataset."""
         ...
 
     @abc.abstractmethod
-    def preview(self, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
-        """Return a preview of a Dataset."""
+    def preview(self, **kwargs: Any) -> ImageData:
+        """Read a preview of a Dataset."""
         ...
 
     @abc.abstractmethod
     def point(self, lon: float, lat: float, **kwargs: Any) -> List:
         """Read a value from a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    def feature(self, shape: Dict, **kwargs: Any) -> ImageData:
+        """Read a Dataset for a GeoJSON feature."""
+        ...
+
+
+@attr.s
+class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
+    """Rio-tiler.io AsyncBaseReader."""
+
+    async def __aenter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
+
+    @abc.abstractmethod
+    async def info(self) -> Coroutine[Any, Any, Info]:
+        """Return Dataset's info."""
+        ...
+
+    @abc.abstractmethod
+    async def stats(
+        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any
+    ) -> Coroutine[Any, Any, Dict[str, ImageStatistics]]:
+        """Return Dataset's statistics."""
+        ...
+
+    async def metadata(
+        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
+    ) -> Coroutine[Any, Any, Metadata]:
+        """Return Dataset's statistics and info."""
+        info, stats = await asyncio.gather(
+            *[self.info(), self.stats(pmin, pmax, **kwargs)]
+        )
+        return Metadata(statistics=stats, **info.dict())
+
+    @abc.abstractmethod
+    async def tile(
+        self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
+    ) -> Coroutine[Any, Any, ImageData]:
+        """Read a Map tile from the Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def part(
+        self, bbox: Tuple[float, float, float, float], **kwargs: Any
+    ) -> Coroutine[Any, Any, ImageData]:
+        """Read a Part of a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
+        """Read a preview of a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def point(
+        self, lon: float, lat: float, **kwargs: Any
+    ) -> Coroutine[Any, Any, List]:
+        """Read a value from a Dataset."""
+        ...
+
+    @abc.abstractmethod
+    async def feature(
+        self, shape: Dict, **kwargs: Any
+    ) -> Coroutine[Any, Any, ImageData]:
+        """Read a Dataset for a GeoJSON feature."""
         ...
 
 
@@ -97,6 +192,8 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
     assets: Sequence[str] = attr.ib(init=False)
 
     @abc.abstractmethod
@@ -110,9 +207,9 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         _re = re.compile(assets.replace("\\\\", "\\"))
         return tuple(set(re.findall(_re, expression)))
 
-    def info(
+    def info(  # type: ignore
         self, assets: Union[Sequence[str], str] = None, *args, **kwargs: Any
-    ) -> Dict:
+    ) -> Dict[str, Info]:
         """Return metadata from multiple assets"""
         if not assets:
             raise MissingAssets("Missing 'assets' option")
@@ -122,18 +219,18 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.info()
 
         return multi_values(assets, _reader, *args, **kwargs)
 
-    def stats(
+    def stats(  # type: ignore
         self,
         pmin: float = 2.0,
         pmax: float = 98.0,
         assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
-    ) -> Dict:
+    ) -> Dict[str, Dict[str, ImageStatistics]]:
         """Return array statistics from multiple assets"""
         if not assets:
             raise MissingAssets("Missing 'assets' option")
@@ -143,18 +240,18 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.stats(*args, **kwargs)
 
         return multi_values(assets, _reader, pmin, pmax, **kwargs)
 
-    def metadata(
+    def metadata(  # type: ignore
         self,
         pmin: float = 2.0,
         pmax: float = 98.0,
         assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
-    ) -> Dict:
+    ) -> Dict[str, Metadata]:
         """Return metadata from multiple assets"""
         if not assets:
             raise MissingAssets("Missing 'assets' option")
@@ -164,7 +261,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.metadata(*args, **kwargs)
 
         return multi_values(assets, _reader, pmin, pmax, **kwargs)
@@ -180,8 +277,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read a Mercator Map tile multiple assets."""
+        if not self.tile_exists(tile_z, tile_x, tile_y):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
+            )
+
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -199,14 +301,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 "assets must be passed either via expression or assets options."
             )
 
-        def _reader(
-            asset: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             assets,
             _reader,
             tile_x,
@@ -218,9 +318,9 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, assets, data)
+            output.data = apply_expression(blocks, assets, output.data)
 
-        return data, mask
+        return output
 
     def part(
         self,
@@ -231,7 +331,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read part of multiple assets."""
         if isinstance(assets, str):
             assets = (assets,)
@@ -250,22 +350,20 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 "assets must be passed either via expression or assets options."
             )
 
-        def _reader(
-            asset: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             assets, _reader, bbox, expression=asset_expression, **kwargs,
         )
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, assets, data)
+            output.data = apply_expression(blocks, assets, output.data)
 
-        return data, mask
+        return output
 
     def preview(
         self,
@@ -275,7 +373,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Return a preview from multiple assets."""
         if isinstance(assets, str):
             assets = (assets,)
@@ -294,20 +392,18 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 "assets must be passed either via expression or assets options."
             )
 
-        def _reader(asset: str, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(asset: str, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
 
-        data, mask = multi_arrays(
-            assets, _reader, expression=asset_expression, **kwargs
-        )
+        output = multi_arrays(assets, _reader, expression=asset_expression, **kwargs)
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, assets, data)
+            output.data = apply_expression(blocks, assets, output.data)
 
-        return data, mask
+        return output
 
     def point(
         self,
@@ -340,7 +436,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs: Any) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.point(*args, **kwargs)
 
         data = multi_values(
@@ -354,6 +450,49 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         return values
 
+    def feature(
+        self,
+        shape: Dict,
+        assets: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",
+        asset_expression: Optional[
+            str
+        ] = "",  # Expression for each asset based on index names
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read multiple assets for a geojson feature."""
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        if assets and expression:
+            warnings.warn(
+                "Both expression and assets passed; expression will overwrite assets parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            assets = self.parse_expression(expression)
+
+        if not assets:
+            raise MissingAssets(
+                "assets must be passed either via expression or assets options."
+            )
+
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
+            url = self._get_asset_url(asset)
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                return cog.feature(*args, **kwargs)
+
+        output = multi_arrays(
+            assets, _reader, shape, expression=asset_expression, **kwargs,
+        )
+
+        if expression:
+            blocks = expression.split(",")
+            output.data = apply_expression(blocks, assets, output.data)
+
+        return output
+
 
 @attr.s
 class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
@@ -361,6 +500,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
     bands: Sequence[str] = attr.ib(init=False)
 
     @abc.abstractmethod
@@ -376,7 +517,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     def info(
         self, bands: Union[Sequence[str], str] = None, *args, **kwargs: Any
-    ) -> Dict:
+    ) -> Info:
         """Return metadata from multiple bands"""
         if not bands:
             raise MissingBands("Missing 'bands' option")
@@ -384,24 +525,30 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        def _reader(band: str, **kwargs: Any) -> Dict:
+        def _reader(band: str, **kwargs: Any) -> Info:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.info()
 
         bands_metadata = multi_values(bands, _reader, *args, **kwargs)
-        meta = self.spatial_info
+
+        meta = self.spatial_info.dict()
+
+        # We only keep the value for the first band.
         meta["band_metadata"] = [
-            (ix + 1, bands_metadata[band]["band_metadata"][0][1])
+            (band, bands_metadata[band].band_metadata[0][1])
             for ix, band in enumerate(bands)
         ]
-        meta["band_descriptions"] = [(ix + 1, band) for ix, band in enumerate(bands)]
-        meta["dtype"] = bands_metadata[bands[0]]["dtype"]
-        meta["colorinterp"] = [
-            bands_metadata[band]["colorinterp"][0] for _, band in enumerate(bands)
+        meta["band_descriptions"] = [
+            (band, bands_metadata[band].band_descriptions[0][1])
+            for ix, band in enumerate(bands)
         ]
-        meta["nodata_type"] = bands_metadata[bands[0]]["nodata_type"]
-        return meta
+        meta["dtype"] = bands_metadata[bands[0]].dtype
+        meta["colorinterp"] = [
+            bands_metadata[band].colorinterp[0] for _, band in enumerate(bands)
+        ]
+        meta["nodata_type"] = bands_metadata[bands[0]].nodata_type
+        return Info(**meta)
 
     def stats(
         self,
@@ -409,7 +556,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         pmax: float = 98.0,
         bands: Union[Sequence[str], str] = None,
         **kwargs: Any,
-    ) -> Dict:
+    ) -> Dict[str, ImageStatistics]:
         """Return array statistics from multiple bands"""
         if not bands:
             raise MissingBands("Missing 'bands' option")
@@ -419,8 +566,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args, **kwargs) -> Dict:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
-                return cog.stats(*args, **kwargs)[1]
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                # We only return statistics for Band `1` of each dataset.
+                stats = cog.stats(*args, **kwargs)
+                return stats.get(list(stats)[0])
 
         return multi_values(bands, _reader, pmin, pmax, **kwargs)
 
@@ -430,7 +579,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         pmax: float = 98.0,
         bands: Union[Sequence[str], str] = None,
         **kwargs: Any,
-    ) -> Dict:
+    ) -> Metadata:
         """Return metadata from multiple bands"""
         if not bands:
             raise MissingBands("Missing 'bands' option")
@@ -438,30 +587,35 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        def _reader(band: str, *args, **kwargs) -> Dict:
+        def _reader(band: str, *args, **kwargs) -> Metadata:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
-                meta = cog.metadata(*args, **kwargs)
-                meta["statistics"] = meta["statistics"][1]
-                return meta
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                return cog.metadata(*args, **kwargs)
 
         bands_metadata = multi_values(bands, _reader, pmin, pmax, **kwargs)
 
-        meta = self.spatial_info
+        meta = self.spatial_info.dict()
         meta["band_metadata"] = [
-            (ix + 1, bands_metadata[band]["band_metadata"][0][1])
+            (band, bands_metadata[band].band_metadata[0][1])
             for ix, band in enumerate(bands)
         ]
-        meta["band_descriptions"] = [(ix + 1, band) for ix, band in enumerate(bands)]
-        meta["dtype"] = bands_metadata[bands[0]]["dtype"]
-        meta["colorinterp"] = [
-            bands_metadata[band]["colorinterp"][0] for _, band in enumerate(bands)
+        meta["band_descriptions"] = [
+            (band, bands_metadata[band].band_descriptions[0][1])
+            for ix, band in enumerate(bands)
         ]
-        meta["nodata_type"] = bands_metadata[bands[0]]["nodata_type"]
+        meta["dtype"] = bands_metadata[bands[0]].dtype
+        meta["colorinterp"] = [
+            bands_metadata[band].colorinterp[0] for _, band in enumerate(bands)
+        ]
+        meta["nodata_type"] = bands_metadata[bands[0]].nodata_type
         meta["statistics"] = {
-            band: bands_metadata[band]["statistics"] for _, band in enumerate(bands)
+            # We only keep statistics for Band `1` of each dataset.
+            band: bands_metadata[band].statistics.get(
+                list(bands_metadata[band].statistics)[0]
+            )
+            for _, band in enumerate(bands)
         }
-        return meta
+        return Metadata(**meta)
 
     def tile(
         self,
@@ -474,8 +628,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read a Mercator Map tile multiple bands."""
+        if not self.tile_exists(tile_z, tile_x, tile_y):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
+            )
+
         if isinstance(bands, str):
             bands = (bands,)
 
@@ -493,14 +652,12 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(
-            band: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.tile(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             bands,
             _reader,
             tile_x,
@@ -512,9 +669,9 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, bands, data)
+            output.data = apply_expression(blocks, bands, output.data)
 
-        return data, mask
+        return output
 
     def part(
         self,
@@ -525,7 +682,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Read part of multiple bands."""
         if isinstance(bands, str):
             bands = (bands,)
@@ -544,22 +701,20 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(
-            band: str, *args: Any, **kwargs: Any
-        ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.part(*args, **kwargs)
 
-        data, mask = multi_arrays(
+        output = multi_arrays(
             bands, _reader, bbox, expression=band_expression, **kwargs,
         )
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, bands, data)
+            output.data = apply_expression(blocks, bands, output.data)
 
-        return data, mask
+        return output
 
     def preview(
         self,
@@ -569,7 +724,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             str
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """Return a preview from multiple bands."""
         if isinstance(bands, str):
             bands = (bands,)
@@ -588,18 +743,18 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(band: str, **kwargs: Any) -> Tuple[numpy.ndarray, numpy.ndarray]:
+        def _reader(band: str, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.preview(**kwargs)
 
-        data, mask = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
+        output = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
 
         if expression:
             blocks = expression.split(",")
-            data = apply_expression(blocks, bands, data)
+            output.data = apply_expression(blocks, bands, output.data)
 
-        return data, mask
+        return output
 
     def point(
         self,
@@ -632,7 +787,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args, **kwargs: Any) -> Dict:
             url = self._get_band_url(band)
-            with self.reader(url, **self.reader_options) as cog:  # type: ignore
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.point(*args, **kwargs)[0]  # We only return the firt value
 
         data = multi_values(
@@ -645,3 +800,46 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             values = apply_expression(blocks, bands, values).tolist()
 
         return values
+
+    def feature(
+        self,
+        shape: Dict,
+        bands: Union[Sequence[str], str] = None,
+        expression: Optional[str] = "",
+        band_expression: Optional[
+            str
+        ] = "",  # Expression for each band based on index names
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read part of multiple bands."""
+        if isinstance(bands, str):
+            bands = (bands,)
+
+        if bands and expression:
+            warnings.warn(
+                "Both expression and bands passed; expression will overwrite bands parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            bands = self.parse_expression(expression)
+
+        if not bands:
+            raise MissingBands(
+                "bands must be passed either via expression or bands options."
+            )
+
+        def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
+            url = self._get_band_url(band)
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                return cog.feature(*args, **kwargs)
+
+        output = multi_arrays(
+            bands, _reader, shape, expression=band_expression, **kwargs,
+        )
+
+        if expression:
+            blocks = expression.split(",")
+            output.data = apply_expression(blocks, bands, output.data)
+
+        return output

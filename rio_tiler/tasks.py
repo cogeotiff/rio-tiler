@@ -1,26 +1,14 @@
 """rio_tiler.tasks: tools for handling rio-tiler's future tasks."""
 
 from concurrent import futures
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    Iterator,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
-
-import numpy
+from functools import partial
+from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Union
 
 from .constants import MAX_THREADS
 from .logger import logger
+from .models import ImageData
 
-TaskType = Union[
-    Generator[Tuple[Callable, str], None, None], Iterator[Tuple[futures.Future, str]],
-]
+TaskType = Sequence[Tuple[Union[futures.Future, Callable], str]]
 
 
 def filter_tasks(
@@ -31,8 +19,8 @@ def filter_tasks(
 
     Attributes
     ----------
-    tasks: list or generator
-        Sequence of 'concurrent.futures._base.Future' or 'callable'
+    tasks: list
+        Sequence of 'concurrent.futures._base.Future' or 'Callable'
     allowed_exceptions: Tuple, optional
         List of exceptions which won't be raised.
 
@@ -41,18 +29,15 @@ def filter_tasks(
     Successful task's result
 
     """
-    if not allowed_exceptions:
+    if allowed_exceptions is None:
         allowed_exceptions = ()
 
-    while True:
+    for (future, asset) in tasks:
         try:
-            future, asset = next(tasks)  # type: ignore
             if isinstance(future, futures.Future):
                 yield future.result(), asset
             else:
-                yield future, asset
-        except StopIteration:
-            break
+                yield future(), asset
         except allowed_exceptions as err:
             logger.info(err)
             pass
@@ -61,30 +46,30 @@ def filter_tasks(
 def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType:
     """Create Future Tasks."""
     if threads and threads > 1:
+        logger.debug(f"Running tasks in ThreadPool with max_workers={threads}")
         with futures.ThreadPoolExecutor(max_workers=threads) as executor:
-            return iter(
-                [
-                    (executor.submit(reader, asset, *args, **kwargs), asset)
-                    for asset in assets
-                ]
-            )
+            return [
+                (executor.submit(reader, asset, *args, **kwargs), asset)
+                for asset in assets
+            ]
     else:
-        return ((reader(asset, *args, **kwargs), asset) for asset in assets)
+        logger.debug(f"Running tasks outside ThreadsPool (max_workers={threads})")
+        return [(partial(reader, asset, *args, **kwargs), asset) for asset in assets]
 
 
 def multi_arrays(
     assets: Sequence[str],
-    reader: Callable,
+    reader: Callable[..., ImageData],
     *args: Any,
     threads: int = MAX_THREADS,
+    allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+) -> ImageData:
     """Multi array."""
     tasks = create_tasks(reader, assets, threads, *args, **kwargs)
-    data, masks = zip(*[r for r, _ in filter_tasks(tasks)])
-    data = numpy.concatenate(data)
-    mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-    return data, mask
+    return ImageData.create_from_list(
+        [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
+    )
 
 
 def multi_values(
@@ -92,8 +77,12 @@ def multi_values(
     reader: Callable,
     *args: Any,
     threads: int = MAX_THREADS,
+    allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any,
 ) -> Dict:
     """Multi Values."""
     tasks = create_tasks(reader, assets, threads, *args, **kwargs)
-    return {asset: val for val, asset in filter_tasks(tasks)}
+    return {
+        asset: val
+        for val, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)
+    }

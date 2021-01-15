@@ -41,17 +41,17 @@ $ mkdocs gh-deploy
 
 ```bash
 pdocs as_markdown \
-   -o docs/ \
+   --output_dir docs/api/ \
    --exclude_source \
-   -ov \
+   --overwrite \
    rio_tiler.colormap \
    rio_tiler.constants \
    rio_tiler.errors \
    rio_tiler.expression \
+   rio_tiler.models \
    rio_tiler.io.base \
    rio_tiler.io.cogeo \
    rio_tiler.io.stac \
-   rio_tiler.mercator \
    rio_tiler.mosaic.methods.base \
    rio_tiler.mosaic.methods.defaults \
    rio_tiler.mosaic.reader \

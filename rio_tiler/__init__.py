@@ -6,7 +6,6 @@ from . import (  # noqa
     errors,
     expression,
     io,
-    mercator,
     mosaic,
     profiles,
     reader,
@@ -14,4 +13,4 @@ from . import (  # noqa
     utils,
 )
 
-__version__ = "2.0.0-beta.16"
+__version__ = "2.0.0rc4"

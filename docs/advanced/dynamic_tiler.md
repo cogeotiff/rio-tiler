@@ -1,6 +1,6 @@
 
 `rio-tiler` aims to be a lightweight plugin for `rasterio` whose sole goal is to
-read a Mercator Tile from a raster dataset.
+read a [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) from a raster dataset.
 
 Given that `rio-tiler` allows for simple, efficient reading of tiles, you can
 then leverage `rio-tiler` to create a **dynamic tile server** to display raster
@@ -10,7 +10,6 @@ There are couple tile servers built on top of rio-tiler:
 
 - [`titiler`](https://github.com/developmentseed/titiler)
 - [`cogeo-tiler`](https://github.com/developmentseed/cogeo-tiler)
-- [`cogeo-mosaic-tiler`](https://github.com/developmentseed/cogeo-mosaic-tiler)
 - [`rio-viz`](https://github.com/developmentseed/rio-viz)
 
 ## Example Application
@@ -29,7 +28,7 @@ your own API.
 Install with
 
 ```bash
-pip install fastapi uvicorn 'rio-tiler~=2.0b'
+pip install fastapi uvicorn rio-tiler --pre
 ```
 
 ### `app.py`
@@ -40,6 +39,8 @@ pip install fastapi uvicorn 'rio-tiler~=2.0b'
 import os
 from enum import Enum
 from typing import Any, Dict, List, Optional
+from types import DynamicClassAttribute
+
 from urllib.parse import urlencode
 
 import uvicorn
@@ -52,19 +53,30 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from rio_tiler.profiles import img_profiles
-from rio_tiler.utils import render
 from rio_tiler.io import COGReader
 
-# From developmentseed/titiler
-drivers = dict(jpg="JPEG", png="PNG")
-mimetype = dict(png="image/png", jpg="image/jpg",)
+
+drivers = dict(jpg="JPEG", png="PNG", tif="GTiff", webp="WEBP", npy="NPY")
+
 
 class ImageType(str, Enum):
     """Image Type Enums."""
 
     png = "png"
+    npy = "npy"
+    tif = "tif"
     jpg = "jpg"
+    webp = "webp"
 
+    @DynamicClassAttribute
+    def profile(self):
+        """Return rio-tiler image default profile."""
+        return img_profiles.get(self.driver.lower(), {})
+
+    @DynamicClassAttribute
+    def driver(self):
+        """Return rio-tiler image default profile."""
+        return drivers[self._name_]
 
 
 class TileResponse(Response):
@@ -123,15 +135,13 @@ def tile(
 ):
     """Handle tiles requests."""
     with COGReader(url) as cog:
-        tile, mask = cog.tile(x, y, z, tilesize=256)
+        img = cog.tile(x, y, z, tilesize=256)
 
-    format = ImageType.jpg if mask.all() else ImageType.png
+    # automatically return PNG or JPEG
+    format = ImageType.jpg if img.mask.all() else ImageType.png
 
-    driver = drivers[format.value]
-    options = img_profiles.get(driver.lower(), {})
-    img = render(tile, mask, img_format=driver, **options)
-
-    return TileResponse(img, media_type=mimetype[format.value])
+    content = img.render(img_format=format.driver, **format.profile)
+    return TileResponse(content, media_type=mimetype[format.value])
 
 
 @app.get("/tilejson.json", responses={200: {"description": "Return a tilejson"}})

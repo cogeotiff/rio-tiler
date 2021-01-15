@@ -1,10 +1,12 @@
 """tests rio_tiler colormaps"""
 
+from copy import deepcopy
+
 import numpy
 import pytest
 
 from rio_tiler import colormap
-from rio_tiler.colormap import _default_cmaps
+from rio_tiler.colormap import DEFAULTS_CMAPS
 from rio_tiler.errors import (
     ColorMapAlreadyRegistered,
     InvalidColorMapName,
@@ -12,26 +14,41 @@ from rio_tiler.errors import (
 )
 
 
-def test_get_cmaplist():
+def test_get_cmaplist(monkeypatch):
     """Should work as expected return all rio-tiler colormaps."""
-    assert len(_default_cmaps) == 167
+    monkeypatch.delenv("COLORMAP_DIRECTORY", raising=False)
+    assert len(DEFAULTS_CMAPS) == 167
 
 
-def test_cmapObject():
+def test_cmapObject(monkeypatch):
     """Test Colormap object handler."""
+    monkeypatch.delenv("COLORMAP_DIRECTORY", raising=False)
+
     cmap = colormap.cmap
     assert len(cmap.list()) == 167
 
     with pytest.raises(InvalidColorMapName):
         cmap.get("something")
 
-    cmap.register("empty", colormap.EMPTY_COLORMAP)
-    assert len(cmap.list()) == 168
+    # `register()` returns a new ColorMaps Objects without modifying the original
+    cmap.register({"empty": colormap.EMPTY_COLORMAP})
+    assert len(cmap.list()) == 167
+    assert len(DEFAULTS_CMAPS) == 167
+
+    # check new cmap is registered and it didn't affect the original Dict
+    new_cmap = cmap.register({"empty": colormap.EMPTY_COLORMAP})
+    assert len(DEFAULTS_CMAPS) == 167
+    assert len(cmap.list()) == 167
+    assert len(new_cmap.list()) == 168
+
+    # register multiple cmap
+    new_cmap = cmap.register({"empty": colormap.EMPTY_COLORMAP, "empty2": "fake.npy"})
+    assert len(new_cmap.list()) == 169
 
     with pytest.raises(ColorMapAlreadyRegistered):
-        cmap.register("empty", colormap.EMPTY_COLORMAP)
+        new_cmap.register({"empty": colormap.EMPTY_COLORMAP})
 
-    assert cmap.get("empty")
+    assert new_cmap.get("empty")
 
 
 def test_valid_cmaps():
@@ -126,3 +143,19 @@ def test_apply_discrete_cmap():
     mask[2:5, 2:5] = 255
     mask[5:, 5:] = 255
     numpy.testing.assert_array_equal(m, mask)
+
+    cm = {1: [0, 0, 0, 255], 1000: [255, 255, 255, 255]}
+    d, m = colormap.apply_cmap(data, cm)
+    dd, mm = colormap.apply_discrete_cmap(data, cm)
+    numpy.testing.assert_array_equal(dd, d)
+    numpy.testing.assert_array_equal(mm, m)
+
+    cm = deepcopy(colormap.EMPTY_COLORMAP)
+    cm.pop(255)
+    cm[1000] = [255, 255, 255, 255]
+
+    d, m = colormap.apply_cmap(data, cm)
+    dd, mm = colormap.apply_discrete_cmap(data, cm)
+
+    cm = {1: [0, 0, 0, 255], 256: [255, 255, 255, 255]}
+    assert colormap.apply_cmap(data, cm)

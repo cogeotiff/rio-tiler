@@ -1,25 +1,26 @@
 """rio_tiler.io.cogeo: raster processing."""
 
 import warnings
-from concurrent import futures
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
-import mercantile
 import numpy
 import rasterio
+from morecantile import Tile, TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
+from rasterio.features import bounds as featureBounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
+from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import transform_bounds
+from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import constants, reader
 from ..errors import ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
-from ..mercator import get_zooms
-from ..utils import has_alpha_band, has_mask_band, tile_exists
+from ..models import ImageData, ImageStatistics, Info
+from ..utils import create_cutline, has_alpha_band, has_mask_band
 from .base import BaseReader
 
 
@@ -89,6 +90,7 @@ class COGReader(BaseReader):
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
+    tms: TileMatrixSet = attr.ib(default=constants.WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
@@ -121,11 +123,13 @@ class COGReader(BaseReader):
 
         self.dataset = self.dataset or rasterio.open(self.filepath)
 
+        self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
+
         self.bounds = transform_bounds(
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
         if self.minzoom is None or self.maxzoom is None:
-            self._get_zooms()
+            self._set_zooms()
 
         if self.colormap is None:
             self._get_colormap()
@@ -139,11 +143,35 @@ class COGReader(BaseReader):
         """Support using with Context Managers."""
         self.close()
 
-    def _get_zooms(self):
+    def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
         """Calculate raster min/max zoom level."""
-        minzoom, maxzoom = get_zooms(self.dataset)
-        self.minzoom = self.minzoom or minzoom
-        self.maxzoom = self.maxzoom or maxzoom
+        if self.dataset.crs != self.tms.crs:
+            dst_affine, w, h = calculate_default_transform(
+                self.dataset.crs,
+                self.tms.crs,
+                self.dataset.width,
+                self.dataset.height,
+                *self.dataset.bounds,
+            )
+        else:
+            dst_affine = list(self.dataset.transform)
+            w = self.dataset.width
+            h = self.dataset.height
+
+        resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+        maxzoom = self.tms.zoom_for_res(resolution)
+
+        overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
+        ovr_resolution = resolution * (2 ** overview_level)
+        minzoom = self.tms.zoom_for_res(ovr_resolution)
+
+        return minzoom, maxzoom
+
+    def _set_zooms(self):
+        """Calculate raster min/max zoom level."""
+        minzoom, maxzoom = self.get_zooms()
+        self.minzoom = self.minzoom if self.minzoom is not None else minzoom
+        self.maxzoom = self.maxzoom if self.maxzoom is not None else maxzoom
         return
 
     def _get_colormap(self):
@@ -154,26 +182,23 @@ class COGReader(BaseReader):
             self.colormap = {}
             pass
 
-    def info(self) -> Dict:
+    def info(self) -> Info:
         """Return COG info."""
 
         def _get_descr(ix):
             """Return band description."""
-            name = self.dataset.descriptions[ix - 1]
-            if not name:
-                name = "band{}".format(ix)
-            return name
+            return self.dataset.descriptions[ix - 1] or ""
 
         indexes = self.dataset.indexes
-        band_descr = [(ix, _get_descr(ix)) for ix in indexes]
-        band_meta = [(ix, self.dataset.tags(ix)) for ix in indexes]
+        band_descr = [(f"{ix}", _get_descr(ix)) for ix in indexes]
+        band_meta = [(f"{ix}", self.dataset.tags(ix)) for ix in indexes]
         colorinterp = [self.dataset.colorinterp[ix - 1].name for ix in indexes]
 
         if has_alpha_band(self.dataset):
             nodata_type = "Alpha"
         elif has_mask_band(self.dataset):
             nodata_type = "Mask"
-        elif self.dataset.nodata is not None:
+        elif self.nodata is not None:
             nodata_type = "Nodata"
         else:
             nodata_type = "None"
@@ -199,7 +224,7 @@ class COGReader(BaseReader):
             "nodata_type": nodata_type,
         }
         meta.update(**other_meta)
-        return meta
+        return Info(**meta)
 
     def stats(
         self,
@@ -207,7 +232,7 @@ class COGReader(BaseReader):
         pmax: float = 98.0,
         hist_options: Optional[Dict] = None,
         **kwargs: Any,
-    ) -> Dict:
+    ) -> Dict[str, ImageStatistics]:
         """
         Return bands statistics from a COG.
 
@@ -238,15 +263,10 @@ class COGReader(BaseReader):
                 k for k, v in self.colormap.items() if v != (0, 0, 0, 255)
             ]
 
-        return reader.stats(
+        stats = reader.stats(
             self.dataset, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs,
         )
-
-    def metadata(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict:
-        """Return COG info and statistics."""
-        info = self.info()
-        info["statistics"] = self.stats(pmin, pmax, **kwargs)
-        return info
+        return {b: ImageStatistics(**s) for b, s in stats.items()}
 
     def tile(
         self,
@@ -257,7 +277,7 @@ class COGReader(BaseReader):
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = "",
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """
         Read a Mercator Map tile from a COG.
 
@@ -286,6 +306,11 @@ class COGReader(BaseReader):
         """
         kwargs = {**self._kwargs, **kwargs}
 
+        if not self.tile_exists(tile_z, tile_x, tile_y):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
+            )
+
         if isinstance(indexes, int):
             indexes = (indexes,)
 
@@ -298,20 +323,14 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
-        if not tile_exists(self.bounds, tile_z, tile_x, tile_y):
-            raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
-            )
-
-        tile_bounds = mercantile.xy_bounds(tile)
+        tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
         tile, mask = reader.part(
             self.dataset,
             tile_bounds,
             tilesize,
             tilesize,
             indexes=indexes,
-            dst_crs=constants.WEB_MERCATOR_CRS,
+            dst_crs=self.tms.crs,
             **kwargs,
         )
         if expression:
@@ -319,7 +338,9 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             tile = apply_expression(blocks, bands, tile)
 
-        return tile, mask
+        return ImageData(
+            tile, mask, bounds=tile_bounds, crs=self.tms.crs, assets=[self.filepath]
+        )
 
     def part(
         self,
@@ -330,7 +351,7 @@ class COGReader(BaseReader):
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = "",
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """
         Read part of a COG.
 
@@ -389,14 +410,21 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
-        return data, mask
+        if dst_crs == bounds_crs:
+            bounds = bbox
+        else:
+            bounds = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        return ImageData(
+            data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
+        )
 
     def preview(
         self,
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = "",
         **kwargs: Any,
-    ) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    ) -> ImageData:
         """
         Return a preview of a COG.
 
@@ -436,7 +464,13 @@ class COGReader(BaseReader):
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
-        return data, mask
+        return ImageData(
+            data,
+            mask,
+            bounds=self.dataset.bounds,
+            crs=self.dataset.crs,
+            assets=[self.filepath],
+        )
 
     def point(
         self,
@@ -493,97 +527,90 @@ class COGReader(BaseReader):
 
         return point
 
+    def feature(
+        self,
+        shape: Dict,
+        dst_crs: Optional[CRS] = None,
+        shape_crs: CRS = constants.WGS84_CRS,
+        max_size: int = 1024,
+        indexes: Optional[Union[int, Sequence]] = None,
+        expression: Optional[str] = "",
+        **kwargs: Any,
+    ) -> ImageData:
+        """
+        Read a COG for a geojson feature.
 
-def multi_tile(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple tiles."""
+        Attributes
+        ----------
+        shape: dict
+            Valid GeoJSON feature.
+        dst_crs: CRS or str, optional
+            Target coordinate reference system, default is the bbox CRS.
+        shape_crs: CRS or str, optional
+            shape coordinate reference system, default is "epsg:4326"
+        max_size: int, optional
+            Limit output size array, default is 1024.
+        indexes: int or sequence of int
+            Band indexes (e.g. 1 or (1, 2, 3))
+        expression: str
+            rio-tiler expression (e.g. b1/b2+b3)
+        kwargs: dict, optional
+            These will be passed to the 'rio_tiler.reader.part' function.
 
-    def _worker(asset: str):
-        with COGReader(asset) as cog:
-            return cog.tile(*args, **kwargs)
+        Returns
+        -------
+        data: numpy ndarray
+        mask: numpy array
 
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(_worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
+        """
+        kwargs = {**self._kwargs, **kwargs}
 
+        if isinstance(indexes, int):
+            indexes = (indexes,)
 
-def multi_part(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple COGReader.part."""
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
 
-    def _worker(asset: str):
-        with COGReader(asset) as cog:
-            return cog.part(*args, **kwargs)
+        if expression:
+            indexes = parse_expression(expression)
 
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(_worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
+        if not dst_crs:
+            dst_crs = shape_crs
 
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
 
-def multi_preview(
-    assets: Sequence[str], *args: Any, **kwargs: Any
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Assemble multiple COGReader.preview."""
+        cutline = create_cutline(self.dataset, shape, geometry_crs=shape_crs)
+        vrt_options = kwargs.pop("vrt_options", {})
+        vrt_options.update({"cutline": cutline})
 
-    def _worker(asset: str):
-        with COGReader(asset) as cog:
-            return cog.preview(*args, **kwargs)
+        data, mask = reader.part(
+            self.dataset,
+            bbox,
+            max_size=max_size,
+            bounds_crs=shape_crs,
+            dst_crs=dst_crs,
+            indexes=indexes,
+            vrt_options=vrt_options,
+            **kwargs,
+        )
 
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        data, masks = zip(*list(executor.map(_worker, assets)))
-        data = numpy.concatenate(data)
-        mask = numpy.all(masks, axis=0).astype(numpy.uint8) * 255
-        return data, mask
+        if expression:
+            blocks = expression.lower().split(",")
+            bands = [f"b{bidx}" for bidx in indexes]
+            data = apply_expression(blocks, bands, data)
 
+        if dst_crs == shape_crs:
+            bounds = bbox
+        else:
+            bounds = transform_bounds(shape_crs, dst_crs, *bbox, densify_pts=21)
 
-def multi_point(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
-    """Assemble multiple COGReader.point."""
-
-    def _worker(asset: str) -> List:
-        with COGReader(asset) as cog:
-            return cog.point(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
-
-
-def multi_stats(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
-    """Assemble multiple COGReader.stats."""
-
-    def _worker(asset: str) -> Dict:
-        with COGReader(asset) as cog:
-            return cog.stats(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
-
-
-def multi_info(assets: Sequence[str]) -> List:
-    """Assemble multiple COGReader.info."""
-
-    def _worker(asset: str) -> Dict:
-        with COGReader(asset) as cog:
-            return cog.info()
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
-
-
-def multi_metadata(assets: Sequence[str], *args: Any, **kwargs: Any) -> List:
-    """Assemble multiple COGReader.metadata."""
-
-    def _worker(asset: str) -> Dict:
-        with COGReader(asset) as cog:
-            return cog.metadata(*args, **kwargs)
-
-    with futures.ThreadPoolExecutor(max_workers=constants.MAX_THREADS) as executor:
-        return list(executor.map(_worker, assets))
+        return ImageData(
+            data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
+        )
 
 
 @attr.s
@@ -616,12 +643,14 @@ class GCPCOGReader(COGReader):
             src_transform=transform.from_gcps(self.src_dataset.gcps[0]),
         )
 
+        self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
+
         self.bounds = transform_bounds(
             self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
 
         if self.minzoom is None or self.maxzoom is None:
-            self._get_zooms()
+            self._set_zooms()
 
         if self.colormap is None:
             self._get_colormap()

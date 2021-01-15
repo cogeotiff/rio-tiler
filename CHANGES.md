@@ -1,3 +1,165 @@
+
+## 2.0.0 (TBD)
+
+* add MultiPolygon support in `rio_tiler.utils.create_cutline` (https://github.com/cogeotiff/rio-tiler/issues/323)
+* support discrete colormap by default in `apply_cmap` (https://github.com/cogeotiff/rio-tiler/issues/321)
+* delete deprecated `rio_tiler.mercator` submodule
+
+## 2.0.0rc4 (2020-12-18)
+
+* add `NPZ` output format (https://github.com/cogeotiff/rio-tiler/issues/308)
+* add [pystac](https://pystac.readthedocs.io/en/latest/) for STAC item reader (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/issues/212)
+* delete deprecated function: `rio_tiler.reader.tile`, `rio_tiler.utils.tile_exits` and `rio_tiler.utils.geotiff_options`
+* deprecated `rio_tiler.mercator` submodule (https://github.com/cogeotiff/rio-tiler/issues/315)
+* update morecantile version to 2.1, which has better `tms.zoom_for_res` definition.
+
+## 2.0.0rc3 (2020-11-24)
+
+* add `feature` method to reader classes (https://github.com/cogeotiff/rio-tiler/issues/306)
+
+## 2.0.0rc2 (2020-11-17)
+
+* add `data` validation in `rio_tiler.models.ImageData` model. Data MUST be a 3 dimensions array in form of (count, height, width).
+* `mask` is now optional for `rio_tiler.models.ImageData` model, but will be initialized to a default full valid (`255`) array.
+
+```python
+import numpy
+from rio_tiler.models import ImageData
+
+data = numpy.random.rand(3, 10, 10)
+
+img = ImageData(data)
+assert img.mask.all()
+```
+
+* add `metadata` property to `rio_tiler.models.ImageData` model
+
+```python
+img.metadata
+>>> {}
+```
+
+**breaking change**
+
+* `rio_tiler.mosaic.reader.mosaic_reader` now raises `EmptyMosaicError` instead of returning an empty `ImageData`
+
+## 2.0.0rc1.post1 (2020-11-12)
+
+* Remove `Uint8` data casting before applying `color_formula` in ImageData.render (https://github.com/cogeotiff/rio-tiler/issues/302)
+
+## 2.0.0rc1 (2020-11-09)
+
+* added `ImageData` output class for all `rio_tiler.io` classes returning numpy array-like types (`tile, mask = method()`)
+
+```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    r = cog.preview()
+    assert isinstance(r, ImageData)
+
+    data, mask = r
+    assert data.shape == (3, 892, 1024)
+```
+**Note**: the class keeps the compatibility with previous notation: `tile, mask = ImageData`
+
+* add pydantic models for IO outputs (Metadata, Info, ...)
+
+* change output form for `band_metadata`, `band_descriptions` and do not add band description when not found.
+```python
+# Before
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    i = cog.info()
+    print(i["band_metadata"])
+    print(i["band_descriptions"])
+
+[(1, {}), (2, {}), (2, {})]
+[(1, 'band1'), (2, 'band2'), (2, 'band3')]
+
+# Now
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    i = cog.info()
+    print(i.band_metadata)
+    print(i.band_descriptions)
+
+[('1', {}), ('2', {}), ('3', {})]
+[('1', ''), ('2', ''), ('3', '')]
+```
+
+* change output form for `stats`
+```python
+# Before
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats())
+{
+    1: {...},
+    2: {...},
+    3: {...}
+}
+
+# Now
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats())
+{
+    "1": {...},
+    "2": {...},
+    "3": {...}
+}
+```
+
+* updated `rio_tiler.utils._stats` function to replace `pc` by `percentiles`
+
+```python
+with COGReader("/Users/vincentsarago/S-2_20200422_COG.tif") as cog:
+    print(cog.stats()["1"].json())
+{"percentiles": [19.0, 168.0], "min": 0.0, "max": 255.0, ...}
+```
+
+* make `rio_tiler.colormap.ColorMap` object immutable. Registering a new colormap will new returns a now instance of ColorMap(https://github.com/cogeotiff/rio-tiler/issues/289).
+* changed the `rio_tiler.colormap.ColorMap.register()` method to take a dictionary as input (instead of name + dict).
+
+```python
+from rio_tiler.colormap import cmap # default cmap
+
+# previous
+cmap.register("acmap", {0: [0, 0, 0, 0], ...})
+
+# Now
+cmap = cmap.register({"acmap": {0: [0, 0, 0, 0], ...}})
+```
+
+* added the possibility to automatically register colormaps stored as `.npy` file in a directory, if `COLORMAP_DIRECTORY` environment variable is set with the name of the directory.
+
+* Update to morecantile 2.0.0
+
+## 2.0.0b19 (2020-10-26)
+
+* surface `allowed_exceptions` options in `rio_tiler.mosaic.reader.mosaic_reader` (https://github.com/cogeotiff/rio-tiler/issues/293)
+* add SpatialInfoMixin base class to reduce code duplication (co-author with @geospatial-jeff, https://github.com/cogeotiff/rio-tiler/pull/295)
+* add `AsyncBaseReader` to support async readers (author @geospatial-jeff, https://github.com/cogeotiff/rio-tiler/pull/265)
+
+## 2.0.0b18 (2020-10-22)
+
+* surface dataset.nodata in COGReader.nodata property (https://github.com/cogeotiff/rio-tiler/pull/292)
+* fix non-threaded tasks scheduler/filter (https://github.com/cogeotiff/rio-tiler/pull/291)
+
+## 2.0.0b17 (2020-10-13)
+
+* switch to morecantile for TMS definition (ref: https://github.com/cogeotiff/rio-tiler/issues/283)
+* add tms options in Readers (breaking change if you create custom Reader from BaseReader)
+* add tile_bounds vs bounds check in tile methods for MultiBands and MultiBase classes
+* add tile_exists method in BaseReader (take tms in account)
+* adapt zooms calculation in COGReader
+* add `LastBandHigh` and `LastBandLow` pixel selection (ref: https://github.com/cogeotiff/rio-tiler/pull/270)
+
+Deprecated function
+
+- rio_tiler.reader.tile
+- rio_tiler.utils.geotiff_options
+- rio_tiler.utils.tile_exists
+- rio_tiler.io.multi_*
+
 ## 2.0.0b16 (2020-10-07)
 
 * remove `pkg_resources` (https://github.com/pypa/setuptools/issues/510)

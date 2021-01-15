@@ -1,10 +1,9 @@
-"""rio-tiler.reader: image utility functions."""
+"""rio-tiler.reader: low level reader."""
 
 import math
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
-import mercantile
 import numpy
 from affine import Affine
 from rasterio import windows
@@ -19,13 +18,7 @@ from . import constants
 from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
-from .utils import (
-    get_vrt_transform,
-    has_alpha_band,
-    has_mask_band,
-    non_alpha_indexes,
-    tile_exists,
-)
+from .utils import get_vrt_transform, has_alpha_band, has_mask_band, non_alpha_indexes
 
 
 def _read(
@@ -415,7 +408,7 @@ def stats(
     percentiles: Tuple[float, float] = (2.0, 98.0),
     hist_options: Optional[Dict] = None,
     **kwargs: Any,
-) -> Dict:
+) -> Dict[str, Any]:
     """
     Retrieve statistics from an image.
 
@@ -471,7 +464,7 @@ def stats(
 
     hist_options = hist_options or {}
     return {
-        indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
+        f"{indexes[b]}": raster_stats(data[b], percentiles=percentiles, **hist_options)
         for b in range(data.shape[0])
     }
 
@@ -548,19 +541,16 @@ def metadata(
 
     hist_options = hist_options or {}
     statistics = {
-        indexes[b]: raster_stats(data[b], percentiles=percentiles, **hist_options)
+        f"{indexes[b]}": raster_stats(data[b], percentiles=percentiles, **hist_options)
         for b in range(data.shape[0])
     }
 
     def _get_descr(ix):
         """Return band description."""
-        name = src_dst.descriptions[ix - 1]
-        if not name:
-            name = "band{}".format(ix)
-        return name
+        return src_dst.descriptions[ix - 1] or ""
 
-    band_descriptions = [(ix, _get_descr(ix)) for ix in indexes]
-    tags = [(ix, src_dst.tags(ix)) for ix in indexes]
+    band_descriptions = [(f"{ix}", _get_descr(ix)) for ix in indexes]
+    tags = [(f"{ix}", src_dst.tags(ix)) for ix in indexes]
 
     other_meta = dict()
     if src_dst.scales[0] and src_dst.offsets[0]:
@@ -591,53 +581,4 @@ def metadata(
         colorinterp=[src_dst.colorinterp[ix - 1].name for ix in indexes],
         nodata_type=nodata_type,
         **other_meta,
-    )
-
-
-def tile(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    x: int,
-    y: int,
-    z: int,
-    tilesize: int = 256,
-    **kwargs,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Read mercator tile from an image.
-
-    Attributes
-    ----------
-        src_dst : rasterio.io.DatasetReader
-            rasterio.io.DatasetReader object
-        x : int
-            Mercator tile X index.
-        y : int
-            Mercator tile Y index.
-        z : int
-            Mercator tile ZOOM level.
-        tilesize : int, optional
-            Output tile size. Default is 256.
-        kwargs : Any, optional
-            Additional options to forward to part()
-
-    Returns
-    -------
-        data : numpy ndarray
-        mask: numpy array
-
-    """
-    bounds = transform_bounds(
-        src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
-    )
-    if not tile_exists(bounds, z, x, y):
-        raise TileOutsideBounds(f"Tile {z}/{x}/{y} is outside image bounds")
-
-    tile_bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
-    return part(
-        src_dst,
-        tile_bounds,
-        tilesize,
-        tilesize,
-        dst_crs=constants.WEB_MERCATOR_CRS,
-        **kwargs,
     )

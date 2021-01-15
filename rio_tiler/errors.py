@@ -25,10 +25,6 @@ class InvalidColorMapName(Exception):
     """Invalid colormap name."""
 
 
-class DeprecationWarning(UserWarning):
-    """Rio-tiler module deprecations warning."""
-
-
 class AlphaBandWarning(UserWarning):
     """Automaticaly removed Alpha band from output array."""
 
@@ -59,3 +55,7 @@ class InvalidMosaicMethod(RioTilerError):
 
 class ColorMapAlreadyRegistered(Exception):
     """ColorMap is already registered."""
+
+
+class EmptyMosaicError(RioTilerError):
+    """Mosaic method returned empty array."""

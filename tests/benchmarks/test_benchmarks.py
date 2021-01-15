@@ -2,11 +2,10 @@
 
 import os
 
-import mercantile
 import pytest
 import rasterio
 
-from rio_tiler import constants, reader
+from rio_tiler.io import COGReader
 
 from . import benchmark_dataset, benchmark_tiles
 
@@ -15,18 +14,10 @@ cog_path = os.path.join(os.path.dirname(__file__), "data")
 
 def read_tile(src_path, tile):
     """Benchmark rio-tiler.utils._tile_read."""
-    tile_bounds = mercantile.xy_bounds(tile)
     # We make sure to not store things in cache.
     with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
-        with rasterio.open(src_path) as src_dst:
-            return reader.part(
-                src_dst,
-                tile_bounds,
-                256,
-                256,
-                resampling_method="nearest",
-                dst_crs=constants.WEB_MERCATOR_CRS,
-            )
+        with COGReader(src_path, minzoom=0, maxzoom=24) as cog:
+            return cog.tile(*tile)
 
 
 @pytest.mark.parametrize("tile_name", ["full", "boundless"])

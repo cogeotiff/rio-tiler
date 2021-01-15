@@ -17,9 +17,10 @@ from rio_tiler.io import STACReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
+STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 
 with open(STAC_PATH) as f:
-    stac_item = json.loads(f.read())
+    item = json.loads(f.read())
 
 
 def mock_rasterio_open(asset):
@@ -35,7 +36,7 @@ def test_fetch_stac(requests, s3_get):
     # Local path
     with STACReader(STAC_PATH) as stac:
         assert stac.minzoom == 0
-        assert stac.maxzoom == 30
+        assert stac.maxzoom == 24
         assert stac.bounds
         assert stac.center
         assert stac.spatial_info
@@ -45,9 +46,9 @@ def test_fetch_stac(requests, s3_get):
     s3_get.assert_not_called()
 
     # Load from dict
-    with STACReader(None, item=stac_item) as stac:
+    with STACReader(None, item=item) as stac:
         assert stac.minzoom == 0
-        assert stac.maxzoom == 30
+        assert stac.maxzoom == 24
         assert not stac.filepath
         assert stac.assets == ["red", "green", "blue"]
     requests.assert_not_called()
@@ -263,10 +264,11 @@ def test_stats_valid(rio):
 
         stats = stac.stats(assets="green")
         assert stats["green"]
+        assert stats["green"]["1"]["percentiles"]
+        assert stats["green"]["1"].percentiles
 
         stats = stac.stats(assets=("green", "red"), hist_options={"bins": 20})
-        assert stats["green"]
-        assert len(stats["green"][1]["histogram"][0]) == 20
+        assert len(stats["green"]["1"]["histogram"][0]) == 20
         assert stats["red"]
 
 
@@ -312,3 +314,75 @@ def test_parse_expression():
             "green",
             "red",
         ]
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_feature_valid(rio):
+    """Should raise or return data."""
+    rio.open = mock_rasterio_open
+
+    feat = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-80.013427734375, 33.03169299978312],
+                    [-80.3045654296875, 32.588477769459146],
+                    [-80.05462646484375, 32.42865847084369],
+                    [-79.45037841796875, 32.6093028087336],
+                    [-79.47235107421875, 33.43602551072033],
+                    [-79.89532470703125, 33.47956309444182],
+                    [-80.1068115234375, 33.37870592138779],
+                    [-80.30181884765625, 33.27084277265288],
+                    [-80.0628662109375, 33.146750228776455],
+                    [-80.013427734375, 33.03169299978312],
+                ]
+            ],
+        },
+    }
+
+    with STACReader(STAC_PATH) as stac:
+        with pytest.raises(InvalidAssetName):
+            stac.feature(feat, assets="vert")
+
+        # missing asset/expression
+        with pytest.raises(MissingAssets):
+            stac.feature(feat)
+
+        data, mask = stac.feature(feat, assets="green")
+        assert data.shape == (1, 119, 97)
+        assert mask.shape == (119, 97)
+
+        data, mask = stac.feature(feat, assets=("green",))
+        assert data.shape == (1, 119, 97)
+        assert mask.shape == (119, 97)
+
+        data, mask = stac.feature(feat, expression="green/red")
+        assert data.shape == (1, 119, 97)
+        assert mask.shape == (119, 97)
+
+        data, mask = stac.feature(feat, assets="green", max_size=30)
+        assert data.shape == (1, 30, 25)
+        assert mask.shape == (30, 25)
+
+        with pytest.warns(ExpressionMixingWarning):
+            data, _ = stac.feature(
+                feat, assets=("green", "red"), expression="green/red"
+            )
+            assert data.shape == (1, 119, 97)
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_relative_assets(rio):
+    """Should return absolute href for assets"""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_REL_PATH) as stac:
+
+        for (key, asset) in stac.item.assets.items():
+            assert asset.get_absolute_href().startswith(PREFIX)
+        assert len(stac.assets) == 5
+        for asset in stac.assets:
+            assert stac._get_asset_url(asset).startswith(PREFIX)

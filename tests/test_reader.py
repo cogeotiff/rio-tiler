@@ -2,12 +2,12 @@
 
 import os
 
-import mercantile
 import numpy
 import pytest
 import rasterio
 
 from rio_tiler import constants, reader
+from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
@@ -28,12 +28,9 @@ S3_EXTMASK_PATH = os.path.join(S3_LOCAL, S3_KEY_EXTMASK)
 KEY_PIX4D = "pix4d/pix4d_alpha_nodata.tif"
 PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 
-COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 COG = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
-COG_DLINE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_dateline.tif")
-COG_EARTH = os.path.join(os.path.dirname(__file__), "fixtures", "cog_fullearth.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -171,24 +168,6 @@ def test_resampling_with_diff_padding_returns_different_results():
 #     assert np.array_equal(arr[0][5:-5][5:-5], arr2[0][5:-5][5:-5])
 
 
-def test_that_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
-    """Ignore Padding when COG is aligned."""
-    with rasterio.open(COG_WEB_TILED) as src_dst:
-        arr, _ = reader.tile(
-            src_dst, 147, 182, 9, tilesize=256, padding=0, resampling_method="bilinear"
-        )
-        arr2, _ = reader.tile(
-            src_dst,
-            147,
-            182,
-            9,
-            tilesize=256,
-            padding=100,
-            resampling_method="bilinear",
-        )
-    assert numpy.array_equal(arr, arr2)
-
-
 def test_tile_read_invalidResampling():
     """Should raise an error on invalid resampling method name."""
     bounds = [
@@ -242,93 +221,6 @@ def test_tile_read_bgr():
         arr, mask = reader.part(src_dst, bounds, 16, 16, indexes=(3, 2, 1))
     assert arr.shape == (3, 16, 16)
     assert mask.shape == (16, 16)
-
-
-def test_tile_read_alpha():
-    """Read masked area."""
-    # non-boundless tile covering the alpha masked part
-    with rasterio.open(S3_ALPHA_PATH) as src_dst:
-        arr, mask = reader.tile(
-            src_dst, 876432, 1603670, 22, tilesize=256, indexes=(1, 2, 3)
-        )
-    assert arr.shape == (3, 256, 256)
-    assert not mask.all()
-
-    with pytest.warns(AlphaBandWarning):
-        with rasterio.open(S3_ALPHA_PATH) as src_dst:
-            nb = src_dst.count
-            arr, mask = reader.tile(src_dst, 876432, 1603670, 22, tilesize=256)
-    assert not nb == arr.shape[0]
-    assert arr.shape == (3, 256, 256)
-    assert not mask.all()
-
-
-def test_tile_read_internal_nodata():
-    """Read masked area."""
-    # non-boundless tile covering the nodata part
-    with rasterio.open(S3_NODATA_PATH) as src_dst:
-        arr, mask = reader.tile(
-            src_dst, 876431, 1603670, 22, tilesize=256, indexes=(1, 2, 3)
-        )
-    assert arr.shape == (3, 256, 256)
-    assert not mask.all()
-
-
-def test_tile_read_wrong_nodata():
-    """Return empty mask on wrong nodata."""
-    # non-boundless tile covering the nodata part
-    with rasterio.open(S3_NODATA_PATH) as src_dst:
-        arr, mask = reader.tile(
-            src_dst, 438217, 801835, 21, tilesize=256, indexes=(1, 2, 3), nodata=1000
-        )
-        assert arr.shape == (3, 256, 256)
-        assert mask.all()
-
-        # Mask boundless values
-        arr, mask = reader.tile(
-            src_dst, 109554, 200458, 19, tilesize=256, indexes=(1, 2, 3), nodata=1000
-        )
-        assert arr.shape == (3, 256, 256)
-        assert not mask.all()
-
-
-def test_tile_read_mask():
-    """Read masked area."""
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
-        # non-boundless tile covering the masked part
-        with rasterio.open(S3_MASK_PATH) as src_dst:
-            arr, mask = reader.tile(src_dst, 876431, 1603669, 22, tilesize=16)
-        assert arr.shape == (3, 16, 16)
-        assert mask.shape == (16, 16)
-        assert not mask.all()
-
-        # boundless tile covering the masked part
-        with rasterio.open(S3_MASK_PATH) as src_dst:
-            arr, mask = reader.tile(src_dst, 876431, 1603668, 22, tilesize=256)
-        assert arr.shape == (3, 256, 256)
-        assert not mask.all()
-
-
-def test_tile_read_extmask():
-    """Read masked area."""
-    # non-boundless tile covering the masked part
-    mercator_tile = mercantile.Tile(x=876431, y=1603669, z=22)
-    bounds = mercantile.xy_bounds(mercator_tile)
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="TRUE"):
-        with rasterio.open(S3_EXTMASK_PATH) as src_dst:
-            arr, mask = reader.part(src_dst, bounds, 256, 256)
-        assert arr.shape == (3, 256, 256)
-        assert mask.shape == (256, 256)
-        assert not mask.all()
-
-    # boundless tile covering the masked part
-    mercator_tile = mercantile.Tile(x=876431, y=1603668, z=22)
-    bounds = mercantile.xy_bounds(mercator_tile)
-    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
-        with rasterio.open(S3_MASK_PATH) as src_dst:
-            arr, mask = reader.part(src_dst, bounds, 256, 256)
-        assert arr.shape == (3, 256, 256)
-        assert not mask.all()
 
 
 def test_tile_read_nodata():
@@ -475,32 +367,6 @@ def test_tile_read_vrt_option():
     assert mask.shape == (16, 16)
 
 
-def test_read_unscale():
-    """Should or Shouldn't apply scale and offset to a data."""
-    with rasterio.open(COG_SCALE) as src_dst:
-        arr, mask = reader.tile(src_dst, 218, 99, 8, tilesize=128)
-        arrS, maskS = reader.tile(src_dst, 218, 99, 8, tilesize=128, unscale=True)
-
-        assert arr.dtype == "int16"
-        assert arrS.dtype == "float32"
-        assert not numpy.array_equal(arr, arrS)
-        numpy.testing.assert_array_equal(mask, maskS)
-
-        meta = reader.metadata(src_dst)
-        assert isinstance(meta["statistics"][1]["min"], int)
-
-        meta = reader.metadata(src_dst, unscale=True)
-        assert isinstance(meta["statistics"][1]["min"], float)
-
-        p = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
-        assert p == [8917]
-
-        p = reader.point(
-            src_dst, [310000, 4100000], coord_crs=src_dst.crs, unscale=True
-        )
-        assert round(p[0], 3) == 1000.892
-
-
 def test_point():
     """Read point values"""
     with rasterio.open(COG_SCALE) as src_dst:
@@ -552,14 +418,14 @@ def test_metadata():
         assert meta["colorinterp"] == ["gray"]
         assert meta["scale"] == 0.0001
         assert meta["offset"] == 1000.0
-        assert meta["band_descriptions"] == [(1, "Green")]
+        assert meta["band_descriptions"] == [("1", "Green")]
         assert not meta.get("colormap")
         assert meta["nodata_type"] == "Nodata"
 
         meta = reader.metadata(src_dst, indexes=1)
         assert meta["colorinterp"] == ["gray"]
 
-        bounds = mercantile.bounds(mercantile.Tile(x=218, y=99, z=8))
+        bounds = WEB_MERCATOR_TMS.bounds(218, 99, 8)
         meta = reader.metadata(src_dst, bounds)
         assert meta["colorinterp"] == ["gray"]
         assert meta["bounds"] == bounds
@@ -579,23 +445,3 @@ def test_metadata():
     with rasterio.open(S3_MASK_PATH) as src_dst:
         meta = reader.metadata(src_dst)
         assert meta["nodata_type"] == "Mask"
-
-
-def test_dateline():
-    """Should return correct metadata."""
-    with rasterio.open(COG_DLINE) as src_dst:
-        tile, _ = reader.tile(src_dst, 1, 42, 7, tilesize=64)
-        assert tile.shape == (1, 64, 64)
-
-        tile, _ = reader.tile(src_dst, 127, 42, 7, tilesize=64)
-        assert tile.shape == (1, 64, 64)
-
-
-def test_fullEarth():
-    """Should read tile for COG spanning the whole earth."""
-    with rasterio.open(COG_EARTH) as src_dst:
-        tile, _ = reader.tile(src_dst, 1, 42, 7, tilesize=64)
-        assert tile.shape == (1, 64, 64)
-
-        tile, _ = reader.tile(src_dst, 127, 42, 7, tilesize=64)
-        assert tile.shape == (1, 64, 64)

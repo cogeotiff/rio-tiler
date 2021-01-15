@@ -1,16 +1,25 @@
-"""rio-tiler colormap functions."""
+"""rio-tiler colormap functions and classes."""
 
+import os
 import pathlib
+from copy import deepcopy
 from typing import Dict, List, Sequence, Tuple, Union
 
+import attr
 import numpy
 
 from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidFormat
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
+DEFAULTS_CMAPS_FILES = list(
+    pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy")
+)
+USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
+if USER_CMAPS_DIR:
+    DEFAULTS_CMAPS_FILES.extend(list(pathlib.Path(USER_CMAPS_DIR).glob("*.npy")))
 
-_default_cmaps = list(pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy"))
+DEFAULTS_CMAPS = {f.stem: str(f) for f in DEFAULTS_CMAPS_FILES}
 
 
 def _update_alpha(cmap: Dict, idx: Sequence[int], alpha: int = 0) -> None:
@@ -40,18 +49,13 @@ def _update_cmap(cmap: Dict, values: Dict) -> None:
 
 # From https://github.com/mojodna/marblecutter/blob/5b9040ba6c83562a465eabdbb6e8959e6a8bf041/marblecutter/utils.py#L35
 def make_lut(colormap: Dict) -> numpy.ndarray:
-    """
-    Create a lookup table numpy.ndarray from a GDAL RGBA Color Table dictionary.
+    """Create a lookup table numpy.ndarray from a GDAL RGBA Color Table dictionary.
 
-    Attributes
-    ----------
-    colormap : dict
-        GDAL RGBA Color Table dictionary.
+    Args:
+        colormap (dict): GDAL RGBA Color Table dictionary.
 
-    Returns
-    -------
-    lut : numpy.ndarray
-        colormap lookup table
+    Returns:
+        numpy.ndarray: colormap lookup table.
 
     """
     lut = numpy.zeros(shape=(256, 4), dtype=numpy.uint8)
@@ -64,26 +68,28 @@ def make_lut(colormap: Dict) -> numpy.ndarray:
 def apply_cmap(
     data: numpy.ndarray, colormap: Dict
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Apply colormap on tile data.
+    """Apply colormap on data.
 
-    Attributes
-    ----------
-    data : numpy ndarray
-        1D image array to translate to RGB.
-    colormap : dict
-        GDAL RGBA Color Table dictionary.
+    Args:
+        data (numpy ndarray): 1D image array to translate to RGB.
+        colormap (dict): GDAL RGBA Color Table dictionary.
 
-    Returns
-    -------
-    data : numpy.ndarray
-        RGB data.
-    mask: numpy.ndarray
-        Alpha band.
+    Returns:
+        tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).
+
+    Raises:
+        InvalidFormat: If data is not a 1 band dataset (1, col, row).
 
     """
     if data.shape[0] > 1:
         raise InvalidFormat("Source data must be 1 band")
+
+    # if colormap has more than 256 values OR its `max` key >= 256 we can't use
+    # rio_tiler.colormap.make_lut, because we don't want to create a `lookup table`
+    # with more than 256 entries (256 x 4) array. In this case we use `apply_discrete_cmap`
+    # which can work with arbitrary colormap dict.
+    if len(colormap) > 256 or max(colormap) >= 256:
+        return apply_discrete_cmap(data, colormap)
 
     lookup_table = make_lut(colormap)
     data = lookup_table[data[0], :]
@@ -96,27 +102,25 @@ def apply_cmap(
 def apply_discrete_cmap(
     data: numpy.ndarray, colormap: Dict
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Apply discrete colormap.
+    """Apply discrete colormap.
 
-    Note: This method is not used by default and left
-          to users to use within custom render methods.
+    Args:
+        data (numpy ndarray): 1D image array to translate to RGB.
+        color_map (dict): Discrete ColorMap dictionary.
 
-    Attributes
-    ----------
-    data : numpy ndarray
-        1D image array to translate to RGB.
-    color_map: dict
-        Discrete ColorMap dictionary
-        e.g:
-        {
-            1: [255, 255, 255],
-            2: [255, 0, 0]
-        }
+    Returns:
+        tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).
 
-    Returns
-    -------
-    arr: numpy.ndarray
+    Examples:
+        >>> data = numpy.random.randint(0, 3, size=(1, 256, 256))
+            cmap = {
+                0, [0, 0, 0, 0],
+                1: [255, 255, 255, 255],
+                2: [255, 0, 0, 255],
+                3: [255, 255, 0, 255],
+            }
+            data, mask = apply_discrete_cmap(data, cmap)
+            assert data.shape == (3, 256, 256)
 
     """
     res = numpy.zeros((data.shape[1], data.shape[2], 4), dtype=numpy.uint8)
@@ -129,16 +133,28 @@ def apply_discrete_cmap(
     return data[:-1], data[-1]
 
 
-class ColorMaps(object):
-    """Default Colormaps holder."""
+@attr.s(frozen=True)
+class ColorMaps:
+    """Default Colormaps holder.
 
-    def __init__(self):
-        """Load default CMAP names in a dict."""
-        self._data = {f.stem: str(f) for f in _default_cmaps}
+    Args:
+        data (dict): colormaps.
+
+    """
+
+    data: Dict[str, Union[str, numpy.array]] = attr.ib()
 
     def get(self, name: str) -> Dict:
-        """Fetch a colormap."""
-        cmap = self._data.get(name)
+        """Fetch a colormap.
+
+        Args:
+            name (dict): colormap name.
+
+        Returns
+            dict: colormap dictionary.
+
+        """
+        cmap = self.data.get(name, None)
         if cmap is None:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
 
@@ -151,29 +167,35 @@ class ColorMaps(object):
             return cmap
 
     def list(self) -> List[str]:
-        """List registered Colormaps."""
-        return list(self._data.keys())
+        """List registered Colormaps.
 
-    def register(self, name: str, custom_cmap: Union[Dict, str], force: bool = False):
-        """
-        Register a custom colormap.
-
-        Attributes
-        ----------
-        name : str
-            Name of the colormap.
-        custom_cmap: dict or str
-            A dict or a path to a numpy file
-        force: bool
-            Overwrite existing colormap with same key (default: False)
+        Returns
+            list: list of colormap names.
 
         """
-        if not force and name in self._data.keys():
-            raise ColorMapAlreadyRegistered(
-                f"{name} is already registered. Use force=True to overwrite."
-            )
+        return list(self.data)
 
-        self._data[name] = custom_cmap
+    def register(
+        self, custom_cmap: Dict[str, Union[str, Dict]], overwrite: bool = False,
+    ) -> "ColorMaps":
+        """Register a custom colormap.
+
+        Args:
+            custom_cmap (dict): custom colormap(s) to register.
+            overwrite (bool): Overwrite existing colormap with same key (default: False)
+
+        Examples:
+            >>> cmap = cmap.register({"acmap": {0: [0, 0, 0, 0]}})
+
+            >>> cmap = cmap.register({"acmap": "acmap.npy"})
+        """
+        for name, cmap in custom_cmap.items():
+            if not overwrite and name in self.data:
+                raise ColorMapAlreadyRegistered(
+                    f"{name} is already registered. Use force=True to overwrite."
+                )
+
+        return ColorMaps({**self.data, **custom_cmap})
 
 
-cmap = ColorMaps()  # noqa
+cmap = ColorMaps(deepcopy(DEFAULTS_CMAPS))  # noqa

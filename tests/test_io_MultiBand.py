@@ -5,12 +5,15 @@ import pathlib
 from typing import Dict, Type
 
 import attr
+import morecantile
 import pytest
 
 from rio_tiler.errors import ExpressionMixingWarning, MissingBands
 from rio_tiler.io import BaseReader, COGReader, MultiBandReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
+
+default_tms = morecantile.tms.get("WebMercatorQuad")
 
 
 @attr.s
@@ -20,6 +23,7 @@ class BandFileReader(MultiBandReader):
     path: str = attr.ib()
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
+    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
@@ -40,11 +44,7 @@ def test_MultiBandReader():
     """Should work as expected."""
     with BandFileReader(PREFIX) as cog:
         assert cog.bands == ["b1", "b2"]
-        meta = cog.spatial_info
-        assert meta.get("minzoom")
-        assert meta.get("maxzoom")
-        assert meta.get("center")
-        assert len(meta.get("bounds")) == 4
+        assert cog.spatial_info
 
         assert sorted(cog.parse_expression("b1/b2")) == ["b1", "b2"]
 
@@ -52,10 +52,10 @@ def test_MultiBandReader():
             cog.info()
 
         meta = cog.info(bands="b1")
-        assert meta["band_descriptions"] == [(1, "b1")]
+        assert meta.band_descriptions == [("b1", "")]
 
         meta = cog.info(bands=("b1", "b2"))
-        assert meta["band_descriptions"] == [(1, "b1"), (2, "b2")]
+        assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
         with pytest.raises(MissingBands):
             cog.stats()
@@ -71,12 +71,12 @@ def test_MultiBandReader():
             cog.metadata()
 
         meta = cog.metadata(bands="b1")
-        assert meta["statistics"]["b1"]
+        assert meta.statistics["b1"]
 
         meta = cog.metadata(bands=("b1", "b2"))
-        assert meta["statistics"]["b1"]
-        assert meta["statistics"]["b2"]
-        assert meta["band_descriptions"] == [(1, "b1"), (2, "b2")]
+        assert meta.statistics["b1"]
+        assert meta.statistics["b2"]
+        assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
         with pytest.raises(MissingBands):
             cog.tile(238, 218, 9)
@@ -117,3 +117,32 @@ def test_MultiBandReader():
 
         with pytest.warns(ExpressionMixingWarning):
             assert cog.point(-11.5, 24.5, bands="b1", expression="b1*2")
+
+        feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-12.03826904296875, 24.87646991083154],
+                        [-12.14263916015625, 24.831610355586918],
+                        [-12.1563720703125, 24.709410369765177],
+                        [-12.1673583984375, 24.484648999654034],
+                        [-11.898193359375, 24.472150437226865],
+                        [-11.6729736328125, 24.542126388899305],
+                        [-11.47247314453125, 24.79920167537382],
+                        [-12.03826904296875, 24.87646991083154],
+                    ]
+                ],
+            },
+        }
+        with pytest.raises(MissingBands):
+            cog.feature(feat)
+
+        img = cog.feature(feat, bands="b1")
+        assert img.data.any()
+        assert not img.mask.all()
+
+        with pytest.warns(ExpressionMixingWarning):
+            cog.feature(feat, bands="b1", expression="b1*2")

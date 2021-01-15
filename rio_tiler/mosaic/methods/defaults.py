@@ -128,3 +128,57 @@ class StdevMethod(MosaicMethodBase):
     def feed(self, tile):
         """Add data to tile."""
         self.tile.append(tile)
+
+
+class LastBandHigh(MosaicMethodBase):
+    """Feed the mosaic tile using the last band as decision factor."""
+
+    @property
+    def data(self):
+        """Return data and mask."""
+        if self.tile is not None:
+            return self.tile.data[:-1], ~self.tile.mask[0] * 255
+        else:
+            return None, None
+
+    def feed(self, tile: numpy.ma.array):
+        """Add data to tile."""
+        if self.tile is None:
+            self.tile = tile
+            return
+
+        pidex = (
+            numpy.bitwise_and(tile.data[-1] > self.tile.data[-1], ~tile.mask)
+            | self.tile.mask
+        )
+
+        mask = numpy.where(pidex, tile.mask, self.tile.mask)
+        self.tile = numpy.ma.where(pidex, tile, self.tile)
+        self.tile.mask = mask
+
+
+class LastBandLow(MosaicMethodBase):
+    """Feed the mosaic tile using the last band as decision factor."""
+
+    @property
+    def data(self):
+        """Return data and mask."""
+        if self.tile is not None:
+            return self.tile.data[:-1], ~self.tile.mask[0] * 255
+        else:
+            return None, None
+
+    def feed(self, tile: numpy.ma.array):
+        """Add data to tile."""
+        if self.tile is None:
+            self.tile = tile
+            return
+
+        pidex = (
+            numpy.bitwise_and(tile.data[-1] < self.tile.data[-1], ~tile.mask)
+            | self.tile.mask
+        )
+
+        mask = numpy.where(pidex, tile.mask, self.tile.mask)
+        self.tile = numpy.ma.where(pidex, tile, self.tile)
+        self.tile.mask = mask

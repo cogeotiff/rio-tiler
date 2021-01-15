@@ -3,13 +3,13 @@
 import os
 from io import BytesIO
 
-import mercantile
 import numpy as np
 import pytest
 import rasterio
 from rasterio.features import bounds as featureBounds
 
-from rio_tiler import colormap, constants, utils
+from rio_tiler import colormap, utils
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import RioTilerError
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import COGReader
@@ -56,29 +56,6 @@ def test_linear_rescale_valid():
     )
 
 
-def test_tile_exists_valid():
-    """Should work as expected (return true)."""
-    bounds = [-80, 34, -75, 40]
-    # Contains
-    assert utils.tile_exists(bounds, 7, 36, 50)  # bounds contains tile bounds
-    assert utils.tile_exists(bounds, 3, 2, 3)  # tile bounds contains bounds
-
-    # Intersects
-    assert utils.tile_exists(bounds, 7, 35, 50)
-    assert utils.tile_exists(bounds, 7, 37, 50)
-    assert utils.tile_exists(bounds, 7, 36, 51)
-    assert utils.tile_exists(bounds, 7, 37, 51)
-    assert utils.tile_exists(bounds, 7, 35, 51)
-    assert utils.tile_exists(bounds, 7, 35, 48)
-    assert utils.tile_exists(bounds, 7, 37, 48)
-
-    # Outside tiles
-    assert not utils.tile_exists(bounds, 7, 36, 40)
-    assert not utils.tile_exists(bounds, 7, 36, 60)
-    assert not utils.tile_exists(bounds, 7, 25, 50)
-    assert not utils.tile_exists(bounds, 7, 70, 50)
-
-
 def test_mapzen_elevation_rgb():
     """Should work as expected."""
     arr = np.random.randint(0, 3000, size=(512, 512))
@@ -122,7 +99,7 @@ def test_get_vrt_transform_valid4326():
     )
     with rasterio.open(S3_PATH) as src:
         vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
-            src, bounds, 256, 256, dst_crs=constants.WGS84_CRS
+            src, bounds, 256, 256, dst_crs=WGS84_CRS
         )
 
     assert vrt_transform[2] == -104.77523803710938
@@ -137,7 +114,7 @@ def test_statsFunction_valid():
         arr = src.read(indexes=[1], masked=True)
 
     stats = utils._stats(arr)
-    assert stats["pc"] == [10, 200]
+    assert stats["percentiles"] == [10, 200]
     assert stats["min"] == 0
     assert stats["max"] == 254
     assert int(stats["std"]) == 55
@@ -145,7 +122,7 @@ def test_statsFunction_valid():
     assert len(stats["histogram"][0]) == 10
 
     stats = utils._stats(arr, percentiles=(5, 95))
-    assert stats["pc"] == [31, 195]
+    assert stats["percentiles"] == [31, 195]
 
     stats = utils._stats(arr, percentiles=(5, 95), bins=20)
     assert len(stats["histogram"][0]) == 20
@@ -192,21 +169,6 @@ def test_render_valid_options():
     assert utils.render(arr, mask=mask, img_format="png", ZLEVEL=9)
 
 
-def test_render_geotiff16Bytes():
-    """Creates GeoTIFF image buffer from 3 bands array."""
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint16)
-    mask = np.zeros((512, 512), dtype=np.uint8) + 255
-    assert utils.render(arr, mask=mask, img_format="GTiff")
-
-
-def test_render_geotiff():
-    """Creates GeoTIFF image buffer from 3 bands array."""
-    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
-    mask = np.zeros((512, 512), dtype=np.uint8) + 255
-    ops = utils.geotiff_options(1, 0, 0)
-    assert utils.render(arr, mask=mask, img_format="GTiff", **ops)
-
-
 @requires_webp
 def test_render_valid_1bandWebp():
     """Creates WEBP image buffer from 1 band array."""
@@ -216,7 +178,7 @@ def test_render_valid_1bandWebp():
 
 def test_aligned_with_internaltile():
     """Check if COG is in WebMercator and aligned with internal tiles."""
-    bounds = mercantile.bounds(43, 25, 7)
+    bounds = WEB_MERCATOR_TMS.bounds(43, 25, 7)
     with rasterio.open(COG_DST) as src_dst:
         assert not utils._requested_tile_aligned_with_internal_tile(
             src_dst, bounds, 256, 256
@@ -227,7 +189,7 @@ def test_aligned_with_internaltile():
             src_dst, bounds, 256, 256
         )
 
-    bounds = mercantile.bounds(147, 182, 9)
+    bounds = WEB_MERCATOR_TMS.bounds(147, 182, 9)
     with rasterio.open(COG_NOWEB) as src_dst:
         assert not utils._requested_tile_aligned_with_internal_tile(
             src_dst, bounds, 256, 256
@@ -373,6 +335,53 @@ def test_cutline():
         with pytest.raises(RioTilerError):
             utils.create_cutline(cog.dataset, feat_line, geometry_crs="epsg:4326")
 
+    feat_mp = {
+        "type": "MultiPolygon",
+        "coordinates": [
+            [
+                [
+                    [7.305908203125, 52.14697334064471],
+                    [7.84423828125, 52.14697334064471],
+                    [7.84423828125, 52.52958999943304],
+                    [7.305908203125, 52.52958999943304],
+                    [7.305908203125, 52.14697334064471],
+                ]
+            ],
+            [
+                [
+                    [9.920654296875, 53.25206880589411],
+                    [10.404052734375, 53.25206880589411],
+                    [10.404052734375, 53.48804553605622],
+                    [9.920654296875, 53.48804553605622],
+                    [9.920654296875, 53.25206880589411],
+                ]
+            ],
+        ],
+    }
+
+    with COGReader(COGEO) as cog:
+        c = utils.create_cutline(cog.dataset, feat_mp, geometry_crs="epsg:4326")
+        assert "MULTIPOLYGON" in c
+
+    bad_poly = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [
+                    [7.305908203125, 52.14697334064471],
+                    [7.84423828125, 52.14697334064471],
+                    [7.84423828125, 52.52958999943304],
+                    [7.305908203125, 52.52958999943304],
+                    [7.305908203125, 52.14697334064471],
+                ]
+            ],
+        ],
+    }
+
+    with COGReader(COGEO) as cog:
+        with pytest.raises(RioTilerError):
+            utils.create_cutline(cog.dataset, bad_poly, geometry_crs="epsg:4326")
+
 
 def test_parse_expression():
     """test parsing rio-tiler expression."""
@@ -390,6 +399,7 @@ def test_render_numpy():
     """Save data to numpy binary."""
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8)
+
     res = utils.render(arr, mask=mask, img_format="npy")
     arr_res = np.load(BytesIO(res))
     assert arr_res.shape == (4, 512, 512)
@@ -400,3 +410,17 @@ def test_render_numpy():
     arr_res = np.load(BytesIO(res))
     assert arr_res.shape == (3, 512, 512)
     np.array_equal(arr, arr_res)
+
+    res = utils.render(arr, img_format="npz")
+    arr_res = np.load(BytesIO(res))
+    assert arr_res.files == ["data"]
+    assert arr_res["data"].shape == (3, 512, 512)
+    np.array_equal(arr, arr_res["data"])
+
+    res = utils.render(arr, mask, img_format="npz")
+    arr_res = np.load(BytesIO(res))
+    assert arr_res.files == ["data", "mask"]
+    assert arr_res["data"].shape == (3, 512, 512)
+    assert arr_res["mask"].shape == (512, 512)
+    np.array_equal(arr, arr_res["data"])
+    np.array_equal(mask, arr_res["mask"])

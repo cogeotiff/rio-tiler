@@ -4,21 +4,21 @@ import math
 from io import BytesIO
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
-import mercantile
 import numpy
 from affine import Affine
 from boto3.session import Session as boto3_session
 from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags
+from rasterio.features import is_valid_geom
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
 from rasterio.transform import from_bounds, rowcol
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_geom
 
-from . import constants
 from .colormap import apply_cmap
+from .constants import WEB_MERCATOR_CRS, NumType
 from .errors import RioTilerError
 
 DataSet = Union[DatasetReader, DatasetWriter, WarpedVRT]
@@ -65,7 +65,7 @@ def _stats(
 
     Returns
     -------
-    dict
+    Dict
         numpy array statistics: percentiles, min, max, stdev, histogram
 
         e.g.
@@ -81,13 +81,15 @@ def _stats(
         }
     """
     sample, edges = numpy.histogram(arr[~arr.mask], **kwargs)
-    return {
-        "pc": numpy.percentile(arr[~arr.mask], percentiles).astype(arr.dtype).tolist(),
-        "min": arr.min().item(),
-        "max": arr.max().item(),
-        "std": arr.std().item(),
-        "histogram": [sample.tolist(), edges.tolist()],
-    }
+    return dict(
+        percentiles=numpy.percentile(arr[~arr.mask], percentiles)
+        .astype(arr.dtype)
+        .tolist(),
+        min=arr.min().item(),
+        max=arr.max().item(),
+        std=arr.std().item(),
+        histogram=[sample.tolist(), edges.tolist()],
+    )
 
 
 # https://github.com/OSGeo/gdal/blob/b1c9c12ad373e40b955162b45d704070d4ebf7b0/gdal/frmts/ingr/IngrTypes.cpp#L191
@@ -100,7 +102,7 @@ def get_overview_level(
     bounds: Tuple[float, float, float, float],
     height: int,
     width: int,
-    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+    dst_crs: CRS = WEB_MERCATOR_CRS,
 ) -> int:
     """
     Return the overview level corresponding to the tile resolution.
@@ -158,7 +160,7 @@ def get_vrt_transform(
     bounds: Tuple[float, float, float, float],
     height: Optional[int] = None,
     width: Optional[int] = None,
-    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
+    dst_crs: CRS = WEB_MERCATOR_CRS,
 ) -> Tuple[Affine, int, int]:
     """
     Calculate VRT transform.
@@ -250,25 +252,25 @@ def non_alpha_indexes(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -
 
 def linear_rescale(
     image: numpy.ndarray,
-    in_range: Tuple[Union[int, float], Union[int, float]] = (0, 1),
-    out_range: Tuple[Union[int, float], Union[int, float]] = (1, 255),
+    in_range: Tuple[NumType, NumType],
+    out_range: Tuple[NumType, NumType] = (0, 255),
 ) -> numpy.ndarray:
     """
     Linear rescaling.
 
     Attributes
     ----------
-        image : numpy ndarray
-            Image array to rescale.
-        in_range : list, int, optional, (default: [0,1])
-            Image min/max value to rescale.
-        out_range : list, int, optional, (default: [1,255])
-            output min/max bounds to rescale to.
+    image: numpy ndarray
+        Image array to rescale.
+    in_range: Tuple, int
+        Image min/max value to rescale.
+    out_range: Tuple, optional, (default: (0,255))
+        output min/max bounds to rescale to.
 
     Returns
     -------
-        out : numpy ndarray
-            returns rescaled image array.
+    out: numpy ndarray
+        returns rescaled image array.
 
     """
     imin, imax = in_range
@@ -276,38 +278,6 @@ def linear_rescale(
     image = numpy.clip(image, imin, imax) - imin
     image = image / numpy.float(imax - imin)
     return image * (omax - omin) + omin
-
-
-def tile_exists(
-    bounds: Tuple[float, float, float, float], tile_z: int, tile_x: int, tile_y: int
-) -> bool:
-    """
-    Check if a mercatile tile is inside a given bounds.
-
-    Attributes
-    ----------
-        bounds : list
-            WGS84 bounds (left, bottom, right, top).
-        z : int
-            Mercator tile ZOOM level.
-        y : int
-            Mercator tile Y index.
-        x : int
-            Mercator tile Y index.
-
-    Returns
-    -------
-        out : boolean
-            if True, the z-x-y mercator tile in inside the bounds.
-
-    """
-    tile_bounds = mercantile.bounds(mercantile.Tile(tile_x, tile_y, tile_z))
-    return (
-        (tile_bounds[0] < bounds[2])
-        and (tile_bounds[2] > bounds[0])
-        and (tile_bounds[3] > bounds[1])
-        and (tile_bounds[1] < bounds[3])
-    )
 
 
 def _requested_tile_aligned_with_internal_tile(
@@ -320,7 +290,7 @@ def _requested_tile_aligned_with_internal_tile(
     if not src_dst.is_tiled:
         return False
 
-    if src_dst.crs != constants.WEB_MERCATOR_CRS:
+    if src_dst.crs != WEB_MERCATOR_CRS:
         return False
 
     col_off, row_off, w, h = windows.from_bounds(
@@ -337,39 +307,6 @@ def _requested_tile_aligned_with_internal_tile(
         return False
 
     return True
-
-
-def geotiff_options(
-    x: int,
-    y: int,
-    z: int,
-    tilesize: int = 256,
-    dst_crs: CRS = constants.WEB_MERCATOR_CRS,
-) -> Dict:
-    """
-    GeoTIFF options.
-
-    Attributes
-    ----------
-        x : int
-            Mercator tile X index.
-        y : int
-            Mercator tile Y index.
-        z : int
-            Mercator tile ZOOM level.
-        tilesize : int, optional
-            Output tile size. Default is 256.
-        dst_crs: CRS, optional
-            Target coordinate reference system, default is "epsg:3857".
-
-    Returns
-    -------
-        dict
-
-    """
-    bounds = mercantile.xy_bounds(mercantile.Tile(x=x, y=y, z=z))
-    dst_transform = from_bounds(*bounds, tilesize, tilesize)
-    return dict(crs=dst_crs, transform=dst_transform)
 
 
 def render(
@@ -423,16 +360,26 @@ def render(
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
     if img_format == "WEBP" and tile.shape[0] == 1:
         tile = numpy.repeat(tile, 3, axis=0)
+
     elif img_format == "JPEG":
         mask = None
 
-    if img_format == "NPY":
+    elif img_format == "NPY":
         # If mask is not None we add it as the last band
         if mask is not None:
             mask = numpy.expand_dims(mask, axis=0)
             tile = numpy.concatenate((tile, mask))
         bio = BytesIO()
         numpy.save(bio, tile)
+        bio.seek(0)
+        return bio.getvalue()
+
+    elif img_format == "NPZ":
+        bio = BytesIO()
+        if mask is not None:
+            numpy.savez_compressed(bio, data=tile, mask=mask)
+        else:
+            numpy.savez_compressed(bio, data=tile)
         bio.seek(0)
         return bio.getvalue()
 
@@ -525,18 +472,34 @@ def create_cutline(src_dst: DataSet, geometry: Dict, geometry_crs: CRS = None) -
     if "geometry" in geometry:
         geometry = geometry["geometry"]
 
+    if not is_valid_geom(geometry):
+        raise RioTilerError("Invalid geometry")
+
     geom_type = geometry["type"]
-    if not geom_type == "Polygon":
-        raise RioTilerError("Invalid geometry type: {geom_type}. Should be Polygon")
+    if geom_type not in ["Polygon", "MultiPolygon"]:
+        raise RioTilerError(
+            "Invalid geometry type: {geom_type}. Should be Polygon or MultiPolygon"
+        )
 
     if geometry_crs:
         geometry = transform_geom(geometry_crs, src_dst.crs, geometry)
 
-    xs, ys = zip(*coords(geometry))
-    src_y, src_x = rowcol(src_dst.transform, xs, ys)
+    polys = []
+    geom = (
+        [geometry["coordinates"]] if geom_type == "Polygon" else geometry["coordinates"]
+    )
+    for p in geom:
+        xs, ys = zip(*coords(p))
+        src_y, src_x = rowcol(src_dst.transform, xs, ys)
+        src_x = [max(0, min(src_dst.width, x)) for x in src_x]
+        src_y = [max(0, min(src_dst.height, y)) for y in src_y]
+        poly = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
+        polys.append(f"(({poly}))")
 
-    src_x = [max(0, min(src_dst.width, x)) for x in src_x]
-    src_y = [max(0, min(src_dst.height, y)) for y in src_y]
+    str_poly = ",".join(polys)
 
-    poly = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
-    return f"POLYGON (({poly}))"
+    return (
+        f"POLYGON {str_poly}"
+        if geom_type == "Polygon"
+        else f"MULTIPOLYGON ({str_poly})"
+    )
