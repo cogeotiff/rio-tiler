@@ -30,7 +30,7 @@ nav:
     - Models: 'models.md'
     - Mosaic: 'mosaic.md'
     - Colormaps: 'colormap.md'
-  - Advanced User Guide:
+  - Advanced Topics:
     - Use a Feature to read a COG: 'advanced/feature.md'
     - Base Classes and Custom Readers: 'advanced/custom_readers.md'
     - Create a Dynamic Tiler: 'advanced/dynamic_tiler.md'

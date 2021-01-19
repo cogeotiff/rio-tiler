@@ -58,7 +58,7 @@ $ pip install -e .
 
 ## Overview
 
-`rio-tiler` is a rasterio plugin which aims to ease the creation of [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) dynamically from any raster data.
+`rio-tiler` is a rasterio plugin that aims to ease the creation of [slippy map tiles](https://en.wikipedia.org/wiki/Tiled_web_map) dynamically from any raster source.
 
 ```python
 from typing import Dict, List
@@ -94,22 +94,39 @@ with COGReader("my-tif.tif") as cog:
     value: List = cog.point(lon, lat)
 ```
 
-## Partial reading on Cloud hosted dataset
+## Partial reading on cloud-hosted datasets
 
-`rio-tiler` perform partial reading on local or distant dataset, which is why it will perform best on Cloud Optimized GeoTIFF (COG).
-It's important to note that **Sentinel-2 scenes hosted on AWS are not in Cloud Optimized format but in JPEG2000**.
-When performing partial reading of JPEG2000 dataset GDAL (rasterio backend library) will need to make a lot of **GET requests** and transfer a lot of data.
+When the output image size is smaller than the input image size, `rio-tiler`
+performs a _partial read_ on the raster source, minimizing the amount of bytes
+that must be read. Because of this, performance will be optimal when the source
+format permits efficient partial reads. In general, Cloud Optimized GeoTIFF
+(COG) sources will provide best performance.
 
-Ref: [Do you really want people using your data](https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f) blog post.
+Some non-COG formats are relatively inefficient. For example, older Sentinel 2
+scenes on AWS are stored in the JPEG2000 format. This file format requires many
+more requests, so it will be both [slower and more
+expensive][vincent_s2_jp2_cost] than reading the newer Sentinel 2 source in COG
+format because the underlying GDAL library will need to make many more GET
+requests.
 
-## Plugins
-- [rio-tiler-mvt](https://github.com/cogeotiff/rio-tiler-mvt): Create Mapbox Vector Tile from numpy array (tile/mask)
+[vincent_s2_jp2_cost]: https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f
 
-**Mission Specific tiler**
+## `rio-tiler` Plugins
 
-In `rio-tiler` v2 we choosed to remove the mission specific tilers (Sentinel2, Sentinel1, Landsat8 and CBERS). Those are now in a specific plugin: [**rio-tiler-pds**](https://github.com/cogeotiff/rio-tiler-pds).
+#### [`rio-tiler-pds`][rio-tiler-pds]
 
-## Implementations
+[rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
+
+`rio-tiler` v1 included several helpers for reading popular public datasets (e.g. Sentinel 2, Sentinel 1, Landsat 8, CBERS) from cloud providers. This functionality is now in a [separate plugin][rio-tiler-pds], enabling easier access to more public datasets.
+
+#### [`rio-tiler-mvt`][rio-tiler-mvt]
+
+Create Mapbox Vector Tiles from raster sources
+
+[rio-tiler-mvt]: https://github.com/cogeotiff/rio-tiler-mvt
+
+## `rio-tiler` Implementations
+
 - [rio-viz](https://github.com/developmentseed/rio-viz): Visualize Cloud Optimized GeoTIFF in browser locally
 - [titiler](https://github.com/developmentseed/titiler): A lightweight Cloud Optimized GeoTIFF dynamic tile server.
 - [cogeo-mosaic](https://github.com/developmentseed/cogeo-mosaic): Create mosaics of Cloud Optimized GeoTIFF based on mosaicJSON specification.
@@ -120,7 +137,7 @@ See [CONTRIBUTING.md](https://github.com/cogeotiff/rio-tiler/blob/master/CONTRIB
 
 ## Authors
 
-The `rio-tiler` project was begun at Mapbox and has been transferred in January 2019.
+The `rio-tiler` project was begun at Mapbox and was transferred to the `cogeotiff` Github organization in January 2019.
 
 See [AUTHORS.txt](https://github.com/cogeotiff/rio-tiler/blob/master/AUTHORS.txt) for a listing of individual contributors.
 
