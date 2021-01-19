@@ -1,5 +1,5 @@
 
-Starting with `rio-tiler==2.0.0`, we added a `.feature()` method to `rio-tiler`'s **readers** (e.g `COGReader`).
+Starting with `rio-tiler` v2, a `.feature()` method exists on `rio-tiler`'s readers (e.g `COGReader`).
 
 ```python
 from rio_tiler.io import COGReader
@@ -10,7 +10,8 @@ with COGReader("my-tif.tif") as cog:
     img: ImageData = cog.feature(geojson_feature)
 ```
 
-The low level `feature API` is using GDALWarpVRT's **Cutline** option and the `.part()` method.
+Under the hood, the `.feature` method uses `GDALWarpVRT`'s `cutline` option and
+the `.part()` method. The below process is roughly what `.feature` does for you.
 
 ```python
 from rio_tiler.io import COGReader

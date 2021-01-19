@@ -4,7 +4,7 @@
   <img src="https://user-images.githubusercontent.com/10407788/88133997-77560f00-cbb1-11ea-874c-a8f1d123a9df.jpg" style="max-width: 800px;" alt="rio-tiler"></a>
 </p>
 <p align="center">
-  <em>Rasterio plugin to read Web Map tiles from raster datasets.</em>
+  <em>Rasterio plugin to read web map tiles from raster datasets.</em>
 </p>
 <p align="center">
   <a href="https://github.com/cogeotiff/rio-tiler/actions?query=workflow%3ACI" target="_blank">

@@ -1,7 +1,8 @@
 
-Starting with rio-tiler 2.0, we replaced [`mercantile`](https://github.com/mapbox/mercantile) dependencie with [`morecantile`](https://github.com/developmentseed/morecantile). Mercantile was used to work with the Web Mercator [**TileMatrixSet**](http://docs.opengeospatial.org/is/17-083r2/17-083r2.html) and helps to define the bounding box (in web mercator projection) for each Tile.
+Starting with rio-tiler 2.0, we replaced [`mercantile`][mercantile] with [_`morecantile`_][morecantile] under the hood. This enables creating tiles aligned to arbitrary projections, specifically any OGC [**TileMatrixSet**](http://docs.opengeospatial.org/is/17-083r2/17-083r2.html).
 
-In version 2.0 we are expanding the capabilities of rio-tiler to work with different TileMatrixSet by using **Morecantile** which was specifically designed to work with pre-defined and user-defined **TMS**.
+[mercantile]: https://github.com/mapbox/mercantile
+[morecantile]: https://github.com/developmentseed/morecantile
 
 ```python
 import morecantile
