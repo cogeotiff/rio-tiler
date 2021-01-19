@@ -1,6 +1,6 @@
 
-`rio-tiler` aims to be a lightweight plugin for `rasterio` whose sole goal is to
-read a [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) from a raster dataset.
+`rio-tiler` aims to be a lightweight plugin for `rasterio` to read [slippy map
+tiles](https://en.wikipedia.org/wiki/Tiled_web_map) from a raster sources.
 
 Given that `rio-tiler` allows for simple, efficient reading of tiles, you can
 then leverage `rio-tiler` to create a **dynamic tile server** to display raster
@@ -204,4 +204,3 @@ RUN cd /tmp/python && zip -r9q /tmp/package.zip *
 ```
 
 Ref: https://github.com/vincentsarago/simple-rio-lambda
-
