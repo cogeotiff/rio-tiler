@@ -38,6 +38,25 @@ nav:
   - Examples:
     - Introduction: 'examples/Using-rio-tiler.ipynb'
     - Mosaic: 'examples/Using-rio-tiler-mosaic.ipynb'
+  - API:
+    - rio_tiler.colormap: api/rio_tiler/colormap.md
+    - rio_tiler.constants: api/rio_tiler/constants.md
+    - rio_tiler.errors: api/rio_tiler/errors.md
+    - rio_tiler.expression: api/rio_tiler/expression.md
+    - rio_tiler.models: api/rio_tiler/models.md
+    - rio_tiler.io:
+      - rio_tiler.io.base: api/rio_tiler/io/base.md
+      - rio_tiler.io.cogeo: api/rio_tiler/io/cogeo.md
+      - rio_tiler.io.stac: api/rio_tiler/io/stac.md
+    - rio_tiler.mosaic:
+      - rio_tiler.mosaic.reader: api/rio_tiler/mosaic/reader.md
+      - rio_tiler.mosaic.methods:
+        - rio_tiler.mosaic.methods.base: api/rio_tiler/mosaic/methods/base.md
+        - rio_tiler.mosaic.methods.defaults: api/rio_tiler/mosaic/methods/defaults.md
+    - rio_tiler.profiles: api/rio_tiler/profiles.md
+    - rio_tiler.reader: api/rio_tiler/reader.md
+    - rio_tiler.tasks: api/rio_tiler/tasks.md
+    - rio_tiler.utils: api/rio_tiler/utils.md
   - Migration from v1.0 to v2.0: 'v2_migration.md'
   - Development - Contributing: 'contributing.md'
   - Release Notes: 'release-notes.md'

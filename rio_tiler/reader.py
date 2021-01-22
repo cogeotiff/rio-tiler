@@ -154,15 +154,18 @@ def part(
         Output width of the array.
     padding: int, optional
         Padding to apply to each edge of the tile when retrieving data
-        to assist in reducing resampling artefacts along edges.
+            to assist in reducing resampling artefacts along edges.
+
     dst_crs: CRS or str, optional
         Target coordinate reference system, default is "epsg:3857".
     bounds_crs: CRS or str, optional
         Overwrite bounds coordinate reference system, default is equal
-        to the output CRS (dst_crs).
+            to the output CRS (dst_crs).
+
     minimum_tile_cover: float, optional
         Minimum % overlap for which to raise an error with dataset not
-        covering enought of the tile.
+            covering enought of the tile.
+
     vrt_options: dict, optional
         These will be passed to the rasterio.warp.WarpedVRT class.
     max_size: int, optional
@@ -267,7 +270,6 @@ def preview(
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """
     Read image and resample to low resolution.
-
 
     Attributes
     ----------
