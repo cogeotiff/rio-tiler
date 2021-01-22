@@ -1,7 +1,10 @@
 
-The main goal of `rio-tiler` is to create [slippy map tile](https://en.wikipedia.org/wiki/Tiled_web_map) data arrays from **big** raster data and then render them dynamically to display on a map.
-
-The `rio-tiler` module can read data and metadata from any raster source supported by Rasterio/GDAL (i.e. local files, http, s3, gcs etc.).
+The main goal of `rio-tiler` is to create [slippy map
+tiles](https://en.wikipedia.org/wiki/Tiled_web_map) from large raster data
+sources and render these tiles dynamically on a web map. `rio-tiler` can read
+data and metadata from any raster source supported by Rasterio/GDAL wherever
+they may be, including local files and via HTTP, AWS S3, Google Cloud Storage,
+etc.
 
 
 ## Read a tile from a file
@@ -33,7 +36,7 @@ with COGReader(
     >>> (256, 256)
 ```
 
-Additional method are availables (see [`COGReader`](/readers/#cogreader))
+Additional methods are available (see [`COGReader`](/readers/#cogreader))
 
 ## Render the data as an image (PNG/JPEG)
 

@@ -1,5 +1,12 @@
 
-`rio-tiler` provides multiple [abstract base classes](https://docs.python.org/3.7/library/abc.html) from which it derives its main readers: [`COGReader`](/readers/#cogreader) and [`STACReader`](/readers/#stacreader). You can also use these classes to build custom readers (see [`rio-tiler-pds`](https://github.com/cogeotiff/rio-tiler-pds)).
+`rio-tiler` provides multiple [abstract base
+classes](https://docs.python.org/3.7/library/abc.html) from which it derives its
+main readers: [`COGReader`](/readers/#cogreader) and
+[`STACReader`](/readers/#stacreader). You can also use these classes to build
+custom readers. For example, [`rio-tiler-pds`][rio-tiler-pds] does this to
+simplify reading popular public raster datasets from cloud services.
+
+[rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
 
 ## Abstract Base Classes
 
@@ -68,13 +75,13 @@ Example: [`COGReader`](/readers/#cogreader)
 
 ### AsyncBaseReader
 
-Equivalent of `BaseReader` for async ready readers (e.g [aiocogeo](https://github.com/geospatial-jeff/aiocogeo)). The `AsyncBaseReader` has the same properties/methods as the `BaseReader`.
+Equivalent of `BaseReader` for async-ready readers (e.g [aiocogeo](https://github.com/geospatial-jeff/aiocogeo)). The `AsyncBaseReader` has the same properties/methods as the `BaseReader`.
 
 see example of reader built using `AsyncBaseReader`: https://github.com/cogeotiff/rio-tiler/blob/832ecbd97f560c2764818bca30ca95ef25408527/tests/test_io_async.py#L49
 
 ### MultiBaseReader
 
-This abstract class inherit from `BaseReader`. The goal of the `MultiBaseReader` is to built reader that needs to concatenate results from multiple assets (e.g STAC).
+This abstract class inherit from `BaseReader`. The goal of the `MultiBaseReader` is to enable building readers that need to join results from multiple assets (e.g STAC).
 
 Example: [`STACReader`](/readers/#stacreader)
 
@@ -118,7 +125,7 @@ with AssetFileReader("my_dir/", "scene_") as cr:
     print(cr.assets)
     >>> ['b1', 'b2']
 
-    info = cr.info(assets=("b1", "b2")
+    info = cr.info(assets=("b1", "b2"))
     # MultiBaseReader returns a Dict
     assert isinstance(info, dict)
     print(list(info))
@@ -215,7 +222,7 @@ with BandFileReader("my_dir/", "scene_") as cr:
     >>> (2, 256, 256)
 ```
 
-More: [**rio-tiler-pds**](https://github.com/cogeotiff/rio-tiler-pds) readers are built using the `MultiBandReader` base class.
+More: [`rio-tiler-pds`][rio-tiler-pds] readers are built using the `MultiBandReader` base class.
 
 ## Links
 
