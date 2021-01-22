@@ -6,7 +6,7 @@ import numpy
 import pytest
 
 from rio_tiler import colormap
-from rio_tiler.colormap import DEFAULTS_CMAPS
+from rio_tiler.colormap import DEFAULT_CMAPS_FILES
 from rio_tiler.errors import (
     ColorMapAlreadyRegistered,
     InvalidColorMapName,
@@ -17,7 +17,7 @@ from rio_tiler.errors import (
 def test_get_cmaplist(monkeypatch):
     """Should work as expected return all rio-tiler colormaps."""
     monkeypatch.delenv("COLORMAP_DIRECTORY", raising=False)
-    assert len(DEFAULTS_CMAPS) == 167
+    assert len(DEFAULT_CMAPS_FILES) == 167
 
 
 def test_cmapObject(monkeypatch):
@@ -33,11 +33,11 @@ def test_cmapObject(monkeypatch):
     # `register()` returns a new ColorMaps Objects without modifying the original
     cmap.register({"empty": colormap.EMPTY_COLORMAP})
     assert len(cmap.list()) == 167
-    assert len(DEFAULTS_CMAPS) == 167
+    assert len(DEFAULT_CMAPS_FILES) == 167
 
     # check new cmap is registered and it didn't affect the original Dict
     new_cmap = cmap.register({"empty": colormap.EMPTY_COLORMAP})
-    assert len(DEFAULTS_CMAPS) == 167
+    assert len(DEFAULT_CMAPS_FILES) == 167
     assert len(cmap.list()) == 167
     assert len(new_cmap.list()) == 168
 

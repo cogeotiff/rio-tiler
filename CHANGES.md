@@ -13,6 +13,7 @@
 * renamed input parameter `tile` to `data` in `rio_tiler.utils.render`.
 * renamed input parameter `arr` to `data` in `rio_tiler.utils.mapzen_elevation_rgb`
 * made `rio_tiler.io.stac.to_pystac_item` private (renamed to `_to_pystac_item`)
+* renamed `rio_tiler.colormap.DEFAULTS_CMAPS` to `rio_tiler.colormap.DEFAULT_CMAPS_FILES`
 
 ## 2.0.0rc4 (2020-12-18)
 
