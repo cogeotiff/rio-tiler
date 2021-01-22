@@ -15,12 +15,10 @@ class MosaicMethodBase(abc.ABC):
 
     @property
     def is_done(self):
-        """
-        Check if the tile filling is done.
+        """Check if the tile filling is done.
 
-        Returns
-        -------
-        bool
+        Returns:
+            bool
 
         """
         if self.tile is None:
@@ -33,15 +31,7 @@ class MosaicMethodBase(abc.ABC):
 
     @property
     def data(self):
-        """
-        Return data and mask.
-
-        Returns
-        -------
-        tile: numpy.ndarray
-        mask: numpy.ndarray
-
-        """
+        """Return data and mask."""
         if self.tile is not None:
             return self.tile.data, ~self.tile.mask[0] * 255
         else:
@@ -49,11 +39,9 @@ class MosaicMethodBase(abc.ABC):
 
     @abc.abstractmethod
     def feed(self, tile):
-        """
-        Fill mosaic tile.
+        """Fill mosaic tile.
 
-        Parameters
-        ----------
-        tile: numpy.ma.ndarray
+        Args:
+            tile (numpy.ma.ndarray): data
 
         """

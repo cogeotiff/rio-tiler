@@ -23,7 +23,15 @@ from ..tasks import multi_arrays, multi_values
 
 @attr.s
 class SpatialMixin:
-    """Spatial Info Mixin."""
+    """Spatial Info Mixin.
+
+    Args:
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
+        bbox (tuple): Dataset bounds (left, bottom, right, top). READ ONLY attribute.
+        minzoom (int): Overwrite Min Zoom level. READ ONLY attribute.
+        maxzoom (int): Overwrite Max Zoom level. READ ONLY attribute.
+
+    """
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     bounds: Tuple[float, float, float, float] = attr.ib(init=False)
@@ -50,7 +58,17 @@ class SpatialMixin:
         )
 
     def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
-        """Check if a tile is inside a the dataset bounds."""
+        """Check if a tile is intersets the dataset bounds.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+
+        Returns:
+            bool: True if the tile is intersets the dataset bounds.
+
+        """
         tile = Tile(x=tile_x, y=tile_y, z=tile_z)
         tile_bounds = self.tms.bounds(*tile)
         return (
@@ -75,47 +93,110 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def info(self) -> Info:
-        """Return Dataset's info."""
+        """Return Dataset's info.
+
+        Returns:
+            rio_tile.models.Info: Dataset info.
+
+        """
         ...
 
     @abc.abstractmethod
     def stats(
         self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
     ) -> Dict[str, ImageStatistics]:
-        """Return Dataset's statistics."""
+        """Return Dataset's statistics.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+
+        Returns:
+            rio_tile.models.ImageStatistics: Dataset statistics.
+
+        """
         ...
 
     def metadata(
         self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
     ) -> Metadata:
-        """Return Dataset's statistics and info."""
+        """Return Dataset's statistics and info.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+
+        Returns:
+            rio_tile.models.Metadata: Dataset statistics and metadata.
+
+        """
         info = self.info()
         stats = self.stats(pmin, pmax, **kwargs)
         return Metadata(statistics=stats, **info.dict())
 
     @abc.abstractmethod
     def tile(self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any) -> ImageData:
-        """Read a Map tile from the Dataset."""
+        """Read a Map tile from the Dataset.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         ...
 
     @abc.abstractmethod
     def part(self, bbox: Tuple[float, float, float, float], **kwargs: Any) -> ImageData:
-        """Read a Part of a Dataset."""
+        """Read a Part of a Dataset.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
         ...
 
     @abc.abstractmethod
     def preview(self, **kwargs: Any) -> ImageData:
-        """Read a preview of a Dataset."""
+        """Read a preview of a Dataset.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
         ...
 
     @abc.abstractmethod
     def point(self, lon: float, lat: float, **kwargs: Any) -> List:
-        """Read a value from a Dataset."""
+        """Read a value from a Dataset.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latittude.
+
+        Returns:
+            list: Pixel value per bands/assets.
+
+        """
         ...
 
     @abc.abstractmethod
     def feature(self, shape: Dict, **kwargs: Any) -> ImageData:
-        """Read a Dataset for a GeoJSON feature."""
+        """Read a Dataset for a GeoJSON feature.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
         ...
 
 
@@ -133,20 +214,43 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     async def info(self) -> Coroutine[Any, Any, Info]:
-        """Return Dataset's info."""
+        """Return Dataset's info.
+
+        Returns:
+            rio_tile.models.Info: Dataset info.
+
+        """
         ...
 
     @abc.abstractmethod
     async def stats(
         self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any
     ) -> Coroutine[Any, Any, Dict[str, ImageStatistics]]:
-        """Return Dataset's statistics."""
+        """Return Dataset's statistics.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+
+        Returns:
+            rio_tile.models.ImageStatistics: Dataset statistics.
+
+        """
         ...
 
     async def metadata(
         self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
     ) -> Coroutine[Any, Any, Metadata]:
-        """Return Dataset's statistics and info."""
+        """Return Dataset's statistics and info.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+
+        Returns:
+            rio_tile.models.Metadata: Dataset statistics and metadata.
+
+        """
         info, stats = await asyncio.gather(
             *[self.info(), self.stats(pmin, pmax, **kwargs)]
         )
@@ -156,39 +260,89 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     async def tile(
         self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
     ) -> Coroutine[Any, Any, ImageData]:
-        """Read a Map tile from the Dataset."""
+        """Read a Map tile from the Dataset.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         ...
 
     @abc.abstractmethod
     async def part(
         self, bbox: Tuple[float, float, float, float], **kwargs: Any
     ) -> Coroutine[Any, Any, ImageData]:
-        """Read a Part of a Dataset."""
+        """Read a Part of a Dataset.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
         ...
 
     @abc.abstractmethod
     async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
-        """Read a preview of a Dataset."""
+        """Read a preview of a Dataset.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
         ...
 
     @abc.abstractmethod
     async def point(
         self, lon: float, lat: float, **kwargs: Any
     ) -> Coroutine[Any, Any, List]:
-        """Read a value from a Dataset."""
+        """Read a value from a Dataset.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latittude.
+
+        Returns:
+            list: Pixel value per bands/assets.
+
+        """
         ...
 
     @abc.abstractmethod
     async def feature(
         self, shape: Dict, **kwargs: Any
     ) -> Coroutine[Any, Any, ImageData]:
-        """Read a Dataset for a GeoJSON feature."""
+        """Read a Dataset for a GeoJSON feature.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
         ...
 
 
 @attr.s
 class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
-    """MultiBaseReader Reader."""
+    """MultiBaseReader Reader.
+
+    This Reader is suited for dataset that are composed of multiple assets (e.g. STAC).
+
+    Args:
+        reader (rio_tiler.io.BaseReader): reader.
+        reader_options (dict, option): options to forward to the reader. Defaults to {}.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
+        assets (sequence): Asset list. READ ONLY attribute.
+
+    """
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
@@ -210,7 +364,15 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
     def info(  # type: ignore
         self, assets: Union[Sequence[str], str] = None, *args, **kwargs: Any
     ) -> Dict[str, Info]:
-        """Return metadata from multiple assets"""
+        """Return metadata from multiple assets.
+
+        Args:
+            assets (sequence of str or str, optional): assets to fetch info from. Requiered keyword argument.
+
+        Returns:
+            dict: Multiple assets info in form of {"asset1": rio_tile.models.Info}.
+
+        """
         if not assets:
             raise MissingAssets("Missing 'assets' option")
 
@@ -231,7 +393,18 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Dict[str, Dict[str, ImageStatistics]]:
-        """Return array statistics from multiple assets"""
+        """Return array statistics from multiple assets.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            assets (sequence of str or str): assets to fetch info from. Requiered keyword argument.
+            kwargs (optional): Options to forward to the 'self.reader.stats' method.
+
+        Returns:
+            dict: Multiple assets statistics in form of {"asset1": rio_tile.models.ImageStatistics}.
+
+        """
         if not assets:
             raise MissingAssets("Missing 'assets' option")
 
@@ -252,7 +425,18 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Dict[str, Metadata]:
-        """Return metadata from multiple assets"""
+        """Return metadata from multiple assets.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            assets (sequence of str or str): assets to fetch info from. Requiered keyword argument.
+            kwargs (optional): Options to forward to the 'self.reader.metadata' method.
+
+        Returns:
+            dict: Multiple assets info and statistics in form of {"asset1": rio_tile.models.Metadata}.
+
+        """
         if not assets:
             raise MissingAssets("Missing 'assets' option")
 
@@ -278,7 +462,21 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Read a Mercator Map tile multiple assets."""
+        """Read and merge Wep Map tiles from multiple assets.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.tile' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if not self.tile_exists(tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
@@ -332,7 +530,19 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Read part of multiple assets."""
+        """Read and merge parts from multiple assets.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.part' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -374,7 +584,18 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Return a preview from multiple assets."""
+        """Read and merge previews from multiple assets.
+
+        Args:
+            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.preview' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -416,7 +637,20 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> List:
-        """Read a value from COGs."""
+        """Read pixel value from multiple assets.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latittude.
+            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.point' method.
+
+        Returns:
+            list: Pixel values per assets.
+
+        """
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -460,7 +694,19 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Read multiple assets for a geojson feature."""
+        """Read and merge parts defined by geojson feature from multiple assets.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.feature' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -496,7 +742,17 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
 @attr.s
 class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
-    """Multi Band Reader."""
+    """Multi Band Reader.
+
+    This Reader is suited for dataset that stores spectral bands as separate files  (e.g. Sentinel 2).
+
+    Args:
+        reader (rio_tiler.io.BaseReader): reader.
+        reader_options (dict, option): options to forward to the reader. Defaults to {}.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
+        bands (sequence): Band list. READ ONLY attribute.
+
+    """
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
@@ -518,7 +774,15 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
     def info(
         self, bands: Union[Sequence[str], str] = None, *args, **kwargs: Any
     ) -> Info:
-        """Return metadata from multiple bands"""
+        """Return metadata from multiple bands.
+
+        Args:
+            bands (sequence of str or str, optional): band names to fetch info from. Requiered keyword argument.
+
+        Returns:
+            dict: Multiple bands info in form of {"band1": rio_tile.models.Info}.
+
+        """
         if not bands:
             raise MissingBands("Missing 'bands' option")
 
@@ -557,7 +821,18 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         bands: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Dict[str, ImageStatistics]:
-        """Return array statistics from multiple bands"""
+        """Return array statistics from multiple bands.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            bands (sequence of str or str): bands to fetch info from. Requiered keyword argument.
+            kwargs (optional): Options to forward to the 'self.reader.stats' method.
+
+        Returns:
+            dict: Multiple bands statistics in form of {"band1": rio_tile.models.ImageStatistics}.
+
+        """
         if not bands:
             raise MissingBands("Missing 'bands' option")
 
@@ -580,7 +855,18 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         bands: Union[Sequence[str], str] = None,
         **kwargs: Any,
     ) -> Metadata:
-        """Return metadata from multiple bands"""
+        """Return metadata from multiple bands.
+
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
+            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            bands (sequence of str or str): bands to fetch info from. Requiered keyword argument.
+            kwargs (optional): Options to forward to the 'self.reader.stats' method.
+
+        Returns:
+            dict: Multiple bands info an statistics in form of {"band1": rio_tile.models.Metadata}.
+
+        """
         if not bands:
             raise MissingBands("Missing 'bands' option")
 
@@ -629,7 +915,21 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Read a Mercator Map tile multiple bands."""
+        """Read and merge Web Map tiles multiple bands.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.tile' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if not self.tile_exists(tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
@@ -683,7 +983,19 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Read part of multiple bands."""
+        """Read and merge parts from multiple bands.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.part' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if isinstance(bands, str):
             bands = (bands,)
 
@@ -725,7 +1037,18 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Return a preview from multiple bands."""
+        """Read and merge previews from multiple bands.
+
+        Args:
+            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.preview' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if isinstance(bands, str):
             bands = (bands,)
 
@@ -767,7 +1090,20 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each band based on index names (b1, b2, ...)
         **kwargs: Any,
     ) -> List:
-        """Read a pixel values from multiple bands,"""
+        """Read a pixel values from multiple bands.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latittude.
+            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.point' method.
+
+        Returns:
+            list: Pixel value per bands.
+
+        """
         if isinstance(bands, str):
             bands = (bands,)
 
@@ -811,7 +1147,19 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         ] = "",  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
-        """Read part of multiple bands."""
+        """Read and merge parts defined by geojson feature from multiple bands.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
+            kwargs (optional): Options to forward to the 'self.reader.feature' method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
         if isinstance(bands, str):
             bands = (bands,)
 

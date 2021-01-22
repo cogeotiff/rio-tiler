@@ -36,37 +36,23 @@ def _read(
         Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
     ] = None,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Create WarpedVRT and read data and mask.
+    """Create a WarpedVRT and read data and mask.
 
-    Attributes
-    ----------
-    src_dst: rasterio.io.DatasetReader
-        rasterio.io.DatasetReader object
-    height: int, optional
-        Output height of the array.
-    width: int, optional
-        Output width of the array.
-    indexes: list of ints or a single int, optional
-        Band indexes
-    window: rasterio.windows.Window, optional
-        Window to read.
-    nodata: int or float, optional
-    resampling_method: str, optional
-        Resampling algorithm. Default is "nearest".
-    force_binary_mask: bool, optional
-        If True, rio-tiler makes sure mask has only 0 or 255 values.
-        Default is set to True.
-    unscale: bool, optional
-        If True, apply scale and offset to the data array.
-        Default is set to False.
-    vrt_options: dict, optional
-        These will be passed to the rasterio.warp.WarpedVRT class.
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        height (int, optional): Output height of the array. Defaults to None.
+        width (int, optional): Output width of the array. Defaults to None.
+        indexes (sequence of int or int, optional): Band indexes. Defaults to None.
+        window (rasterio.windows.Window, optional): Window to read. Defaults to None.
+        force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to True.
+        nodata (int or float, optional): Overwrite dataset internal nodata value. Defaults to None.
+        unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to False.
+        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to nearest.
+        vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class. Defaults to None.
+        post_process (callable, optional): Function to apply on output data and mask values. Defaults to None.
 
-    Returns
-    -------
-    data : numpy ndarray
-    mask: numpy array
+    Returns:
+        tuple: Data (numpy.ndarray) and Mask (numpy.ndarray) values.
 
     """
     if isinstance(indexes, int):
@@ -139,44 +125,23 @@ def part(
     max_size: Optional[int] = None,
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Read part of an image.
+    """Read part of a dataset.
 
-    Attributes
-    ----------
-    src_dst: rasterio.io.DatasetReader
-        rasterio.io.DatasetReader object
-    bounds: tuple
-        Output bounds (left, bottom, right, top) in target crs ("dst_crs").
-    height: int, optional
-        Output height of the array.
-    width: int, optional
-        Output width of the array.
-    padding: int, optional
-        Padding to apply to each edge of the tile when retrieving data
-            to assist in reducing resampling artefacts along edges.
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        bounds (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+        height (int, optional): Output height of the array. Defaults to None.
+        width (int, optional): Output width of the array. Defaults to None.
+        padding (int, optional): Padding to apply to each edge of the tile when retrieving data to assist in reducing resampling artefacts along edges. Defaults to 0.
+        dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to epsg:3857.
+        bounds_crs (rasterio.crs.CRS, optional): Overwrite bounds Coordinate Reference System. Defaults to the output CRS (dst_crs).
+        minimum_overlap (float, optional): Minimum % overlap for which to raise an error with dataset not covering enought of the tile. Defaults to None.
+        vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class. Defaults to None.
+        max_size (int, optional): Limit output size array if not widht and height. Defaults to None.
+        kwargs (optional): Additional options to forward to 'rio_tiler.reader._read()'.
 
-    dst_crs: CRS or str, optional
-        Target coordinate reference system, default is "epsg:3857".
-    bounds_crs: CRS or str, optional
-        Overwrite bounds coordinate reference system, default is equal
-            to the output CRS (dst_crs).
-
-    minimum_tile_cover: float, optional
-        Minimum % overlap for which to raise an error with dataset not
-            covering enought of the tile.
-
-    vrt_options: dict, optional
-        These will be passed to the rasterio.warp.WarpedVRT class.
-    max_size: int, optional
-        Limit output size array if not widht and height.
-    kwargs: Any, optional
-        Additional options to forward to reader._read()
-
-    Returns
-    -------
-    data : numpy ndarray
-    mask: numpy array
+    Returns:
+        tuple: Data (numpy.ndarray) and Mask (numpy.ndarray) values.
 
     """
     if not dst_crs:
@@ -268,27 +233,17 @@ def preview(
     width: int = None,
     **kwargs: Any,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """
-    Read image and resample to low resolution.
+    """Read decimated version of a dataset.
 
-    Attributes
-    ----------
-        src_dst : rasterio.io.DatasetReader
-            rasterio.io.DatasetReader object
-        max_size : int
-            `max_size` of the longest dimension, respecting
-            bounds X/Y aspect ratio.
-        height: int, optional
-            output height of the data
-        width: int, optional
-            output width of the data
-        kwargs : Any, optional
-            Additional options to forward to reader._read()
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        max_size (int, optional): Limit output size array if not widht and height. Defaults to 1024.
+        height (int, optional): Output height of the array. Defaults to None.
+        width (int, optional): Output width of the array. Defaults to None.
+        kwargs (optional): Additional options to forward to 'rio_tiler.reader._read()'.
 
-    Returns
-    -------
-        data : numpy ndarray
-        mask: numpy array
+    Returns:
+        tuple: Data (numpy.ndarray) and Mask (numpy.ndarray) values.
 
     """
     if not height and not width:
@@ -320,33 +275,22 @@ def point(
         Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
     ] = None,
 ) -> List:
-    """
-    Read point value
+    """Read a pixel value for a point.
 
-    Attributes
-    ----------
-        src_dst : rasterio.io.DatasetReader
-            rasterio.io.DatasetReader object
-        coordinates : tuple
-            (X, Y) coordinates.
-        indexes : list of ints or a single int, optional
-            Band indexes
-        coord_crs : rasterio.crs.CRS, optional
-            (X, Y) coordinate system. Default is WGS84/EPSG:4326.
-        nodata: int or float, optional
-        unscale, bool, optional
-            If True, apply scale and offset to the data.
-            Default is set to False.
-        masked : bool
-            Whether to mask samples that fall outside the extent of the dataset.
-            Default is set to True.
-        vrt_options: dict, optional
-            These will be passed to the rasterio.warp.WarpedVRT class.
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        coordinates (tuple): Coordinates in form of (X, Y).
+        indexes (sequence of int or int, optional): Band indexes. Defaults to None.
+        coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to epsg:4326.
+        masked (bool): Mask samples that fall outside the extent of the dataset. Defaults to True.
+        nodata (int or float, optional): Overwrite dataset internal nodata value. Defaults to None.
+        unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to False.
+        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to nearest.
+        vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class. Defaults to None.
+        post_process (callable, optional): Function to apply on output data and mask values. Defaults to None.
 
-    Returns
-    -------
-        point : list
-            List of pixel values per bands indexes.
+    Returns:
+        list: Pixel value per band indexes.
 
     """
     if isinstance(indexes, int):
@@ -409,32 +353,20 @@ def stats(
     hist_options: Optional[Dict] = None,
     **kwargs: Any,
 ) -> Dict[str, Any]:
-    """
-    Retrieve statistics from an image.
+    """Retrieve statistics from a dataset.
 
-    Attributes
-    ----------
-    src_dst : rasterio.io.DatasetReader
-        rasterio.io.DatasetReader object
-    bounds : tuple, optional
-        Bounding box coordinates from which to calculate image statistics.
-    max_size : int
-        `max_size` of the longest dimension, respecting
-        bounds X/Y aspect ratio.
-    indexes : list of ints or a single int, optional
-        Band indexes.
-    bounds_crs: CRS or str, optional
-        Specify bounds coordinate reference system, default WGS84/EPSG4326.
-    percentiles: tuple, optional
-        Tuple of Min/Max percentiles to compute. Default is (2, 98).
-    hist_options : dict, optional
-        Options to forward to numpy.histogram function.
-    kwargs : Any, optional
-        Additional options to forward to part or preview
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        bounds (tuple, optional): Bounding box coordinates from which to calculate image statistics.
+        indexes (sequence of int or int, optional): Band indexes. Defaults to None.
+        max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+        bounds_crs (rasterio.crs.CRS, optional): Input bounds Coordinate Reference System. Defaults to 'epsg:4326'
+        percentiles (tuple, optional): Min/Max percentiles to compute. Defaults to (2, 98).
+        hist_options (dict, optional): Options to forward to numpy.histogram function. Defaults to None.
+        kwargs (optional): Additional options to forward to 'rio_tiler.reader.part' or 'rio_tiler.reader.preview'.
 
-    Returns
-    -------
-    dict
+    Returns:
+        dict: Dataset statistics.
 
     """
     if isinstance(indexes, int):
@@ -479,32 +411,20 @@ def metadata(
     hist_options: Optional[Dict] = None,
     **kwargs: Any,
 ) -> Dict:
-    """
-    Retrieve metadata and statistics from an image.
+    """Retrieve metadata and statistics from a dataset.
 
-    Attributes
-    ----------
-        src_dst : rasterio.io.DatasetReader
-            rasterio.io.DatasetReader object
-        bounds : tuple, optional
-            Bounding box coordinates from which to calculate image statistics.
-        max_size : int
-            `max_size` of the longest dimension, respecting
-            bounds X/Y aspect ratio.
-        indexes : list of ints or a single int, optional
-            Band indexes.
-        bounds_crs: CRS or str, optional
-            Specify bounds coordinate reference system, default WGS84/EPSG4326.
-        percentiles: tuple, optional
-            Tuple of Min/Max percentiles to compute. Default is (2, 98).
-        hist_options : dict, optional
-            Options to forward to numpy.histogram function.
-        kwargs : Any, optional
-            Additional options to forward to part or preview
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        bounds (tuple, optional): Bounding box coordinates from which to calculate image statistics.
+        indexes (sequence of int or int, optional): Band indexes. Defaults to None.
+        max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+        bounds_crs (rasterio.crs.CRS, optional): Input bounds Coordinate Reference System. Defaults to 'epsg:4326'
+        percentiles (tuple, optional): Min/Max percentiles to compute. Defaults to (2, 98).
+        hist_options (dict, optional): Options to forward to numpy.histogram function. Defaults to None.
+        kwargs (optional): Additional options to forward to 'rio_tiler.reader.part' or 'rio_tiler.reader.preview'.
 
-    Returns
-    -------
-        dict
+    Returns:
+        dict: Dataset metadata and statistics.
 
     """
     if isinstance(indexes, int):

@@ -21,8 +21,6 @@ from .colormap import apply_cmap
 from .constants import WEB_MERCATOR_CRS, NumType
 from .errors import RioTilerError
 
-DataSet = Union[DatasetReader, DatasetWriter, WarpedVRT]
-
 
 def _chunks(my_list: Sequence, chuck_size: int):
     """Yield successive n-sized chunks from l."""
@@ -51,25 +49,18 @@ def aws_get_object(
 def _stats(
     arr: numpy.ma.array, percentiles: Tuple[float, float] = (2, 98), **kwargs: Any
 ) -> Dict:
-    """
-    Calculate array statistics.
+    """Calculate array statistics.
 
-    Attributes
-    ----------
-    arr: numpy ndarray
-        Input array data to get the stats from.
-    percentiles: tuple, optional
-        Tuple of Min/Max percentiles to compute.
-    kwargs: dict, optional
-        These will be passed to the numpy.histogram function.
+    Args:
+        arr (numpy ndarray): Input array data to get the stats from.
+        percentiles (tuple, optional): Min/Max percentiles to compute. Defaults to (2, 98).
+        kwargs (optional): Options to forward to numpy.histogram function. Defaults to None.
 
-    Returns
-    -------
-    Dict
-        numpy array statistics: percentiles, min, max, stdev, histogram
+    Returns:
+        dict: numpy array statistics: percentiles, min, max, stdev, histogram.
 
-        e.g.
-        {
+    Examples:
+        >>> {
             'pc': [38, 147],
             'min': 20,
             'max': 180,
@@ -79,6 +70,7 @@ def _stats(
                 [20.0, 36.0, 52.0, 68.0, 84.0, 100.0, 116.0, 132.0, 148.0, 164.0, 180.0]
             ]
         }
+
     """
     sample, edges = numpy.histogram(arr[~arr.mask], **kwargs)
     return dict(
@@ -104,28 +96,19 @@ def get_overview_level(
     width: int,
     dst_crs: CRS = WEB_MERCATOR_CRS,
 ) -> int:
-    """
-    Return the overview level corresponding to the tile resolution.
+    """Return the overview level corresponding to the tile resolution.
 
     Freely adapted from https://github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e944744b7c9b2bd6c400/gdal/apps/gdalwarp_lib.cpp#L2293-L2362
 
-    Attributes
-    ----------
-        src_dst : rasterio.io.DatasetReader
-            Rasterio io.DatasetReader object
-        bounds : list
-            Bounds (left, bottom, right, top) in target crs ("dst_crs").
-        height : int
-            Output height.
-        width : int
-            Output width.
-        dst_crs: CRS or str, optional
-            Target coordinate reference system (default "epsg:3857").
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        bounds (tuple): Bounding box coordinates in target crs ("dst_crs").
+        height (int): Desired output height of the array for the input bounds.
+        width (int): Desired output width of the array for the input bounds.
+        dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to epsg:3857.
 
-    Returns
-    -------
-        ovr_idx: Int or None
-            Overview level
+    Returns:
+        int: Overview level.
 
     """
     dst_transform, _, _ = calculate_default_transform(
@@ -162,28 +145,17 @@ def get_vrt_transform(
     width: Optional[int] = None,
     dst_crs: CRS = WEB_MERCATOR_CRS,
 ) -> Tuple[Affine, int, int]:
-    """
-    Calculate VRT transform.
+    """Calculate VRT transform.
 
-    Attributes
-    ----------
-    src_dst : rasterio.io.DatasetReader
-        Rasterio io.DatasetReader object
-    bounds : list
-        Bounds (left, bottom, right, top) in target crs ("dst_crs").
-    height : int, optional
-        Desired output height of the array for the bounds.
-    width : int, optional
-        Desired output width of the array for the bounds.
-    dst_crs: CRS or str, optional
-        Target coordinate reference system (default "epsg:3857").
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        bounds (tuple): Bounding box coordinates in target crs ("dst_crs").
+        height (int, optional): Desired output height of the array for the input bounds. Defaults to None.
+        width (int, optional): Desired output width of the array for the input bounds. Defaults to None.
+        dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to epsg:3857.
 
-    Returns
-    -------
-    vrt_transform: Affine
-        Output affine transformation matrix
-    vrt_width, vrt_height: int
-        Output dimensions
+    Returns:
+        tuple: VRT transform (affine.Affine), width (int) and height (int)
 
     """
     dst_transform, _, _ = calculate_default_transform(
@@ -255,22 +227,15 @@ def linear_rescale(
     in_range: Tuple[NumType, NumType],
     out_range: Tuple[NumType, NumType] = (0, 255),
 ) -> numpy.ndarray:
-    """
-    Linear rescaling.
+    """Apply linear rescaling to a numpy array.
 
-    Attributes
-    ----------
-    image: numpy ndarray
-        Image array to rescale.
-    in_range: Tuple, int
-        Image min/max value to rescale.
-    out_range: Tuple, optional, (default: (0,255))
-        output min/max bounds to rescale to.
+    Args:
+        image (numpy.ndarray): array to rescale.
+        in_range (tuple): array min/max value to rescale from.
+        out_range (tuple, optional): output min/max bounds to rescale to. Defaults to (0,255).
 
-    Returns
-    -------
-    out: numpy ndarray
-        returns rescaled image array.
+    Returns:
+        numpy.ndarray: linear rescaled array.
 
     """
     imin, imax = in_range
@@ -310,56 +275,47 @@ def _requested_tile_aligned_with_internal_tile(
 
 
 def render(
-    tile: numpy.ndarray,
+    data: numpy.ndarray,
     mask: Optional[numpy.ndarray] = None,
     img_format: str = "PNG",
     colormap: Optional[Dict] = None,
     **creation_options: Any,
 ) -> bytes:
-    """
-    Translate numpy ndarray to image buffer using GDAL.
+    """Translate numpy.ndarray to image bytes.
 
-    Usage
-    -----
-        tile, mask = rio_tiler.utils.tile_read(......)
-        with open('test.jpg', 'wb') as f:
-            f.write(render(tile, mask, img_format="jpeg"))
-
-    Attributes
-    ----------
-        tile : numpy ndarray
-            Image array to encode.
-        mask: numpy ndarray, optional
-            Mask array
-        img_format: str, optional
-            Image format to return (default: 'png').
-            List of supported format by GDAL: https://www.gdal.org/formats_list.html
-        colormap: dict, optional
-            GDAL RGBA Color Table dictionary.
-        creation_options: dict, optional
-            Image driver creation options to pass to GDAL
+    Args:
+        data (numpy.ndarray): Image array to encode.
+        mask (numpy.ndarray, optional): Mask array. Defaults to None.
+        img_format (str, optional): Image format. Defaults to PNG. See: for the list of supported format by GDAL: https://www.gdal.org/formats_list.html
+        colormap (dict, optional): GDAL RGBA Color Table dictionary. Defaults to None.
+        creation_options (optional): Image driver creation options to forward to GDAL
 
     Returns
-    -------
-        bytes: BytesIO
-            Reurn image body.
+        bytes: image body.
+
+    Examples:
+        >>> with COGReader("my_tif.tif") as cog:
+            img = cog.preview()
+            with open('test.jpg', 'wb') as f:
+                f.write(render(img.data, img.mask, img_format="jpeg"))
+
 
     """
     img_format = img_format.upper()
 
-    if len(tile.shape) < 3:
-        tile = numpy.expand_dims(tile, axis=0)
+    if len(data.shape) < 3:
+        data = numpy.expand_dims(data, axis=0)
 
     if colormap:
-        tile, alpha = apply_cmap(tile, colormap)
+        data, alpha = apply_cmap(data, colormap)
         if mask is not None:
             mask = (
                 mask * alpha * 255
             )  # This is a special case when we want to mask some valid data
 
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
-    if img_format == "WEBP" and tile.shape[0] == 1:
-        tile = numpy.repeat(tile, 3, axis=0)
+    if img_format == "WEBP" and data.shape[0] == 1:
+        data = numpy.repeat(data, 3, axis=0)
 
     elif img_format == "JPEG":
         mask = None
@@ -368,26 +324,27 @@ def render(
         # If mask is not None we add it as the last band
         if mask is not None:
             mask = numpy.expand_dims(mask, axis=0)
-            tile = numpy.concatenate((tile, mask))
+            data = numpy.concatenate((data, mask))
+
         bio = BytesIO()
-        numpy.save(bio, tile)
+        numpy.save(bio, data)
         bio.seek(0)
         return bio.getvalue()
 
     elif img_format == "NPZ":
         bio = BytesIO()
         if mask is not None:
-            numpy.savez_compressed(bio, data=tile, mask=mask)
+            numpy.savez_compressed(bio, data=data, mask=mask)
         else:
-            numpy.savez_compressed(bio, data=tile)
+            numpy.savez_compressed(bio, data=data)
         bio.seek(0)
         return bio.getvalue()
 
-    count, height, width = tile.shape
+    count, height, width = data.shape
 
     output_profile = dict(
         driver=img_format,
-        dtype=tile.dtype,
+        dtype=data.dtype,
         count=count + 1 if mask is not None else count,
         height=height,
         width=width,
@@ -396,46 +353,43 @@ def render(
 
     with MemoryFile() as memfile:
         with memfile.open(**output_profile) as dst:
-            dst.write(tile, indexes=list(range(1, count + 1)))
+            dst.write(data, indexes=list(range(1, count + 1)))
             # Use Mask as an alpha band
             if mask is not None:
-                dst.write(mask.astype(tile.dtype), indexes=count + 1)
+                dst.write(mask.astype(data.dtype), indexes=count + 1)
 
         return memfile.read()
 
 
-def mapzen_elevation_rgb(arr: numpy.ndarray) -> numpy.ndarray:
-    """
-    Encode elevation value to RGB values compatible with Mapzen tangram.
+def mapzen_elevation_rgb(data: numpy.ndarray) -> numpy.ndarray:
+    """Encode elevation value to RGB values compatible with Mapzen tangram.
 
-    Attributes
-    ----------
-        arr : numpy ndarray
-            Image array to encode.
+    Args:
+        data (numpy.ndarray): Image array to encode.
 
     Returns
-    -------
-        out : numpy ndarray
-            RGB array (3, h, w)
+        numpy.ndarray: Elevation encoded in a RGB array.
 
     """
-    arr = numpy.clip(arr + 32768.0, 0.0, 65535.0)
-    r = arr / 256
-    g = arr % 256
-    b = (arr * 256) % 256
+    data = numpy.clip(data + 32768.0, 0.0, 65535.0)
+    r = data / 256
+    g = data % 256
+    b = (data * 256) % 256
     return numpy.stack([r, g, b]).astype(numpy.uint8)
 
 
 def pansharpening_brovey(
     rgb: numpy.ndarray, pan: numpy.ndarray, weight: float, pan_dtype: str
 ) -> numpy.ndarray:
-    """
+    """Apply Brovey pansharpening method.
+
     Brovey Method: Each resampled, multispectral pixel is
     multiplied by the ratio of the corresponding
     panchromatic pixel intensity to the sum of all the
     multispectral intensities.
 
     Original code from https://github.com/mapbox/rio-pansharpen
+
     """
 
     def _calculateRatio(
@@ -448,25 +402,23 @@ def pansharpening_brovey(
         return numpy.clip(ratio * rgb, 0, numpy.iinfo(pan_dtype).max).astype(pan_dtype)
 
 
-def create_cutline(src_dst: DataSet, geometry: Dict, geometry_crs: CRS = None) -> str:
+def create_cutline(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    geometry: Dict,
+    geometry_crs: CRS = None,
+) -> str:
     """
     Create WKT Polygon Cutline for GDALWarpOptions.
 
     Ref: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions
 
-    Attributes
-    ----------
-    src_dst: rasterio.io.DatasetReader
-        rasterio.io.DatasetReader object
-    geometry: dict
-        GeoJSON feature or GeoJSON geometry
-    geometry_crs: CRS or str, optional
-            Specify bounds coordinate reference system, default is same as input dataset.
+    Args:
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
+        geometry (dict): GeoJSON feature or GeoJSON geometry
+        geometry_crs (rasterio.crs.CRS, optional): Input geometry Coordinate Reference System. Default input dataset CRS.
 
-    Returns
-    -------
-    wkt: str
-        Cutline WKT geometry in form of `POLYGON ((x y, x y, ...)))
+    Returns:
+        str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 
     """
     if "geometry" in geometry:

@@ -4,6 +4,15 @@
 * add MultiPolygon support in `rio_tiler.utils.create_cutline` (https://github.com/cogeotiff/rio-tiler/issues/323)
 * support discrete colormap by default in `apply_cmap` (https://github.com/cogeotiff/rio-tiler/issues/321)
 * delete deprecated `rio_tiler.mercator` submodule
+* added default factory in `rio_tiler.colormap.ColorMaps`.
+* fix missing `metadata` forwarding in `ImageData.post_process` method.
+* refactor `rio_tiler.io.GCPCOGReader` for better inheritance from COGReader.
+
+**breaking change**
+
+* renamed input parameter `tile` to `data` in `rio_tiler.utils.render`.
+* renamed input parameter `arr` to `data` in `rio_tiler.utils.mapzen_elevation_rgb`
+* made `rio_tiler.io.stac.to_pystac_item` private (renamed to `_to_pystac_item`)
 
 ## 2.0.0rc4 (2020-12-18)
 

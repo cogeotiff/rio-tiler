@@ -1,6 +1,7 @@
 """Image file profiles."""
 
 from collections import UserDict
+from copy import deepcopy
 
 from rasterio.profiles import Profile  # type: ignore
 
@@ -30,8 +31,7 @@ class WEBPProfile(Profile):
 
 
 class ImagesProfiles(UserDict):
-    """
-    GDAL Image creation options.
+    """GDAL Image creation options.
 
     ref: https://github.com/mapnik/mapnik/wiki/Image-IO#default-output-details.
 
@@ -52,12 +52,12 @@ class ImagesProfiles(UserDict):
     def get(self, key, default=None):
         """Like normal item access but return a copy of the key."""
         if key in (self.keys()):
-            return self.data[key].copy()
+            return deepcopy(self.data[key])
         return default
 
     def __getitem__(self, key):
         """Like normal item access but return a copy of the key."""
-        return self.data[key].copy()
+        return deepcopy(self.data[key])
 
 
 img_profiles = ImagesProfiles()

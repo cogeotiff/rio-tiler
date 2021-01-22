@@ -14,19 +14,14 @@ TaskType = Sequence[Tuple[Union[futures.Future, Callable], str]]
 def filter_tasks(
     tasks: TaskType, allowed_exceptions: Optional[Tuple] = None,
 ) -> Generator:
-    """
-    Filter tasks to remove Exceptions.
+    """Filter Tasks to remove Exceptions.
 
-    Attributes
-    ----------
-    tasks: list
-        Sequence of 'concurrent.futures._base.Future' or 'Callable'
-    allowed_exceptions: Tuple, optional
-        List of exceptions which won't be raised.
+    Args:
+        tasks (sequence): Sequence of 'concurrent.futures._base.Future' or 'Callable'
+        allowed_exceptions (tuple, optional): List of exceptions which won't be raised. Defaults to None.
 
-    Yields
-    ------
-    Successful task's result
+    Yields:
+        Task results.
 
     """
     if allowed_exceptions is None:
@@ -65,7 +60,7 @@ def multi_arrays(
     allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any,
 ) -> ImageData:
-    """Multi array."""
+    """Merge arrays returned from tasks."""
     tasks = create_tasks(reader, assets, threads, *args, **kwargs)
     return ImageData.create_from_list(
         [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
@@ -80,7 +75,7 @@ def multi_values(
     allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any,
 ) -> Dict:
-    """Multi Values."""
+    """Merge values returned from tasks."""
     tasks = create_tasks(reader, assets, threads, *args, **kwargs)
     return {
         asset: val

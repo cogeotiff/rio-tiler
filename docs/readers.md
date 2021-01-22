@@ -148,12 +148,12 @@ with COGReader("myfile.tif") as cog:
 # With indexes
 with COGReader("myfile.tif") as cog:
     print(cog.point(-100, 25, indexes=1))
-[1]
+>>> [1]
 
 # With expression
 with COGReader("myfile.tif") as cog:
     print(cog.point(-100, 25, expression="B1+2,B1*4"))
-[3, 4]
+>>> [3, 4]
 ```
 
 - **info()**: Return simple metadata about the dataset
@@ -164,7 +164,7 @@ with COGReader("myfile.tif") as cog:
     assert isinstance(info, Info)
 
 print(info.dict(exclude_none=True))
->>>{
+>>> {
     "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
     "center": [-101.98868496889182, 23.548959503763047, 3],
     "minzoom": 3,
@@ -198,7 +198,7 @@ print(stats)
 }
 
 print(stats["1"].dict())
->>>{
+>>> {
     "percentiles": [1, 16],
     "min": 1,
     "max": 18,
@@ -285,8 +285,8 @@ with STACReader(
     print(stac.bounds)
     print(stac.assets)
 
-> [23.293255090449595, 31.505183020453355, 24.296453548295318, 32.51147809805106]
-> ['overview', 'visual', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'AOT', 'WVP', 'SCL']
+>>> [23.293255090449595, 31.505183020453355, 24.296453548295318, 32.51147809805106]
+>>> ['overview', 'visual', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'AOT', 'WVP', 'SCL']
 
 # Name of assets to read
 assets = ["B01", "B02"]
@@ -304,7 +304,7 @@ print(img.assets)
 ]
 
 print(img.data.shape)
-> (2, 256, 256)
+>>> (2, 256, 256)
 
 # With expression
 with STACReader(
@@ -320,7 +320,7 @@ print(img.assets)
 ]
 
 print(img.data.shape)
-> (1, 256, 256)
+>>> (1, 256, 256)
 ```
 
 Note: `STACReader` is based on `rio_tiler.io.base.MultiBaseReader` class.

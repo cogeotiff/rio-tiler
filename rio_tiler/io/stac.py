@@ -32,6 +32,8 @@ DEFAULT_VALID_TYPE = {
 def fetch(filepath: str) -> Dict:
     """Fetch STAC items.
 
+    A LRU cache is set on top of this function.
+
     Args:
         filepath (str): STAC item URL.
 
@@ -96,7 +98,7 @@ def _get_assets(
         yield asset
 
 
-def to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.Item]:
+def _to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.Item]:
     """Attr converter to convert to Dict to pystac.Item
 
     Args:
@@ -118,15 +120,15 @@ class STACReader(MultiBaseReader):
 
     Args:
         filepath (str): STAC Item path, URL or S3 URL.
-        item (Dict or pystac.Item, STAC): Stac Item.
-        minzoom (Optional[int]): Set minzoom for the tiles. Defaults to tms.minzoom.
-        minzoom (Optional[int]): Set maxzoom for the tiles. Defaults to tms.maxzoom.
-        include (Optional[Set[str]]): Only Include specific assets. Defaults to None.
-        exclude (Optional[Set[str]]): Exclude specific assets. Defaults to None.
-        include_asset_types (Optional[Set[str]]): Only include some assets base on their type. Defaults to None.
-        exclude_asset_types (Optional[Set[str]]): Exclude some assets base on their type. Defaults to None.
-        reader (BaseReader): rio-tiler Reader (default is set to rio_tiler.io.COGReader).
-        reader_options (dict): additional option to forward to the Reader (default is {}).
+        item (dict or pystac.Item, STAC): Stac Item.
+        minzoom (int, optional): Set minzoom for the tiles. Defaults to tms.minzoom.
+        minzoom (int, optional): Set maxzoom for the tiles. Defaults to tms.maxzoom.
+        include (set of string, optional): Only Include specific assets. Defaults to None.
+        exclude (set of string, optional): Exclude specific assets. Defaults to None.
+        include_asset_types (set of string, optional): Only include some assets base on their type. Defaults to None.
+        exclude_asset_types (set of string, optional): Exclude some assets base on their type. Defaults to None.
+        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to rio_tiler.io.COGReader.
+        reader_options (dict, optional): additional option to forward to the Reader. Defaults to {}.
 
     Raises:
         rio_tiler.errors.MissingAssets: if no valid asset is found.
@@ -151,7 +153,7 @@ class STACReader(MultiBaseReader):
     """
 
     filepath: str = attr.ib()
-    item: pystac.Item = attr.ib(default=None, converter=to_pystac_item)
+    item: pystac.Item = attr.ib(default=None, converter=_to_pystac_item)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
