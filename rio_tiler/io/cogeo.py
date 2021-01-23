@@ -240,7 +240,7 @@ class COGReader(BaseReader):
         tile_z: int,
         tilesize: int = 256,
         indexes: Optional[Union[int, Sequence]] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a COG.
@@ -251,7 +251,7 @@ class COGReader(BaseReader):
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
             indexes (int or sequence of int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
@@ -268,13 +268,13 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression:
+        if indexes and expression is not None:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             indexes = parse_expression(expression)
 
         tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
@@ -287,7 +287,7 @@ class COGReader(BaseReader):
             dst_crs=self.tms.crs,
             **kwargs,
         )
-        if expression:
+        if expression is not None:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             tile = apply_expression(blocks, bands, tile)
@@ -303,7 +303,7 @@ class COGReader(BaseReader):
         bounds_crs: CRS = constants.WGS84_CRS,
         max_size: int = 1024,
         indexes: Optional[Union[int, Sequence]] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG.
@@ -314,7 +314,7 @@ class COGReader(BaseReader):
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
             indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
@@ -326,13 +326,13 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression:
+        if indexes and expression is not None:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             indexes = parse_expression(expression)
 
         if not dst_crs:
@@ -348,7 +348,7 @@ class COGReader(BaseReader):
             **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
@@ -365,14 +365,14 @@ class COGReader(BaseReader):
     def preview(
         self,
         indexes: Optional[Union[int, Sequence]] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a COG.
 
         Args:
             indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `rio_tiler.reader.preview` function.
 
         Returns:
@@ -384,18 +384,18 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression:
+        if indexes and expression is not None:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             indexes = parse_expression(expression)
 
         data, mask = reader.preview(self.dataset, indexes=indexes, **kwargs)
 
-        if expression:
+        if expression is not None:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
@@ -413,7 +413,7 @@ class COGReader(BaseReader):
         lon: float,
         lat: float,
         indexes: Optional[Union[int, Sequence]] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         **kwargs: Any,
     ) -> List:
         """Read a pixel value from a COG.
@@ -422,7 +422,7 @@ class COGReader(BaseReader):
             lon (float): Longitude.
             lat (float): Latittude.
             indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `rio_tiler.reader.point` function.
 
         Returns:
@@ -434,18 +434,18 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression:
+        if indexes and expression is not None:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             indexes = parse_expression(expression)
 
         point = reader.point(self.dataset, (lon, lat), indexes=indexes, **kwargs)
 
-        if expression:
+        if expression is not None:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             point = apply_expression(blocks, bands, point).tolist()
@@ -459,7 +459,7 @@ class COGReader(BaseReader):
         shape_crs: CRS = constants.WGS84_CRS,
         max_size: int = 1024,
         indexes: Optional[Union[int, Sequence]] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG defined by a geojson feature.
@@ -470,7 +470,7 @@ class COGReader(BaseReader):
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
             indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
@@ -482,13 +482,13 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression:
+        if indexes and expression is not None:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             indexes = parse_expression(expression)
 
         if not dst_crs:
@@ -512,7 +512,7 @@ class COGReader(BaseReader):
             **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)

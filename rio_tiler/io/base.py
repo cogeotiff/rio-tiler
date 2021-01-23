@@ -456,10 +456,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         tile_y: int,
         tile_z: int,
         assets: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = "",  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Wep Map tiles from multiple assets.
@@ -469,8 +469,8 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             assets (sequence of str or str, optional): assets to fetch info from.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.tile` method.
 
         Returns:
@@ -485,13 +485,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression:
+        if assets and expression is not None:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -514,7 +514,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -524,10 +524,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         self,
         bbox: Tuple[float, float, float, float],
         assets: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = "",  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple assets.
@@ -535,8 +535,8 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             assets (sequence of str or str, optional): assets to fetch info from.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.part` method.
 
         Returns:
@@ -546,13 +546,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression:
+        if assets and expression is not None:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -569,7 +569,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             assets, _reader, bbox, expression=asset_expression, **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -578,18 +578,18 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
     def preview(
         self,
         assets: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = "",  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple assets.
 
         Args:
             assets (sequence of str or str, optional): assets to fetch info from.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.preview` method.
 
         Returns:
@@ -599,13 +599,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression:
+        if assets and expression is not None:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -620,7 +620,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         output = multi_arrays(assets, _reader, expression=asset_expression, **kwargs)
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -631,10 +631,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         lon: float,
         lat: float,
         assets: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = "",  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> List:
         """Read pixel value from multiple assets.
@@ -643,8 +643,8 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             lon (float): Longitude.
             lat (float): Latittude.
             assets (sequence of str or str, optional): assets to fetch info from.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
@@ -654,13 +654,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression:
+        if assets and expression is not None:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -678,7 +678,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         )
 
         values = [d for _, d in data.items()]
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             values = apply_expression(blocks, assets, values).tolist()
 
@@ -688,10 +688,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         self,
         shape: Dict,
         assets: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = "",  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple assets.
@@ -699,8 +699,8 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             shape (dict): Valid GeoJSON feature.
             assets (sequence of str or str, optional): assets to fetch info from.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.feature` method.
 
         Returns:
@@ -710,13 +710,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression:
+        if assets and expression is not None:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -733,7 +733,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             assets, _reader, shape, expression=asset_expression, **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -909,10 +909,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         tile_y: int,
         tile_z: int,
         bands: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = "",  # Expression for each band based on index names
+        ] = None,  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Web Map tiles multiple bands.
@@ -922,8 +922,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             bands (sequence of str or str, optional): bands to fetch info from.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.tile` method.
 
         Returns:
@@ -938,13 +938,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression:
+        if bands and expression is not None:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -967,7 +967,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 
@@ -977,10 +977,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         self,
         bbox: Tuple[float, float, float, float],
         bands: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = "",  # Expression for each band based on index names
+        ] = None,  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple bands.
@@ -988,8 +988,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             bands (sequence of str or str, optional): bands to fetch info from.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the 'self.reader.part' method.
 
         Returns:
@@ -999,13 +999,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression:
+        if bands and expression is not None:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1022,7 +1022,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bands, _reader, bbox, expression=band_expression, **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 
@@ -1031,18 +1031,18 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
     def preview(
         self,
         bands: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = "",  # Expression for each band based on index names
+        ] = None,  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple bands.
 
         Args:
             bands (sequence of str or str, optional): bands to fetch info from.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.preview` method.
 
         Returns:
@@ -1052,13 +1052,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression:
+        if bands and expression is not None:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1073,7 +1073,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         output = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 
@@ -1084,10 +1084,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         lon: float,
         lat: float,
         bands: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = "",  # Expression for each band based on index names (b1, b2, ...)
+        ] = None,  # Expression for each band based on index names (b1, b2, ...)
         **kwargs: Any,
     ) -> List:
         """Read a pixel values from multiple bands.
@@ -1096,8 +1096,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             lon (float): Longitude.
             lat (float): Latittude.
             bands (sequence of str or str, optional): bands to fetch info from.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
@@ -1107,13 +1107,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression:
+        if bands and expression is not None:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1131,7 +1131,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         )
 
         values = [d for _, d in data.items()]
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             values = apply_expression(blocks, bands, values).tolist()
 
@@ -1141,10 +1141,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         self,
         shape: Dict,
         bands: Union[Sequence[str], str] = None,
-        expression: Optional[str] = "",
+        expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = "",  # Expression for each band based on index names
+        ] = None,  # Expression for each band based on index names
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple bands.
@@ -1152,8 +1152,8 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             shape (dict): Valid GeoJSON feature.
             bands (sequence of str or str, optional): bands to fetch info from.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.feature` method.
 
         Returns:
@@ -1163,13 +1163,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression:
+        if bands and expression is not None:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression:
+        if expression is not None:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1186,7 +1186,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bands, _reader, shape, expression=band_expression, **kwargs,
         )
 
-        if expression:
+        if expression is not None:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 
