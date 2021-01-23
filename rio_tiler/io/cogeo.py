@@ -69,7 +69,7 @@ class COGReader(BaseReader):
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
 
-    # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
+    # Define global options to be forwarded to functions reading the data (e.g `rio_tiler.reader.read`)
     nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
     unscale: Optional[bool] = attr.ib(default=None)
     resampling_method: Optional[Resampling] = attr.ib(default=None)
@@ -566,7 +566,7 @@ class GCPCOGReader(COGReader):
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
 
-    # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
+    # Define global options to be forwarded to functions reading the data (e.g `rio_tiler.reader.read`)
     nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
     unscale: Optional[bool] = attr.ib(default=None)
     resampling_method: Optional[Resampling] = attr.ib(default=None)
