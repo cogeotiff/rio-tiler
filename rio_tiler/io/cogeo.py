@@ -28,18 +28,18 @@ from .base import BaseReader
 class COGReader(BaseReader):
     """Cloud Optimized GeoTIFF Reader.
 
-    Args:
+    Attributes:
         filepath (str): Cloud Optimized GeoTIFF path.
-        dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset. Defaults to None.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
-        minzoom (int, optional): Overwrite Min Zoom level. Defaults to None.
-        maxzoom (int, optional): Overwrite Max Zoom level. Defaults to None.
-        colormap (dict, optional): Overwrite internal colormap. Defaults to None.
-        nodata (int or float or str, optional): Global options, overwrite internal nodata value. Defaults to None.
-        unscale (bool, optional): Global options, apply internal scale and offset on all read operations. Defaults to None.
-        resampling_method (rasterio.enums.Resampling, optional): Global options, resampling method to use for read operations. Defaults to None.
-        vrt_options (dict, optional): Global options, WarpedVRT options to use for read operations. Defaults to None.
-        post_process (callable, optional): Global options, Function to apply after all read operations. Defaults to None.
+        dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Overwrite Min Zoom level.
+        maxzoom (int, optional): Overwrite Max Zoom level.
+        colormap (dict, optional): Overwrite internal colormap.
+        nodata (int or float or str, optional): Global options, overwrite internal nodata value.
+        unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
+        resampling_method (rasterio.enums.Resampling, optional): Global options, resampling method to use for read operations.
+        vrt_options (dict, optional): Global options, WarpedVRT options to use for read operations.
+        post_process (callable, optional): Global options, Function to apply after all read operations.
 
     Examples:
         >>> with COGReader(src_path) as cog:
@@ -210,10 +210,10 @@ class COGReader(BaseReader):
         """Return bands statistics from a COG.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
-            hist_options (dict, optional): Options to forward to numpy.histogram function. Defaults to None.
-            kwargs (optional): Options to forward to 'rio_tiler.reader.stats'.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            kwargs (optional): Options to forward to `rio_tiler.reader.stats`.
 
         Returns:
             rio_tiler.models.ImageStatistics: bands statistics.
@@ -249,10 +249,10 @@ class COGReader(BaseReader):
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
-            tilesize (int, optional): Output image size. Defaults to 256.
-            indexes (int or sequence of int, optional): Band indexes. Defaults to None.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'rio_tiler.reader.part' function.
+            tilesize (int, optional): Output image size. Defaults to `256`.
+            indexes (int or sequence of int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -310,12 +310,12 @@ class COGReader(BaseReader):
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
-            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system. Defaults to None.
-            bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to epsg:4326.
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
-            indexes (sequence of int or int, optional): Band indexes. Defaults to None.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'rio_tiler.reader.part' function.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -371,9 +371,9 @@ class COGReader(BaseReader):
         """Return a preview of a COG.
 
         Args:
-            indexes (sequence of int or int, optional): Band indexes. Defaults to None.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'rio_tiler.reader.preview' function.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.preview` function.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -421,9 +421,9 @@ class COGReader(BaseReader):
         Args:
             lon (float): Longitude.
             lat (float): Latittude.
-            indexes (sequence of int or int, optional): Band indexes. Defaults to None.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'rio_tiler.reader.point' function.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.point` function.
 
         Returns:
             list: Pixel value per band indexes.
@@ -466,12 +466,12 @@ class COGReader(BaseReader):
 
         Args:
             shape (dict): Valid GeoJSON feature.
-            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system. Defaults to None.
-            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to epsg:4326.
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
-            indexes (sequence of int or int, optional): Band indexes. Defaults to None.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'rio_tiler.reader.part' function.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -531,19 +531,19 @@ class COGReader(BaseReader):
 class GCPCOGReader(COGReader):
     """Custom COG Reader with GCPS support.
 
-    Args:
+    Attributes:
         filepath (str): Cloud Optimized GeoTIFF path.
-        src_dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset. Defaults to None.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
-        minzoom (int, optional): Overwrite Min Zoom level. Defaults to None.
-        maxzoom (int, optional): Overwrite Max Zoom level. Defaults to None.
-        colormap (dict, optional): Overwrite internal colormap. Defaults to None.
-        nodata (int or float or str, optional): Global options, overwrite internal nodata value. Defaults to None.
-        unscale (bool, optional): Global options, apply internal scale and offset on all read operations. Defaults to None.
-        resampling_method (rasterio.enums.Resampling, optional): Global options, resampling method to use for read operations. Defaults to None.
-        vrt_options (dict, optional): Global options, WarpedVRT options to use for read operations. Defaults to None.
-        post_process (callable, optional): Global options, Function to apply after all read operations. Defaults to None.
-        dataset (rasterio.vrtWarpedVRT): Warped VRT constructed with dataset GCPS info. This is a READ ONLY attribute.
+        src_dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Overwrite Min Zoom level.
+        maxzoom (int, optional): Overwrite Max Zoom level.
+        colormap (dict, optional): Overwrite internal colormap.
+        nodata (int or float or str, optional): Global options, overwrite internal nodata value.
+        unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
+        resampling_method (rasterio.enums.Resampling, optional): Global options, resampling method to use for read operations.
+        vrt_options (dict, optional): Global options, WarpedVRT options to use for read operations.
+        post_process (callable, optional): Global options, Function to apply after all read operations.
+        dataset (rasterio.vrtWarpedVRT): Warped VRT constructed with dataset GCPS info. **READ ONLY attribute**.
 
     Examples:
         >>> with COGReader(src_path) as cog:

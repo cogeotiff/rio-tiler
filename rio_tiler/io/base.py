@@ -25,11 +25,11 @@ from ..tasks import multi_arrays, multi_values
 class SpatialMixin:
     """Spatial Info Mixin.
 
-    Args:
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
-        bbox (tuple): Dataset bounds (left, bottom, right, top). READ ONLY attribute.
-        minzoom (int): Overwrite Min Zoom level. READ ONLY attribute.
-        maxzoom (int): Overwrite Max Zoom level. READ ONLY attribute.
+    Attributes:
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        bbox (tuple): Dataset bounds (left, bottom, right, top). **READ ONLY attribute**.
+        minzoom (int): Overwrite Min Zoom level. **READ ONLY attribute**.
+        maxzoom (int): Overwrite Max Zoom level. **READ ONLY attribute**.
 
     """
 
@@ -108,8 +108,8 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Return Dataset's statistics.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
 
         Returns:
             rio_tile.models.ImageStatistics: Dataset statistics.
@@ -123,8 +123,8 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Return Dataset's statistics and info.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
 
         Returns:
             rio_tile.models.Metadata: Dataset statistics and metadata.
@@ -154,7 +154,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Read a Part of a Dataset.
 
         Args:
-            bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -229,8 +229,8 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Return Dataset's statistics.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
 
         Returns:
             rio_tile.models.ImageStatistics: Dataset statistics.
@@ -244,8 +244,8 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Return Dataset's statistics and info.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
 
         Returns:
             rio_tile.models.Metadata: Dataset statistics and metadata.
@@ -280,7 +280,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Read a Part of a Dataset.
 
         Args:
-            bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -336,11 +336,11 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     This Reader is suited for dataset that are composed of multiple assets (e.g. STAC).
 
-    Args:
+    Attributes:
         reader (rio_tiler.io.BaseReader): reader.
-        reader_options (dict, option): options to forward to the reader. Defaults to {}.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
-        assets (sequence): Asset list. READ ONLY attribute.
+        reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        assets (sequence): Asset list. **READ ONLY attribute**.
 
     """
 
@@ -367,7 +367,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         """Return metadata from multiple assets.
 
         Args:
-            assets (sequence of str or str, optional): assets to fetch info from. Requiered keyword argument.
+            assets (sequence of str or str, optional): assets to fetch info from. Required keyword argument.
 
         Returns:
             dict: Multiple assets info in form of {"asset1": rio_tile.models.Info}.
@@ -396,10 +396,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         """Return array statistics from multiple assets.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
-            assets (sequence of str or str): assets to fetch info from. Requiered keyword argument.
-            kwargs (optional): Options to forward to the 'self.reader.stats' method.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
+            assets (sequence of str or str): assets to fetch info from. Required keyword argument.
+            kwargs (optional): Options to forward to the `self.reader.stats` method.
 
         Returns:
             dict: Multiple assets statistics in form of {"asset1": rio_tile.models.ImageStatistics}.
@@ -428,10 +428,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         """Return metadata from multiple assets.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
-            assets (sequence of str or str): assets to fetch info from. Requiered keyword argument.
-            kwargs (optional): Options to forward to the 'self.reader.metadata' method.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
+            assets (sequence of str or str): assets to fetch info from. Required keyword argument.
+            kwargs (optional): Options to forward to the `self.reader.metadata` method.
 
         Returns:
             dict: Multiple assets info and statistics in form of {"asset1": rio_tile.models.Metadata}.
@@ -468,10 +468,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
-            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.tile' method.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.tile` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -534,10 +534,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
-            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.part' method.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -587,10 +587,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         """Read and merge previews from multiple assets.
 
         Args:
-            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.preview' method.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.preview` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -642,10 +642,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             lon (float): Longitude.
             lat (float): Latittude.
-            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.point' method.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
             list: Pixel values per assets.
@@ -698,10 +698,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         Args:
             shape (dict): Valid GeoJSON feature.
-            assets (sequence of str or str, optional): assets to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to ''.
-            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.feature' method.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). Defaults to `''`.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.feature` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -746,11 +746,11 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     This Reader is suited for dataset that stores spectral bands as separate files  (e.g. Sentinel 2).
 
-    Args:
+    Attributes:
         reader (rio_tiler.io.BaseReader): reader.
-        reader_options (dict, option): options to forward to the reader. Defaults to {}.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to WebMercatorQuad.
-        bands (sequence): Band list. READ ONLY attribute.
+        reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        bands (sequence): Band list. **READ ONLY attribute**.
 
     """
 
@@ -777,7 +777,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         """Return metadata from multiple bands.
 
         Args:
-            bands (sequence of str or str, optional): band names to fetch info from. Requiered keyword argument.
+            bands (sequence of str or str, optional): band names to fetch info from. Required keyword argument.
 
         Returns:
             dict: Multiple bands info in form of {"band1": rio_tile.models.Info}.
@@ -824,10 +824,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         """Return array statistics from multiple bands.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
-            bands (sequence of str or str): bands to fetch info from. Requiered keyword argument.
-            kwargs (optional): Options to forward to the 'self.reader.stats' method.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
+            bands (sequence of str or str): bands to fetch info from. Required keyword argument.
+            kwargs (optional): Options to forward to the `self.reader.stats` method.
 
         Returns:
             dict: Multiple bands statistics in form of {"band1": rio_tile.models.ImageStatistics}.
@@ -858,10 +858,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         """Return metadata from multiple bands.
 
         Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to 2.0.
-            pmax (float, optional): Histogram maximum cut. Defaults to 98.0.
-            bands (sequence of str or str): bands to fetch info from. Requiered keyword argument.
-            kwargs (optional): Options to forward to the 'self.reader.stats' method.
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
+            bands (sequence of str or str): bands to fetch info from. Required keyword argument.
+            kwargs (optional): Options to forward to the `self.reader.stats` method.
 
         Returns:
             dict: Multiple bands info an statistics in form of {"band1": rio_tile.models.Metadata}.
@@ -921,10 +921,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
-            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.tile' method.
+            bands (sequence of str or str, optional): bands to fetch info from.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.tile` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -987,9 +987,9 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
-            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
+            bands (sequence of str or str, optional): bands to fetch info from.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
             kwargs (optional): Options to forward to the 'self.reader.part' method.
 
         Returns:
@@ -1040,10 +1040,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         """Read and merge previews from multiple bands.
 
         Args:
-            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.preview' method.
+            bands (sequence of str or str, optional): bands to fetch info from.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.preview` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -1095,10 +1095,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             lon (float): Longitude.
             lat (float): Latittude.
-            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.point' method.
+            bands (sequence of str or str, optional): bands to fetch info from.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
             list: Pixel value per bands.
@@ -1151,10 +1151,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         Args:
             shape (dict): Valid GeoJSON feature.
-            bands (sequence of str or str, optional): bands to fetch info from. Defaults to None.
-            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to ''.
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to ''.
-            kwargs (optional): Options to forward to the 'self.reader.feature' method.
+            bands (sequence of str or str, optional): bands to fetch info from.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3). Defaults to `''`.
+            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `self.reader.feature` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.

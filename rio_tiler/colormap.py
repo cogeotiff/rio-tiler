@@ -136,7 +136,7 @@ def apply_discrete_cmap(
 class ColorMaps:
     """Default Colormaps holder.
 
-    Args:
+    Attributes:
         data (dict): colormaps. Defaults to `rio_tiler.colormap.DEFAULTS_CMAPS`.
 
     """

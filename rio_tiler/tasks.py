@@ -18,7 +18,7 @@ def filter_tasks(
 
     Args:
         tasks (sequence): Sequence of 'concurrent.futures._base.Future' or 'Callable'
-        allowed_exceptions (tuple, optional): List of exceptions which won't be raised. Defaults to None.
+        allowed_exceptions (tuple, optional): List of exceptions which won't be raised.
 
     Yields:
         Task results.

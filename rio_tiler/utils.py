@@ -52,12 +52,12 @@ def _stats(
     """Calculate array statistics.
 
     Args:
-        arr (numpy ndarray): Input array data to get the stats from.
-        percentiles (tuple, optional): Min/Max percentiles to compute. Defaults to (2, 98).
-        kwargs (optional): Options to forward to numpy.histogram function. Defaults to None.
+        arr (numpy.ndarray): Input array data to get the stats from.
+        percentiles (tuple, optional): Min/Max percentiles to compute. Defaults to `(2, 98)`.
+        kwargs (optional): Options to forward to numpy.histogram function.
 
     Returns:
-        dict: numpy array statistics: percentiles, min, max, stdev, histogram.
+        dict: numpy array statistics (percentiles, min, max, stdev, histogram).
 
     Examples:
         >>> {
@@ -101,11 +101,11 @@ def get_overview_level(
     Freely adapted from https://github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e944744b7c9b2bd6c400/gdal/apps/gdalwarp_lib.cpp#L2293-L2362
 
     Args:
-        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
-        bounds (tuple): Bounding box coordinates in target crs ("dst_crs").
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
+        bounds (tuple): Bounding box coordinates in target crs (**dst_crs**).
         height (int): Desired output height of the array for the input bounds.
         width (int): Desired output width of the array for the input bounds.
-        dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to epsg:3857.
+        dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to `epsg:3857`.
 
     Returns:
         int: Overview level.
@@ -148,11 +148,11 @@ def get_vrt_transform(
     """Calculate VRT transform.
 
     Args:
-        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
-        bounds (tuple): Bounding box coordinates in target crs ("dst_crs").
-        height (int, optional): Desired output height of the array for the input bounds. Defaults to None.
-        width (int, optional): Desired output width of the array for the input bounds. Defaults to None.
-        dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to epsg:3857.
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
+        bounds (tuple): Bounding box coordinates in target crs (**dst_crs**).
+        height (int, optional): Desired output height of the array for the input bounds.
+        width (int, optional): Desired output width of the array for the input bounds.
+        dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to `epsg:3857`.
 
     Returns:
         tuple: VRT transform (affine.Affine), width (int) and height (int)
@@ -232,7 +232,7 @@ def linear_rescale(
     Args:
         image (numpy.ndarray): array to rescale.
         in_range (tuple): array min/max value to rescale from.
-        out_range (tuple, optional): output min/max bounds to rescale to. Defaults to (0,255).
+        out_range (tuple, optional): output min/max bounds to rescale to. Defaults to `(0, 255)`.
 
     Returns:
         numpy.ndarray: linear rescaled array.
@@ -285,10 +285,10 @@ def render(
 
     Args:
         data (numpy.ndarray): Image array to encode.
-        mask (numpy.ndarray, optional): Mask array. Defaults to None.
-        img_format (str, optional): Image format. Defaults to PNG. See: for the list of supported format by GDAL: https://www.gdal.org/formats_list.html
-        colormap (dict, optional): GDAL RGBA Color Table dictionary. Defaults to None.
-        creation_options (optional): Image driver creation options to forward to GDAL
+        mask (numpy.ndarray, optional): Mask array.
+        img_format (str, optional): Image format. See: for the list of supported format by GDAL: https://www.gdal.org/formats_list.html. Defaults to `PNG`.
+        colormap (dict, optional): GDAL RGBA Color Table dictionary.
+        creation_options (optional): Image driver creation options to forward to GDAL.
 
     Returns
         bytes: image body.
@@ -413,10 +413,9 @@ def create_cutline(
     Ref: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions
 
     Args:
-        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Input rasterio.io.DatasetReader object.
-        geometry (dict): GeoJSON feature or GeoJSON geometry
-        geometry_crs (rasterio.crs.CRS, optional): Input geometry Coordinate Reference System. Default input dataset CRS.
-
+        src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
+        geometry (dict): GeoJSON feature or GeoJSON geometry. By default the cordinates are considered to be in the dataset CRS. Use `geometry_crs` to set a specific CRS.
+        geometry_crs (rasterio.crs.CRS, optional): Input geometry Coordinate Reference System
     Returns:
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 

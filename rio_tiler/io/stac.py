@@ -66,10 +66,10 @@ def _get_assets(
 
     Args:
         stac_item (pystac.Item): STAC Item.
-        include (Optional[Set[str]]): Only Include specific assets. Defaults to None.
-        exclude (Optional[Set[str]]): Exclude specific assets. Defaults to None.
-        include_asset_types (Optional[Set[str]]): Only include some assets base on their type. Defaults to None.
-        exclude_asset_types (Optional[Set[str]]): Exclude some assets base on their type. Defaults to None.
+        include (Optional[Set[str]]): Only Include specific assets.
+        exclude (Optional[Set[str]]): Exclude specific assets.
+        include_asset_types (Optional[Set[str]]): Only include some assets base on their type.
+        exclude_asset_types (Optional[Set[str]]): Exclude some assets base on their type.
 
     Yields
         str: valid STAC asset name.
@@ -118,20 +118,17 @@ def _to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.
 class STACReader(MultiBaseReader):
     """STAC Reader.
 
-    Args:
+    Attributes:
         filepath (str): STAC Item path, URL or S3 URL.
         item (dict or pystac.Item, STAC): Stac Item.
-        minzoom (int, optional): Set minzoom for the tiles. Defaults to tms.minzoom.
-        minzoom (int, optional): Set maxzoom for the tiles. Defaults to tms.maxzoom.
-        include (set of string, optional): Only Include specific assets. Defaults to None.
-        exclude (set of string, optional): Exclude specific assets. Defaults to None.
-        include_asset_types (set of string, optional): Only include some assets base on their type. Defaults to None.
-        exclude_asset_types (set of string, optional): Exclude some assets base on their type. Defaults to None.
-        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to rio_tiler.io.COGReader.
-        reader_options (dict, optional): additional option to forward to the Reader. Defaults to {}.
-
-    Raises:
-        rio_tiler.errors.MissingAssets: if no valid asset is found.
+        minzoom (int, optional): Set minzoom for the tiles.
+        minzoom (int, optional): Set maxzoom for the tiles.
+        include (set of string, optional): Only Include specific assets.
+        exclude (set of string, optional): Exclude specific assets.
+        include_asset_types (set of string, optional): Only include some assets base on their type.
+        exclude_asset_types (set of string, optional): Exclude some assets base on their type.
+        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.COGReader`.
+        reader_options (dict, optional): additional option to forward to the Reader. Defaults to `{}`.
 
     Examples:
         >>> with STACReader(stac_path) as stac:
