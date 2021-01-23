@@ -363,6 +363,37 @@ def test_cog_with_internal_gcps():
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
 
+    # https://github.com/mapbox/rasterio/issues/2092
+    # assert cog.dataset.closed
+    assert cog.src_dataset.closed
+
+    with rasterio.open(COG_GCPS) as dst:
+        with GCPCOGReader(None, src_dataset=dst, nodata=0) as cog:
+            assert cog.bounds
+            assert cog.nodata == 0
+            assert isinstance(cog.src_dataset, DatasetReader)
+            assert isinstance(cog.dataset, WarpedVRT)
+
+            assert cog.minzoom == 7
+            assert cog.maxzoom == 10
+
+            metadata = cog.info()
+            assert len(metadata.band_metadata) == 1
+            assert metadata.band_descriptions == [("1", "")]
+            b1_stats = cog.stats()["1"]
+            assert b1_stats.max == 623
+
+            tile_z = 8
+            tile_x = 183
+            tile_y = 120
+            data, mask = cog.tile(tile_x, tile_y, tile_z)
+            assert data.shape == (1, 256, 256)
+            assert mask.shape == (256, 256)
+        # https://github.com/mapbox/rasterio/issues/2092
+        # assert cog.dataset.closed
+        assert not cog.src_dataset.closed
+    assert cog.src_dataset.closed
+
 
 def parse_img(content: bytes) -> Dict[Any, Any]:
     """Read tile image and return metadata."""

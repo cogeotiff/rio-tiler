@@ -2,7 +2,6 @@
 
 import os
 import pathlib
-from copy import deepcopy
 from typing import Dict, List, Sequence, Tuple, Union
 
 import attr
@@ -12,14 +11,15 @@ from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidForma
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
-DEFAULTS_CMAPS_FILES = list(
-    pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy")
-)
+DEFAULT_CMAPS_FILES = {
+    f.stem: str(f)
+    for f in pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy")
+}
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
 if USER_CMAPS_DIR:
-    DEFAULTS_CMAPS_FILES.extend(list(pathlib.Path(USER_CMAPS_DIR).glob("*.npy")))
-
-DEFAULTS_CMAPS = {f.stem: str(f) for f in DEFAULTS_CMAPS_FILES}
+    DEFAULT_CMAPS_FILES.update(
+        {f.stem: str(f) for f in pathlib.Path(USER_CMAPS_DIR).glob("*.npy")}
+    )
 
 
 def _update_alpha(cmap: Dict, idx: Sequence[int], alpha: int = 0) -> None:
@@ -75,7 +75,7 @@ def apply_cmap(
         colormap (dict): GDAL RGBA Color Table dictionary.
 
     Returns:
-        tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).
+        tuple: Data (numpy.ndarray) and Mask (numpy.ndarray) values.
 
     Raises:
         InvalidFormat: If data is not a 1 band dataset (1, col, row).
@@ -137,12 +137,14 @@ def apply_discrete_cmap(
 class ColorMaps:
     """Default Colormaps holder.
 
-    Args:
-        data (dict): colormaps.
+    Attributes:
+        data (dict): colormaps. Defaults to `rio_tiler.colormap.DEFAULTS_CMAPS`.
 
     """
 
-    data: Dict[str, Union[str, numpy.array]] = attr.ib()
+    data: Dict[str, Union[str, numpy.array]] = attr.ib(
+        default=attr.Factory(lambda: DEFAULT_CMAPS_FILES)
+    )
 
     def get(self, name: str) -> Dict:
         """Fetch a colormap.
@@ -188,6 +190,7 @@ class ColorMaps:
             >>> cmap = cmap.register({"acmap": {0: [0, 0, 0, 0]}})
 
             >>> cmap = cmap.register({"acmap": "acmap.npy"})
+
         """
         for name, cmap in custom_cmap.items():
             if not overwrite and name in self.data:
@@ -198,4 +201,4 @@ class ColorMaps:
         return ColorMaps({**self.data, **custom_cmap})
 
 
-cmap = ColorMaps(deepcopy(DEFAULTS_CMAPS))  # noqa
+cmap = ColorMaps()  # noqa

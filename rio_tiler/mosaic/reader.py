@@ -24,45 +24,36 @@ def mosaic_reader(
     allowed_exceptions: Tuple = (TileOutsideBounds,),
     **kwargs,
 ) -> Tuple[ImageData, List[str]]:
-    """
-    Merge multiple assets.
+    """Merge multiple assets.
 
-    Attributes
-    ----------
-    assets: list or tuple
-        List of tiler compatible asset.
-    reader: callable
-        reader function. The function MUST take asset, *args, **kwargs as arguments,
-        and MUST return a tuple with tile data and mask
-        e.g:
-        def reader(asset: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
-            with COGReader(asset) as cog:
-                return cog.tile(*args, **kwargs)
+    Args:
 
-        def reader(asset: str, *args, **kwargs) -> Tuple[numpy.ndarray, numpy.ndarray]:
-            with COGReader(asset) as cog:
-                return cog.preview(*args, **kwargs)
-    args: Any
-        additional argument to forward to the reader function.
-    pixel_selection: MosaicMethod, optional
-        Instance of MosaicMethodBase class.
-        default: "rio_tiler.mosaic.methods.defaults.FirstMethod".
-    chunk_size: int, optional
-        Control the number of asset to process per loop (default = threads).
-    threads: int, optional
-        Number of threads to use. If <= 1, runs single threaded without an event
-        loop. By default reads from the MAX_THREADS environment variable, and if
-        not found defaults to multiprocessing.cpu_count() * 5.
-    allowed_exceptions: Tuple, optional
-        List of exceptions which will be ignored. Default is set to `(TileOutsideBounds,)`.
-        Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions.
-    kwargs: dict, optional
-        tiler specific options.
+        assets (sequence): List of assets.
+        reader (callable): Reader function. The function MUST take `(asset, *args, **kwargs)` as arguments, and MUST return an ImageData.
+        args (Any): Argument to forward to the reader function.
+        pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. Defaults to `rio_tiler.mosaic.methods.defaults.FirstMethod`.
+        chunk_size (int, optional): Control the number of asset to process per loop.
+        threads (int, optional): Number of threads to use. If <= 1, runs single threaded without an event loop. By default reads from the MAX_THREADS environment variable, and if not found defaults to multiprocessing.cpu_count() * 5.
+        allowed_exceptions (tuple, optional): List of exceptions which will be ignored. Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions. Defaults to `(TileOutsideBounds, )`.
+        kwargs (optional): Reader callable's keywords options.
 
-    Returns
-    -------
-    (tile, mask), assets_used : tuple of ndarray, sequence of str
-        Return (tile, mask) data and list of assets used.
+    Returns:
+        tuple: ImageData and assets (list).
+
+    Examples:
+        >>> def reader(asset: str, *args, **kwargs) -> ImageData:
+                with COGReader(asset) as cog:
+                    return cog.tile(*args, **kwargs)
+
+            x, y, z = 10, 10, 4
+            img = mosaic_reader(["cog.tif", "cog2.tif"], reader, x, y, z)
+
+        >>> def reader(asset: str, *args, **kwargs) -> ImageData:
+                with COGReader(asset) as cog:
+                    return cog.preview(*args, **kwargs)
+
+            img = mosaic_reader(["cog.tif", "cog2.tif"], reader)
+
 
     """
     if isclass(pixel_selection):

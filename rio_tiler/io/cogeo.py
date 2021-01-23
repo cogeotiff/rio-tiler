@@ -26,63 +26,37 @@ from .base import BaseReader
 
 @attr.s
 class COGReader(BaseReader):
-    """
-    Cloud Optimized GeoTIFF Reader.
+    """Cloud Optimized GeoTIFF Reader.
 
-    Examples
-    --------
-    with COGReader(src_path) as cog:
-        cog.tile(...)
+    Attributes:
+        filepath (str): Cloud Optimized GeoTIFF path.
+        dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Overwrite Min Zoom level.
+        maxzoom (int, optional): Overwrite Max Zoom level.
+        colormap (dict, optional): Overwrite internal colormap.
+        nodata (int or float or str, optional): Global options, overwrite internal nodata value.
+        unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
+        resampling_method (rasterio.enums.Resampling, optional): Global options, resampling method to use for read operations.
+        vrt_options (dict, optional): Global options, WarpedVRT options to use for read operations.
+        post_process (callable, optional): Global options, Function to apply after all read operations.
 
-    # Set global options
-    with COGReader(src_path, unscale=True, nodata=0) as cog:
-        cog.tile(...)
-
-    with rasterio.open(src_path) as src_dst:
-        with WarpedVRT(src_dst, ...) as vrt_dst:
-            with COGReader(None, dataset=vrt_dst) as cog:
-                cog.tile(...)
-
-    with rasterio.open(src_path) as src_dst:
-        with COGReader(None, dataset=src_dst) as cog:
+    Examples:
+        >>> with COGReader(src_path) as cog:
             cog.tile(...)
 
-    Attributes
-    ----------
-    filepath: str
-        Cloud Optimized GeoTIFF path.
-    dataset: rasterio.DatasetReader, optional
-        Rasterio dataset.
+        >>> # Set global options
+            with COGReader(src_path, unscale=True, nodata=0) as cog:
+                cog.tile(...)
 
-    Properties
-    ----------
-    minzoom: int
-        COG minimum zoom level.
-    maxzoom: int
-        COG maximum zoom level.
-    bounds: tuple[float]
-        COG bounds in WGS84 crs.
-    center: tuple[float, float, int]
-        COG center + minzoom
-    colormap: dict
-        COG internal colormap.
-    info: dict
-        General information about the COG (datatype, indexes, ...)
+        >>> with rasterio.open(src_path) as src_dst:
+                with WarpedVRT(src_dst, ...) as vrt_dst:
+                    with COGReader(None, dataset=vrt_dst) as cog:
+                        cog.tile(...)
 
-    Methods
-    -------
-    tile(0, 0, 0, indexes=(1,2,3), expression="B1/B2", tilesize=512, resampling_methods="nearest")
-        Read a map tile from the COG.
-    part((0,10,0,10), indexes=(1,2,3,), expression="B1/B20", max_size=1024)
-        Read part of the COG.
-    preview(max_size=1024)
-        Read preview of the COG.
-    point((10, 10), indexes=1)
-        Read a point value from the COG.
-    stats(pmin=5, pmax=95)
-        Get Raster statistics.
-    meta(pmin=5, pmax=95)
-        Get info + raster statistics
+        >>> with rasterio.open(src_path) as src_dst:
+                with COGReader(None, dataset=src_dst) as cog:
+                    cog.tile(...)
 
     """
 
@@ -233,25 +207,16 @@ class COGReader(BaseReader):
         hist_options: Optional[Dict] = None,
         **kwargs: Any,
     ) -> Dict[str, ImageStatistics]:
-        """
-        Return bands statistics from a COG.
+        """Return bands statistics from a COG.
 
-        Attributes
-        ----------
-        pmin: float, optional, (default: 2)
-            Histogram minimum cut.
-        pmax: float, optional, (default: 98)
-            Histogram maximum cut.
-        hist_options: dict, optional
-            Options to forward to numpy.histogram function.
-            e.g: {bins=20, range=(0, 1000)}
-        kwargs: optional
-            These are passed to 'rio_tiler.reader.stats'
+        Args:
+            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
+            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            kwargs (optional): Options to forward to `rio_tiler.reader.stats`.
 
-        Returns
-        -------
-        out: dict
-            Dictionary with bands statistics.
+        Returns:
+            rio_tiler.models.ImageStatistics: bands statistics.
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -278,30 +243,19 @@ class COGReader(BaseReader):
         expression: Optional[str] = "",
         **kwargs: Any,
     ) -> ImageData:
-        """
-        Read a Mercator Map tile from a COG.
+        """Read a Web Map tile from a COG.
 
-        Attributes
-        ----------
-        tile_x: int
-            Mercator tile X index.
-        tile_y: int
-            Mercator tile Y index.
-        tile_z: int
-            Mercator tile ZOOM level.
-        tilesize: int, optional (default: 256)
-            Output image size.
-        indexes: int or sequence of int
-            Band indexes (e.g. 1 or (1, 2, 3))
-        expression: str
-            rio-tiler expression (e.g. b1/b2+b3)
-        kwargs: dict, optional
-            These will be passed to the 'rio_tiler.reader.part' function.
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+            tilesize (int, optional): Output image size. Defaults to `256`.
+            indexes (int or sequence of int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
-        Returns
-        -------
-        data: numpy ndarray
-        mask: numpy array
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -352,30 +306,19 @@ class COGReader(BaseReader):
         expression: Optional[str] = "",
         **kwargs: Any,
     ) -> ImageData:
-        """
-        Read part of a COG.
+        """Read part of a COG.
 
-        Attributes
-        ----------
-        bbox: tuple
-            bounds to read (left, bottom, right, top) in "bounds_crs".
-        dst_crs: CRS or str, optional
-            Target coordinate reference system, default is the bbox CRS.
-        bounds_crs: CRS or str, optional
-            bounds coordinate reference system, default is "epsg:4326"
-        max_size: int, optional
-            Limit output size array, default is 1024.
-        indexes: int or sequence of int
-            Band indexes (e.g. 1 or (1, 2, 3))
-        expression: str
-            rio-tiler expression (e.g. b1/b2+b3)
-        kwargs: dict, optional
-            These will be passed to the 'rio_tiler.reader.part' function.
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
-        Returns
-        -------
-        data: numpy ndarray
-        mask: numpy array
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -425,22 +368,15 @@ class COGReader(BaseReader):
         expression: Optional[str] = "",
         **kwargs: Any,
     ) -> ImageData:
-        """
-        Return a preview of a COG.
+        """Return a preview of a COG.
 
-        Attributes
-        ----------
-        indexes: int or sequence of int
-            Band indexes (e.g. 1 or (1, 2, 3))
-        expression: str
-            rio-tiler expression (e.g. b1/b2+b3)
-        kwargs: dict, optional
-            These will be passed to the 'rio_tiler.reader.preview' function.
+        Args:
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.preview` function.
 
-        Returns
-        -------
-        data: numpy ndarray
-        mask: numpy array
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -480,28 +416,17 @@ class COGReader(BaseReader):
         expression: Optional[str] = "",
         **kwargs: Any,
     ) -> List:
-        """
-        Read a value from a COG.
+        """Read a pixel value from a COG.
 
-        Attributes
-        ----------
-        address: str
-            file url.
-        lon: float
-            Longitude
-        lat: float
-            Latittude.
-        indexes: int or sequence of int
-            Band indexes (e.g. 1 or (1, 2, 3))
-        expression: str
-            rio-tiler expression (e.g. b1/b2+b3)
-        kwargs: dict, optional
-            These will be passed to the 'rio_tiler.reader.point' function.
+        Args:
+            lon (float): Longitude.
+            lat (float): Latittude.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.point` function.
 
-        Returns
-        -------
-        point: list
-            List of pixel values per bands indexes.
+        Returns:
+            list: Pixel value per band indexes.
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -537,30 +462,19 @@ class COGReader(BaseReader):
         expression: Optional[str] = "",
         **kwargs: Any,
     ) -> ImageData:
-        """
-        Read a COG for a geojson feature.
+        """Read part of a COG defined by a geojson feature.
 
-        Attributes
-        ----------
-        shape: dict
-            Valid GeoJSON feature.
-        dst_crs: CRS or str, optional
-            Target coordinate reference system, default is the bbox CRS.
-        shape_crs: CRS or str, optional
-            shape coordinate reference system, default is "epsg:4326"
-        max_size: int, optional
-            Limit output size array, default is 1024.
-        indexes: int or sequence of int
-            Band indexes (e.g. 1 or (1, 2, 3))
-        expression: str
-            rio-tiler expression (e.g. b1/b2+b3)
-        kwargs: dict, optional
-            These will be passed to the 'rio_tiler.reader.part' function.
+        Args:
+            shape (dict): Valid GeoJSON feature.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3). Defaults to `''`.
+            kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
-        Returns
-        -------
-        data: numpy ndarray
-        mask: numpy array
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -618,46 +532,68 @@ class GCPCOGReader(COGReader):
     """Custom COG Reader with GCPS support.
 
     Attributes:
-        src_dataset (DatasetReader): rasterio openned dataset.
-        dataset (WarpedVRT): rasterio WarpedVRT dataset.
+        filepath (str): Cloud Optimized GeoTIFF path.
+        src_dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Overwrite Min Zoom level.
+        maxzoom (int, optional): Overwrite Max Zoom level.
+        colormap (dict, optional): Overwrite internal colormap.
+        nodata (int or float or str, optional): Global options, overwrite internal nodata value.
+        unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
+        resampling_method (rasterio.enums.Resampling, optional): Global options, resampling method to use for read operations.
+        vrt_options (dict, optional): Global options, WarpedVRT options to use for read operations.
+        post_process (callable, optional): Global options, Function to apply after all read operations.
+        dataset (rasterio.vrtWarpedVRT): Warped VRT constructed with dataset GCPS info. **READ ONLY attribute**.
+
+    Examples:
+        >>> with COGReader(src_path) as cog:
+            cog.tile(...)
+            assert cog.dataset
+            assert cog.src_dataset
+
+        >>> with rasterio.open(src_path) as src_dst:
+                with COGReader(None, src_dataset=src_dst) as cog:
+                    cog.tile(...)
 
     """
 
+    filepath: str = attr.ib()
+    src_dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
+        default=None
+    )
+    tms: TileMatrixSet = attr.ib(default=constants.WEB_MERCATOR_TMS)
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
+    colormap: Dict = attr.ib(default=None)
+
+    # Define global options to be forwarded to functions reading the data (e.g rio_tiler.reader._read)
+    nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
+    unscale: Optional[bool] = attr.ib(default=None)
+    resampling_method: Optional[Resampling] = attr.ib(default=None)
+    vrt_options: Optional[Dict] = attr.ib(default=None)
+    post_process: Optional[
+        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+    ] = attr.ib(default=None)
+
+    # for GCPCOGReader, dataset is not a input option.
+    dataset: WarpedVRT = attr.ib(init=False)
+
+    # We use _kwargs to store values of nodata, unscale, vrt_options and resampling_method.
+    # _kwargs is used avoid having to set those values on each method call.
+    _kwargs: Dict[str, Any] = attr.ib(init=False, factory=dict)
+
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
-        if self.nodata is not None:
-            self._kwargs["nodata"] = self.nodata
-        if self.unscale is not None:
-            self._kwargs["unscale"] = self.unscale
-        if self.resampling_method is not None:
-            self._kwargs["resampling_method"] = self.resampling_method
-        if self.vrt_options is not None:
-            self._kwargs["vrt_options"] = self.vrt_options
-        if self.post_process is not None:
-            self._kwargs["post_process"] = self.post_process
-
-        self.src_dataset = rasterio.open(self.filepath)
+        self.src_dataset = self.src_dataset or rasterio.open(self.filepath)
         self.dataset = WarpedVRT(
             self.src_dataset,
             src_crs=self.src_dataset.gcps[1],
             src_transform=transform.from_gcps(self.src_dataset.gcps[0]),
         )
-
-        self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
-
-        self.bounds = transform_bounds(
-            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
-        )
-
-        if self.minzoom is None or self.maxzoom is None:
-            self._set_zooms()
-
-        if self.colormap is None:
-            self._get_colormap()
-
-        return self
+        super().__attrs_post_init__()
 
     def close(self):
         """Close rasterio dataset."""
         self.dataset.close()
-        self.src_dataset.close()
+        if self.filepath:
+            self.src_dataset.close()

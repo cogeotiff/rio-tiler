@@ -92,7 +92,17 @@ def to_coordsbbox(bbox) -> Optional[BoundingBox]:
 
 @attr.s
 class ImageData:
-    """Image Data class."""
+    """Image Data class.
+
+    Attributes:
+        data (numpy.ndarray): pixel values.
+        mask (numpy.ndarray): rasterio mask values.
+        assets (list, optional): list of assets used to construct the data values.
+        bounds (BoundingBox, optional): bounding box of the data.
+        crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
+        metadata (dict, optional): Additional metadata. Defaults to `{}`.
+
+    """
 
     data: numpy.ndarray = attr.ib()
     mask: numpy.ndarray = attr.ib()
@@ -120,7 +130,12 @@ class ImageData:
 
     @classmethod
     def create_from_list(cls, data: Sequence["ImageData"]):
-        """Create ImageData from a sequence of ImageData objects."""
+        """Create ImageData from a sequence of ImageData objects.
+
+        Args:
+            data (sequence): sequence of ImageData.
+
+        """
         arr = numpy.concatenate([img.data for img in data])
         mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
         assets = [img.assets[0] for img in data if img.assets]
@@ -182,9 +197,9 @@ class ImageData:
 
         Args:
             in_range (tuple): input min/max bounds value to rescale from.
-            out_dtype (str): output datatype after rescaling (default is 'uint8')
-            color_formula (str): rio-color formula (see: https://github.com/mapbox/rio-color)
-            kwargs (any): keyword arguments to forward to `rio_tiler.utils.linear_rescale`
+            out_dtype (str, optional): output datatype after rescaling. Defaults to `uint8`.
+            color_formula (str, optional): rio-color formula (see: https://github.com/mapbox/rio-color).
+            kwargs (optional): keyword arguments to forward to `rio_tiler.utils.linear_rescale`.
 
         Returns:
             ImageData: new ImageData object with the updated data.
@@ -217,11 +232,26 @@ class ImageData:
                 data = scale_dtype(ops(to_math_type(data)), numpy.uint8)
 
         return ImageData(
-            data, mask, crs=self.crs, bounds=self.bounds, assets=self.assets
+            data,
+            mask,
+            crs=self.crs,
+            bounds=self.bounds,
+            assets=self.assets,
+            metadata=self.metadata,
         )
 
     def render(self, add_mask: bool = True, img_format: str = "PNG", **kwargs) -> bytes:
-        """Render data to image blob."""
+        """Render data to image blob.
+
+        Args:
+            add_mask (bool, optional): add mask to output image. Defaults to `True`.
+            img_format (str, optional): output image format. Defaults to `PNG`.
+            kwargs (optional): keyword arguments to forward to `rio_tiler.utils.render`.
+
+        Returns:
+            bytes: image.
+
+        """
         if img_format.lower() == "gtiff":
             if "transform" not in kwargs:
                 kwargs.update({"transform": self.transform})

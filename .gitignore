@@ -105,5 +105,7 @@ ENV/
 
 .benchmarks/
 tests/benchmarks/data/*
-tests/fixtures/mask* 
+tests/fixtures/mask*
 .vscode/settings.json
+
+docs/api*

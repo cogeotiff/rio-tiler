@@ -30,8 +30,7 @@ class WEBPProfile(Profile):
 
 
 class ImagesProfiles(UserDict):
-    """
-    GDAL Image creation options.
+    """GDAL Image creation options.
 
     ref: https://github.com/mapnik/mapnik/wiki/Image-IO#default-output-details.
 
