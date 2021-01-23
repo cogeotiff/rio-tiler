@@ -11,14 +11,15 @@ from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidForma
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
-DEFAULTS_CMAPS_FILES = list(
-    pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy")
-)
+DEFAULT_CMAPS_FILES = {
+    f.stem: str(f)
+    for f in pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy")
+}
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
 if USER_CMAPS_DIR:
-    DEFAULTS_CMAPS_FILES.extend(list(pathlib.Path(USER_CMAPS_DIR).glob("*.npy")))
-
-DEFAULTS_CMAPS = {f.stem: str(f) for f in DEFAULTS_CMAPS_FILES}
+    DEFAULT_CMAPS_FILES.update(
+        {f.stem: str(f) for f in pathlib.Path(USER_CMAPS_DIR).glob("*.npy")}
+    )
 
 
 def _update_alpha(cmap: Dict, idx: Sequence[int], alpha: int = 0) -> None:
@@ -142,7 +143,7 @@ class ColorMaps:
     """
 
     data: Dict[str, Union[str, numpy.array]] = attr.ib(
-        default=attr.Factory(lambda: DEFAULTS_CMAPS)
+        default=attr.Factory(lambda: DEFAULT_CMAPS_FILES)
     )
 
     def get(self, name: str) -> Dict:
