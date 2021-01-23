@@ -1,7 +1,6 @@
 """Image file profiles."""
 
 from collections import UserDict
-from copy import deepcopy
 
 from rasterio.profiles import Profile  # type: ignore
 
@@ -52,12 +51,12 @@ class ImagesProfiles(UserDict):
     def get(self, key, default=None):
         """Like normal item access but return a copy of the key."""
         if key in (self.keys()):
-            return deepcopy(self.data[key])
+            return self.data[key].copy()
         return default
 
     def __getitem__(self, key):
         """Like normal item access but return a copy of the key."""
-        return deepcopy(self.data[key])
+        return self.data[key].copy()
 
 
 img_profiles = ImagesProfiles()
