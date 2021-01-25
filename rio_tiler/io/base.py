@@ -485,13 +485,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression is not None:
+        if assets and expression:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -514,7 +514,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -546,13 +546,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression is not None:
+        if assets and expression:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -569,7 +569,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             assets, _reader, bbox, expression=asset_expression, **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -599,13 +599,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression is not None:
+        if assets and expression:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -620,7 +620,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         output = multi_arrays(assets, _reader, expression=asset_expression, **kwargs)
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -654,13 +654,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression is not None:
+        if assets and expression:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -678,7 +678,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         )
 
         values = [d for _, d in data.items()]
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             values = apply_expression(blocks, assets, values).tolist()
 
@@ -710,13 +710,13 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(assets, str):
             assets = (assets,)
 
-        if assets and expression is not None:
+        if assets and expression:
             warnings.warn(
                 "Both expression and assets passed; expression will overwrite assets parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             assets = self.parse_expression(expression)
 
         if not assets:
@@ -733,7 +733,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             assets, _reader, shape, expression=asset_expression, **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
 
@@ -938,13 +938,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression is not None:
+        if bands and expression:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -967,7 +967,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 
@@ -999,13 +999,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression is not None:
+        if bands and expression:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1022,7 +1022,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bands, _reader, bbox, expression=band_expression, **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 
@@ -1052,13 +1052,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression is not None:
+        if bands and expression:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1073,7 +1073,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         output = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 
@@ -1107,13 +1107,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression is not None:
+        if bands and expression:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1131,7 +1131,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         )
 
         values = [d for _, d in data.items()]
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             values = apply_expression(blocks, bands, values).tolist()
 
@@ -1163,13 +1163,13 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if isinstance(bands, str):
             bands = (bands,)
 
-        if bands and expression is not None:
+        if bands and expression:
             warnings.warn(
                 "Both expression and bands passed; expression will overwrite bands parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             bands = self.parse_expression(expression)
 
         if not bands:
@@ -1186,7 +1186,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bands, _reader, shape, expression=band_expression, **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
 

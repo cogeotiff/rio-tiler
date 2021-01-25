@@ -268,13 +268,13 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression is not None:
+        if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             indexes = parse_expression(expression)
 
         tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
@@ -287,7 +287,7 @@ class COGReader(BaseReader):
             dst_crs=self.tms.crs,
             **kwargs,
         )
-        if expression is not None:
+        if expression:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             tile = apply_expression(blocks, bands, tile)
@@ -326,13 +326,13 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression is not None:
+        if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             indexes = parse_expression(expression)
 
         if not dst_crs:
@@ -348,7 +348,7 @@ class COGReader(BaseReader):
             **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
@@ -384,18 +384,18 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression is not None:
+        if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             indexes = parse_expression(expression)
 
         data, mask = reader.preview(self.dataset, indexes=indexes, **kwargs)
 
-        if expression is not None:
+        if expression:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
@@ -434,18 +434,18 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression is not None:
+        if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             indexes = parse_expression(expression)
 
         point = reader.point(self.dataset, (lon, lat), indexes=indexes, **kwargs)
 
-        if expression is not None:
+        if expression:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             point = apply_expression(blocks, bands, point).tolist()
@@ -482,13 +482,13 @@ class COGReader(BaseReader):
         if isinstance(indexes, int):
             indexes = (indexes,)
 
-        if indexes and expression is not None:
+        if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
                 ExpressionMixingWarning,
             )
 
-        if expression is not None:
+        if expression:
             indexes = parse_expression(expression)
 
         if not dst_crs:
@@ -512,7 +512,7 @@ class COGReader(BaseReader):
             **kwargs,
         )
 
-        if expression is not None:
+        if expression:
             blocks = expression.lower().split(",")
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
