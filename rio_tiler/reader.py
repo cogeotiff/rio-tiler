@@ -21,7 +21,7 @@ from .utils import _stats as raster_stats
 from .utils import get_vrt_transform, has_alpha_band, has_mask_band, non_alpha_indexes
 
 
-def _read(
+def read(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     height: Optional[int] = None,
     width: Optional[int] = None,
@@ -36,7 +36,7 @@ def _read(
         Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
     ] = None,
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Create a WarpedVRT and read data and mask.
+    """Low level read function.
 
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
@@ -138,7 +138,7 @@ def part(
         minimum_overlap (float, optional): Minimum % overlap for which to raise an error with dataset not covering enought of the tile.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
         max_size (int, optional): Limit output size array if not widht and height.
-        kwargs (optional): Additional options to forward to `rio_tiler.reader._read()`.
+        kwargs (optional): Additional options to forward to `rio_tiler.reader.read`.
 
     Returns:
         tuple: Data (numpy.ndarray) and Mask (numpy.ndarray) values.
@@ -216,7 +216,7 @@ def part(
         }
     )
 
-    return _read(
+    return read(
         src_dst,
         out_height,
         out_width,
@@ -240,7 +240,7 @@ def preview(
         max_size (int, optional): Limit output size array if not widht and height. Defaults to `1024`.
         height (int, optional): Output height of the array.
         width (int, optional): Output width of the array.
-        kwargs (optional): Additional options to forward to `rio_tiler.reader._read()`.
+        kwargs (optional): Additional options to forward to `rio_tiler.reader.read`.
 
     Returns:
         tuple: Data (numpy.ndarray) and Mask (numpy.ndarray) values.
@@ -258,7 +258,7 @@ def preview(
                 width = max_size
                 height = math.ceil(width * ratio)
 
-    return _read(src_dst, height, width, **kwargs)
+    return read(src_dst, height, width, **kwargs)
 
 
 def point(
