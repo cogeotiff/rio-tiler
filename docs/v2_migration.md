@@ -98,7 +98,7 @@ with rasterio.open("my_tif.tif") as src_dst:
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
 
-    t, m = rio_tiler.utils._tilesrc, tile_bounds, 256)
+    t, m = rio_tiler.utils._tile_read(src, tile_bounds, 256)
 
 # v2
 with rasterio.open("my_tif.tif") as src_dst:
@@ -124,7 +124,7 @@ with rasterio.open("my_tif.tif") as src_dst:
 with rasterio.open("my_tif.tif") as src_dst:
     mercator_tile = mercantile.Tile(x=tile_x, y=tile_y, z=tile_z)
     tile_bounds = mercantile.xy_bounds(mercator_tile)
-    t, m = rio_tiler.utils._tilesrc, tile_bounds, 256, tile_edge_padding=4, minimum_tile_cover=0.3)
+    t, m = rio_tiler.utils._tile_read, tile_bounds, 256, tile_edge_padding=4, minimum_tile_cover=0.3)
 
 # v2
 with rasterio.open("my_tif.tif") as src_dst:
@@ -140,7 +140,7 @@ In version 2, when no `indexes` options are passed, **we remove the alpha channe
 ```python
 # v1
 with rasterio.open("my_tif_alpha.tif") as src_dst:
-    t, m = rio_tiler.utils._tilesrc, tile_bounds, 256, indexes=(1,2,3))
+    t, m = rio_tiler.utils._tile_read, tile_bounds, 256, indexes=(1,2,3))
 
 # v2
 with rasterio.open("my_tif_alpha.tif") as src_dst:
