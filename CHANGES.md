@@ -14,6 +14,7 @@
 * renamed input parameter `arr` to `data` in `rio_tiler.utils.mapzen_elevation_rgb`
 * made `rio_tiler.io.stac.to_pystac_item` private (renamed to `_to_pystac_item`)
 * renamed `rio_tiler.colormap.DEFAULTS_CMAPS` to `rio_tiler.colormap.DEFAULT_CMAPS_FILES`
+* made `rio_tiler.reader._read` public (renamed to rio_tiler.reader.read) (ref: https://github.com/cogeotiff/rio-tiler/issues/332)
 
 ## 2.0.0rc4 (2020-12-18)
 
