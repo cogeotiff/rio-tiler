@@ -134,7 +134,9 @@ A lightweight Cloud Optimized GeoTIFF dynamic tile server.
 
 [cogeo-mosaic]: https://github.com/developmentseed/cogeo-mosaic
 
-Create mosaics of Cloud Optimized GeoTIFF based on mosaicJSON specification.
+Create mosaics of Cloud Optimized GeoTIFF based on the [mosaicJSON][mosaicjson_spec] specification.
+
+[mosaicjson_spec]: https://github.com/developmentseed/mosaicjson-spec
 
 ## Contribution & Development
 
