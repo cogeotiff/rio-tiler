@@ -9,7 +9,6 @@ tiles on a web map.
 There are couple tile servers built on top of rio-tiler:
 
 - [`titiler`](https://github.com/developmentseed/titiler)
-- [`cogeo-tiler`](https://github.com/developmentseed/cogeo-tiler)
 - [`rio-viz`](https://github.com/developmentseed/rio-viz)
 
 ## Example Application
@@ -21,14 +20,14 @@ your own API.
 
 ### Requirements
 
-- `rio-tiler ~= 2.0b`
+- `rio-tiler ~= 2.0`
 - `fastapi`
 - `uvicorn`
 
 Install with
 
 ```bash
-pip install fastapi uvicorn rio-tiler --pre
+pip install fastapi uvicorn rio-tiler
 ```
 
 ### `app.py`
@@ -46,9 +45,6 @@ from urllib.parse import urlencode
 import uvicorn
 from fastapi import FastAPI, Path, Query
 from rasterio.crs import CRS
-from starlette.background import BackgroundTask
-from starlette.middleware.cors import CORSMiddleware
-from starlette.middleware.gzip import GZipMiddleware
 from starlette.requests import Request
 from starlette.responses import Response
 
@@ -56,127 +52,53 @@ from rio_tiler.profiles import img_profiles
 from rio_tiler.io import COGReader
 
 
-drivers = dict(jpg="JPEG", png="PNG", tif="GTiff", webp="WEBP", npy="NPY")
-
-
-class ImageType(str, Enum):
-    """Image Type Enums."""
-
-    png = "png"
-    npy = "npy"
-    tif = "tif"
-    jpg = "jpg"
-    webp = "webp"
-
-    @DynamicClassAttribute
-    def profile(self):
-        """Return rio-tiler image default profile."""
-        return img_profiles.get(self.driver.lower(), {})
-
-    @DynamicClassAttribute
-    def driver(self):
-        """Return rio-tiler image default profile."""
-        return drivers[self._name_]
-
-
-class TileResponse(Response):
-    """Tiler's response."""
-
-    def __init__(
-        self,
-        content: bytes,
-        media_type: str,
-        status_code: int = 200,
-        headers: dict = {},
-        background: BackgroundTask = None,
-        ttl: int = 3600,
-    ) -> None:
-        """Init tiler response."""
-        headers.update({"Content-Type": media_type})
-        if ttl:
-            headers.update({"Cache-Control": "max-age=3600"})
-        self.body = self.render(content)
-        self.status_code = 200
-        self.media_type = media_type
-        self.background = background
-        self.init_headers(headers)
-
-
 app = FastAPI(
     title="rio-tiler",
     description="A lightweight Cloud Optimized GeoTIFF tile server",
 )
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_credentials=True,
-    allow_methods=["GET"],
-    allow_headers=["*"],
+
+
+@app.get(
+    r"/{z}/{x}/{y}.png",
+    responses={
+        200: {
+            "content": {"image/png": {}}, "description": "Return an image.",
+        }
+    },
+    response_class=ImageResponse,
+    description="Read COG and return a tile",
 )
-app.add_middleware(GZipMiddleware, minimum_size=0)
-
-responses = {
-    200: {
-        "content": {"image/png": {}, "image/jpg": {}},
-        "description": "Return an image.",
-    }
-}
-tile_routes_params: Dict[str, Any] = dict(
-    responses=responses, tags=["tiles"], response_class=TileResponse
-)
-
-
-@app.get("/{z}/{x}/{y}", **tile_routes_params)
 def tile(
     z: int,
     x: int,
     y: int,
     url: str = Query(..., description="Cloud Optimized GeoTIFF URL."),
 ):
-    """Handle tiles requests."""
+    """Handle tile requests."""
     with COGReader(url) as cog:
         img = cog.tile(x, y, z, tilesize=256)
-
-    # automatically return PNG or JPEG
-    format = ImageType.jpg if img.mask.all() else ImageType.png
-
-    content = img.render(img_format=format.driver, **format.profile)
-    return TileResponse(content, media_type=mimetype[format.value])
+    content = img.render(img_format="PNG", **img_profiles.get("png"))
+    return Response(content, media_type="image/png")
 
 
 @app.get("/tilejson.json", responses={200: {"description": "Return a tilejson"}})
 def tilejson(
     request: Request,
     url: str = Query(..., description="Cloud Optimized GeoTIFF URL."),
-    minzoom: Optional[int] = Query(None, description="Overwrite default minzoom."),
-    maxzoom: Optional[int] = Query(None, description="Overwrite default maxzoom."),
 ):
     """Return TileJSON document for a COG."""
-    tile_url = request.url_for("tile", {"z": "{z}", "x": "{x}", "y": "{y}"}).replace("\\", "")
-
-    kwargs = dict(request.query_params)
-    kwargs.pop("tile_format", None)
-    kwargs.pop("tile_scale", None)
-    kwargs.pop("minzoom", None)
-    kwargs.pop("maxzoom", None)
-
-    qs = urlencode(list(kwargs.items()))
-    tile_url = f"{tile_url}?{qs}"
+    tile_url = request.url_for("tile", {"z": "{z}", "x": "{x}", "y": "{y}"})
+    tile_url = f"{tile_url}?url={url}"
 
     with COGReader(url) as cog:
-        center = list(cog.center)
-        if minzoom:
-            center[-1] = minzoom
-        tjson = {
+        return {
             "bounds": cog.bounds,
-            "center": tuple(center),
-            "minzoom": minzoom or cog.minzoom,
-            "maxzoom": maxzoom or cog.maxzoom,
+            "center": cog.center,
+            "minzoom": cog.minzoom,
+            "maxzoom": cog.maxzoom,
             "name": os.path.basename(url),
             "tiles": [tile_url],
         }
-
-    return tjson
 ```
 
 ## Launch Example
@@ -188,19 +110,3 @@ call the `app` function within `app.py`, so you must be in the same directory as
 ```
 uvicorn app:app --reload
 ```
-
-## Create an AWS Lambda package
-
-The easiest way to make sure the package will work on AWS is to use docker
-
-```dockerfile
-FROM lambci/lambda:build-python3.7
-
-ENV LANG=en_US.UTF-8 LC_ALL=en_US.UTF-8 CFLAGS="--std=c99"
-
-RUN pip3 install rio-tiler --no-binary numpy -t /tmp/python -U
-
-RUN cd /tmp/python && zip -r9q /tmp/package.zip *
-```
-
-Ref: https://github.com/vincentsarago/simple-rio-lambda

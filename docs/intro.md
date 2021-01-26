@@ -6,7 +6,6 @@ data and metadata from any raster source supported by Rasterio/GDAL wherever
 they may be, including local files and via HTTP, AWS S3, Google Cloud Storage,
 etc.
 
-
 ## Read a tile from a file
 
 ```python
@@ -36,7 +35,8 @@ with COGReader(
     >>> (256, 256)
 ```
 
-Additional methods are available (see [`COGReader`](/readers/#cogreader))
+The `COGReader` class has other interesting features, please see [User Guide - Readers](/readers/).
+
 
 ## Render the data as an image (PNG/JPEG)
 
@@ -114,6 +114,19 @@ with COGReader(
     assert npy_tile.shape == (1, 256, 256)
 ```
 
-## More
+Learn more about the **NumpyTile** specification [here](https://github.com/planetlabs/numpytiles-spec).
 
-`rio-tiler`'s readers have other interesting features, please see [User Guide - Readers](/readers/)
+
+## `rio-tiler`'s magic: Partial reading
+
+When the output image size, or the AOI is smaller than the input image, `GDAL` will try to
+perform *decimated and/or spatial reads* on the raster source, minimizing the amount data to transfer. Because of this, performance will be optimal when the source format permits efficient partial reads.
+
+The [Cloud-Optimized GeoTIFF (COG)](https://www.cogeo.org/) format is the **recommended** format for rio-tiler because it's natively:
+- internally tiled
+- has a header with a `map` of all the tiles
+- can have internal overviews
+
+To learn more about efficiency of COG vs other file formats, check out [this blog post](vincent_s2_jp2_cost).
+
+[vincent_s2_jp2_cost]: https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f

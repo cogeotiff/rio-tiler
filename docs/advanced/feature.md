@@ -1,5 +1,6 @@
+![](https://user-images.githubusercontent.com/10407788/105767632-3f959e80-5f29-11eb-9331-969f3f53111e.png)
 
-Starting with `rio-tiler` v2, a `.feature()` method exists on `rio-tiler`'s readers (e.g `COGReader`).
+Starting with `rio-tiler` v2, a `.feature()` method exists on `rio-tiler`'s readers (e.g `COGReader`) which enables data reading for GeoJSON defined (polygon or multipolygon) shapes.
 
 ```python
 from rio_tiler.io import COGReader
