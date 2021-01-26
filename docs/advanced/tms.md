@@ -1,5 +1,5 @@
 
-Starting with rio-tiler 2.0, we replaced [`mercantile`][mercantile] with [_`morecantile`_][morecantile], enabling support for other [**TileMatrixSet**](TileMatrixSet_specs) than the default WebMercator grid.
+Starting with rio-tiler 2.0, we replaced [`mercantile`][mercantile] with [_`morecantile`_][morecantile], enabling support for other [**TileMatrixSets**](TileMatrixSet_specs) than the default WebMercator grid.
 
 [mercantile]: https://github.com/mapbox/mercantile
 [morecantile]: https://github.com/developmentseed/morecantile
