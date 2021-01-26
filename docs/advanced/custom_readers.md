@@ -220,3 +220,5 @@ with BandFileReader("my_dir/", "scene_") as cr:
 ```
 
 Note: [`rio-tiler-pds`][rio-tiler-pds] readers are built using the `MultiBandReader` base class.
+
+[rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
