@@ -44,7 +44,7 @@ You can install `rio-tiler` using pip
 
 ```bash
 $ pip install -U pip
-$ pip install rio-tiler -U
+$ pip install -U rio-tiler
 ```
 
 or install from source:
