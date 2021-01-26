@@ -45,7 +45,7 @@ Rasterio 1.1.7 or newer is required.
 
 With [Morecantile](https://github.com/developmentseed/morecantile) we can support more than the Web Mercator TMS.
 
-See [tms](/advanced/tms/)
+See [tms](advanced/tms.md)
 
 ## New **rio_tiler.io** submodules
 
