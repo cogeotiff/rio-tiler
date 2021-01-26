@@ -35,7 +35,7 @@ with COGReader(
     >>> (256, 256)
 ```
 
-`COGReader` reader has other interesting features, please see [User Guide - Readers](/readers/).
+The `COGReader` class has other interesting features, please see [User Guide - Readers](/readers/).
 
 
 ## Render the data as an image (PNG/JPEG)
