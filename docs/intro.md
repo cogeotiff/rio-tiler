@@ -122,7 +122,7 @@ Learn more about the **NumpyTile** specification [here](https://github.com/plane
 When the output image size, or the AOI is smaller than the input image, `GDAL` will try to
 perform *decimated and/or spatial reads* on the raster source, minimizing the amount data to transfer. Because of this, performance will be optimal when the source format permits efficient partial reads.
 
-The Cloud Optimized GeoTIFF (COG) format is the **recommanded** format for rio-tiler because it's natively:
+The [Cloud-Optimized GeoTIFF (COG)](https://www.cogeo.org/) format is the **recommended** format for rio-tiler because it's natively:
 - internally tiled
 - has a header with a `map` of all the tiles
 - can have internal overviews
@@ -130,4 +130,3 @@ The Cloud Optimized GeoTIFF (COG) format is the **recommanded** format for rio-t
 To learn more about efficiency of COG vs other file formats, checkout [this blog post](vincent_s2_jp2_cost).
 
 [vincent_s2_jp2_cost]: https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f
-
