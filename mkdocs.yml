@@ -38,6 +38,7 @@ nav:
   - Examples:
     - Introduction: 'examples/Using-rio-tiler.ipynb'
     - Mosaic: 'examples/Using-rio-tiler-mosaic.ipynb'
+    - rio-tiler + morecantile: 'examples/Using-tms.ipynb'
   - API:
     - rio_tiler.colormap: api/rio_tiler/colormap.md
     - rio_tiler.constants: api/rio_tiler/constants.md
