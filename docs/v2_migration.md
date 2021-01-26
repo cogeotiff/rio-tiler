@@ -7,7 +7,7 @@ document aims to help with migrating your code to use `rio-tiler` 2.0.
 First and foremost is the drop of Python 2 support. We are in 2020 and Python 2
 is [officially dead](https://pythonclock.org). For ease of maintenance we
 decided to remove Python 2 support and to continue with only Python 3. **Python
-3.5 or later is required.**
+3.6 or later is required.**
 
 If you need help moving from Python 2 to 3 check out the official transition
 [documentation](https://docs.python.org/3/howto/pyporting.html).
