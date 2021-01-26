@@ -64,17 +64,24 @@ $ pip install -e .
 from typing import Dict, List
 
 from rio_tiler.io import COGReader
-from rio_tiler.models import ImageData
+from rio_tiler.models import ImageData, Info, Metadata, ImageStatistics
 
 with COGReader("my-tif.tif") as cog:
     # get info
-    info: Dict = cog.info()
+    info: Info = cog.info()
+    assert info.nodata_type
+    assert info.band_descriptions
 
     # get image statistics
-    stats: Dict = cog.stats()
+    stats: ImageStatistics = cog.stats()
+    assert stats.min
+    assert stats.max
 
     # get metadata (info + image statistics)
-    meta: Dict = cog.metadata()
+    meta: Metadata = cog.metadata()
+    assert meta.statistics
+    assert meta.nodata_type
+    assert meta.band_descriptions
 
     # Read data for a mercator tile
     img: ImageData = cog.tile(tile_x, tile_y, tile_zoom, tilesize=256)
