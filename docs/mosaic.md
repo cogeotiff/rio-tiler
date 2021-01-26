@@ -114,7 +114,7 @@ The rules for writing your own `pixel selection algorithm` class are as follows:
 - Must inherit from `MosaicMethodBase`
 - Must provide concrete implementations of all the above methods.
 
-See [`rio_tiler.mosaic.methods.defaults`](/rio_tiler/mosaic/methods/defaults.py) classes for examples.
+See [`rio_tiler.mosaic.methods.defaults`](https://github.com/cogeotiff/rio-tiler/blob/master/rio_tiler/mosaic/methods/defaults.py) classes for examples.
 
 ### Smart Multi-Threading
 

@@ -81,7 +81,7 @@ with COGReader("my_tif.tif") as cog:
     tile, mask = cog.tile(691559, 956905, 21, expression="b1/b2")
 ```
 
-See [`COGReader`](/readers/#cogreader) amd [`STACReader`](/readers/#stacreader) for more info.
+See [`COGReader`](readers.md#cogreader) amd [`STACReader`](readers.md#stacreader) for more info.
 
 ## Internal API: **rio_tiler.reader**
 
@@ -273,7 +273,7 @@ img = rio_tiler.utils.render(tile, mask, img_format="PNG")
 
 The `.io` readers now returns pydantic models hosting the results. This enables easy API definition.
 
-See [models](/models/)
+See [models](models.md)
 
 ## Mission specific changes
 

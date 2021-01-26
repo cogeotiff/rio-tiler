@@ -251,7 +251,7 @@ print(metadata.dict(exclude_none=True))
 
 #### Global Options
 
-`COGReader` accepts several options which will be forwarded to the `rio_tiler.reader._read` function (low level function accessing the data):
+`COGReader` accepts several options which will be forwarded to the `rio_tiler.reader.read` function (low level function accessing the data):
 
 - **nodata**: Overwrite the nodata value (or set if not present)
 - **unscale**: Apply internal rescaling factors

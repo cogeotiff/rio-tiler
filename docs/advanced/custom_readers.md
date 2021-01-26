@@ -1,8 +1,8 @@
 
 `rio-tiler` provides multiple [abstract base
 classes](https://docs.python.org/3.7/library/abc.html) from which it derives its
-main readers: [`COGReader`](/readers/#cogreader) and
-[`STACReader`](/readers/#stacreader). You can also use these classes to build
+main readers: [`COGReader`](../readers.md#cogreader) and
+[`STACReader`](../readers.md#stacreader). You can also use these classes to build
 custom readers.
 
 ## Abstract Base Classes
@@ -68,7 +68,7 @@ Abstract methods, are mehtod that **HAVE TO** be implemented in the subclass.
 - **point**: reads pixel value for a specific point (`List`)
 - **feature**: reads data for a geojson feature (`rio_tiler.models.ImageData`)
 
-Example: [`COGReader`](/readers/#cogreader)
+Example: [`COGReader`](../readers.md#cogreader)
 
 ### **AsyncBaseReader**
 
@@ -80,7 +80,7 @@ see example of reader built using `AsyncBaseReader`: https://github.com/cogeotif
 
 This abstract class inherit from `BaseReader`. The goal of the `MultiBaseReader` is to enable readers that need to join results from multiple files (e.g STAC).
 
-Example: [`STACReader`](/readers/#stacreader)
+Example: [`STACReader`](../readers.md#stacreader)
 
 ```python
 import os
