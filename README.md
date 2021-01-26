@@ -126,8 +126,6 @@ Visualize Cloud Optimized GeoTIFFs locally in the browser
 
 A lightweight Cloud Optimized GeoTIFF dynamic tile server.
 
-
-
 #### [**cogeo-mosaic**][cogeo-mosaic]
 
 ![](https://user-images.githubusercontent.com/10407788/73185274-c41dc900-40eb-11ea-8b67-f79c0682c3b0.jpg)
