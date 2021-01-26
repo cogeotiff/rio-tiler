@@ -44,7 +44,7 @@ You can install `rio-tiler` using pip
 
 ```bash
 $ pip install -U pip
-$ pip install rio-tiler --pre # version 2.0 is in development
+$ pip install rio-tiler -U
 ```
 
 or install from source:
@@ -91,45 +91,50 @@ with COGReader("my-tif.tif") as cog:
     img: ImageData = cog.preview()
 
     # Get pixel values for a given lon/lat coordinate
-    value: List = cog.point(lon, lat)
+    values: List = cog.point(lon, lat)
 ```
 
-## Partial reading on cloud-hosted datasets
+## Plugins
 
-When the output image size is smaller than the input image size, `rio-tiler`
-performs a _partial read_ on the raster source, minimizing the amount of bytes
-that must be read. Because of this, performance will be optimal when the source
-format permits efficient partial reads. In general, Cloud Optimized GeoTIFF
-(COG) sources will provide best performance.
-
-Some non-COG formats are relatively inefficient. For example, older Sentinel 2
-scenes on AWS are stored in the JPEG2000 format. This file format requires many
-more requests, so it will be both [slower and more
-expensive][vincent_s2_jp2_cost] than reading the newer Sentinel 2 source in COG
-format because the underlying GDAL library will need to make many more GET
-requests.
-
-[vincent_s2_jp2_cost]: https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f
-
-## `rio-tiler` Plugins
-
-#### [`rio-tiler-pds`][rio-tiler-pds]
+#### [**rio-tiler-pds**][rio-tiler-pds]
 
 [rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
 
 `rio-tiler` v1 included several helpers for reading popular public datasets (e.g. Sentinel 2, Sentinel 1, Landsat 8, CBERS) from cloud providers. This functionality is now in a [separate plugin][rio-tiler-pds], enabling easier access to more public datasets.
 
-#### [`rio-tiler-mvt`][rio-tiler-mvt]
+#### [**rio-tiler-mvt**][rio-tiler-mvt]
 
 Create Mapbox Vector Tiles from raster sources
 
 [rio-tiler-mvt]: https://github.com/cogeotiff/rio-tiler-mvt
 
-## `rio-tiler` Implementations
+## Implementations
 
-- [rio-viz](https://github.com/developmentseed/rio-viz): Visualize Cloud Optimized GeoTIFF in browser locally
-- [titiler](https://github.com/developmentseed/titiler): A lightweight Cloud Optimized GeoTIFF dynamic tile server.
-- [cogeo-mosaic](https://github.com/developmentseed/cogeo-mosaic): Create mosaics of Cloud Optimized GeoTIFF based on mosaicJSON specification.
+#### [**rio-viz**][rio-viz]
+
+![](https://user-images.githubusercontent.com/10407788/105772356-0ca2d900-5f30-11eb-85b9-c3da9e12b663.jpg)
+
+[rio-viz]: (https://github.com/developmentseed/rio-viz)
+
+ Visualize Cloud Optimized GeoTIFF in browser locally
+
+#### [**titiler**][titiler]
+
+![](https://user-images.githubusercontent.com/10407788/84913491-99c3ac80-b088-11ea-846d-75db9e3ab31c.jpg)
+
+[titiler]: https://github.com/developmentseed/titiler
+
+A lightweight Cloud Optimized GeoTIFF dynamic tile server.
+
+
+
+#### [**cogeo-mosaic**][cogeo-mosaic]
+
+![](https://user-images.githubusercontent.com/10407788/73185274-c41dc900-40eb-11ea-8b67-f79c0682c3b0.jpg)
+
+[cogeo-mosaic]: https://github.com/developmentseed/cogeo-mosaic
+
+Create mosaics of Cloud Optimized GeoTIFF based on mosaicJSON specification.
 
 ## Contribution & Development
 

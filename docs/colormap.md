@@ -6,12 +6,24 @@ ones that are commonly used with raster data.
 You can load a colormap with `rio_tiler.colormap.get_colormap`, and then pass it
 to `rio_tiler.utils.render`:
 
-```py
+```python
 from rio_tiler.colormap import cmap
-from rio_tiler.utils import render
+from rio_tiler.io import COGReader
 
-colormap = cmap.get('cfastie')
-render(tile, mask, colormap=colormap)
+with COGReader(
+  "s3://landsat-pds/c1/L8/015/029/LC08_L1GT_015029_20200119_20200119_01_RT/LC08_L1GT_015029_20200119_20200119_01_RT_B8.TIF",
+  nodata=0,
+) as cog:
+    img = cog.tile(150, 187, 9)
+
+    # Rescale the data from 0-10000 to 0-255
+    image_rescale = img.post_process(in_range=(0, 10000), out_range=(0, 255))
+
+    # Get Colormap
+    cm = cmap.get("cfastie")
+
+    # Apply colormap and create a PNG buffer
+    buff = image_rescale.render(colormap=cm) # this returns a buffer (PNG by default)
 ```
 
 ![](img/custom.png)

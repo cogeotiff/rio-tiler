@@ -3,14 +3,11 @@
 classes](https://docs.python.org/3.7/library/abc.html) from which it derives its
 main readers: [`COGReader`](/readers/#cogreader) and
 [`STACReader`](/readers/#stacreader). You can also use these classes to build
-custom readers. For example, [`rio-tiler-pds`][rio-tiler-pds] does this to
-simplify reading popular public raster datasets from cloud services.
-
-[rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
+custom readers.
 
 ## Abstract Base Classes
 
-### BaseReader
+### **BaseReader**
 
 Main `rio_tiler.io` Abstract Base Class.
 
@@ -22,7 +19,7 @@ Main `rio_tiler.io` Abstract Base Class.
 - **minzoom**: dataset minzoom. Not in the `init` method.
 - **maxzoom**: dataset maxzoom. Not in the `init` method.
 
-Class arguments set to be define outside the `init` method can be set in the `__post_init__` step.
+Class arguments set to be define outside the `init` method can be set in the `__attrs_post_init__` step.
 
 Example:
 ```python
@@ -73,15 +70,15 @@ Abstract methods, are mehtod that **HAVE TO** be implemented in the subclass.
 
 Example: [`COGReader`](/readers/#cogreader)
 
-### AsyncBaseReader
+### **AsyncBaseReader**
 
 Equivalent of `BaseReader` for async-ready readers (e.g [aiocogeo](https://github.com/geospatial-jeff/aiocogeo)). The `AsyncBaseReader` has the same properties/methods as the `BaseReader`.
 
 see example of reader built using `AsyncBaseReader`: https://github.com/cogeotiff/rio-tiler/blob/832ecbd97f560c2764818bca30ca95ef25408527/tests/test_io_async.py#L49
 
-### MultiBaseReader
+### **MultiBaseReader**
 
-This abstract class inherit from `BaseReader`. The goal of the `MultiBaseReader` is to enable building readers that need to join results from multiple assets (e.g STAC).
+This abstract class inherit from `BaseReader`. The goal of the `MultiBaseReader` is to enable readers that need to join results from multiple files (e.g STAC).
 
 Example: [`STACReader`](/readers/#stacreader)
 
@@ -154,7 +151,7 @@ with AssetFileReader("my_dir/", "scene_") as cr:
     >>> (2, 256, 256)
 ```
 
-### MultiBandsReader
+### **MultiBandsReader**
 
 Almost as the previous `MultiBaseReader`, the `MultiBandsReader` subclasses will merge results extracted from differents assets but taking each assets as individual bands.
 
@@ -222,8 +219,4 @@ with BandFileReader("my_dir/", "scene_") as cr:
     >>> (2, 256, 256)
 ```
 
-More: [`rio-tiler-pds`][rio-tiler-pds] readers are built using the `MultiBandReader` base class.
-
-## Links
-
-**Attrs** - Classes Without Boilerplate [https://www.attrs.org/en/stable/](https://www.attrs.org/en/stable/)
+Note: [`rio-tiler-pds`][rio-tiler-pds] readers are built using the `MultiBandReader` base class.

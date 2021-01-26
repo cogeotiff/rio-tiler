@@ -278,3 +278,5 @@ See [models](/models/)
 ## Mission specific changes
 
 **Mission-specific tilers have been moved to the [`rio-tiler-pds`](https://github.com/cogeotiff/rio-tiler-pds) package.**
+
+[`rio-tiler-pds`]: https://github.com/cogeotiff/rio-tiler-pds
