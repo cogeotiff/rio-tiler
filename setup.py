@@ -12,10 +12,11 @@ inst_reqs = [
     "numexpr",
     "numpy",
     "morecantile>=2.1,<2.2",
+    "pydantic",
+    "pystac>=0.5.3",
     "rasterio>=1.1.7",
     "requests",
     "rio-color",
-    "pystac>=0.5.3",
 ]
 
 extra_reqs = {
