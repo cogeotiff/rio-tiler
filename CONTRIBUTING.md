@@ -22,7 +22,7 @@ $ pre-commit install
 
 ```bash
 $ git clone https://github.com/cogeotiff/rio-tiler.git
-$ cd rio-cogeo
+$ cd rio-tiler
 $ pip install -e .["docs"]
 ```
 
