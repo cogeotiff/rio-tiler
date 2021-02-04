@@ -127,6 +127,6 @@ The [Cloud-Optimized GeoTIFF (COG)](https://www.cogeo.org/) format is the **reco
 - has a header with a `map` of all the tiles
 - can have internal overviews
 
-To learn more about efficiency of COG vs other file formats, check out [this blog post](vincent_s2_jp2_cost).
+To learn more about efficiency of COG vs other file formats, check out [this blog post][vincent_s2_jp2_cost].
 
 [vincent_s2_jp2_cost]: https://medium.com/@_VincentS_/do-you-really-want-people-using-your-data-ec94cd94dc3f

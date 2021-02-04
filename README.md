@@ -121,7 +121,7 @@ Create Mapbox Vector Tiles from raster sources
 
 ![](https://user-images.githubusercontent.com/10407788/105772356-0ca2d900-5f30-11eb-85b9-c3da9e12b663.jpg)
 
-[rio-viz]: (https://github.com/developmentseed/rio-viz)
+[rio-viz]: https://github.com/developmentseed/rio-viz
 
 Visualize Cloud Optimized GeoTIFFs locally in the browser
 
