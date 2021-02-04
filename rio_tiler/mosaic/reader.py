@@ -15,7 +15,7 @@ from .methods.defaults import FirstMethod
 
 
 def mosaic_reader(
-    assets: Sequence[str],
+    mosaic_assets: Sequence[str],
     reader: Callable[..., ImageData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
@@ -28,7 +28,7 @@ def mosaic_reader(
 
     Args:
 
-        assets (sequence): List of assets.
+        mosaic_assets (sequence): List of assets.
         reader (callable): Reader function. The function MUST take `(asset, *args, **kwargs)` as arguments, and MUST return an ImageData.
         args (Any): Argument to forward to the reader function.
         pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. Defaults to `rio_tiler.mosaic.methods.defaults.FirstMethod`.
@@ -69,13 +69,13 @@ def mosaic_reader(
         )
 
     if not chunk_size:
-        chunk_size = threads if threads > 1 else len(assets)
+        chunk_size = threads if threads > 1 else len(mosaic_assets)
 
     assets_used: List[str] = []
     crs: Optional[CRS] = None
     bounds: Optional[BBox] = None
 
-    for chunks in _chunks(assets, chunk_size):
+    for chunks in _chunks(mosaic_assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
         for img, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions,):
             if isinstance(img, tuple):
