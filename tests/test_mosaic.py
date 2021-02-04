@@ -2,15 +2,17 @@
 
 import os
 from typing import Tuple
+from unittest.mock import patch
 
 import numpy
 import pytest
+import rasterio
 from rasterio.warp import transform_bounds
 
 from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
-from rio_tiler.io import COGReader
+from rio_tiler.io import COGReader, STACReader
 from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
 
@@ -18,6 +20,8 @@ asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
 asset2 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog2.tif")
 assets = [asset1, asset2]
 assets_order = [asset2, asset1]
+
+stac_asset = os.path.join(os.path.dirname(__file__), "fixtures", "stac.json")
 
 # Full covered tile
 x = 150
@@ -210,6 +214,34 @@ def test_mosaic_tiler():
     (t, m), _ = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
+
+
+def mock_rasterio_open(asset):
+    """Mock rasterio Open."""
+    assert asset.startswith("http://somewhere-over-the-rainbow.io")
+    asset = asset.replace(
+        "http://somewhere-over-the-rainbow.io",
+        os.path.join(os.path.dirname(__file__), "fixtures"),
+    )
+    return rasterio.open(asset)
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_stac_mosaic_tiler(rio):
+    """Test mosaic tiler with STACReader."""
+    rio.open = mock_rasterio_open
+
+    def _reader(src_path: str, *args, **kwargs) -> ImageData:
+        """Read tile from an asset"""
+        with STACReader(src_path) as stac:
+            return stac.tile(*args, **kwargs)
+
+    (data, mask), assets_used = mosaic.mosaic_reader(
+        [stac_asset], _reader, 71, 102, 8, assets="green", threads=0,
+    )
+    assert assets_used == [stac_asset]
+    assert data.shape == (1, 256, 256)
+    assert mask.shape == (256, 256)
 
 
 def test_mosaic_tiler_Stdev():

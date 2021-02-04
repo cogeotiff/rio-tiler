@@ -1,4 +1,9 @@
 
+## 2.0.0.post1 (2021-02-04)
+
+* fix arguments names conflicts between mosaic_reader/tasks and STACReader options (https://github.com/cogeotiff/rio-tiler/pull/343)
+* update rio-tiler pypi description.
+
 ## 2.0.0 (2021-01-27)
 
 * add MultiPolygon support in `rio_tiler.utils.create_cutline` (https://github.com/cogeotiff/rio-tiler/issues/323)
