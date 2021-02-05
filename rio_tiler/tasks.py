@@ -38,22 +38,24 @@ def filter_tasks(
             pass
 
 
-def create_tasks(reader: Callable, assets, threads, *args, **kwargs) -> TaskType:
+def create_tasks(reader: Callable, asset_list, threads, *args, **kwargs) -> TaskType:
     """Create Future Tasks."""
     if threads and threads > 1:
         logger.debug(f"Running tasks in ThreadPool with max_workers={threads}")
         with futures.ThreadPoolExecutor(max_workers=threads) as executor:
             return [
                 (executor.submit(reader, asset, *args, **kwargs), asset)
-                for asset in assets
+                for asset in asset_list
             ]
     else:
         logger.debug(f"Running tasks outside ThreadsPool (max_workers={threads})")
-        return [(partial(reader, asset, *args, **kwargs), asset) for asset in assets]
+        return [
+            (partial(reader, asset, *args, **kwargs), asset) for asset in asset_list
+        ]
 
 
 def multi_arrays(
-    assets: Sequence[str],
+    asset_list: Sequence[str],
     reader: Callable[..., ImageData],
     *args: Any,
     threads: int = MAX_THREADS,
@@ -61,14 +63,14 @@ def multi_arrays(
     **kwargs: Any,
 ) -> ImageData:
     """Merge arrays returned from tasks."""
-    tasks = create_tasks(reader, assets, threads, *args, **kwargs)
+    tasks = create_tasks(reader, asset_list, threads, *args, **kwargs)
     return ImageData.create_from_list(
         [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
     )
 
 
 def multi_values(
-    assets: Sequence[str],
+    asset_list: Sequence[str],
     reader: Callable,
     *args: Any,
     threads: int = MAX_THREADS,
@@ -76,7 +78,7 @@ def multi_values(
     **kwargs: Any,
 ) -> Dict:
     """Merge values returned from tasks."""
-    tasks = create_tasks(reader, assets, threads, *args, **kwargs)
+    tasks = create_tasks(reader, asset_list, threads, *args, **kwargs)
     return {
         asset: val
         for val, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)

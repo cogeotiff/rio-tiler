@@ -374,15 +374,12 @@ def test_feature_valid(rio):
             assert data.shape == (1, 119, 97)
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
-def test_relative_assets(rio):
+def test_relative_assets():
     """Should return absolute href for assets"""
-    rio.open = mock_rasterio_open
-
     with STACReader(STAC_REL_PATH) as stac:
-
         for (key, asset) in stac.item.assets.items():
             assert asset.get_absolute_href().startswith(PREFIX)
         assert len(stac.assets) == 5
+
         for asset in stac.assets:
             assert stac._get_asset_url(asset).startswith(PREFIX)

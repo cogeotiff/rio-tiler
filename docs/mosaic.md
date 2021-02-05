@@ -26,7 +26,7 @@ how to handle these cases for each pixel:
 
 ```python
 rio_tiler.mosaic.mosaic_reader(
-    assets: Sequence[str],
+    mosaic_assets: Sequence[str],
     reader: Callable[..., ImageData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
@@ -38,7 +38,7 @@ rio_tiler.mosaic.mosaic_reader(
 ```
 Inputs:
 
-- **assets** : list, tuple of rio-tiler compatible assets (url or sceneid)
+- **mosaic_assets** : list, tuple of rio-tiler compatible assets (url or sceneid)
 - **reader**: Callable that returns a `ImageData` instance or a tuple of `numpy.array`
 - **\*args**: arguments to be forwarded to the callable.
 - **pixel_selection** : optional **pixel selection** algorithm (default: "first").
@@ -63,19 +63,19 @@ def tiler(src_path: str, *args, **kwargs) -> ImageData:
     with COGReader(src_path) as cog:
         return cog.tile(*args, **kwargs)
 
-assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
+mosaic_assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
 x = 1000
 y = 1000
 z = 9
 
 # Use Default First value method
-img, _ = mosaic_reader(assets, tiler, x, y, z)
+img, _ = mosaic_reader(mosaic_assets, tiler, x, y, z)
 assert isinstance(img, ImageData)
 assert img.data.shape == (3, 256, 256)
 
 # Use Highest value: defaults.HighestMethod()
 img, _ = mosaic_reader(
-    assets,
+    mosaic_assets,
     tiler,
     x,
     y,
@@ -85,7 +85,7 @@ img, _ = mosaic_reader(
 
 # Use Lowest value: defaults.LowestMethod()
 mg, _ = mosaic_reader(
-    assets,
+    mosaic_assets,
     tiler,
     x,
     y,
@@ -121,10 +121,10 @@ See [`rio_tiler.mosaic.methods.defaults`](https://github.com/cogeotiff/rio-tiler
 When dealing with an important number of image, you might not want to process the whole stack, especially if the pixel selection method stops when the tile is filled. To allow better optimization, `rio_tiler.mosaic.mosaic_reader` is fetching the tiles in parallel (threads) but to limit the number of files we also embeded the fetching in a loop (creating 2 level of processing):
 
 ```python
-assets = ["1.tif", "2.tif", "3.tif", "4.tif", "5.tif", "6.tif"]
+mosaic_assets = ["1.tif", "2.tif", "3.tif", "4.tif", "5.tif", "6.tif"]
 
 # 1st level loop - Creates chuncks of assets
-for chunks in _chunks(assets, chunk_size):
+for chunks in _chunks(mosaic_assets, chunk_size):
 
     # 2nd level loop - Uses threads for process each `chunck`
     with futures.ThreadPoolExecutor(max_workers=max_threads) as executor:

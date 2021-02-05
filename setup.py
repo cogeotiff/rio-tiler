@@ -36,7 +36,7 @@ setup(
     name="rio-tiler",
     version="2.0.0",
     python_requires=">=3.6",
-    description="Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF.",
+    description="Rasterio plugin to create web map tiles from raster datasets.",
     long_description=readme,
     long_description_content_type="text/markdown",
     classifiers=[
@@ -48,7 +48,7 @@ setup(
         "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS",
     ],
-    keywords="COG cogeo raster aws map tiles gdal rasterio",
+    keywords="cog cogeotiff raster map tiles gdal rasterio raster-processing slippy-map",
     author="Vincent Sarago",
     author_email="vincent@developmentseed.org",
     url="https://github.com/cogeotiff/rio-tiler",
