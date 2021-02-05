@@ -1,5 +1,5 @@
 
-## 2.0.0.post1 (2021-02-04)
+## 2.0.1 (2021-02-04)
 
 * fix arguments names conflicts between mosaic_reader/tasks and STACReader options (https://github.com/cogeotiff/rio-tiler/pull/343)
 * update rio-tiler pypi description.
