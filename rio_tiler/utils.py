@@ -245,6 +245,46 @@ def linear_rescale(
     return image * (omax - omin) + omin
 
 
+def get_aligned_bounds(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    bounds: Tuple[float, float, float, float],
+    height: Optional[int] = None,
+    width: Optional[int] = None,
+    bounds_crs: CRS = WEB_MERCATOR_CRS,
+    threshold: float = 0.0001,
+):
+    """Correct bounds to align with internal block bounds."""
+    if not src_dst.is_tiled:
+        return bounds
+
+    if src_dst.crs != bounds_crs:
+        return bounds
+
+    col_off, row_off, w, h = windows.from_bounds(
+        *bounds, transform=src_dst.transform, width=width, height=height,
+    ).flatten()
+
+    if round(w) % 64 and round(h) % 64:
+        return bounds
+
+    if (src_dst.width - round(col_off)) % 64:
+        return bounds
+
+    if (src_dst.height - round(row_off)) % 64:
+        return bounds
+
+    w = windows.Window(
+        col_off=round(col_off), row_off=round(row_off), width=round(w), height=round(h),
+    )
+
+    new_bounds = src_dst.window_bounds(w)
+    for ii in range(4):
+        if abs(new_bounds[ii] - bounds[ii]) > threshold:
+            return bounds
+
+    return new_bounds
+
+
 def _requested_tile_aligned_with_internal_tile(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
