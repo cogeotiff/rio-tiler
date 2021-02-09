@@ -177,7 +177,6 @@ def get_vrt_transform(
             round(w, window_precision),
             round(h, window_precision),
         )
-        print(w)
         bounds = src_dst.window_bounds(w)
 
     w, s, e, n = bounds
@@ -207,7 +206,6 @@ def get_vrt_transform(
     vrt_height = max(1, round((s - n) / h_res))
     vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
 
-    print(vrt_width, vrt_height)
     return vrt_transform, vrt_width, vrt_height
 
 
