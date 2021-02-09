@@ -60,6 +60,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install tox
 
+      - name: Cache benchmark data
+        uses: actions/cache@v2
+        with:
+          path: ./tests/benchmarks/data/*.tif
+          key: ${{ runner.os }}-${{ hashFiles('./tests/benchmarks/__init__.py') }}
+
       - name: Run Benchmark
         env:
           TOXENV: benchmark
