@@ -386,8 +386,8 @@ def test_mosaic_tiler_with_imageDataClass():
     img, assets_used = mosaic.mosaic_reader(
         assets, _read_part, bbox=bbox, dst_crs=crs1, bounds_crs=WGS84_CRS, max_size=1024
     )
-    assert img.data.shape == (3, 690, 1024)
-    assert img.mask.shape == (690, 1024)
+    assert img.data.shape == (3, 689, 1024)
+    assert img.mask.shape == (689, 1024)
     assert img.mask.any()
     assert assets_used == img.assets == assets
     assert img.crs == crs1 == crs2

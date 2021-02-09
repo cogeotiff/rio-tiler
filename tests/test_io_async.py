@@ -129,7 +129,7 @@ async def test_async():
             73.50183615350426,
         )
         data, mask = await cog.part(bbox)
-        assert data.shape == (1, 11, 41)
+        assert data.shape == (1, 11, 40)
 
         data, mask = await cog.preview(max_size=128)
         assert data.shape == (1, 128, 128)
@@ -159,4 +159,4 @@ async def test_async():
         }
 
         img = await cog.feature(feature)
-        assert img.data.shape == (1, 349, 1024)
+        assert img.data.shape == (1, 348, 1024)

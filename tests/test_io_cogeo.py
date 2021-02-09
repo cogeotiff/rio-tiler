@@ -240,26 +240,26 @@ def test_area_valid():
     )
     with COGReader(COG_NODATA) as cog:
         data, mask = cog.part(bbox)
-        assert data.shape == (1, 11, 41)
+        assert data.shape == (1, 11, 40)
 
         data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
-        assert data.shape == (1, 29, 30)
+        assert data.shape == (1, 28, 30)
 
         data, mask = cog.part(bbox, max_size=30)
         assert data.shape == (1, 9, 30)
 
         data, mask = cog.part(bbox, expression="b1*2,b1-100")
-        assert data.shape == (2, 11, 41)
+        assert data.shape == (2, 11, 40)
 
         with pytest.warns(ExpressionMixingWarning):
             data, _ = cog.part(bbox, indexes=(1, 2, 3), expression="b1*2")
-            assert data.shape == (1, 11, 41)
+            assert data.shape == (1, 11, 40)
 
         data, mask = cog.part(bbox, indexes=1)
-        assert data.shape == (1, 11, 41)
+        assert data.shape == (1, 11, 40)
 
         data, mask = cog.part(bbox, indexes=(1, 1,))
-        assert data.shape == (2, 11, 41)
+        assert data.shape == (2, 11, 40)
 
 
 def test_preview_valid():
@@ -461,13 +461,13 @@ def test_imageData_output():
             73.50183615350426,
         )
         img = cog.part(bbox)
-        assert img.data.shape == (1, 11, 41)
+        assert img.data.shape == (1, 11, 40)
         meta = parse_img(img.render(img_format="GTiff"))
         assert meta["crs"] == WGS84_CRS
         assert img.bounds == bbox
 
         img = cog.part(bbox, dst_crs=cog.dataset.crs)
-        assert img.data.shape == (1, 29, 30)
+        assert img.data.shape == (1, 28, 30)
         meta = parse_img(img.render(img_format="GTiff"))
         assert meta["crs"] == cog.dataset.crs
         assert not img.bounds == bbox
@@ -507,7 +507,7 @@ def test_feature_valid():
 
     with COGReader(COG_NODATA) as cog:
         img = cog.feature(feature)
-        assert img.data.shape == (1, 349, 1024)
+        assert img.data.shape == (1, 348, 1024)
 
         img = cog.feature(feature, dst_crs=cog.dataset.crs)
         assert img.data.shape == (1, 1024, 869)
@@ -516,17 +516,17 @@ def test_feature_valid():
         assert img.data.shape == (1, 11, 30)
 
         img = cog.feature(feature, expression="b1*2,b1-100")
-        assert img.data.shape == (2, 349, 1024)
+        assert img.data.shape == (2, 348, 1024)
 
         with pytest.warns(ExpressionMixingWarning):
             img = cog.feature(feature, indexes=(1, 2, 3), expression="b1*2")
-            assert img.data.shape == (1, 349, 1024)
+            assert img.data.shape == (1, 348, 1024)
 
         img = cog.feature(feature, indexes=1)
-        assert img.data.shape == (1, 349, 1024)
+        assert img.data.shape == (1, 348, 1024)
 
         img = cog.feature(feature, indexes=(1, 1,))
-        assert img.data.shape == (2, 349, 1024)
+        assert img.data.shape == (2, 348, 1024)
 
         # feature overlaping on mask area
         mask_feat = {
