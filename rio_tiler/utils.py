@@ -1,6 +1,5 @@
 """rio_tiler.utils: utility functions."""
 
-import math
 from io import BytesIO
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
@@ -178,16 +177,19 @@ def get_vrt_transform(
             round(w, window_precision),
             round(h, window_precision),
         )
+        print(w)
         bounds = src_dst.window_bounds(w)
 
     w, s, e, n = bounds
 
+    # TODO: Explain
     if not height or not width:
-        vrt_width = math.ceil((e - w) / dst_transform.a)
-        vrt_height = math.ceil((s - n) / dst_transform.e)
+        vrt_width = max(1, round((e - w) / dst_transform.a))
+        vrt_height = max(1, round((s - n) / dst_transform.e))
         vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
         return vrt_transform, vrt_width, vrt_height
 
+    # TODO: Explain
     tile_transform = from_bounds(w, s, e, n, width, height)
     w_res = (
         tile_transform.a
@@ -200,10 +202,12 @@ def get_vrt_transform(
         else dst_transform.e
     )
 
-    vrt_width = math.ceil((e - w) / w_res)
-    vrt_height = math.ceil((s - n) / h_res)
+    # TODO: Explain
+    vrt_width = max(1, round((e - w) / w_res))
+    vrt_height = max(1, round((s - n) / h_res))
     vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
 
+    print(vrt_width, vrt_height)
     return vrt_transform, vrt_width, vrt_height
 
 
