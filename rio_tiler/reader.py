@@ -18,13 +18,7 @@ from . import constants
 from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
-from .utils import (
-    get_aligned_bounds,
-    get_vrt_transform,
-    has_alpha_band,
-    has_mask_band,
-    non_alpha_indexes,
-)
+from .utils import get_vrt_transform, has_alpha_band, has_mask_band, non_alpha_indexes
 
 
 def read(
@@ -181,8 +175,6 @@ def part(
                 "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
             )
 
-    bounds = get_aligned_bounds(src_dst, bounds, height, width, bounds_crs=dst_crs)
-
     vrt_transform, vrt_width, vrt_height = get_vrt_transform(
         src_dst, bounds, height, width, dst_crs=dst_crs
     )
@@ -201,7 +193,7 @@ def part(
 
     out_height = height or vrt_height
     out_width = width or vrt_width
-    if padding > 0 and not is_aligned(src_dst, bounds, out_height, out_width):
+    if padding > 0 and not is_aligned(src_dst, bounds, out_height, out_width, dst_crs):
         vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
         orig_vrt_height = vrt_height
         orig_vrt_width = vrt_width
