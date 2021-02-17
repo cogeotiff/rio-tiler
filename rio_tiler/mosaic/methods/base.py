@@ -33,7 +33,7 @@ class MosaicMethodBase(abc.ABC):
     def data(self):
         """Return data and mask."""
         if self.tile is not None:
-            return self.tile.data, ~self.tile.mask[0] * 255
+            return self.tile.data, (~self.tile.mask[0] * 255).astype(self.tile.dtype)
         else:
             return None, None
 
