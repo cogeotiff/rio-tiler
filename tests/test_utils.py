@@ -77,8 +77,8 @@ def test_get_vrt_transform_valid():
         )
         assert vrt_transform[2] == -11663507.036777973
         assert vrt_transform[5] == 4715037.199028169
-        assert vrt_width == 100
-        assert vrt_height == 100
+        assert vrt_width == 99
+        assert vrt_height == 99
 
         vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
             src, bounds, 256, 256
@@ -105,7 +105,7 @@ def test_get_vrt_transform_valid4326():
     assert vrt_transform[2] == -104.77523803710938
     assert vrt_transform[5] == 38.954069293441066
     assert vrt_width == 420
-    assert vrt_height == 327
+    assert vrt_height == 326
 
 
 def test_statsFunction_valid():

@@ -193,7 +193,7 @@ def part(
 
     out_height = height or vrt_height
     out_width = width or vrt_width
-    if padding > 0 and not is_aligned(src_dst, bounds, out_height, out_width):
+    if padding > 0 and not is_aligned(src_dst, bounds, out_height, out_width, dst_crs):
         vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
         orig_vrt_height = vrt_height
         orig_vrt_width = vrt_width

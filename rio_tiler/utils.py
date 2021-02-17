@@ -1,6 +1,5 @@
 """rio_tiler.utils: utility functions."""
 
-import math
 from io import BytesIO
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
@@ -144,6 +143,7 @@ def get_vrt_transform(
     height: Optional[int] = None,
     width: Optional[int] = None,
     dst_crs: CRS = WEB_MERCATOR_CRS,
+    window_precision: int = 6,
 ) -> Tuple[Affine, int, int]:
     """Calculate VRT transform.
 
@@ -161,14 +161,34 @@ def get_vrt_transform(
     dst_transform, _, _ = calculate_default_transform(
         src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
     )
+
+    # If bounds window is aligned with the dataset internal tile we align the bounds with the pixels.
+    # This is to limit the number of internal block fetched.
+    if _requested_tile_aligned_with_internal_tile(
+        src_dst, bounds, height, width, dst_crs
+    ):
+        col_off, row_off, w, h = windows.from_bounds(
+            *bounds, transform=src_dst.transform, width=width, height=height,
+        ).flatten()
+
+        w = windows.Window(
+            round(col_off, window_precision),
+            round(row_off, window_precision),
+            round(w, window_precision),
+            round(h, window_precision),
+        )
+        bounds = src_dst.window_bounds(w)
+
     w, s, e, n = bounds
 
+    # TODO: Explain
     if not height or not width:
-        vrt_width = math.ceil((e - w) / dst_transform.a)
-        vrt_height = math.ceil((s - n) / dst_transform.e)
+        vrt_width = max(1, round((e - w) / dst_transform.a))
+        vrt_height = max(1, round((s - n) / dst_transform.e))
         vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
         return vrt_transform, vrt_width, vrt_height
 
+    # TODO: Explain
     tile_transform = from_bounds(w, s, e, n, width, height)
     w_res = (
         tile_transform.a
@@ -181,8 +201,9 @@ def get_vrt_transform(
         else dst_transform.e
     )
 
-    vrt_width = math.ceil((e - w) / w_res)
-    vrt_height = math.ceil((s - n) / h_res)
+    # TODO: Explain
+    vrt_width = max(1, round((e - w) / w_res))
+    vrt_height = max(1, round((s - n) / h_res))
     vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
 
     return vrt_transform, vrt_width, vrt_height
@@ -248,18 +269,19 @@ def linear_rescale(
 def _requested_tile_aligned_with_internal_tile(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: Tuple[float, float, float, float],
-    height: int,
-    width: int,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
+    bounds_crs: CRS = WEB_MERCATOR_CRS,
 ) -> bool:
     """Check if tile is aligned with internal tiles."""
     if not src_dst.is_tiled:
         return False
 
-    if src_dst.crs != WEB_MERCATOR_CRS:
+    if src_dst.crs != bounds_crs:
         return False
 
     col_off, row_off, w, h = windows.from_bounds(
-        *bounds, height=height, transform=src_dst.transform, width=width
+        *bounds, transform=src_dst.transform, height=height, width=width
     ).flatten()
 
     if round(w) % 64 and round(h) % 64:

@@ -174,16 +174,16 @@ def test_part_valid(rio):
             stac.part(bbox)
 
         data, mask = stac.part(bbox, assets="green")
-        assert data.shape == (1, 73, 84)
-        assert mask.shape == (73, 84)
+        assert data.shape == (1, 73, 83)
+        assert mask.shape == (73, 83)
 
         data, mask = stac.part(bbox, assets=("green",))
-        assert data.shape == (1, 73, 84)
-        assert mask.shape == (73, 84)
+        assert data.shape == (1, 73, 83)
+        assert mask.shape == (73, 83)
 
         data, mask = stac.part(bbox, expression="green/red")
-        assert data.shape == (1, 73, 84)
-        assert mask.shape == (73, 84)
+        assert data.shape == (1, 73, 83)
+        assert mask.shape == (73, 83)
 
         data, mask = stac.part(bbox, assets="green", max_size=30)
         assert data.shape == (1, 27, 30)
@@ -191,7 +191,7 @@ def test_part_valid(rio):
 
         with pytest.warns(ExpressionMixingWarning):
             data, _ = stac.part(bbox, assets=("green", "red"), expression="green/red")
-            assert data.shape == (1, 73, 84)
+            assert data.shape == (1, 73, 83)
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -352,16 +352,16 @@ def test_feature_valid(rio):
             stac.feature(feat)
 
         data, mask = stac.feature(feat, assets="green")
-        assert data.shape == (1, 119, 97)
-        assert mask.shape == (119, 97)
+        assert data.shape == (1, 118, 96)
+        assert mask.shape == (118, 96)
 
         data, mask = stac.feature(feat, assets=("green",))
-        assert data.shape == (1, 119, 97)
-        assert mask.shape == (119, 97)
+        assert data.shape == (1, 118, 96)
+        assert mask.shape == (118, 96)
 
         data, mask = stac.feature(feat, expression="green/red")
-        assert data.shape == (1, 119, 97)
-        assert mask.shape == (119, 97)
+        assert data.shape == (1, 118, 96)
+        assert mask.shape == (118, 96)
 
         data, mask = stac.feature(feat, assets="green", max_size=30)
         assert data.shape == (1, 30, 25)
@@ -371,7 +371,7 @@ def test_feature_valid(rio):
             data, _ = stac.feature(
                 feat, assets=("green", "red"), expression="green/red"
             )
-            assert data.shape == (1, 119, 97)
+            assert data.shape == (1, 118, 96)
 
 
 def test_relative_assets():
