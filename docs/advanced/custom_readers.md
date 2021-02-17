@@ -222,3 +222,58 @@ with BandFileReader("my_dir/", "scene_") as cr:
 Note: [`rio-tiler-pds`][rio-tiler-pds] readers are built using the `MultiBandReader` base class.
 
 [rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
+
+
+## Custom COGReader subclass
+
+The example :point_down: was created as a response to https://github.com/developmentseed/titiler/discussions/235. In short, the user needed a way to keep metadata information from an asset within a STAC item.
+
+Sadly when we are using the STAC Reader we only keep the metadata about the item but not the assets metadata (because we built the STAC Reader with the idea that user might first want to merge assets together).
+
+But rio-tiler has been designed to be easily customizable.
+
+```python
+import attr
+from rasterio.io import DatasetReader
+from rio_tiler.io.stac import fetch, _to_pystac_item
+from rio_tiler.io import COGReader
+import pystac
+
+@attr.s
+class CustomSTACReader(COGReader):
+    """Custom COG Reader with GCPS support."""
+
+    # This will keep the STAC item info within the instance
+    item: pystac.Item = attr.ib(default=None, init=False)
+
+    def __attrs_post_init__(self):
+        """Define _kwargs, open dataset and get info."""
+        # get STAC item URL and asset name
+        asset = self.filepath.split(":")[-1]
+        stac_url = self.filepath.replace(f":{asset}", "")
+
+        # Fetch the STAC item
+        self.item = pystac.Item.from_dict(fetch(stac_url), stac_url)
+
+        # Get asset url from the STAC Item
+        self.filepath = self.item.assets[asset].get_absolute_href()
+        super().__attrs_post_init__()
+
+with CustomSTACReader("https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/S5_11055_6057_20070622.json:pan") as cog:
+    print(type(cog.dataset))
+    print(cog.filepath)
+    print(cog.nodata)
+    print(cog.bounds)
+
+>>> rasterio.io.DatasetReader
+>>> "https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/s5_11055_6057_20070622_p10_1_lcc00_cog.tif"
+>>> 0
+>>> (-111.87793996076493, 60.48627186654449, -109.94924666908423, 61.42036313093244)
+```
+
+In this `CustomSTACReader`, we are using a custom path `schema` in form of `{item-url}:{asset-name}`. When creating an instance of `CustomSTACReader`, we will do the following:
+
+1. Parse the input path to get the STAC url and asset name
+2. Fetch and parse the STAC item
+3. Construct a new `filename` using the asset full url.
+4. Fall back to the regular `COGReader` initialization (using `super().__attrs_post_init__()`)
