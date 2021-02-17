@@ -68,6 +68,7 @@ def test_mosaic_tiler():
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8682
+    assert t.dtype == m.dtype
 
     # Test last pixel selection
     assetsr = list(reversed(assets))
@@ -76,6 +77,7 @@ def test_mosaic_tiler():
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8057
+    assert t.dtype == m.dtype
 
     (t, m), _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, indexes=1)
     assert t.shape == (1, 256, 256)
@@ -83,6 +85,7 @@ def test_mosaic_tiler():
     assert t.all()
     assert m.all()
     assert t[0][-1][-1] == 8682
+    assert t.dtype == m.dtype
 
     # Test darkest pixel selection
     (t, m), assets_used = mosaic.mosaic_reader(
@@ -91,11 +94,13 @@ def test_mosaic_tiler():
     assert len(assets_used) == 2
     assert m.all()
     assert t[0][-1][-1] == 8057
+    assert t.dtype == m.dtype
 
     (to, mo), _ = mosaic.mosaic_reader(
         assets_order, _read_tile, x, y, z, pixel_selection=defaults.LowestMethod()
     )
     numpy.testing.assert_array_equal(t[0, m], to[0, mo])
+    assert to.dtype == mo.dtype
 
     # Test brightest pixel selection
     (t, m), _ = mosaic.mosaic_reader(
@@ -103,12 +108,14 @@ def test_mosaic_tiler():
     )
     assert m.all()
     assert t[0][-1][-1] == 8682
+    assert t.dtype == m.dtype
 
     (to, mo), _ = mosaic.mosaic_reader(
         assets_order, _read_tile, x, y, z, pixel_selection=defaults.HighestMethod()
     )
     numpy.testing.assert_array_equal(to, t)
     numpy.testing.assert_array_equal(mo, m)
+    assert to.dtype == mo.dtype
 
     # test with default and partially covered tile
     (t, m), _ = mosaic.mosaic_reader(
@@ -116,6 +123,7 @@ def test_mosaic_tiler():
     )
     assert t.any()
     assert not m.all()
+    assert t.dtype == m.dtype
 
     # test when tiler raise errors (outside bounds)
     with pytest.raises(EmptyMosaicError):
@@ -129,6 +137,7 @@ def test_mosaic_tiler():
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8369
+    assert t.dtype == m.dtype
 
     # Test mean pixel selection
     (t, m), _ = mosaic.mosaic_reader(
@@ -141,6 +150,7 @@ def test_mosaic_tiler():
     )
     assert m.all()
     assert t[0][-1][-1] == 8369.5
+    assert t.dtype == m.dtype
 
     # Test median pixel selection
     (t, m), _ = mosaic.mosaic_reader(
@@ -150,6 +160,7 @@ def test_mosaic_tiler():
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8369
+    assert t.dtype == m.dtype
 
     # Test median pixel selection
     (t, m), _ = mosaic.mosaic_reader(
@@ -162,6 +173,7 @@ def test_mosaic_tiler():
     )
     assert m.all()
     assert t[0][-1][-1] == 8369.5
+    assert t.dtype == m.dtype
 
     (t, m), _ = mosaic.mosaic_reader(
         assets_order,
@@ -176,6 +188,7 @@ def test_mosaic_tiler():
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8682
+    assert t.dtype == m.dtype
 
     (t, m), _ = mosaic.mosaic_reader(
         assets_order,
@@ -190,6 +203,7 @@ def test_mosaic_tiler():
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8057
+    assert t.dtype == m.dtype
 
     # Test pixel selection as _class_, not instance of class
     (t, m), assets_used = mosaic.mosaic_reader(
@@ -199,6 +213,7 @@ def test_mosaic_tiler():
     assert m.shape == (256, 256)
     assert m.all()
     assert t[0][-1][-1] == 8682
+    assert t.dtype == m.dtype
 
     # Test invalid Pixel Selection class
     with pytest.raises(InvalidMosaicMethod):
@@ -214,6 +229,7 @@ def test_mosaic_tiler():
     (t, m), _ = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
+    assert t.dtype == m.dtype
 
 
 def mock_rasterio_open(asset):

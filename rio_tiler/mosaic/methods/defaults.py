@@ -74,7 +74,7 @@ class MeanMethod(MosaicMethodBase):
             tile = numpy.ma.mean(numpy.ma.stack(self.tile, axis=0), axis=0)
             if self.enforce_data_type:
                 tile = tile.astype(self.tile[0].dtype)
-            return tile.data, ~tile.mask[0] * 255
+            return tile.data, (~tile.mask[0] * 255).astype(tile.dtype)
         else:
             return None, None
 
@@ -99,7 +99,7 @@ class MedianMethod(MosaicMethodBase):
             tile = numpy.ma.median(numpy.ma.stack(self.tile, axis=0), axis=0)
             if self.enforce_data_type:
                 tile = tile.astype(self.tile[0].dtype)
-            return tile.data, ~tile.mask[0] * 255
+            return tile.data, (~tile.mask[0] * 255).astype(tile.dtype)
         else:
             return None, None
 
@@ -121,7 +121,7 @@ class StdevMethod(MosaicMethodBase):
         """Return data and mask."""
         if self.tile:
             tile = numpy.ma.std(numpy.ma.stack(self.tile, axis=0), axis=0)
-            return tile.data, ~tile.mask[0] * 255
+            return tile.data, (~tile.mask[0] * 255).astype(tile.dtype)
         else:
             return None, None
 
@@ -137,7 +137,10 @@ class LastBandHigh(MosaicMethodBase):
     def data(self):
         """Return data and mask."""
         if self.tile is not None:
-            return self.tile.data[:-1], ~self.tile.mask[0] * 255
+            return (
+                self.tile.data[:-1],
+                (~self.tile.mask[0] * 255).astype(self.tile.dtype),
+            )
         else:
             return None, None
 
@@ -164,7 +167,10 @@ class LastBandLow(MosaicMethodBase):
     def data(self):
         """Return data and mask."""
         if self.tile is not None:
-            return self.tile.data[:-1], ~self.tile.mask[0] * 255
+            return (
+                self.tile.data[:-1],
+                (~self.tile.mask[0] * 255).astype(self.tile.dtype),
+            )
         else:
             return None, None
 
