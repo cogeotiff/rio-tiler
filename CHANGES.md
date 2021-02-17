@@ -2,6 +2,7 @@
 ## 2.0.2 (2021-02-17)
 
 * fix bad mask datatype returned by mosaic methods (https://github.com/cogeotiff/rio-tiler/pull/353)
+* align WarpedVRT with internal blocks when needed. This is to reduce the number of GET requests need for VSI files (https://github.com/cogeotiff/rio-tiler/pull/345)
 
 ## 2.0.1 (2021-02-04)
 
