@@ -34,7 +34,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="2.0.2",
+    version="2.0.3",
     python_requires=">=3.6",
     description="Rasterio plugin to create web map tiles from raster datasets.",
     long_description=readme,
