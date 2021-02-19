@@ -81,19 +81,26 @@ def read(
         vrt_params.update(vrt_options)
 
     with WarpedVRT(src_dst, **vrt_params) as vrt:
-        data = vrt.read(
-            indexes=indexes, window=window, out_shape=out_shape, resampling=resampling,
-        )
         if ColorInterp.alpha in vrt.colorinterp:
             idx = vrt.colorinterp.index(ColorInterp.alpha) + 1
-            mask = vrt.read(
-                indexes=idx,
+            indexes = tuple(indexes) + (idx,)
+            if out_shape:
+                out_shape = (len(indexes), height, width)
+
+            data = vrt.read(
+                indexes=indexes,
                 window=window,
-                out_shape=mask_out_shape,
+                out_shape=out_shape,
                 resampling=resampling,
-                out_dtype="uint8",
             )
+            data, mask = data[0:-1], data[-1].astype("uint8")
         else:
+            data = vrt.read(
+                indexes=indexes,
+                window=window,
+                out_shape=out_shape,
+                resampling=resampling,
+            )
             mask = vrt.dataset_mask(
                 window=window, out_shape=mask_out_shape, resampling=resampling,
             )
