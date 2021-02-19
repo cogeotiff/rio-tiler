@@ -1,3 +1,7 @@
+## 2.0.3 (2021-02-19)
+
+* Reduce the number of `.read()` calls for dataset without nodata value (https://github.com/cogeotiff/rio-tiler/pull/355)
+* replace deprecated `numpy.float` by `numpy.float64`
 
 ## 2.0.2 (2021-02-17)
 
