@@ -68,6 +68,13 @@ To get the best performances out of `rio-tiler` we recommand for now to use GDAL
 
 Note: Starting with rasterio 1.2.0, the wheels are distributed with GDAL 3.2 and thus we recommand using rasterio==1.1.8.
 
+Links:
+
+- http://rgdal.r-forge.r-project.org/articles/PROJ6_GDAL3.html
+- https://mapserver.gis.umn.edu/id/development/rfc/ms-rfc-126.html
+- https://github.com/OSGeo/gdal/issues/3470
+- https://github.com/OSGeo/gdal/issues/1662
+
 ## Overview
 
 `rio-tiler` is a rasterio plugin that aims to ease the creation of [slippy map tiles](https://en.wikipedia.org/wiki/Tiled_web_map) dynamically from any raster source.
