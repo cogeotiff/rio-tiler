@@ -56,6 +56,18 @@ $ pip install -U pip
 $ pip install -e .
 ```
 
+## GDAL>=3.0 / PROJ>=6.0 performances issue
+
+`rio-tiler` is often used for dynamic tiling, where we need to perform small tasks involving croping and reprojecting the input data. Starting wiht GDAL>=3.0 the project shifted to PROJ>5 which introduced new ways to store projection metadata (using a uniq SQLite database and/or cloud stored grids). This change introduced some performance regression as mentioned in https://mapserver.gis.umn.edu/id/development/rfc/ms-rfc-126.html:
+
+> using naively the equivalent calls proj_create_crs_to_crs() + proj_trans() would be a major performance killer, since proj_create_crs_to_crs() can take a time in the order of 100 milliseconds in the most complex situations.
+
+We believe the issue reported in [issues/346](https://github.com/cogeotiff/rio-tiler/issues/346) is in fact due to :point_up:.
+
+To get the best performances out of `rio-tiler` we recommand for now to use GDAL **2.4** until a solution can be found in GDAL or in PROJ.
+
+Note: Starting with rasterio 1.2.0, the wheels are distributed with GDAL 3.2 and thus we recommand using rasterio==1.1.8.
+
 ## Overview
 
 `rio-tiler` is a rasterio plugin that aims to ease the creation of [slippy map tiles](https://en.wikipedia.org/wiki/Tiled_web_map) dynamically from any raster source.
