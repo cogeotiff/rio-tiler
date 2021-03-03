@@ -19,6 +19,7 @@ from .cogeo import COGReader
 DEFAULT_VALID_TYPE = {
     "image/tiff; application=geotiff",
     "image/tiff; application=geotiff; profile=cloud-optimized",
+    pystac.MediaType.COG,
     "image/vnd.stac.geotiff; cloud-optimized=true",
     "image/tiff",
     "image/x.geotiff",

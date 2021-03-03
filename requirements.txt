@@ -4,7 +4,7 @@ numexpr
 numpy
 morecantile>=2.1,<2.2
 pydantic
-pystac>=0.5.3
+pystac>=0.5.4
 rasterio>=1.1.7
 requests
 rio-color
