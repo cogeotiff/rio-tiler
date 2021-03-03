@@ -1,3 +1,7 @@
+## 2.0.4 (?)
+
+* Added [pystac.MediaType.COG](https://github.com/stac-utils/pystac/blob/master/pystac/media_type.py#L4) in supported types by STAC reader
+
 ## 2.0.3 (2021-02-19)
 
 * Reduce the number of `.read()` calls for dataset without nodata value (https://github.com/cogeotiff/rio-tiler/pull/355)
