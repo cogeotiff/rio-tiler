@@ -2,12 +2,18 @@
 
 import os
 import pathlib
+import re
 from typing import Dict, List, Sequence, Tuple, Union
 
 import attr
 import numpy
 
-from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidFormat
+from .errors import (
+    ColorMapAlreadyRegistered,
+    InvalidColorFormat,
+    InvalidColorMapName,
+    InvalidFormat,
+)
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
@@ -131,6 +137,67 @@ def apply_discrete_cmap(
     data = numpy.transpose(res, [2, 0, 1])
 
     return data[:-1], data[-1]
+
+
+def parse_color(value: Union[List[int], str]) -> List[int]:
+    """Parse RGB/RGBA color and return valid rio-tiler compatible RGBA colormap entry.
+
+    Args:
+        value (str or list of int): HEX encoded or list RGB or RGBA colors.
+
+    Returns:
+        list: RGBA values.
+
+    Examples:
+        >>> parse_color("#FFF")
+        [255, 255, 255, 255]
+
+        >>> parse_color("#FF0000FF")
+        [255, 0, 0, 255]
+
+        >>> parse_color("#FF0000")
+        [255, 0, 0, 255]
+
+        >>> parse_color([255, 255, 255])
+        [255, 255, 255, 255]
+
+    """
+    if isinstance(value, str):
+        if re.match("^#[a-fA-F0-9]{3,4}$", value):
+            factor = 2
+            hex_pattern = (
+                r"^#"
+                r"(?P<red>[a-fA-F0-9])"
+                r"(?P<green>[a-fA-F0-9])"
+                r"(?P<blue>[a-fA-F0-9])"
+                r"(?P<alpha>[a-fA-F0-9])?"
+                r"$"
+            )
+        elif re.match("^#([a-fA-F0-9][a-fA-F0-9]){3,4}$", value):
+            factor = 1
+            hex_pattern = (
+                r"^#"
+                r"(?P<red>[a-fA-F0-9][a-fA-F0-9])"
+                r"(?P<green>[a-fA-F0-9][a-fA-F0-9])"
+                r"(?P<blue>[a-fA-F0-9][a-fA-F0-9])"
+                r"(?P<alpha>[a-fA-F0-9][a-fA-F0-9])?"
+                r"$"
+            )
+        else:
+            raise InvalidColorFormat(f"Invalid color format: {value}")
+
+        match = re.match(hex_pattern, value)
+        value = [
+            int(n * factor, 16) for n in match.groupdict().values() if n is not None
+        ]
+
+    if len(value) > 4 or len(value) < 3:
+        raise InvalidColorFormat(f"Invalid color format: {value}")
+
+    if len(value) == 3:
+        value += [255]
+
+    return value
 
 
 @attr.s(frozen=True)

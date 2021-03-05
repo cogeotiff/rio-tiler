@@ -9,6 +9,7 @@ from rio_tiler import colormap
 from rio_tiler.colormap import DEFAULT_CMAPS_FILES
 from rio_tiler.errors import (
     ColorMapAlreadyRegistered,
+    InvalidColorFormat,
     InvalidColorMapName,
     InvalidFormat,
 )
@@ -159,3 +160,34 @@ def test_apply_discrete_cmap():
 
     cm = {1: [0, 0, 0, 255], 256: [255, 255, 255, 255]}
     assert colormap.apply_cmap(data, cm)
+
+
+@pytest.mark.parametrize(
+    "value,result",
+    [
+        ["#FFF", [255, 255, 255, 255]],
+        ["#FFF0", [255, 255, 255, 0]],
+        ["#FF0000", [255, 0, 0, 255]],
+        ["#FF000000", [255, 0, 0, 0]],
+        [[255, 255, 255], [255, 255, 255, 255]],
+        [[255, 255, 255, 0], [255, 255, 255, 0]],
+    ],
+)
+def test_parse_color(value, result):
+    """should parse HEX color and/or return a rio-tiler compatible colormap value."""
+    assert colormap.parse_color(value) == result
+
+
+def test_parse_color_bad():
+    """Should raise InvalidColorFormat."""
+    with pytest.raises(InvalidColorFormat):
+        colormap.parse_color("#00000")
+
+    with pytest.raises(InvalidColorFormat):
+        colormap.parse_color("00000")
+
+    with pytest.raises(InvalidColorFormat):
+        colormap.parse_color([0, 0])
+
+    with pytest.raises(InvalidColorFormat):
+        colormap.parse_color([0, 0, 0, 0, 0])
