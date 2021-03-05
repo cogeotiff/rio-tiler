@@ -1,3 +1,7 @@
+## 2.0.4 (TBD)
+
+* fix bad type definition in `rio_tiler.colormap.ColorMaps` data (https://github.com/cogeotiff/rio-tiler/issues/359)
+
 ## 2.0.3 (2021-02-19)
 
 * Reduce the number of `.read()` calls for dataset without nodata value (https://github.com/cogeotiff/rio-tiler/pull/355)
