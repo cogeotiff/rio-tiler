@@ -142,7 +142,7 @@ class ColorMaps:
 
     """
 
-    data: Dict[str, Union[str, numpy.array]] = attr.ib(
+    data: Dict[str, Union[str, Dict]] = attr.ib(
         default=attr.Factory(lambda: DEFAULT_CMAPS_FILES)
     )
 
@@ -161,10 +161,10 @@ class ColorMaps:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
 
         if isinstance(cmap, str):
-            cmap = numpy.load(cmap)
-            assert cmap.shape == (256, 4)
-            assert cmap.dtype == numpy.uint8
-            return {idx: value.tolist() for idx, value in enumerate(cmap)}
+            colormap = numpy.load(cmap)
+            assert colormap.shape == (256, 4)
+            assert colormap.dtype == numpy.uint8
+            return {idx: value.tolist() for idx, value in enumerate(colormap)}
         else:
             return cmap
 
