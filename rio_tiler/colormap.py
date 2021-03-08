@@ -139,14 +139,14 @@ def apply_discrete_cmap(
     return data[:-1], data[-1]
 
 
-def parse_color(value: Union[List[int], str]) -> List[int]:
+def parse_color(rgba: Union[Sequence[int], str]) -> Tuple[int, int, int, int]:
     """Parse RGB/RGBA color and return valid rio-tiler compatible RGBA colormap entry.
 
     Args:
-        value (str or list of int): HEX encoded or list RGB or RGBA colors.
+        rgba (str or list of int): HEX encoded or list RGB or RGBA colors.
 
     Returns:
-        list: RGBA values.
+        tuple: RGBA values.
 
     Examples:
         >>> parse_color("#FFF")
@@ -162,8 +162,8 @@ def parse_color(value: Union[List[int], str]) -> List[int]:
         [255, 255, 255, 255]
 
     """
-    if isinstance(value, str):
-        if re.match("^#[a-fA-F0-9]{3,4}$", value):
+    if isinstance(rgba, str):
+        if re.match("^#[a-fA-F0-9]{3,4}$", rgba):
             factor = 2
             hex_pattern = (
                 r"^#"
@@ -173,7 +173,7 @@ def parse_color(value: Union[List[int], str]) -> List[int]:
                 r"(?P<alpha>[a-fA-F0-9])?"
                 r"$"
             )
-        elif re.match("^#([a-fA-F0-9][a-fA-F0-9]){3,4}$", value):
+        elif re.match("^#([a-fA-F0-9][a-fA-F0-9]){3,4}$", rgba):
             factor = 1
             hex_pattern = (
                 r"^#"
@@ -184,20 +184,21 @@ def parse_color(value: Union[List[int], str]) -> List[int]:
                 r"$"
             )
         else:
-            raise InvalidColorFormat(f"Invalid color format: {value}")
+            raise InvalidColorFormat(f"Invalid color format: {rgba}")
 
-        match = re.match(hex_pattern, value)
-        value = [
+        match = re.match(hex_pattern, rgba)
+        rgba = [
             int(n * factor, 16) for n in match.groupdict().values() if n is not None
         ]
 
-    if len(value) > 4 or len(value) < 3:
-        raise InvalidColorFormat(f"Invalid color format: {value}")
+    if len(rgba) > 4 or len(rgba) < 3:
+        raise InvalidColorFormat(f"Invalid color format: {rgba}")
 
-    if len(value) == 3:
-        value += [255]
+    rgba = tuple(rgba)
+    if len(rgba) == 3:
+        rgba += (255,)
 
-    return value
+    return rgba  # type: ignore
 
 
 @attr.s(frozen=True)
