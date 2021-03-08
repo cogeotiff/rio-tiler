@@ -1,6 +1,7 @@
 ## 2.0.4 (TBD)
 
 * fix bad type definition in `rio_tiler.colormap.ColorMaps` data (https://github.com/cogeotiff/rio-tiler/issues/359)
+* add `rio_tiler.colormap.parse_color` function to parse HEX color (https://github.com/cogeotiff/rio-tiler/issues/361)
 
 ## 2.0.3 (2021-02-19)
 
