@@ -2,12 +2,18 @@
 
 import os
 import pathlib
+import re
 from typing import Dict, List, Sequence, Tuple, Union
 
 import attr
 import numpy
 
-from .errors import ColorMapAlreadyRegistered, InvalidColorMapName, InvalidFormat
+from .errors import (
+    ColorMapAlreadyRegistered,
+    InvalidColorFormat,
+    InvalidColorMapName,
+    InvalidFormat,
+)
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
@@ -133,6 +139,68 @@ def apply_discrete_cmap(
     return data[:-1], data[-1]
 
 
+def parse_color(rgba: Union[Sequence[int], str]) -> Tuple[int, int, int, int]:
+    """Parse RGB/RGBA color and return valid rio-tiler compatible RGBA colormap entry.
+
+    Args:
+        rgba (str or list of int): HEX encoded or list RGB or RGBA colors.
+
+    Returns:
+        tuple: RGBA values.
+
+    Examples:
+        >>> parse_color("#FFF")
+        [255, 255, 255, 255]
+
+        >>> parse_color("#FF0000FF")
+        [255, 0, 0, 255]
+
+        >>> parse_color("#FF0000")
+        [255, 0, 0, 255]
+
+        >>> parse_color([255, 255, 255])
+        [255, 255, 255, 255]
+
+    """
+    if isinstance(rgba, str):
+        if re.match("^#[a-fA-F0-9]{3,4}$", rgba):
+            factor = 2
+            hex_pattern = (
+                r"^#"
+                r"(?P<red>[a-fA-F0-9])"
+                r"(?P<green>[a-fA-F0-9])"
+                r"(?P<blue>[a-fA-F0-9])"
+                r"(?P<alpha>[a-fA-F0-9])?"
+                r"$"
+            )
+        elif re.match("^#([a-fA-F0-9][a-fA-F0-9]){3,4}$", rgba):
+            factor = 1
+            hex_pattern = (
+                r"^#"
+                r"(?P<red>[a-fA-F0-9][a-fA-F0-9])"
+                r"(?P<green>[a-fA-F0-9][a-fA-F0-9])"
+                r"(?P<blue>[a-fA-F0-9][a-fA-F0-9])"
+                r"(?P<alpha>[a-fA-F0-9][a-fA-F0-9])?"
+                r"$"
+            )
+        else:
+            raise InvalidColorFormat(f"Invalid color format: {rgba}")
+
+        match = re.match(hex_pattern, rgba)
+        rgba = [
+            int(n * factor, 16) for n in match.groupdict().values() if n is not None
+        ]
+
+    if len(rgba) > 4 or len(rgba) < 3:
+        raise InvalidColorFormat(f"Invalid color format: {rgba}")
+
+    rgba = tuple(rgba)
+    if len(rgba) == 3:
+        rgba += (255,)
+
+    return rgba  # type: ignore
+
+
 @attr.s(frozen=True)
 class ColorMaps:
     """Default Colormaps holder.
@@ -142,7 +210,7 @@ class ColorMaps:
 
     """
 
-    data: Dict[str, Union[str, numpy.array]] = attr.ib(
+    data: Dict[str, Union[str, Dict]] = attr.ib(
         default=attr.Factory(lambda: DEFAULT_CMAPS_FILES)
     )
 
@@ -161,10 +229,10 @@ class ColorMaps:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
 
         if isinstance(cmap, str):
-            cmap = numpy.load(cmap)
-            assert cmap.shape == (256, 4)
-            assert cmap.dtype == numpy.uint8
-            return {idx: value.tolist() for idx, value in enumerate(cmap)}
+            colormap = numpy.load(cmap)
+            assert colormap.shape == (256, 4)
+            assert colormap.dtype == numpy.uint8
+            return {idx: value.tolist() for idx, value in enumerate(colormap)}
         else:
             return cmap
 

@@ -21,7 +21,7 @@ class InvalidBandName(RioTilerError):
     """Invalid band name."""
 
 
-class InvalidColorMapName(Exception):
+class InvalidColorMapName(RioTilerError):
     """Invalid colormap name."""
 
 
@@ -53,9 +53,13 @@ class InvalidMosaicMethod(RioTilerError):
     """Invalid Pixel Selection method for mosaic."""
 
 
-class ColorMapAlreadyRegistered(Exception):
+class ColorMapAlreadyRegistered(RioTilerError):
     """ColorMap is already registered."""
 
 
 class EmptyMosaicError(RioTilerError):
     """Mosaic method returned empty array."""
+
+
+class InvalidColorFormat(RioTilerError):
+    """Invalid color format."""
