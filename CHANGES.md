@@ -1,5 +1,6 @@
-## 2.0.4 (TBD)
+## 2.0.4 (2021-03-09)
 
+* Added [pystac.MediaType.COG](https://github.com/stac-utils/pystac/blob/master/pystac/media_type.py#L4) in supported types by STAC reader
 * fix bad type definition in `rio_tiler.colormap.ColorMaps` data (https://github.com/cogeotiff/rio-tiler/issues/359)
 * add `rio_tiler.colormap.parse_color` function to parse HEX color (https://github.com/cogeotiff/rio-tiler/issues/361)
 
