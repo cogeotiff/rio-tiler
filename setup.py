@@ -55,7 +55,7 @@ setup(
     license="BSD",
     packages=find_packages(exclude=["tests*"]),
     include_package_data=True,
-    package_data={"rio_tiler": ["cmap_data/*.npy"]},
+    package_data={"rio_tiler": ["py.typed", "cmap_data/*.npy"]},
     zip_safe=False,
     install_requires=inst_reqs,
     extras_require=extra_reqs,
