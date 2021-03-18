@@ -42,6 +42,7 @@ class ImagesProfiles(UserDict):
         self.data.update(
             {
                 "jpeg": JPEGProfile(),
+                "jpg": JPEGProfile(),
                 "png": PNGProfile(),
                 "pngraw": PNGRAWProfile(),
                 "webp": WEBPProfile(),
