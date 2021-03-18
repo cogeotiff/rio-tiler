@@ -1,6 +1,15 @@
-## 2.0.5 (TBH)
+## 2.0.5 (2021-03-17)
 
 * make sure `py.typed` is included in the package (https://github.com/cogeotiff/rio-tiler/pull/363)
+* add `jpg` alias in `img_profiles` (https://github.com/cogeotiff/rio-tiler/pull/364)
+
+```python
+from rio_tiler.profiles import img_profiles
+
+jpeg = img_profiles.get("jpeg")
+jpg = img_profiles.get("jpg")
+assert jpeg == jpg
+```
 
 ## 2.0.4 (2021-03-09)
 
