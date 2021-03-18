@@ -1,3 +1,7 @@
+## 2.0.5 (TBH)
+
+* make sure `py.typed` is included in the package (https://github.com/cogeotiff/rio-tiler/pull/363)
+
 ## 2.0.4 (2021-03-09)
 
 * Added [pystac.MediaType.COG](https://github.com/stac-utils/pystac/blob/master/pystac/media_type.py#L4) in supported types by STAC reader
