@@ -26,3 +26,5 @@ def test_gdal_profiles():
 
     prof = img_profiles.get("jpe", {"a": "b"})
     assert prof == {"a": "b"}
+
+    assert img_profiles.get("jpeg") == img_profiles.get("jpg")
