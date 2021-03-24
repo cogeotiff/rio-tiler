@@ -1,3 +1,8 @@
+
+## Next (TBD)
+
+* add `read()` method in COGReader (https://github.com/cogeotiff/rio-tiler/pull/366)
+
 ## 2.0.5 (2021-03-17)
 
 * make sure `py.typed` is included in the package (https://github.com/cogeotiff/rio-tiler/pull/363)

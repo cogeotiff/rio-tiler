@@ -526,6 +526,52 @@ class COGReader(BaseReader):
             data, mask, bounds=bounds, crs=dst_crs, assets=[self.filepath],
         )
 
+    def read(
+        self,
+        indexes: Optional[Union[int, Sequence]] = None,
+        expression: Optional[str] = None,
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read the COG.
+
+        Args:
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to the `rio_tiler.reader.read` function.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        kwargs = {**self._kwargs, **kwargs}
+
+        if isinstance(indexes, int):
+            indexes = (indexes,)
+
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        data, mask = reader.read(self.dataset, indexes=indexes, **kwargs)
+
+        if expression:
+            blocks = expression.lower().split(",")
+            bands = [f"b{bidx}" for bidx in indexes]
+            data = apply_expression(blocks, bands, data)
+
+        return ImageData(
+            data,
+            mask,
+            bounds=self.dataset.bounds,
+            crs=self.dataset.crs,
+            assets=[self.filepath],
+        )
+
 
 @attr.s
 class GCPCOGReader(COGReader):
