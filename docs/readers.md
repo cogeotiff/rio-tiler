@@ -13,12 +13,38 @@
 
 #### Methods
 
+- **read()**: Read the entire dataset
+
+```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
+with COGReader("myfile.tif") as cog:
+    img = cog.read()
+    assert isinstance(img, ImageData)
+    assert img.crs == cog.dataset.crs
+    assert img.assets == ["myfile.tif"]
+    assert img.width == cog.dataset.width
+    assert img.height == cog.dataset.height
+    assert img.count == cog.dataset.count
+
+# With indexes
+with COGReader("myfile.tif") as cog:
+    img = cog.read(indexes=1)  # or cog.read(indexes=(1,))
+    assert img.data.count == 1
+
+# With expression
+with COGReader("myfile.tif"s) as cog:
+    img = cog.read(expression="B1/B2")
+    assert img.data.count == 1
+```
+
 - **tile()**: Read map tile from a raster
 
 ```python
 from rio_tiler.contants import WEB_MERCATOR_CRS
 from rio_tiler.io import COGReader
-from rio_tiler.models import ImageData, Info, Metadata, SpatialInfo
+from rio_tiler.models import ImageData
 
 with COGReader("myfile.tif") as cog:
     # cog.tile(tile_x, tile_y, tile_z, **kwargs)
@@ -41,6 +67,9 @@ with COGReader("myfile.tif"s) as cog:
 - **part()**: Read a raster for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
 
 ```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
 with COGReader("myfile.tif") as cog:
     # cog.part((minx, miny, maxx, maxy), **kwargs)
     img = cog.part((10, 10, 20, 20))
@@ -74,6 +103,9 @@ with COGReader("myfile.tif") as cog:
 - **feature()**: Read a raster for a geojson feature. By default the feature is considered to be in WGS84.
 
 ```python
+from rio_tiler.constants import WGS84_CRS
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
 
 feat = {
     "type": "Feature",
@@ -125,6 +157,9 @@ with COGReader("myfile.tif") as cog:
 - **preview()**: Read a preview of a raster
 
 ```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import ImageData
+
 with COGReader("myfile.tif") as cog:
     img = cog.preview()
     assert isinstance(img, ImageData)
@@ -141,6 +176,8 @@ with COGReader("myfile.tif") as cog:
 - **point()**: Read the pixel values of a raster for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
 
 ```python
+from rio_tiler.io import COGReader
+
 with COGReader("myfile.tif") as cog:
     # cog.point(lon, lat)
     print(cog.point(-100, 25))
@@ -159,6 +196,9 @@ with COGReader("myfile.tif") as cog:
 - **info()**: Return simple metadata about the dataset
 
 ```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import Info
+
 with COGReader("myfile.tif") as cog:
     info = cog.info()
     assert isinstance(info, Info)
@@ -185,6 +225,8 @@ print(info.dict(exclude_none=True))
 - **stats()**: Return image statistics (Min/Max/Stdev)
 
 ```python
+from rio_tiler.io import COGReader
+
 with COGReader("myfile.tif") as cog:
     # cog.stats(min_percentile, max_percentile, **kwargs)
     stats = cog.stats()
@@ -213,6 +255,9 @@ print(stats["1"].dict())
 - **metadata()**: Return COG info + statistics
 
 ```python
+from rio_tiler.io import COGReader
+from rio_tiler.models import Metadata
+
 with COGReader("myfile.tif") as cog:
     # cog.metadata(min_percentile, max_percentile, **kwargs)
     metadata = cog.metadata()
@@ -249,16 +294,15 @@ print(metadata.dict(exclude_none=True))
 }
 ```
 
-#### Global Options
+#### Read Options
 
-`COGReader` accepts several options which will be forwarded to the `rio_tiler.reader.read` function (low level function accessing the data):
+`COGReader` accepts several options which will be forwarded to the `rio_tiler.reader.read` function (low level function accessing the data), those options can be set as reader's attribute or within each method calls:
 
 - **nodata**: Overwrite the nodata value (or set if not present)
 - **unscale**: Apply internal rescaling factors
 - **vrt_options**: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
 - **resampling_method**: Set default `resampling_method`
-
-Note: Those options could already be passed on each `method` call.
+- **post_process**: Function to apply after the read operations
 
 ```python
 with COGReader("my_cog.tif", nodata=0) as cog:

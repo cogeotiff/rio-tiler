@@ -1,12 +1,12 @@
 
-The main goal of `rio-tiler` is to create [slippy map
+`rio-tiler` was initialy designed to create [slippy map
 tiles](https://en.wikipedia.org/wiki/Tiled_web_map) from large raster data
-sources and render these tiles dynamically on a web map. `rio-tiler` can read
+sources and render these tiles dynamically on a web map. With `rio-tiler` v2.0 we added many more methods to read
 data and metadata from any raster source supported by Rasterio/GDAL wherever
 they may be, including local files and via HTTP, AWS S3, Google Cloud Storage,
 etc.
 
-## Read a tile from a file
+## Read data
 
 ```python
 from rio_tiler.io import COGReader
@@ -19,6 +19,7 @@ tile_zoom = 21
 with COGReader(
   "http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"
 ) as cog:
+    # Read data for a slippy map tile
     img = cog.tile(tile_x, tile_y, tile_zoom, tilesize=256)
     assert isinstance(img, ImageData)
 
@@ -26,6 +27,29 @@ with COGReader(
     >>> (3, 256, 256)
     print(img.mask.shape)
     >>> (256, 256)
+
+    # Read the entire data
+    img = cog.read()
+    print(img.data.shape)
+    >>> (3, 11666, 19836)
+
+    # Read part of a data for a given bbox (size is maxed out to 1024)
+    img = cog.part([-61.281, 15.539, -61.279, 15.541])
+    print(img.data.shape)
+    >>> (3, 1024, 1024)
+
+    # Read data for a given geojson polygon (size is maxed out to 1024)
+    img = cog.feature(geojson_feature)
+
+    # Get a preview (size is maxed out to 1024)
+    img = cog.preview()
+    print(img.data.shape)
+    >>> (3, 603, 1024)
+
+    # Get pixel values for a given lon/lat coordinate
+    values = cog.point(-61.281, 15.539)
+    print(values)
+    >>> [47, 62, 43]
 
     # You can also use the `old style` notation
     data, mask = cog.tile(691559, 956905, 21, tilesize=256)

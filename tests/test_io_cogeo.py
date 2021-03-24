@@ -643,3 +643,23 @@ def test_fullEarth():
 
         img = cog.tile(127, 42, 7, tilesize=64)
         assert img.data.shape == (1, 64, 64)
+
+
+def test_read():
+    """Should read the entire dataset."""
+    with COGReader(COGEO) as cog:
+        img = cog.read()
+        assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
+        assert img.width == cog.dataset.width
+        assert img.height == cog.dataset.height
+        assert img.count == cog.dataset.count
+
+        with pytest.warns(ExpressionMixingWarning):
+            img = cog.read(indexes=(1, 2, 3), expression="b1*2")
+            assert img.data.shape == (1, 2667, 2658)
+
+        img = cog.read(indexes=1)
+        assert img.data.shape == (1, 2667, 2658)
+
+        img = cog.read(indexes=(1, 1,))
+        assert img.data.shape == (2, 2667, 2658)

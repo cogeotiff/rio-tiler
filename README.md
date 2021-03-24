@@ -86,21 +86,27 @@ from rio_tiler.io import COGReader
 from rio_tiler.models import ImageData, Info, Metadata, ImageStatistics
 
 with COGReader("my-tif.tif") as cog:
-    # get info
+    # Get dataset basic info
     info: Info = cog.info()
     assert info.nodata_type
     assert info.band_descriptions
 
-    # get image statistics
+    # Get image statistics
     stats: ImageStatistics = cog.stats()
     assert stats.min
     assert stats.max
 
-    # get metadata (info + image statistics)
+    # Get metadata (info + image statistics)
     meta: Metadata = cog.metadata()
     assert meta.statistics
     assert meta.nodata_type
     assert meta.band_descriptions
+
+    # Read the full dataset
+    img: ImageData = cog.read()
+    assert img.width == cog.dataset.width
+    assert img.height == cog.dataset.height
+    assert img.count == cog.dataset.count
 
     # Read data for a mercator tile
     img: ImageData = cog.tile(tile_x, tile_y, tile_zoom, tilesize=256)
