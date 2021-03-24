@@ -200,6 +200,15 @@ def test_tile_valid_default():
         data, mask = cog.tile(43, 24, 7, indexes=(1, 1,))
         assert data.shape == (2, 256, 256)
 
+    # We are using a file that is aligned with the grid so no resampling should be involved
+    with COGReader(COG_WEB) as cog:
+        img = cog.tile(147, 182, 9)
+        img_buffer = cog.tile(147, 182, 9, tile_buffer=10)
+        assert img_buffer.width == 276
+        assert img_buffer.height == 276
+        assert not img.bounds == img_buffer.bounds
+        assert numpy.array_equal(img.data, img_buffer.data[:, 10:266, 10:266])
+
 
 def test_tile_invalid_bounds():
     """Should raise an error with invalid tile."""
