@@ -16,7 +16,8 @@ from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
-from .. import constants, reader
+from .. import reader
+from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData
 from ..errors import ExpressionMixingWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
 from ..models import ImageData, ImageStatistics, Info
@@ -64,13 +65,13 @@ class COGReader(BaseReader):
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
-    tms: TileMatrixSet = attr.ib(default=constants.WEB_MERCATOR_TMS)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
 
     # Define global options to be forwarded to functions reading the data (e.g `rio_tiler.reader.read`)
-    nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
+    nodata: Optional[NoData] = attr.ib(default=None)
     unscale: Optional[bool] = attr.ib(default=None)
     resampling_method: Optional[Resampling] = attr.ib(default=None)
     vrt_options: Optional[Dict] = attr.ib(default=None)
@@ -100,7 +101,7 @@ class COGReader(BaseReader):
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
         self.bounds = transform_bounds(
-            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
+            self.dataset.crs, WGS84_CRS, *self.dataset.bounds, densify_pts=21
         )
         if self.minzoom is None or self.maxzoom is None:
             self._set_zooms()
@@ -239,7 +240,7 @@ class COGReader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
-        indexes: Optional[Union[int, Sequence]] = None,
+        indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         tile_buffer: Optional[int] = None,
         **kwargs: Any,
@@ -310,9 +311,9 @@ class COGReader(BaseReader):
 
     def part(
         self,
-        bbox: Tuple[float, float, float, float],
+        bbox: BBox,
         dst_crs: Optional[CRS] = None,
-        bounds_crs: CRS = constants.WGS84_CRS,
+        bounds_crs: CRS = WGS84_CRS,
         max_size: int = 1024,
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = None,
@@ -376,7 +377,7 @@ class COGReader(BaseReader):
 
     def preview(
         self,
-        indexes: Optional[Union[int, Sequence]] = None,
+        indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -424,7 +425,7 @@ class COGReader(BaseReader):
         self,
         lon: float,
         lat: float,
-        indexes: Optional[Union[int, Sequence]] = None,
+        indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> List:
@@ -468,9 +469,9 @@ class COGReader(BaseReader):
         self,
         shape: Dict,
         dst_crs: Optional[CRS] = None,
-        shape_crs: CRS = constants.WGS84_CRS,
+        shape_crs: CRS = WGS84_CRS,
         max_size: int = 1024,
-        indexes: Optional[Union[int, Sequence]] = None,
+        indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -540,7 +541,7 @@ class COGReader(BaseReader):
 
     def read(
         self,
-        indexes: Optional[Union[int, Sequence]] = None,
+        indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -619,13 +620,13 @@ class GCPCOGReader(COGReader):
     src_dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
-    tms: TileMatrixSet = attr.ib(default=constants.WEB_MERCATOR_TMS)
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
     colormap: Dict = attr.ib(default=None)
 
     # Define global options to be forwarded to functions reading the data (e.g `rio_tiler.reader.read`)
-    nodata: Optional[Union[float, int, str]] = attr.ib(default=None)
+    nodata: Optional[NoData] = attr.ib(default=None)
     unscale: Optional[bool] = attr.ib(default=None)
     resampling_method: Optional[Resampling] = attr.ib(default=None)
     vrt_options: Optional[Dict] = attr.ib(default=None)

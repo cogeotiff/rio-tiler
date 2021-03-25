@@ -9,7 +9,7 @@ from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, 
 import attr
 from morecantile import Tile, TileMatrixSet
 
-from ..constants import WEB_MERCATOR_TMS
+from ..constants import WEB_MERCATOR_TMS, BBox
 from ..errors import (
     ExpressionMixingWarning,
     MissingAssets,
@@ -34,7 +34,7 @@ class SpatialMixin:
     """
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    bounds: Tuple[float, float, float, float] = attr.ib(init=False)
+    bounds: BBox = attr.ib(init=False)
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
 
@@ -150,7 +150,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def part(self, bbox: Tuple[float, float, float, float], **kwargs: Any) -> ImageData:
+    def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
         """Read a Part of a Dataset.
 
         Args:
@@ -274,9 +274,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    async def part(
-        self, bbox: Tuple[float, float, float, float], **kwargs: Any
-    ) -> Coroutine[Any, Any, ImageData]:
+    async def part(self, bbox: BBox, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
         """Read a Part of a Dataset.
 
         Args:
@@ -522,7 +520,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     def part(
         self,
-        bbox: Tuple[float, float, float, float],
+        bbox: BBox,
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_expression: Optional[
@@ -975,7 +973,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     def part(
         self,
-        bbox: Tuple[float, float, float, float],
+        bbox: BBox,
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         band_expression: Optional[

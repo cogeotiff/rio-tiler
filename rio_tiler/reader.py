@@ -2,7 +2,7 @@
 
 import math
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 
 import numpy
 from affine import Affine
@@ -14,7 +14,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
-from . import constants
+from .constants import WGS84_CRS, BBox, Indexes, NoData
 from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
@@ -25,10 +25,10 @@ def read(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     height: Optional[int] = None,
     width: Optional[int] = None,
-    indexes: Optional[Union[Sequence[int], int]] = None,
+    indexes: Optional[Indexes] = None,
     window: Optional[windows.Window] = None,
     force_binary_mask: bool = True,
-    nodata: Optional[Union[float, int, str]] = None,
+    nodata: Optional[NoData] = None,
     unscale: bool = False,
     resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
@@ -121,7 +121,7 @@ def read(
 
 def part(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    bounds: Tuple[float, float, float, float],
+    bounds: BBox,
     height: Optional[int] = None,
     width: Optional[int] = None,
     padding: int = 0,
@@ -271,10 +271,10 @@ def preview(
 def point(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     coordinates: Tuple[float, float],
-    indexes: Optional[Union[Sequence[int], int]] = None,
-    coord_crs: CRS = constants.WGS84_CRS,
+    indexes: Optional[Indexes] = None,
+    coord_crs: CRS = WGS84_CRS,
     masked: bool = True,
-    nodata: Optional[Union[float, int, str]] = None,
+    nodata: Optional[NoData] = None,
     unscale: bool = False,
     resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
@@ -352,10 +352,10 @@ def point(
 
 def stats(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    bounds: Optional[Tuple[float, float, float, float]] = None,
-    indexes: Optional[Union[Sequence[int], int]] = None,
+    bounds: Optional[BBox] = None,
+    indexes: Optional[Indexes] = None,
     max_size: int = 1024,
-    bounds_crs: CRS = constants.WGS84_CRS,
+    bounds_crs: CRS = WGS84_CRS,
     percentiles: Tuple[float, float] = (2.0, 98.0),
     hist_options: Optional[Dict] = None,
     **kwargs: Any,
@@ -410,10 +410,10 @@ def stats(
 
 def metadata(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    bounds: Optional[Tuple[float, float, float, float]] = None,
-    indexes: Optional[Union[Sequence[int], int]] = None,
+    bounds: Optional[BBox] = None,
+    indexes: Optional[Indexes] = None,
     max_size: int = 1024,
-    bounds_crs: CRS = constants.WGS84_CRS,
+    bounds_crs: CRS = WGS84_CRS,
     percentiles: Tuple[float, float] = (2.0, 98.0),
     hist_options: Optional[Dict] = None,
     **kwargs: Any,
@@ -453,14 +453,12 @@ def metadata(
             bounds_crs=bounds_crs,
             **kwargs,
         )
-        bounds = transform_bounds(
-            bounds_crs, constants.WGS84_CRS, *bounds, densify_pts=21
-        )
+        bounds = transform_bounds(bounds_crs, WGS84_CRS, *bounds, densify_pts=21)
 
     else:
         data, mask = preview(src_dst, max_size=max_size, indexes=indexes, **kwargs)
         bounds = transform_bounds(
-            src_dst.crs, constants.WGS84_CRS, *src_dst.bounds, densify_pts=21
+            src_dst.crs, WGS84_CRS, *src_dst.bounds, densify_pts=21
         )
 
     data = numpy.ma.array(data)

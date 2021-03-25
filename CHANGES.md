@@ -1,9 +1,10 @@
 
-## Next (TBD)
+## 2.0.6 (2021-03-25)
 
 * add `read()` method in COGReader (https://github.com/cogeotiff/rio-tiler/pull/366)
 * add `tile_buffer` option to `COGReader.tile()` method to add pixels around a tile request (https://github.com/cogeotiff/rio-tiler/issues/365)
 * use `importlib.resources.path` to find rio-tiler `cmap_data` directory (https://github.com/cogeotiff/rio-tiler/pull/370)
+* re-use type definitions (https://github.com/cogeotiff/rio-tiler/issues/337)
 
 ## 2.0.5 (2021-03-17)
 
