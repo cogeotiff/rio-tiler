@@ -53,70 +53,70 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
 
 - Read any dataset supported by GDAL/Rasterio
 
-```python
-from rio_tiler.io import COGReader
+    ```python
+    from rio_tiler.io import COGReader
 
-with COGReader("my.tif") as image:
-    print(image.dataset)  # rasterio opened dataset
-    img = image.read()    # similar to rasterio.open("my.tif").read() but returns a rio_tiler.models.ImageData object
-```
+    with COGReader("my.tif") as image:
+        print(image.dataset)  # rasterio opened dataset
+        img = image.read()    # similar to rasterio.open("my.tif").read() but returns a rio_tiler.models.ImageData object
+    ```
 
 - User friendly `tile`, `part`, `feature`, `point` reading methods
 
-```python
-from rio_tiler.io import COGReader
+    ```python
+    from rio_tiler.io import COGReader
 
-with COGReader("my.tif") as image:
-    img = image.tile(x, y, z)            # read mercator tile z-x-y
-    img = image.part(bbox)               # read the data intersecting a bounding box
-    img = image.feature(geojson_feature) # read the data intersecting a geojson feature
-    img = image.point(lon,lat)           # get pixel values for a lon/lat coordinates
-```
+    with COGReader("my.tif") as image:
+        img = image.tile(x, y, z)            # read mercator tile z-x-y
+        img = image.part(bbox)               # read the data intersecting a bounding box
+        img = image.feature(geojson_feature) # read the data intersecting a geojson feature
+        img = image.point(lon,lat)           # get pixel values for a lon/lat coordinates
+    ```
 
 - Enable property assignement (e.g nodata) on data reading
 
-```python
-from rio_tiler.io import COGReader
+    ```python
+    from rio_tiler.io import COGReader
 
-with COGReader("my.tif") as image:
-    img = image.tile(x, y, z, nodata=-9999) # read mercator tile z-x-y
-```
+    with COGReader("my.tif") as image:
+        img = image.tile(x, y, z, nodata=-9999) # read mercator tile z-x-y
+    ```
 
 - [STAC](https://github.com/radiantearth/stac-spec) support
 
-```python
-from rio_tiler.io import STACReader
+    ```python
+    from rio_tiler.io import STACReader
 
-with STACReader("item.json") as stac:
-    print(stac.assets)  # available asset
-    img = stac.tile(x, y, z, assets="asset1", indexes=(1, 2, 3))  # read tile for asset1 and indexes 1,2,3
-    img = stac.tile(x, y, z, assets=("asset1", "asset2", "asset3",), indexes=(1,))  # create an image from assets 1,2,3 using their first band
-```
+    with STACReader("item.json") as stac:
+        print(stac.assets)  # available asset
+        img = stac.tile(x, y, z, assets="asset1", indexes=(1, 2, 3))  # read tile for asset1 and indexes 1,2,3
+        img = stac.tile(x, y, z, assets=("asset1", "asset2", "asset3",), indexes=(1,))  # create an image from assets 1,2,3 using their first band
+    ```
 
 - [Mosaic](https://cogeotiff.github.io/rio-tiler/mosaic/) (merging or stacking)
 
-```python
-from rio_tiler.io import COGReader
-from rio_tiler.mosaic import mosaic_reader
+    ```python
+    from rio_tiler.io import COGReader
+    from rio_tiler.mosaic import mosaic_reader
 
-def reader(file, x, y, z, **kwargs):
-    with COGReader("my.tif") as image:
-        return image.tile(x, y, z, **kwargs)
+    def reader(file, x, y, z, **kwargs):
+        with COGReader("my.tif") as image:
+            return image.tile(x, y, z, **kwargs)
 
-img, assets = mosaic_reader(["image1.tif", "image2.tif"], reader, x, y, z)
-```
+    img, assets = mosaic_reader(["image1.tif", "image2.tif"], reader, x, y, z)
+    ```
 
 - Native support for multiple TileMatrixSet via [morecantile](https://developmentseed.org/morecantile/)
 
-```python
-import morecantile
-from rio_tiler.io import COGReader
+    ```python
+    import morecantile
+    from rio_tiler.io import COGReader
 
-# Use EPSG:4326 (WGS84) grid
-wgs84_grid = morecantile.tms.get("WorldCRS84Quad")
-with COGReader("my.tif", tms=wgs84_grid) as cog:
-    img = cog.tile(1, 1, 1)
-```
+    # Use EPSG:4326 (WGS84) grid
+    wgs84_grid = morecantile.tms.get("WorldCRS84Quad")
+    with COGReader("my.tif", tms=wgs84_grid) as cog:
+        img = cog.tile(1, 1, 1)
+    ```
 
 ## Install
 
