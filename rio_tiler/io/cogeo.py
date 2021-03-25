@@ -241,6 +241,7 @@ class COGReader(BaseReader):
         tilesize: int = 256,
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = None,
+        tile_buffer: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a COG.
@@ -278,6 +279,17 @@ class COGReader(BaseReader):
             indexes = parse_expression(expression)
 
         tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
+        if tile_buffer:
+            x_res = (tile_bounds[2] - tile_bounds[0]) / tilesize
+            y_res = (tile_bounds[3] - tile_bounds[1]) / tilesize
+            tile_bounds = (
+                tile_bounds[0] - x_res * tile_buffer,
+                tile_bounds[1] - y_res * tile_buffer,
+                tile_bounds[2] + x_res * tile_buffer,
+                tile_bounds[3] + y_res * tile_buffer,
+            )
+            tilesize += tile_buffer * 2
+
         tile, mask = reader.part(
             self.dataset,
             tile_bounds,
