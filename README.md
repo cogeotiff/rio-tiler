@@ -69,7 +69,7 @@ from rio_tiler.io import COGReader
 with COGReader("my.tif") as image:
     img = image.tile(x, y, z)            # read mercator tile z-x-y
     img = image.part(bbox)               # read the data intersecting a bounding box
-    img = image.feature(geosjon_feature) # read the data intersecting a geojson feature
+    img = image.feature(geojson_feature) # read the data intersecting a geojson feature
     img = image.point(lon,lat)           # get pixel values for a lon/lat coordinates
 ```
 
