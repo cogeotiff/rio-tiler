@@ -1,11 +1,4 @@
 
-`rio-tiler` was initialy designed to create [slippy map
-tiles](https://en.wikipedia.org/wiki/Tiled_web_map) from large raster data
-sources and render these tiles dynamically on a web map. With `rio-tiler` v2.0 we added many more methods to read
-data and metadata from any raster source supported by Rasterio/GDAL wherever
-they may be, including local files and via HTTP, AWS S3, Google Cloud Storage,
-etc.
-
 ## Read data
 
 ```python
@@ -60,7 +53,6 @@ with COGReader(
 ```
 
 The `COGReader` class has other interesting features, please see [User Guide - Readers](readers.md).
-
 
 ## Render the data as an image (PNG/JPEG)
 

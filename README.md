@@ -4,7 +4,7 @@
   <img src="https://user-images.githubusercontent.com/10407788/88133997-77560f00-cbb1-11ea-874c-a8f1d123a9df.jpg" style="max-width: 800px;" alt="rio-tiler"></a>
 </p>
 <p align="center">
-  <em>Rasterio plugin to read web map tiles from raster datasets.</em>
+  <em>User friendly Rasterio plugin to read raster datasets.</em>
 </p>
 <p align="center">
   <a href="https://github.com/cogeotiff/rio-tiler/actions?query=workflow%3ACI" target="_blank">
@@ -38,6 +38,86 @@
 
 ---
 
+## Description
+
+`rio-tiler` was initialy designed to create [slippy map
+tiles](https://en.wikipedia.org/wiki/Tiled_web_map) from large raster data
+sources and render these tiles dynamically on a web map. With `rio-tiler` v2.0 we added many more methods to read
+data and metadata from any raster source supported by Rasterio/GDAL wherever
+they may be, including local files and via HTTP, AWS S3, Google Cloud Storage,
+etc.
+
+At the low level, `rio-tiler` is *just* a wrapper around [rasterio.vrt.WarpedVRT](https://github.com/mapbox/rasterio/blob/5b76d05fb374e64602166d6cd880c38424fad39b/rasterio/vrt.py#L15) class which can be usefull for doing reprojection and/or property overwriding (e.g nodata value).
+
+## Features
+
+- Read any dataset supported by GDAL/Rasterio
+
+```python
+from rio_tiler.io import COGReader
+
+with COGReader("my.tif") as image:
+    print(image.dataset)  # rasterio openned dataset
+    img = image.read()    # similar to rasterio.open("my.tif").read() but returns a rio_tiler.models.ImageData object
+```
+
+- User friendly `tile`, `part`, `feature`, `point` reading methods
+
+```python
+from rio_tiler.io import COGReader
+
+with COGReader("my.tif") as image:
+    img = image.tile(x, y, z)            # read mercator tile z-x-y
+    img = image.part(bbox)               # read the data intersecting a bounding box
+    img = image.feature(geosjon_feature) # read the data intersecting a geojson feature
+    img = image.point(lon,lat)           # get pixel values for a lon/lat coordinates
+```
+
+- Enable property assignement (e.g nodata) on data reading
+
+```python
+from rio_tiler.io import COGReader
+
+with COGReader("my.tif") as image:
+    img = image.tile(x, y, z, nodata=-9999) # read mercator tile z-x-y
+```
+
+- [STAC](https://github.com/radiantearth/stac-spec) support
+
+```python
+from rio_tiler.io import STACReader
+
+with STACReader("item.json") as stac:
+    print(stac.assets)  # available asset
+    img = stac.tile(x, y, z, assets="asset1", indexes=(1, 2, 3))  # read tile for asset1 and indexes 1,2,3
+    img = stac.tile(x, y, z, assets=("asset1", "asset2", "asset3",), indexes=(1,))  # create an image from assets 1,2,3 using their first band
+```
+
+- [Mosaic](https://cogeotiff.github.io/rio-tiler/mosaic/) (merging or stacking)
+
+```python
+from rio_tiler.io import COGReader
+from rio_tiler.mosaic import mosaic_reader
+
+def reader(file, x, y, z, **kwargs):
+    with COGReader("my.tif") as image:
+        return image.tile(x, y, z, **kwargs)
+
+img, assets = mosaic_reader(["image1.tif", "image2.tif"], reader, x, y, z)
+```
+
+- Native support for multiple TileMatrixSet via [morecantile](https://developmentseed.org/morecantile/)
+
+```python
+import morecantile
+from rio_tiler.io import COGReader
+
+# Use EPSG:4326 (WGS84) grid
+wgs84_grid = morecantile.tms.get("WorldCRS84Quad")
+with COGReader("my.tif", tms=wgs84_grid) as cog:
+    img = cog.tile(1, 1, 1)
+```
+
 ## Install
 
 You can install `rio-tiler` using pip
@@ -56,7 +136,7 @@ $ pip install -U pip
 $ pip install -e .
 ```
 
-## GDAL>=3.0 / PROJ>=6.0 performances issue
+#### GDAL>=3.0 / PROJ>=6.0 performances issue
 
 `rio-tiler` is often used for dynamic tiling, where we need to perform small tasks involving cropping and reprojecting the input data. Starting with GDAL>=3.0 the project shifted to PROJ>=6, which introduced new ways to store projection metadata (using a SQLite database and/or cloud stored grids). This change introduced a performance regression as mentioned in https://mapserver.gis.umn.edu/id/development/rfc/ms-rfc-126.html:
 
@@ -75,56 +155,6 @@ Links:
 - https://github.com/OSGeo/gdal/issues/3470
 - https://github.com/OSGeo/gdal/issues/1662
 
-## Overview
-
-`rio-tiler` is a rasterio plugin that aims to ease the creation of [slippy map tiles](https://en.wikipedia.org/wiki/Tiled_web_map) dynamically from any raster source.
-
-```python
-from typing import Dict, List
-
-from rio_tiler.io import COGReader
-from rio_tiler.models import ImageData, Info, Metadata, ImageStatistics
-
-with COGReader("my-tif.tif") as cog:
-    # Get dataset basic info
-    info: Info = cog.info()
-    assert info.nodata_type
-    assert info.band_descriptions
-
-    # Get image statistics
-    stats: ImageStatistics = cog.stats()
-    assert stats.min
-    assert stats.max
-
-    # Get metadata (info + image statistics)
-    meta: Metadata = cog.metadata()
-    assert meta.statistics
-    assert meta.nodata_type
-    assert meta.band_descriptions
-
-    # Read the full dataset
-    img: ImageData = cog.read()
-    assert img.width == cog.dataset.width
-    assert img.height == cog.dataset.height
-    assert img.count == cog.dataset.count
-
-    # Read data for a mercator tile
-    img: ImageData = cog.tile(tile_x, tile_y, tile_zoom, tilesize=256)
-    assert img.data
-    assert img.mask
-
-    # Read part of a data for a given bbox (size is maxed out to 1024)
-    img: ImageData = cog.part([minx, miny, maxx, maxy])
-
-    # Read data for a given geojson polygon (size is maxed out to 1024)
-    img: ImageData = cog.feature(geojson_feature)
-
-    # Get a preview (size is maxed out to 1024)
-    img: ImageData = cog.preview()
-
-    # Get pixel values for a given lon/lat coordinate
-    values: List = cog.point(lon, lat)
-```
 
 ## Plugins
 
@@ -142,30 +172,15 @@ Create Mapbox Vector Tiles from raster sources
 
 ## Implementations
 
-#### [**rio-viz**][rio-viz]
+[**rio-viz**][rio-viz]: Visualize Cloud Optimized GeoTIFFs locally in the browser
 
-![](https://user-images.githubusercontent.com/10407788/105772356-0ca2d900-5f30-11eb-85b9-c3da9e12b663.jpg)
+[**titiler**][titiler]: A lightweight Cloud Optimized GeoTIFF dynamic tile server.
+
+[**cogeo-mosaic**][cogeo-mosaic]: Create mosaics of Cloud Optimized GeoTIFF based on the [mosaicJSON][mosaicjson_spec] specification.
 
 [rio-viz]: https://github.com/developmentseed/rio-viz
-
-Visualize Cloud Optimized GeoTIFFs locally in the browser
-
-#### [**titiler**][titiler]
-
-![](https://user-images.githubusercontent.com/10407788/84913491-99c3ac80-b088-11ea-846d-75db9e3ab31c.jpg)
-
 [titiler]: https://github.com/developmentseed/titiler
-
-A lightweight Cloud Optimized GeoTIFF dynamic tile server.
-
-#### [**cogeo-mosaic**][cogeo-mosaic]
-
-![](https://user-images.githubusercontent.com/10407788/73185274-c41dc900-40eb-11ea-8b67-f79c0682c3b0.jpg)
-
 [cogeo-mosaic]: https://github.com/developmentseed/cogeo-mosaic
-
-Create mosaics of Cloud Optimized GeoTIFF based on the [mosaicJSON][mosaicjson_spec] specification.
-
 [mosaicjson_spec]: https://github.com/developmentseed/mosaicjson-spec
 
 ## Contribution & Development
