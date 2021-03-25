@@ -1,6 +1,6 @@
 # Project Information
 site_name: 'rio-tiler'
-site_description: 'Rasterio plugin to read mercator tiles from Cloud Optimized GeoTIFF'
+site_description: 'User friendly Rasterio plugin to read raster datasets.'
 
 docs_dir: 'docs'
 site_dir: 'build'
