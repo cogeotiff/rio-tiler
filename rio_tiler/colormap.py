@@ -15,12 +15,18 @@ from .errors import (
     InvalidFormat,
 )
 
+try:
+    import importlib.resources as pkg_resources
+except ImportError:
+    # Try backported to PY<37 `importlib_resources`.
+    import importlib_resources as pkg_resources  # type: ignore
+
+
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
-DEFAULT_CMAPS_FILES = {
-    f.stem: str(f)
-    for f in pathlib.Path(__file__).parent.joinpath("cmap_data").glob("*.npy")
-}
+with pkg_resources.path(__package__, "cmap_data") as p:
+    DEFAULT_CMAPS_FILES = {f.stem: str(f) for f in p.glob("*.npy")}
+
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
 if USER_CMAPS_DIR:
     DEFAULT_CMAPS_FILES.update(
