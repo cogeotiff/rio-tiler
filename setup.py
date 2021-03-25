@@ -36,7 +36,7 @@ setup(
     name="rio-tiler",
     version="2.0.5",
     python_requires=">=3.6",
-    description="Rasterio plugin to create web map tiles from raster datasets.",
+    description="User friendly Rasterio plugin to read raster datasets.",
     long_description=readme,
     long_description_content_type="text/markdown",
     classifiers=[
