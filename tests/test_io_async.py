@@ -4,13 +4,13 @@ import asyncio
 import functools
 import os
 import typing
-from typing import Any, Coroutine, Dict, List, Tuple, Type
+from typing import Any, Coroutine, Dict, List, Type
 
 import attr
 import morecantile
 import pytest
 
-from rio_tiler import constants
+from rio_tiler.constants import WEB_MERCATOR_TMS, BBox
 from rio_tiler.io import AsyncBaseReader, COGReader
 from rio_tiler.models import ImageData, ImageStatistics, Info
 
@@ -49,7 +49,7 @@ async def run_in_threadpool(
 class AsyncCOGReader(AsyncBaseReader):
 
     dataset: Type[COGReader] = attr.ib()
-    tms: morecantile.TileMatrixSet = attr.ib(default=constants.WEB_MERCATOR_TMS)
+    tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     def __attrs_post_init__(self):
         """Update dataset info."""
@@ -75,9 +75,7 @@ class AsyncCOGReader(AsyncBaseReader):
             self.dataset.tile, tile_x, tile_y, tile_z, **kwargs  # type: ignore
         )
 
-    async def part(
-        self, bbox: Tuple[float, float, float, float], **kwargs: Any
-    ) -> Coroutine[Any, Any, ImageData]:
+    async def part(self, bbox: BBox, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
         """Read a Part of a Dataset."""
         return await run_in_threadpool(self.dataset.part, bbox, **kwargs)  # type: ignore
 

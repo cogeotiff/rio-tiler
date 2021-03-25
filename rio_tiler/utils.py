@@ -17,7 +17,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_geom
 
 from .colormap import apply_cmap
-from .constants import WEB_MERCATOR_CRS, NumType
+from .constants import WEB_MERCATOR_CRS, BBox, NumType
 from .errors import RioTilerError
 
 
@@ -90,7 +90,7 @@ def _div_round_up(a: int, b: int) -> int:
 
 def get_overview_level(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    bounds: Tuple[float, float, float, float],
+    bounds: BBox,
     height: int,
     width: int,
     dst_crs: CRS = WEB_MERCATOR_CRS,
@@ -139,7 +139,7 @@ def get_overview_level(
 
 def get_vrt_transform(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    bounds: Tuple[float, float, float, float],
+    bounds: BBox,
     height: Optional[int] = None,
     width: Optional[int] = None,
     dst_crs: CRS = WEB_MERCATOR_CRS,
@@ -268,7 +268,7 @@ def linear_rescale(
 
 def _requested_tile_aligned_with_internal_tile(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    bounds: Tuple[float, float, float, float],
+    bounds: BBox,
     height: Optional[int] = None,
     width: Optional[int] = None,
     bounds_crs: CRS = WEB_MERCATOR_CRS,
