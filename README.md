@@ -57,7 +57,7 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
 from rio_tiler.io import COGReader
 
 with COGReader("my.tif") as image:
-    print(image.dataset)  # rasterio openned dataset
+    print(image.dataset)  # rasterio opened dataset
     img = image.read()    # similar to rasterio.open("my.tif").read() but returns a rio_tiler.models.ImageData object
 ```
 
