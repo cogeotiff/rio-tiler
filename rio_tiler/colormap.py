@@ -18,24 +18,18 @@ from .errors import (
 DEFAULT_CMAPS_FILES: Dict[str, str]
 
 try:
-    import importlib.metadata
-
-    DEFAULT_CMAPS_FILES = {
-        file.stem: str(file.locate())
-        for file in importlib.metadata.files("rio_tiler")
-        if "cmap_data" in file.parts and file.suffix == ".npy"
-    }
+    import importlib.metadata as importlib_metadata
 except ImportError:
-    # Try backported to PY<37 `importlib_resources`.
-    import importlib_resources
-
-    DEFAULT_CMAPS_FILES = {
-        file.stem: str(file)
-        for file in importlib_resources.files("rio_tiler.cmap_data").glob("*.npy")
-    }
-
+    # Try backported to PY<37 `importlib_metadata`.
+    import importlib_metadata  # type: ignore
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
+
+DEFAULT_CMAPS_FILES = {
+    file.stem: str(file.locate())
+    for file in importlib_metadata.files("rio_tiler")
+    if "cmap_data" in file.parts and file.suffix == ".npy"
+}
 
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
 if USER_CMAPS_DIR:

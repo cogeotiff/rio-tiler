@@ -17,7 +17,7 @@ inst_reqs = [
     "rasterio>=1.1.7",
     "requests",
     "rio-color",
-    "importlib_resources;python_version<'3.7'",
+    "importlib_metadata;python_version<'3.8'",
 ]
 
 extra_reqs = {
