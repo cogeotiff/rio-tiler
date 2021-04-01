@@ -16,16 +16,26 @@ from .errors import (
 )
 
 try:
-    import importlib.resources as pkg_resources
+    import importlib.metadata
 except ImportError:
     # Try backported to PY<37 `importlib_resources`.
-    import importlib_resources as pkg_resources  # type: ignore
+    import importlib.metadata
+
+
+def list_available_colormaps() -> Dict[str, str]:
+    """Get physical paths for colormaps included in package data
+    """
+    all_files = importlib.metadata.files("rio_tiler")
+    return {
+        file.stem: str(file.locate())
+        for file in all_files
+        if "cmap_data" in file.parts and file.suffix == ".npy"
+    }
 
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
-with pkg_resources.path(__package__, "cmap_data") as p:
-    DEFAULT_CMAPS_FILES = {f.stem: str(f) for f in p.glob("*.npy")}
+DEFAULT_CMAPS_FILES = list_available_colormaps()
 
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
 if USER_CMAPS_DIR:
