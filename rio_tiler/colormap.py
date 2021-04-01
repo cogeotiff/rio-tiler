@@ -26,7 +26,7 @@ EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
 DEFAULT_CMAPS_FILES = {
     f.stem: str(f)
-    for f in resources_files(__package__).joinpath("cmap_data").glob("*.npy")
+    for f in (resources_files(__package__) / "cmap_data").glob("*.npy")
 }
 
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
