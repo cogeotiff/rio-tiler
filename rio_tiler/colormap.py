@@ -16,16 +16,17 @@ from .errors import (
 )
 
 try:
-    import importlib.resources as pkg_resources
+    from importlib.resources import files as resources_files  # type: ignore
 except ImportError:
-    # Try backported to PY<37 `importlib_resources`.
-    import importlib_resources as pkg_resources  # type: ignore
+    # Try backported to PY<39 `importlib_resources`.
+    from importlib_resources import files as resources_files  # type: ignore
 
 
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
-with pkg_resources.path(__package__, "cmap_data") as p:
-    DEFAULT_CMAPS_FILES = {f.stem: str(f) for f in p.glob("*.npy")}
+DEFAULT_CMAPS_FILES = {
+    f.stem: str(f) for f in (resources_files(__package__) / "cmap_data").glob("*.npy")
+}
 
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
 if USER_CMAPS_DIR:
