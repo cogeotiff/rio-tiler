@@ -35,7 +35,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="2.0.6",
+    version="2.0.7",
     python_requires=">=3.6",
     description="User friendly Rasterio plugin to read raster datasets.",
     long_description=readme,
