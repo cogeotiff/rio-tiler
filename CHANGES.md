@@ -1,4 +1,8 @@
 
+## 2.0.7 (2021-04-01)
+
+* use importlib.resources `.files` method to resolve the package directory (https://github.com/cogeotiff/rio-tiler/pull/379)
+
 ## 2.0.6 (2021-03-25)
 
 * add `read()` method in COGReader (https://github.com/cogeotiff/rio-tiler/pull/366)
