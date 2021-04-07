@@ -1,5 +1,6 @@
 """rio_tiler.utils: utility functions."""
 
+import warnings
 from io import BytesIO
 from typing import Any, Dict, Optional, Sequence, Tuple, Union
 
@@ -205,6 +206,15 @@ def get_vrt_transform(
     vrt_width = max(1, round((e - w) / w_res))
     vrt_height = max(1, round((s - n) / h_res))
     vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
+
+    # Warns when the read resolution (tile, part) is lower than the
+    # resolution of the smaller overview. This will result in rasterio/rio-tiler
+    # creating a big WarpedVRT and trying to read a small part of it.
+    max_ovr_dec = max(src_dst.overviews(1))
+    max_native_res = max(abs(vrt_transform.a), abs(vrt_transform.e)) * max_ovr_dec
+    dst_res = max((abs(tile_transform.a), abs(tile_transform.e)))
+    if max_native_res < dst_res:
+        warnings.warn("Trying to fetch lower resolution than min overview resolution")
 
     return vrt_transform, vrt_width, vrt_height
 
