@@ -3,7 +3,7 @@
 Rio-tiler includes many colormaps, some derived from Matplotlib and some custom
 ones that are commonly used with raster data.
 
-You can load one of rio-tiler's default colormap using `rio_tiler.colormap.cmap` object, and then pass it
+You can load one of `rio-tiler`'s default colormaps from the `rio_tiler.colormap.cmap` object, and then pass it
 to `rio_tiler.utils.render`:
 
 ```python
