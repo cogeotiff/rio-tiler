@@ -11,6 +11,7 @@ from rio_tiler.colormap import cmap
 from rio_tiler.io import COGReader
 
 # Get Colormap
+# You can list available colormap names with `cmap.list()`
 cm = cmap.get("cfastie")
 
 with COGReader(
