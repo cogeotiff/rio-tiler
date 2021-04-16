@@ -109,7 +109,9 @@ class COGReader(BaseReader):
         if self.colormap is None:
             self._get_colormap()
 
-        if not self.dataset.overviews(1):
+        if min(
+            self.dataset.width, self.dataset.height
+        ) > 512 and not self.dataset.overviews(1):
             warnings.warn(
                 "The dataset has no materialized Overviews. rio-tiler performances might be impacted",
                 NoOverviewWarning,
