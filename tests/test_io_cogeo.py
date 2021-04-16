@@ -14,6 +14,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     AlphaBandWarning,
     ExpressionMixingWarning,
+    NoOverviewWarning,
     TileOutsideBounds,
 )
 from rio_tiler.io import COGReader, GCPCOGReader
@@ -29,6 +30,7 @@ COG_SCALE = os.path.join(PREFIX, "cog_scale.tif")
 COG_GCPS = os.path.join(PREFIX, "cog_gcps.tif")
 COG_DLINE = os.path.join(PREFIX, "cog_dateline.tif")
 COG_EARTH = os.path.join(PREFIX, "cog_fullearth.tif")
+GEOTIFF = os.path.join(PREFIX, "nocog.tif")
 
 KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
@@ -672,3 +674,10 @@ def test_read():
 
         img = cog.read(indexes=(1, 1,))
         assert img.data.shape == (2, 2667, 2658)
+
+
+def test_no_overviews():
+    """Should warns when no overviews are found."""
+    with pytest.warns(NoOverviewWarning):
+        with COGReader(GEOTIFF):
+            pass
