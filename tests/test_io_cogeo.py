@@ -145,6 +145,10 @@ def test_metadata_valid():
         assert len(meta["band_descriptions"]) == 1
         assert len(meta.band_descriptions) == 1
         assert ("1", "") == meta.band_descriptions[0]
+        assert meta.overviews
+        assert meta.count
+        assert meta.height
+        assert meta.width
 
         stats = meta["statistics"]
         assert len(stats.items()) == 1
