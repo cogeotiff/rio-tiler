@@ -113,7 +113,7 @@ class COGReader(BaseReader):
             self.dataset.width, self.dataset.height
         ) > 512 and not self.dataset.overviews(1):
             warnings.warn(
-                "The dataset has no materialized Overviews. rio-tiler performances might be impacted",
+                "The dataset has no Overviews. rio-tiler performances might be impacted.",
                 NoOverviewWarning,
             )
 
