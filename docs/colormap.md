@@ -3,12 +3,16 @@
 Rio-tiler includes many colormaps, some derived from Matplotlib and some custom
 ones that are commonly used with raster data.
 
-You can load a colormap with `rio_tiler.colormap.get_colormap`, and then pass it
+You can load one of `rio-tiler`'s default colormaps from the `rio_tiler.colormap.cmap` object, and then pass it
 to `rio_tiler.utils.render`:
 
 ```python
 from rio_tiler.colormap import cmap
 from rio_tiler.io import COGReader
+
+# Get Colormap
+# You can list available colormap names with `cmap.list()`
+cm = cmap.get("cfastie")
 
 with COGReader(
   "s3://landsat-pds/c1/L8/015/029/LC08_L1GT_015029_20200119_20200119_01_RT/LC08_L1GT_015029_20200119_20200119_01_RT_B8.TIF",
@@ -19,12 +23,77 @@ with COGReader(
     # Rescale the data linearly from 0-10000 to 0-255
     image_rescale = img.post_process(in_range=(0, 10000), out_range=(0, 255))
 
-    # Get Colormap
-    cm = cmap.get("cfastie")
-
     # Apply colormap and create a PNG buffer
     buff = image_rescale.render(colormap=cm) # this returns a buffer (PNG by default)
 ```
+
+The `render` method accept colormap in form of:
+```python
+{
+  value1: [R, G, B, Alpha],
+  value2: [R, G, B, Alpha],
+  ...
+}
+```
+
+Colormaps can be `discrete` (having sparse value) or `linear` (with values stricly from 0 to 255).
+
+### Custom colormaps
+
+The `rio_tiler.colormap.cmap` object holds the list of default colormaps and also allow users to registed new ones.
+
+**discrete** (with custom entries, not limited to uint8 type)
+
+```python
+from rio_tiler.colormap import cmap
+
+cmap = cmap.register(
+    {
+        "custom_classes": {
+          0: [0, 0, 0, 0],
+          100: [255, 0, 0, 255],
+          200: [0, 255, 0, 255],
+          300: [0, 0, 255, 255],
+        }
+    }
+)
+```
+
+**linear** (with 256 values from 0 to 255)
+
+```python
+# ref: https://github.com/cogeotiff/rio-tiler/issues/382
+import matplotlib
+import numpy
+
+ndvi = matplotlib.colors.LinearSegmentedColormap.from_list(
+    'ndvi', [
+        '#422112',
+        '#724C01',
+        '#CEA712',
+        '#FFA904',
+        '#FDFE00',
+        '#E6EC06',
+        '#BACF00',
+        '#8BB001',
+        '#72A002',
+        '#5B8D03',
+        '#448102',
+        '#2C7001',
+        '#176100',
+    ],
+    256,
+)
+
+x = numpy.linspace(0, 1, 256)
+cmap_vals = ndvi(x)[:, :]
+cmap_uint8 = (cmap_vals * 255).astype('uint8')
+ndvi_dict = {idx: value.tolist() for idx, value in enumerate(cmap_uint8)}
+
+cmap = cmap.register({"ndvi": ndvi_dict})
+```
+
+### Default rio-tiler's colormaps
 
 ![](img/custom.png)
 ![](img/perceptually_uniform_sequential.png)
