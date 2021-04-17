@@ -18,7 +18,7 @@ from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import reader
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData
-from ..errors import ExpressionMixingWarning, TileOutsideBounds
+from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
 from ..models import ImageData, ImageStatistics, Info
 from ..utils import create_cutline, has_alpha_band, has_mask_band
@@ -108,6 +108,14 @@ class COGReader(BaseReader):
 
         if self.colormap is None:
             self._get_colormap()
+
+        if min(
+            self.dataset.width, self.dataset.height
+        ) > 512 and not self.dataset.overviews(1):
+            warnings.warn(
+                "The dataset has no Overviews. rio-tiler performances might be impacted.",
+                NoOverviewWarning,
+            )
 
     def close(self):
         """Close rasterio dataset."""
