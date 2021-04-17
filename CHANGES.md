@@ -1,4 +1,8 @@
 
+## 2.0.8 (TBD)
+
+* add warning when dataset doesn't have overviews (https://github.com/cogeotiff/rio-tiler/pull/386)
+
 ## 2.0.7 (2021-04-01)
 
 * use importlib.resources `.files` method to resolve the package directory (https://github.com/cogeotiff/rio-tiler/pull/379)
