@@ -172,11 +172,6 @@ class COGReader(BaseReader):
             """Return band description."""
             return self.dataset.descriptions[ix - 1] or ""
 
-        indexes = self.dataset.indexes
-        band_descr = [(f"{ix}", _get_descr(ix)) for ix in indexes]
-        band_meta = [(f"{ix}", self.dataset.tags(ix)) for ix in indexes]
-        colorinterp = [self.dataset.colorinterp[ix - 1].name for ix in indexes]
-
         if has_alpha_band(self.dataset):
             nodata_type = "Alpha"
         elif has_mask_band(self.dataset):
@@ -186,27 +181,39 @@ class COGReader(BaseReader):
         else:
             nodata_type = "None"
 
-        other_meta = {}
-        if self.dataset.scales[0] and self.dataset.offsets[0]:
-            other_meta.update(
-                {"scale": self.dataset.scales[0], "offset": self.dataset.offsets[0]}
-            )
-
-        if self.colormap:
-            other_meta.update({"colormap": self.colormap})
-
         meta = {
             "bounds": self.bounds,
             "center": self.center,
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
-            "band_metadata": band_meta,
-            "band_descriptions": band_descr,
+            "band_metadata": [
+                (f"{ix}", self.dataset.tags(ix)) for ix in self.dataset.indexes
+            ],
+            "band_descriptions": [
+                (f"{ix}", _get_descr(ix)) for ix in self.dataset.indexes
+            ],
             "dtype": self.dataset.meta["dtype"],
-            "colorinterp": colorinterp,
+            "colorinterp": [
+                self.dataset.colorinterp[ix - 1].name for ix in self.dataset.indexes
+            ],
             "nodata_type": nodata_type,
+            # additional info (not in default model)
+            "count": self.dataset.count,
+            "width": self.dataset.width,
+            "height": self.dataset.height,
+            "overviews": self.dataset.overviews(1),
         }
-        meta.update(**other_meta)
+        if self.dataset.scales[0] and self.dataset.offsets[0]:
+            meta.update(
+                {"scale": self.dataset.scales[0], "offset": self.dataset.offsets[0]}
+            )
+
+        if self.colormap:
+            meta.update({"colormap": self.colormap})
+
+        if nodata_type == "Nodata":
+            meta.update({"nodata_value": self.nodata})
+
         return Info(**meta)
 
     def stats(

@@ -88,6 +88,10 @@ def test_info_valid():
         assert meta.scale
         assert meta.offset
         assert not meta.colormap
+        assert meta.width
+        assert meta.height
+        assert meta.count
+        assert meta.overviews
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
@@ -99,6 +103,7 @@ def test_info_valid():
         assert cog.colormap
         meta = cog.info()
         assert meta.colormap
+        assert meta.nodata_value
 
     with COGReader(COG_TAGS) as cog:
         meta = cog.info()
@@ -140,6 +145,10 @@ def test_metadata_valid():
         assert len(meta["band_descriptions"]) == 1
         assert len(meta.band_descriptions) == 1
         assert ("1", "") == meta.band_descriptions[0]
+        assert meta.overviews
+        assert meta.count
+        assert meta.height
+        assert meta.width
 
         stats = meta["statistics"]
         assert len(stats.items()) == 1

@@ -65,7 +65,7 @@ class Info(SpatialInfo):
     class Config:
         """Config for model."""
 
-        extra = "ignore"
+        extra = "allow"
         use_enum_values = True
 
 
