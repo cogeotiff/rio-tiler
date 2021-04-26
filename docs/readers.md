@@ -218,7 +218,12 @@ print(info.dict(exclude_none=True))
         "0": [0, 0, 0, 0],
         "1": [0, 61, 0, 255],
         ...
-    }
+    },
+    "driver": "GTiff",
+    "count": 1,
+    "width": 1000,
+    "height": 2000,
+    "overviews": [2, 4, 8],
 }
 ```
 
@@ -248,7 +253,8 @@ print(stats["1"].dict())
     "histogram": [
         [...],
         [...]
-    ]
+    ],
+    "valid_percent": 0.3,
 }
 ```
 
@@ -278,7 +284,12 @@ print(metadata.dict(exclude_none=True))
         "0": [0, 0, 0, 0],
         "1": [0, 61, 0, 255],
         ...
-    }
+    },
+    "driver": "GTiff",
+    "count": 1,
+    "width": 1000,
+    "height": 2000,
+    "overviews": [2, 4, 8],
     "statistics" : {
         "1": {
             "percentiles": [1, 16],
@@ -290,7 +301,8 @@ print(metadata.dict(exclude_none=True))
                 [...]
             ]
         }
-    }
+    },
+    "valid_percent": 0.3,
 }
 ```
 
