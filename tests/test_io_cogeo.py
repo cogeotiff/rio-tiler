@@ -92,6 +92,7 @@ def test_info_valid():
         assert meta.height
         assert meta.count
         assert meta.overviews
+        assert meta.driver
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
