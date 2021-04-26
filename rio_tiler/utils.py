@@ -56,18 +56,19 @@ def _stats(
         kwargs (optional): Options to forward to numpy.histogram function.
 
     Returns:
-        dict: numpy array statistics (percentiles, min, max, stdev, histogram).
+        dict: numpy array statistics (percentiles, min, max, stdev, histogram, valid_percent).
 
     Examples:
         >>> {
-            'pc': [38, 147],
+            'percentiles': [38, 147],
             'min': 20,
             'max': 180,
             'std': 28.123562304138662,
             'histogram': [
                 [1625, 219241, 28344, 15808, 12325, 10687, 8535, 7348, 4656, 1208],
                 [20.0, 36.0, 52.0, 68.0, 84.0, 100.0, 116.0, 132.0, 148.0, 164.0, 180.0]
-            ]
+            ],
+            'valid_percent': 0.5
         }
 
     """
@@ -80,6 +81,7 @@ def _stats(
         max=arr.max().item(),
         std=arr.std().item(),
         histogram=[sample.tolist(), edges.tolist()],
+        valid_percent=numpy.count_nonzero(~arr.mask) / float(arr.data.size),
     )
 
 
