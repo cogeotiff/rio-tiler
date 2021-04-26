@@ -198,6 +198,7 @@ class COGReader(BaseReader):
             ],
             "nodata_type": nodata_type,
             # additional info (not in default model)
+            "driver": self.dataset.driver,
             "count": self.dataset.count,
             "width": self.dataset.width,
             "height": self.dataset.height,

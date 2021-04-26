@@ -2,7 +2,8 @@
 ## 2.0.8 (TBD)
 
 * add warning when dataset doesn't have overviews (https://github.com/cogeotiff/rio-tiler/pull/386)
-* add width, height, count and overviews info in `COGReader.info()` (https://github.com/cogeotiff/rio-tiler/pull/387)
+* add `width`, `height`, `count` and `overviews` infos in `COGReader.info()` (https://github.com/cogeotiff/rio-tiler/pull/387)
+* add `driver` in `COGReader.info()` output (https://github.com/cogeotiff/rio-tiler/pull/388)
 
 ## 2.0.7 (2021-04-01)
 
