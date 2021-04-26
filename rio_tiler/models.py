@@ -77,6 +77,7 @@ class ImageStatistics(RioTilerBaseModel):
     max: NumType
     std: NumType
     histogram: List[List[NumType]]
+    valid_percent: float
 
 
 class Metadata(Info):

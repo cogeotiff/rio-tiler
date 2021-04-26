@@ -156,6 +156,7 @@ def test_metadata_valid():
         assert meta["statistics"]["1"]["percentiles"]
         b1_stats = meta.statistics["1"]
         assert b1_stats.percentiles == [1, 6896]
+        assert b1_stats.valid_percent
 
         stats = cog.stats()
         assert len(stats.items()) == 1
