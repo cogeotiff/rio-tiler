@@ -1,4 +1,8 @@
 
+## 2.1.0 (TBD)
+
+* add auto-rescaling in `ImageData.render` method to avoid error when datatype is not supported by the output driver (https://github.com/cogeotiff/rio-tiler/pull/391)
+
 ## 2.0.8 (2021-04-26)
 
 * add warning when dataset doesn't have overviews (https://github.com/cogeotiff/rio-tiler/pull/386)
