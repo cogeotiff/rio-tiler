@@ -9,7 +9,6 @@ from rio_tiler.models import ImageData
 
 def test_imageData_AutoRescaling():
     """Test ImageData auto rescaling."""
-
     with pytest.warns(InvalidDatatypeWarning) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="float32")).render(img_format="PNG")
         assert len(w.list) == 2  # NotGeoreferencedWarning and InvalidDatatypeWarning

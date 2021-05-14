@@ -18,7 +18,7 @@ from rio_color.utils import scale_dtype, to_math_type
 
 from .constants import ColorTuple, NumType
 from .errors import InvalidDatatypeWarning
-from .utils import _chunks, linear_rescale, render
+from .utils import linear_rescale, render
 
 
 class NodataTypes(str, Enum):
@@ -194,26 +194,24 @@ class ImageData:
         self,
         data: numpy.ndarray,
         mask: numpy.ndarray,
-        in_range: Tuple[NumType, NumType],
-        out_range: Tuple[NumType, NumType] = (0, 255,),
+        in_range: Sequence[Tuple[NumType, NumType]],
+        out_range: Sequence[Tuple[NumType, NumType]] = ((0, 255),),
         out_dtype: Union[str, numpy.number] = "uint8",
     ):
         """Rescale data."""
         nbands = data.shape[0]
 
-        rescale_arr = tuple(_chunks(in_range, 2))
-        if len(rescale_arr) != nbands:
-            rescale_arr = ((rescale_arr[0]),) * nbands
+        if len(in_range) != nbands:
+            in_range = ((in_range[0]),) * nbands
 
-        out_rescale_arr = tuple(_chunks(out_range, 2))
-        if len(out_rescale_arr) != nbands:
-            out_rescale_arr = ((out_rescale_arr[0]),) * nbands
+        if len(out_range) != nbands:
+            out_range = ((out_range[0]),) * nbands
 
         for bdx in range(nbands):
             data[bdx] = numpy.where(
                 mask,
                 linear_rescale(
-                    data[bdx], in_range=rescale_arr[bdx], out_range=out_rescale_arr[bdx]
+                    data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
                 ),
                 0,
             )
@@ -222,7 +220,7 @@ class ImageData:
 
     def post_process(
         self,
-        in_range: Optional[Tuple[NumType, NumType]] = None,
+        in_range: Optional[Sequence[Tuple[NumType, NumType]]] = None,
         out_dtype: Union[str, numpy.number] = "uint8",
         color_formula: Optional[str] = None,
         **kwargs: Any,
@@ -239,7 +237,7 @@ class ImageData:
             ImageData: new ImageData object with the updated data.
 
         Examples:
-            >>> img.post_process(in_range=(0, 16000))
+            >>> img.post_process(in_range=((0, 16000), ))
 
             >>> img.post_process(color_formula="Gamma RGB 4.1")
 
@@ -285,7 +283,7 @@ class ImageData:
                 kwargs.update({"crs": self.crs})
 
         data = self.data.copy()
-        datatype_range = dtype_ranges[str(data.dtype)]
+        datatype_range = (dtype_ranges[str(data.dtype)],)
 
         if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:
             warnings.warn(
