@@ -21,7 +21,10 @@ with COGReader(
     img = cog.tile(150, 187, 9)
 
     # Rescale the data linearly from 0-10000 to 0-255
-    image_rescale = img.post_process(in_range=(0, 10000), out_range=(0, 255))
+    image_rescale = img.post_process(
+        in_range=((0, 10000),),
+        out_range=((0, 255),)
+    )
 
     # Apply colormap and create a PNG buffer
     buff = image_rescale.render(colormap=cm) # this returns a buffer (PNG by default)

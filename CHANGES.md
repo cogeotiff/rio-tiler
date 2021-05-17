@@ -1,5 +1,5 @@
 
-## 2.1.0 (TBD)
+## 2.1.0 (2021-05-17)
 
 * add auto-rescaling in `ImageData.render` method to avoid error when datatype is not supported by the output driver (https://github.com/cogeotiff/rio-tiler/pull/391)
 
@@ -20,11 +20,13 @@ with open("img.png", "wb") as f:
 * change type of `in_range` option in `ImageData.render` to `Sequence[Tuple[NumType, NumType]]` (https://github.com/cogeotiff/rio-tiler/pull/391)
 
 ```python
+img = ImageData(numpy.zeros((3, 256, 256), dtype="uint16"))
+
 # before - Tuple[NumType, NumType]
-buff = ImageData(numpy.zeros((3, 256, 256), dtype="uint16")).render(in_range=(0, 1000, 0, 1000, 0, 1000))
+buff = img.render(in_range=(0, 1000, 0, 1000, 0, 1000))
 
 # now - Sequence[Tuple[NumType, NumType]]
-buff = ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(in_range=((0, 1000), (0, 1000), (0, 1000)))
+buff = img.render(in_range=((0, 1000), (0, 1000), (0, 1000)))
 ```
 
 ## 2.0.8 (2021-04-26)
