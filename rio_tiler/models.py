@@ -1,5 +1,6 @@
 """rio-tiler models."""
 
+import warnings
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
@@ -9,13 +10,15 @@ from affine import Affine
 from pydantic import BaseModel
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
+from rasterio.dtypes import dtype_ranges
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
 from rio_color.operations import parse_operations
 from rio_color.utils import scale_dtype, to_math_type
 
 from .constants import ColorTuple, NumType
-from .utils import _chunks, linear_rescale, render
+from .errors import InvalidDatatypeWarning
+from .utils import linear_rescale, render
 
 
 class NodataTypes(str, Enum):
@@ -187,9 +190,37 @@ class ImageData:
             else Affine.scale(self.width, -self.height)
         )
 
+    def _rescale(
+        self,
+        data: numpy.ndarray,
+        mask: numpy.ndarray,
+        in_range: Sequence[Tuple[NumType, NumType]],
+        out_range: Sequence[Tuple[NumType, NumType]] = ((0, 255),),
+        out_dtype: Union[str, numpy.number] = "uint8",
+    ):
+        """Rescale data."""
+        nbands = data.shape[0]
+
+        if len(in_range) != nbands:
+            in_range = ((in_range[0]),) * nbands
+
+        if len(out_range) != nbands:
+            out_range = ((out_range[0]),) * nbands
+
+        for bdx in range(nbands):
+            data[bdx] = numpy.where(
+                mask,
+                linear_rescale(
+                    data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
+                ),
+                0,
+            )
+
+        return data.astype(out_dtype)
+
     def post_process(
         self,
-        in_range: Optional[Tuple[NumType, NumType]] = None,
+        in_range: Optional[Sequence[Tuple[NumType, NumType]]] = None,
         out_dtype: Union[str, numpy.number] = "uint8",
         color_formula: Optional[str] = None,
         **kwargs: Any,
@@ -206,7 +237,7 @@ class ImageData:
             ImageData: new ImageData object with the updated data.
 
         Examples:
-            >>> img.post_process(in_range=(0, 16000))
+            >>> img.post_process(in_range=((0, 16000), ))
 
             >>> img.post_process(color_formula="Gamma RGB 4.1")
 
@@ -215,17 +246,7 @@ class ImageData:
         mask = self.mask.copy()
 
         if in_range:
-            rescale_arr = tuple(_chunks(in_range, 2))
-            if len(rescale_arr) != self.count:
-                rescale_arr = ((rescale_arr[0]),) * self.count
-
-            for bdx in range(self.count):
-                data[bdx] = numpy.where(
-                    self.mask,
-                    linear_rescale(data[bdx], in_range=rescale_arr[bdx], **kwargs,),
-                    0,
-                )
-            data = data.astype(out_dtype)
+            data = self._rescale(data, mask, in_range, out_dtype=out_dtype, **kwargs)
 
         if color_formula:
             data[data < 0] = 0
@@ -253,13 +274,43 @@ class ImageData:
             bytes: image.
 
         """
-        if img_format.lower() == "gtiff":
+        img_format = img_format.upper()
+
+        if img_format == "GTIFF":
             if "transform" not in kwargs:
                 kwargs.update({"transform": self.transform})
             if "crs" not in kwargs and self.crs:
                 kwargs.update({"crs": self.crs})
 
-        if add_mask:
-            return render(self.data, self.mask, img_format=img_format, **kwargs)
+        data = self.data.copy()
+        datatype_range = (dtype_ranges[str(data.dtype)],)
 
-        return render(self.data, img_format=img_format, **kwargs)
+        if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:
+            warnings.warn(
+                f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                InvalidDatatypeWarning,
+            )
+            data = self._rescale(data, self.mask, in_range=datatype_range)
+
+        elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
+            warnings.warn(
+                f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                InvalidDatatypeWarning,
+            )
+            data = self._rescale(data, self.mask, in_range=datatype_range)
+
+        elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
+            "uint8",
+            "int16",
+            "uint16",
+        ]:
+            warnings.warn(
+                f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                InvalidDatatypeWarning,
+            )
+            data = self._rescale(data, self.mask, in_range=datatype_range)
+
+        if add_mask:
+            return render(data, self.mask, img_format=img_format, **kwargs)
+
+        return render(data, img_format=img_format, **kwargs)

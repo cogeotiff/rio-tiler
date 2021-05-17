@@ -74,7 +74,10 @@ with COGReader(
     img = cog.tile(150, 187, 9)
 
     # Rescale the data from 0-10000 to 0-255
-    image_rescale = img.post_process(in_range=(0, 10000), out_range=(0, 255))
+    image_rescale = img.post_process(
+        in_range=((0, 10000),),
+        out_range=((0, 255),),
+    )
 
     # Get Colormap
     cm = cmap.get("viridis")
@@ -100,6 +103,9 @@ with COGReader(
 
     buff = img.render(img_format="webp", **options)
 ```
+
+Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for a driver (e.g `float` for `PNG`),
+`rio-tiler` will automatically rescale the data using the `min/max` value for the datatype (ref: https://github.com/cogeotiff/rio-tiler/pull/391).
 
 ## Write image to file
 

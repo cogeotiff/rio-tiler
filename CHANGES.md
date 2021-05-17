@@ -1,4 +1,34 @@
 
+## 2.1.0 (2021-05-17)
+
+* add auto-rescaling in `ImageData.render` method to avoid error when datatype is not supported by the output driver (https://github.com/cogeotiff/rio-tiler/pull/391)
+
+```python
+# before - exit with error
+with open("img.png", "wb") as f:
+    f.write(ImageData(numpy.zeros((3, 256, 256), dtype="float32")).render())
+>>> (ERROR) CPLE_NotSupportedError: "PNG driver doesn't support data type Float32. Only eight bit (Byte) and sixteen bit (UInt16) bands supported".
+
+# now - print a warning
+with open("img.png", "wb") as f:
+    f.write(ImageData(numpy.zeros((3, 256, 256), dtype="float32")).render())
+>>> (WARNING) InvalidDatatypeWarning: "Invalid type: `float32` for the `PNG` driver. Data will be rescaled using min/max type bounds".
+```
+
+**breaking changes**
+
+* change type of `in_range` option in `ImageData.render` to `Sequence[Tuple[NumType, NumType]]` (https://github.com/cogeotiff/rio-tiler/pull/391)
+
+```python
+img = ImageData(numpy.zeros((3, 256, 256), dtype="uint16"))
+
+# before - Tuple[NumType, NumType]
+buff = img.render(in_range=(0, 1000, 0, 1000, 0, 1000))
+
+# now - Sequence[Tuple[NumType, NumType]]
+buff = img.render(in_range=((0, 1000), (0, 1000), (0, 1000)))
+```
+
 ## 2.0.8 (2021-04-26)
 
 * add warning when dataset doesn't have overviews (https://github.com/cogeotiff/rio-tiler/pull/386)

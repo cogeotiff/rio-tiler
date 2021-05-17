@@ -455,7 +455,7 @@ def test_imageData_output():
         imgc = img.post_process(color_formula="Gamma R 3.1")
         assert imgc.data.dtype == "uint8"
 
-        imgr = img.post_process(in_range=(img.data.min(), img.data.max()))
+        imgr = img.post_process(in_range=((img.data.min(), img.data.max()),))
         assert not numpy.array_equal(img.data, imgr.data)
         assert imgr.data.dtype == "uint8"
         assert imgr.data.min() == 0
@@ -472,7 +472,7 @@ def test_imageData_output():
         assert imgc.assets == img.assets
 
         imgrc = img.post_process(
-            in_range=(img.data.min(), img.data.max()), color_formula="Gamma R 3.1"
+            in_range=((img.data.min(), img.data.max()),), color_formula="Gamma R 3.1"
         )
         assert numpy.array_equal(imgc.data, imgrc.data)
 

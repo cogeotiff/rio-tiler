@@ -63,3 +63,7 @@ class EmptyMosaicError(RioTilerError):
 
 class InvalidColorFormat(RioTilerError):
     """Invalid color format."""
+
+
+class InvalidDatatypeWarning(UserWarning):
+    """Invalid Output Datatype."""

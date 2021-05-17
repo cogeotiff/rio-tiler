@@ -1,7 +1,7 @@
 """rio_tiler.utils: utility functions."""
 
 from io import BytesIO
-from typing import Any, Dict, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Generator, Optional, Sequence, Tuple, Union
 
 import numpy
 from affine import Affine
@@ -21,7 +21,7 @@ from .constants import WEB_MERCATOR_CRS, BBox, NumType
 from .errors import RioTilerError
 
 
-def _chunks(my_list: Sequence, chuck_size: int):
+def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(my_list), chuck_size):
         yield my_list[i : i + chuck_size]

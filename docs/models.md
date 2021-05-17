@@ -90,7 +90,12 @@ print(img.data.max())
 >>> 2999
 
 # rescale the data from 0 -> 3000 to 0 -> 255
-image = img.post_process(in_range=(0, 3000))
+# by default rio-tiler will apply the same `in_range` for all the bands
+image = img.post_process(in_range=((0, 3000),))
+
+# or provide range for each bands
+image = img.post_process(in_range=((0, 3000), (0, 1000), (0, 2000)))
+
 assert isinstance(image, ImageData)
 
 print(image.data.dtype)
@@ -100,7 +105,10 @@ print(image.data.max())
 >>> 254
 
 # rescale and apply rio-color formula
-image = img.post_process(in_range=(0, 3000), color_formula="Gamma RGB 3.1")
+image = img.post_process(
+    in_range=((0, 3000),),
+    color_formula="Gamma RGB 3.1",
+)
 assert isinstance(image, ImageData)
 ```
 
@@ -149,6 +157,9 @@ print(get_meta(buf))
     'transform': Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
 }
 ```
+
+Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for a driver (e.g `float` for `PNG`),
+`rio-tiler` will automatically rescale the data using the `min/max` value for the datatype (ref: https://github.com/cogeotiff/rio-tiler/pull/391).
 
 ## Others
 
@@ -275,7 +286,7 @@ print(info.dict(exclude_none=True))
 }
 ```
 
-Note: starting with `rio-tiler>=2.0.8`, additional metadat can be set (e.g. driver, count, width, height, overviews in `COGReader.info()`)
+Note: starting with `rio-tiler>=2.0.8`, additional metadata can be set (e.g. driver, count, width, height, overviews in `COGReader.info()`)
 
 ### Metadata
 
