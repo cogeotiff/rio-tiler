@@ -1,6 +1,7 @@
 """rio_tiler.utils: utility functions."""
 
 from io import BytesIO
+import os
 from typing import Any, Dict, Generator, Optional, Sequence, Tuple, Union
 
 import numpy
@@ -36,7 +37,8 @@ def aws_get_object(
     """AWS s3 get object content."""
     if not client:
         session = boto3_session()
-        client = session.client("s3")
+        endpoint_url = os.environ.get('AWS_S3_ENDPOINT', None)
+        client = session.client("s3", endpoint_url=endpoint_url)
 
     params = {"Bucket": bucket, "Key": key}
     if request_pays:
