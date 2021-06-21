@@ -1,7 +1,7 @@
 
-`rio-tiler` can work with all raster formats supported by [GDAL](https://gdal.org). That's beeing said, `rio-tiler` works better with data format that supports **partial reading**, like [Cloud Optimized GeoTIFF](http://cogeo.org).
+`rio-tiler` can work with all raster formats supported by [GDAL](https://gdal.org). That's being said, `rio-tiler` works better with data format that supports **partial reading**, like [Cloud Optimized GeoTIFF](http://cogeo.org).
 
-On interesting feature of Cloud Optimized GeoTIFF is the internal overviews which enable fast preview of the data. For example, when using the `COGReader.preview` method, rio-tiler will only fetch the internal overviews instead of the whole data, to be able to contruct the output array. Doing this reduce the amount of data transfert and thus increase the process speed.
+On interesting feature of Cloud Optimized GeoTIFF is the internal overviews which enable fast preview of the data. For example, when using the `COGReader.preview` method, rio-tiler will only fetch the internal overviews instead of the whole data, to be able to construct the output array. Doing this reduce the amount of data transfer and thus increase the process speed.
 
 ### VRT
 
