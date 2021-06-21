@@ -118,7 +118,7 @@ See [`rio_tiler.mosaic.methods.defaults`](https://github.com/cogeotiff/rio-tiler
 
 ### Smart Multi-Threading
 
-When dealing with an important number of image, you might not want to process the whole stack, especially if the pixel selection method stops when the tile is filled. To allow better optimization, `rio_tiler.mosaic.mosaic_reader` is fetching the tiles in parallel (threads) but to limit the number of files we also embeded the fetching in a loop (creating 2 level of processing):
+When dealing with an important number of image, you might not want to process the whole stack, especially if the pixel selection method stops when the tile is filled. To allow better optimization, `rio_tiler.mosaic.mosaic_reader` is fetching the tiles in parallel (threads) but to limit the number of files we also embedded the fetching in a loop (creating 2 level of processing):
 
 ```python
 mosaic_assets = ["1.tif", "2.tif", "3.tif", "4.tif", "5.tif", "6.tif"]
