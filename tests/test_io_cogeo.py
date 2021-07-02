@@ -156,7 +156,7 @@ def test_metadata_valid():
         assert meta["statistics"]["1"]["percentiles"]
         b1_stats = meta.statistics["1"]
         assert b1_stats.percentiles == [1, 6896]
-        assert b1_stats.valid_percent
+        assert b1_stats.valid_percent == 100.0
 
         stats = cog.stats()
         assert len(stats.items()) == 1
@@ -323,9 +323,14 @@ def test_COGReader_Options():
         _, mask = cog.tile(43, 25, 7)
         assert not mask.all()
 
+    # read cog using default Nearest
+    with COGReader(COGEO, nodata=1) as cog:
+        data_default, _ = cog.tile(43, 25, 7)
+
+    # read cog using bilinear
     with COGReader(COGEO, nodata=1, resampling_method="bilinear") as cog:
         data, _ = cog.tile(43, 25, 7)
-        assert data[0, 100, 100] == 3774  # 3776 with nearest
+        assert not numpy.array_equal(data_default, data)
 
     with COGReader(COG_SCALE, unscale=True) as cog:
         p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
