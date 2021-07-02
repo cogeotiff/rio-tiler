@@ -83,7 +83,7 @@ def _stats(
         max=arr.max().item(),
         std=arr.std().item(),
         histogram=[sample.tolist(), edges.tolist()],
-        valid_percent=((numpy.count_nonzero(~arr.mask) ) / float(arr.data.size)) * 100,
+        valid_percent=((numpy.count_nonzero(~arr.mask)) / float(arr.data.size)) * 100,
     )
 
 
