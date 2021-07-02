@@ -1,6 +1,9 @@
 ## Unreleased
 
 * add support for setting the S3 endpoint url via the `AWS_S3_ENDPOINT` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/394)
+
+* make `ImageStatistics.valid_percent` a value between 0 and 100 (instead of 0 and 1) (author @param-thakker, https://github.com/cogeotiff/rio-tiler/pull/400)
+
 ## 2.1.0 (2021-05-17)
 
 * add auto-rescaling in `ImageData.render` method to avoid error when datatype is not supported by the output driver (https://github.com/cogeotiff/rio-tiler/pull/391)
