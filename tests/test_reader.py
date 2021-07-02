@@ -8,7 +8,12 @@ import rasterio
 
 from rio_tiler import constants, reader
 from rio_tiler.constants import WEB_MERCATOR_TMS
-from rio_tiler.errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from rio_tiler.errors import (
+    AlphaBandWarning,
+    NodataMaskAlphaWarning,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
@@ -31,6 +36,9 @@ PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 COG = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
+COG_MASK_AND_NODATA = os.path.join(
+    os.path.dirname(__file__), "fixtures", "cog_mask_nodata.tif"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -445,3 +453,10 @@ def test_metadata():
     with rasterio.open(S3_MASK_PATH) as src_dst:
         meta = reader.metadata(src_dst)
         assert meta["nodata_type"] == "Mask"
+
+
+def test_warns_when_nodata_and_alpha():
+    """Should warns when the data has both nodata and mask or alpha"""
+    with pytest.warns(NodataMaskAlphaWarning):
+        with rasterio.open(COG_MASK_AND_NODATA) as src_dst:
+            reader.read(src_dst)

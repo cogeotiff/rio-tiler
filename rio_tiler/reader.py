@@ -15,7 +15,12 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from .constants import WGS84_CRS, BBox, Indexes, NoData
-from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from .errors import (
+    AlphaBandWarning,
+    NodataMaskAlphaWarning,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import _stats as raster_stats
 from .utils import get_vrt_transform, has_alpha_band, has_mask_band, non_alpha_indexes
@@ -58,14 +63,6 @@ def read(
     if isinstance(indexes, int):
         indexes = (indexes,)
 
-    vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
-    nodata = nodata if nodata is not None else src_dst.nodata
-    if nodata is not None:
-        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
-
-    if has_alpha_band(src_dst):
-        vrt_params.update(dict(add_alpha=False))
-
     if indexes is None:
         indexes = non_alpha_indexes(src_dst)
         if indexes != src_dst.indexes:
@@ -73,24 +70,41 @@ def read(
                 "Alpha band was removed from the output data array", AlphaBandWarning
             )
 
-    out_shape = (len(indexes), height, width) if height and width else None
-    mask_out_shape = (height, width) if height and width else None
-    resampling = Resampling[resampling_method]
+    nodata = nodata if nodata is not None else src_dst.nodata
+
+    dataset_has_mask = has_mask_band(src_dst)
+    dataset_has_alpha = has_alpha_band(src_dst)
+    dataset_has_nodata = nodata is not None
+    if dataset_has_nodata and (dataset_has_mask or dataset_has_alpha):
+        warnings.warn(
+            "Input dataset has a Nodata Value and Mask or Alpha band. Mask output might not be accurate.",
+            NodataMaskAlphaWarning,
+        )
+
+    vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
+
+    if dataset_has_alpha:
+        vrt_params.update(dict(add_alpha=False))
+
+    if dataset_has_nodata:
+        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
     if vrt_options:
         vrt_params.update(vrt_options)
+
+    out_shape = (len(indexes), height, width) if height and width else None
+    mask_out_shape = (height, width) if height and width else None
+    resampling = Resampling[resampling_method]
 
     with WarpedVRT(src_dst, **vrt_params) as vrt:
         if ColorInterp.alpha in vrt.colorinterp:
             idx = vrt.colorinterp.index(ColorInterp.alpha) + 1
             indexes = tuple(indexes) + (idx,)
-            if out_shape:
-                out_shape = (len(indexes), height, width)
 
             data = vrt.read(
                 indexes=indexes,
                 window=window,
-                out_shape=out_shape,
+                out_shape=(len(indexes), height, width) if height and width else None,
                 resampling=resampling,
             )
             data, mask = data[0:-1], data[-1].astype("uint8")

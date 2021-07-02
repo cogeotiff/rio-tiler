@@ -29,6 +29,10 @@ class AlphaBandWarning(UserWarning):
     """Automaticaly removed Alpha band from output array."""
 
 
+class NodataMaskAlphaWarning(UserWarning):
+    """Dataset mask definition mixing."""
+
+
 class NoOverviewWarning(UserWarning):
     """Dataset has no overviews."""
 
