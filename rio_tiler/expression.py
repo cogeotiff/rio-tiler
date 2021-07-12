@@ -44,10 +44,11 @@ def apply_expression(
         numpy.array: output data.
 
     """
-    data = dict(zip(bands, data))
     return numpy.array(
         [
-            numpy.nan_to_num(numexpr.evaluate(bloc.strip(), local_dict=data))
+            numpy.nan_to_num(
+                numexpr.evaluate(bloc.strip(), local_dict=dict(zip(bands, data)))
+            )
             for bloc in blocks
         ]
     )
