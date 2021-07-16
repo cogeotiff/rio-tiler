@@ -2,7 +2,6 @@
 
 import functools
 import json
-import os
 from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
@@ -49,14 +48,7 @@ def fetch(filepath: str, **kwargs: Any) -> Dict:
     if parsed.scheme == "s3":
         bucket = parsed.netloc
         key = parsed.path.strip("/")
-
-        client = kwargs.get("client")
-        request_pays = kwargs.get(
-            "request_pays", os.environ.get("AWS_REQUEST_PAYER", False),
-        )
-        return json.loads(
-            aws_get_object(bucket, key, request_pays=request_pays, client=client,)
-        )
+        return json.loads(aws_get_object(bucket, key, **kwargs))
 
     elif parsed.scheme in ["https", "http", "ftp"]:
         return requests.get(filepath, **kwargs).json()
