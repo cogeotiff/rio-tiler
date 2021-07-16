@@ -4,10 +4,10 @@
 * make `ImageStatistics.valid_percent` a value between 0 and 100 (instead of 0 and 1) (author @param-thakker, https://github.com/cogeotiff/rio-tiler/pull/400)
 * add `client_options` to `STACReader` to allow custom configuration to the fetch client (https://github.com/cogeotiff/rio-tiler/pull/404)
 
-  ```python
-  with STACReader("s3://...", fetch_options={"request_pays": True}):
-    pass
-  ```
+    ```python
+    with STACReader("s3://...", fetch_options={"request_pays": True}):
+        pass
+    ```
 
 ## 2.1.0 (2021-05-17)
 
