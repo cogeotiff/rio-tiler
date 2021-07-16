@@ -38,7 +38,7 @@ def fetch(filepath: str, **kwargs: Any) -> Dict:
 
     Args:
         filepath (str): STAC item URL.
-        kargs (any): additional options to pass to client.
+        kwargs (any): additional options to pass to client.
 
     Returns:
         dict: STAC Item content.
