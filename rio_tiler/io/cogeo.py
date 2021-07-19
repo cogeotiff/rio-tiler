@@ -18,7 +18,12 @@ from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import reader
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData
-from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
+from ..errors import (
+    ExpressionMixingWarning,
+    IncorrectTileBuffer,
+    NoOverviewWarning,
+    TileOutsideBounds,
+)
 from ..expression import apply_expression, parse_expression
 from ..models import ImageData, ImageStatistics, Info
 from ..utils import create_cutline, has_alpha_band, has_mask_band
@@ -258,7 +263,7 @@ class COGReader(BaseReader):
         tilesize: int = 256,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
-        tile_buffer: Optional[int] = None,
+        tile_buffer: Optional[Union[int, float]] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a COG.
@@ -270,12 +275,19 @@ class COGReader(BaseReader):
             tilesize (int, optional): Output image size. Defaults to `256`.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            tile_buffer (int or float, optional): Buffer around the given tile in pixels. Tilesize will be expanded to
+             `tilesize + 2 * tile_buffer`. If given as a float, must be half of an integer to have an integer `tilesize`
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
+        if isinstance(tile_buffer, float) and not (tile_buffer * 2).is_integer():
+            raise IncorrectTileBuffer(
+                "When tile buffer is a float, it must be half of an integer"
+            )
+
         if not self.tile_exists(tile_z, tile_x, tile_y):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
@@ -291,7 +303,9 @@ class COGReader(BaseReader):
                 tile_bounds[2] + x_res * tile_buffer,
                 tile_bounds[3] + y_res * tile_buffer,
             )
-            tilesize += tile_buffer * 2
+            tilesize += int(
+                tile_buffer * 2
+            )  # We are sure this is a valid int because we checked before
 
         return self.part(
             tile_bounds,

@@ -14,7 +14,7 @@ class TileOutsideBounds(RioTilerError):
 
 
 class IncorrectTileBuffer(RioTilerError):
-    """Tile buffer if a float but not half of an integer"""
+    """Tile buffer is a float but not half of an integer"""
 
 
 class PointOutsideBounds(RioTilerError):
