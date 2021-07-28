@@ -383,3 +383,42 @@ def test_relative_assets():
 
         for asset in stac.assets:
             assert stac._get_asset_url(asset).startswith(PREFIX)
+
+
+@patch("rio_tiler.io.stac.aws_get_object")
+@patch("rio_tiler.io.stac.requests")
+def test_fetch_stac_client_options(requests, s3_get):
+    # HTTP
+    class MockResponse:
+        def __init__(self, data):
+            self.data = data
+
+        def json(self):
+            return json.loads(self.data)
+
+    with open(STAC_PATH, "r") as f:
+        requests.get.return_value = MockResponse(f.read())
+
+    with STACReader(
+        "http://somewhereovertherainbow.io/mystac.json",
+        fetch_options={"auth": ("user", "pass")},
+    ) as stac:
+        assert stac.assets == ["red", "green", "blue"]
+    requests.get.assert_called_once()
+    assert requests.get.call_args[1]["auth"] == ("user", "pass")
+    s3_get.assert_not_called()
+    requests.mock_reset()
+
+    # S3
+    with open(STAC_PATH, "r") as f:
+        s3_get.return_value = f.read()
+
+    with STACReader(
+        "s3://somewhereovertherainbow.io/mystac.json",
+        fetch_options={"request_pays": True},
+    ) as stac:
+        assert stac.assets == ["red", "green", "blue"]
+    requests.assert_not_called()
+    s3_get.assert_called_once()
+    assert s3_get.call_args[1]["request_pays"]
+    assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")

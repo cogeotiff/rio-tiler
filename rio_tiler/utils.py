@@ -41,8 +41,9 @@ def aws_get_object(
         client = session.client("s3", endpoint_url=endpoint_url)
 
     params = {"Bucket": bucket, "Key": key}
-    if request_pays:
+    if request_pays or os.environ.get("AWS_REQUEST_PAYER", "").lower() == "requester":
         params["RequestPayer"] = "requester"
+
     response = client.get_object(**params)
     return response["Body"].read()
 
