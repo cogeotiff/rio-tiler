@@ -132,7 +132,7 @@ class STACReader(MultiBaseReader):
         exclude_asset_types (set of string, optional): Exclude some assets base on their type.
         reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.COGReader`.
         reader_options (dict, optional): Additional option to forward to the Reader. Defaults to `{}`.
-        fetch_options (dict, optional): Options to pass to the client (requests, boto3 ...) fetching the STAC Items. Defaults to `{}`.
+        fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`.
 
     Examples:
         >>> with STACReader(stac_path) as stac:
