@@ -344,6 +344,9 @@ def render(
     if img_format == "WEBP" and data.shape[0] == 1:
         data = numpy.repeat(data, 3, axis=0)
 
+    if img_format == "PNG" and data.dtype == "uint16" and mask is not None:
+        mask = linear_rescale(mask, (0, 255), (0, 65535)).astype("uint16")
+
     elif img_format == "JPEG":
         mask = None
 
