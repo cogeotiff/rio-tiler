@@ -1,4 +1,4 @@
-# 2.1.2 (TBD)
+# 2.1.2 (2021-08-10)
 
 * update type information for mosaics functions (https://github.com/cogeotiff/rio-tiler/pull/409)
 
