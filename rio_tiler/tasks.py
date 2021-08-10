@@ -8,7 +8,7 @@ from .constants import MAX_THREADS
 from .logger import logger
 from .models import ImageData
 
-TaskType = Sequence[Tuple[Union[futures.Future, Callable], str]]
+TaskType = Sequence[Tuple[Union[futures.Future, Callable], Any]]
 
 
 def filter_tasks(
@@ -38,7 +38,9 @@ def filter_tasks(
             pass
 
 
-def create_tasks(reader: Callable, asset_list, threads, *args, **kwargs) -> TaskType:
+def create_tasks(
+    reader: Callable, asset_list: Sequence, threads: int, *args, **kwargs
+) -> TaskType:
     """Create Future Tasks."""
     if threads and threads > 1:
         logger.debug(f"Running tasks in ThreadPool with max_workers={threads}")
@@ -55,7 +57,7 @@ def create_tasks(reader: Callable, asset_list, threads, *args, **kwargs) -> Task
 
 
 def multi_arrays(
-    asset_list: Sequence[str],
+    asset_list: Sequence,
     reader: Callable[..., ImageData],
     *args: Any,
     threads: int = MAX_THREADS,
@@ -70,7 +72,7 @@ def multi_arrays(
 
 
 def multi_values(
-    asset_list: Sequence[str],
+    asset_list: Sequence,
     reader: Callable,
     *args: Any,
     threads: int = MAX_THREADS,

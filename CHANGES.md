@@ -1,3 +1,7 @@
+# 2.1.2 (TBD)
+
+* update type information for mosaics functions (https://github.com/cogeotiff/rio-tiler/pull/409)
+
 ## 2.1.1 (2021-07-29)
 
 * add support for setting the S3 endpoint url via the `AWS_S3_ENDPOINT` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/394)
