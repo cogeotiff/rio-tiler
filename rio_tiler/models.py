@@ -110,7 +110,7 @@ class ImageData:
 
     data: numpy.ndarray = attr.ib()
     mask: numpy.ndarray = attr.ib()
-    assets: Optional[List[str]] = attr.ib(default=None)
+    assets: Optional[List] = attr.ib(default=None)
     bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
     crs: Optional[CRS] = attr.ib(default=None)
     metadata: Optional[Dict] = attr.ib(factory=dict)

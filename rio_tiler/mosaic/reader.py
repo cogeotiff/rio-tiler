@@ -15,7 +15,7 @@ from .methods.defaults import FirstMethod
 
 
 def mosaic_reader(
-    mosaic_assets: Sequence[str],
+    mosaic_assets: Sequence,
     reader: Callable[..., ImageData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
@@ -23,7 +23,7 @@ def mosaic_reader(
     threads: int = MAX_THREADS,
     allowed_exceptions: Tuple = (TileOutsideBounds,),
     **kwargs,
-) -> Tuple[ImageData, List[str]]:
+) -> Tuple[ImageData, List]:
     """Merge multiple assets.
 
     Args:
@@ -71,7 +71,7 @@ def mosaic_reader(
     if not chunk_size:
         chunk_size = threads if threads > 1 else len(mosaic_assets)
 
-    assets_used: List[str] = []
+    assets_used: List = []
     crs: Optional[CRS] = None
     bounds: Optional[BBox] = None
 
