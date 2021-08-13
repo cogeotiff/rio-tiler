@@ -22,7 +22,6 @@ inst_reqs = [
 
 test_reqs = [
     "mypy",
-    "numpy>=1.21,<1.22",
     "pytest-asyncio",
     "pytest-benchmark",
     "pytest-cov",

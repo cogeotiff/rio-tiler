@@ -34,7 +34,7 @@ jobs:
       # Run mypy using the version of Python in `PATH`
       - name: Run mypy
         run: |
-            python -m pip install '.[test]'
+            python -m pip install '.[test]' 'numpy>=1.21,<1.22'
             python -m mypy --config-file setup.cfg -p rio_tiler
 
       # Run pre-commit (only for python-3.8)
