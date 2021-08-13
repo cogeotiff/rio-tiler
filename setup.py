@@ -27,6 +27,7 @@ test_reqs = [
     "pytest-cov",
     "rio-cogeo",
     "mypy",
+    "types-requests",
 ]
 
 extra_reqs = {
