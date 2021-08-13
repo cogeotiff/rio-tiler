@@ -7,6 +7,7 @@ import warnings
 from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
+import numpy
 from morecantile import Tile, TileMatrixSet
 
 from ..constants import WEB_MERCATOR_TMS, BBox
@@ -240,7 +241,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     async def metadata(
         self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
-    ) -> Coroutine[Any, Any, Metadata]:
+    ) -> Metadata:
         """Return Dataset's statistics and info.
 
         Args:
@@ -675,7 +676,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             assets, _reader, lon, lat, expression=asset_expression, **kwargs,
         )
 
-        values = [d for _, d in data.items()]
+        values = numpy.array([d for _, d in data.items()])
         if expression:
             blocks = expression.split(",")
             values = apply_expression(blocks, assets, values).tolist()
@@ -1128,7 +1129,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bands, _reader, lon, lat, expression=band_expression, **kwargs,
         )
 
-        values = [d for _, d in data.items()]
+        values = numpy.array([d for _, d in data.items()])
         if expression:
             blocks = expression.split(",")
             values = apply_expression(blocks, bands, values).tolist()
