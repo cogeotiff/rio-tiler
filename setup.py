@@ -21,12 +21,13 @@ inst_reqs = [
 ]
 
 test_reqs = [
-    "pytest",
+    "mypy",
+    "numpy>=1.21,<1.22",
     "pytest-asyncio",
     "pytest-benchmark",
     "pytest-cov",
+    "pytest",
     "rio-cogeo",
-    "mypy",
     "types-requests",
 ]
 
