@@ -20,16 +20,18 @@ inst_reqs = [
     "importlib_resources>=1.1.0;python_version<'3.9'",
 ]
 
+test_reqs = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-benchmark",
+    "pytest-cov",
+    "rio-cogeo",
+    "mypy",
+]
+
 extra_reqs = {
-    "test": ["pytest", "pytest-asyncio", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
-    "dev": [
-        "pytest",
-        "pytest-benchmark",
-        "pytest-cov",
-        "pytest-asyncio",
-        "rio-cogeo",
-        "pre-commit",
-    ],
+    "test": test_reqs,
+    "dev": [*test_reqs, "pre-commit"],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
 }
 

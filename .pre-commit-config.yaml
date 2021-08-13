@@ -22,9 +22,3 @@ repos:
     hooks:
       - id: pydocstyle
         language_version: python
-
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v0.812
-    hooks:
-      - id: mypy
-        language_version: python
