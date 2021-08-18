@@ -100,7 +100,7 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
     from rio_tiler.mosaic import mosaic_reader
 
     def reader(file, x, y, z, **kwargs):
-        with COGReader("my.tif") as image:
+        with COGReader(file) as image:
             return image.tile(x, y, z, **kwargs)
 
     img, assets = mosaic_reader(["image1.tif", "image2.tif"], reader, x, y, z)
