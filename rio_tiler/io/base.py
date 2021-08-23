@@ -58,7 +58,7 @@ class SpatialMixin:
         )
 
     def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
-        """Check if a tile is intersets the dataset bounds.
+        """Check if a tile intersects the dataset bounds.
 
         Args:
             tile_x (int): Tile's horizontal index.
@@ -66,7 +66,7 @@ class SpatialMixin:
             tile_z (int): Tile's zoom level index.
 
         Returns:
-            bool: True if the tile is intersets the dataset bounds.
+            bool: True if the tile intersects the dataset bounds.
 
         """
         tile = Tile(x=tile_x, y=tile_y, z=tile_z)
