@@ -128,10 +128,10 @@ class COGReader(BaseReader):
 
     def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
         """Calculate raster min/max zoom level."""
-        if self.dataset.crs != self.tms.crs:
+        if self.dataset.crs != self.tms.rasterio_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.dataset.crs,
-                self.tms.crs,
+                self.tms.rasterio_crs,
                 self.dataset.width,
                 self.dataset.height,
                 *self.dataset.bounds,
@@ -281,7 +281,7 @@ class COGReader(BaseReader):
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
             )
 
-        tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
+        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
         if tile_buffer:
             x_res = (tile_bounds[2] - tile_bounds[0]) / tilesize
             y_res = (tile_bounds[3] - tile_bounds[1]) / tilesize
@@ -295,7 +295,7 @@ class COGReader(BaseReader):
 
         return self.part(
             tile_bounds,
-            dst_crs=self.tms.crs,
+            dst_crs=self.tms.rasterio_crs,
             bounds_crs=None,
             height=tilesize,
             width=tilesize,
