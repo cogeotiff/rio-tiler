@@ -26,14 +26,14 @@ extra_reqs = {
         "pytest-asyncio",
         "pytest-benchmark",
         "pytest-cov",
-        "rio-cogeo>=2.3.1",
+        "rio-cogeo @ git+https://github.com/cogeotiff/rio-cogeo.git@morecantileV3",  # TODO: replace with rio-cogeo>=3.0
     ],
     "dev": [
         "pytest",
         "pytest-benchmark",
         "pytest-cov",
         "pytest-asyncio",
-        "rio-cogeo>=2.3.1",
+        "rio-cogeo @ git+https://github.com/cogeotiff/rio-cogeo.git@morecantileV3",  # TODO: replace with rio-cogeo>=3.0
         "pre-commit",
     ],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
