@@ -21,7 +21,13 @@ inst_reqs = [
 ]
 
 extra_reqs = {
-    "test": ["pytest", "pytest-asyncio", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
+    "test": [
+        "pytest",
+        "pytest-asyncio",
+        "pytest-benchmark",
+        "pytest-cov",
+        "rio-cogeo>=2.3.1",
+    ],
     "dev": [
         "pytest",
         "pytest-benchmark",
