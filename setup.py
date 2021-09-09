@@ -27,7 +27,7 @@ extra_reqs = {
         "pytest-benchmark",
         "pytest-cov",
         "pytest-asyncio",
-        "rio-cogeo",
+        "rio-cogeo>=2.3.1",
         "pre-commit",
     ],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
