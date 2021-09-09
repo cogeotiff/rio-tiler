@@ -36,7 +36,7 @@ extra_reqs = {
 setup(
     name="rio-tiler",
     version="2.1.2",
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     description="User friendly Rasterio plugin to read raster datasets.",
     long_description=readme,
     long_description_content_type="text/markdown",
@@ -47,7 +47,6 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS",
     ],
     keywords="cog cogeotiff raster map tiles gdal rasterio raster-processing slippy-map",
