@@ -11,7 +11,7 @@ inst_reqs = [
     "boto3",
     "numexpr",
     "numpy",
-    "morecantile>=2.1,<2.2",
+    "morecantile>=3.0.0a0,<3.1",
     "pydantic",
     "pystac>=0.5.3",
     "rasterio>=1.1.7",
@@ -21,13 +21,19 @@ inst_reqs = [
 ]
 
 extra_reqs = {
-    "test": ["pytest", "pytest-asyncio", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
+    "test": [
+        "pytest",
+        "pytest-asyncio",
+        "pytest-benchmark",
+        "pytest-cov",
+        "rio-cogeo @ git+https://github.com/cogeotiff/rio-cogeo.git@morecantileV3",  # TODO: replace with rio-cogeo>=3.0
+    ],
     "dev": [
         "pytest",
         "pytest-benchmark",
         "pytest-cov",
         "pytest-asyncio",
-        "rio-cogeo",
+        "rio-cogeo @ git+https://github.com/cogeotiff/rio-cogeo.git@morecantileV3",  # TODO: replace with rio-cogeo>=3.0
         "pre-commit",
     ],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
@@ -36,7 +42,7 @@ extra_reqs = {
 setup(
     name="rio-tiler",
     version="2.1.2",
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     description="User friendly Rasterio plugin to read raster datasets.",
     long_description=readme,
     long_description_content_type="text/markdown",
@@ -47,7 +53,6 @@ setup(
         "Programming Language :: Python :: 3.9",
         "Programming Language :: Python :: 3.8",
         "Programming Language :: Python :: 3.7",
-        "Programming Language :: Python :: 3.6",
         "Topic :: Scientific/Engineering :: GIS",
     ],
     keywords="cog cogeotiff raster map tiles gdal rasterio raster-processing slippy-map",

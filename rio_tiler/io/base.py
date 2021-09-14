@@ -70,7 +70,7 @@ class SpatialMixin:
 
         """
         tile = Tile(x=tile_x, y=tile_y, z=tile_z)
-        tile_bounds = self.tms.bounds(*tile)
+        tile_bounds = self.tms.bounds(tile)
         return (
             (tile_bounds[0] < self.bounds[2])
             and (tile_bounds[2] > self.bounds[0])
