@@ -1,3 +1,10 @@
+# 3.0.0 (TDB)
+
+**breaking changes**
+
+* update morecantile requirement to version >=3.0 (https://github.com/cogeotiff/rio-tiler/pull/418)
+* remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
+
 # 2.1.2 (2021-08-10)
 
 * update type information for mosaics functions (https://github.com/cogeotiff/rio-tiler/pull/409)
