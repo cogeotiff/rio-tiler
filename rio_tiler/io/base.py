@@ -57,7 +57,7 @@ class SpatialMixin:
             maxzoom=self.maxzoom,
         )
 
-    def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
+    def tile_exists(self, tile_x: int, tile_y: int, tile_z: int) -> bool:
         """Check if a tile intersects the dataset bounds.
 
         Args:
@@ -475,7 +475,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_z, tile_x, tile_y):
+        if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
             )
@@ -928,7 +928,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_z, tile_x, tile_y):
+        if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
             )
