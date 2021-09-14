@@ -547,26 +547,28 @@ def test_feature_valid():
     }
 
     with COGReader(COG_NODATA) as cog:
-        img = cog.feature(feature)
+        img = cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(feature, dst_crs=cog.dataset.crs)
+        img = cog.feature(feature, dst_crs=cog.dataset.crs, max_size=1024)
         assert img.data.shape == (1, 1024, 869)
 
         img = cog.feature(feature, max_size=30)
         assert img.data.shape == (1, 11, 30)
 
-        img = cog.feature(feature, expression="b1*2,b1-100")
+        img = cog.feature(feature, expression="b1*2,b1-100", max_size=1024)
         assert img.data.shape == (2, 348, 1024)
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.feature(feature, indexes=(1, 2, 3), expression="b1*2")
+            img = cog.feature(
+                feature, indexes=(1, 2, 3), expression="b1*2", max_size=1024
+            )
             assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(feature, indexes=1)
+        img = cog.feature(feature, indexes=1, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(feature, indexes=(1, 1,))
+        img = cog.feature(feature, indexes=(1, 1,), max_size=1024)
         assert img.data.shape == (2, 348, 1024)
 
         # feature overlaping on mask area
@@ -587,7 +589,7 @@ def test_feature_valid():
             },
         }
 
-        img = cog.feature(mask_feat)
+        img = cog.feature(mask_feat, max_size=1024)
         assert not img.mask.all()
 
         outside_mask_feature = {
@@ -608,7 +610,7 @@ def test_feature_valid():
                 ],
             },
         }
-        img = cog.feature(outside_mask_feature)
+        img = cog.feature(outside_mask_feature, max_size=1024)
         assert not img.mask.all()
 
 

@@ -4,6 +4,7 @@
 
 * update morecantile requirement to version >=3.0 (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
+* remove `max_size` defaults for `COGReader.part` and `COGReader.feature`, which will now default to full resolution reading.
 
 # 2.1.2 (2021-08-10)
 
