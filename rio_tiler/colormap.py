@@ -107,7 +107,7 @@ def apply_cmap(
     lookup_table = make_lut(colormap)
     data = lookup_table[data[0], :]
 
-    data = numpy.transpose(data, [2, 0, 1])
+    data = numpy.transpose(data, [2, 0, 1]).astype("uint8")
 
     return data[:-1], data[-1]
 
@@ -141,7 +141,7 @@ def apply_discrete_cmap(
     for k, v in colormap.items():
         res[data[0] == k] = v
 
-    data = numpy.transpose(res, [2, 0, 1])
+    data = numpy.transpose(res, [2, 0, 1]).astype("uint8")
 
     return data[:-1], data[-1]
 
