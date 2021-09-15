@@ -1,3 +1,8 @@
+# 2.1.3 (2021-09-14)
+
+* Make sure output data is of type `Uint8` when applying a colormap (https://github.com/cogeotiff/rio-tiler/pull/423)
+* Do not auto-rescale data if there is a colormap (https://github.com/cogeotiff/rio-tiler/pull/423)
+
 # 2.1.2 (2021-08-10)
 
 * update type information for mosaics functions (https://github.com/cogeotiff/rio-tiler/pull/409)

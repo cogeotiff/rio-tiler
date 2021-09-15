@@ -173,7 +173,21 @@ def test_metadata_valid():
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
         b1_stats = cog.metadata().statistics["1"]
-        assert b1_stats.histogram[1] == list(range(20))
+        assert b1_stats.histogram[1] == [
+            0.0,
+            1.0,
+            2.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            10.0,
+            11.0,
+            12.0,
+            13.0,
+        ]
 
 
 def test_tile_valid_default():
@@ -655,10 +669,10 @@ def test_tile_read_extmask():
 def test_dateline():
     """Read tile from data crossing the antimeridian."""
     with COGReader(COG_DLINE) as cog:
-        img = cog.tile(1, 42, 7, tilesize=64)
+        img = cog.tile(0, 84, 8, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
-        img = cog.tile(127, 42, 7, tilesize=64)
+        img = cog.tile(255, 84, 8, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
 
