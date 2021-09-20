@@ -130,6 +130,10 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             rio_tile.models.Metadata: Dataset statistics and metadata.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         info = self.info()
         stats = self.stats(pmin, pmax, **kwargs)
         return Metadata(statistics=stats, **info.dict())
@@ -251,6 +255,10 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             rio_tile.models.Metadata: Dataset statistics and metadata.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         info, stats = await asyncio.gather(
             *[self.info(), self.stats(pmin, pmax, **kwargs)]
         )
@@ -435,6 +443,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple assets info and statistics in form of {"asset1": rio_tile.models.Metadata}.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         if not assets:
             raise MissingAssets("Missing 'assets' option")
 
@@ -865,6 +877,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple bands info an statistics in form of {"band1": rio_tile.models.Metadata}.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         if not bands:
             raise MissingBands("Missing 'bands' option")
 

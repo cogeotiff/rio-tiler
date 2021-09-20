@@ -8,7 +8,7 @@ import rasterio
 
 from rio_tiler import constants, reader
 from rio_tiler.constants import WEB_MERCATOR_TMS
-from rio_tiler.errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from rio_tiler.errors import PointOutsideBounds, TileOutsideBounds
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
@@ -392,44 +392,49 @@ def test_point():
 
 def test_metadata():
     """Should return correct metadata."""
-    with rasterio.open(COG_CMAP) as src_dst:
-        meta = reader.metadata(src_dst)
-        assert meta["dtype"] == "uint8"
-        assert meta["colorinterp"] == ["palette"]
-        assert not meta.get("scale")
-        assert not meta.get("ofsset")
-        assert meta.get("colormap")
+    with pytest.warns(DeprecationWarning):
+        with rasterio.open(COG_CMAP) as src_dst:
+            meta = reader.metadata(src_dst)
+            assert meta["dtype"] == "uint8"
+            assert meta["colorinterp"] == ["palette"]
+            assert not meta.get("scale")
+            assert not meta.get("ofsset")
+            assert meta.get("colormap")
 
-    with rasterio.open(COG_SCALE) as src_dst:
-        meta = reader.metadata(src_dst)
-        assert meta["dtype"] == "int16"
-        assert meta["colorinterp"] == ["gray"]
-        assert meta["scale"] == 0.0001
-        assert meta["offset"] == 1000.0
-        assert meta["band_descriptions"] == [("1", "Green")]
-        assert not meta.get("colormap")
-        assert meta["nodata_type"] == "Nodata"
+    with pytest.warns(DeprecationWarning):
+        with rasterio.open(COG_SCALE) as src_dst:
+            meta = reader.metadata(src_dst)
+            assert meta["dtype"] == "int16"
+            assert meta["colorinterp"] == ["gray"]
+            assert meta["scale"] == 0.0001
+            assert meta["offset"] == 1000.0
+            assert meta["band_descriptions"] == [("1", "Green")]
+            assert not meta.get("colormap")
+            assert meta["nodata_type"] == "Nodata"
 
-        meta = reader.metadata(src_dst, indexes=1)
-        assert meta["colorinterp"] == ["gray"]
+            meta = reader.metadata(src_dst, indexes=1)
+            assert meta["colorinterp"] == ["gray"]
 
-        bounds = WEB_MERCATOR_TMS.bounds(218, 99, 8)
-        meta = reader.metadata(src_dst, bounds)
-        assert meta["colorinterp"] == ["gray"]
-        assert meta["bounds"] == bounds
+            bounds = WEB_MERCATOR_TMS.bounds(218, 99, 8)
+            meta = reader.metadata(src_dst, bounds)
+            assert meta["colorinterp"] == ["gray"]
+            assert meta["bounds"] == bounds
 
     with rasterio.open(S3_ALPHA_PATH) as src_dst:
-        with pytest.warns(AlphaBandWarning):
+        with pytest.warns(None) as rec:
             meta = reader.metadata(src_dst)
+            assert len(rec) == 2  # AlphaBandWarning and DeprecationWarning
             assert len(meta["band_descriptions"]) == 3
             assert meta["colorinterp"] == ["red", "green", "blue"]
             assert meta["nodata_type"] == "Alpha"
 
-        meta = reader.metadata(src_dst, indexes=(1, 2, 3, 4))
-        assert len(meta["band_descriptions"]) == 4
-        assert meta["colorinterp"] == ["red", "green", "blue", "alpha"]
-        assert meta["nodata_type"] == "Alpha"
+        with pytest.warns(DeprecationWarning):
+            meta = reader.metadata(src_dst, indexes=(1, 2, 3, 4))
+            assert len(meta["band_descriptions"]) == 4
+            assert meta["colorinterp"] == ["red", "green", "blue", "alpha"]
+            assert meta["nodata_type"] == "Alpha"
 
-    with rasterio.open(S3_MASK_PATH) as src_dst:
-        meta = reader.metadata(src_dst)
-        assert meta["nodata_type"] == "Mask"
+    with pytest.warns(DeprecationWarning):
+        with rasterio.open(S3_MASK_PATH) as src_dst:
+            meta = reader.metadata(src_dst)
+            assert meta["nodata_type"] == "Mask"
