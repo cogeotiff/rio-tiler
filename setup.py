@@ -13,7 +13,7 @@ inst_reqs = [
     "numpy",
     "morecantile>=3.0,<3.1",
     "pydantic",
-    "pystac>=0.5.3",
+    "pystac>=0.5.4",
     "rasterio>=1.1.7",
     "requests",
     "rio-color",
@@ -41,7 +41,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="2.1.2",
+    version="3.0.0",
     python_requires=">=3.7",
     description="User friendly Rasterio plugin to read raster datasets.",
     long_description=readme,

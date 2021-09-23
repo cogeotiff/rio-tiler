@@ -262,12 +262,19 @@ class ImageData:
             metadata=self.metadata,
         )
 
-    def render(self, add_mask: bool = True, img_format: str = "PNG", **kwargs) -> bytes:
+    def render(
+        self,
+        add_mask: bool = True,
+        img_format: str = "PNG",
+        colormap: Optional[Dict] = None,
+        **kwargs,
+    ) -> bytes:
         """Render data to image blob.
 
         Args:
             add_mask (bool, optional): add mask to output image. Defaults to `True`.
             img_format (str, optional): output image format. Defaults to `PNG`.
+            colormap (dict, optional): GDAL RGBA Color Table dictionary.
             kwargs (optional): keyword arguments to forward to `rio_tiler.utils.render`.
 
         Returns:
@@ -285,32 +292,35 @@ class ImageData:
         data = self.data.copy()
         datatype_range = (dtype_ranges[str(data.dtype)],)
 
-        if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:
-            warnings.warn(
-                f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
-                InvalidDatatypeWarning,
-            )
-            data = self._rescale(data, self.mask, in_range=datatype_range)
+        if not colormap:
+            if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:
+                warnings.warn(
+                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                    InvalidDatatypeWarning,
+                )
+                data = self._rescale(data, self.mask, in_range=datatype_range)
 
-        elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
-            warnings.warn(
-                f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
-                InvalidDatatypeWarning,
-            )
-            data = self._rescale(data, self.mask, in_range=datatype_range)
+            elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
+                warnings.warn(
+                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                    InvalidDatatypeWarning,
+                )
+                data = self._rescale(data, self.mask, in_range=datatype_range)
 
-        elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
-            "uint8",
-            "int16",
-            "uint16",
-        ]:
-            warnings.warn(
-                f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
-                InvalidDatatypeWarning,
-            )
-            data = self._rescale(data, self.mask, in_range=datatype_range)
+            elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
+                "uint8",
+                "int16",
+                "uint16",
+            ]:
+                warnings.warn(
+                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                    InvalidDatatypeWarning,
+                )
+                data = self._rescale(data, self.mask, in_range=datatype_range)
 
         if add_mask:
-            return render(data, self.mask, img_format=img_format, **kwargs)
+            return render(
+                data, self.mask, img_format=img_format, colormap=colormap, **kwargs
+            )
 
-        return render(data, img_format=img_format, **kwargs)
+        return render(data, img_format=img_format, colormap=colormap, **kwargs)

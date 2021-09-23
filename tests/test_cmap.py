@@ -125,6 +125,11 @@ def test_apply_cmap():
     mask[5:, 5:] = 255
     numpy.testing.assert_array_equal(m, mask)
 
+    data = data.astype("uint16")
+    d, m = colormap.apply_cmap(data, cm)
+    assert d.dtype == numpy.uint8
+    assert m.dtype == numpy.uint8
+
     with pytest.raises(InvalidFormat):
         data = numpy.repeat(data, 3, axis=0)
         colormap.apply_cmap(data, cm)
@@ -144,6 +149,11 @@ def test_apply_discrete_cmap():
     mask[2:5, 2:5] = 255
     mask[5:, 5:] = 255
     numpy.testing.assert_array_equal(m, mask)
+
+    data = data.astype("uint16")
+    d, m = colormap.apply_discrete_cmap(data, cm)
+    assert d.dtype == numpy.uint8
+    assert m.dtype == numpy.uint8
 
     cm = {1: [0, 0, 0, 255], 1000: [255, 255, 255, 255]}
     d, m = colormap.apply_cmap(data, cm)
