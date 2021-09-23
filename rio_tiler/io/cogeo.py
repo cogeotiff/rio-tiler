@@ -276,7 +276,7 @@ class COGReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_z, tile_x, tile_y):
+        if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
             )
