@@ -11,7 +11,7 @@ inst_reqs = [
     "boto3",
     "numexpr",
     "numpy",
-    "morecantile>=3.0.0a0,<3.1",
+    "morecantile>=3.0,<3.1",
     "pydantic",
     "pystac>=0.5.3",
     "rasterio>=1.1.7",

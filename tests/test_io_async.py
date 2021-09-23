@@ -157,5 +157,5 @@ async def test_async():
             },
         }
 
-        img = await cog.feature(feature)
+        img = await cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
