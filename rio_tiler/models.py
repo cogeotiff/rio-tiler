@@ -83,6 +83,30 @@ class ImageStatistics(RioTilerBaseModel):
     valid_percent: float
 
 
+class BandStatistics(RioTilerBaseModel):
+    """Image statistics"""
+
+    min: float
+    max: float
+    mean: float
+    count: float
+    sum: float
+    std: float
+    median: float
+    majority: float
+    minority: float
+    unique: float
+    histogram: List[List[NumType]]
+    valid_percent: float
+    masked_pixels: float
+    valid_pixels: float
+
+    class Config:
+        """Config for model."""
+
+        extra = "allow"
+
+
 class Metadata(Info):
     """Dataset metadata and statistics."""
 
@@ -114,6 +138,7 @@ class ImageData:
     bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
     crs: Optional[CRS] = attr.ib(default=None)
     metadata: Optional[Dict] = attr.ib(factory=dict)
+    band_names: Optional[List[str]] = attr.ib()
 
     @data.validator
     def _validate_data(self, attribute, value):
@@ -122,6 +147,10 @@ class ImageData:
             raise ValueError(
                 "ImageData data has to be an array in form of (count, height, width)"
             )
+
+    @band_names.default
+    def _default_names(self):
+        return [f"{ix + 1}" for ix in range(self.count)]
 
     @mask.default
     def _default_mask(self):
