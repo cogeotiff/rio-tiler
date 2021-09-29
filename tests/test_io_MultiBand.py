@@ -23,7 +23,10 @@ class BandFileReader(MultiBandReader):
     path: str = attr.ib()
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
+
     tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
@@ -32,6 +35,7 @@ class BandFileReader(MultiBandReader):
         )
         with self.reader(self._get_band_url(self.bands[0])) as cog:
             self.bounds = cog.bounds
+            self.crs = cog.crs
             self.minzoom = cog.minzoom
             self.maxzoom = cog.maxzoom
 
@@ -44,7 +48,11 @@ def test_MultiBandReader():
     """Should work as expected."""
     with BandFileReader(PREFIX) as cog:
         assert cog.bands == ["b1", "b2"]
-        assert cog.spatial_info
+        assert cog.minzoom is not None
+        assert cog.maxzoom is not None
+        assert cog.bounds
+        assert cog.bounds
+        assert cog.crs
 
         assert sorted(cog.parse_expression("b1/b2")) == ["b1", "b2"]
 
