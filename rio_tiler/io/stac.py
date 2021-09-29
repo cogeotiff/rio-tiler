@@ -178,8 +178,8 @@ class STACReader(MultiBaseReader):
         )
 
         # TODO: get bounds/crs using PROJ extension if availble
-        self.dataset_bounds = self.item.bbox
-        self.dataset_crs = WGS84_CRS
+        self.bounds = self.item.bbox
+        self.crs = WGS84_CRS
 
         self.assets = list(
             _get_assets(
