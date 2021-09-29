@@ -827,7 +827,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         bands_metadata = multi_values(bands, _reader, *args, **kwargs)
 
         meta = {
-            "bounds": self.bounds,
+            "bounds": self.geographic_bounds,
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
         }
@@ -919,7 +919,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         bands_metadata = multi_values(bands, _reader, pmin, pmax, **kwargs)
 
         meta = {
-            "bounds": self.bounds,
+            "bounds": self.geographic_bounds,
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
         }
