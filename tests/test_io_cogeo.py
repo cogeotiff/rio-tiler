@@ -7,8 +7,11 @@ from typing import Any, Dict
 import numpy
 import pytest
 import rasterio
+from morecantile import TileMatrixSet
+from pyproj import CRS
 from rasterio.io import DatasetReader, MemoryFile
 from rasterio.vrt import WarpedVRT
+from rasterio.warp import transform_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -746,3 +749,23 @@ def test_nonearthbody():
             lon = (cog.bounds[0] + cog.bounds[2]) / 2
             lat = (cog.bounds[1] + cog.bounds[3]) / 2
             assert cog.point(lon, lat, coord_crs=cog.crs)[0] is not None
+
+    europa_crs = CRS.from_authority("ESRI", 104915)
+    tms = TileMatrixSet.custom(
+        crs=europa_crs, extent=europa_crs.area_of_use.bounds, matrix_scale=[2, 1],
+    )
+    with pytest.warns(None) as warnings:
+        with COGReader(COG_EUROPA, tms=tms) as cog:
+            assert cog.minzoom == 4
+            assert cog.maxzoom == 6
+
+            # Get Tile covering the UL corner
+            bounds = transform_bounds(cog.crs, tms.rasterio_crs, *cog.bounds)
+            t = tms._tile(bounds[0], bounds[1], cog.minzoom)
+            img = cog.tile(t.x, t.y, t.z)
+
+            assert img.height == 256
+            assert img.width == 256
+            assert img.crs == tms.rasterio_crs
+
+            assert len(warnings) == 0
