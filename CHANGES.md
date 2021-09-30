@@ -63,7 +63,6 @@ with COGReader(
 * deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/423)
 * remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)
 * `rio_tiler.io.base.SpatialMixin.bounds` should now be in dataset's CRS (not in WGS84) (https://github.com/cogeotiff/rio-tiler/pull/429)
-* `minzoom` and `maxzoom` attributes are now in `__init__` for `rio_tiler.io` base classes meaning that you HAVE to add them in your class definition (https://github.com/cogeotiff/rio-tiler/pull/429)
 
 # 2.1.3 (2021-09-14)
 

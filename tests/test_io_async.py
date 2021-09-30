@@ -50,8 +50,6 @@ class AsyncCOGReader(AsyncBaseReader):
 
     dataset: Type[COGReader] = attr.ib()
     tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Update dataset info."""

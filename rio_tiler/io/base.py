@@ -29,16 +29,16 @@ class SpatialMixin:
 
     Attributes:
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        minzoom (int): Dataset Min Zoom level. **READ ONLY attribute**.
-        maxzoom (int): Dataset Max Zoom level. **READ ONLY attribute**.
-        bounds (tuple): Dataset bounds (left, bottom, right, top). **READ ONLY attribute**.
-        crs (rasterio.crs.CRS): Dataset crs. **READ ONLY attribute**.
+        minzoom (int): Dataset Min Zoom level. **Not in __init__**.
+        maxzoom (int): Dataset Max Zoom level. **Not in __init__**.
+        bounds (tuple): Dataset bounds (left, bottom, right, top). **Not in __init__**.
+        crs (rasterio.crs.CRS): Dataset crs. **Not in __init__**.
 
     """
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
+    minzoom: int = attr.ib(init=False)
+    maxzoom: int = attr.ib(init=False)
 
     bounds: BBox = attr.ib(init=False)
     crs: CRS = attr.ib(init=False)
@@ -368,8 +368,6 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
     reader_options: Dict = attr.ib(factory=dict)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
 
     assets: Sequence[str] = attr.ib(init=False)
 
@@ -785,8 +783,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
     reader_options: Dict = attr.ib(factory=dict)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
 
     bands: Sequence[str] = attr.ib(init=False)
 

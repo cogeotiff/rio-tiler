@@ -25,8 +25,6 @@ class BandFileReader(MultiBandReader):
     reader_options: Dict = attr.ib(factory=dict)
 
     tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""

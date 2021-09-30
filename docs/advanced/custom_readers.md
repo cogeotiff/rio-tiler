@@ -14,13 +14,13 @@ Main `rio_tiler.io` Abstract Base Class.
 ##### Minimal Arguments
 
 - **tms**: The TileMatrixSet define which default projection and map grid the reader uses. Defaults to WebMercatorQuad.
-- **minzoom**: Dataset's minzoom. Defaults to None.
-- **maxzoom**: Dataset's maxzoom. Defaults to None.
+- **minzoom**: Dataset's minzoom. Not in the `__init__` method.
+- **maxzoom**: Dataset's maxzoom. Not in the `__init__` method.
 - **bounds**: Dataset's bounding box. Not in the `__init__` method.
 - **crs**: dataset's crs. Not in the `__init__` method.
 
 !!! important
-    BaseClass Arguments outside the `__init__` method **HAVE** TO be set in the `__attrs_post_init__` step.
+    BaseClass Arguments outside the `__init__` method **HAVE TO** be set in the `__attrs_post_init__` step.
 
 #### Methods
 
