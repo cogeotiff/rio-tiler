@@ -13,47 +13,23 @@ Main `rio_tiler.io` Abstract Base Class.
 
 ##### Minimal Arguments
 
-- **tms**: morecantile.TileMatrixSet (default is set to WebMercatorQuad). The TileMatrixSet define which default projection and map grid the reader uses.
+- **tms**: The TileMatrixSet define which default projection and map grid the reader uses. Defaults to WebMercatorQuad.
+- **minzoom**: Dataset's minzoom. Defaults to None.
+- **maxzoom**: Dataset's maxzoom. Defaults to None.
+- **bounds**: Dataset's bounding box. Not in the `__init__` method.
+- **crs**: dataset's crs. Not in the `__init__` method.
 
-- **bounds**: bounding box of the dataset. Not in the `init` method.
-- **minzoom**: dataset minzoom. Not in the `init` method.
-- **maxzoom**: dataset maxzoom. Not in the `init` method.
+!!! important
+    BaseClass Arguments outside the `__init__` method **HAVE** TO be set in the `__attrs_post_init__` step.
 
-Class arguments set to be define outside the `init` method can be set in the `__attrs_post_init__` step.
+#### Methods
 
-Example:
-```python
-
-@attr.s
-class Reader(BaseReader):
-
-    filepath: str = attr.ib() # Required argument
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    # We can overwrite the baseclass attribute definition
-    minzoom: int = attr.ib(default=WEB_MERCATOR_TMS.minzoom)
-    maxzoom: int = attr.ib(default=WEB_MERCATOR_TMS.maxzoom)
-
-    bounds: Tuple[float, float, float, float] = attr.ib(init=False)
-    dataset: rasterio.io.DatasetReader = attr.ib(init=False)
-
-    def __attrs_post_init__(self):
-        # Set the dataset variable
-        self.dataset = rasterio.open(self.filepath)
-
-        # Set bounds variable
-        self.bounds = transform_bounds(
-            self.dataset.crs, constants.WGS84_CRS, *self.dataset.bounds, densify_pts=21
-        )
-    ...
-```
+- **tile_exists**: Check if a given tile (for the input TMS) intersect the dataset bounds.
+- **metadata**: returns info + stats (`rio_tiler.models.Metadata`)
 
 ##### Properties
 
-- **center**: dataset center (calculated from bounds and minzoom).
-- **spatial_info**: bounds + zoom info.
-
-Those properties will be added by default in every readers (because bounds and zooms info are part of the BaseReader definition).
+- **geographic_bounds**: dataset's bounds in WGS84 crs (calculated from `self.bounds` and `self.crs`).
 
 ##### Abstract Methods
 
@@ -61,7 +37,6 @@ Abstract methods, are mehtod that **HAVE TO** be implemented in the subclass.
 
 - **info**: returns dataset info (`rio_tiler.models.Info`)
 - **stats**: returns dataset array statistric (`Dict[str, rio_tiler.models.ImageStatistics]`)
-- **metadata**: returns info + stats (`rio_tiler.models.Metadata`)
 - **tile**: reads data for a specific XYZ slippy map indexes (`rio_tiler.models.ImageData`)
 - **part**: reads specific part of a dataset (`rio_tiler.models.ImageData`)
 - **preview**: creates an overview of a dataset (`rio_tiler.models.ImageData`)
@@ -102,6 +77,8 @@ class AssetFileReader(MultiBaseReader):
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
@@ -110,8 +87,13 @@ class AssetFileReader(MultiBaseReader):
         )
         with self.reader(self._get_asset_url(self.assets[0])) as cog:
             self.bounds = cog.bounds
-            self.minzoom = cog.minzoom
-            self.maxzoom = cog.maxzoom
+            self.crs = cog.crs
+
+            if self.minzoom is None:
+                self.minzoom = cog.minzoom
+
+            if self.maxzoom is None:
+                self.maxzoom = cog.maxzoom
 
     def _get_asset_url(self, band: str) -> str:
         """Validate band's name and return band's url."""
@@ -129,10 +111,9 @@ with AssetFileReader("my_dir/", "scene_") as cr:
     >>> ['b1', 'b2']
 
     assert isinstance(info["b1"], Info)
-    print(info["b1"].dict(exclude_none=True))
+    print(info["b1"].json(exclude_none=True))
     >>> {
-        'bounds': (-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263),
-        'center': (-11.426895834413937, 24.800472642003292, 7),
+        'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
         'minzoom': 7,
         'maxzoom': 9,
         'band_metadata': [('1', {})],
@@ -176,6 +157,8 @@ class BandFileReader(MultiBandReader):
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
@@ -184,8 +167,13 @@ class BandFileReader(MultiBandReader):
         )
         with self.reader(self._get_band_url(self.bands[0])) as cog:
             self.bounds = cog.bounds
-            self.minzoom = cog.minzoom
-            self.maxzoom = cog.maxzoom
+            self.crs = cog.crs
+
+            if self.minzoom is None:
+                self.minzoom = cog.minzoom
+
+            if self.maxzoom is None:
+                self.maxzoom = cog.maxzoom
 
     def _get_band_url(self, band: str) -> str:
         """Validate band's name and return band's url."""
@@ -197,10 +185,9 @@ with BandFileReader("my_dir/", "scene_") as cr:
     print(cr.bands)
     >>> ['b1', 'b2']
 
-    print(cr.info(bands=("b1", "b2")).dict(exclude_none=True))
+    print(cr.info(bands=("b1", "b2")).json(exclude_none=True))
     >>> {
-        'bounds': (-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263),
-        'center': (-11.426895834413937, 24.800472642003292, 7),
+        'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
         'minzoom': 7,
         'maxzoom': 9,
         'band_metadata': [('b1', {}), ('b2', {})],
@@ -268,7 +255,7 @@ with CustomSTACReader("https://canada-spot-ortho.s3.amazonaws.com/canada_spot_or
 >>> rasterio.io.DatasetReader
 >>> "https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/s5_11055_6057_20070622_p10_1_lcc00_cog.tif"
 >>> 0
->>> (-111.87793996076493, 60.48627186654449, -109.94924666908423, 61.42036313093244)
+>>> (-869900.0, 1370200.0, -786360.0, 1453180.0)
 ```
 
 In this `CustomSTACReader`, we are using a custom path `schema` in form of `{item-url}:{asset-name}`. When creating an instance of `CustomSTACReader`, we will do the following:
@@ -277,3 +264,81 @@ In this `CustomSTACReader`, we are using a custom path `schema` in form of `{ite
 2. Fetch and parse the STAC item
 3. Construct a new `filename` using the asset full url.
 4. Fall back to the regular `COGReader` initialization (using `super().__attrs_post_init__()`)
+
+
+## Simple Reader
+
+
+```python
+from typing import Any, Dict
+
+import attr
+import rasterio
+from rasterio.io import DatasetReader
+from rio_tiler.io import BaseReader
+from rio_tiler.models import Info, ImageStatistics, ImageData
+from morecantile import TileMatrixSet
+
+from rio_tiler.constants import BBox, WEB_MERCATOR_TMS
+
+@attr.s
+class Reader(BaseReader):
+
+    dataset: DatasetReader = attr.ib()
+
+    # We force tms to be outside the class __init__
+    tms: TileMatrixSet = attr.ib(init=False, default=WEB_MERCATOR_TMS)
+
+    # We can overwrite the baseclass attribute definition and set default
+    minzoom: int = attr.ib(init=False, default=WEB_MERCATOR_TMS.minzoom)
+    maxzoom: int = attr.ib(init=False, default=WEB_MERCATOR_TMS.maxzoom)
+
+    def __attrs_post_init__(self):
+        # Set bounds and crs variable
+        self.bounds = self.dataset.bounds
+        self.crs = self.dataset.crs
+
+    # implement all mandatory methods
+    def info(self) -> Info:
+        raise NotImplemented
+
+    def stats(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict[str, ImageStatistics]:
+        raise NotImplemented
+
+    def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
+        raise NotImplemented
+
+    def preview(self, **kwargs: Any) -> ImageData:
+        raise NotImplemented
+
+    def point(self, lon: float, lat: float, **kwargs: Any) -> List:
+        raise NotImplemented
+
+    def feature(self, shape: Dict, **kwargs: Any) -> ImageData:
+        raise NotImplemented
+
+    def tile(self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any) -> ImageData:
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside bounds"
+            )
+
+        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+
+        data, mask = reader.part(
+            self.dataset,
+            tile_bounds,
+            width=256,
+            height=256,
+            bounds_crs=tms.rasterio_crs,
+            dst_crs=tms.rasterio_crs,
+            **kwargs,
+        )
+        return ImageData(
+            data, mask, bounds=tile_bounds, crs=tms.rasterio_crs
+        )
+
+with rasterio.open("file.tif") as src:
+    with Reader(src) as cog:
+        img = cog.tile(1, 1, 1)
+```
