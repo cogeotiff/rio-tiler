@@ -33,6 +33,8 @@ class COGReader(BaseReader):
         filepath (str): Cloud Optimized GeoTIFF path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Set minzoom for the tiles.
+        maxzoom (int, optional): Set maxzoom for the tiles.
         colormap (dict, optional): Overwrite internal colormap.
         nodata (int or float or str, optional): Global options, overwrite internal nodata value.
         unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
@@ -97,7 +99,7 @@ class COGReader(BaseReader):
             self._kwargs["post_process"] = self.post_process
 
         self.dataset = self.dataset or rasterio.open(self.filepath)
-        self.bounds = self.dataset.bounds
+        self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
 
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
