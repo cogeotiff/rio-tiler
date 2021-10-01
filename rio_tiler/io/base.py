@@ -26,6 +26,7 @@ from ..models import (
     SpatialInfo,
 )
 from ..tasks import multi_arrays, multi_values
+from ..utils import get_array_statistics
 
 
 @attr.s
@@ -582,7 +583,9 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.tile(*args, **kwargs)
+                data = cog.tile(*args, **kwargs)
+                data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                return data
 
         output = multi_arrays(
             assets,
@@ -597,6 +600,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
+            output.band_names = blocks
 
         return output
 
@@ -643,7 +647,9 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.part(*args, **kwargs)
+                data = cog.part(*args, **kwargs)
+                data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                return data
 
         output = multi_arrays(
             assets, _reader, bbox, expression=asset_expression, **kwargs,
@@ -652,6 +658,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
+            output.band_names = blocks
 
         return output
 
@@ -696,13 +703,16 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(asset: str, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.preview(**kwargs)
+                data = cog.preview(**kwargs)
+                data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                return data
 
         output = multi_arrays(assets, _reader, expression=asset_expression, **kwargs)
 
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
+            output.band_names = blocks
 
         return output
 
@@ -807,7 +817,9 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.feature(*args, **kwargs)
+                data = cog.feature(*args, **kwargs)
+                data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                return data
 
         output = multi_arrays(
             assets, _reader, shape, expression=asset_expression, **kwargs,
@@ -816,6 +828,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, assets, output.data)
+            output.band_names = blocks
 
         return output
 
@@ -995,17 +1008,22 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
     def statistics(
         self,
         bands: Union[Sequence[str], str] = None,
-        indexes: int = 1,
+        expression: Optional[str] = None,
         band_expression: Optional[
             str
         ] = None,  # Expression for each band dataset based on band indexes
+        categorical: bool = False,
+        categories: Optional[List[float]] = None,
+        percentiles: List[int] = [2, 98],
+        hist_options: Optional[Dict] = None,
+        max_size: int = 1024,
         **kwargs: Any,
     ) -> Dict[str, BandStatistics]:
         """Return array statistics for multiple assets.
 
         Args:
             bands (sequence of str or str): bands to fetch info from. Required keyword argument.
-            indexes (int, optional): Band indexes. Defaults to 1.
+            expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
             band_expression (str, optional): rio-tiler expression for each band dataset (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.statistics` method.
 
@@ -1013,22 +1031,28 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple assets statistics in form of {"1": rio_tiler.models.BandStatistics, ...}.
 
         """
-        if not bands:
-            raise MissingBands("Missing 'bands' option")
-
-        if isinstance(bands, str):
-            bands = (bands,)
-
-        def _reader(band: str, *args, **kwargs) -> BandStatistics:
-            url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                stats = cog.statistics(*args, **kwargs)
-                # We only return statistics for the first enntry of each dataset.
-                return stats.get(list(stats)[0])
-
-        return multi_values(
-            bands, _reader, indexes=indexes, expression=band_expression, **kwargs,
+        data = self.preview(
+            bands=bands,
+            expression=expression,
+            band_expression=band_expression,
+            max_size=max_size,
+            **kwargs,
         )
+
+        hist_options = hist_options or {}
+
+        stats = get_array_statistics(
+            data.as_masked(),
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            **hist_options,
+        )
+
+        return {
+            f"{data.band_names[ix]}": BandStatistics(**stats[ix])
+            for ix in range(len(stats))
+        }
 
     def tile(
         self,
@@ -1082,7 +1106,9 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.tile(*args, **kwargs)
+                data = cog.tile(*args, **kwargs)
+                data.band_names = [band]
+                return data
 
         output = multi_arrays(
             bands,
@@ -1097,6 +1123,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
+            output.band_names = blocks
 
         return output
 
@@ -1143,7 +1170,9 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.part(*args, **kwargs)
+                data = cog.part(*args, **kwargs)
+                data.band_names = [band]
+                return data
 
         output = multi_arrays(
             bands, _reader, bbox, expression=band_expression, **kwargs,
@@ -1152,6 +1181,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
+            output.band_names = blocks
 
         return output
 
@@ -1196,13 +1226,16 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(band: str, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.preview(**kwargs)
+                data = cog.preview(**kwargs)
+                data.band_names = [band]
+                return data
 
         output = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
 
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
+            output.band_names = blocks
 
         return output
 
@@ -1307,7 +1340,9 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.feature(*args, **kwargs)
+                data = cog.feature(*args, **kwargs)
+                data.band_names = [band]
+                return data
 
         output = multi_arrays(
             bands, _reader, shape, expression=band_expression, **kwargs,
@@ -1316,5 +1351,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         if expression:
             blocks = expression.split(",")
             output.data = apply_expression(blocks, bands, output.data)
+            output.band_names = blocks
 
         return output
