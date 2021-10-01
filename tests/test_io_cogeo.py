@@ -201,10 +201,12 @@ def test_tile_valid_default():
     """Should return a 3 bands array and a full valid mask."""
     with COGReader(COG_NODATA) as cog:
         # Full tile
-        data, mask = cog.tile(43, 24, 7)
-        assert data.shape == (1, 256, 256)
-        assert mask.all()
+        img = cog.tile(43, 24, 7)
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.all()
+        assert img.band_names == ["1"]
 
+        # Validate that Tile and Part gives the same result
         tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
         data_part, _ = cog.part(
             tile_bounds,
@@ -213,7 +215,7 @@ def test_tile_valid_default():
             height=256,
             max_size=None,
         )
-        assert numpy.array_equal(data, data_part)
+        assert numpy.array_equal(img.data, data_part)
 
         # Partial tile
         data, mask = cog.tile(42, 24, 7)
@@ -221,18 +223,21 @@ def test_tile_valid_default():
         assert not mask.all()
 
         # Expression
-        data, mask = cog.tile(43, 24, 7, expression="b1*2,b1-100")
-        assert data.shape == (2, 256, 256)
+        img = cog.tile(43, 24, 7, expression="b1*2,b1-100")
+        assert img.data.shape == (2, 256, 256)
+        assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            data, _ = cog.tile(43, 24, 7, indexes=(1, 2, 3), expression="b1*2")
-            assert data.shape == (1, 256, 256)
+            img = cog.tile(43, 24, 7, indexes=(1, 2, 3), expression="b1*2")
+            assert img.data.shape == (1, 256, 256)
+        assert img.band_names == ["b1*2"]
 
         data, mask = cog.tile(43, 24, 7, indexes=1)
         assert data.shape == (1, 256, 256)
 
-        data, mask = cog.tile(43, 24, 7, indexes=(1, 1,))
-        assert data.shape == (2, 256, 256)
+        img = cog.tile(43, 24, 7, indexes=(1, 1,))
+        assert img.data.shape == (2, 256, 256)
+        assert img.band_names == ["1", "1"]
 
     # We are using a file that is aligned with the grid so no resampling should be involved
     with COGReader(COG_WEB) as cog:
@@ -282,8 +287,9 @@ def test_area_valid():
         73.50183615350426,
     )
     with COGReader(COG_NODATA) as cog:
-        data, mask = cog.part(bbox)
-        assert data.shape == (1, 11, 40)
+        img = cog.part(bbox)
+        assert img.data.shape == (1, 11, 40)
+        assert img.band_names == ["1"]
 
         data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
         assert data.shape == (1, 28, 30)
@@ -291,41 +297,48 @@ def test_area_valid():
         data, mask = cog.part(bbox, max_size=30)
         assert data.shape == (1, 9, 30)
 
-        data, mask = cog.part(bbox, expression="b1*2,b1-100")
-        assert data.shape == (2, 11, 40)
+        img = cog.part(bbox, expression="b1*2,b1-100")
+        assert img.data.shape == (2, 11, 40)
+        assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            data, _ = cog.part(bbox, indexes=(1, 2, 3), expression="b1*2")
-            assert data.shape == (1, 11, 40)
+            img = cog.part(bbox, indexes=(1, 2, 3), expression="b1*2")
+            assert img.data.shape == (1, 11, 40)
+            assert img.band_names == ["b1*2"]
 
         data, mask = cog.part(bbox, indexes=1)
         assert data.shape == (1, 11, 40)
 
-        data, mask = cog.part(bbox, indexes=(1, 1,))
-        assert data.shape == (2, 11, 40)
+        img = cog.part(bbox, indexes=(1, 1,))
+        assert img.data.shape == (2, 11, 40)
+        assert img.band_names == ["1", "1"]
 
 
 def test_preview_valid():
     """Read preview."""
     with COGReader(COGEO) as cog:
-        data, mask = cog.preview(max_size=128)
-        assert data.shape == (1, 128, 128)
+        img = cog.preview(max_size=128)
+        assert img.data.shape == (1, 128, 128)
+        assert img.band_names == ["1"]
 
         data, mask = cog.preview()
         assert data.shape == (1, 1024, 1021)
 
-        data, mask = cog.preview(max_size=128, expression="b1*2,b1-100")
-        assert data.shape == (2, 128, 128)
+        img = cog.preview(max_size=128, expression="b1*2,b1-100")
+        assert img.data.shape == (2, 128, 128)
+        assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            data, _ = cog.preview(max_size=128, indexes=(1, 2, 3), expression="b1*2")
-            assert data.shape == (1, 128, 128)
+            img = cog.preview(max_size=128, indexes=(1, 2, 3), expression="b1*2")
+            assert img.data.shape == (1, 128, 128)
+            assert img.band_names == ["b1*2"]
 
         data, mask = cog.preview(max_size=128, indexes=1)
         assert data.shape == (1, 128, 128)
 
-        data, mask = cog.preview(max_size=128, indexes=(1, 1,))
-        assert data.shape == (2, 128, 128)
+        img = cog.preview(max_size=128, indexes=(1, 1,))
+        assert img.data.shape == (2, 128, 128)
+        assert img.band_names == ["1", "1"]
 
 
 def test_statistics():
@@ -613,6 +626,7 @@ def test_feature_valid():
     with COGReader(COG_NODATA) as cog:
         img = cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
+        assert img.band_names == ["1"]
 
         img = cog.feature(feature, dst_crs=cog.dataset.crs, max_size=1024)
         assert img.data.shape == (1, 1024, 869)
@@ -622,18 +636,21 @@ def test_feature_valid():
 
         img = cog.feature(feature, expression="b1*2,b1-100", max_size=1024)
         assert img.data.shape == (2, 348, 1024)
+        assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = cog.feature(
                 feature, indexes=(1, 2, 3), expression="b1*2", max_size=1024
             )
             assert img.data.shape == (1, 348, 1024)
+            assert img.band_names == ["b1*2"]
 
         img = cog.feature(feature, indexes=1, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
 
         img = cog.feature(feature, indexes=(1, 1,), max_size=1024)
         assert img.data.shape == (2, 348, 1024)
+        assert img.band_names == ["1", "1"]
 
         # feature overlaping on mask area
         mask_feat = {

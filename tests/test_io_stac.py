@@ -134,29 +134,35 @@ def test_tile_valid(rio):
         with pytest.raises(MissingAssets):
             stac.tile(71, 102, 8)
 
-        data, mask = stac.tile(71, 102, 8, assets="green")
-        assert data.shape == (1, 256, 256)
-        assert mask.shape == (256, 256)
+        img = stac.tile(71, 102, 8, assets="green")
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_1"]
+
+        img = stac.tile(71, 102, 8, assets="green", indexes=(1, 1, 1))
+        assert img.data.shape == (3, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_1", "green_1", "green_1"]
 
         data, mask = stac.tile(71, 102, 8, assets=("green",))
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
 
-        data, mask = stac.tile(71, 102, 8, expression="green/red")
-        assert data.shape == (1, 256, 256)
-        assert mask.shape == (256, 256)
+        img = stac.tile(71, 102, 8, expression="green/red")
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        # Note: Here we loose the information about the band
+        assert img.band_names == ["green/red"]
 
         with pytest.warns(ExpressionMixingWarning):
-            data, _ = stac.tile(
-                71, 102, 8, assets=("green", "red"), expression="green/red"
-            )
-            assert data.shape == (1, 256, 256)
+            img = stac.tile(71, 102, 8, assets=("green", "red"), expression="green/red")
+            assert img.data.shape == (1, 256, 256)
+            assert img.band_names == ["green/red"]
 
-        data, mask = stac.tile(
-            71, 102, 8, assets=("green", "red"), asset_expression="b1*2,b1"
-        )
-        assert data.shape == (4, 256, 256)
-        assert mask.shape == (256, 256)
+        img = stac.tile(71, 102, 8, assets=("green", "red"), asset_expression="b1*2,b1")
+        assert img.data.shape == (4, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2", "red_b1"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -174,25 +180,33 @@ def test_part_valid(rio):
         with pytest.raises(MissingAssets):
             stac.part(bbox)
 
-        data, mask = stac.part(bbox, assets="green")
-        assert data.shape == (1, 73, 83)
-        assert mask.shape == (73, 83)
+        img = stac.part(bbox, assets="green")
+        assert img.data.shape == (1, 73, 83)
+        assert img.mask.shape == (73, 83)
+        assert img.band_names == ["green_1"]
 
         data, mask = stac.part(bbox, assets=("green",))
         assert data.shape == (1, 73, 83)
         assert mask.shape == (73, 83)
 
-        data, mask = stac.part(bbox, expression="green/red")
-        assert data.shape == (1, 73, 83)
-        assert mask.shape == (73, 83)
+        img = stac.part(bbox, expression="green/red")
+        assert img.data.shape == (1, 73, 83)
+        assert img.mask.shape == (73, 83)
+        assert img.band_names == ["green/red"]
 
         data, mask = stac.part(bbox, assets="green", max_size=30)
         assert data.shape == (1, 27, 30)
         assert mask.shape == (27, 30)
 
         with pytest.warns(ExpressionMixingWarning):
-            data, _ = stac.part(bbox, assets=("green", "red"), expression="green/red")
-            assert data.shape == (1, 73, 83)
+            img = stac.part(bbox, assets=("green", "red"), expression="green/red")
+            assert img.data.shape == (1, 73, 83)
+            assert img.band_names == ["green/red"]
+
+        img = stac.part(bbox, assets=("green", "red"), asset_expression="b1*2,b1")
+        assert img.data.shape == (4, 73, 83)
+        assert img.mask.shape == (73, 83)
+        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2", "red_b1"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -208,21 +222,29 @@ def test_preview_valid(rio):
         with pytest.raises(MissingAssets):
             stac.preview()
 
-        data, mask = stac.preview(assets="green")
-        assert data.shape == (1, 259, 255)
-        assert mask.shape == (259, 255)
+        img = stac.preview(assets="green")
+        assert img.data.shape == (1, 259, 255)
+        assert img.mask.shape == (259, 255)
+        assert img.band_names == ["green_1"]
 
         data, mask = stac.preview(assets=("green",))
         assert data.shape == (1, 259, 255)
         assert mask.shape == (259, 255)
 
-        data, mask = stac.preview(expression="green/red")
-        assert data.shape == (1, 259, 255)
-        assert mask.shape == (259, 255)
+        img = stac.preview(expression="green/red")
+        assert img.data.shape == (1, 259, 255)
+        assert img.mask.shape == (259, 255)
+        assert img.band_names == ["green/red"]
 
         with pytest.warns(ExpressionMixingWarning):
-            data, _ = stac.preview(assets=("green", "red"), expression="green/red")
-            assert data.shape == (1, 259, 255)
+            img = stac.preview(assets=("green", "red"), expression="green/red")
+            assert img.data.shape == (1, 259, 255)
+            assert img.band_names == ["green/red"]
+
+        img = stac.preview(assets=("green", "red"), asset_expression="b1*2,b1")
+        assert img.data.shape == (4, 259, 255)
+        assert img.mask.shape == (259, 255)
+        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2", "red_b1"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -384,27 +406,28 @@ def test_feature_valid(rio):
         with pytest.raises(MissingAssets):
             stac.feature(feat)
 
-        data, mask = stac.feature(feat, assets="green")
-        assert data.shape == (1, 118, 96)
-        assert mask.shape == (118, 96)
+        img = stac.feature(feat, assets="green")
+        assert img.data.shape == (1, 118, 96)
+        assert img.mask.shape == (118, 96)
+        assert img.band_names == ["green_1"]
 
         data, mask = stac.feature(feat, assets=("green",))
         assert data.shape == (1, 118, 96)
         assert mask.shape == (118, 96)
 
-        data, mask = stac.feature(feat, expression="green/red")
-        assert data.shape == (1, 118, 96)
-        assert mask.shape == (118, 96)
+        img = stac.feature(feat, expression="green/red")
+        assert img.data.shape == (1, 118, 96)
+        assert img.mask.shape == (118, 96)
+        assert img.band_names == ["green/red"]
 
         data, mask = stac.feature(feat, assets="green", max_size=30)
         assert data.shape == (1, 30, 25)
         assert mask.shape == (30, 25)
 
         with pytest.warns(ExpressionMixingWarning):
-            data, _ = stac.feature(
-                feat, assets=("green", "red"), expression="green/red"
-            )
-            assert data.shape == (1, 118, 96)
+            img = stac.feature(feat, assets=("green", "red"), expression="green/red")
+            assert img.data.shape == (1, 118, 96)
+            assert img.band_names == ["green/red"]
 
 
 def test_relative_assets():
