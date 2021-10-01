@@ -1,5 +1,6 @@
 """rio-tiler models."""
 
+import itertools
 import warnings
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
@@ -104,7 +105,7 @@ class BandStatistics(RioTilerBaseModel):
     class Config:
         """Config for model."""
 
-        extra = "allow"
+        extra = "allow"  # We allow extra values for `percentiles_{}`
 
 
 class Metadata(Info):
@@ -171,7 +172,13 @@ class ImageData:
         """
         arr = numpy.concatenate([img.data for img in data])
         mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
-        assets = [img.assets[0] for img in data if img.assets]
+        assets = list(
+            dict.fromkeys(
+                itertools.chain.from_iterable(
+                    [img.assets for img in data if img.assets]
+                )
+            )
+        )
 
         bounds_values = [img.bounds for img in data if img.bounds]
         bounds = bounds_values[0] if bounds_values else None
@@ -179,7 +186,15 @@ class ImageData:
         crs_values = [img.crs for img in data if img.crs]
         crs = crs_values[0] if crs_values else None
 
-        return cls(arr, mask, assets=assets, crs=crs, bounds=bounds)
+        band_names = list(
+            itertools.chain.from_iterable(
+                [img.band_names for img in data if img.band_names]
+            )
+        )
+
+        return cls(
+            arr, mask, assets=assets, crs=crs, bounds=bounds, band_names=band_names
+        )
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""

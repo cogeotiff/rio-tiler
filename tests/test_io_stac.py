@@ -14,6 +14,7 @@ from rio_tiler.errors import (
     TileOutsideBounds,
 )
 from rio_tiler.io import STACReader
+from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
@@ -259,17 +260,46 @@ def test_stats_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
+        with pytest.warns(DeprecationWarning):
+            with pytest.raises(InvalidAssetName):
+                stac.stats(assets="vert")
+
+        with pytest.warns(DeprecationWarning):
+            stats = stac.stats(assets="green")
+            assert stats["green"]
+            assert stats["green"]["1"]["percentiles"]
+            assert stats["green"]["1"].percentiles
+
+        with pytest.warns(DeprecationWarning):
+            stats = stac.stats(assets=("green", "red"), hist_options={"bins": 20})
+            assert len(stats["green"]["1"]["histogram"][0]) == 20
+            assert stats["red"]
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_statistics_valid(rio):
+    """Should raise or return data."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_PATH) as stac:
+        with pytest.raises(MissingAssets):
+            stac.statistics()
+
         with pytest.raises(InvalidAssetName):
-            stac.stats(assets="vert")
+            stac.statistics(assets="vert")
 
-        stats = stac.stats(assets="green")
+        stats = stac.statistics(assets="green")
         assert stats["green"]
-        assert stats["green"]["1"]["percentiles"]
-        assert stats["green"]["1"].percentiles
+        assert isinstance(stats["green"]["1"], BandStatistics)
 
-        stats = stac.stats(assets=("green", "red"), hist_options={"bins": 20})
+        # Check that asset_expression is passed
+        stats = stac.statistics(assets="green", asset_expression="b1*2")
+        assert stats["green"]
+        assert isinstance(stats["green"]["b1*2"], BandStatistics)
+
+        stats = stac.statistics(assets=("green", "red"), hist_options={"bins": 20})
+        assert len(stats) == 2
         assert len(stats["green"]["1"]["histogram"][0]) == 20
-        assert stats["red"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")

@@ -116,30 +116,44 @@ def get_array_statistics(
     percentiles: List[int] = [2, 98],
     **kwargs: Any,
 ) -> List[Dict[Any, Any]]:
-    """Calculate array statistics.
+    """Calculate per band array statistics.
 
     Args:
-        data (numpy.ndarray): Input array data to get the stats from.
+        data (numpy.ma.ndarray): input masked array data to get the statistics from.
         categorical (bool): treat input data as categorical data. Defaults to False.
-        categories (list of numbers, optional)
-        percentiles (list of numbers, optional): List of percentile values to calculate. Defaults to `[2, 98]`.
-        kwargs (optional): Options to forward to numpy.histogram function (only applies for non-categorical data).
+        categories (list of numbers, optional): list of caterogies to return value for.
+        percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+        kwargs (optional): options to forward to `numpy.histogram` function (only applies for non-categorical data).
 
     Returns:
         list of dict
 
     Examples:
-        >>> {
-            'percentiles': [38, 147],
-            'min': 20,
-            'max': 180,
-            'std': 28.123562304138662,
-            'histogram': [
-                [1625, 219241, 28344, 15808, 12325, 10687, 8535, 7348, 4656, 1208],
-                [20.0, 36.0, 52.0, 68.0, 84.0, 100.0, 116.0, 132.0, 148.0, 164.0, 180.0]
-            ],
-            'valid_percent': 0.5
-        }
+        >>> data = numpy.ma.zeros((1, 256, 256))
+        >>> get_array_statistics(data)
+        [
+            {
+                'min': 0.0,
+                'max': 0.0,
+                'mean': 0.0,
+                'count': 65536.0,
+                'sum': 0.0,
+                'std': 0.0,
+                'median': 0.0,
+                'majority': 0.0,
+                'minority': 0.0,
+                'unique': 1.0,
+                'percentile_2': 0.0,
+                'percentile_98': 0.0,
+                'histogram': [
+                    [0, 0, 0, 0, 0, 65536, 0, 0, 0, 0],
+                    [-0.5, -0.4, -0.3, -0.19999999999999996, -0.09999999999999998, 0.0, 0.10000000000000009, 0.20000000000000007, 0.30000000000000004, 0.4, 0.5]
+                ],
+                'valid_pixels': 65536.0,
+                'masked_pixels': 0.0,
+                'valid_percent': 100.0
+            }
+        ]
 
     """
     if len(data.shape) < 3:

@@ -270,12 +270,14 @@ class COGReader(BaseReader):
         max_size: int = 1024,
         **kwargs: Any,
     ) -> Dict[str, BandStatistics]:
-        """Return bands statistics from a COG.
+        """Return bands statistics from a dataset.
 
         Args:
-
-
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of caterogies to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             kwargs (optional): Options to forward to `self.preview`.
 
         Returns:

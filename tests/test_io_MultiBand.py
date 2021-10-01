@@ -10,6 +10,7 @@ import pytest
 
 from rio_tiler.errors import ExpressionMixingWarning, MissingBands
 from rio_tiler.io import BaseReader, COGReader, MultiBandReader
+from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -57,15 +58,28 @@ def test_MultiBandReader():
         meta = cog.info(bands=("b1", "b2"))
         assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
+        with pytest.warns(DeprecationWarning):
+            with pytest.raises(MissingBands):
+                cog.stats()
+
+        with pytest.warns(DeprecationWarning):
+            meta = cog.stats(bands="b1", hist_options={"bins": 20})
+            assert meta["b1"]
+
+        with pytest.warns(DeprecationWarning):
+            meta = cog.stats(bands=("b1", "b2"))
+            assert meta["b1"]
+            assert meta["b2"]
+
         with pytest.raises(MissingBands):
-            cog.stats()
+            cog.statistics()
 
-        meta = cog.stats(bands="b1", hist_options={"bins": 20})
-        assert meta["b1"]
+        stats = cog.statistics(bands="b1")
+        assert isinstance(stats["b1"], BandStatistics)
 
-        meta = cog.stats(bands=("b1", "b2"))
-        assert meta["b1"]
-        assert meta["b2"]
+        stats = cog.statistics(bands=("b1", "b2"))
+        assert stats["b1"]
+        assert stats["b2"]
 
         with pytest.raises(MissingBands):
             with pytest.warns(DeprecationWarning):

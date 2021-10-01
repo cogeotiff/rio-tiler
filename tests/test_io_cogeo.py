@@ -18,6 +18,7 @@ from rio_tiler.errors import (
     TileOutsideBounds,
 )
 from rio_tiler.io import COGReader, GCPCOGReader
+from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -159,10 +160,11 @@ def test_metadata_valid():
             assert b1_stats.percentiles == [1, 6896]
             assert b1_stats.valid_percent == 100.0
 
-        stats = cog.stats()
-        assert len(stats.items()) == 1
-        b1_stats = stats["1"]
-        assert b1_stats.percentiles == [1, 6896]
+        with pytest.warns(DeprecationWarning):
+            stats = cog.stats()
+            assert len(stats.items()) == 1
+            b1_stats = stats["1"]
+            assert b1_stats.percentiles == [1, 6896]
 
         with pytest.warns(DeprecationWarning):
             meta = cog.metadata(
@@ -326,6 +328,58 @@ def test_preview_valid():
         assert data.shape == (2, 128, 128)
 
 
+def test_statistics():
+    """tests statistics method."""
+    with COGReader(COGEO) as cog:
+        stats = cog.statistics()
+        assert len(stats) == 1
+        assert isinstance(stats["1"], BandStatistics)
+        assert stats["1"].percentile_2
+        assert stats["1"].percentile_98
+
+    with COGReader(COGEO) as cog:
+        stats = cog.statistics(percentiles=[3])
+        assert stats["1"].percentile_3
+
+    with COGReader(COGEO) as cog:
+        stats = cog.statistics(percentiles=[3])
+        assert stats["1"].percentile_3
+
+    with COGReader(COG_CMAP) as cog:
+        stats = cog.statistics(categorical=True)
+        assert stats["1"].histogram[1] == [
+            1.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            11.0,
+            12.0,
+        ]
+
+        stats = cog.statistics(categorical=True, categories=[1, 3])
+        assert stats["1"].histogram[1] == [
+            1.0,
+            3.0,
+        ]
+
+    # make sure kwargs are passed to `preview`
+    with COGReader(COGEO) as cog:
+        stats = cog.statistics(width=100, height=100, max_size=None)
+        assert stats["1"].count == 10000.0
+
+    # Check results for expression
+    with COGReader(COGEO) as cog:
+        stats = cog.statistics(expression="b1,b1*2")
+        assert stats["b1"]
+        assert stats["b1*2"]
+        assert stats["b1"].min == stats["b1*2"].min / 2
+
+
 def test_COGReader_Options():
     """Set options in reader."""
     with COGReader(COGEO, nodata=1) as cog:
@@ -400,8 +454,10 @@ def test_cog_with_internal_gcps():
         metadata = cog.info()
         assert len(metadata.band_metadata) == 1
         assert metadata.band_descriptions == [("1", "")]
-        b1_stats = cog.stats()["1"]
-        assert b1_stats.max == 623
+
+        with pytest.warns(DeprecationWarning):
+            b1_stats = cog.stats()["1"]
+            assert b1_stats.max == 623
 
         tile_z = 8
         tile_x = 183
@@ -427,8 +483,10 @@ def test_cog_with_internal_gcps():
             metadata = cog.info()
             assert len(metadata.band_metadata) == 1
             assert metadata.band_descriptions == [("1", "")]
-            b1_stats = cog.stats()["1"]
-            assert b1_stats.max == 623
+
+            with pytest.warns(DeprecationWarning):
+                b1_stats = cog.stats()["1"]
+                assert b1_stats.max == 623
 
             tile_z = 8
             tile_x = 183

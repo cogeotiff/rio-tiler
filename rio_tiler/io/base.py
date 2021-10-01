@@ -9,7 +9,7 @@ from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, 
 import attr
 from morecantile import Tile, TileMatrixSet
 
-from ..constants import WEB_MERCATOR_TMS, BBox
+from ..constants import WEB_MERCATOR_TMS, BBox, Indexes
 from ..errors import (
     ExpressionMixingWarning,
     MissingAssets,
@@ -17,7 +17,14 @@ from ..errors import (
     TileOutsideBounds,
 )
 from ..expression import apply_expression
-from ..models import ImageData, ImageStatistics, Info, Metadata, SpatialInfo
+from ..models import (
+    BandStatistics,
+    ImageData,
+    ImageStatistics,
+    Info,
+    Metadata,
+    SpatialInfo,
+)
 from ..tasks import multi_arrays, multi_values
 
 
@@ -137,6 +144,16 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         info = self.info()
         stats = self.stats(pmin, pmax, **kwargs)
         return Metadata(statistics=stats, **info.dict())
+
+    @abc.abstractmethod
+    def statistics(self, **kwargs: Any) -> Dict[str, BandStatistics]:
+        """Return bands statistics from a dataset.
+
+        Returns:
+            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        ...
 
     @abc.abstractmethod
     def tile(self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any) -> ImageData:
@@ -265,6 +282,18 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         return Metadata(statistics=stats, **info.dict())
 
     @abc.abstractmethod
+    async def statistics(
+        self, **kwargs: Any,
+    ) -> Coroutine[Any, Any, Dict[str, BandStatistics]]:
+        """Return bands statistics from a dataset.
+
+        Returns:
+            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        ...
+
+    @abc.abstractmethod
     async def tile(
         self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
     ) -> Coroutine[Any, Any, ImageData]:
@@ -368,7 +397,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         return tuple(set(re.findall(_re, expression)))
 
     def info(  # type: ignore
-        self, assets: Union[Sequence[str], str] = None, *args, **kwargs: Any
+        self, assets: Union[Sequence[str], str] = None, **kwargs: Any
     ) -> Dict[str, Info]:
         """Return metadata from multiple assets.
 
@@ -390,7 +419,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.info()
 
-        return multi_values(assets, _reader, *args, **kwargs)
+        return multi_values(assets, _reader, **kwargs)
 
     def stats(  # type: ignore
         self,
@@ -411,6 +440,11 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple assets statistics in form of {"asset1": rio_tile.models.ImageStatistics}.
 
         """
+        warnings.warn(
+            "`stats` method will be removed and replaced by `statistics` in rio-tiler v3.0.0",
+            DeprecationWarning,
+        )
+
         if not assets:
             raise MissingAssets("Missing 'assets' option")
 
@@ -460,6 +494,42 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         return multi_values(assets, _reader, pmin, pmax, **kwargs)
 
+    def statistics(  # type: ignore
+        self,
+        assets: Union[Sequence[str], str] = None,
+        indexes: Optional[Indexes] = None,
+        asset_expression: Optional[
+            str
+        ] = None,  # Expression for each asset based on band indexes
+        **kwargs: Any,
+    ) -> Dict[str, Dict[str, BandStatistics]]:
+        """Return array statistics for multiple assets.
+
+        Args:
+            assets (sequence of str or str): assets to fetch info from.
+            indexes (int or sequence of int, optional): Band indexes.
+            asset_expression (str, optional): rio-tiler expression for each asset (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to the `self.reader.statistics` method.
+
+        Returns:
+            dict: Multiple assets statistics in form of {"asset1": {"1": rio_tiler.models.BandStatistics, ...}}.
+
+        """
+        if not assets:
+            raise MissingAssets("Missing 'assets' option")
+
+        if isinstance(assets, str):
+            assets = (assets,)
+
+        def _reader(asset: str, *args, **kwargs) -> Dict:
+            url = self._get_asset_url(asset)
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                return cog.statistics(*args, **kwargs)
+
+        return multi_values(
+            assets, _reader, indexes=indexes, expression=asset_expression, **kwargs,
+        )
+
     def tile(
         self,
         tile_x: int,
@@ -469,7 +539,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = None,  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Wep Map tiles from multiple assets.
@@ -537,7 +607,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = None,  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple assets.
@@ -591,7 +661,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = None,  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple assets.
@@ -644,7 +714,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = None,  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on band indexes
         **kwargs: Any,
     ) -> List:
         """Read pixel value from multiple assets.
@@ -701,7 +771,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         asset_expression: Optional[
             str
-        ] = None,  # Expression for each asset based on index names
+        ] = None,  # Expression for each asset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple assets.
@@ -843,6 +913,11 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple bands statistics in form of {"band1": rio_tile.models.ImageStatistics}.
 
         """
+        warnings.warn(
+            "`stats` method will be removed and replaced by `statistics` in rio-tiler v3.0.0",
+            DeprecationWarning,
+        )
+
         if not bands:
             raise MissingBands("Missing 'bands' option")
 
@@ -917,6 +992,44 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         }
         return Metadata(**meta)
 
+    def statistics(
+        self,
+        bands: Union[Sequence[str], str] = None,
+        indexes: int = 1,
+        band_expression: Optional[
+            str
+        ] = None,  # Expression for each band dataset based on band indexes
+        **kwargs: Any,
+    ) -> Dict[str, BandStatistics]:
+        """Return array statistics for multiple assets.
+
+        Args:
+            bands (sequence of str or str): bands to fetch info from. Required keyword argument.
+            indexes (int, optional): Band indexes. Defaults to 1.
+            band_expression (str, optional): rio-tiler expression for each band dataset (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to the `self.reader.statistics` method.
+
+        Returns:
+            dict: Multiple assets statistics in form of {"1": rio_tiler.models.BandStatistics, ...}.
+
+        """
+        if not bands:
+            raise MissingBands("Missing 'bands' option")
+
+        if isinstance(bands, str):
+            bands = (bands,)
+
+        def _reader(band: str, *args, **kwargs) -> BandStatistics:
+            url = self._get_band_url(band)
+            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
+                stats = cog.statistics(*args, **kwargs)
+                # We only return statistics for the first enntry of each dataset.
+                return stats.get(list(stats)[0])
+
+        return multi_values(
+            bands, _reader, indexes=indexes, expression=band_expression, **kwargs,
+        )
+
     def tile(
         self,
         tile_x: int,
@@ -926,7 +1039,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = None,  # Expression for each band based on index names
+        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Web Map tiles multiple bands.
@@ -994,7 +1107,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = None,  # Expression for each band based on index names
+        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple bands.
@@ -1048,7 +1161,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = None,  # Expression for each band based on index names
+        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple bands.
@@ -1101,7 +1214,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = None,  # Expression for each band based on index names (b1, b2, ...)
+        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> List:
         """Read a pixel values from multiple bands.
@@ -1158,7 +1271,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         band_expression: Optional[
             str
-        ] = None,  # Expression for each band based on index names
+        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple bands.
