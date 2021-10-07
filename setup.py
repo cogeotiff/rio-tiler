@@ -21,7 +21,14 @@ inst_reqs = [
 ]
 
 extra_reqs = {
-    "test": ["pytest", "pytest-asyncio", "pytest-benchmark", "pytest-cov", "rio-cogeo"],
+    "test": [
+        "pytest",
+        "pytest-asyncio",
+        "pytest-benchmark",
+        "pytest-cov",
+        "rio-cogeo",
+        "tox",
+    ],
     "dev": [
         "pytest",
         "pytest-benchmark",
@@ -29,6 +36,7 @@ extra_reqs = {
         "pytest-asyncio",
         "rio-cogeo",
         "pre-commit",
+        "tox",
     ],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
 }
