@@ -142,52 +142,57 @@ def test_info_valid():
 def test_metadata_valid():
     """Get bounds and get stats for all bands."""
     with COGReader(COGEO) as cog:
-        meta = cog.metadata()
-        assert len(meta["band_descriptions"]) == 1
-        assert len(meta.band_descriptions) == 1
-        assert ("1", "") == meta.band_descriptions[0]
-        assert meta.overviews
-        assert meta.count
-        assert meta.height
-        assert meta.width
+        with pytest.warns(DeprecationWarning):
+            meta = cog.metadata()
+            assert len(meta["band_descriptions"]) == 1
+            assert len(meta.band_descriptions) == 1
+            assert ("1", "") == meta.band_descriptions[0]
+            assert meta.overviews
+            assert meta.count
+            assert meta.height
+            assert meta.width
 
-        stats = meta["statistics"]
-        assert len(stats.items()) == 1
-        assert meta["statistics"]["1"]["percentiles"]
-        b1_stats = meta.statistics["1"]
-        assert b1_stats.percentiles == [1, 6896]
-        assert b1_stats.valid_percent == 100.0
+            stats = meta["statistics"]
+            assert len(stats.items()) == 1
+            assert meta["statistics"]["1"]["percentiles"]
+            b1_stats = meta.statistics["1"]
+            assert b1_stats.percentiles == [1, 6896]
+            assert b1_stats.valid_percent == 100.0
 
         stats = cog.stats()
         assert len(stats.items()) == 1
         b1_stats = stats["1"]
         assert b1_stats.percentiles == [1, 6896]
 
-        meta = cog.metadata(pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128)
-        stats = meta.statistics
-        assert len(stats.items()) == 1
-        b1_stats = stats["1"]
-        assert len(b1_stats.histogram[0]) == 20
-        assert b1_stats.percentiles == [1, 3776]
+        with pytest.warns(DeprecationWarning):
+            meta = cog.metadata(
+                pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128
+            )
+            stats = meta.statistics
+            assert len(stats.items()) == 1
+            b1_stats = stats["1"]
+            assert len(b1_stats.histogram[0]) == 20
+            assert b1_stats.percentiles == [1, 3776]
 
     with COGReader(COG_CMAP) as cog:
         assert cog.colormap
-        b1_stats = cog.metadata().statistics["1"]
-        assert b1_stats.histogram[1] == [
-            0.0,
-            1.0,
-            2.0,
-            3.0,
-            4.0,
-            5.0,
-            6.0,
-            7.0,
-            8.0,
-            10.0,
-            11.0,
-            12.0,
-            13.0,
-        ]
+        with pytest.warns(DeprecationWarning):
+            b1_stats = cog.metadata().statistics["1"]
+            assert b1_stats.histogram[1] == [
+                0.0,
+                1.0,
+                2.0,
+                3.0,
+                4.0,
+                5.0,
+                6.0,
+                7.0,
+                8.0,
+                10.0,
+                11.0,
+                12.0,
+                13.0,
+            ]
 
 
 def test_tile_valid_default():
@@ -325,9 +330,10 @@ def test_COGReader_Options():
     """Set options in reader."""
     with COGReader(COGEO, nodata=1) as cog:
         assert cog.nodata == 1
-        b1_stats = cog.metadata().statistics["1"]
-        assert b1_stats.percentiles == [2720, 6896]
-        assert cog.info().nodata_type == "Nodata"
+        with pytest.warns(DeprecationWarning):
+            b1_stats = cog.metadata().statistics["1"]
+            assert b1_stats.percentiles == [2720, 6896]
+            assert cog.info().nodata_type == "Nodata"
 
     with COGReader(COGEO) as cog:
         assert not cog.nodata
@@ -547,26 +553,28 @@ def test_feature_valid():
     }
 
     with COGReader(COG_NODATA) as cog:
-        img = cog.feature(feature)
+        img = cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(feature, dst_crs=cog.dataset.crs)
+        img = cog.feature(feature, dst_crs=cog.dataset.crs, max_size=1024)
         assert img.data.shape == (1, 1024, 869)
 
         img = cog.feature(feature, max_size=30)
         assert img.data.shape == (1, 11, 30)
 
-        img = cog.feature(feature, expression="b1*2,b1-100")
+        img = cog.feature(feature, expression="b1*2,b1-100", max_size=1024)
         assert img.data.shape == (2, 348, 1024)
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.feature(feature, indexes=(1, 2, 3), expression="b1*2")
+            img = cog.feature(
+                feature, indexes=(1, 2, 3), expression="b1*2", max_size=1024
+            )
             assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(feature, indexes=1)
+        img = cog.feature(feature, indexes=1, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(feature, indexes=(1, 1,))
+        img = cog.feature(feature, indexes=(1, 1,), max_size=1024)
         assert img.data.shape == (2, 348, 1024)
 
         # feature overlaping on mask area
@@ -587,7 +595,7 @@ def test_feature_valid():
             },
         }
 
-        img = cog.feature(mask_feat)
+        img = cog.feature(mask_feat, max_size=1024)
         assert not img.mask.all()
 
         outside_mask_feature = {
@@ -608,7 +616,7 @@ def test_feature_valid():
                 ],
             },
         }
-        img = cog.feature(outside_mask_feature)
+        img = cog.feature(outside_mask_feature, max_size=1024)
         assert not img.mask.all()
 
 

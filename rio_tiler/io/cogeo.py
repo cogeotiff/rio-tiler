@@ -128,10 +128,10 @@ class COGReader(BaseReader):
 
     def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
         """Calculate raster min/max zoom level."""
-        if self.dataset.crs != self.tms.crs:
+        if self.dataset.crs != self.tms.rasterio_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.dataset.crs,
-                self.tms.crs,
+                self.tms.rasterio_crs,
                 self.dataset.width,
                 self.dataset.height,
                 *self.dataset.bounds,
@@ -276,12 +276,12 @@ class COGReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_z, tile_x, tile_y):
+        if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
             )
 
-        tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
+        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
         if tile_buffer:
             x_res = (tile_bounds[2] - tile_bounds[0]) / tilesize
             y_res = (tile_bounds[3] - tile_bounds[1]) / tilesize
@@ -295,7 +295,7 @@ class COGReader(BaseReader):
 
         return self.part(
             tile_bounds,
-            dst_crs=self.tms.crs,
+            dst_crs=self.tms.rasterio_crs,
             bounds_crs=None,
             height=tilesize,
             width=tilesize,
@@ -310,9 +310,11 @@ class COGReader(BaseReader):
         bbox: BBox,
         dst_crs: Optional[CRS] = None,
         bounds_crs: CRS = WGS84_CRS,
-        max_size: int = 1024,
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG.
@@ -321,9 +323,11 @@ class COGReader(BaseReader):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
             kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
@@ -351,6 +355,8 @@ class COGReader(BaseReader):
             self.dataset,
             bbox,
             max_size=max_size,
+            width=width,
+            height=height,
             bounds_crs=bounds_crs,
             dst_crs=dst_crs,
             indexes=indexes,
@@ -371,6 +377,9 @@ class COGReader(BaseReader):
         self,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
+        max_size: int = 1024,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a COG.
@@ -378,6 +387,9 @@ class COGReader(BaseReader):
         Args:
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
             kwargs (optional): Options to forward to the `rio_tiler.reader.preview` function.
 
         Returns:
@@ -398,7 +410,14 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        data, mask = reader.preview(self.dataset, indexes=indexes, **kwargs)
+        data, mask = reader.preview(
+            self.dataset,
+            indexes=indexes,
+            max_size=max_size,
+            width=width,
+            height=height,
+            **kwargs,
+        )
 
         if expression:
             blocks = expression.lower().split(",")
@@ -462,9 +481,11 @@ class COGReader(BaseReader):
         shape: Dict,
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
-        max_size: int = 1024,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG defined by a geojson feature.
@@ -473,9 +494,11 @@ class COGReader(BaseReader):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
@@ -499,6 +522,8 @@ class COGReader(BaseReader):
             indexes=indexes,
             expression=expression,
             max_size=max_size,
+            width=width,
+            height=height,
             vrt_options=vrt_options,
             **kwargs,
         )

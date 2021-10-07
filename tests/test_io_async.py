@@ -109,7 +109,8 @@ async def test_async():
         assert meta.maxzoom == 9
 
         assert await cog.stats(5, 95)
-        assert await cog.metadata(2, 98)
+        with pytest.warns(DeprecationWarning):
+            assert await cog.metadata(2, 98)
 
         data, mask = await cog.tile(43, 24, 7)
         assert data.shape == (1, 256, 256)
@@ -156,5 +157,5 @@ async def test_async():
             },
         }
 
-        img = await cog.feature(feature)
+        img = await cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)

@@ -295,15 +295,18 @@ def test_metadata_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(InvalidAssetName):
-            stac.metadata(assets="vert")
+        with pytest.warns(DeprecationWarning):
+            with pytest.raises(InvalidAssetName):
+                stac.metadata(assets="vert")
 
-        meta = stac.metadata(assets="green")
-        assert meta["green"]
+        with pytest.warns(DeprecationWarning):
+            meta = stac.metadata(assets="green")
+            assert meta["green"]
 
-        meta = stac.metadata(assets=("green", "red"))
-        assert meta["green"]
-        assert meta["red"]
+        with pytest.warns(DeprecationWarning):
+            meta = stac.metadata(assets=("green", "red"))
+            assert meta["green"]
+            assert meta["red"]
 
 
 def test_parse_expression():

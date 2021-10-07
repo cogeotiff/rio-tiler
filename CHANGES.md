@@ -1,3 +1,12 @@
+# 3.0.0 (TDB)
+
+**breaking changes**
+
+* update morecantile requirement to version >=3.0 (https://github.com/cogeotiff/rio-tiler/pull/418)
+* remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
+* remove `max_size` defaults for `COGReader.part` and `COGReader.feature`, which will now default to full resolution reading.
+* Deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/423)
+
 # 2.1.3 (2021-09-14)
 
 * Make sure output data is of type `Uint8` when applying a colormap (https://github.com/cogeotiff/rio-tiler/pull/423)

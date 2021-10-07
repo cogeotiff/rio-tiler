@@ -434,6 +434,10 @@ def metadata(
         dict: Dataset metadata and statistics.
 
     """
+    warnings.warn(
+        "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+    )
+
     if isinstance(indexes, int):
         indexes = (indexes,)
 

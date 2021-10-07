@@ -57,7 +57,7 @@ class SpatialMixin:
             maxzoom=self.maxzoom,
         )
 
-    def tile_exists(self, tile_z: int, tile_x: int, tile_y: int) -> bool:
+    def tile_exists(self, tile_x: int, tile_y: int, tile_z: int) -> bool:
         """Check if a tile intersects the dataset bounds.
 
         Args:
@@ -70,7 +70,7 @@ class SpatialMixin:
 
         """
         tile = Tile(x=tile_x, y=tile_y, z=tile_z)
-        tile_bounds = self.tms.bounds(*tile)
+        tile_bounds = self.tms.bounds(tile)
         return (
             (tile_bounds[0] < self.bounds[2])
             and (tile_bounds[2] > self.bounds[0])
@@ -130,6 +130,10 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             rio_tile.models.Metadata: Dataset statistics and metadata.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         info = self.info()
         stats = self.stats(pmin, pmax, **kwargs)
         return Metadata(statistics=stats, **info.dict())
@@ -251,6 +255,10 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             rio_tile.models.Metadata: Dataset statistics and metadata.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         info, stats = await asyncio.gather(
             *[self.info(), self.stats(pmin, pmax, **kwargs)]
         )
@@ -435,6 +443,10 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple assets info and statistics in form of {"asset1": rio_tile.models.Metadata}.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         if not assets:
             raise MissingAssets("Missing 'assets' option")
 
@@ -475,7 +487,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_z, tile_x, tile_y):
+        if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
             )
@@ -865,6 +877,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple bands info an statistics in form of {"band1": rio_tile.models.Metadata}.
 
         """
+        warnings.warn(
+            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+        )
+
         if not bands:
             raise MissingBands("Missing 'bands' option")
 
@@ -928,7 +944,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_z, tile_x, tile_y):
+        if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
             )
