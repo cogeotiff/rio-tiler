@@ -15,7 +15,7 @@ inst_reqs = [
     "pydantic",
     "pystac>=0.5.3",
     "rasterio>=1.1.7",
-    "requests",
+    "httpx",
     "rio-color",
     "importlib_resources>=1.1.0;python_version<'3.9'",
 ]
