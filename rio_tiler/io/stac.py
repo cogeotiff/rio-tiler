@@ -6,8 +6,8 @@ from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
 import attr
+import httpx
 import pystac
-import requests
 from morecantile import TileMatrixSet
 
 from ..constants import WEB_MERCATOR_TMS
@@ -51,7 +51,7 @@ def fetch(filepath: str, **kwargs: Any) -> Dict:
         return json.loads(aws_get_object(bucket, key, **kwargs))
 
     elif parsed.scheme in ["https", "http", "ftp"]:
-        return requests.get(filepath, **kwargs).json()
+        return httpx.get(filepath, **kwargs).json()
 
     else:
         with open(filepath, "r") as f:
