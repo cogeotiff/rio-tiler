@@ -6,7 +6,7 @@
 * remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove `max_size` defaults for `COGReader.part` and `COGReader.feature`, which will now default to full resolution reading.
 * Deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/423)
-* Use `RIO_TILER_MAX_THREADS` environment variable instead of `MAX_THREADS` (https://github.com/cogeotiff/rio-tiler/pull/432)
+* Use `RIO_TILER_MAX_THREADS` environment variable instead of `MAX_THREADS` (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/432)
 
 # 2.1.3 (2021-09-14)
 
