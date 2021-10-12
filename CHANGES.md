@@ -61,7 +61,7 @@ with COGReader(
 * update morecantile requirement to version >=3.0 (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove `max_size` defaults for `COGReader.part` and `COGReader.feature`, which will now default to full resolution reading.
-* deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/423)
+* deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/425)
 * remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)
 * `rio_tiler.io.base.SpatialMixin.bounds` should now be in dataset's CRS (not in `WGS84`) (https://github.com/cogeotiff/rio-tiler/pull/429)
 * Use `RIO_TILER_MAX_THREADS` environment variable instead of `MAX_THREADS` (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/432)
