@@ -15,7 +15,7 @@ inst_reqs = [
     "pydantic",
     "pystac>=0.5.4",
     "rasterio>=1.1.7",
-    "requests",
+    "httpx",
     "rio-color",
     "importlib_resources>=1.1.0;python_version<'3.9'",
 ]
@@ -27,6 +27,7 @@ extra_reqs = {
         "pytest-benchmark",
         "pytest-cov",
         "rio-cogeo>=3.0.0a0",
+        "tox",
     ],
     "dev": [
         "pytest",
@@ -35,6 +36,7 @@ extra_reqs = {
         "pytest-asyncio",
         "rio-cogeo>=3.0.0a0",
         "pre-commit",
+        "tox",
     ],
     "docs": ["nbconvert", "mkdocs", "mkdocs-material", "pygments", "mkdocs-jupyter"],
 }

@@ -6,6 +6,6 @@ morecantile>=3.0,<3.1
 pydantic
 pystac>=0.5.4
 rasterio>=1.1.7
-requests
+httpx
 rio-color
 importlib_resources>=1.1.0;python_version<'3.9'

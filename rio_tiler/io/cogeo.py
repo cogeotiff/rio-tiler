@@ -39,8 +39,8 @@ class COGReader(BaseReader):
         filepath (str): Cloud Optimized GeoTIFF path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        minzoom (int, optional): Overwrite Min Zoom level.
-        maxzoom (int, optional): Overwrite Max Zoom level.
+        minzoom (int, optional): Set minzoom for the tiles.
+        maxzoom (int, optional): Set maxzoom for the tiles.
         colormap (dict, optional): Overwrite internal colormap.
         nodata (int or float or str, optional): Global options, overwrite internal nodata value.
         unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
@@ -71,9 +71,11 @@ class COGReader(BaseReader):
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
+
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
+
     colormap: Dict = attr.ib(default=None)
 
     # Define global options to be forwarded to functions reading the data (e.g `rio_tiler.reader.read`)
@@ -103,12 +105,11 @@ class COGReader(BaseReader):
             self._kwargs["post_process"] = self.post_process
 
         self.dataset = self.dataset or rasterio.open(self.filepath)
+        self.bounds = tuple(self.dataset.bounds)
+        self.crs = self.dataset.crs
 
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
-        self.bounds = transform_bounds(
-            self.dataset.crs, WGS84_CRS, *self.dataset.bounds, densify_pts=21
-        )
         if self.minzoom is None or self.maxzoom is None:
             self._set_zooms()
 
@@ -133,7 +134,7 @@ class COGReader(BaseReader):
         self.close()
 
     def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
-        """Calculate raster min/max zoom level."""
+        """Calculate raster min/max zoom level for input TMS."""
         if self.dataset.crs != self.tms.rasterio_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.dataset.crs,
@@ -147,18 +148,30 @@ class COGReader(BaseReader):
             w = self.dataset.width
             h = self.dataset.height
 
+        # The maxzoom is defined by finding the minimum difference between
+        # the raster resolution and the zoom level resolution
         resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
         maxzoom = self.tms.zoom_for_res(resolution)
 
+        # The minzoom is defined by the resolution of the maximum theoretical overview level
         overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
         ovr_resolution = resolution * (2 ** overview_level)
         minzoom = self.tms.zoom_for_res(ovr_resolution)
 
-        return minzoom, maxzoom
+        return (minzoom, maxzoom)
 
     def _set_zooms(self):
         """Calculate raster min/max zoom level."""
-        minzoom, maxzoom = self.get_zooms()
+        try:
+            minzoom, maxzoom = self.get_zooms()
+        except:  # noqa
+            # if we can't get min/max zoom from the dataset we default to TMS min/max zoom
+            warnings.warn(
+                "Cannot dertermine min/max zoom based on dataset informations, will default to TMS min/max zoom.",
+                UserWarning,
+            )
+            minzoom, maxzoom = self.tms.minzoom, self.tms.maxzoom
+
         self.minzoom = self.minzoom if self.minzoom is not None else minzoom
         self.maxzoom = self.maxzoom if self.maxzoom is not None else maxzoom
         return
@@ -188,8 +201,7 @@ class COGReader(BaseReader):
             nodata_type = "None"
 
         meta = {
-            "bounds": self.bounds,
-            "center": self.center,
+            "bounds": self.geographic_bounds,
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
             "band_metadata": [
@@ -489,8 +501,8 @@ class COGReader(BaseReader):
         return ImageData(
             data,
             mask,
-            bounds=self.dataset.bounds,
-            crs=self.dataset.crs,
+            bounds=self.bounds,
+            crs=self.crs,
             assets=[self.filepath],
             band_names=get_bands_names(
                 indexes=indexes, expression=expression, count=data.shape[0]
@@ -501,6 +513,7 @@ class COGReader(BaseReader):
         self,
         lon: float,
         lat: float,
+        coord_crs: CRS = WGS84_CRS,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
@@ -510,6 +523,7 @@ class COGReader(BaseReader):
         Args:
             lon (float): Longitude.
             lat (float): Latittude.
+            coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `rio_tiler.reader.point` function.
@@ -532,7 +546,9 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        point = reader.point(self.dataset, (lon, lat), indexes=indexes, **kwargs)
+        point = reader.point(
+            self.dataset, (lon, lat), indexes=indexes, coord_crs=coord_crs, **kwargs
+        )
 
         if expression:
             blocks = expression.lower().split(",")
@@ -634,8 +650,8 @@ class COGReader(BaseReader):
         return ImageData(
             data,
             mask,
-            bounds=self.dataset.bounds,
-            crs=self.dataset.crs,
+            bounds=self.bounds,
+            crs=self.crs,
             assets=[self.filepath],
             band_names=get_bands_names(
                 indexes=indexes, expression=expression, count=data.shape[0]

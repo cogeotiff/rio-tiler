@@ -49,7 +49,6 @@ class Bounds(RioTilerBaseModel):
 class SpatialInfo(Bounds):
     """Dataset SpatialInfo"""
 
-    center: Tuple[NumType, NumType, int]
     minzoom: int
     maxzoom: int
 

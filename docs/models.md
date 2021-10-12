@@ -163,57 +163,7 @@ Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for 
 
 ## Others
 
-Readers methods (`spatial_info`, `info`, `metadata` and `stats`) returning metadata like results return [pydantic](https://pydantic-docs.helpmanual.io) models to make sure the values are valids.
-
-### SpatialInfo
-
-```python
-from rio_tiler.io import COGReader
-from rio_tiler.models import SpatialInfo
-
-# Schema
-print(SpatialInfo.schema())
->>> {
-    'title': 'SpatialInfo',
-    'description': 'Dataset SpatialInfo',
-    'type': 'object',
-    'properties': {
-        'bounds': {'title': 'Bounds', 'type': 'array', 'items': {}},
-        'center': {
-            'title': 'Center',
-            'type': 'array',
-            'items': [
-                {'anyOf': [{'type': 'number'}, {'type': 'integer'}]},
-                {'anyOf': [{'type': 'number'}, {'type': 'integer'}]},
-                {'type': 'integer'}
-            ]
-        },
-        'minzoom': {'title': 'Minzoom', 'type': 'integer'},
-        'maxzoom': {'title': 'Maxzoom', 'type': 'integer'}
-    },
-    'required': ['bounds', 'center', 'minzoom', 'maxzoom']
-}
-
-# Example
-with COGReader(
-  "http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"
-) as cog:
-    spatial_info = cog.spatial_info
-
-print(spatial_info["minzoom"])
->>> 15
-
-print(spatial_info.minzoom)
->>> 15
-
-print(spatial_info.dict())
->>> {
-    'bounds': (-61.28700187663819, 15.53775679445058, -61.27877967704676, 15.542486503997605),
-    'center': (-61.28289077684248, 15.540121649224092, 15),
-    'minzoom': 15,
-    'maxzoom': 21
-}
-```
+Readers methods (`info`, `metadata` and `stats`) returning metadata like results return [pydantic](https://pydantic-docs.helpmanual.io) models to make sure the values are valids.
 
 ### Info
 
@@ -224,34 +174,132 @@ from rio_tiler.models import Info
 # Schema
 print(Info.schema())
 >>> {
-    'title': 'Info',
-    'description': 'Dataset Info.',
-    'type': 'object',
-    'properties': {
-        'bounds': {'title': 'Bounds', 'type': 'array', 'items': {}},
-        'center': {
-            'title': 'Center',
-            'type': 'array',
-            'items': [
-                {'anyOf': [{'type': 'number'}, {'type': 'integer'}]},
-                {'anyOf': [{'type': 'number'}, {'type': 'integer'}]},
-                {'type': 'integer'}
+    "title": "Info",
+    "description": "Dataset Info.",
+    "type": "object",
+    "properties": {
+        "bounds": {
+            "title": "Bounds",
+            "type": "array",
+            "items": [
+                {
+                    "title": "Left"
+                },
+                {
+                    "title": "Bottom"
+                },
+                {
+                    "title": "Right"
+                },
+                {
+                    "title": "Top"
+                }
             ]
         },
-        'minzoom': {'title': 'Minzoom', 'type': 'integer'},
-        'maxzoom': {'title': 'Maxzoom', 'type': 'integer'},
-        'band_metadata': {'title': 'Band Metadata', 'type': 'array', 'items': {'type': 'array', 'items': [{'type': 'string'}, {'type': 'object'}]}},
-        'band_descriptions': {'title': 'Band Descriptions', 'type': 'array', 'items': {'type': 'array', 'items': [{'type': 'string'}, {'type': 'string'}]}},
-        'dtype': {'title': 'Dtype', 'type': 'string'},
-        'nodata_type': {'$ref': '#/definitions/NodataTypes'},
-        'colorinterp': {'title': 'Colorinterp', 'type': 'array', 'items': {'type': 'string'}},
-        'scale': {'title': 'Scale', 'type': 'number'},
-        'offset': {'title': 'Offset', 'type': 'number'},
-        'colormap': {'title': 'Colormap', 'type': 'object', 'additionalProperties': {'type': 'array', 'items': [{'type': 'integer'}, {'type': 'integer'}, {'type': 'integer'}, {'type': 'integer'}]}}
+        "minzoom": {
+            "title": "Minzoom",
+            "type": "integer"
+        },
+        "maxzoom": {
+            "title": "Maxzoom",
+            "type": "integer"
+        },
+        "band_metadata": {
+            "title": "Band Metadata",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "object"
+                    }
+                ]
+            }
+        },
+        "band_descriptions": {
+            "title": "Band Descriptions",
+            "type": "array",
+            "items": {
+                "type": "array",
+                "items": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            }
+        },
+        "dtype": {
+            "title": "Dtype",
+            "type": "string"
+        },
+        "nodata_type": {
+            "$ref": "#/definitions/NodataTypes"
+        },
+        "colorinterp": {
+            "title": "Colorinterp",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "scale": {
+            "title": "Scale",
+            "type": "number"
+        },
+        "offset": {
+            "title": "Offset",
+            "type": "number"
+        },
+        "colormap": {
+            "title": "Colormap",
+            "type": "object",
+            "additionalProperties": {
+                "type": "array",
+                "items": [
+                    {
+                        "type": "integer"
+                    },
+                    {
+                        "type": "integer"
+                    },
+                    {
+                        "type": "integer"
+                    },
+                    {
+                        "type": "integer"
+                    }
+                ]
+            }
+        }
     },
-    'required': ['bounds', 'center', 'minzoom', 'maxzoom', 'band_metadata', 'band_descriptions', 'dtype', 'nodata_type'],
-    'definitions': {
-        'NodataTypes': {'title': 'NodataTypes', 'description': 'rio-tiler Nodata types.', 'enum': ['Alpha', 'Mask', 'Internal', 'Nodata', 'None'], 'type': 'string'}
+    "required": [
+        "bounds",
+        "minzoom",
+        "maxzoom",
+        "band_metadata",
+        "band_descriptions",
+        "dtype",
+        "nodata_type"
+    ],
+    "definitions": {
+        "NodataTypes": {
+            "title": "NodataTypes",
+            "description": "rio-tiler Nodata types.",
+            "enum": [
+                "Alpha",
+                "Mask",
+                "Internal",
+                "Nodata",
+                "None"
+            ],
+            "type": "string"
+        }
     }
 }
 
@@ -267,22 +315,21 @@ print(info["nodata_type"])
 print(info.nodata_type)
 >>> "None"
 
-print(info.dict(exclude_none=True))
+print(info.json(exclude_none=True))
 >>> {
-    'bounds': (-61.28700187663819, 15.53775679445058, -61.27877967704676, 15.542486503997605),
-    'center': (-61.28289077684248, 15.540121649224092, 15),
-    'minzoom': 15,
-    'maxzoom': 21,
+    'bounds': [-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608],
+    'minzoom': 16,
+    'maxzoom': 22,
     'band_metadata': [('1', {}), ('2', {}), ('3', {})],
     'band_descriptions': [('1', ''), ('2', ''), ('3', '')],
     'dtype': 'uint8',
     'nodata_type': 'None',
     'colorinterp': ['red', 'green', 'blue'],
-    'driver': "GTiff',
     'count': 3,
-    'width': 1000,
-    'height': 2000,
-    'overviews': [2, 4, 8, 16, 32],
+    'driver': 'GTiff',
+    'height': 11666,
+    'overviews': [2, 4, 8, 16, 32, 64],
+    'width': 19836
 }
 ```
 
@@ -305,42 +352,98 @@ print(Metadata.schema())
             "title": "Bounds",
             "type": "array",
             "items": [
-                {"title": "Left"}, {"title": "Bottom"}, {"title": "Right"}, {"title": "Top"}
+                {
+                    "title": "Left"
+                },
+                {
+                    "title": "Bottom"
+                },
+                {
+                    "title": "Right"
+                },
+                {
+                    "title": "Top"
+                }
             ]
         },
-        "center": {
-            "title": "Center",
-            "type": "array",
-            "items": [
-                {"anyOf": [{"type": "number"}, {"type": "integer"}]},
-                {"anyOf": [{"type": "number"}, {"type": "integer"}]},
-                {"type": "integer"}
-            ]
+        "minzoom": {
+            "title": "Minzoom",
+            "type": "integer"
         },
-        "minzoom": {"title": "Minzoom", "type": "integer"},
-        "maxzoom": {"title": "Maxzoom", "type": "integer"},
+        "maxzoom": {
+            "title": "Maxzoom",
+            "type": "integer"
+        },
         "band_metadata": {
             "title": "Band Metadata",
             "type": "array",
-            "items": {"type": "array", "items": [{"type": "string"},{"type": "object"}]}
+            "items": {
+                "type": "array",
+                "items": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "object"
+                    }
+                ]
+            }
         },
         "band_descriptions": {
             "title": "Band Descriptions",
             "type": "array",
-            "items": {"type": "array", "items": [{"type": "string"}, {"type": "string"}]}
+            "items": {
+                "type": "array",
+                "items": [
+                    {
+                        "type": "string"
+                    },
+                    {
+                        "type": "string"
+                    }
+                ]
+            }
         },
-        "dtype": {"title": "Dtype", "type": "string" },
-        "nodata_type": {"$ref": "#/definitions/NodataTypes"},
-        "colorinterp": {"title": "Colorinterp","type": "array", "items": {"type": "string"}},
-        "scale": {"title": "Scale", "type": "number"},
-        "offset": {"title": "Offset", "type": "number"},
+        "dtype": {
+            "title": "Dtype",
+            "type": "string"
+        },
+        "nodata_type": {
+            "$ref": "#/definitions/NodataTypes"
+        },
+        "colorinterp": {
+            "title": "Colorinterp",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "scale": {
+            "title": "Scale",
+            "type": "number"
+        },
+        "offset": {
+            "title": "Offset",
+            "type": "number"
+        },
         "colormap": {
             "title": "Colormap",
             "type": "object",
             "additionalProperties": {
                 "type": "array",
                 "items": [
-                    {"type": "integer"}, {"type": "integer"}, {"type": "integer"}, {"type": "integer"}
+                    {
+                        "type": "integer"
+                    },
+                    {
+                        "type": "integer"
+                    },
+                    {
+                        "type": "integer"
+                    },
+                    {
+                        "type": "integer"
+                    }
                 ]
             }
         },
@@ -353,13 +456,26 @@ print(Metadata.schema())
         }
     },
     "required": [
-        "bounds", "center", "minzoom", "maxzoom", "band_metadata", "band_descriptions", "dtype", "nodata_type", "statistics"
+        "bounds",
+        "minzoom",
+        "maxzoom",
+        "band_metadata",
+        "band_descriptions",
+        "dtype",
+        "nodata_type",
+        "statistics"
     ],
     "definitions": {
         "NodataTypes": {
             "title": "NodataTypes",
             "description": "rio-tiler Nodata types.",
-            "enum": ["Alpha", "Mask", "Internal", "Nodata", "None"],
+            "enum": [
+                "Alpha",
+                "Mask",
+                "Internal",
+                "Nodata",
+                "None"
+            ],
             "type": "string"
         },
         "ImageStatistics": {
@@ -370,22 +486,80 @@ print(Metadata.schema())
                 "percentiles": {
                     "title": "Percentiles",
                     "type": "array",
-                    "items": {"anyOf": [{"type": "number"}, {"type": "integer"}]}
+                    "items": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ]
+                    }
                 },
-                "min": {"title": "Min", "anyOf": [{"type": "number"}, {"type": "integer"}]},
-                "max": {"title": "Max", "anyOf": [{"type": "number"}, {"type": "integer"}]},
-                "std": {"title": "Std", "anyOf": [{"type": "number"}, {"type": "integer"}]},
+                "min": {
+                    "title": "Min",
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ]
+                },
+                "max": {
+                    "title": "Max",
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ]
+                },
+                "std": {
+                    "title": "Std",
+                    "anyOf": [
+                        {
+                            "type": "number"
+                        },
+                        {
+                            "type": "integer"
+                        }
+                    ]
+                },
                 "histogram": {
                     "title": "Histogram",
                     "type": "array",
                     "items": {
                         "type": "array",
-                        "items": {"anyOf": [{"type": "number"}, {"type": "integer"}]}
+                        "items": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "integer"
+                                }
+                            ]
+                        }
                     }
                 },
-                "valid_percent": {"title": "Valid Percent", "type": "number"}
+                "valid_percent": {
+                    "title": "Valid Percent",
+                    "type": "number"
+                }
             },
-            "required": ["percentiles", "min", "max", "std", "histogram", "valid_percent"]
+            "required": [
+                "percentiles",
+                "min",
+                "max",
+                "std",
+                "histogram",
+                "valid_percent"
+            ]
         }
     }
 }
@@ -402,12 +576,11 @@ print(metadata["statistics"]["1"]["min"])
 print(metadata.statistics["1"].min)
 >>> 0.0
 
-print(metadata.dict(exclude_none=True))
+print(metadata.json(exclude_none=True))
 >>> {
-    'bounds': (-61.28700187663819, 15.53775679445058, -61.27877967704676, 15.542486503997605),
-    'center': (-61.28289077684248, 15.540121649224092, 15),
-    'minzoom': 15,
-    'maxzoom': 21,
+    'bounds': [-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608],
+    'minzoom': 16,
+    'maxzoom': 22,
     'band_metadata': [('1', {}), ('2', {}), ('3', {})],
     'band_descriptions': [('1', ''), ('2', ''), ('3', '')],
     'dtype': 'uint8',
@@ -420,9 +593,10 @@ print(metadata.dict(exclude_none=True))
             'max': 255.0,
             'std': 59.261322978176324,
             'histogram': [
-                [100540.0,43602.0, 87476.0, 112587.0, 107599.0, 73453.0, 43623.0, 21971.0, 15006.0, 11615.0],
+                [100540.0, 43602.0, 87476.0, 112587.0, 107599.0, 73453.0, 43623.0, 21971.0, 15006.0, 11615.0],
                 [0.0, 25.5, 51.0, 76.5, 102.0, 127.5, 153.0, 178.5, 204.0, 229.5, 255.0]
-            ]
+            ],
+            'valid_percent': 100.0
         },
         '2': {
             'percentiles': [0.0, 231.0],
@@ -432,7 +606,8 @@ print(metadata.dict(exclude_none=True))
             'histogram': [
                 [95196.0, 33243.0, 67186.0, 116180.0, 128328.0, 82649.0, 45167.0, 22637.0, 13985.0, 12901.0],
                 [0.0, 25.5, 51.0, 76.5, 102.0, 127.5, 153.0, 178.5, 204.0, 229.5, 255.0]
-            ]
+            ],
+            'valid_percent': 100.0
         },
         '3': {
             'percentiles': [0.0, 232.0],
@@ -442,10 +617,15 @@ print(metadata.dict(exclude_none=True))
             'histogram': [
                 [122393.0, 94783.0, 136757.0, 100639.0, 63487.0, 32661.0, 24458.0, 16910.0, 11900.0, 13484.0],
                 [0.0, 25.5, 51.0, 76.5, 102.0, 127.5, 153.0, 178.5, 204.0, 229.5, 255.0]
-            ]
+            ],
+            'valid_percent': 100.0
         }
     },
-    'valid_percent': 0.9
+    'count': 3,
+    'driver': 'GTiff',
+    'height': 11666,
+    'overviews': [2, 4, 8, 16, 32, 64],
+    'width': 19836
 }
 ```
 

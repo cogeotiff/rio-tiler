@@ -7,8 +7,11 @@ from typing import Any, Dict
 import numpy
 import pytest
 import rasterio
+from morecantile import TileMatrixSet
+from pyproj import CRS
 from rasterio.io import DatasetReader, MemoryFile
 from rasterio.vrt import WarpedVRT
+from rasterio.warp import transform_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -32,6 +35,7 @@ COG_GCPS = os.path.join(PREFIX, "cog_gcps.tif")
 COG_DLINE = os.path.join(PREFIX, "cog_dateline.tif")
 COG_EARTH = os.path.join(PREFIX, "cog_fullearth.tif")
 GEOTIFF = os.path.join(PREFIX, "nocog.tif")
+COG_EUROPA = os.path.join(PREFIX, "cog_nonearth.tif")
 
 KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
@@ -47,10 +51,10 @@ def test_spatial_info_valid():
     """Should work as expected (get spatial info)"""
     with COGReader(COG_NODATA) as cog:
         assert not cog.dataset.closed
-        meta = cog.spatial_info
-        assert meta["minzoom"] == 5
-        assert meta.minzoom == 5
-        assert meta.maxzoom == 9
+        assert cog.bounds
+        assert cog.crs
+        assert cog.minzoom == 5
+        assert cog.maxzoom == 9
         assert cog.nodata == cog.dataset.nodata
     assert cog.dataset.closed
 
@@ -60,19 +64,16 @@ def test_spatial_info_valid():
     assert cog.dataset.closed
 
     with COGReader(COG_NODATA, minzoom=3) as cog:
-        meta = cog.spatial_info
-        assert meta.minzoom == 3
-        assert meta.maxzoom == 9
+        assert cog.minzoom == 3
+        assert cog.maxzoom == 9
 
     with COGReader(COG_NODATA, maxzoom=12) as cog:
-        meta = cog.spatial_info
-        assert meta.minzoom == 5
-        assert meta.maxzoom == 12
+        assert cog.minzoom == 5
+        assert cog.maxzoom == 12
 
     with COGReader(COG_NODATA, minzoom=3, maxzoom=12) as cog:
-        meta = cog.spatial_info
-        assert meta.minzoom == 3
-        assert meta.maxzoom == 12
+        assert cog.minzoom == 3
+        assert cog.maxzoom == 12
 
 
 def test_bounds_valid():
@@ -794,3 +795,52 @@ def test_no_overviews():
     with pytest.warns(NoOverviewWarning):
         with COGReader(GEOTIFF):
             pass
+
+
+def test_nonearthbody():
+    """COGReader should work with non-earth dataset."""
+    with pytest.warns(UserWarning):
+        with COGReader(COG_EUROPA) as cog:
+            assert cog.minzoom == 0
+            assert cog.maxzoom == 24
+
+    with pytest.warns(None) as warnings:
+        with COGReader(COG_EUROPA) as cog:
+            assert cog.info()
+            assert len(warnings) == 2
+
+            img = cog.read()
+            assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
+            assert img.width == cog.dataset.width
+            assert img.height == cog.dataset.height
+            assert img.count == cog.dataset.count
+
+            img = cog.preview()
+            assert img.bounds == cog.bounds
+
+            part = cog.part(cog.bounds, bounds_crs=cog.crs)
+            assert part.bounds == cog.bounds
+
+            lon = (cog.bounds[0] + cog.bounds[2]) / 2
+            lat = (cog.bounds[1] + cog.bounds[3]) / 2
+            assert cog.point(lon, lat, coord_crs=cog.crs)[0] is not None
+
+    europa_crs = CRS.from_authority("ESRI", 104915)
+    tms = TileMatrixSet.custom(
+        crs=europa_crs, extent=europa_crs.area_of_use.bounds, matrix_scale=[2, 1],
+    )
+    with pytest.warns(None) as warnings:
+        with COGReader(COG_EUROPA, tms=tms) as cog:
+            assert cog.minzoom == 4
+            assert cog.maxzoom == 6
+
+            # Get Tile covering the UL corner
+            bounds = transform_bounds(cog.crs, tms.rasterio_crs, *cog.bounds)
+            t = tms._tile(bounds[0], bounds[1], cog.minzoom)
+            img = cog.tile(t.x, t.y, t.z)
+
+            assert img.height == 256
+            assert img.width == 256
+            assert img.crs == tms.rasterio_crs
+
+            assert len(warnings) == 0
