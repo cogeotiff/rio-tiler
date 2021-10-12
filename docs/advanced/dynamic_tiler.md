@@ -76,7 +76,7 @@ def tile(
 ):
     """Handle tile requests."""
     with COGReader(url) as cog:
-        img = cog.tile(x, y, z, tilesize=256)
+        img = cog.tile(x, y, z)
     content = img.render(img_format="PNG", **img_profiles.get("png"))
     return Response(content, media_type="image/png")
 
@@ -92,8 +92,7 @@ def tilejson(
 
     with COGReader(url) as cog:
         return {
-            "bounds": cog.bounds,
-            "center": cog.center,
+            "bounds": cog.geographic_bounds,
             "minzoom": cog.minzoom,
             "maxzoom": cog.maxzoom,
             "name": os.path.basename(url),

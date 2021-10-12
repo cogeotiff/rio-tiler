@@ -8,8 +8,10 @@ from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, 
 
 import attr
 from morecantile import Tile, TileMatrixSet
+from rasterio.crs import CRS
+from rasterio.warp import transform_bounds
 
-from ..constants import WEB_MERCATOR_TMS, BBox
+from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox
 from ..errors import (
     ExpressionMixingWarning,
     MissingAssets,
@@ -17,7 +19,7 @@ from ..errors import (
     TileOutsideBounds,
 )
 from ..expression import apply_expression
-from ..models import ImageData, ImageStatistics, Info, Metadata, SpatialInfo
+from ..models import ImageData, ImageStatistics, Info, Metadata
 from ..tasks import multi_arrays, multi_values
 
 
@@ -27,35 +29,35 @@ class SpatialMixin:
 
     Attributes:
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        bbox (tuple): Dataset bounds (left, bottom, right, top). **READ ONLY attribute**.
-        minzoom (int): Overwrite Min Zoom level. **READ ONLY attribute**.
-        maxzoom (int): Overwrite Max Zoom level. **READ ONLY attribute**.
+        minzoom (int): Dataset Min Zoom level. **Not in __init__**.
+        maxzoom (int): Dataset Max Zoom level. **Not in __init__**.
+        bounds (tuple): Dataset bounds (left, bottom, right, top). **Not in __init__**.
+        crs (rasterio.crs.CRS): Dataset crs. **Not in __init__**.
 
     """
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    bounds: BBox = attr.ib(init=False)
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
 
-    @property
-    def center(self) -> Tuple[float, float, int]:
-        """Dataset center + minzoom."""
-        return (
-            (self.bounds[0] + self.bounds[2]) / 2,
-            (self.bounds[1] + self.bounds[3]) / 2,
-            self.minzoom,
-        )
+    bounds: BBox = attr.ib(init=False)
+    crs: CRS = attr.ib(init=False)
 
     @property
-    def spatial_info(self) -> SpatialInfo:
-        """Return Dataset's spatial info."""
-        return SpatialInfo(
-            bounds=self.bounds,
-            center=self.center,
-            minzoom=self.minzoom,
-            maxzoom=self.maxzoom,
-        )
+    def geographic_bounds(self) -> BBox:
+        """return bounds in WGS84."""
+        try:
+            bounds = transform_bounds(
+                self.crs, WGS84_CRS, *self.bounds, densify_pts=21,
+            )
+        except:  # noqa
+            warnings.warn(
+                "Cannot dertermine bounds in WGS84, will default to (-180.0, -90.0, 180.0, 90.0).",
+                UserWarning,
+            )
+            bounds = (-180.0, -90, 180.0, 90)
+
+        return bounds
 
     def tile_exists(self, tile_x: int, tile_y: int, tile_z: int) -> bool:
         """Check if a tile intersects the dataset bounds.
@@ -69,13 +71,25 @@ class SpatialMixin:
             bool: True if the tile intersects the dataset bounds.
 
         """
-        tile = Tile(x=tile_x, y=tile_y, z=tile_z)
-        tile_bounds = self.tms.bounds(tile)
+        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+
+        try:
+            dataset_bounds = transform_bounds(
+                self.crs, self.tms.rasterio_crs, *self.bounds, densify_pts=21,
+            )
+        except:  # noqa
+            # HACK: gdal will first throw an error for invalid transformation
+            # but if retried it will then pass.
+            # Note: It might return `+/-inf` values
+            dataset_bounds = transform_bounds(
+                self.crs, self.tms.rasterio_crs, *self.bounds, densify_pts=21,
+            )
+
         return (
-            (tile_bounds[0] < self.bounds[2])
-            and (tile_bounds[2] > self.bounds[0])
-            and (tile_bounds[3] > self.bounds[1])
-            and (tile_bounds[1] < self.bounds[3])
+            (tile_bounds[0] < dataset_bounds[2])
+            and (tile_bounds[2] > dataset_bounds[0])
+            and (tile_bounds[3] > dataset_bounds[1])
+            and (tile_bounds[1] < dataset_bounds[3])
         )
 
 
@@ -352,6 +366,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
+
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     assets: Sequence[str] = attr.ib(init=False)
@@ -766,6 +781,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader: Type[BaseReader] = attr.ib()
     reader_options: Dict = attr.ib(factory=dict)
+
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     bands: Sequence[str] = attr.ib(init=False)
@@ -806,7 +822,11 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         bands_metadata = multi_values(bands, _reader, *args, **kwargs)
 
-        meta = self.spatial_info.dict()
+        meta = {
+            "bounds": self.geographic_bounds,
+            "minzoom": self.minzoom,
+            "maxzoom": self.maxzoom,
+        }
 
         # We only keep the value for the first band.
         meta["band_metadata"] = [
@@ -894,7 +914,11 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         bands_metadata = multi_values(bands, _reader, pmin, pmax, **kwargs)
 
-        meta = self.spatial_info.dict()
+        meta = {
+            "bounds": self.geographic_bounds,
+            "minzoom": self.minzoom,
+            "maxzoom": self.maxzoom,
+        }
         meta["band_metadata"] = [
             (band, bands_metadata[band].band_metadata[0][1])
             for ix, band in enumerate(bands)

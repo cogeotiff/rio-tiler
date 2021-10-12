@@ -3,13 +3,14 @@
 
 #### Properties
 
-- **dataset**: Return the rasterio dataset
-- **colormap**: Return the dataset's internal colormap
-- **minzoom**: Return minimum Mercator Zoom
-- **maxzoom**: Return maximum Mercator Zoom
-- **bounds**: Return the dataset bounds in WGS84
-- **center**: Return the center of the dataset + minzoom
-- **spatial_info**: Return the bounds, center and zoom infos (`rio_tiler.models.SpatialInfo`)
+- **dataset**: rasterio openned dataset
+- **tms**: morecantile TileMatrixSet used for tile reading
+- **minzoom**: dataset's minimum zoom level (for input tms)
+- **maxzoom**: dataset's maximum zoom level (for input tms)
+- **bounds**: dataset's bounds (in dataset crs)
+- **crs**: dataset's crs
+- **geographic_bounds**: dataset's bounds in WGS84
+- **colormap**: dataset's internal colormap
 
 #### Methods
 
@@ -34,7 +35,7 @@ with COGReader("myfile.tif") as cog:
     assert img.data.count == 1
 
 # With expression
-with COGReader("myfile.tif"s) as cog:
+with COGReader("myfile.tif") as cog:
     img = cog.read(expression="B1/B2")
     assert img.data.count == 1
 ```
@@ -206,7 +207,6 @@ with COGReader("myfile.tif") as cog:
 print(info.dict(exclude_none=True))
 >>> {
     "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
-    "center": [-101.98868496889182, 23.548959503763047, 3],
     "minzoom": 3,
     "maxzoom": 12,
     "band_metadata": [["1", {}]],
@@ -272,7 +272,6 @@ with COGReader("myfile.tif") as cog:
 print(metadata.dict(exclude_none=True))
 >>> {
     "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
-    "center": [-101.98868496889182, 23.548959503763047, 3],
     "minzoom": 3,
     "maxzoom": 12,
     "band_metadata": [["1", {}]],
@@ -339,8 +338,10 @@ with STACReader(
     exclude_assets={"thumbnail"}
 ) as stac:
     print(stac.bounds)
+    print(stac.geographic_bounds)
     print(stac.assets)
 
+>>> [23.293255090449595, 31.505183020453355, 24.296453548295318, 32.51147809805106]
 >>> [23.293255090449595, 31.505183020453355, 24.296453548295318, 32.51147809805106]
 >>> ['overview', 'visual', 'B01', 'B02', 'B03', 'B04', 'B05', 'B06', 'B07', 'B08', 'B8A', 'B09', 'B11', 'B12', 'AOT', 'WVP', 'SCL']
 

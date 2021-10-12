@@ -54,6 +54,7 @@ class AsyncCOGReader(AsyncBaseReader):
     def __attrs_post_init__(self):
         """Update dataset info."""
         self.bounds = self.dataset.bounds
+        self.crs = self.dataset.crs
         self.minzoom = self.dataset.minzoom
         self.maxzoom = self.dataset.maxzoom
 
@@ -104,9 +105,8 @@ async def test_async():
         info = await cog.info()
         assert info == dataset.info()
 
-        meta = cog.spatial_info
-        assert meta.minzoom == 5
-        assert meta.maxzoom == 9
+        assert cog.minzoom == 5
+        assert cog.maxzoom == 9
 
         assert await cog.stats(5, 95)
         with pytest.warns(DeprecationWarning):
