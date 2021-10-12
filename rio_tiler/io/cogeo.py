@@ -20,8 +20,14 @@ from .. import reader
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData
 from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
 from ..expression import apply_expression, parse_expression
-from ..models import ImageData, ImageStatistics, Info
-from ..utils import create_cutline, has_alpha_band, has_mask_band
+from ..models import BandStatistics, ImageData, ImageStatistics, Info
+from ..utils import (
+    create_cutline,
+    get_array_statistics,
+    get_bands_names,
+    has_alpha_band,
+    has_mask_band,
+)
 from .base import BaseReader
 
 
@@ -248,6 +254,11 @@ class COGReader(BaseReader):
             rio_tiler.models.ImageStatistics: bands statistics.
 
         """
+        warnings.warn(
+            "`stats` method will be removed and replaced by `statistics` in rio-tiler v3.0.0",
+            DeprecationWarning,
+        )
+
         kwargs = {**self._kwargs, **kwargs}
 
         hist_options = hist_options or {}
@@ -261,6 +272,48 @@ class COGReader(BaseReader):
             self.dataset, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs,
         )
         return {b: ImageStatistics(**s) for b, s in stats.items()}
+
+    def statistics(
+        self,
+        categorical: bool = False,
+        categories: Optional[List[float]] = None,
+        percentiles: List[int] = [2, 98],
+        hist_options: Optional[Dict] = None,
+        max_size: int = 1024,
+        **kwargs: Any,
+    ) -> Dict[str, BandStatistics]:
+        """Return bands statistics from a dataset.
+
+        Args:
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of caterogies to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            kwargs (optional): Options to forward to `self.preview`.
+
+        Returns:
+            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        kwargs = {**self._kwargs, **kwargs}
+
+        data = self.preview(max_size=max_size, **kwargs)
+
+        hist_options = hist_options or {}
+
+        stats = get_array_statistics(
+            data.as_masked(),
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            **hist_options,
+        )
+
+        return {
+            f"{data.band_names[ix]}": BandStatistics(**stats[ix])
+            for ix in range(len(stats))
+        }
 
     def tile(
         self,
@@ -383,7 +436,16 @@ class COGReader(BaseReader):
         if bounds_crs and bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
 
-        return ImageData(data, mask, bounds=bbox, crs=dst_crs, assets=[self.filepath],)
+        return ImageData(
+            data,
+            mask,
+            bounds=bbox,
+            crs=dst_crs,
+            assets=[self.filepath],
+            band_names=get_bands_names(
+                indexes=indexes, expression=expression, count=data.shape[0]
+            ),
+        )
 
     def preview(
         self,
@@ -437,7 +499,14 @@ class COGReader(BaseReader):
             data = apply_expression(blocks, bands, data)
 
         return ImageData(
-            data, mask, bounds=self.bounds, crs=self.crs, assets=[self.filepath],
+            data,
+            mask,
+            bounds=self.bounds,
+            crs=self.crs,
+            assets=[self.filepath],
+            band_names=get_bands_names(
+                indexes=indexes, expression=expression, count=data.shape[0]
+            ),
         )
 
     def point(
@@ -579,7 +648,14 @@ class COGReader(BaseReader):
             data = apply_expression(blocks, bands, data)
 
         return ImageData(
-            data, mask, bounds=self.bounds, crs=self.crs, assets=[self.filepath],
+            data,
+            mask,
+            bounds=self.bounds,
+            crs=self.crs,
+            assets=[self.filepath],
+            band_names=get_bands_names(
+                indexes=indexes, expression=expression, count=data.shape[0]
+            ),
         )
 
 

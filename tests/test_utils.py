@@ -33,6 +33,7 @@ COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 COG_NOWEB = os.path.join(os.path.dirname(__file__), "fixtures", "noweb.tif")
 NOCOG = os.path.join(os.path.dirname(__file__), "fixtures", "nocog.tif")
 COGEO = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
+COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -424,3 +425,61 @@ def test_render_numpy():
     assert arr_res["mask"].shape == (512, 512)
     np.array_equal(arr, arr_res["data"])
     np.array_equal(mask, arr_res["mask"])
+
+
+def test_get_bands_names():
+    """should return correct list of bands names."""
+    b = utils.get_bands_names(indexes=[1, 2, 3], expression=None, count=None)
+    assert b == ["1", "2", "3"]
+
+    # band names should be created from expression first
+    b = utils.get_bands_names(indexes=[1, 2, 3], expression="b3,b2,b1", count=None)
+    assert b == ["b3", "b2", "b1"]
+
+    # if not indexes nor expression create band names from count
+    b = utils.get_bands_names(indexes=None, expression=None, count=1)
+    assert b == ["1"]
+
+
+def test_get_array_statistics():
+    """Should return a valid dict with array statistics."""
+    with rasterio.open(COGEO) as src:
+        arr = src.read(indexes=[1], masked=True)
+
+    stats = utils.get_array_statistics(arr)
+    assert len(stats) == 1
+    assert list(stats[0]) == [
+        "min",
+        "max",
+        "mean",
+        "count",
+        "sum",
+        "std",
+        "median",
+        "majority",
+        "minority",
+        "unique",
+        "percentile_2",
+        "percentile_98",
+        "histogram",
+        "valid_pixels",
+        "masked_pixels",
+        "valid_percent",
+    ]
+
+    stats = utils.get_array_statistics(arr, percentiles=[2, 3, 4])
+    assert "percentile_2" in stats[0]
+    assert "percentile_3" in stats[0]
+    assert "percentile_4" in stats[0]
+
+    with rasterio.open(COG_CMAP) as src:
+        arr = src.read(masked=True)
+
+    stats = utils.get_array_statistics(arr, categorical=True)
+    assert len(stats) == 1
+    assert len(stats[0]["histogram"][0]) == stats[0]["unique"]
+    assert len(stats[0]["histogram"][1]) == stats[0]["unique"]
+
+    stats = utils.get_array_statistics(arr, categorical=True, categories=[1, 10, 12])
+    assert len(stats[0]["histogram"][0]) == 3
+    assert len(stats[0]["histogram"][1]) == 3
