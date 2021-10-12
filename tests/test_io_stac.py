@@ -38,8 +38,6 @@ def test_fetch_stac(httpx, s3_get):
         assert stac.minzoom == 0
         assert stac.maxzoom == 24
         assert stac.bounds
-        assert stac.center
-        assert stac.spatial_info
         assert stac.filepath == STAC_PATH
         assert stac.assets == ["red", "green", "blue"]
     httpx.assert_not_called()

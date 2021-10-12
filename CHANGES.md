@@ -1,11 +1,69 @@
 # 3.0.0 (TDB)
 
+* add `crs` property in `rio_tiler.io.base.SpatialMixin` (https://github.com/cogeotiff/rio-tiler/pull/429)
+* add `geographic_bounds` in `rio_tiler.io.base.SpatialMixin` to return bounds in WGS84 (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+```python
+from rio_tiler.io import COGReader
+
+with COGReader("https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog.tif") as cog:
+    print(cog.bounds)
+    >> (373185.0, 8019284.949381611, 639014.9492102272, 8286015.0)
+
+    print(cog.crs)
+    >> "EPSG:32621"
+
+    print(cog.geographic_bounds)
+    >> (-61.28762442711404, 72.22979795551834, -52.301598718454485, 74.66298001264106)
+```
+
+* Allow errors to be ignored when trying to find `zooms` for dataset in `rio_tiler.io.COGReader`. If we're not able to find the zooms in selected TMS, COGReader will defaults to the min/max zooms of the TMS (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+```python
+from pyproj import CRS
+from morecantile import TileMatrixSet
+
+from rio_tiler.io import COGReader
+
+# For a non-earth dataset there is no available transformation from its own CRS and the default WebMercator TMS CRS.
+with COGReader("https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif") as cog:
+    >> UserWarning: Cannot dertermine min/max zoom based on dataset informations, will default to TMS min/max zoom.
+
+    print(cog.minzoom)
+    >> 0
+
+    print(cog.maxzoom)
+    >> 24
+
+# if we use a `compatible TMS` then we don't get warnings
+europa_crs = CRS.from_authority("ESRI", 104915)
+europa_tms = TileMatrixSet.custom(
+    crs=europa_crs,
+    extent=europa_crs.area_of_use.bounds,
+    matrix_scale=[2, 1],
+)
+with COGReader(
+    "https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif",
+    tms=europa_tms,
+) as cog:
+    print(cog.minzoom)
+    >> 4
+
+    print(cog.maxzoom)
+    >> 6
+```
+
+* compare dataset bounds and tile bounds in TMS crs in `rio_tiler.io.base.SpatialMixin.tile_exists` method to allow dataset and TMS not compatible with WGS84 crs (https://github.com/cogeotiff/rio-tiler/pull/429)
+
 **breaking changes**
 
 * update morecantile requirement to version >=3.0 (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove `max_size` defaults for `COGReader.part` and `COGReader.feature`, which will now default to full resolution reading.
-* Deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/423)
+* deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/423)
+* remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)
+* `rio_tiler.io.base.SpatialMixin.bounds` should now be in dataset's CRS (not in `WGS84`) (https://github.com/cogeotiff/rio-tiler/pull/429)
+* Use `RIO_TILER_MAX_THREADS` environment variable instead of `MAX_THREADS` (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/432)
 
 # 2.1.3 (2021-09-14)
 
