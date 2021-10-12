@@ -54,6 +54,7 @@ with COGReader(
 ```
 
 * compare dataset bounds and tile bounds in TMS crs in `rio_tiler.io.base.SpatialMixin.tile_exists` method to allow dataset and TMS not compatible with WGS84 crs (https://github.com/cogeotiff/rio-tiler/pull/429)
+* use `httpx` package instead of requests (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/431)
 
 **breaking changes**
 

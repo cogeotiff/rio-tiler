@@ -31,8 +31,8 @@ def mock_rasterio_open(asset):
 
 
 @patch("rio_tiler.io.stac.aws_get_object")
-@patch("rio_tiler.io.stac.requests")
-def test_fetch_stac(requests, s3_get):
+@patch("rio_tiler.io.stac.httpx")
+def test_fetch_stac(httpx, s3_get):
     # Local path
     with STACReader(STAC_PATH) as stac:
         assert stac.minzoom == 0
@@ -40,7 +40,7 @@ def test_fetch_stac(requests, s3_get):
         assert stac.bounds
         assert stac.filepath == STAC_PATH
         assert stac.assets == ["red", "green", "blue"]
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # Load from dict
@@ -49,25 +49,25 @@ def test_fetch_stac(requests, s3_get):
         assert stac.maxzoom == 24
         assert not stac.filepath
         assert stac.assets == ["red", "green", "blue"]
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # Exclude red
     with STACReader(STAC_PATH, exclude_assets={"red"}) as stac:
         assert stac.assets == ["green", "blue"]
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # Only include red asset
     with STACReader(STAC_PATH, include_assets={"red"}) as stac:
         assert stac.assets == ["red"]
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # Only include png
     with STACReader(STAC_PATH, include_asset_types={"image/png"}) as stac:
         assert "thumbnail" in stac.assets
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # Include assets/types
@@ -77,14 +77,14 @@ def test_fetch_stac(requests, s3_get):
         include_asset_types={"image/png"},
     ) as stac:
         assert stac.assets == ["thumbnail"]
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # No valid assets
     with pytest.raises(MissingAssets):
         with STACReader(STAC_PATH, include_assets={"B1"}) as stac:
             pass
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # HTTP
@@ -96,13 +96,13 @@ def test_fetch_stac(requests, s3_get):
             return json.loads(self.data)
 
     with open(STAC_PATH, "r") as f:
-        requests.get.return_value = MockResponse(f.read())
+        httpx.get.return_value = MockResponse(f.read())
 
     with STACReader("http://somewhereovertherainbow.io/mystac.json") as stac:
         assert stac.assets == ["red", "green", "blue"]
-    requests.get.assert_called_once()
+    httpx.get.assert_called_once()
     s3_get.assert_not_called()
-    requests.mock_reset()
+    httpx.mock_reset()
 
     # S3
     with open(STAC_PATH, "r") as f:
@@ -110,7 +110,7 @@ def test_fetch_stac(requests, s3_get):
 
     with STACReader("s3://somewhereovertherainbow.io/mystac.json") as stac:
         assert stac.assets == ["red", "green", "blue"]
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_called_once()
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
 
@@ -387,8 +387,8 @@ def test_relative_assets():
 
 
 @patch("rio_tiler.io.stac.aws_get_object")
-@patch("rio_tiler.io.stac.requests")
-def test_fetch_stac_client_options(requests, s3_get):
+@patch("rio_tiler.io.stac.httpx")
+def test_fetch_stac_client_options(httpx, s3_get):
     # HTTP
     class MockResponse:
         def __init__(self, data):
@@ -398,17 +398,17 @@ def test_fetch_stac_client_options(requests, s3_get):
             return json.loads(self.data)
 
     with open(STAC_PATH, "r") as f:
-        requests.get.return_value = MockResponse(f.read())
+        httpx.get.return_value = MockResponse(f.read())
 
     with STACReader(
         "http://somewhereovertherainbow.io/mystac.json",
         fetch_options={"auth": ("user", "pass")},
     ) as stac:
         assert stac.assets == ["red", "green", "blue"]
-    requests.get.assert_called_once()
-    assert requests.get.call_args[1]["auth"] == ("user", "pass")
+    httpx.get.assert_called_once()
+    assert httpx.get.call_args[1]["auth"] == ("user", "pass")
     s3_get.assert_not_called()
-    requests.mock_reset()
+    httpx.mock_reset()
 
     # S3
     with open(STAC_PATH, "r") as f:
@@ -419,7 +419,7 @@ def test_fetch_stac_client_options(requests, s3_get):
         fetch_options={"request_pays": True},
     ) as stac:
         assert stac.assets == ["red", "green", "blue"]
-    requests.assert_not_called()
+    httpx.assert_not_called()
     s3_get.assert_called_once()
     assert s3_get.call_args[1]["request_pays"]
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
