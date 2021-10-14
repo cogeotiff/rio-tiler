@@ -129,14 +129,14 @@ with STACReader("mystac.json") as stac:
 with STACReader("mystac.json") as stac:
     img = stac.preview(
         assets=("data1", "data2"),
-        asset_expression="b1*2",  # expression was applied to each asset
+        indexes=(1,),  # indexes was applied to each asset
     )
 
 # now
 with STACReader("mystac.json") as stac:
     img = stac.preview(
         assets=("data1", "data2"),
-        asset_expression={"data1": "b1*2", "data2": "b2*100"},  # we can now pass per asset expression
+        asset_indexes={"data1": 1, "data2": 2},  # we can now pass per asset indexes
     )
 ```
 
