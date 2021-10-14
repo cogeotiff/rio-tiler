@@ -20,7 +20,7 @@ your own API.
 
 ### Requirements
 
-- `rio-tiler ~= 2.0`
+- `rio-tiler ~= 3.0`
 - `fastapi`
 - `uvicorn`
 

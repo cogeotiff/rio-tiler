@@ -72,17 +72,6 @@ class Info(SpatialInfo):
         use_enum_values = True
 
 
-class ImageStatistics(RioTilerBaseModel):
-    """Image statistics"""
-
-    percentiles: List[NumType]
-    min: NumType
-    max: NumType
-    std: NumType
-    histogram: List[List[NumType]]
-    valid_percent: float
-
-
 class BandStatistics(RioTilerBaseModel):
     """Image statistics"""
 
@@ -107,6 +96,19 @@ class BandStatistics(RioTilerBaseModel):
         extra = "allow"  # We allow extra values for `percentiles_{}`
 
 
+# TODO: remove
+class ImageStatistics(RioTilerBaseModel):
+    """Image statistics"""
+
+    percentiles: List[NumType]
+    min: NumType
+    max: NumType
+    std: NumType
+    histogram: List[List[NumType]]
+    valid_percent: float
+
+
+# TODO: remove
 class Metadata(Info):
     """Dataset metadata and statistics."""
 
@@ -129,6 +131,7 @@ class ImageData:
         bounds (BoundingBox, optional): bounding box of the data.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
+        band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
 
     """
 

@@ -84,13 +84,9 @@ with COGReader("myfile.tif") as cog:
     img = cog.part((10, 10, 20, 20), dst_crs=cog.dataset.crs)
     assert img.crs == cog.dataset.crs
 
-# Limit output size (default is set to 1024)
+# Limit output size
 with COGReader("myfile.tif") as cog:
     img = cog.part((10, 10, 20, 20), max_size=2000)
-
-# Read high resolution
-with COGReader("myfile.tif") as cog:
-    img = cog.part((10, 10, 20, 20), max_size=None)
 
 # With indexes
 with COGReader("myfile.tif") as cog:
@@ -138,7 +134,7 @@ with COGReader("myfile.tif") as cog:
     img = cog.feature(feat, dst_crs=cog.dataset.crs)
     assert img.crs == cog.dataset.crs
 
-# Limit output size (default is set to 1024)
+# Limit output size
 with COGReader("myfile.tif") as cog:
     img = cog.feature(feat, max_size=2000)
 
@@ -227,81 +223,64 @@ print(info.dict(exclude_none=True))
 }
 ```
 
-- **stats()**: Return image statistics (Min/Max/Stdev)
+- **statistics()**: Return image statistics (Min/Max/Stdev)
 
 ```python
 from rio_tiler.io import COGReader
 
 with COGReader("myfile.tif") as cog:
-    # cog.stats(min_percentile, max_percentile, **kwargs)
-    stats = cog.stats()
+    # cog.stats(**kwargs)
+    stats = cog.statistics()
     assert isinstance(stats, dict)
 
 print(stats)
 >>> {
-    '1': ImageStatistics(...),
-    '2': ImageStatistics(...),
-    '3': ImageStatistics(...)
+    '1': BandStatistics(...),
+    '2': BandStatistics(...),
+    '3': BandStatistics(...)
 }
 
 print(stats["1"].dict())
 >>> {
-    "percentiles": [1, 16],
     "min": 1,
-    "max": 18,
-    "std": 4.069636227214257,
+    "max": 7872,
+    "mean": 2107.524612053134,
+    "count": 1045504,
+    "sum": 2203425412,
+    "std": 2271.0065537857326,
+    "median": 2800,
+    "majority": 1,
+    "minority": 7072,
+    "unique": 15,
     "histogram": [
         [...],
         [...]
     ],
-    "valid_percent": 0.3,
+    "valid_percent": 100,
+    "masked_pixels": 0,
+    "valid_pixels": 1045504,
+    "percentile_98": 6896,
+    "percentile_2": 1
 }
-```
 
-- **metadata()**: Return COG info + statistics
+with COGReader("myfile_with_colormap.tif") as cog:
+    # cog.stats(**kwargs)
+    stats = cog.statistics(categorical=True, categories=[1, 2])  # we limit the categories to 2 defined value (defaults to all dataset values)
+    assert isinstance(stats, dict)
 
-```python
-from rio_tiler.io import COGReader
-from rio_tiler.models import Metadata
-
-with COGReader("myfile.tif") as cog:
-    # cog.metadata(min_percentile, max_percentile, **kwargs)
-    metadata = cog.metadata()
-    assert isinstance(metadata, Metadata)
-
-print(metadata.dict(exclude_none=True))
+print(stats)
 >>> {
-    "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
-    "minzoom": 3,
-    "maxzoom": 12,
-    "band_metadata": [["1", {}]],
-    "band_descriptions": [["1",""]],
-    "dtype": "int8",
-    "colorinterp": ["palette"],
-    "nodata_type": "Nodata",
-    "colormap": {
-        "0": [0, 0, 0, 0],
-        "1": [0, 61, 0, 255],
-        ...
-    },
-    "driver": "GTiff",
-    "count": 1,
-    "width": 1000,
-    "height": 2000,
-    "overviews": [2, 4, 8],
-    "statistics" : {
-        "1": {
-            "percentiles": [1, 16],
-            "min": 1,
-            "max": 18,
-            "std": 4.069636227214257,
-            "histogram": [
-                [...],
-                [...]
-            ]
-        }
-    },
-    "valid_percent": 0.3,
+    '1': BandStatistics(...)
+}
+# For categorical data, the histogram will represent the density of EACH value.
+print(stats["1"].dict())
+>>> {
+    ...
+    "histogram": [
+        [1, 2],
+        [100, 20000]
+    ],
+    ...
 }
 ```
 

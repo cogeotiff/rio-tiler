@@ -25,7 +25,6 @@ Main `rio_tiler.io` Abstract Base Class.
 #### Methods
 
 - **tile_exists**: Check if a given tile (for the input TMS) intersect the dataset bounds.
-- **metadata**: returns info + stats (`rio_tiler.models.Metadata`)
 
 ##### Properties
 
@@ -36,7 +35,7 @@ Main `rio_tiler.io` Abstract Base Class.
 Abstract methods, are mehtod that **HAVE TO** be implemented in the subclass.
 
 - **info**: returns dataset info (`rio_tiler.models.Info`)
-- **stats**: returns dataset array statistric (`Dict[str, rio_tiler.models.ImageStatistics]`)
+- **statistics**: returns dataset band statistics (`Dict[str, rio_tiler.models.BandStatistics]`)
 - **tile**: reads data for a specific XYZ slippy map indexes (`rio_tiler.models.ImageData`)
 - **part**: reads specific part of a dataset (`rio_tiler.models.ImageData`)
 - **preview**: creates an overview of a dataset (`rio_tiler.models.ImageData`)
