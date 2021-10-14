@@ -137,11 +137,6 @@ def test_tile_valid(rio):
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["green_1"]
 
-        img = stac.tile(71, 102, 8, assets="green", indexes=(1, 1, 1))
-        assert img.data.shape == (3, 256, 256)
-        assert img.mask.shape == (256, 256)
-        assert img.band_names == ["green_1", "green_1", "green_1"]
-
         data, mask = stac.tile(71, 102, 8, assets=("green",))
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
@@ -157,10 +152,27 @@ def test_tile_valid(rio):
             assert img.data.shape == (1, 256, 256)
             assert img.band_names == ["green/red"]
 
-        img = stac.tile(71, 102, 8, assets=("green", "red"), asset_expression="b1*2,b1")
-        assert img.data.shape == (4, 256, 256)
+        img = stac.tile(
+            71,
+            102,
+            8,
+            assets=("green", "red"),
+            asset_indexes={"green": (1, 1,), "red": 1},
+        )
+        assert img.data.shape == (3, 256, 256)
         assert img.mask.shape == (256, 256)
-        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2", "red_b1"]
+        assert img.band_names == ["green_1", "green_1", "red_1"]
+
+        img = stac.tile(
+            71,
+            102,
+            8,
+            assets=("green", "red"),
+            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+        )
+        assert img.data.shape == (3, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -201,10 +213,21 @@ def test_part_valid(rio):
             assert img.data.shape == (1, 73, 83)
             assert img.band_names == ["green/red"]
 
-        img = stac.part(bbox, assets=("green", "red"), asset_expression="b1*2,b1")
-        assert img.data.shape == (4, 73, 83)
+        img = stac.part(
+            bbox, assets=("green", "red"), asset_indexes={"green": (1, 1,), "red": 1}
+        )
+        assert img.data.shape == (3, 73, 83)
         assert img.mask.shape == (73, 83)
-        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2", "red_b1"]
+        assert img.band_names == ["green_1", "green_1", "red_1"]
+
+        img = stac.part(
+            bbox,
+            assets=("green", "red"),
+            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+        )
+        assert img.data.shape == (3, 73, 83)
+        assert img.mask.shape == (73, 83)
+        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -239,10 +262,20 @@ def test_preview_valid(rio):
             assert img.data.shape == (1, 259, 255)
             assert img.band_names == ["green/red"]
 
-        img = stac.preview(assets=("green", "red"), asset_expression="b1*2,b1")
-        assert img.data.shape == (4, 259, 255)
+        img = stac.preview(
+            assets=("green", "red"), asset_indexes={"green": (1, 1,), "red": 1}
+        )
+        assert img.data.shape == (3, 259, 255)
         assert img.mask.shape == (259, 255)
-        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2", "red_b1"]
+        assert img.band_names == ["green_1", "green_1", "red_1"]
+
+        img = stac.preview(
+            assets=("green", "red"),
+            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+        )
+        assert img.data.shape == (3, 259, 255)
+        assert img.mask.shape == (259, 255)
+        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -272,6 +305,26 @@ def test_point_valid(rio):
                 -80.477, 33.4453, assets=("green", "red"), expression="green/red"
             )
             assert len(data) == 1
+
+        data = stac.point(
+            -80.477,
+            33.4453,
+            assets=("green", "red"),
+            asset_indexes={"green": (1, 1), "red": 1},
+        )
+        assert len(data) == 2
+        assert len(data[0]) == 2
+        assert len(data[1]) == 1
+
+        data = stac.point(
+            -80.477,
+            33.4453,
+            assets=("green", "red"),
+            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+        )
+        assert len(data) == 2
+        assert len(data[0]) == 2
+        assert len(data[1]) == 1
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -312,14 +365,25 @@ def test_statistics_valid(rio):
         assert stats["green"]
         assert isinstance(stats["green"]["1"], BandStatistics)
 
-        # Check that asset_expression is passed
-        stats = stac.statistics(assets="green", asset_expression="b1*2")
-        assert stats["green"]
-        assert isinstance(stats["green"]["b1*2"], BandStatistics)
-
         stats = stac.statistics(assets=("green", "red"), hist_options={"bins": 20})
         assert len(stats) == 2
         assert len(stats["green"]["1"]["histogram"][0]) == 20
+
+        # Check that asset_expression is passed
+        stats = stac.statistics(
+            assets=("green", "red"), asset_expression={"green": "b1*2", "red": "b1+100"}
+        )
+        assert stats["green"]
+        assert isinstance(stats["green"]["b1*2"], BandStatistics)
+        assert isinstance(stats["red"]["b1+100"], BandStatistics)
+
+        # Check that asset_indexes is passed
+        stats = stac.statistics(
+            assets=("green", "red"), asset_indexes={"green": 1, "red": 1}
+        )
+        assert stats["green"]
+        assert isinstance(stats["green"]["1"], BandStatistics)
+        assert isinstance(stats["red"]["1"], BandStatistics)
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
@@ -426,6 +490,22 @@ def test_feature_valid(rio):
             img = stac.feature(feat, assets=("green", "red"), expression="green/red")
             assert img.data.shape == (1, 118, 96)
             assert img.band_names == ["green/red"]
+
+        img = stac.feature(
+            feat, assets=("green", "red"), asset_indexes={"green": (1, 1), "red": 1}
+        )
+        assert img.data.shape == (3, 118, 96)
+        assert img.mask.shape == (118, 96)
+        assert img.band_names == ["green_1", "green_1", "red_1"]
+
+        img = stac.feature(
+            feat,
+            assets=("green", "red"),
+            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+        )
+        assert img.data.shape == (3, 118, 96)
+        assert img.mask.shape == (118, 96)
+        assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
 def test_relative_assets():
