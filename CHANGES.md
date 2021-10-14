@@ -65,6 +65,7 @@ with COGReader(
 * remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)
 * `rio_tiler.io.base.SpatialMixin.bounds` should now be in dataset's CRS (not in `WGS84`) (https://github.com/cogeotiff/rio-tiler/pull/429)
 * Use `RIO_TILER_MAX_THREADS` environment variable instead of `MAX_THREADS` (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/432)
+* remove `band_expression` in `rio_tiler.io.base.MultiBandReader` (https://github.com/cogeotiff/rio-tiler/pull/433)
 
 # 2.1.3 (2021-09-14)
 

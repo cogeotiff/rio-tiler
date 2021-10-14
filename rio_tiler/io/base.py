@@ -1026,9 +1026,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         self,
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
-        band_expression: Optional[
-            str
-        ] = None,  # Expression for each band dataset based on band indexes
         categorical: bool = False,
         categories: Optional[List[float]] = None,
         percentiles: List[int] = [2, 98],
@@ -1041,19 +1038,19 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             bands (sequence of str or str): bands to fetch info from. Required keyword argument.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
-            band_expression (str, optional): rio-tiler expression for each band dataset (e.g. b1/b2+b3).
-            kwargs (optional): Options to forward to the `self.reader.statistics` method.
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of caterogies to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            kwargs (optional): Options to forward to the `self.preview` method.
 
         Returns:
-            dict: Multiple assets statistics in form of {"1": rio_tiler.models.BandStatistics, ...}.
+            dict: Multiple assets statistics in form of {"{band}/{expression}": rio_tiler.models.BandStatistics, ...}.
 
         """
         data = self.preview(
-            bands=bands,
-            expression=expression,
-            band_expression=band_expression,
-            max_size=max_size,
-            **kwargs,
+            bands=bands, expression=expression, max_size=max_size, **kwargs,
         )
 
         hist_options = hist_options or {}
@@ -1078,9 +1075,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         tile_z: int,
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
-        band_expression: Optional[
-            str
-        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Web Map tiles multiple bands.
@@ -1091,7 +1085,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             tile_z (int): Tile's zoom level index.
             bands (sequence of str or str, optional): bands to fetch info from.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.tile` method.
 
         Returns:
@@ -1127,15 +1120,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 data.band_names = [band]
                 return data
 
-        output = multi_arrays(
-            bands,
-            _reader,
-            tile_x,
-            tile_y,
-            tile_z,
-            expression=band_expression,
-            **kwargs,
-        )
+        output = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs,)
 
         if expression:
             blocks = expression.split(",")
@@ -1149,9 +1134,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         bbox: BBox,
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
-        band_expression: Optional[
-            str
-        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple bands.
@@ -1160,7 +1142,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             bands (sequence of str or str, optional): bands to fetch info from.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the 'self.reader.part' method.
 
         Returns:
@@ -1191,9 +1172,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 data.band_names = [band]
                 return data
 
-        output = multi_arrays(
-            bands, _reader, bbox, expression=band_expression, **kwargs,
-        )
+        output = multi_arrays(bands, _reader, bbox, **kwargs)
 
         if expression:
             blocks = expression.split(",")
@@ -1206,9 +1185,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         self,
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
-        band_expression: Optional[
-            str
-        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple bands.
@@ -1216,7 +1192,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         Args:
             bands (sequence of str or str, optional): bands to fetch info from.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.preview` method.
 
         Returns:
@@ -1247,7 +1222,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 data.band_names = [band]
                 return data
 
-        output = multi_arrays(bands, _reader, expression=band_expression, **kwargs)
+        output = multi_arrays(bands, _reader, **kwargs)
 
         if expression:
             blocks = expression.split(",")
@@ -1262,9 +1237,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         lat: float,
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
-        band_expression: Optional[
-            str
-        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> List:
         """Read a pixel values from multiple bands.
@@ -1274,7 +1246,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             lat (float): Latittude.
             bands (sequence of str or str, optional): bands to fetch info from.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
@@ -1303,9 +1274,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.point(*args, **kwargs)[0]  # We only return the firt value
 
-        data = multi_values(
-            bands, _reader, lon, lat, expression=band_expression, **kwargs,
-        )
+        data = multi_values(bands, _reader, lon, lat, **kwargs)
 
         values = [d for _, d in data.items()]
         if expression:
@@ -1319,9 +1288,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         shape: Dict,
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
-        band_expression: Optional[
-            str
-        ] = None,  # Expression for each band dataset based on band indexes
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple bands.
@@ -1330,7 +1296,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             shape (dict): Valid GeoJSON feature.
             bands (sequence of str or str, optional): bands to fetch info from.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
-            band_expression (str, optional): rio-tiler expression for each band (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.feature` method.
 
         Returns:
@@ -1361,9 +1326,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 data.band_names = [band]
                 return data
 
-        output = multi_arrays(
-            bands, _reader, shape, expression=band_expression, **kwargs,
-        )
+        output = multi_arrays(bands, _reader, shape, **kwargs)
 
         if expression:
             blocks = expression.split(",")
