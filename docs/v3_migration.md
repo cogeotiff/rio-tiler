@@ -2,7 +2,6 @@
 `rio-tiler` version 3.0 introduced [many breaking changes](release-notes.md). This
 document aims to help with migrating your code to use `rio-tiler` 3.0.
 
-
 ## Morecantile 2.0 -> 3.0
 
 Morecantil 3.0 switched from rasterio to pyproj for the coordinates transformation processes (https://github.com/developmentseed/morecantile/blob/master/CHANGES.md#300a0-2021-09-09).
@@ -69,6 +68,44 @@ with COGReader("my_tif.tif") as cog:
 >>> {'1': BandStatistics(min=1.0, max=7872.0, mean=2107.524612053134, count=1045504.0, sum=2203425412.0, std=2271.0065537857326, median=2800.0, majority=1.0, minority=7072.0, unique=15.0, histogram=[[503460.0, 0.0, 0.0, 161792.0, 283094.0, 0.0, 0.0, 0.0, 87727.0, 9431.0], [1.0, 788.1, 1575.2, 2362.3, 3149.4, 3936.5, 4723.6, 5510.7, 6297.8, 7084.900000000001, 7872.0]], valid_percent=100.0, masked_pixels=0.0, valid_pixels=1045504.0, percentile_2=1.0, percentile_98=6896.0)}
 ```
 
+## `asset_expression` and `asset_indexes`
+
+In 3.0, we changed how `asset_expression` was defined in `rio_tiler.io.MultiBaseReader` (the base class of STAC like datasets). In 2.0, it was defined as a `string` (e.g `b1+100`) and would be applied to all `assets` and in 3.0 it's now a `dict` in form of `{"asset 1": "expression for asset 1", ...}`.
+
+```python
+# v2
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_expression="b1*2",  # expression was applied to each asset
+    )
+
+# v3
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_expression={"data1": "b1*2", "data2": "b2*100"},  # we can now pass per asset expression
+    )
+```
+
+We also added `asset_indexes` to return specific indexes per asset.
+
+
+```python
+# v2
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        indexes=1,  # first band of each asset would be returned
+    )
+
+# v3
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_indexes={"data1": (1, 2), "data2": (3,)},  # we can now pass per asset Indexes
+    )
+```
 
 ## Deprecation
 

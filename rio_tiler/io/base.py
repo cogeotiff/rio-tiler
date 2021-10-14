@@ -383,7 +383,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
         reader (rio_tiler.io.BaseReader): reader.
         reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        assets (sequence): Asset list. **READ ONLY attribute**.
+        assets (sequence): Asset list. **Not in __init__**.
 
     """
 
@@ -880,7 +880,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         reader (rio_tiler.io.BaseReader): reader.
         reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        bands (sequence): Band list. **READ ONLY attribute**.
+        bands (sequence): Band list. **Not in __init__**.
 
     """
 
