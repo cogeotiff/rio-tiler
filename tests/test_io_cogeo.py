@@ -270,6 +270,11 @@ def test_tile_with_int_buffer():
     assert data.shape == (1, 258, 258)
     assert mask.all()
 
+    with COGReader(COGEO) as cog:
+        data, mask = cog.tile(43, 24, 7, tile_buffer=0)
+    assert data.shape == (1, 256, 256)
+    assert mask.all()
+
 
 def test_tile_with_correct_float_buffer():
     with COGReader(COGEO) as cog:

@@ -356,7 +356,7 @@ class COGReader(BaseReader):
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
         if tile_buffer is not None:
-            if not tile_buffer % 0.5:
+            if tile_buffer % 0.5:
                 raise IncorrectTileBuffer(
                     "`tile_buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
                 )
