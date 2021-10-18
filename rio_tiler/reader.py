@@ -75,9 +75,13 @@ def read(
     dataset_has_mask = has_mask_band(src_dst)
     dataset_has_alpha = has_alpha_band(src_dst)
     dataset_has_nodata = nodata is not None
+
+    # When dataset has a nodata value in addition to a Mask or an Alpha band
+    # the mask output might not be the on expected.
+    # ref: https://github.com/cogeotiff/rio-tiler/pull/402
     if dataset_has_nodata and (dataset_has_mask or dataset_has_alpha):
         warnings.warn(
-            "Input dataset has a Nodata Value and Mask or Alpha band. Mask output might not be accurate.",
+            "Input dataset has a Nodata Value in addition to a Mask or an Alpha band. Mask output might not be accurate.",
             NodataMaskAlphaWarning,
         )
 
@@ -92,12 +96,11 @@ def read(
     if vrt_options:
         vrt_params.update(vrt_options)
 
-    out_shape = (len(indexes), height, width) if height and width else None
-    mask_out_shape = (height, width) if height and width else None
     resampling = Resampling[resampling_method]
 
     with WarpedVRT(src_dst, **vrt_params) as vrt:
         if ColorInterp.alpha in vrt.colorinterp:
+            # find aplha band indexe
             idx = vrt.colorinterp.index(ColorInterp.alpha) + 1
             indexes = tuple(indexes) + (idx,)
 
@@ -107,18 +110,27 @@ def read(
                 out_shape=(len(indexes), height, width) if height and width else None,
                 resampling=resampling,
             )
+            # split data and alpha band
             data, mask = data[0:-1], data[-1].astype("uint8")
+
         else:
+            # read data
+            out_shape = (len(indexes), height, width) if height and width else None
             data = vrt.read(
                 indexes=indexes,
                 window=window,
                 out_shape=out_shape,
                 resampling=resampling,
             )
+            # read mask
+            mask_out_shape = (height, width) if height and width else None
             mask = vrt.dataset_mask(
                 window=window, out_shape=mask_out_shape, resampling=resampling,
             )
 
+        # when mask comes from nodata we can introduce artefacts on border
+        # Forcing binary mask makes sure that non-zero value get set a transparent.
+        # ref: https://github.com/cogeotiff/rio-tiler/issues/105
         if force_binary_mask:
             mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
 
@@ -448,6 +460,10 @@ def metadata(
         dict: Dataset metadata and statistics.
 
     """
+    warnings.warn(
+        "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
+    )
+
     if isinstance(indexes, int):
         indexes = (indexes,)
 

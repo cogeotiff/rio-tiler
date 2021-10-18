@@ -26,15 +26,15 @@ with COGReader(
     print(img.data.shape)
     >>> (3, 11666, 19836)
 
-    # Read part of a data for a given bbox (size is maxed out to 1024)
-    img = cog.part([-61.281, 15.539, -61.279, 15.541])
+    # Read part of a data for a given bbox (we use `max_size=1024` to limit the data transfer and read lower resolution data)
+    img = cog.part([-61.281, 15.539, -61.279, 15.541], max_size=1024)
     print(img.data.shape)
     >>> (3, 1024, 1024)
 
-    # Read data for a given geojson polygon (size is maxed out to 1024)
-    img = cog.feature(geojson_feature)
+    # Read data for a given geojson polygon (we use `max_size=1024` to limit the data transfer and read lower resolution data)
+    img = cog.feature(geojson_feature, max_size=1024)
 
-    # Get a preview (size is maxed out to 1024)
+    # Get a preview (size is maxed out to 1024 by default to limit the data transfer and read lower resolution data)
     img = cog.preview()
     print(img.data.shape)
     >>> (3, 603, 1024)

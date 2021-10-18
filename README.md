@@ -89,8 +89,21 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
 
     with STACReader("item.json") as stac:
         print(stac.assets)  # available asset
-        img = stac.tile(x, y, z, assets="asset1", indexes=(1, 2, 3))  # read tile for asset1 and indexes 1,2,3
-        img = stac.tile(x, y, z, assets=("asset1", "asset2", "asset3",), indexes=(1,))  # create an image from assets 1,2,3 using their first band
+        img = stac.tile(  # read tile for asset1 and indexes 1,2,3
+            x,
+            y,
+            z,
+            assets="asset1",
+            indexes=(1, 2, 3),
+        )
+
+        img = stac.tile(  # create an image from assets 1,2,3 using their first band
+            x,
+            y,
+            z,
+            assets=("asset1", "asset2", "asset3",),
+            asset_indexes={"asset1": 1, "asset2": 1, "asset3": 1},
+        )
     ```
 
 - [Mosaic](https://cogeotiff.github.io/rio-tiler/mosaic/) (merging or stacking)
@@ -100,7 +113,7 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
     from rio_tiler.mosaic import mosaic_reader
 
     def reader(file, x, y, z, **kwargs):
-        with COGReader("my.tif") as image:
+        with COGReader(file) as image:
             return image.tile(x, y, z, **kwargs)
 
     img, assets = mosaic_reader(["image1.tif", "image2.tif"], reader, x, y, z)
@@ -135,26 +148,6 @@ $ cd rio-tiler
 $ pip install -U pip
 $ pip install -e .
 ```
-
-#### GDAL>=3.0 / PROJ>=6.0 performances issue
-
-`rio-tiler` is often used for dynamic tiling, where we need to perform small tasks involving cropping and reprojecting the input data. Starting with GDAL>=3.0 the project shifted to PROJ>=6, which introduced new ways to store projection metadata (using a SQLite database and/or cloud stored grids). This change introduced a performance regression as mentioned in https://mapserver.gis.umn.edu/id/development/rfc/ms-rfc-126.html:
-
-> using naively the equivalent calls proj_create_crs_to_crs() + proj_trans() would be a major performance killer, since proj_create_crs_to_crs() can take a time in the order of 100 milliseconds in the most complex situations.
-
-We believe the issue reported in [issues/346](https://github.com/cogeotiff/rio-tiler/issues/346) is in fact due to :point_up:.
-
-To get the best performances out of `rio-tiler` we recommend for now to use GDAL **2.4** until a solution can be found in GDAL or in PROJ.
-
-Note: Starting with rasterio 1.2.0, rasterio's wheels are distributed with GDAL 3.2 and thus we recommend using rasterio==1.1.8 if using the default wheels, which include GDAL 2.4.
-
-Links:
-
-- http://rgdal.r-forge.r-project.org/articles/PROJ6_GDAL3.html
-- https://mapserver.gis.umn.edu/id/development/rfc/ms-rfc-126.html
-- https://github.com/OSGeo/gdal/issues/3470
-- https://github.com/OSGeo/gdal/issues/1662
-
 
 ## Plugins
 
