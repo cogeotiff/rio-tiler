@@ -89,8 +89,21 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
 
     with STACReader("item.json") as stac:
         print(stac.assets)  # available asset
-        img = stac.tile(x, y, z, assets="asset1", indexes=(1, 2, 3))  # read tile for asset1 and indexes 1,2,3
-        img = stac.tile(x, y, z, assets=("asset1", "asset2", "asset3",), indexes=(1,))  # create an image from assets 1,2,3 using their first band
+        img = stac.tile(  # read tile for asset1 and indexes 1,2,3
+            x,
+            y,
+            z,
+            assets="asset1",
+            indexes=(1, 2, 3),
+        )
+
+        img = stac.tile(  # create an image from assets 1,2,3 using their first band
+            x,
+            y,
+            z,
+            assets=("asset1", "asset2", "asset3",),
+            asset_indexes={"asset1": 1, "asset2": 1, "asset3": 1},
+        )
     ```
 
 - [Mosaic](https://cogeotiff.github.io/rio-tiler/mosaic/) (merging or stacking)

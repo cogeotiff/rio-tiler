@@ -61,11 +61,84 @@ with COGReader(
 * update morecantile requirement to version >=3.0 (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
 * remove `max_size` defaults for `COGReader.part` and `COGReader.feature`, which will now default to full resolution reading.
-* deprecate `.metadata` methods (https://github.com/cogeotiff/rio-tiler/pull/425)
+
+```python
+# before
+with COGReader("my.tif") as cog:
+    img = cog.part(*cog.dataset.bounds, dst_crs=cog.dataset.crs, bounds_crs=cog.dataset.crs)
+    # by default image should be max 1024x1024
+    assert max(img.width, 1024) # by default image should be max 1024x1024
+    assert max(img.height, 1024)
+
+# now (there is no more max_size default)
+with COGReader("my.tif") as cog:
+    img = cog.part(*cog.dataset.bounds, dst_crs=cog.dataset.crs, bounds_crs=cog.dataset.crs)
+    assert img.width == cog.dataset.width
+    assert img.height == cog.dataset.height
+```
+
+* deprecate `.metadata` and `.stats` methods (https://github.com/cogeotiff/rio-tiler/pull/425)
+* add `.statistics` method in base classes (https://github.com/cogeotiff/rio-tiler/pull/427)
+
 * remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)
-* `rio_tiler.io.base.SpatialMixin.bounds` should now be in dataset's CRS (not in `WGS84`) (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+* Reader's `.bounds` property should now be in dataset's CRS, not in `WGS84` (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+```python
+# before
+with COGReader("my.tif") as cog:
+    print(cog.bounds)
+    >>> (-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608)
+
+# now
+with COGReader("my.tif") as cog:
+    print(cog.bounds)
+    >>> (683715.3266400001, 1718548.5702, 684593.2680000002, 1719064.90736)
+
+    print(cog.crs)
+    >>> EPSG:32620
+
+    print(cog.geographic_bounds)
+    >>> (-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608)
+```
+
 * Use `RIO_TILER_MAX_THREADS` environment variable instead of `MAX_THREADS` (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/432)
 * remove `band_expression` in `rio_tiler.io.base.MultiBandReader` (https://github.com/cogeotiff/rio-tiler/pull/433)
+* change `asset_expression` input type from `str` to `Dict[str, str]` in `rio_tiler.io.base.MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/434)
+
+```python
+# before
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_expression="b1*2",  # expression was applied to each asset
+    )
+
+# now
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_expression={"data1": "b1*2", "data2": "b2*100"},  # we can now pass per asset expression
+    )
+```
+
+* add `asset_indexes` in `rio_tiler.io.base.MultiBaseReader`, which replaces `indexes`. (https://github.com/cogeotiff/rio-tiler/pull/434)
+
+```python
+# before
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        indexes=(1,),  # indexes was applied to each asset
+    )
+
+# now
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_indexes={"data1": 1, "data2": 2},  # we can now pass per asset indexes
+    )
+```
 
 # 2.1.3 (2021-09-14)
 
