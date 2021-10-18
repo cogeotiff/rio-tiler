@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import attr
 import numpy
 import rasterio
-from morecantile import Tile, TileMatrixSet
+from morecantile import BoundingBox, Tile, TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -17,7 +17,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import reader
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData
+from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData, NumType
 from ..errors import (
     ExpressionMixingWarning,
     IncorrectTileBuffer,
@@ -25,8 +25,14 @@ from ..errors import (
     TileOutsideBounds,
 )
 from ..expression import apply_expression, parse_expression
-from ..models import ImageData, ImageStatistics, Info
-from ..utils import create_cutline, has_alpha_band, has_mask_band
+from ..models import BandStatistics, ImageData, ImageStatistics, Info
+from ..utils import (
+    create_cutline,
+    get_array_statistics,
+    get_bands_names,
+    has_alpha_band,
+    has_mask_band,
+)
 from .base import BaseReader
 
 
@@ -37,9 +43,11 @@ class COGReader(BaseReader):
     Attributes:
         filepath (str): Cloud Optimized GeoTIFF path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
+        bounds (tuple): Dataset bounds (left, bottom, right, top).
+        crs (rasterio.crs.CRS): Dataset crs.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        minzoom (int, optional): Overwrite Min Zoom level.
-        maxzoom (int, optional): Overwrite Max Zoom level.
+        minzoom (int, optional): Set minzoom for the tiles.
+        maxzoom (int, optional): Set maxzoom for the tiles.
         colormap (dict, optional): Overwrite internal colormap.
         nodata (int or float or str, optional): Global options, overwrite internal nodata value.
         unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
@@ -70,9 +78,11 @@ class COGReader(BaseReader):
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
+
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
+
     colormap: Dict = attr.ib(default=None)
 
     # Define global options to be forwarded to functions reading the data (e.g `rio_tiler.reader.read`)
@@ -102,12 +112,11 @@ class COGReader(BaseReader):
             self._kwargs["post_process"] = self.post_process
 
         self.dataset = self.dataset or rasterio.open(self.filepath)
+        self.bounds = tuple(self.dataset.bounds)
+        self.crs = self.dataset.crs
 
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
-        self.bounds = transform_bounds(
-            self.dataset.crs, WGS84_CRS, *self.dataset.bounds, densify_pts=21
-        )
         if self.minzoom is None or self.maxzoom is None:
             self._set_zooms()
 
@@ -132,11 +141,11 @@ class COGReader(BaseReader):
         self.close()
 
     def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
-        """Calculate raster min/max zoom level."""
-        if self.dataset.crs != self.tms.crs:
+        """Calculate raster min/max zoom level for input TMS."""
+        if self.dataset.crs != self.tms.rasterio_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.dataset.crs,
-                self.tms.crs,
+                self.tms.rasterio_crs,
                 self.dataset.width,
                 self.dataset.height,
                 *self.dataset.bounds,
@@ -146,18 +155,30 @@ class COGReader(BaseReader):
             w = self.dataset.width
             h = self.dataset.height
 
+        # The maxzoom is defined by finding the minimum difference between
+        # the raster resolution and the zoom level resolution
         resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
         maxzoom = self.tms.zoom_for_res(resolution)
 
+        # The minzoom is defined by the resolution of the maximum theoretical overview level
         overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
         ovr_resolution = resolution * (2 ** overview_level)
         minzoom = self.tms.zoom_for_res(ovr_resolution)
 
-        return minzoom, maxzoom
+        return (minzoom, maxzoom)
 
     def _set_zooms(self):
         """Calculate raster min/max zoom level."""
-        minzoom, maxzoom = self.get_zooms()
+        try:
+            minzoom, maxzoom = self.get_zooms()
+        except:  # noqa
+            # if we can't get min/max zoom from the dataset we default to TMS min/max zoom
+            warnings.warn(
+                "Cannot dertermine min/max zoom based on dataset informations, will default to TMS min/max zoom.",
+                UserWarning,
+            )
+            minzoom, maxzoom = self.tms.minzoom, self.tms.maxzoom
+
         self.minzoom = self.minzoom if self.minzoom is not None else minzoom
         self.maxzoom = self.maxzoom if self.maxzoom is not None else maxzoom
         return
@@ -187,8 +208,7 @@ class COGReader(BaseReader):
             nodata_type = "None"
 
         meta = {
-            "bounds": self.bounds,
-            "center": self.center,
+            "bounds": self.geographic_bounds,
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
             "band_metadata": [
@@ -241,6 +261,11 @@ class COGReader(BaseReader):
             rio_tiler.models.ImageStatistics: bands statistics.
 
         """
+        warnings.warn(
+            "`stats` method will be removed and replaced by `statistics` in rio-tiler v3.0.0",
+            DeprecationWarning,
+        )
+
         kwargs = {**self._kwargs, **kwargs}
 
         hist_options = hist_options or {}
@@ -255,6 +280,48 @@ class COGReader(BaseReader):
         )
         return {b: ImageStatistics(**s) for b, s in stats.items()}
 
+    def statistics(
+        self,
+        categorical: bool = False,
+        categories: Optional[List[float]] = None,
+        percentiles: List[int] = [2, 98],
+        hist_options: Optional[Dict] = None,
+        max_size: int = 1024,
+        **kwargs: Any,
+    ) -> Dict[str, BandStatistics]:
+        """Return bands statistics from a dataset.
+
+        Args:
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of caterogies to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            kwargs (optional): Options to forward to `self.preview`.
+
+        Returns:
+            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        kwargs = {**self._kwargs, **kwargs}
+
+        data = self.preview(max_size=max_size, **kwargs)
+
+        hist_options = hist_options or {}
+
+        stats = get_array_statistics(
+            data.as_masked(),
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            **hist_options,
+        )
+
+        return {
+            f"{data.band_names[ix]}": BandStatistics(**stats[ix])
+            for ix in range(len(stats))
+        }
+
     def tile(
         self,
         tile_x: int,
@@ -263,7 +330,7 @@ class COGReader(BaseReader):
         tilesize: int = 256,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
-        tile_buffer: Optional[Union[int, float]] = None,
+        tile_buffer: Optional[NumType] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a COG.
@@ -275,41 +342,42 @@ class COGReader(BaseReader):
             tilesize (int, optional): Output image size. Defaults to `256`.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            tile_buffer (int or float, optional): Buffer around the given tile in pixels. Tilesize will be expanded to
-             `tilesize + 2 * tile_buffer`. If given as a float, must be half of an integer to have an integer `tilesize`
+            tile_buffer (int or float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if isinstance(tile_buffer, float) and not (tile_buffer * 2).is_integer():
-            raise IncorrectTileBuffer(
-                "When tile buffer is a float, it must be half of an integer"
-            )
-
-        if not self.tile_exists(tile_z, tile_x, tile_y):
+        if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
             )
 
-        tile_bounds = self.tms.xy_bounds(*Tile(x=tile_x, y=tile_y, z=tile_z))
-        if tile_buffer:
-            x_res = (tile_bounds[2] - tile_bounds[0]) / tilesize
-            y_res = (tile_bounds[3] - tile_bounds[1]) / tilesize
-            tile_bounds = (
-                tile_bounds[0] - x_res * tile_buffer,
-                tile_bounds[1] - y_res * tile_buffer,
-                tile_bounds[2] + x_res * tile_buffer,
-                tile_bounds[3] + y_res * tile_buffer,
+        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        if tile_buffer is not None:
+            if not tile_buffer % 0.5:
+                raise IncorrectTileBuffer(
+                    "`tile_buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
+                )
+
+            x_res = (tile_bounds.right - tile_bounds.left) / tilesize
+            y_res = (tile_bounds.top - tile_bounds.bottom) / tilesize
+
+            # Buffered Tile Bounds
+            tile_bounds = BoundingBox(
+                tile_bounds.left - x_res * tile_buffer,
+                tile_bounds.bottom - y_res * tile_buffer,
+                tile_bounds.right + x_res * tile_buffer,
+                tile_bounds.top + y_res * tile_buffer,
             )
-            tilesize += int(
-                tile_buffer * 2
-            )  # We are sure this is a valid int because we checked before
+
+            # Buffered Tile Size
+            tilesize += int(tile_buffer * 2)
 
         return self.part(
             tile_bounds,
-            dst_crs=self.tms.crs,
+            dst_crs=self.tms.rasterio_crs,
             bounds_crs=None,
             height=tilesize,
             width=tilesize,
@@ -324,9 +392,11 @@ class COGReader(BaseReader):
         bbox: BBox,
         dst_crs: Optional[CRS] = None,
         bounds_crs: CRS = WGS84_CRS,
-        max_size: int = 1024,
         indexes: Optional[Union[int, Sequence]] = None,
         expression: Optional[str] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG.
@@ -335,9 +405,11 @@ class COGReader(BaseReader):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
             kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
@@ -365,6 +437,8 @@ class COGReader(BaseReader):
             self.dataset,
             bbox,
             max_size=max_size,
+            width=width,
+            height=height,
             bounds_crs=bounds_crs,
             dst_crs=dst_crs,
             indexes=indexes,
@@ -379,12 +453,24 @@ class COGReader(BaseReader):
         if bounds_crs and bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
 
-        return ImageData(data, mask, bounds=bbox, crs=dst_crs, assets=[self.filepath],)
+        return ImageData(
+            data,
+            mask,
+            bounds=bbox,
+            crs=dst_crs,
+            assets=[self.filepath],
+            band_names=get_bands_names(
+                indexes=indexes, expression=expression, count=data.shape[0]
+            ),
+        )
 
     def preview(
         self,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
+        max_size: int = 1024,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a COG.
@@ -392,6 +478,9 @@ class COGReader(BaseReader):
         Args:
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
             kwargs (optional): Options to forward to the `rio_tiler.reader.preview` function.
 
         Returns:
@@ -412,7 +501,14 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        data, mask = reader.preview(self.dataset, indexes=indexes, **kwargs)
+        data, mask = reader.preview(
+            self.dataset,
+            indexes=indexes,
+            max_size=max_size,
+            width=width,
+            height=height,
+            **kwargs,
+        )
 
         if expression:
             blocks = expression.lower().split(",")
@@ -422,15 +518,19 @@ class COGReader(BaseReader):
         return ImageData(
             data,
             mask,
-            bounds=self.dataset.bounds,
-            crs=self.dataset.crs,
+            bounds=self.bounds,
+            crs=self.crs,
             assets=[self.filepath],
+            band_names=get_bands_names(
+                indexes=indexes, expression=expression, count=data.shape[0]
+            ),
         )
 
     def point(
         self,
         lon: float,
         lat: float,
+        coord_crs: CRS = WGS84_CRS,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
@@ -440,6 +540,7 @@ class COGReader(BaseReader):
         Args:
             lon (float): Longitude.
             lat (float): Latittude.
+            coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `rio_tiler.reader.point` function.
@@ -462,7 +563,9 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        point = reader.point(self.dataset, (lon, lat), indexes=indexes, **kwargs)
+        point = reader.point(
+            self.dataset, (lon, lat), indexes=indexes, coord_crs=coord_crs, **kwargs
+        )
 
         if expression:
             blocks = expression.lower().split(",")
@@ -476,9 +579,11 @@ class COGReader(BaseReader):
         shape: Dict,
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
-        max_size: int = 1024,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG defined by a geojson feature.
@@ -487,9 +592,11 @@ class COGReader(BaseReader):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to `1024`.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
@@ -513,6 +620,8 @@ class COGReader(BaseReader):
             indexes=indexes,
             expression=expression,
             max_size=max_size,
+            width=width,
+            height=height,
             vrt_options=vrt_options,
             **kwargs,
         )
@@ -558,9 +667,12 @@ class COGReader(BaseReader):
         return ImageData(
             data,
             mask,
-            bounds=self.dataset.bounds,
-            crs=self.dataset.crs,
+            bounds=self.bounds,
+            crs=self.crs,
             assets=[self.filepath],
+            band_names=get_bands_names(
+                indexes=indexes, expression=expression, count=data.shape[0]
+            ),
         )
 
 

@@ -2,7 +2,7 @@
 
 import os
 from io import BytesIO
-from typing import Any, Dict, Generator, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
 
 import numpy
 from affine import Affine
@@ -41,8 +41,9 @@ def aws_get_object(
         client = session.client("s3", endpoint_url=endpoint_url)
 
     params = {"Bucket": bucket, "Key": key}
-    if request_pays:
+    if request_pays or os.environ.get("AWS_REQUEST_PAYER", "").lower() == "requester":
         params["RequestPayer"] = "requester"
+
     response = client.get_object(**params)
     return response["Body"].read()
 
@@ -85,6 +86,130 @@ def _stats(
         histogram=[sample.tolist(), edges.tolist()],
         valid_percent=((numpy.count_nonzero(~arr.mask)) / float(arr.data.size)) * 100,
     )
+
+
+def get_bands_names(
+    indexes: Optional[Sequence[int]] = None,
+    expression: Optional[str] = None,
+    count: Optional[int] = None,
+) -> List[str]:
+    """Define bands names based on expression, indexes or band count."""
+    if expression:
+        return expression.split(",")
+
+    elif indexes:
+        return [str(idx) for idx in indexes]
+
+    elif count:
+        return [str(idx + 1) for idx in range(count)]
+
+    else:
+        raise ValueError(
+            "one of expression or indexes or count must be passed to define band names."
+        )
+
+
+def get_array_statistics(
+    data: numpy.ma.array,
+    categorical: bool = False,
+    categories: Optional[List[float]] = None,
+    percentiles: List[int] = [2, 98],
+    **kwargs: Any,
+) -> List[Dict[Any, Any]]:
+    """Calculate per band array statistics.
+
+    Args:
+        data (numpy.ma.ndarray): input masked array data to get the statistics from.
+        categorical (bool): treat input data as categorical data. Defaults to False.
+        categories (list of numbers, optional): list of caterogies to return value for.
+        percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+        kwargs (optional): options to forward to `numpy.histogram` function (only applies for non-categorical data).
+
+    Returns:
+        list of dict
+
+    Examples:
+        >>> data = numpy.ma.zeros((1, 256, 256))
+        >>> get_array_statistics(data)
+        [
+            {
+                'min': 0.0,
+                'max': 0.0,
+                'mean': 0.0,
+                'count': 65536.0,
+                'sum': 0.0,
+                'std': 0.0,
+                'median': 0.0,
+                'majority': 0.0,
+                'minority': 0.0,
+                'unique': 1.0,
+                'percentile_2': 0.0,
+                'percentile_98': 0.0,
+                'histogram': [
+                    [0, 0, 0, 0, 0, 65536, 0, 0, 0, 0],
+                    [-0.5, -0.4, -0.3, -0.19999999999999996, -0.09999999999999998, 0.0, 0.10000000000000009, 0.20000000000000007, 0.30000000000000004, 0.4, 0.5]
+                ],
+                'valid_pixels': 65536.0,
+                'masked_pixels': 0.0,
+                'valid_percent': 100.0
+            }
+        ]
+
+    """
+    if len(data.shape) < 3:
+        data = numpy.expand_dims(data, axis=0)
+
+    output: List[Dict[Any, Any]] = []
+    percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
+
+    for b in range(data.shape[0]):
+        keys, counts = numpy.unique(data[b].compressed(), return_counts=True)
+
+        valid_pixels = float(numpy.ma.count(data[b]))
+        masked_pixels = float(numpy.ma.count_masked(data[b]))
+        valid_percent = round((valid_pixels / data[b].size) * 100, 2)
+        info_px = {
+            "valid_pixels": valid_pixels,
+            "masked_pixels": masked_pixels,
+            "valid_percent": valid_percent,
+        }
+
+        if categorical:
+            out_dict = dict(zip(keys.tolist(), counts.tolist()))
+            h_keys = (
+                numpy.array(categories).astype(keys.dtype) if categories else keys
+            ).tolist()
+            histogram = [
+                [out_dict[x] for x in h_keys],
+                h_keys,
+            ]
+        else:
+            h_counts, h_keys = numpy.histogram(data[b][~data[b].mask], **kwargs)
+            histogram = [h_counts.tolist(), h_keys.tolist()]
+
+        percentiles_values = numpy.percentile(
+            data[b].compressed(), percentiles
+        ).tolist()
+
+        output.append(
+            {
+                "min": float(data[b].min()),
+                "max": float(data[b].max()),
+                "mean": float(data[b].mean()),
+                "count": float(data[b].count()),
+                "sum": float(data[b].sum()),
+                "std": float(data[b].std()),
+                "median": float(numpy.ma.median(data[b])),
+                "majority": float(keys[counts.tolist().index(counts.max())].tolist()),
+                "minority": float(keys[counts.tolist().index(counts.min())].tolist()),
+                "unique": float(counts.size),
+                **dict(zip(percentiles_names, percentiles_values)),
+                "histogram": histogram,
+                **info_px,
+            }
+        )
+
+    return output
 
 
 # https://github.com/OSGeo/gdal/blob/b1c9c12ad373e40b955162b45d704070d4ebf7b0/gdal/frmts/ingr/IngrTypes.cpp#L191
@@ -342,6 +467,9 @@ def render(
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
     if img_format == "WEBP" and data.shape[0] == 1:
         data = numpy.repeat(data, 3, axis=0)
+
+    if img_format == "PNG" and data.dtype == "uint16" and mask is not None:
+        mask = linear_rescale(mask, (0, 255), (0, 65535)).astype("uint16")
 
     elif img_format == "JPEG":
         mask = None

@@ -25,7 +25,7 @@ except ImportError:
 EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
 
 DEFAULT_CMAPS_FILES = {
-    f.stem: str(f) for f in (resources_files(__package__) / "cmap_data").glob("*.npy")
+    f.stem: str(f) for f in (resources_files(__package__) / "cmap_data").glob("*.npy")  # type: ignore
 }
 
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
@@ -109,6 +109,11 @@ def apply_cmap(
 
     data = numpy.transpose(data, [2, 0, 1])
 
+    # If the colormap has values between 0-255
+    # we cast the output array to Uint8.
+    if data.min() >= 0 and data.max() <= 255:
+        data = data.astype("uint8")
+
     return data[:-1], data[-1]
 
 
@@ -142,6 +147,11 @@ def apply_discrete_cmap(
         res[data[0] == k] = v
 
     data = numpy.transpose(res, [2, 0, 1])
+
+    # If the colormap has values between 0-255
+    # we cast the output array to Uint8
+    if data.min() >= 0 and data.max() <= 255:
+        data = data.astype("uint8")
 
     return data[:-1], data[-1]
 

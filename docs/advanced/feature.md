@@ -7,8 +7,8 @@ from rio_tiler.io import COGReader
 from rio_tiler.models import ImageData
 
 with COGReader("my-tif.tif") as cog:
-    # Read data for a given geojson polygon (size is maxed out to 1024)
-    img: ImageData = cog.feature(geojson_feature)
+    # Read data for a given geojson polygon
+    img: ImageData = cog.feature(geojson_feature, max_size=1024)  # we limit the max_size to 1024
 ```
 
 Under the hood, the `.feature` method uses `GDALWarpVRT`'s `cutline` option and
@@ -28,7 +28,7 @@ with COGReader("my_tif.tif") as cog:
     bbox = featureBounds(feat)
 
     # Read part of the data (bbox) and use the cutline to mask the data
-    data, mask = cog.part(bbox, vrt_options={'cutline': cutline})
+    data, mask = cog.part(bbox, vrt_options={'cutline': cutline}, max_size=1024)
 ```
 
 Another interesting fact about the `cutline` option is that it can be used with other methods:
@@ -46,7 +46,4 @@ with COGReader("my_tif.tif") as cog:
 
     # Read a mercator tile and use the cutline to mask the data
     data, mask = cog.tile(1, 1, 1, vrt_options={'cutline': cutline})
-
-    # Get image statistics over a bbox and use the cutline as mask
-    stats = cog.stats(bounds=bbox, vrt_options={'cutline': cutline})
 ```

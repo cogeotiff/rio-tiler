@@ -1,8 +1,166 @@
-## Unreleased
+# 3.0.0 (TDB)
+
+* add `crs` property in `rio_tiler.io.base.SpatialMixin` (https://github.com/cogeotiff/rio-tiler/pull/429)
+* add `geographic_bounds` in `rio_tiler.io.base.SpatialMixin` to return bounds in WGS84 (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+```python
+from rio_tiler.io import COGReader
+
+with COGReader("https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog.tif") as cog:
+    print(cog.bounds)
+    >> (373185.0, 8019284.949381611, 639014.9492102272, 8286015.0)
+
+    print(cog.crs)
+    >> "EPSG:32621"
+
+    print(cog.geographic_bounds)
+    >> (-61.28762442711404, 72.22979795551834, -52.301598718454485, 74.66298001264106)
+```
+
+* Allow errors to be ignored when trying to find `zooms` for dataset in `rio_tiler.io.COGReader`. If we're not able to find the zooms in selected TMS, COGReader will defaults to the min/max zooms of the TMS (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+```python
+from pyproj import CRS
+from morecantile import TileMatrixSet
+
+from rio_tiler.io import COGReader
+
+# For a non-earth dataset there is no available transformation from its own CRS and the default WebMercator TMS CRS.
+with COGReader("https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif") as cog:
+    >> UserWarning: Cannot dertermine min/max zoom based on dataset informations, will default to TMS min/max zoom.
+
+    print(cog.minzoom)
+    >> 0
+
+    print(cog.maxzoom)
+    >> 24
+
+# if we use a `compatible TMS` then we don't get warnings
+europa_crs = CRS.from_authority("ESRI", 104915)
+europa_tms = TileMatrixSet.custom(
+    crs=europa_crs,
+    extent=europa_crs.area_of_use.bounds,
+    matrix_scale=[2, 1],
+)
+with COGReader(
+    "https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif",
+    tms=europa_tms,
+) as cog:
+    print(cog.minzoom)
+    >> 4
+
+    print(cog.maxzoom)
+    >> 6
+```
+
+* compare dataset bounds and tile bounds in TMS crs in `rio_tiler.io.base.SpatialMixin.tile_exists` method to allow dataset and TMS not compatible with WGS84 crs (https://github.com/cogeotiff/rio-tiler/pull/429)
+* use `httpx` package instead of requests (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/431)
+
+**breaking changes**
+
+* update morecantile requirement to version >=3.0 (https://github.com/cogeotiff/rio-tiler/pull/418)
+* remove python 3.6 support (https://github.com/cogeotiff/rio-tiler/pull/418)
+* remove `max_size` defaults for `COGReader.part` and `COGReader.feature`, which will now default to full resolution reading.
+
+```python
+# before
+with COGReader("my.tif") as cog:
+    img = cog.part(*cog.dataset.bounds, dst_crs=cog.dataset.crs, bounds_crs=cog.dataset.crs)
+    # by default image should be max 1024x1024
+    assert max(img.width, 1024) # by default image should be max 1024x1024
+    assert max(img.height, 1024)
+
+# now (there is no more max_size default)
+with COGReader("my.tif") as cog:
+    img = cog.part(*cog.dataset.bounds, dst_crs=cog.dataset.crs, bounds_crs=cog.dataset.crs)
+    assert img.width == cog.dataset.width
+    assert img.height == cog.dataset.height
+```
+
+* deprecate `.metadata` and `.stats` methods (https://github.com/cogeotiff/rio-tiler/pull/425)
+* add `.statistics` method in base classes (https://github.com/cogeotiff/rio-tiler/pull/427)
+
+* remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+* Reader's `.bounds` property should now be in dataset's CRS, not in `WGS84` (https://github.com/cogeotiff/rio-tiler/pull/429)
+
+```python
+# before
+with COGReader("my.tif") as cog:
+    print(cog.bounds)
+    >>> (-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608)
+
+# now
+with COGReader("my.tif") as cog:
+    print(cog.bounds)
+    >>> (683715.3266400001, 1718548.5702, 684593.2680000002, 1719064.90736)
+
+    print(cog.crs)
+    >>> EPSG:32620
+
+    print(cog.geographic_bounds)
+    >>> (-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608)
+```
+
+* Use `RIO_TILER_MAX_THREADS` environment variable instead of `MAX_THREADS` (author @rodrigoalmeida94, https://github.com/cogeotiff/rio-tiler/pull/432)
+* remove `band_expression` in `rio_tiler.io.base.MultiBandReader` (https://github.com/cogeotiff/rio-tiler/pull/433)
+* change `asset_expression` input type from `str` to `Dict[str, str]` in `rio_tiler.io.base.MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/434)
+
+```python
+# before
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_expression="b1*2",  # expression was applied to each asset
+    )
+
+# now
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_expression={"data1": "b1*2", "data2": "b2*100"},  # we can now pass per asset expression
+    )
+```
+
+* add `asset_indexes` in `rio_tiler.io.base.MultiBaseReader`, which replaces `indexes`. (https://github.com/cogeotiff/rio-tiler/pull/434)
+
+```python
+# before
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        indexes=(1,),  # indexes was applied to each asset
+    )
+
+# now
+with STACReader("mystac.json") as stac:
+    img = stac.preview(
+        assets=("data1", "data2"),
+        asset_indexes={"data1": 1, "data2": 2},  # we can now pass per asset indexes
+    )
+```
+
+# 2.1.3 (2021-09-14)
+
+* Make sure output data is of type `Uint8` when applying a colormap (https://github.com/cogeotiff/rio-tiler/pull/423)
+* Do not auto-rescale data if there is a colormap (https://github.com/cogeotiff/rio-tiler/pull/423)
+
+# 2.1.2 (2021-08-10)
+
+* update type information for mosaics functions (https://github.com/cogeotiff/rio-tiler/pull/409)
+
+## 2.1.1 (2021-07-29)
 
 * add support for setting the S3 endpoint url via the `AWS_S3_ENDPOINT` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/394)
-
 * make `ImageStatistics.valid_percent` a value between 0 and 100 (instead of 0 and 1) (author @param-thakker, https://github.com/cogeotiff/rio-tiler/pull/400)
+* add `fetch_options` to `STACReader` to allow custom configuration to the fetch client (https://github.com/cogeotiff/rio-tiler/pull/404)
+
+    ```python
+    with STACReader("s3://...", fetch_options={"request_pays": True}):
+        pass
+    ```
+
+* Fix alpha band values when storing `Uint16` data in **PNG**. (https://github.com/cogeotiff/rio-tiler/pull/407)
 
 ## 2.1.0 (2021-05-17)
 
