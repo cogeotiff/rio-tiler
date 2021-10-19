@@ -12,7 +12,7 @@ import pytest
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, BBox
 from rio_tiler.io import AsyncBaseReader, COGReader
-from rio_tiler.models import ImageData, ImageStatistics, Info
+from rio_tiler.models import BandStatistics, ImageData, Info
 
 try:
     import contextvars  # Python 3.7+ only or via contextvars backport.
@@ -54,6 +54,7 @@ class AsyncCOGReader(AsyncBaseReader):
     def __attrs_post_init__(self):
         """Update dataset info."""
         self.bounds = self.dataset.bounds
+        self.crs = self.dataset.crs
         self.minzoom = self.dataset.minzoom
         self.maxzoom = self.dataset.maxzoom
 
@@ -61,11 +62,11 @@ class AsyncCOGReader(AsyncBaseReader):
         """Return Dataset's info."""
         return await run_in_threadpool(self.dataset.info)  # type: ignore
 
-    async def stats(
-        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any
-    ) -> Coroutine[Any, Any, Dict[str, ImageStatistics]]:
+    async def statistics(
+        self, **kwargs: Any
+    ) -> Coroutine[Any, Any, Dict[str, BandStatistics]]:
         """Return Dataset's statistics."""
-        return await run_in_threadpool(self.dataset.stats, pmin, pmax, **kwargs)  # type: ignore
+        return await run_in_threadpool(self.dataset.statistics, **kwargs)  # type: ignore
 
     async def tile(
         self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
@@ -104,12 +105,11 @@ async def test_async():
         info = await cog.info()
         assert info == dataset.info()
 
-        meta = cog.spatial_info
-        assert meta.minzoom == 5
-        assert meta.maxzoom == 9
+        assert cog.minzoom == 5
+        assert cog.maxzoom == 9
 
-        assert await cog.stats(5, 95)
-        assert await cog.metadata(2, 98)
+        stat = await cog.statistics()
+        assert stat == dataset.statistics()
 
         data, mask = await cog.tile(43, 24, 7)
         assert data.shape == (1, 256, 256)
@@ -156,5 +156,5 @@ async def test_async():
             },
         }
 
-        img = await cog.feature(feature)
+        img = await cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)

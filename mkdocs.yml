@@ -41,6 +41,7 @@ nav:
     - Mosaic: 'examples/Using-rio-tiler-mosaic.ipynb'
     - rio-tiler + morecantile: 'examples/Using-tms.ipynb'
     - rio-tiler + STAC: 'examples/Using-rio-tiler-STACReader.ipynb'
+    - Non-Earth dataset: 'examples/Using-nonEarth-dataset.ipynb'
   - API:
     - rio_tiler.colormap: api/rio_tiler/colormap.md
     - rio_tiler.constants: api/rio_tiler/constants.md
@@ -61,6 +62,7 @@ nav:
     - rio_tiler.tasks: api/rio_tiler/tasks.md
     - rio_tiler.utils: api/rio_tiler/utils.md
   - Migration from v1.0 to v2.0: 'v2_migration.md'
+  - Migration from v2.0 to v3.0: 'v3_migration.md'
   - Development - Contributing: 'contributing.md'
   - Release Notes: 'release-notes.md'
 

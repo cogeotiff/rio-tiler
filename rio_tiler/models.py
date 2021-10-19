@@ -1,5 +1,6 @@
 """rio-tiler models."""
 
+import itertools
 import warnings
 from enum import Enum
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
@@ -48,7 +49,6 @@ class Bounds(RioTilerBaseModel):
 class SpatialInfo(Bounds):
     """Dataset SpatialInfo"""
 
-    center: Tuple[NumType, NumType, int]
     minzoom: int
     maxzoom: int
 
@@ -72,6 +72,31 @@ class Info(SpatialInfo):
         use_enum_values = True
 
 
+class BandStatistics(RioTilerBaseModel):
+    """Image statistics"""
+
+    min: float
+    max: float
+    mean: float
+    count: float
+    sum: float
+    std: float
+    median: float
+    majority: float
+    minority: float
+    unique: float
+    histogram: List[List[NumType]]
+    valid_percent: float
+    masked_pixels: float
+    valid_pixels: float
+
+    class Config:
+        """Config for model."""
+
+        extra = "allow"  # We allow extra values for `percentiles_{}`
+
+
+# TODO: remove
 class ImageStatistics(RioTilerBaseModel):
     """Image statistics"""
 
@@ -81,12 +106,6 @@ class ImageStatistics(RioTilerBaseModel):
     std: NumType
     histogram: List[List[NumType]]
     valid_percent: float
-
-
-class Metadata(Info):
-    """Dataset metadata and statistics."""
-
-    statistics: Dict[str, ImageStatistics]
 
 
 def to_coordsbbox(bbox) -> Optional[BoundingBox]:
@@ -105,6 +124,7 @@ class ImageData:
         bounds (BoundingBox, optional): bounding box of the data.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
+        band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
 
     """
 
@@ -114,6 +134,7 @@ class ImageData:
     bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
     crs: Optional[CRS] = attr.ib(default=None)
     metadata: Optional[Dict] = attr.ib(factory=dict)
+    band_names: Optional[List[str]] = attr.ib()
 
     @data.validator
     def _validate_data(self, attribute, value):
@@ -122,6 +143,10 @@ class ImageData:
             raise ValueError(
                 "ImageData data has to be an array in form of (count, height, width)"
             )
+
+    @band_names.default
+    def _default_names(self):
+        return [f"{ix + 1}" for ix in range(self.count)]
 
     @mask.default
     def _default_mask(self):
@@ -142,7 +167,13 @@ class ImageData:
         """
         arr = numpy.concatenate([img.data for img in data])
         mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
-        assets = [img.assets[0] for img in data if img.assets]
+        assets = list(
+            dict.fromkeys(
+                itertools.chain.from_iterable(
+                    [img.assets for img in data if img.assets]
+                )
+            )
+        )
 
         bounds_values = [img.bounds for img in data if img.bounds]
         bounds = bounds_values[0] if bounds_values else None
@@ -150,7 +181,15 @@ class ImageData:
         crs_values = [img.crs for img in data if img.crs]
         crs = crs_values[0] if crs_values else None
 
-        return cls(arr, mask, assets=assets, crs=crs, bounds=bounds)
+        band_names = list(
+            itertools.chain.from_iterable(
+                [img.band_names for img in data if img.band_names]
+            )
+        )
+
+        return cls(
+            arr, mask, assets=assets, crs=crs, bounds=bounds, band_names=band_names
+        )
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
@@ -266,7 +305,7 @@ class ImageData:
         self,
         add_mask: bool = True,
         img_format: str = "PNG",
-        colormap: Optional[Dict] = None,
+        colormap: Optional[Union[Dict, Sequence]] = None,
         **kwargs,
     ) -> bytes:
         """Render data to image blob.
@@ -274,7 +313,7 @@ class ImageData:
         Args:
             add_mask (bool, optional): add mask to output image. Defaults to `True`.
             img_format (str, optional): output image format. Defaults to `PNG`.
-            colormap (dict, optional): GDAL RGBA Color Table dictionary.
+            colormap (dict or sequence, optional): RGBA Color Table dictionary or sequence.
             kwargs (optional): keyword arguments to forward to `rio_tiler.utils.render`.
 
         Returns:

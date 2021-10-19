@@ -13,4 +13,4 @@ from . import (  # noqa
     utils,
 )
 
-__version__ = "2.1.3"
+__version__ = "3.0.0a0"
