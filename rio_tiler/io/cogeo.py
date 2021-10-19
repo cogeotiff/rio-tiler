@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import attr
 import numpy
 import rasterio
-from morecantile import Tile, TileMatrixSet
+from morecantile import BoundingBox, Tile, TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -17,8 +17,13 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import reader
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData
-from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
+from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData, NumType
+from ..errors import (
+    ExpressionMixingWarning,
+    IncorrectTileBuffer,
+    NoOverviewWarning,
+    TileOutsideBounds,
+)
 from ..expression import apply_expression, parse_expression
 from ..models import BandStatistics, ImageData, ImageStatistics, Info
 from ..utils import (
@@ -325,7 +330,7 @@ class COGReader(BaseReader):
         tilesize: int = 256,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
-        tile_buffer: Optional[int] = None,
+        tile_buffer: Optional[NumType] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a COG.
@@ -337,6 +342,7 @@ class COGReader(BaseReader):
             tilesize (int, optional): Output image size. Defaults to `256`.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            tile_buffer (int or float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
@@ -349,16 +355,25 @@ class COGReader(BaseReader):
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
-        if tile_buffer:
-            x_res = (tile_bounds[2] - tile_bounds[0]) / tilesize
-            y_res = (tile_bounds[3] - tile_bounds[1]) / tilesize
-            tile_bounds = (
-                tile_bounds[0] - x_res * tile_buffer,
-                tile_bounds[1] - y_res * tile_buffer,
-                tile_bounds[2] + x_res * tile_buffer,
-                tile_bounds[3] + y_res * tile_buffer,
+        if tile_buffer is not None:
+            if tile_buffer % 0.5:
+                raise IncorrectTileBuffer(
+                    "`tile_buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
+                )
+
+            x_res = (tile_bounds.right - tile_bounds.left) / tilesize
+            y_res = (tile_bounds.top - tile_bounds.bottom) / tilesize
+
+            # Buffered Tile Bounds
+            tile_bounds = BoundingBox(
+                tile_bounds.left - x_res * tile_buffer,
+                tile_bounds.bottom - y_res * tile_buffer,
+                tile_bounds.right + x_res * tile_buffer,
+                tile_bounds.top + y_res * tile_buffer,
             )
-            tilesize += tile_buffer * 2
+
+            # Buffered Tile Size
+            tilesize += int(tile_buffer * 2)
 
         return self.part(
             tile_bounds,

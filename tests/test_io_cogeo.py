@@ -17,6 +17,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     AlphaBandWarning,
     ExpressionMixingWarning,
+    IncorrectTileBuffer,
     NoOverviewWarning,
     TileOutsideBounds,
 )
@@ -255,6 +256,31 @@ def test_tile_invalid_bounds():
     with pytest.raises(TileOutsideBounds):
         with COGReader(COGEO) as cog:
             cog.tile(38, 24, 7)
+
+
+def test_tile_with_incorrect_float_buffer():
+    with pytest.raises(IncorrectTileBuffer):
+        with COGReader(COGEO) as cog:
+            cog.tile(43, 24, 7, tile_buffer=0.8)
+
+
+def test_tile_with_int_buffer():
+    with COGReader(COGEO) as cog:
+        data, mask = cog.tile(43, 24, 7, tile_buffer=1)
+    assert data.shape == (1, 258, 258)
+    assert mask.all()
+
+    with COGReader(COGEO) as cog:
+        data, mask = cog.tile(43, 24, 7, tile_buffer=0)
+    assert data.shape == (1, 256, 256)
+    assert mask.all()
+
+
+def test_tile_with_correct_float_buffer():
+    with COGReader(COGEO) as cog:
+        data, mask = cog.tile(43, 24, 7, tile_buffer=0.5)
+    assert data.shape == (1, 257, 257)
+    assert mask.all()
 
 
 def test_point_valid():
