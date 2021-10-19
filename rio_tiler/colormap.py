@@ -8,6 +8,7 @@ from typing import Dict, List, Sequence, Tuple, Union
 import attr
 import numpy
 
+from .constants import NumType
 from .errors import (
     ColorMapAlreadyRegistered,
     InvalidColorFormat,
@@ -79,7 +80,7 @@ def make_lut(colormap: Dict) -> numpy.ndarray:
 
 
 def apply_cmap(
-    data: numpy.ndarray, colormap: Dict
+    data: numpy.ndarray, colormap: Union[Dict, Sequence]
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
     """Apply colormap on data.
 
@@ -96,6 +97,9 @@ def apply_cmap(
     """
     if data.shape[0] > 1:
         raise InvalidFormat("Source data must be 1 band")
+
+    if isinstance(colormap, Sequence):
+        return apply_intervals_cmap(data, colormap)
 
     # if colormap has more than 256 values OR its `max` key >= 256 we can't use
     # rio_tiler.colormap.make_lut, because we don't want to create a `lookup table`
@@ -132,7 +136,7 @@ def apply_discrete_cmap(
     Examples:
         >>> data = numpy.random.randint(0, 3, size=(1, 256, 256))
             cmap = {
-                0, [0, 0, 0, 0],
+                0: [0, 0, 0, 0],
                 1: [255, 255, 255, 255],
                 2: [255, 0, 0, 255],
                 3: [255, 255, 0, 255],
@@ -145,6 +149,46 @@ def apply_discrete_cmap(
 
     for k, v in colormap.items():
         res[data[0] == k] = v
+
+    data = numpy.transpose(res, [2, 0, 1])
+
+    # If the colormap has values between 0-255
+    # we cast the output array to Uint8
+    if data.min() >= 0 and data.max() <= 255:
+        data = data.astype("uint8")
+
+    return data[:-1], data[-1]
+
+
+def apply_intervals_cmap(
+    data: numpy.ndarray, colormap: Sequence[Sequence[Sequence[NumType]]]
+) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    """Apply intervals colormap.
+
+    Args:
+        data (numpy ndarray): 1D image array to translate to RGB.
+        color_map (Sequence): Sequence of intervals and color in form of [([min, max], [r, g, b, a]), ...].
+
+    Returns:
+        tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).
+
+    Examples:
+        >>> data = numpy.random.randint(0, 3, size=(1, 256, 256))
+            cmap = [
+                ([0, 1], [0, 0, 0, 0]),
+                ([1, 2], [255, 255, 255, 255]),
+                ([2, 3], [255, 0, 0, 255]),
+                ([3, 4], [255, 255, 0, 255]),
+            ]
+
+            data, mask = apply_intervals_cmap(data, cmap)
+            assert data.shape == (3, 256, 256)
+
+    """
+    res = numpy.zeros((data.shape[1], data.shape[2], 4), dtype=numpy.uint8)
+
+    for (k, v) in colormap:
+        res[(data[0] >= k[0]) & (data[0] < k[1])] = v
 
     data = numpy.transpose(res, [2, 0, 1])
 
