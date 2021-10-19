@@ -536,7 +536,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.statistics(
                     *args,
-                    indexes=asset_indexes.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
                     expression=asset_expression.get(asset),
                     **kwargs,
                 )
@@ -600,7 +600,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.tile(
                     *args,
-                    indexes=asset_indexes.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
                     expression=asset_expression.get(asset),
                     **kwargs,
                 )
@@ -664,7 +664,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.part(
                     *args,
-                    indexes=asset_indexes.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
                     expression=asset_expression.get(asset),
                     **kwargs,
                 )
@@ -725,7 +725,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.preview(
-                    indexes=asset_indexes.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
                     expression=asset_expression.get(asset),
                     **kwargs,
                 )
@@ -791,7 +791,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.point(
                     *args,
-                    indexes=asset_indexes.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
                     expression=asset_expression.get(asset),
                     **kwargs,
                 )
@@ -853,7 +853,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.feature(
                     *args,
-                    indexes=asset_indexes.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
                     expression=asset_expression.get(asset),
                     **kwargs,
                 )

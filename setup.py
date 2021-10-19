@@ -26,7 +26,7 @@ extra_reqs = {
         "pytest-asyncio",
         "pytest-benchmark",
         "pytest-cov",
-        "rio-cogeo>=3.0.0a0",
+        "rio-cogeo>=3.0.0",
         "tox",
     ],
     "dev": [
@@ -34,7 +34,7 @@ extra_reqs = {
         "pytest-benchmark",
         "pytest-cov",
         "pytest-asyncio",
-        "rio-cogeo>=3.0.0a0",
+        "rio-cogeo>=3.0.0",
         "pre-commit",
         "tox",
     ],
@@ -43,7 +43,7 @@ extra_reqs = {
 
 setup(
     name="rio-tiler",
-    version="3.0.0",
+    version="3.0.0a0",
     python_requires=">=3.7",
     description="User friendly Rasterio plugin to read raster datasets.",
     long_description=readme,

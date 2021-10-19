@@ -94,9 +94,10 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
             y,
             z,
             assets="asset1",
-            indexes=(1, 2, 3),
+            indexes=(1, 2, 3),  # same as asset_indexes={"asset1": (1, 2, 3)},
         )
 
+        # Merging data from different assets
         img = stac.tile(  # create an image from assets 1,2,3 using their first band
             x,
             y,

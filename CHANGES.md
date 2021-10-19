@@ -1,4 +1,4 @@
-# 3.0.0 (TDB)
+# 3.0.0a0 (2021-10-19)
 
 * add `crs` property in `rio_tiler.io.base.SpatialMixin` (https://github.com/cogeotiff/rio-tiler/pull/429)
 * add `geographic_bounds` in `rio_tiler.io.base.SpatialMixin` to return bounds in WGS84 (https://github.com/cogeotiff/rio-tiler/pull/429)

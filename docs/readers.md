@@ -99,9 +99,25 @@ with COGReader("myfile.tif") as cog:
     assert img.count == 1
 
 # With expression
-with COGReader("myfile.tif"s) as cog:
+with COGReader("myfile.tif") as cog:
     img = cog.tile(1, 2, 3, tilesize=256, expression="B1/B2")
     assert img.count == 1
+
+# Using buffer
+# Sometime, to avoid edge artefacts, you may want to read buffered tile data.
+# ref:
+# - https://github.com/cogeotiff/rio-tiler/issues/365
+# - https://github.com/cogeotiff/rio-tiler/pull/405
+with COGReader("myfile.tif") as cog:
+    # add 0.5 pixel on each side of the tile
+    img = cog.tile(1, 2, 3, tile_buffer=0.5)
+    assert img.width == 257
+    assert img.height == 257
+
+    # add 1 pixel on each side of the tile
+    img = cog.tile(1, 2, 3, tile_buffer=1)
+    assert img.width == 258
+    assert img.height == 258
 ```
 
 - **part()**: Read a raster for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
