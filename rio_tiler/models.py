@@ -108,13 +108,6 @@ class ImageStatistics(RioTilerBaseModel):
     valid_percent: float
 
 
-# TODO: remove
-class Metadata(Info):
-    """Dataset metadata and statistics."""
-
-    statistics: Dict[str, ImageStatistics]
-
-
 def to_coordsbbox(bbox) -> Optional[BoundingBox]:
     """Convert bbox to CoordsBbox nameTuple."""
     return BoundingBox(*bbox) if bbox else None

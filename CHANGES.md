@@ -96,7 +96,6 @@ with COGReader("my.tif") as cog:
     assert img.height == cog.dataset.height
 ```
 
-* deprecate `.metadata` and `.stats` methods (https://github.com/cogeotiff/rio-tiler/pull/425)
 * add `.statistics` method in base classes (https://github.com/cogeotiff/rio-tiler/pull/427)
 
 * remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)
@@ -158,6 +157,13 @@ with STACReader("mystac.json") as stac:
         asset_indexes={"data1": 1, "data2": 2},  # we can now pass per asset indexes
     )
 ```
+
+**removed**
+
+* `rio_tiler.io.BaseReader.metadata` and `rio_tiler.io.BaseReader.stats` base class methods (https://github.com/cogeotiff/rio-tiler/pull/425)
+* `rio_tiler.reader.stats` function (https://github.com/cogeotiff/rio-tiler/pull/440)
+* `rio_tiler.reader.metadata` function (https://github.com/cogeotiff/rio-tiler/pull/440)
+*  `rio_tiler.utils._stats` function (https://github.com/cogeotiff/rio-tiler/pull/440)
 
 # 2.1.3 (2021-09-14)
 

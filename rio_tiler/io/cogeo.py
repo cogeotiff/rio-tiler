@@ -25,7 +25,7 @@ from ..errors import (
     TileOutsideBounds,
 )
 from ..expression import apply_expression, parse_expression
-from ..models import BandStatistics, ImageData, ImageStatistics, Info
+from ..models import BandStatistics, ImageData, Info
 from ..utils import (
     create_cutline,
     get_array_statistics,
@@ -241,44 +241,6 @@ class COGReader(BaseReader):
             meta.update({"nodata_value": self.nodata})
 
         return Info(**meta)
-
-    def stats(
-        self,
-        pmin: float = 2.0,
-        pmax: float = 98.0,
-        hist_options: Optional[Dict] = None,
-        **kwargs: Any,
-    ) -> Dict[str, ImageStatistics]:
-        """Return bands statistics from a COG.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-            hist_options (dict, optional): Options to forward to numpy.histogram function.
-            kwargs (optional): Options to forward to `rio_tiler.reader.stats`.
-
-        Returns:
-            rio_tiler.models.ImageStatistics: bands statistics.
-
-        """
-        warnings.warn(
-            "`stats` method will be removed and replaced by `statistics` in rio-tiler v3.0.0",
-            DeprecationWarning,
-        )
-
-        kwargs = {**self._kwargs, **kwargs}
-
-        hist_options = hist_options or {}
-
-        if self.colormap and not hist_options.get("bins"):
-            hist_options["bins"] = [
-                k for k, v in self.colormap.items() if v != (0, 0, 0, 255)
-            ]
-
-        stats = reader.stats(
-            self.dataset, percentiles=(pmin, pmax), hist_options=hist_options, **kwargs,
-        )
-        return {b: ImageStatistics(**s) for b, s in stats.items()}
 
     def statistics(
         self,

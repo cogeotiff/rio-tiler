@@ -64,19 +64,6 @@ def test_MultiBandReader():
         meta = cog.info(bands=("b1", "b2"))
         assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
-        with pytest.warns(DeprecationWarning):
-            with pytest.raises(MissingBands):
-                cog.stats()
-
-        with pytest.warns(DeprecationWarning):
-            meta = cog.stats(bands="b1", hist_options={"bins": 20})
-            assert meta["b1"]
-
-        with pytest.warns(DeprecationWarning):
-            meta = cog.stats(bands=("b1", "b2"))
-            assert meta["b1"]
-            assert meta["b2"]
-
         with pytest.raises(MissingBands):
             cog.statistics()
 
@@ -92,20 +79,6 @@ def test_MultiBandReader():
         assert stats["b1"]
         assert stats["b1+b2"]
         assert stats["b1-100"]
-
-        with pytest.raises(MissingBands):
-            with pytest.warns(DeprecationWarning):
-                cog.metadata()
-
-        with pytest.warns(DeprecationWarning):
-            meta = cog.metadata(bands="b1")
-            assert meta.statistics["b1"]
-
-        with pytest.warns(DeprecationWarning):
-            meta = cog.metadata(bands=("b1", "b2"))
-            assert meta.statistics["b1"]
-            assert meta.statistics["b2"]
-            assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
         with pytest.raises(MissingBands):
             cog.tile(238, 218, 9)

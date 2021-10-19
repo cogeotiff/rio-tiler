@@ -109,26 +109,6 @@ def test_get_vrt_transform_valid4326():
     assert vrt_height == 326
 
 
-def test_statsFunction_valid():
-    """Should return a valid dict with array statistics."""
-    with rasterio.open(S3_ALPHA_PATH) as src:
-        arr = src.read(indexes=[1], masked=True)
-
-    stats = utils._stats(arr)
-    assert stats["percentiles"] == [10, 200]
-    assert stats["min"] == 0
-    assert stats["max"] == 254
-    assert int(stats["std"]) == 55
-    assert len(stats["histogram"]) == 2
-    assert len(stats["histogram"][0]) == 10
-
-    stats = utils._stats(arr, percentiles=(5, 95))
-    assert stats["percentiles"] == [31, 195]
-
-    stats = utils._stats(arr, percentiles=(5, 95), bins=20)
-    assert len(stats["histogram"][0]) == 20
-
-
 def test_render_valid_1band():
     """Creates PNG image buffer from one band array."""
     arr = np.random.randint(0, 255, size=(512, 512), dtype=np.uint8)

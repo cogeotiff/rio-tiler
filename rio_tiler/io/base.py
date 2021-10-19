@@ -1,7 +1,6 @@
 """rio_tiler.io.base: ABC class for rio-tiler readers."""
 
 import abc
-import asyncio
 import re
 import warnings
 from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
@@ -19,7 +18,7 @@ from ..errors import (
     TileOutsideBounds,
 )
 from ..expression import apply_expression
-from ..models import BandStatistics, ImageData, ImageStatistics, Info, Metadata
+from ..models import BandStatistics, ImageData, Info
 from ..tasks import multi_arrays, multi_values
 from ..utils import get_array_statistics
 
@@ -115,43 +114,6 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         ...
-
-    @abc.abstractmethod
-    def stats(
-        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
-    ) -> Dict[str, ImageStatistics]:
-        """Return Dataset's statistics.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-
-        Returns:
-            rio_tile.models.ImageStatistics: Dataset statistics.
-
-        """
-        ...
-
-    def metadata(
-        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
-    ) -> Metadata:
-        """Return Dataset's statistics and info.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-
-        Returns:
-            rio_tile.models.Metadata: Dataset statistics and metadata.
-
-        """
-        warnings.warn(
-            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
-        )
-
-        info = self.info()
-        stats = self.stats(pmin, pmax, **kwargs)
-        return Metadata(statistics=stats, **info.dict())
 
     @abc.abstractmethod
     def statistics(self, **kwargs: Any) -> Dict[str, BandStatistics]:
@@ -250,44 +212,6 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         ...
-
-    @abc.abstractmethod
-    async def stats(
-        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any
-    ) -> Coroutine[Any, Any, Dict[str, ImageStatistics]]:
-        """Return Dataset's statistics.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-
-        Returns:
-            rio_tile.models.ImageStatistics: Dataset statistics.
-
-        """
-        ...
-
-    async def metadata(
-        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any,
-    ) -> Coroutine[Any, Any, Metadata]:
-        """Return Dataset's statistics and info.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-
-        Returns:
-            rio_tile.models.Metadata: Dataset statistics and metadata.
-
-        """
-        warnings.warn(
-            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
-        )
-
-        info, stats = await asyncio.gather(
-            *[self.info(), self.stats(pmin, pmax, **kwargs)]
-        )
-        return Metadata(statistics=stats, **info.dict())
 
     @abc.abstractmethod
     async def statistics(
@@ -429,79 +353,6 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 return cog.info()
 
         return multi_values(assets, _reader, **kwargs)
-
-    def stats(  # type: ignore
-        self,
-        pmin: float = 2.0,
-        pmax: float = 98.0,
-        assets: Union[Sequence[str], str] = None,
-        **kwargs: Any,
-    ) -> Dict[str, Dict[str, ImageStatistics]]:
-        """Return array statistics from multiple assets.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-            assets (sequence of str or str): assets to fetch info from. Required keyword argument.
-            kwargs (optional): Options to forward to the `self.reader.stats` method.
-
-        Returns:
-            dict: Multiple assets statistics in form of {"asset1": rio_tile.models.ImageStatistics}.
-
-        """
-        warnings.warn(
-            "`stats` method will be removed and replaced by `statistics` in rio-tiler v3.0.0",
-            DeprecationWarning,
-        )
-
-        if not assets:
-            raise MissingAssets("Missing 'assets' option")
-
-        if isinstance(assets, str):
-            assets = (assets,)
-
-        def _reader(asset: str, *args, **kwargs) -> Dict:
-            url = self._get_asset_url(asset)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.stats(*args, **kwargs)
-
-        return multi_values(assets, _reader, pmin, pmax, **kwargs)
-
-    def metadata(  # type: ignore
-        self,
-        pmin: float = 2.0,
-        pmax: float = 98.0,
-        assets: Union[Sequence[str], str] = None,
-        **kwargs: Any,
-    ) -> Dict[str, Metadata]:
-        """Return metadata from multiple assets.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-            assets (sequence of str or str): assets to fetch info from. Required keyword argument.
-            kwargs (optional): Options to forward to the `self.reader.metadata` method.
-
-        Returns:
-            dict: Multiple assets info and statistics in form of {"asset1": rio_tile.models.Metadata}.
-
-        """
-        warnings.warn(
-            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
-        )
-
-        if not assets:
-            raise MissingAssets("Missing 'assets' option")
-
-        if isinstance(assets, str):
-            assets = (assets,)
-
-        def _reader(asset: str, *args, **kwargs) -> Dict:
-            url = self._get_asset_url(asset)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.metadata(*args, **kwargs)
-
-        return multi_values(assets, _reader, pmin, pmax, **kwargs)
 
     def statistics(  # type: ignore
         self,
@@ -948,108 +799,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         ]
         meta["nodata_type"] = bands_metadata[bands[0]].nodata_type
         return Info(**meta)
-
-    def stats(
-        self,
-        pmin: float = 2.0,
-        pmax: float = 98.0,
-        bands: Union[Sequence[str], str] = None,
-        **kwargs: Any,
-    ) -> Dict[str, ImageStatistics]:
-        """Return array statistics from multiple bands.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-            bands (sequence of str or str): bands to fetch info from. Required keyword argument.
-            kwargs (optional): Options to forward to the `self.reader.stats` method.
-
-        Returns:
-            dict: Multiple bands statistics in form of {"band1": rio_tile.models.ImageStatistics}.
-
-        """
-        warnings.warn(
-            "`stats` method will be removed and replaced by `statistics` in rio-tiler v3.0.0",
-            DeprecationWarning,
-        )
-
-        if not bands:
-            raise MissingBands("Missing 'bands' option")
-
-        if isinstance(bands, str):
-            bands = (bands,)
-
-        def _reader(band: str, *args, **kwargs) -> Dict:
-            url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                # We only return statistics for Band `1` of each dataset.
-                stats = cog.stats(*args, **kwargs)
-                return stats.get(list(stats)[0])
-
-        return multi_values(bands, _reader, pmin, pmax, **kwargs)
-
-    def metadata(
-        self,
-        pmin: float = 2.0,
-        pmax: float = 98.0,
-        bands: Union[Sequence[str], str] = None,
-        **kwargs: Any,
-    ) -> Metadata:
-        """Return metadata from multiple bands.
-
-        Args:
-            pmin (float, optional): Histogram minimum cut. Defaults to `2.0`.
-            pmax (float, optional): Histogram maximum cut. Defaults to `98.0`.
-            bands (sequence of str or str): bands to fetch info from. Required keyword argument.
-            kwargs (optional): Options to forward to the `self.reader.stats` method.
-
-        Returns:
-            dict: Multiple bands info an statistics in form of {"band1": rio_tile.models.Metadata}.
-
-        """
-        warnings.warn(
-            "Metadata method will be removed in rio-tiler v3.0.0", DeprecationWarning
-        )
-
-        if not bands:
-            raise MissingBands("Missing 'bands' option")
-
-        if isinstance(bands, str):
-            bands = (bands,)
-
-        def _reader(band: str, *args, **kwargs) -> Metadata:
-            url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.metadata(*args, **kwargs)
-
-        bands_metadata = multi_values(bands, _reader, pmin, pmax, **kwargs)
-
-        meta = {
-            "bounds": self.geographic_bounds,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
-        }
-        meta["band_metadata"] = [
-            (band, bands_metadata[band].band_metadata[0][1])
-            for ix, band in enumerate(bands)
-        ]
-        meta["band_descriptions"] = [
-            (band, bands_metadata[band].band_descriptions[0][1])
-            for ix, band in enumerate(bands)
-        ]
-        meta["dtype"] = bands_metadata[bands[0]].dtype
-        meta["colorinterp"] = [
-            bands_metadata[band].colorinterp[0] for _, band in enumerate(bands)
-        ]
-        meta["nodata_type"] = bands_metadata[bands[0]].nodata_type
-        meta["statistics"] = {
-            # We only keep statistics for Band `1` of each dataset.
-            band: bands_metadata[band].statistics.get(
-                list(bands_metadata[band].statistics)[0]
-            )
-            for _, band in enumerate(bands)
-        }
-        return Metadata(**meta)
 
     def statistics(
         self,
