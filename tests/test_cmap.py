@@ -172,7 +172,7 @@ def test_apply_discrete_cmap():
     assert colormap.apply_cmap(data, cm)
 
 
-def test_apply_range_cmap():
+def test_apply_intervals_cmap():
     """Should return valid data and mask."""
     cm = [
         # ([min, max], [r, g, b, a])
@@ -183,7 +183,7 @@ def test_apply_range_cmap():
     data[0, 0:2, 0:2] = 1000
     data[0, 2:5, 2:5] = 1
     data[0, 5:, 5:] = 2
-    d, m = colormap.apply_range_cmap(data, cm)
+    d, m = colormap.apply_intervals_cmap(data, cm)
     assert d.shape == (3, 10, 10)
     assert m.shape == (10, 10)
 
@@ -193,7 +193,7 @@ def test_apply_range_cmap():
     numpy.testing.assert_array_equal(m, mask)
 
     data = data.astype("uint16")
-    d, m = colormap.apply_range_cmap(data, cm)
+    d, m = colormap.apply_intervals_cmap(data, cm)
     assert d.dtype == numpy.uint8
     assert m.dtype == numpy.uint8
 
@@ -203,7 +203,7 @@ def test_apply_range_cmap():
         ([2, 3], [255, 255, 255, 255]),
         ([2, 1000], [255, 0, 0, 255]),
     ]
-    d, m = colormap.apply_range_cmap(data, cm)
+    d, m = colormap.apply_intervals_cmap(data, cm)
     assert d.shape == (3, 10, 10)
     assert m.shape == (10, 10)
     d[:, 0, 0] == [255, 0, 0, 255]

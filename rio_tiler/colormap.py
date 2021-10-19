@@ -99,7 +99,7 @@ def apply_cmap(
         raise InvalidFormat("Source data must be 1 band")
 
     if isinstance(colormap, Sequence):
-        return apply_range_cmap(data, colormap)
+        return apply_intervals_cmap(data, colormap)
 
     # if colormap has more than 256 values OR its `max` key >= 256 we can't use
     # rio_tiler.colormap.make_lut, because we don't want to create a `lookup table`
@@ -160,14 +160,14 @@ def apply_discrete_cmap(
     return data[:-1], data[-1]
 
 
-def apply_range_cmap(
+def apply_intervals_cmap(
     data: numpy.ndarray, colormap: Sequence[Sequence[Sequence[NumType]]]
 ) -> Tuple[numpy.ndarray, numpy.ndarray]:
-    """Apply range colormap.
+    """Apply intervals colormap.
 
     Args:
         data (numpy ndarray): 1D image array to translate to RGB.
-        color_map (Sequence): Range ColorMap sequence in form of [([min, max], [r, g, b, a]), ...].
+        color_map (Sequence): Sequence of intervals and color in form of [([min, max], [r, g, b, a]), ...].
 
     Returns:
         tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).
@@ -181,7 +181,7 @@ def apply_range_cmap(
                 ([3, 4], [255, 255, 0, 255]),
             ]
 
-            data, mask = apply_range_cmap(data, cmap)
+            data, mask = apply_intervals_cmap(data, cmap)
             assert data.shape == (3, 256, 256)
 
     """
