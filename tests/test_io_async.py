@@ -12,7 +12,7 @@ import pytest
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, BBox
 from rio_tiler.io import AsyncBaseReader, COGReader
-from rio_tiler.models import BandStatistics, ImageData, ImageStatistics, Info
+from rio_tiler.models import BandStatistics, ImageData, Info
 
 try:
     import contextvars  # Python 3.7+ only or via contextvars backport.
@@ -62,12 +62,6 @@ class AsyncCOGReader(AsyncBaseReader):
         """Return Dataset's info."""
         return await run_in_threadpool(self.dataset.info)  # type: ignore
 
-    async def stats(
-        self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any
-    ) -> Coroutine[Any, Any, Dict[str, ImageStatistics]]:
-        """Return Dataset's statistics."""
-        return await run_in_threadpool(self.dataset.stats, pmin, pmax, **kwargs)  # type: ignore
-
     async def statistics(
         self, **kwargs: Any
     ) -> Coroutine[Any, Any, Dict[str, BandStatistics]]:
@@ -114,14 +108,8 @@ async def test_async():
         assert cog.minzoom == 5
         assert cog.maxzoom == 9
 
-        with pytest.warns(DeprecationWarning):
-            assert await cog.stats(5, 95)
-
         stat = await cog.statistics()
         assert stat == dataset.statistics()
-
-        with pytest.warns(DeprecationWarning):
-            assert await cog.metadata(2, 98)
 
         data, mask = await cog.tile(43, 24, 7)
         assert data.shape == (1, 256, 256)

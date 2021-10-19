@@ -284,7 +284,6 @@ print(info.dict(exclude_none=True))
 from rio_tiler.io import COGReader
 
 with COGReader("myfile.tif") as cog:
-    # cog.stats(**kwargs)
     stats = cog.statistics()
     assert isinstance(stats, dict)
 
@@ -320,7 +319,6 @@ print(stats["1"].dict())
 }
 
 with COGReader("myfile_with_colormap.tif") as cog:
-    # cog.stats(**kwargs)
     stats = cog.statistics(categorical=True, categories=[1, 2])  # we limit the categories to 2 defined value (defaults to all dataset values)
     assert isinstance(stats, dict)
 

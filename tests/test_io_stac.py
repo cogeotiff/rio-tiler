@@ -349,28 +349,6 @@ def test_point_valid(rio):
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
-def test_stats_valid(rio):
-    """Should raise or return data."""
-    rio.open = mock_rasterio_open
-
-    with STACReader(STAC_PATH) as stac:
-        with pytest.warns(DeprecationWarning):
-            with pytest.raises(InvalidAssetName):
-                stac.stats(assets="vert")
-
-        with pytest.warns(DeprecationWarning):
-            stats = stac.stats(assets="green")
-            assert stats["green"]
-            assert stats["green"]["1"]["percentiles"]
-            assert stats["green"]["1"].percentiles
-
-        with pytest.warns(DeprecationWarning):
-            stats = stac.stats(assets=("green", "red"), hist_options={"bins": 20})
-            assert len(stats["green"]["1"]["histogram"][0]) == 20
-            assert stats["red"]
-
-
-@patch("rio_tiler.io.cogeo.rasterio")
 def test_statistics_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -428,26 +406,6 @@ def test_info_valid(rio):
         meta = stac.info(assets=("green", "red"))
         assert meta["green"]
         assert meta["red"]
-
-
-@patch("rio_tiler.io.cogeo.rasterio")
-def test_metadata_valid(rio):
-    """Should raise or return data."""
-    rio.open = mock_rasterio_open
-
-    with STACReader(STAC_PATH) as stac:
-        with pytest.warns(DeprecationWarning):
-            with pytest.raises(InvalidAssetName):
-                stac.metadata(assets="vert")
-
-        with pytest.warns(DeprecationWarning):
-            meta = stac.metadata(assets="green")
-            assert meta["green"]
-
-        with pytest.warns(DeprecationWarning):
-            meta = stac.metadata(assets=("green", "red"))
-            assert meta["green"]
-            assert meta["red"]
 
 
 def test_parse_expression():

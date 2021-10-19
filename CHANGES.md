@@ -78,7 +78,7 @@ with COGReader("my.tif") as cog:
     assert img.height == cog.dataset.height
 ```
 
-* deprecate `.metadata` and `.stats` methods (https://github.com/cogeotiff/rio-tiler/pull/425)
+* remove `.metadata` and `.stats` methods (https://github.com/cogeotiff/rio-tiler/pull/425)
 * add `.statistics` method in base classes (https://github.com/cogeotiff/rio-tiler/pull/427)
 
 * remove `rio_tiler.io.base.SpatialMixin.spatial_info` and `rio_tiler.io.base.SpatialMixin.center` properties (https://github.com/cogeotiff/rio-tiler/pull/429)

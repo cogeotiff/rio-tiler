@@ -48,46 +48,6 @@ def aws_get_object(
     return response["Body"].read()
 
 
-def _stats(
-    arr: numpy.ma.array, percentiles: Tuple[float, float] = (2, 98), **kwargs: Any
-) -> Dict:
-    """Calculate array statistics.
-
-    Args:
-        arr (numpy.ndarray): Input array data to get the stats from.
-        percentiles (tuple, optional): Min/Max percentiles to compute. Defaults to `(2, 98)`.
-        kwargs (optional): Options to forward to numpy.histogram function.
-
-    Returns:
-        dict: numpy array statistics (percentiles, min, max, stdev, histogram, valid_percent).
-
-    Examples:
-        >>> {
-            'percentiles': [38, 147],
-            'min': 20,
-            'max': 180,
-            'std': 28.123562304138662,
-            'histogram': [
-                [1625, 219241, 28344, 15808, 12325, 10687, 8535, 7348, 4656, 1208],
-                [20.0, 36.0, 52.0, 68.0, 84.0, 100.0, 116.0, 132.0, 148.0, 164.0, 180.0]
-            ],
-            'valid_percent': 0.5
-        }
-
-    """
-    sample, edges = numpy.histogram(arr[~arr.mask], **kwargs)
-    return dict(
-        percentiles=numpy.percentile(arr[~arr.mask], percentiles)
-        .astype(arr.dtype)
-        .tolist(),
-        min=arr.min().item(),
-        max=arr.max().item(),
-        std=arr.std().item(),
-        histogram=[sample.tolist(), edges.tolist()],
-        valid_percent=((numpy.count_nonzero(~arr.mask)) / float(arr.data.size)) * 100,
-    )
-
-
 def get_bands_names(
     indexes: Optional[Sequence[int]] = None,
     expression: Optional[str] = None,

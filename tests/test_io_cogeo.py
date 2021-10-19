@@ -142,63 +142,6 @@ def test_info_valid():
         assert meta.nodata_type == "Nodata"
 
 
-def test_metadata_valid():
-    """Get bounds and get stats for all bands."""
-    with COGReader(COGEO) as cog:
-        with pytest.warns(DeprecationWarning):
-            meta = cog.metadata()
-            assert len(meta["band_descriptions"]) == 1
-            assert len(meta.band_descriptions) == 1
-            assert ("1", "") == meta.band_descriptions[0]
-            assert meta.overviews
-            assert meta.count
-            assert meta.height
-            assert meta.width
-
-            stats = meta["statistics"]
-            assert len(stats.items()) == 1
-            assert meta["statistics"]["1"]["percentiles"]
-            b1_stats = meta.statistics["1"]
-            assert b1_stats.percentiles == [1, 6896]
-            assert b1_stats.valid_percent == 100.0
-
-        with pytest.warns(DeprecationWarning):
-            stats = cog.stats()
-            assert len(stats.items()) == 1
-            b1_stats = stats["1"]
-            assert b1_stats.percentiles == [1, 6896]
-
-        with pytest.warns(DeprecationWarning):
-            meta = cog.metadata(
-                pmin=5, pmax=90, hist_options=dict(bins=20), max_size=128
-            )
-            stats = meta.statistics
-            assert len(stats.items()) == 1
-            b1_stats = stats["1"]
-            assert len(b1_stats.histogram[0]) == 20
-            assert b1_stats.percentiles == [1, 3776]
-
-    with COGReader(COG_CMAP) as cog:
-        assert cog.colormap
-        with pytest.warns(DeprecationWarning):
-            b1_stats = cog.metadata().statistics["1"]
-            assert b1_stats.histogram[1] == [
-                0.0,
-                1.0,
-                2.0,
-                3.0,
-                4.0,
-                5.0,
-                6.0,
-                7.0,
-                8.0,
-                10.0,
-                11.0,
-                12.0,
-                13.0,
-            ]
-
-
 def test_tile_valid_default():
     """Should return a 3 bands array and a full valid mask."""
     with COGReader(COG_NODATA) as cog:
@@ -424,10 +367,6 @@ def test_COGReader_Options():
     """Set options in reader."""
     with COGReader(COGEO, nodata=1) as cog:
         assert cog.nodata == 1
-        with pytest.warns(DeprecationWarning):
-            b1_stats = cog.metadata().statistics["1"]
-            assert b1_stats.percentiles == [2720, 6896]
-            assert cog.info().nodata_type == "Nodata"
 
     with COGReader(COGEO) as cog:
         assert not cog.nodata
@@ -495,10 +434,6 @@ def test_cog_with_internal_gcps():
         assert len(metadata.band_metadata) == 1
         assert metadata.band_descriptions == [("1", "")]
 
-        with pytest.warns(DeprecationWarning):
-            b1_stats = cog.stats()["1"]
-            assert b1_stats.max == 623
-
         tile_z = 8
         tile_x = 183
         tile_y = 120
@@ -523,10 +458,6 @@ def test_cog_with_internal_gcps():
             metadata = cog.info()
             assert len(metadata.band_metadata) == 1
             assert metadata.band_descriptions == [("1", "")]
-
-            with pytest.warns(DeprecationWarning):
-                b1_stats = cog.stats()["1"]
-                assert b1_stats.max == 623
 
             tile_z = 8
             tile_x = 183

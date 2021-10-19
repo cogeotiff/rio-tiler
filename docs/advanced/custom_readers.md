@@ -301,9 +301,6 @@ class Reader(BaseReader):
     def info(self) -> Info:
         raise NotImplemented
 
-    def stats(self, pmin: float = 2.0, pmax: float = 98.0, **kwargs: Any) -> Dict[str, ImageStatistics]:
-        raise NotImplemented
-
     def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
         raise NotImplemented
 
