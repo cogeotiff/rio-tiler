@@ -122,7 +122,7 @@ class STACReader(MultiBaseReader):
     """STAC Reader.
 
     Attributes:
-        filepath (str): STAC Item path, URL or S3 URL.
+        input (str): STAC Item path, URL or S3 URL.
         item (dict or pystac.Item, STAC): Stac Item.
         minzoom (int, optional): Set minzoom for the tiles.
         maxzoom (int, optional): Set maxzoom for the tiles.
@@ -153,7 +153,7 @@ class STACReader(MultiBaseReader):
 
     """
 
-    filepath: str = attr.ib()
+    input: str = attr.ib()
     item: pystac.Item = attr.ib(default=None, converter=_to_pystac_item)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
@@ -174,7 +174,7 @@ class STACReader(MultiBaseReader):
     def __attrs_post_init__(self):
         """Fetch STAC Item and get list of valid assets."""
         self.item = self.item or pystac.Item.from_dict(
-            fetch(self.filepath, **self.fetch_options), self.filepath
+            fetch(self.input, **self.fetch_options), self.input
         )
 
         # TODO: get bounds/crs using PROJ extension if availble

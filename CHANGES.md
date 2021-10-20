@@ -1,3 +1,12 @@
+# 3.0.0a1 (TBD)
+
+**breaking changes**
+
+* add `input` in BaseReader class definition to avoid type mismatch (https://github.com/cogeotiff/rio-tiler/pull/450)
+
+    Note: `input` replaces `filepath` attribute in STACReader and COGReader.
+
+
 # 3.0.0a0 (2021-10-19)
 
 * add `crs` property in `rio_tiler.io.base.SpatialMixin` (https://github.com/cogeotiff/rio-tiler/pull/429)

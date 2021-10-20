@@ -97,6 +97,15 @@ class SpatialMixin:
 class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """Rio-tiler.io BaseReader."""
 
+    input: Any = attr.ib()
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    minzoom: int = attr.ib(init=False)
+    maxzoom: int = attr.ib(init=False)
+
+    bounds: BBox = attr.ib(init=False)
+    crs: CRS = attr.ib(init=False)
+
     def __enter__(self):
         """Support using with Context Managers."""
         return self
@@ -194,6 +203,15 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 @attr.s
 class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """Rio-tiler.io AsyncBaseReader."""
+
+    input: Any = attr.ib()
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    minzoom: int = attr.ib(init=False)
+    maxzoom: int = attr.ib(init=False)
+
+    bounds: BBox = attr.ib(init=False)
+    crs: CRS = attr.ib(init=False)
 
     async def __aenter__(self):
         """Support using with Context Managers."""
@@ -311,10 +329,17 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     """
 
+    input: Any = attr.ib()
     reader: Type[BaseReader] = attr.ib()
-    reader_options: Dict = attr.ib(factory=dict)
 
+    reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    minzoom: int = attr.ib(init=False)
+    maxzoom: int = attr.ib(init=False)
+
+    bounds: BBox = attr.ib(init=False)
+    crs: CRS = attr.ib(init=False)
 
     assets: Sequence[str] = attr.ib(init=False)
 
@@ -735,10 +760,17 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     """
 
+    input: Any = attr.ib()
     reader: Type[BaseReader] = attr.ib()
-    reader_options: Dict = attr.ib(factory=dict)
 
+    reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    minzoom: int = attr.ib(init=False)
+    maxzoom: int = attr.ib(init=False)
+
+    bounds: BBox = attr.ib(init=False)
+    crs: CRS = attr.ib(init=False)
 
     bands: Sequence[str] = attr.ib(init=False)
 

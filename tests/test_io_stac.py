@@ -39,7 +39,7 @@ def test_fetch_stac(httpx, s3_get):
         assert stac.minzoom == 0
         assert stac.maxzoom == 24
         assert stac.bounds
-        assert stac.filepath == STAC_PATH
+        assert stac.input == STAC_PATH
         assert stac.assets == ["red", "green", "blue"]
     httpx.assert_not_called()
     s3_get.assert_not_called()
@@ -48,7 +48,7 @@ def test_fetch_stac(httpx, s3_get):
     with STACReader(None, item=item) as stac:
         assert stac.minzoom == 0
         assert stac.maxzoom == 24
-        assert not stac.filepath
+        assert not stac.input
         assert stac.assets == ["red", "green", "blue"]
     httpx.assert_not_called()
     s3_get.assert_not_called()

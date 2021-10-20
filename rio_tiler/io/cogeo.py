@@ -41,7 +41,7 @@ class COGReader(BaseReader):
     """Cloud Optimized GeoTIFF Reader.
 
     Attributes:
-        filepath (str): Cloud Optimized GeoTIFF path.
+        input (str): Cloud Optimized GeoTIFF path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         bounds (tuple): Dataset bounds (left, bottom, right, top).
         crs (rasterio.crs.CRS): Dataset crs.
@@ -74,7 +74,7 @@ class COGReader(BaseReader):
 
     """
 
-    filepath: str = attr.ib()
+    input: str = attr.ib()
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
@@ -111,7 +111,7 @@ class COGReader(BaseReader):
         if self.post_process is not None:
             self._kwargs["post_process"] = self.post_process
 
-        self.dataset = self.dataset or rasterio.open(self.filepath)
+        self.dataset = self.dataset or rasterio.open(self.input)
         self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
 
@@ -133,7 +133,7 @@ class COGReader(BaseReader):
 
     def close(self):
         """Close rasterio dataset."""
-        if self.filepath:
+        if self.input:
             self.dataset.close()
 
     def __exit__(self, exc_type, exc_value, traceback):
@@ -313,7 +313,7 @@ class COGReader(BaseReader):
         """
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.filepath} bounds"
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
@@ -420,7 +420,7 @@ class COGReader(BaseReader):
             mask,
             bounds=bbox,
             crs=dst_crs,
-            assets=[self.filepath],
+            assets=[self.input],
             band_names=get_bands_names(
                 indexes=indexes, expression=expression, count=data.shape[0]
             ),
@@ -482,7 +482,7 @@ class COGReader(BaseReader):
             mask,
             bounds=self.bounds,
             crs=self.crs,
-            assets=[self.filepath],
+            assets=[self.input],
             band_names=get_bands_names(
                 indexes=indexes, expression=expression, count=data.shape[0]
             ),
@@ -631,7 +631,7 @@ class COGReader(BaseReader):
             mask,
             bounds=self.bounds,
             crs=self.crs,
-            assets=[self.filepath],
+            assets=[self.input],
             band_names=get_bands_names(
                 indexes=indexes, expression=expression, count=data.shape[0]
             ),
@@ -643,7 +643,7 @@ class GCPCOGReader(COGReader):
     """Custom COG Reader with GCPS support.
 
     Attributes:
-        filepath (str): Cloud Optimized GeoTIFF path.
+        input (str): Cloud Optimized GeoTIFF path.
         src_dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         minzoom (int, optional): Overwrite Min Zoom level.
@@ -668,7 +668,7 @@ class GCPCOGReader(COGReader):
 
     """
 
-    filepath: str = attr.ib()
+    input: str = attr.ib()
     src_dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
@@ -695,7 +695,7 @@ class GCPCOGReader(COGReader):
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
-        self.src_dataset = self.src_dataset or rasterio.open(self.filepath)
+        self.src_dataset = self.src_dataset or rasterio.open(self.input)
         self.dataset = WarpedVRT(
             self.src_dataset,
             src_crs=self.src_dataset.gcps[1],
@@ -706,5 +706,5 @@ class GCPCOGReader(COGReader):
     def close(self):
         """Close rasterio dataset."""
         self.dataset.close()
-        if self.filepath:
+        if self.input:
             self.src_dataset.close()
