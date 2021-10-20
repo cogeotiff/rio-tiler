@@ -96,18 +96,6 @@ class BandStatistics(RioTilerBaseModel):
         extra = "allow"  # We allow extra values for `percentiles_{}`
 
 
-# TODO: remove
-class ImageStatistics(RioTilerBaseModel):
-    """Image statistics"""
-
-    percentiles: List[NumType]
-    min: NumType
-    max: NumType
-    std: NumType
-    histogram: List[List[NumType]]
-    valid_percent: float
-
-
 def to_coordsbbox(bbox) -> Optional[BoundingBox]:
     """Convert bbox to CoordsBbox nameTuple."""
     return BoundingBox(*bbox) if bbox else None

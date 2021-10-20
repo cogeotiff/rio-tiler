@@ -6,6 +6,9 @@
 
     Note: `input` replaces `filepath` attribute in STACReader and COGReader.
 
+**removed**
+
+* - `rio_tiler.models.ImageStatistics` model
 
 # 3.0.0a0 (2021-10-19)
 
@@ -172,7 +175,7 @@ with STACReader("mystac.json") as stac:
 * `rio_tiler.io.BaseReader.metadata` and `rio_tiler.io.BaseReader.stats` base class methods (https://github.com/cogeotiff/rio-tiler/pull/425)
 * `rio_tiler.reader.stats` function (https://github.com/cogeotiff/rio-tiler/pull/440)
 * `rio_tiler.reader.metadata` function (https://github.com/cogeotiff/rio-tiler/pull/440)
-*  `rio_tiler.utils._stats` function (https://github.com/cogeotiff/rio-tiler/pull/440)
+* `rio_tiler.utils._stats` function (https://github.com/cogeotiff/rio-tiler/pull/440)
 
 # 2.1.3 (2021-09-14)
 

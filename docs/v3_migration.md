@@ -109,8 +109,12 @@ with STACReader("mystac.json") as stac:
 
 ## Deprecation
 
-- `BaseReader.metadata()` method
-- `BaseReader.stats()` method
-- `BaseReader.spatial_info()` method
-- `BaseReader.center` property
-
+- `rio_tiler.io.base.BaseReader.metadata()` method
+- `rio_tiler.io.base.BaseReader.stats()` method
+- `rio_tiler.io.base.BaseReader.spatial_info()` method
+- `rio_tiler.io.base.BaseReader.center` property
+- `rio_tiler.models.Metadata` model
+- `rio_tiler.models.ImageStatistics` model
+* `rio_tiler.reader.stats` function
+* `rio_tiler.reader.metadata` function
+* `rio_tiler.utils._stats` function

@@ -287,7 +287,7 @@ import attr
 import rasterio
 from rasterio.io import DatasetReader
 from rio_tiler.io import BaseReader
-from rio_tiler.models import Info, ImageStatistics, ImageData
+from rio_tiler.models import BandStatistics, Info, ImageData
 from morecantile import TileMatrixSet
 
 from rio_tiler.constants import BBox, WEB_MERCATOR_TMS
@@ -311,6 +311,9 @@ class Reader(BaseReader):
 
     # implement all mandatory methods
     def info(self) -> Info:
+        raise NotImplemented
+
+    def statistics(self, **kwargs: Any) -> Dict[str, BandStatistics]:
         raise NotImplemented
 
     def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
