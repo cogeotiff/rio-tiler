@@ -13,7 +13,9 @@ Main `rio_tiler.io` Abstract Base Class.
 
 ##### Minimal Arguments
 
+- **input**: Input
 - **tms**: The TileMatrixSet define which default projection and map grid the reader uses. Defaults to WebMercatorQuad.
+
 - **minzoom**: Dataset's minzoom. Not in the `__init__` method.
 - **maxzoom**: Dataset's maxzoom. Not in the `__init__` method.
 - **bounds**: Dataset's bounding box. Not in the `__init__` method.
@@ -71,18 +73,23 @@ from rio_tiler.models import Info
 @attr.s
 class AssetFileReader(MultiBaseReader):
 
-    path: str = attr.ib()
-    prefix: str = attr.ib()
+    input: str = attr.ib()
+    prefix: str = attr.ib() # we add a custom attribute
+
+    # because we add another attribute (prefix) we need to
+    # re-specify the other attribute for the class
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    # we place min/max zoom in __init__
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
         self.assets = sorted(
-            [p.stem.split("_")[1] for p in pathlib.Path(self.path).glob(f"*{self.prefix}*.tif")]
+            [p.stem.split("_")[1] for p in pathlib.Path(self.input).glob(f"*{self.prefix}*.tif")]
         )
         with self.reader(self._get_asset_url(self.assets[0])) as cog:
             self.bounds = cog.bounds
@@ -96,10 +103,10 @@ class AssetFileReader(MultiBaseReader):
 
     def _get_asset_url(self, band: str) -> str:
         """Validate band's name and return band's url."""
-        return os.path.join(self.path, f"{self.prefix}{band}.tif")
+        return os.path.join(self.input, f"{self.prefix}{band}.tif")
 
 # we have a directoty with "scene_b1.tif", "scene_b2.tif"
-with AssetFileReader("my_dir/", "scene_") as cr:
+with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
     print(cr.assets)
     >>> ['b1', 'b2']
 
@@ -151,18 +158,23 @@ from rio_tiler.constants import WEB_MERCATOR_TMS
 @attr.s
 class BandFileReader(MultiBandReader):
 
-    path: str = attr.ib()
-    prefix: str = attr.ib()
+    input: str = attr.ib()
+    prefix: str = attr.ib() # we add a custom attribute
+
+    # because we add another attribute (prefix) we need to
+    # re-specify the other attribute for the class
     reader: Type[BaseReader] = attr.ib(default=COGReader)
     reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    # we place min/max zoom in __init__
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
         self.bands = sorted(
-            [p.stem.split("_")[1] for p in pathlib.Path(self.path).glob(f"*{self.prefix}*.tif")]
+            [p.stem.split("_")[1] for p in pathlib.Path(self.input).glob(f"*{self.prefix}*.tif")]
         )
         with self.reader(self._get_band_url(self.bands[0])) as cog:
             self.bounds = cog.bounds
@@ -176,11 +188,11 @@ class BandFileReader(MultiBandReader):
 
     def _get_band_url(self, band: str) -> str:
         """Validate band's name and return band's url."""
-        return os.path.join(self.path, f"{self.prefix}{band}.tif")
+        return os.path.join(self.input, f"{self.prefix}{band}.tif")
 
 
 # we have a directoty with "scene_b1.tif", "scene_b2.tif"
-with BandFileReader("my_dir/", "scene_") as cr:
+with BandFileReader(input="my_dir/", prefix="scene_") as cr:
     print(cr.bands)
     >>> ['b1', 'b2']
 
@@ -235,19 +247,19 @@ class CustomSTACReader(COGReader):
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
         # get STAC item URL and asset name
-        asset = self.filepath.split(":")[-1]
-        stac_url = self.filepath.replace(f":{asset}", "")
+        asset = self.input.split(":")[-1]
+        stac_url = self.input.replace(f":{asset}", "")
 
         # Fetch the STAC item
         self.item = pystac.Item.from_dict(fetch(stac_url), stac_url)
 
         # Get asset url from the STAC Item
-        self.filepath = self.item.assets[asset].get_absolute_href()
+        self.input = self.item.assets[asset].get_absolute_href()
         super().__attrs_post_init__()
 
 with CustomSTACReader("https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/S5_11055_6057_20070622.json:pan") as cog:
     print(type(cog.dataset))
-    print(cog.filepath)
+    print(cog.input)
     print(cog.nodata)
     print(cog.bounds)
 
@@ -261,7 +273,7 @@ In this `CustomSTACReader`, we are using a custom path `schema` in form of `{ite
 
 1. Parse the input path to get the STAC url and asset name
 2. Fetch and parse the STAC item
-3. Construct a new `filename` using the asset full url.
+3. Construct a new `input` using the asset full url.
 4. Fall back to the regular `COGReader` initialization (using `super().__attrs_post_init__()`)
 
 
@@ -283,7 +295,7 @@ from rio_tiler.constants import BBox, WEB_MERCATOR_TMS
 @attr.s
 class Reader(BaseReader):
 
-    dataset: DatasetReader = attr.ib()
+    input: DatasetReader = attr.ib()
 
     # We force tms to be outside the class __init__
     tms: TileMatrixSet = attr.ib(init=False, default=WEB_MERCATOR_TMS)
@@ -294,8 +306,8 @@ class Reader(BaseReader):
 
     def __attrs_post_init__(self):
         # Set bounds and crs variable
-        self.bounds = self.dataset.bounds
-        self.crs = self.dataset.crs
+        self.bounds = self.input.bounds
+        self.crs = self.input.crs
 
     # implement all mandatory methods
     def info(self) -> Info:
@@ -322,7 +334,7 @@ class Reader(BaseReader):
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
         data, mask = reader.part(
-            self.dataset,
+            self.input,
             tile_bounds,
             width=256,
             height=256,

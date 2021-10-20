@@ -21,16 +21,19 @@ default_tms = morecantile.tms.get("WebMercatorQuad")
 class BandFileReader(MultiBandReader):
     """Test MultiBand"""
 
-    path: str = attr.ib()
+    input: str = attr.ib()
     reader: Type[BaseReader] = attr.ib(default=COGReader)
-    reader_options: Dict = attr.ib(factory=dict)
 
+    reader_options: Dict = attr.ib(factory=dict)
     tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
         self.bands = sorted(
-            [p.stem.split("_")[1] for p in pathlib.Path(self.path).glob("*scene_*.tif")]
+            [
+                p.stem.split("_")[1]
+                for p in pathlib.Path(self.input).glob("*scene_*.tif")
+            ]
         )
         with self.reader(self._get_band_url(self.bands[0])) as cog:
             self.bounds = cog.bounds
@@ -40,7 +43,7 @@ class BandFileReader(MultiBandReader):
 
     def _get_band_url(self, band: str) -> str:
         """Validate band's name and return band's url."""
-        return os.path.join(self.path, f"scene_{band}.tif")
+        return os.path.join(self.input, f"scene_{band}.tif")
 
 
 def test_MultiBandReader():

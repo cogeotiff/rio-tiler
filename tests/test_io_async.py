@@ -48,53 +48,53 @@ async def run_in_threadpool(
 @attr.s
 class AsyncCOGReader(AsyncBaseReader):
 
-    dataset: Type[COGReader] = attr.ib()
+    input: Type[COGReader] = attr.ib()
     tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     def __attrs_post_init__(self):
         """Update dataset info."""
-        self.bounds = self.dataset.bounds
-        self.crs = self.dataset.crs
-        self.minzoom = self.dataset.minzoom
-        self.maxzoom = self.dataset.maxzoom
+        self.bounds = self.input.bounds
+        self.crs = self.input.crs
+        self.minzoom = self.input.minzoom
+        self.maxzoom = self.input.maxzoom
 
     async def info(self) -> Coroutine[Any, Any, Info]:
         """Return Dataset's info."""
-        return await run_in_threadpool(self.dataset.info)  # type: ignore
+        return await run_in_threadpool(self.input.info)  # type: ignore
 
     async def statistics(
         self, **kwargs: Any
     ) -> Coroutine[Any, Any, Dict[str, BandStatistics]]:
         """Return Dataset's statistics."""
-        return await run_in_threadpool(self.dataset.statistics, **kwargs)  # type: ignore
+        return await run_in_threadpool(self.input.statistics, **kwargs)  # type: ignore
 
     async def tile(
         self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
     ) -> Coroutine[Any, Any, ImageData]:
         """Read a Map tile from the Dataset."""
         return await run_in_threadpool(
-            self.dataset.tile, tile_x, tile_y, tile_z, **kwargs  # type: ignore
+            self.input.tile, tile_x, tile_y, tile_z, **kwargs  # type: ignore
         )
 
     async def part(self, bbox: BBox, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
         """Read a Part of a Dataset."""
-        return await run_in_threadpool(self.dataset.part, bbox, **kwargs)  # type: ignore
+        return await run_in_threadpool(self.input.part, bbox, **kwargs)  # type: ignore
 
     async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
         """Return a preview of a Dataset."""
-        return await run_in_threadpool(self.dataset.preview, **kwargs)  # type: ignore
+        return await run_in_threadpool(self.input.preview, **kwargs)  # type: ignore
 
     async def point(
         self, lon: float, lat: float, **kwargs: Any
     ) -> Coroutine[Any, Any, List]:
         """Read a value from a Dataset."""
-        return await run_in_threadpool(self.dataset.point, lon, lat, **kwargs)  # type: ignore
+        return await run_in_threadpool(self.input.point, lon, lat, **kwargs)  # type: ignore
 
     async def feature(
         self, shape: Dict, **kwargs: Any
     ) -> Coroutine[Any, Any, ImageData]:
         """Read a Dataset for a GeoJSON feature"""
-        return await run_in_threadpool(self.dataset.feature, shape, **kwargs)  # type: ignore
+        return await run_in_threadpool(self.input.feature, shape, **kwargs)  # type: ignore
 
 
 @pytest.mark.asyncio

@@ -16,16 +16,20 @@ COGReader.__mro__
  object)
 ```
 
+#### Attributes
+
+- **input** (str): filepath
+- **dataset** (rasterio dataset, optional): rasterio openned dataset
+- **tms** (morecantile.TileMatrixSet, optional): morecantile TileMatrixSet used for tile reading (defaults to WebMercator)
+- **minzoom** (int, optional): dataset's minimum zoom level (for input tms)
+- **maxzoom** (int, optional): dataset's maximum zoom level (for input tms)
+- **colormap** (dict, optional): dataset's colormap
+
 #### Properties
 
-- **dataset**: rasterio openned dataset
-- **tms**: morecantile TileMatrixSet used for tile reading
-- **minzoom**: dataset's minimum zoom level (for input tms)
-- **maxzoom**: dataset's maximum zoom level (for input tms)
 - **bounds**: dataset's bounds (in dataset crs)
 - **crs**: dataset's crs
 - **geographic_bounds**: dataset's bounds in WGS84
-- **colormap**: dataset's internal colormap
 
 
 ```python
@@ -340,7 +344,7 @@ print(stats["1"].dict())
 
 #### Read Options
 
-`COGReader` accepts several options which will be forwarded to the `rio_tiler.reader.read` function (low level function accessing the data), those options can be set as reader's attribute or within each method calls:
+`COGReader` accepts several input options which will be forwarded to the `rio_tiler.reader.read` function (low level function accessing the data), those options can be set as reader's attribute or within each method calls:
 
 - **nodata**: Overwrite the nodata value (or set if not present)
 - **unscale**: Apply internal rescaling factors
@@ -374,14 +378,24 @@ STACReader.__mro__
  object)
 ```
 
+#### Attributes
+
+- **input** (str): STAC Item path, URL or S3 URL
+- **item**: PySTAC item
+- **tms** (morecantile.TileMatrixSet, optional): morecantile TileMatrixSet used for tile reading (defaults to WebMercator)
+- **minzoom** (int, optional): dataset's minimum zoom level (for input tms)
+- **maxzoom** (int, optional): dataset's maximum zoom level (for input tms)
+- **include_assets** (set, optional): Set of assets to include from the `available` asset list
+- **exclude_assets** (set, optional): Set of assets to exclude from the `available` asset list
+- **include_asset_types** (set, optional): asset types to consider as valid type for the reader
+- **exclude_asset_types** (set, optional): asset types to consider as invalid type for the reader
+- **reader** (BaseReader, optional): Reader to use to read assets (defaults to COGReader)
+- **reader_options** (dict, optional): Options to forward to the reader init
+- **fetch_options** (dict, optional): Options to pass to the `httpx.get` or `boto3` when fetching the STAC item
+
 #### Properties
 
-- **filepath**: STAC Item path, URL or S3 URL
-- **item**: PySTAC item
 - **assets**: Asset list.
-- **tms**: morecantile TileMatrixSet used for tile reading
-- **minzoom**: dataset's minimum zoom level (for input tms)
-- **maxzoom**: dataset's maximum zoom level (for input tms)
 - **bounds**: dataset's bounds (in dataset crs)
 - **crs**: dataset's crs
 - **geographic_bounds**: dataset's bounds in WGS84
@@ -393,7 +407,7 @@ with STACReader(
     "https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A",
     exclude_assets={"thumbnail"}
 ) as stac:
-    print(stac.filepath)
+    print(stac.input)
     print(stac.item)
     print(stac.assets)
     print(stac.tms.identifier)
