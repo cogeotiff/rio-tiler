@@ -460,6 +460,15 @@ def test_get_array_statistics():
     assert len(stats[0]["histogram"][0]) == stats[0]["unique"]
     assert len(stats[0]["histogram"][1]) == stats[0]["unique"]
 
+    # histogram return only the categories passed
     stats = utils.get_array_statistics(arr, categorical=True, categories=[1, 10, 12])
     assert len(stats[0]["histogram"][0]) == 3
     assert len(stats[0]["histogram"][1]) == 3
+
+    # test if providing a category not in the data (1000000)
+    stats = utils.get_array_statistics(
+        arr, categorical=True, categories=[1, 10, 12, 1000000]
+    )
+    assert len(stats[0]["histogram"][0]) == 4
+    assert len(stats[0]["histogram"][1]) == 4
+    assert stats[0]["histogram"][0][3] == 0.0  # there is no value 1000000
