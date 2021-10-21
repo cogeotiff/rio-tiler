@@ -140,7 +140,7 @@ def get_array_statistics(
                 numpy.array(categories).astype(keys.dtype) if categories else keys
             ).tolist()
             histogram = [
-                [out_dict[x] for x in h_keys],
+                [out_dict.get(x, 0) for x in h_keys],
                 h_keys,
             ]
         else:

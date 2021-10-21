@@ -1,3 +1,7 @@
+# 3.0.0a2 (2021-10-21)
+
+* Allow `rio_tiler.utils.get_array_statistics` to return `0` for unfound category, instead of raising an error (https://github.com/cogeotiff/rio-tiler/pull/443)
+
 # 3.0.0a1 (2021-10-20)
 
 **breaking changes**
