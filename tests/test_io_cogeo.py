@@ -441,7 +441,7 @@ def test_cog_with_internal_gcps():
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
 
-    # https://github.com/mapbox/rasterio/issues/2092
+    # https://github.com/rasterio/rasterio/issues/2092
     # assert cog.dataset.closed
     assert cog.src_dataset.closed
 
@@ -465,7 +465,7 @@ def test_cog_with_internal_gcps():
             data, mask = cog.tile(tile_x, tile_y, tile_z)
             assert data.shape == (1, 256, 256)
             assert mask.shape == (256, 256)
-        # https://github.com/mapbox/rasterio/issues/2092
+        # https://github.com/rasterio/rasterio/issues/2092
         # assert cog.dataset.closed
         assert not cog.src_dataset.closed
     assert cog.src_dataset.closed

@@ -10,8 +10,8 @@ This class has helper methods like `render` which forward internal data and mask
 - **data**: image data array (numpy.ndarray)
 - **mask**: gdal/rasterio mask data array (numpy.ndarray)
 - **assets**: assets list used to create the data array (list, optional)
-- **bounds**: bounds of the data ([rasterio.coords.BoundingBox](https://github.com/mapbox/rasterio/blob/master/rasterio/coords.py#L8), optional)
-- **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/mapbox/rasterio/blob/master/rasterio/crs.py#L21), optional)
+- **bounds**: bounds of the data ([rasterio.coords.BoundingBox](https://github.com/rasterio/rasterio/blob/master/rasterio/coords.py#L8), optional)
+- **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/master/rasterio/crs.py#L21), optional)
 - **metadata**: additional metadata (dict, optional)
 - **band_names**: image band's names
 
