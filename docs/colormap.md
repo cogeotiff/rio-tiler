@@ -96,6 +96,34 @@ ndvi_dict = {idx: value.tolist() for idx, value in enumerate(cmap_uint8)}
 cmap = cmap.register({"ndvi": ndvi_dict})
 ```
 
+### Internvals colormaps
+
+Starting with `rio-tiler` 3.0, *intervals* colormap support has been added. This is usefull when you want to define color breaks for a given data.
+
+!!! warnings
+    For `intervals`, colormap has to be in form of `Sequence[Tuple[Sequence, Sequence]]`:
+    ```
+    [
+      ([min, max], [r, g, b, a]),
+      ([min, max], [r, g, b, a]),
+      ...
+    ]
+    ```
+
+```python
+from rio_tiler.colormap import apply_cmap
+
+data = numpy.random.randint(0, 255, size=(1, 256, 256))
+cmap = [
+    ([0, 1], [0, 0, 0, 0]),
+    ([1, 10], [255, 255, 255, 255]),
+    ([10, 100], [255, 0, 0, 255]),
+    ([100, 256], [255, 255, 0, 255]),
+]
+
+data, mask = apply_cmap(data, cmap)
+```
+
 ### Default rio-tiler's colormaps
 
 ![](img/custom.png)

@@ -266,7 +266,7 @@ class ImageData:
         self,
         add_mask: bool = True,
         img_format: str = "PNG",
-        colormap: Optional[Dict] = None,
+        colormap: Optional[Union[Dict, Sequence]] = None,
         **kwargs,
     ) -> bytes:
         """Render data to image blob.
@@ -274,7 +274,7 @@ class ImageData:
         Args:
             add_mask (bool, optional): add mask to output image. Defaults to `True`.
             img_format (str, optional): output image format. Defaults to `PNG`.
-            colormap (dict, optional): GDAL RGBA Color Table dictionary.
+            colormap (dict or sequence, optional): RGBA Color Table dictionary or sequence.
             kwargs (optional): keyword arguments to forward to `rio_tiler.utils.render`.
 
         Returns:

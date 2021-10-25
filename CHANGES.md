@@ -1,3 +1,24 @@
+# 2.1.4 (2021-10-25)
+
+* add support for **intervals** colormap (https://github.com/cogeotiff/rio-tiler/pull/439))
+
+```python
+from rio_tiler.colormap import apply_cmap, apply_intervals_cmap
+
+data = numpy.random.randint(0, 255, size=(1, 256, 256))
+cmap = [
+    # ([min, max], [r, g, b, a])
+    ([0, 1], [0, 0, 0, 0]),
+    ([1, 10], [255, 255, 255, 255]),
+    ([10, 100], [255, 0, 0, 255]),
+    ([100, 256], [255, 255, 0, 255]),
+]
+
+data, mask = apply_intervals_cmap(data, cmap)
+# or
+data, mask = apply_cmap(data, cmap)
+```
+
 # 2.1.3 (2021-09-14)
 
 * Make sure output data is of type `Uint8` when applying a colormap (https://github.com/cogeotiff/rio-tiler/pull/423)
