@@ -305,7 +305,7 @@ def render(
     data: numpy.ndarray,
     mask: Optional[numpy.ndarray] = None,
     img_format: str = "PNG",
-    colormap: Optional[Dict] = None,
+    colormap: Optional[Union[Dict, Sequence]] = None,
     **creation_options: Any,
 ) -> bytes:
     """Translate numpy.ndarray to image bytes.
@@ -314,7 +314,7 @@ def render(
         data (numpy.ndarray): Image array to encode.
         mask (numpy.ndarray, optional): Mask array.
         img_format (str, optional): Image format. See: for the list of supported format by GDAL: https://www.gdal.org/formats_list.html. Defaults to `PNG`.
-        colormap (dict, optional): GDAL RGBA Color Table dictionary.
+        colormap (dict or sequence, optional): RGBA Color Table dictionary or sequence.
         creation_options (optional): Image driver creation options to forward to GDAL.
 
     Returns
