@@ -1,3 +1,8 @@
+
+# 3.0.0a3 (2021-11-03)
+
+* Reader's `info` and `statistics` methods to default to available `bands` or `assets` if not provided (https://github.com/cogeotiff/rio-tiler/pull/451)
+
 # 3.0.0a2 (2021-10-21)
 
 * Allow `rio_tiler.utils.get_array_statistics` to return `0` for unfound category, instead of raising an error (https://github.com/cogeotiff/rio-tiler/pull/443)

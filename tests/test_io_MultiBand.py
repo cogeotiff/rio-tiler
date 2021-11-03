@@ -58,8 +58,8 @@ def test_MultiBandReader():
 
         assert sorted(cog.parse_expression("b1/b2")) == ["b1", "b2"]
 
-        with pytest.raises(MissingBands):
-            cog.info()
+        meta = cog.info()
+        assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
         meta = cog.info(bands="b1")
         assert meta.band_descriptions == [("b1", "")]
@@ -67,8 +67,9 @@ def test_MultiBandReader():
         meta = cog.info(bands=("b1", "b2"))
         assert meta.band_descriptions == [("b1", ""), ("b2", "")]
 
-        with pytest.raises(MissingBands):
-            cog.statistics()
+        stats = cog.statistics()
+        assert stats["b1"]
+        assert stats["b2"]
 
         stats = cog.statistics(bands="b1")
         assert "b1" in stats
