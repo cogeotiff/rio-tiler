@@ -354,8 +354,11 @@ def test_statistics_valid(rio):
     rio.open = mock_rasterio_open
 
     with STACReader(STAC_PATH) as stac:
-        with pytest.raises(MissingAssets):
-            stac.statistics()
+        with pytest.warns(UserWarning):
+            stats = stac.statistics()
+            assert stats["red"]
+            assert stats["green"]
+            assert stats["blue"]
 
         with pytest.raises(InvalidAssetName):
             stac.statistics(assets="vert")
@@ -399,6 +402,12 @@ def test_info_valid(rio):
     with STACReader(STAC_PATH) as stac:
         with pytest.raises(InvalidAssetName):
             stac.info(assets="vert")
+
+        with pytest.warns(UserWarning):
+            meta = stac.info()
+            assert meta["red"]
+            assert meta["green"]
+            assert meta["blue"]
 
         meta = stac.info(assets="green")
         assert meta["green"]

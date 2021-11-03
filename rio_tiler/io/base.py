@@ -367,7 +367,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         """
         if not assets:
-            raise MissingAssets("Missing 'assets' option")
+            warnings.warn(
+                "No `assets` option passed, will fetch info for all available assets.",
+                UserWarning,
+            )
+
+        assets = assets or self.assets
 
         if isinstance(assets, str):
             assets = (assets,)
@@ -399,7 +404,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         """
         if not assets:
-            raise MissingAssets("Missing 'assets' option")
+            warnings.warn(
+                "No `assets` option passed, will fetch statistics for all available assets.",
+                UserWarning,
+            )
+
+        assets = assets or self.assets
 
         if isinstance(assets, str):
             assets = (assets,)
@@ -798,7 +808,12 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         """
         if not bands:
-            raise MissingBands("Missing 'bands' option")
+            warnings.warn(
+                "No `bands` option passed, will fetch info for all available bands.",
+                UserWarning,
+            )
+
+        bands = bands or self.bands
 
         if isinstance(bands, str):
             bands = (bands,)
@@ -859,6 +874,14 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             dict: Multiple assets statistics in form of {"{band}/{expression}": rio_tiler.models.BandStatistics, ...}.
 
         """
+        if not expression:
+            if not bands:
+                warnings.warn(
+                    "No `bands` option passed, will fetch statistics for all available bands.",
+                    UserWarning,
+                )
+            bands = bands or self.bands
+
         data = self.preview(
             bands=bands, expression=expression, max_size=max_size, **kwargs,
         )
