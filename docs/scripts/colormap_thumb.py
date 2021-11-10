@@ -126,16 +126,14 @@ gradient = np.vstack((gradient, gradient))
 
 
 def make_colormap(name):
-    """Use rio-tiler colormap to create matplotlib colormap
-    """
+    """Use rio-tiler colormap to create matplotlib colormap"""
     colormap = make_lut(cmap.get(name))
     # rescale to 0-1
     return ListedColormap(colormap / 255, name=name)
 
 
 def plot_color_gradients(cmap_category, cmap_list):
-    """Make
-    """
+    """Make"""
     # Create figure and adjust figure height to number of colormaps
     nrows = len(cmap_list)
     figh = 0.35 + 0.15 + (nrows + (nrows - 1) * 0.1) * 0.22

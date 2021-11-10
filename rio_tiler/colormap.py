@@ -307,7 +307,9 @@ class ColorMaps:
         return list(self.data)
 
     def register(
-        self, custom_cmap: Dict[str, Union[str, Dict]], overwrite: bool = False,
+        self,
+        custom_cmap: Dict[str, Union[str, Dict]],
+        overwrite: bool = False,
     ) -> "ColorMaps":
         """Register a custom colormap.
 

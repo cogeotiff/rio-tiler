@@ -81,7 +81,7 @@ def get_array_statistics(
     Args:
         data (numpy.ma.ndarray): input masked array data to get the statistics from.
         categorical (bool): treat input data as categorical data. Defaults to False.
-        categories (list of numbers, optional): list of caterogies to return value for.
+        categories (list of numbers, optional): list of categories to return value for.
         percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
         kwargs (optional): options to forward to `numpy.histogram` function (only applies for non-categorical data).
 
@@ -257,7 +257,10 @@ def get_vrt_transform(
         src_dst, bounds, height, width, dst_crs
     ):
         col_off, row_off, w, h = windows.from_bounds(
-            *bounds, transform=src_dst.transform, width=width, height=height,
+            *bounds,
+            transform=src_dst.transform,
+            width=width,
+            height=height,
         ).flatten()
 
         w = windows.Window(
@@ -528,7 +531,7 @@ def create_cutline(
 
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
-        geometry (dict): GeoJSON feature or GeoJSON geometry. By default the cordinates are considered to be in the dataset CRS. Use `geometry_crs` to set a specific CRS.
+        geometry (dict): GeoJSON feature or GeoJSON geometry. By default the coordinates are considered to be in the dataset CRS. Use `geometry_crs` to set a specific CRS.
         geometry_crs (rasterio.crs.CRS, optional): Input geometry Coordinate Reference System
     Returns:
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))

@@ -157,14 +157,26 @@ def test_tile_valid(rio):
             102,
             8,
             assets=("green", "red"),
-            asset_indexes={"green": (1, 1,), "red": 1},
+            asset_indexes={
+                "green": (
+                    1,
+                    1,
+                ),
+                "red": 1,
+            },
         )
         assert img.data.shape == (3, 256, 256)
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["green_1", "green_1", "red_1"]
 
         # check backward compatibility for `indexes`
-        img = stac.tile(71, 102, 8, assets=("green", "red"), indexes=1,)
+        img = stac.tile(
+            71,
+            102,
+            8,
+            assets=("green", "red"),
+            indexes=1,
+        )
         assert img.data.shape == (2, 256, 256)
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["green_1", "red_1"]
@@ -220,7 +232,15 @@ def test_part_valid(rio):
             assert img.band_names == ["green/red"]
 
         img = stac.part(
-            bbox, assets=("green", "red"), asset_indexes={"green": (1, 1,), "red": 1}
+            bbox,
+            assets=("green", "red"),
+            asset_indexes={
+                "green": (
+                    1,
+                    1,
+                ),
+                "red": 1,
+            },
         )
         assert img.data.shape == (3, 73, 83)
         assert img.mask.shape == (73, 83)
@@ -274,7 +294,14 @@ def test_preview_valid(rio):
             assert img.band_names == ["green/red"]
 
         img = stac.preview(
-            assets=("green", "red"), asset_indexes={"green": (1, 1,), "red": 1}
+            assets=("green", "red"),
+            asset_indexes={
+                "green": (
+                    1,
+                    1,
+                ),
+                "red": 1,
+            },
         )
         assert img.data.shape == (3, 259, 255)
         assert img.mask.shape == (259, 255)
@@ -332,7 +359,12 @@ def test_point_valid(rio):
         assert len(data[0]) == 2
         assert len(data[1]) == 1
 
-        data = stac.point(-80.477, 33.4453, assets=("green", "red"), indexes=1,)
+        data = stac.point(
+            -80.477,
+            33.4453,
+            assets=("green", "red"),
+            indexes=1,
+        )
         assert len(data) == 2
         assert len(data[0]) == 1
         assert len(data[1]) == 1

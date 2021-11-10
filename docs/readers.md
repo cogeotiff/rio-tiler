@@ -1,11 +1,11 @@
 
-`rio-tiler`'s  COGReader and STACReader are built from its abstract base classes (`AsyncBaseReader`, `BaseReader`, `MultiBandReader`, `MultiBaseReader`). Thoses Classes implements defaults interfaces which helps the integration in broder application. To learn more about `rio-tiler`'s base classes see [Base classes and custom readers](advanced/custom_readers.md)
+`rio-tiler`'s  COGReader and STACReader are built from its abstract base classes (`AsyncBaseReader`, `BaseReader`, `MultiBandReader`, `MultiBaseReader`). Those Classes implements defaults interfaces which helps the integration in broader application. To learn more about `rio-tiler`'s base classes see [Base classes and custom readers](advanced/custom_readers.md)
 
 ## rio_tiler.io.COGReader
 
 The `COGReader` is designed to work with simple raster datasets (e.g COG, GeoTIFF, ...).
 
-The class is derieved from the `rio_tiler.io.base.BaseReader` base class.
+The class is derived from the `rio_tiler.io.base.BaseReader` base class.
 ```python
 from rio_tiler.io import COGReader
 
@@ -19,7 +19,7 @@ COGReader.__mro__
 #### Attributes
 
 - **input** (str): filepath
-- **dataset** (rasterio dataset, optional): rasterio openned dataset
+- **dataset** (rasterio dataset, optional): rasterio opened dataset
 - **tms** (morecantile.TileMatrixSet, optional): morecantile TileMatrixSet used for tile reading (defaults to WebMercator)
 - **minzoom** (int, optional): dataset's minimum zoom level (for input tms)
 - **maxzoom** (int, optional): dataset's maximum zoom level (for input tms)
@@ -366,7 +366,7 @@ with COGReader("my_cog.tif") as cog:
 
 In `rio-tiler` v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item.
 
-The class is derieved from the `rio_tiler.io.base.MultiBaseReader` base class which help handling responses from multiple `BaseReader` (each asset will be read with a `BaseReader`).
+The class is derived from the `rio_tiler.io.base.MultiBaseReader` base class which help handling responses from multiple `BaseReader` (each asset will be read with a `BaseReader`).
 ```python
 from rio_tiler.io import STACReader
 

@@ -73,9 +73,10 @@ def test_16bit_PNG():
     mask[10:11, 10:11] = 100
 
     with pytest.warns(None):
-        img = ImageData(numpy.zeros((1, 256, 256), dtype="uint16"), mask,).render(
-            img_format="PNG"
-        )
+        img = ImageData(
+            numpy.zeros((1, 256, 256), dtype="uint16"),
+            mask,
+        ).render(img_format="PNG")
 
         with rasterio.open(BytesIO(img)) as src:
             assert src.count == 2
@@ -88,9 +89,10 @@ def test_16bit_PNG():
             assert (arr[11:, 11:] == 65535).all()
 
     with pytest.warns(None):
-        img = ImageData(numpy.zeros((3, 256, 256), dtype="uint16"), mask,).render(
-            img_format="PNG"
-        )
+        img = ImageData(
+            numpy.zeros((3, 256, 256), dtype="uint16"),
+            mask,
+        ).render(img_format="PNG")
 
         with rasterio.open(BytesIO(img)) as src:
             assert src.count == 4

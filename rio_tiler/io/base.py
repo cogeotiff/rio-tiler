@@ -48,7 +48,10 @@ class SpatialMixin:
         """return bounds in WGS84."""
         try:
             bounds = transform_bounds(
-                self.crs, WGS84_CRS, *self.bounds, densify_pts=21,
+                self.crs,
+                WGS84_CRS,
+                *self.bounds,
+                densify_pts=21,
             )
         except:  # noqa
             warnings.warn(
@@ -75,14 +78,20 @@ class SpatialMixin:
 
         try:
             dataset_bounds = transform_bounds(
-                self.crs, self.tms.rasterio_crs, *self.bounds, densify_pts=21,
+                self.crs,
+                self.tms.rasterio_crs,
+                *self.bounds,
+                densify_pts=21,
             )
         except:  # noqa
             # HACK: gdal will first throw an error for invalid transformation
             # but if retried it will then pass.
             # Note: It might return `+/-inf` values
             dataset_bounds = transform_bounds(
-                self.crs, self.tms.rasterio_crs, *self.bounds, densify_pts=21,
+                self.crs,
+                self.tms.rasterio_crs,
+                *self.bounds,
+                densify_pts=21,
             )
 
         return (
@@ -178,7 +187,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         Args:
             lon (float): Longitude.
-            lat (float): Latittude.
+            lat (float): Latitude.
 
         Returns:
             list: Pixel value per bands/assets.
@@ -233,7 +242,8 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     async def statistics(
-        self, **kwargs: Any,
+        self,
+        **kwargs: Any,
     ) -> Coroutine[Any, Any, Dict[str, BandStatistics]]:
         """Return bands statistics from a dataset.
 
@@ -291,7 +301,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         Args:
             lon (float): Longitude.
-            lat (float): Latittude.
+            lat (float): Latitude.
 
         Returns:
             list: Pixel value per bands/assets.
@@ -493,7 +503,14 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
-        output = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs,)
+        output = multi_arrays(
+            assets,
+            _reader,
+            tile_x,
+            tile_y,
+            tile_z,
+            **kwargs,
+        )
 
         if expression:
             blocks = expression.split(",")
@@ -641,7 +658,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         Args:
             lon (float): Longitude.
-            lat (float): Latittude.
+            lat (float): Latitude.
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
@@ -864,7 +881,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bands (sequence of str or str): bands to fetch info from. Required keyword argument.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
             categorical (bool): treat input data as categorical data. Defaults to False.
-            categories (list of numbers, optional): list of caterogies to return value for.
+            categories (list of numbers, optional): list of categories to return value for.
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
@@ -883,7 +900,10 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
             bands = bands or self.bands
 
         data = self.preview(
-            bands=bands, expression=expression, max_size=max_size, **kwargs,
+            bands=bands,
+            expression=expression,
+            max_size=max_size,
+            **kwargs,
         )
 
         hist_options = hist_options or {}
@@ -953,7 +973,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
                 data.band_names = [band]
                 return data
 
-        output = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs,)
+        output = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
 
         if expression:
             blocks = expression.split(",")
@@ -1076,7 +1096,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         Args:
             lon (float): Longitude.
-            lat (float): Latittude.
+            lat (float): Latitude.
             bands (sequence of str or str, optional): bands to fetch info from.
             expression (str, optional): rio-tiler expression for the band list (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to the `self.reader.point` method.
@@ -1105,7 +1125,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
         def _reader(band: str, *args, **kwargs: Any) -> Dict:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.point(*args, **kwargs)[0]  # We only return the firt value
+                return cog.point(*args, **kwargs)[0]  # We only return the first value
 
         data = multi_values(bands, _reader, lon, lat, **kwargs)
 

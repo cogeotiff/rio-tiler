@@ -39,11 +39,11 @@ The `render` method accept colormap in form of:
 }
 ```
 
-Colormaps can be `discrete` (having sparse value) or `linear` (with values stricly from 0 to 255).
+Colormaps can be `discrete` (having sparse value) or `linear` (with values strictly from 0 to 255).
 
 ### Custom colormaps
 
-The `rio_tiler.colormap.cmap` object holds the list of default colormaps and also allow users to registed new ones.
+The `rio_tiler.colormap.cmap` object holds the list of default colormaps and also allow users to registered new ones.
 
 **discrete** (with custom entries, not limited to uint8 type)
 
@@ -96,9 +96,9 @@ ndvi_dict = {idx: value.tolist() for idx, value in enumerate(cmap_uint8)}
 cmap = cmap.register({"ndvi": ndvi_dict})
 ```
 
-### Internvals colormaps
+### Intervals colormaps
 
-Starting with `rio-tiler` 3.0, *intervals* colormap support has been added. This is usefull when you want to define color breaks for a given data.
+Starting with `rio-tiler` 3.0, *intervals* colormap support has been added. This is useful when you want to define color breaks for a given data.
 
 !!! warnings
     For `intervals`, colormap has to be in form of `Sequence[Tuple[Sequence, Sequence]]`:

@@ -101,7 +101,9 @@ def read(
                 resampling=resampling,
             )
             mask = vrt.dataset_mask(
-                window=window, out_shape=mask_out_shape, resampling=resampling,
+                window=window,
+                out_shape=mask_out_shape,
+                resampling=resampling,
             )
 
         if force_binary_mask:
@@ -135,15 +137,15 @@ def part(
 
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
-        bounds (tuple): Output bounds (left, bottom, right, top). By default the cordinates are considered to be in either the dataset CRS or in the `dst_crs` if set. Use `bounds_crs` to set a specific CRS.
+        bounds (tuple): Output bounds (left, bottom, right, top). By default the coordinates are considered to be in either the dataset CRS or in the `dst_crs` if set. Use `bounds_crs` to set a specific CRS.
         height (int, optional): Output height of the array.
         width (int, optional): Output width of the array.
         padding (int, optional): Padding to apply to each edge of the tile when retrieving data to assist in reducing resampling artefacts along edges. Defaults to `0`.
         dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system.
         bounds_crs (rasterio.crs.CRS, optional): Overwrite bounds Coordinate Reference System.
-        minimum_overlap (float, optional): Minimum % overlap for which to raise an error with dataset not covering enought of the tile.
+        minimum_overlap (float, optional): Minimum % overlap for which to raise an error with dataset not covering enough of the tile.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        max_size (int, optional): Limit output size array if not widht and height.
+        max_size (int, optional): Limit output size array if not width and height.
         kwargs (optional): Additional options to forward to `rio_tiler.reader.read`.
 
     Returns:
@@ -243,7 +245,7 @@ def preview(
 
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
-        max_size (int, optional): Limit output size array if not widht and height. Defaults to `1024`.
+        max_size (int, optional): Limit output size array if not width and height. Defaults to `1024`.
         height (int, optional): Output height of the array.
         width (int, optional): Output width of the array.
         kwargs (optional): Additional options to forward to `rio_tiler.reader.read`.

@@ -77,7 +77,10 @@ def mosaic_reader(
 
     for chunks in _chunks(mosaic_assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
-        for img, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions,):
+        for img, asset in filter_tasks(
+            tasks,
+            allowed_exceptions=allowed_exceptions,
+        ):
             if isinstance(img, tuple):
                 img = ImageData(*img)
 

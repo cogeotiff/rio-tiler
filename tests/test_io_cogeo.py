@@ -180,7 +180,15 @@ def test_tile_valid_default():
         data, mask = cog.tile(43, 24, 7, indexes=1)
         assert data.shape == (1, 256, 256)
 
-        img = cog.tile(43, 24, 7, indexes=(1, 1,))
+        img = cog.tile(
+            43,
+            24,
+            7,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert img.data.shape == (2, 256, 256)
         assert img.band_names == ["1", "1"]
 
@@ -244,7 +252,14 @@ def test_point_valid():
         pts = cog.point(lon, lat, indexes=1)
         assert len(pts) == 1
 
-        pts = cog.point(lon, lat, indexes=(1, 1,))
+        pts = cog.point(
+            lon,
+            lat,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert len(pts) == 2
 
 
@@ -279,7 +294,13 @@ def test_area_valid():
         data, mask = cog.part(bbox, indexes=1)
         assert data.shape == (1, 11, 40)
 
-        img = cog.part(bbox, indexes=(1, 1,))
+        img = cog.part(
+            bbox,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert img.data.shape == (2, 11, 40)
         assert img.band_names == ["1", "1"]
 
@@ -306,7 +327,13 @@ def test_preview_valid():
         data, mask = cog.preview(max_size=128, indexes=1)
         assert data.shape == (1, 128, 128)
 
-        img = cog.preview(max_size=128, indexes=(1, 1,))
+        img = cog.preview(
+            max_size=128,
+            indexes=(
+                1,
+                1,
+            ),
+        )
         assert img.data.shape == (2, 128, 128)
         assert img.band_names == ["1", "1"]
 
@@ -606,7 +633,14 @@ def test_feature_valid():
         img = cog.feature(feature, indexes=1, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(feature, indexes=(1, 1,), max_size=1024)
+        img = cog.feature(
+            feature,
+            indexes=(
+                1,
+                1,
+            ),
+            max_size=1024,
+        )
         assert img.data.shape == (2, 348, 1024)
         assert img.band_names == ["1", "1"]
 
@@ -743,7 +777,12 @@ def test_read():
         img = cog.read(indexes=1)
         assert img.data.shape == (1, 2667, 2658)
 
-        img = cog.read(indexes=(1, 1,))
+        img = cog.read(
+            indexes=(
+                1,
+                1,
+            )
+        )
         assert img.data.shape == (2, 2667, 2658)
 
 
@@ -784,7 +823,9 @@ def test_nonearthbody():
 
     europa_crs = CRS.from_authority("ESRI", 104915)
     tms = TileMatrixSet.custom(
-        crs=europa_crs, extent=europa_crs.area_of_use.bounds, matrix_scale=[2, 1],
+        crs=europa_crs,
+        extent=europa_crs.area_of_use.bounds,
+        matrix_scale=[2, 1],
     )
     with pytest.warns(None) as warnings:
         with COGReader(COG_EUROPA, tms=tms) as cog:
