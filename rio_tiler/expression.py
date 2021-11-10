@@ -30,7 +30,9 @@ def parse_expression(expression: str, cast: bool = True) -> Tuple:
 
 
 def apply_expression(
-    blocks: Sequence[str], bands: Sequence[Union[str, int]], data: numpy.ndarray,
+    blocks: Sequence[str],
+    bands: Sequence[Union[str, int]],
+    data: numpy.ndarray,
 ) -> numpy.ndarray:
     """Apply rio-tiler expression.
 

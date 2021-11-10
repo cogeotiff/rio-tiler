@@ -177,7 +177,7 @@ class STACReader(MultiBaseReader):
             fetch(self.input, **self.fetch_options), self.input
         )
 
-        # TODO: get bounds/crs using PROJ extension if availble
+        # TODO: get bounds/crs using PROJ extension if available
         self.bounds = self.item.bbox
         self.crs = WGS84_CRS
 

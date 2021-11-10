@@ -174,7 +174,7 @@ class COGReader(BaseReader):
         except:  # noqa
             # if we can't get min/max zoom from the dataset we default to TMS min/max zoom
             warnings.warn(
-                "Cannot dertermine min/max zoom based on dataset informations, will default to TMS min/max zoom.",
+                "Cannot dertermine min/max zoom based on dataset information, will default to TMS min/max zoom.",
                 UserWarning,
             )
             minzoom, maxzoom = self.tms.minzoom, self.tms.maxzoom
@@ -255,7 +255,7 @@ class COGReader(BaseReader):
 
         Args:
             categorical (bool): treat input data as categorical data. Defaults to False.
-            categories (list of numbers, optional): list of caterogies to return value for.
+            categories (list of numbers, optional): list of categories to return value for.
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
@@ -501,7 +501,7 @@ class COGReader(BaseReader):
 
         Args:
             lon (float): Longitude.
-            lat (float): Latittude.
+            lat (float): Latitude.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).

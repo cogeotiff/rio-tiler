@@ -12,7 +12,8 @@ TaskType = Sequence[Tuple[Union[futures.Future, Callable], Any]]
 
 
 def filter_tasks(
-    tasks: TaskType, allowed_exceptions: Optional[Tuple] = None,
+    tasks: TaskType,
+    allowed_exceptions: Optional[Tuple] = None,
 ) -> Generator:
     """Filter Tasks to remove Exceptions.
 

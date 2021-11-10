@@ -47,7 +47,7 @@ data and metadata from any raster source supported by Rasterio/GDAL.
 This includes local files and via HTTP, AWS S3, Google Cloud Storage,
 etc.
 
-At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.WarpedVRT](https://github.com/rasterio/rasterio/blob/5b76d05fb374e64602166d6cd880c38424fad39b/rasterio/vrt.py#L15) class, which can be useful for doing reprojection and/or property overriding (e.g nodata value).
+At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.WarpedVRT](https://github.com/rasterio/rasterio/blob/5b76d05fb374e64602166d6cd880c38424fad39b/rasterio/vrt.py#L15) class, which can be useful for doing re-projection and/or property overriding (e.g nodata value).
 
 ## Features
 
@@ -73,7 +73,7 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
         img = image.point(lon,lat)           # get pixel values for a lon/lat coordinates
     ```
 
-- Enable property assignement (e.g nodata) on data reading
+- Enable property assignment (e.g nodata) on data reading
 
     ```python
     from rio_tiler.io import COGReader

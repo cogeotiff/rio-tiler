@@ -4,12 +4,12 @@ document aims to help with migrating your code to use `rio-tiler` 3.0.
 
 ## Morecantile 2.0 -> 3.0
 
-Morecantil 3.0 switched from rasterio to pyproj for the coordinates transformation processes (https://github.com/developmentseed/morecantile/blob/master/CHANGES.md#300a0-2021-09-09).
+Morecantile 3.0 switched from rasterio to pyproj for the coordinates transformation processes (https://github.com/developmentseed/morecantile/blob/master/CHANGES.md#300a0-2021-09-09).
 Morecantile and Pyproj require python >= 3.7 which means rio-tiler had to remove python 3.6 supports.
 
 ## Bounds and CRS properties
 
-Previously the `BaseReader.bounds` property was set to the `wgs84` representation of the dataset bounds but to accomodate to non-earth dataset we changed this and decided to store the native dataset `bounds`. We've also added `BaseReader.crs` to make sure user can work with the `bounds` property.
+Previously the `BaseReader.bounds` property was set to the `wgs84` representation of the dataset bounds but to accommodate to non-earth dataset we changed this and decided to store the native dataset `bounds`. We've also added `BaseReader.crs` to make sure user can work with the `bounds` property.
 
 We've added a `BaseReader.geographic_bounds`, which will return the `bounds` in WGS84.
 

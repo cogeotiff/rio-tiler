@@ -30,7 +30,7 @@ class InvalidColorMapName(RioTilerError):
 
 
 class AlphaBandWarning(UserWarning):
-    """Automaticaly removed Alpha band from output array."""
+    """Automatically removed Alpha band from output array."""
 
 
 class NoOverviewWarning(UserWarning):

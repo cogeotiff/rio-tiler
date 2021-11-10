@@ -123,14 +123,14 @@ When dealing with an important number of image, you might not want to process th
 ```python
 mosaic_assets = ["1.tif", "2.tif", "3.tif", "4.tif", "5.tif", "6.tif"]
 
-# 1st level loop - Creates chuncks of assets
+# 1st level loop - Creates chunks of assets
 for chunks in _chunks(mosaic_assets, chunk_size):
 
-    # 2nd level loop - Uses threads for process each `chunck`
+    # 2nd level loop - Uses threads for process each `chunk`
     with futures.ThreadPoolExecutor(max_workers=max_threads) as executor:
         future_tasks = [(executor.submit(_tiler, asset), asset) for asset in chunks]
 ```
-By default the chunck_size is equal to the number or threads (or the number of assets if no threads=0)
+By default the chunk_size is equal to the number or threads (or the number of assets if no threads=0)
 
 #### More on threading
 

@@ -253,7 +253,13 @@ def test_stac_mosaic_tiler(rio):
             return stac.tile(*args, **kwargs)
 
     (data, mask), assets_used = mosaic.mosaic_reader(
-        [stac_asset], _reader, 71, 102, 8, assets="green", threads=0,
+        [stac_asset],
+        _reader,
+        71,
+        102,
+        8,
+        assets="green",
+        threads=0,
     )
     assert assets_used == [stac_asset]
     assert data.shape == (1, 256, 256)
