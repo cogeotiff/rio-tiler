@@ -78,7 +78,7 @@ class SpatialMixin:
         # bounds in TileMatrixSet's CRS
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
-        # Transform the bounds in the dataset's CRS
+        # Transform the bounds to the dataset's CRS
         try:
             tile_bounds = transform_bounds(
                 self.tms.rasterio_crs,
