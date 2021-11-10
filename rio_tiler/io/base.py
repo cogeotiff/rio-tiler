@@ -6,6 +6,7 @@ import warnings
 from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
+import numpy
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
@@ -74,31 +75,37 @@ class SpatialMixin:
             bool: True if the tile intersects the dataset bounds.
 
         """
+        # bounds in TileMatrixSet's CRS
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
+        # Transform the bounds to the dataset's CRS
         try:
-            dataset_bounds = transform_bounds(
-                self.crs,
+            tile_bounds = transform_bounds(
                 self.tms.rasterio_crs,
-                *self.bounds,
+                self.crs,
+                *tile_bounds,
                 densify_pts=21,
             )
         except:  # noqa
             # HACK: gdal will first throw an error for invalid transformation
             # but if retried it will then pass.
             # Note: It might return `+/-inf` values
-            dataset_bounds = transform_bounds(
-                self.crs,
+            tile_bounds = transform_bounds(
                 self.tms.rasterio_crs,
-                *self.bounds,
+                self.crs,
+                *tile_bounds,
                 densify_pts=21,
             )
 
+        # If tile_bounds has non-finite value in the dataset CRS we return True
+        if not all(numpy.isfinite(tile_bounds)):
+            return True
+
         return (
-            (tile_bounds[0] < dataset_bounds[2])
-            and (tile_bounds[2] > dataset_bounds[0])
-            and (tile_bounds[3] > dataset_bounds[1])
-            and (tile_bounds[1] < dataset_bounds[3])
+            (tile_bounds[0] < self.bounds[2])
+            and (tile_bounds[2] > self.bounds[0])
+            and (tile_bounds[3] > self.bounds[1])
+            and (tile_bounds[1] < self.bounds[3])
         )
 
 
