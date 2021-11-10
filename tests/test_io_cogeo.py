@@ -4,6 +4,7 @@ import os
 from io import BytesIO
 from typing import Any, Dict
 
+import morecantile
 import numpy
 import pytest
 import rasterio
@@ -758,6 +759,12 @@ def test_fullEarth():
         assert img.data.shape == (1, 64, 64)
 
         img = cog.tile(127, 42, 7, tilesize=64)
+        assert img.data.shape == (1, 64, 64)
+
+    with COGReader(
+        COG_EARTH, tms=morecantile.tms.get("EuropeanETRS89_LAEAQuad")
+    ) as cog:
+        img = cog.tile(0, 0, 1, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
 
