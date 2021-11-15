@@ -1,4 +1,8 @@
 
+# 3.0.0a5 (TBD)
+
+* allow the definition of `geographic_crs` used in the `geographic_bounds` property (https://github.com/cogeotiff/rio-tiler/pull/458)
+
 # 3.0.0a4 (2021-11-10)
 
 * refactor `SpatialMixin.tile_exists` to compare the bounds in the dataset's coordinate system to avoid coordinates overflow (a TMS CRS bounds can be smaller than the dataset CRS bounds) (https://github.com/cogeotiff/rio-tiler/pull/455)
