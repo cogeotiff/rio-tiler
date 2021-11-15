@@ -38,11 +38,14 @@ class SpatialMixin:
     """
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
     minzoom: int = attr.ib(init=False)
     maxzoom: int = attr.ib(init=False)
 
     bounds: BBox = attr.ib(init=False)
     crs: CRS = attr.ib(init=False)
+
+    geographic_crs: CRS = attr.ib(init=False, default=WGS84_CRS)
 
     @property
     def geographic_bounds(self) -> BBox:
@@ -50,7 +53,7 @@ class SpatialMixin:
         try:
             bounds = transform_bounds(
                 self.crs,
-                WGS84_CRS,
+                self.geographic_crs,
                 *self.bounds,
                 densify_pts=21,
             )
@@ -115,12 +118,6 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    minzoom: int = attr.ib(init=False)
-    maxzoom: int = attr.ib(init=False)
-
-    bounds: BBox = attr.ib(init=False)
-    crs: CRS = attr.ib(init=False)
 
     def __enter__(self):
         """Support using with Context Managers."""
@@ -222,12 +219,6 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    minzoom: int = attr.ib(init=False)
-    maxzoom: int = attr.ib(init=False)
-
-    bounds: BBox = attr.ib(init=False)
-    crs: CRS = attr.ib(init=False)
 
     async def __aenter__(self):
         """Support using with Context Managers."""
@@ -339,6 +330,7 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
     This Reader is suited for dataset that are composed of multiple assets (e.g. STAC).
 
     Attributes:
+        input (any): input data.
         reader (rio_tiler.io.BaseReader): reader.
         reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
@@ -351,12 +343,6 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    minzoom: int = attr.ib(init=False)
-    maxzoom: int = attr.ib(init=False)
-
-    bounds: BBox = attr.ib(init=False)
-    crs: CRS = attr.ib(init=False)
 
     assets: Sequence[str] = attr.ib(init=False)
 
@@ -787,6 +773,7 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
     This Reader is suited for dataset that stores spectral bands as separate files  (e.g. Sentinel 2).
 
     Attributes:
+        input (any): input data.
         reader (rio_tiler.io.BaseReader): reader.
         reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
@@ -799,12 +786,6 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
     reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    minzoom: int = attr.ib(init=False)
-    maxzoom: int = attr.ib(init=False)
-
-    bounds: BBox = attr.ib(init=False)
-    crs: CRS = attr.ib(init=False)
 
     bands: Sequence[str] = attr.ib(init=False)
 
