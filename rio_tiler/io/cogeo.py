@@ -103,7 +103,7 @@ class COGReader(BaseReader):
     _kwargs: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
     # Context Manager to handle rasterio open/close
-    _ctx_stac = attr.ib(init=False, factory=contextlib.ExitStack)
+    _ctx_stack = attr.ib(init=False, factory=contextlib.ExitStack)
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
@@ -118,7 +118,7 @@ class COGReader(BaseReader):
         if self.post_process is not None:
             self._kwargs["post_process"] = self.post_process
 
-        self.dataset = self.dataset or self._ctx_stac.enter_context(
+        self.dataset = self.dataset or self._ctx_stack.enter_context(
             rasterio.open(self.input)
         )
         self.bounds = tuple(self.dataset.bounds)
@@ -142,7 +142,7 @@ class COGReader(BaseReader):
 
     def close(self):
         """Close rasterio dataset."""
-        self._ctx_stac.close()
+        self._ctx_stack.close()
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Support using with Context Managers."""
@@ -703,10 +703,10 @@ class GCPCOGReader(COGReader):
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
-        self.src_dataset = self.src_dataset or self._ctx_stac.enter_context(
+        self.src_dataset = self.src_dataset or self._ctx_stack.enter_context(
             rasterio.open(self.input)
         )
-        self.dataset = self._ctx_stac.enter_context(
+        self.dataset = self._ctx_stack.enter_context(
             WarpedVRT(
                 self.src_dataset,
                 src_crs=self.src_dataset.gcps[1],
