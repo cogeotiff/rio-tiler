@@ -29,7 +29,7 @@ with COGReader("my_tif.tif") as cog:
     print(cog.geographic_bounds)  # bounds in WGS84 projection
 ```
 
-Note a `geographic_crs` attribute is available in `COGReader` and `STACReader` to control which CRS to use for the transformation from the dataset's CRS.
+Note a `geographic_crs` attribute is available in `COGReader` and `STACReader` to control which CRS to use for the transformation from the dataset's CRS.  `geographic_crs` is outside the `__init__` method for Abstract Base Classes (e.g `BaseReader`)
 
 ```python
 MARS2000_SPHERE = CRS.from_proj4("+proj=longlat +R=3396190 +no_defs")
