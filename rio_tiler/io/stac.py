@@ -9,6 +9,7 @@ import attr
 import httpx
 import pystac
 from morecantile import TileMatrixSet
+from rasterio.crs import CRS
 
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
 from ..errors import InvalidAssetName, MissingAssets
@@ -126,6 +127,7 @@ class STACReader(MultiBaseReader):
         item (dict or pystac.Item, STAC): Stac Item.
         minzoom (int, optional): Set minzoom for the tiles.
         maxzoom (int, optional): Set maxzoom for the tiles.
+        geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
         include (set of string, optional): Only Include specific assets.
         exclude (set of string, optional): Exclude specific assets.
         include_asset_types (set of string, optional): Only include some assets base on their type.
@@ -159,6 +161,8 @@ class STACReader(MultiBaseReader):
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
+
+    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     include_assets: Optional[Set[str]] = attr.ib(default=None)
     exclude_assets: Optional[Set[str]] = attr.ib(default=None)

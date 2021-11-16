@@ -4,6 +4,7 @@ import os
 from io import BytesIO
 from typing import Any, Dict
 
+import attr
 import morecantile
 import numpy
 import pytest
@@ -38,6 +39,7 @@ COG_DLINE = os.path.join(PREFIX, "cog_dateline.tif")
 COG_EARTH = os.path.join(PREFIX, "cog_fullearth.tif")
 GEOTIFF = os.path.join(PREFIX, "nocog.tif")
 COG_EUROPA = os.path.join(PREFIX, "cog_nonearth.tif")
+COG_MARS = os.path.join(PREFIX, "cog_hirise_mars.tif")
 
 KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
@@ -849,3 +851,51 @@ def test_nonearthbody():
             assert img.crs == tms.rasterio_crs
 
             assert len(warnings) == 0
+
+
+def test_nonearth_custom():
+    """Test Custom geographic_crs."""
+    MARS2000_SPHERE = CRS.from_proj4("+proj=longlat +R=3396190 +no_defs")
+    MARS_MERCATOR = CRS.from_proj4(
+        "+proj=merc +R=3396190 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs"
+    )
+
+    mars_tms = TileMatrixSet.custom(
+        [
+            -179.9999999999996,
+            -85.05112877980656,
+            179.9999999999996,
+            85.05112877980656,
+        ],
+        MARS_MERCATOR,
+        extent_crs=MARS2000_SPHERE,
+        title="Web Mercator Mars",
+        geographic_crs=MARS2000_SPHERE,
+    )
+
+    @attr.s
+    class MarsReader(COGReader):
+        """Use custom geographic CRS."""
+
+        geographic_crs: rasterio.crs.CRS = attr.ib(
+            init=False,
+            default=rasterio.crs.CRS.from_proj4("+proj=longlat +R=3396190 +no_defs"),
+        )
+
+    with pytest.warns(None) as warnings:
+        with MarsReader(COG_MARS, tms=mars_tms) as cog:
+            assert cog.geographic_bounds[0] > -180
+
+    assert len(warnings) == 0
+
+    with pytest.warns(None) as warnings:
+        with COGReader(
+            COG_MARS,
+            tms=mars_tms,
+            geographic_crs=rasterio.crs.CRS.from_proj4(
+                "+proj=longlat +R=3396190 +no_defs"
+            ),
+        ) as cog:
+            assert cog.geographic_bounds[0] > -180
+
+    assert len(warnings) == 0
