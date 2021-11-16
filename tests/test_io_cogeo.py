@@ -887,3 +887,15 @@ def test_nonearth_custom():
             assert cog.geographic_bounds[0] > -180
 
     assert len(warnings) == 0
+
+    with pytest.warns(None) as warnings:
+        with COGReader(
+            COG_MARS,
+            tms=mars_tms,
+            geographic_crs=rasterio.crs.CRS.from_proj4(
+                "+proj=longlat +R=3396190 +no_defs"
+            ),
+        ) as cog:
+            assert cog.geographic_bounds[0] > -180
+
+    assert len(warnings) == 0

@@ -29,6 +29,34 @@ with COGReader("my_tif.tif") as cog:
     print(cog.geographic_bounds)  # bounds in WGS84 projection
 ```
 
+Note a `geographic_crs` attribute is available in `COGReader` and `STACReader` to control which CRS to use for the transformation from the dataset's CRS.
+
+```python
+MARS2000_SPHERE = CRS.from_proj4("+proj=longlat +R=3396190 +no_defs")
+MARS_MERCATOR = CRS.from_proj4(
+    "+proj=merc +R=3396190 +lat_ts=0.0 +lon_0=0.0 +x_0=0.0 +y_0=0 +k=1.0 +units=m +no_defs"
+)
+MARS_TMS = TileMatrixSet.custom(
+    [
+        -179.9999999999996,
+        -85.05112877980656,
+        179.9999999999996,
+        85.05112877980656,
+    ],
+    MARS_MERCATOR,
+    extent_crs=MARS2000_SPHERE,
+    title="Web Mercator Mars",
+    geographic_crs=MARS2000_SPHERE,
+)
+with COGReader(
+    "martian_dataset.tif",
+    tms=MARS_TMS,
+    geographic_crs=rasterio.crs.CRS.from_proj4("+proj=longlat +R=3396190 +no_defs"),
+) as cog:
+    ...
+```
+
+
 ## No more `max_size`
 
 We've removed the default option `max_size=1024` in `BaseReader.part` and `BaseReader.feature` to return the highest resolution dataset by default.

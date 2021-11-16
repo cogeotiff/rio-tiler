@@ -44,10 +44,11 @@ class COGReader(BaseReader):
         input (str): Cloud Optimized GeoTIFF path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         bounds (tuple): Dataset bounds (left, bottom, right, top).
-        crs (rasterio.crs.CRS): Dataset crs.
+        crs (rasterio.crs.CRS): Dataset CRS.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         minzoom (int, optional): Set minzoom for the tiles.
         maxzoom (int, optional): Set maxzoom for the tiles.
+        geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
         colormap (dict, optional): Overwrite internal colormap.
         nodata (int or float or str, optional): Global options, overwrite internal nodata value.
         unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
@@ -82,6 +83,8 @@ class COGReader(BaseReader):
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
+
+    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     colormap: Dict = attr.ib(default=None)
 
@@ -672,9 +675,13 @@ class GCPCOGReader(COGReader):
     src_dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
+
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
+
+    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
+
     colormap: Dict = attr.ib(default=None)
 
     # Define global options to be forwarded to functions reading the data (e.g `rio_tiler.reader.read`)
