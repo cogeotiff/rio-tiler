@@ -12,7 +12,7 @@ Indexes = Union[Sequence[int], int]
 
 DataMaskType = Tuple[numpy.ndarray, numpy.ndarray]
 
-ColorTuple = Tuple[int, int, int, int]
+ColorTuple = Tuple[int, int, int, int]  # (red, green, blue, alpha)
 IntervalTuple = Tuple[NumType, NumType]  # (0, 100)
 
 # ColorMap Dict: {1: (0, 0, 0, 255), ...}
