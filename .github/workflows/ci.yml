@@ -10,7 +10,7 @@ on:
   pull_request:
 
 jobs:
-  tests:
+  lint:
     runs-on: ubuntu-latest
     strategy:
       matrix:
@@ -22,18 +22,36 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
+
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install tox codecov pre-commit
+          python -m pip install -e .["dev"]
 
-      # Run tox using the version of Python in `PATH`
-      - name: Run Tox
-        run: tox -e py
-
-      # Run pre-commit
       - name: run pre-commit
         run: pre-commit run --all-files
+
+  tests:
+    needs: [lint]
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: [3.7, 3.8, 3.9]
+
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install tox codecov
+
+      - name: Run Tox (using the version of Python in `PATH`)
+        run: tox -e py
 
       - name: Upload Results
         if: success()
