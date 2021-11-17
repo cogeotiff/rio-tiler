@@ -144,7 +144,7 @@ class LastBandHigh(MosaicMethodBase):
         else:
             return None, None
 
-    def feed(self, tile: numpy.ma.array):
+    def feed(self, tile: numpy.ma.MaskedArray):
         """Add data to tile."""
         if self.tile is None:
             self.tile = tile
@@ -174,7 +174,7 @@ class LastBandLow(MosaicMethodBase):
         else:
             return None, None
 
-    def feed(self, tile: numpy.ma.array):
+    def feed(self, tile: numpy.ma.MaskedArray):
         """Add data to tile."""
         if self.tile is None:
             self.tile = tile

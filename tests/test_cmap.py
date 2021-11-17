@@ -95,15 +95,15 @@ def test_remove_value():
 def test_update_cmap():
     """Should update the colormap."""
     cm = colormap.cmap.get("viridis")
-    val = {1: [0, 0, 0], 2: [255, 255, 255, 255]}
+    val = {1: (0, 0, 0, 0), 2: (255, 255, 255, 255)}
     colormap._update_cmap(cm, val)
-    assert cm[1] == [0, 0, 0, 255]
-    assert cm[2] == [255, 255, 255, 255]
+    assert cm[1] == (0, 0, 0, 0)
+    assert cm[2] == (255, 255, 255, 255)
 
 
 def test_make_lut():
     """Should create valid lookup table."""
-    cm = {1: [100, 100, 100, 255], 2: [255, 255, 255, 255]}
+    cm = {1: (100, 100, 100, 255), 2: (255, 255, 255, 255)}
     lut = colormap.make_lut(cm)
     assert len(lut) == 256
     assert lut[0].tolist() == [0, 0, 0, 0]
@@ -113,7 +113,7 @@ def test_make_lut():
 
 def test_apply_cmap():
     """Should return valid data and mask."""
-    cm = {1: [0, 0, 0, 255], 2: [255, 255, 255, 255]}
+    cm = {1: (0, 0, 0, 255), 2: (255, 255, 255, 255)}
     data = numpy.zeros(shape=(1, 10, 10), dtype=numpy.uint8)
     data[0, 2:5, 2:5] = 1
     data[0, 5:, 5:] = 2
@@ -137,7 +137,7 @@ def test_apply_cmap():
 
 def test_apply_discrete_cmap():
     """Should return valid data and mask."""
-    cm = {1: [0, 0, 0, 255], 2: [255, 255, 255, 255]}
+    cm = {1: (0, 0, 0, 255), 2: (255, 255, 255, 255)}
     data = numpy.zeros(shape=(1, 10, 10), dtype=numpy.uint16)
     data[0, 0:2, 0:2] = 1000
     data[0, 2:5, 2:5] = 1
@@ -155,7 +155,7 @@ def test_apply_discrete_cmap():
     assert d.dtype == numpy.uint8
     assert m.dtype == numpy.uint8
 
-    cm = {1: [0, 0, 0, 255], 1000: [255, 255, 255, 255]}
+    cm = {1: (0, 0, 0, 255), 1000: (255, 255, 255, 255)}
     d, m = colormap.apply_cmap(data, cm)
     dd, mm = colormap.apply_discrete_cmap(data, cm)
     numpy.testing.assert_array_equal(dd, d)
@@ -163,12 +163,12 @@ def test_apply_discrete_cmap():
 
     cm = deepcopy(colormap.EMPTY_COLORMAP)
     cm.pop(255)
-    cm[1000] = [255, 255, 255, 255]
+    cm[1000] = (255, 255, 255, 255)
 
     d, m = colormap.apply_cmap(data, cm)
     dd, mm = colormap.apply_discrete_cmap(data, cm)
 
-    cm = {1: [0, 0, 0, 255], 256: [255, 255, 255, 255]}
+    cm = {1: (0, 0, 0, 255), 256: (255, 255, 255, 255)}
     assert colormap.apply_cmap(data, cm)
 
 
@@ -176,8 +176,8 @@ def test_apply_intervals_cmap():
     """Should return valid data and mask."""
     cm = [
         # ([min, max], [r, g, b, a])
-        ([1, 2], [0, 0, 0, 255]),
-        ([2, 3], [255, 255, 255, 255]),
+        ((1, 2), (0, 0, 0, 255)),
+        ((2, 3), (255, 255, 255, 255)),
     ]
     data = numpy.zeros(shape=(1, 10, 10), dtype=numpy.uint16)
     data[0, 0:2, 0:2] = 1000
@@ -198,10 +198,10 @@ def test_apply_intervals_cmap():
     assert m.dtype == numpy.uint8
 
     cm = [
-        # ([min, max], [r, g, b, a])
-        ([1, 2], [0, 0, 0, 255]),
-        ([2, 3], [255, 255, 255, 255]),
-        ([2, 1000], [255, 0, 0, 255]),
+        # ((min, max), (r, g, b, a))
+        ((1, 2), (0, 0, 0, 255)),
+        ((2, 3), (255, 255, 255, 255)),
+        ((3, 1000), (255, 0, 0, 255)),
     ]
     d, m = colormap.apply_intervals_cmap(data, cm)
     assert d.shape == (3, 10, 10)

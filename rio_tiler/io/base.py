@@ -11,7 +11,7 @@ from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
 
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes
+from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
 from ..errors import (
     ExpressionMixingWarning,
     MissingAssets,
@@ -21,6 +21,7 @@ from ..errors import (
 from ..expression import apply_expression
 from ..models import BandStatistics, ImageData, Info
 from ..tasks import multi_arrays, multi_values
+from ..types import BBox, Indexes
 from ..utils import get_array_statistics
 
 
@@ -694,12 +695,12 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
         data = multi_values(assets, _reader, lon, lat, **kwargs)
 
-        values = [d for _, d in data.items()]
+        values = numpy.array([d for _, d in data.items()])
         if expression:
             blocks = expression.split(",")
-            values = apply_expression(blocks, assets, values).tolist()
+            values = apply_expression(blocks, assets, values)
 
-        return values
+        return values.tolist()
 
     def feature(
         self,
@@ -1117,12 +1118,12 @@ class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
 
         data = multi_values(bands, _reader, lon, lat, **kwargs)
 
-        values = [d for _, d in data.items()]
+        values = numpy.array([d for _, d in data.items()])
         if expression:
             blocks = expression.split(",")
-            values = apply_expression(blocks, bands, values).tolist()
+            values = apply_expression(blocks, bands, values)
 
-        return values
+        return values.tolist()
 
     def feature(
         self,

@@ -18,8 +18,9 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_geom
 
 from .colormap import apply_cmap
-from .constants import WEB_MERCATOR_CRS, BBox, NumType
+from .constants import WEB_MERCATOR_CRS
 from .errors import RioTilerError
+from .types import BBox, ColorMapType, IntervalTuple
 
 
 def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
@@ -70,7 +71,7 @@ def get_bands_names(
 
 
 def get_array_statistics(
-    data: numpy.ma.array,
+    data: numpy.ma.MaskedArray,
     categorical: bool = False,
     categories: Optional[List[float]] = None,
     percentiles: List[int] = [2, 98],
@@ -79,7 +80,7 @@ def get_array_statistics(
     """Calculate per band array statistics.
 
     Args:
-        data (numpy.ma.ndarray): input masked array data to get the statistics from.
+        data (numpy.ma.MaskedArray): input masked array data to get the statistics from.
         categorical (bool): treat input data as categorical data. Defaults to False.
         categories (list of numbers, optional): list of categories to return value for.
         percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
@@ -337,8 +338,8 @@ def non_alpha_indexes(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -
 
 def linear_rescale(
     image: numpy.ndarray,
-    in_range: Tuple[NumType, NumType],
-    out_range: Tuple[NumType, NumType] = (0, 255),
+    in_range: IntervalTuple,
+    out_range: IntervalTuple = (0, 255),
 ) -> numpy.ndarray:
     """Apply linear rescaling to a numpy array.
 
@@ -392,7 +393,7 @@ def render(
     data: numpy.ndarray,
     mask: Optional[numpy.ndarray] = None,
     img_format: str = "PNG",
-    colormap: Optional[Union[Dict, Sequence]] = None,
+    colormap: Optional[ColorMapType] = None,
     **creation_options: Any,
 ) -> bytes:
     """Translate numpy.ndarray to image bytes.

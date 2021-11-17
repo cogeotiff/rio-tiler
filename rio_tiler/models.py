@@ -17,8 +17,8 @@ from rasterio.transform import from_bounds
 from rio_color.operations import parse_operations
 from rio_color.utils import scale_dtype, to_math_type
 
-from .constants import ColorTuple, NumType
 from .errors import InvalidDatatypeWarning
+from .types import ColorMapType, GDALColorMapType, IntervalTuple, NumType
 from .utils import linear_rescale, render
 
 
@@ -63,7 +63,7 @@ class Info(SpatialInfo):
     colorinterp: Optional[List[str]]
     scale: Optional[float]
     offset: Optional[float]
-    colormap: Optional[Dict[int, ColorTuple]]
+    colormap: Optional[GDALColorMapType]
 
     class Config:
         """Config for model."""
@@ -221,8 +221,8 @@ class ImageData:
         self,
         data: numpy.ndarray,
         mask: numpy.ndarray,
-        in_range: Sequence[Tuple[NumType, NumType]],
-        out_range: Sequence[Tuple[NumType, NumType]] = ((0, 255),),
+        in_range: Sequence[IntervalTuple],
+        out_range: Sequence[IntervalTuple] = ((0, 255),),
         out_dtype: Union[str, numpy.number] = "uint8",
     ):
         """Rescale data."""
@@ -247,7 +247,7 @@ class ImageData:
 
     def post_process(
         self,
-        in_range: Optional[Sequence[Tuple[NumType, NumType]]] = None,
+        in_range: Optional[Sequence[IntervalTuple]] = None,
         out_dtype: Union[str, numpy.number] = "uint8",
         color_formula: Optional[str] = None,
         **kwargs: Any,
@@ -293,7 +293,7 @@ class ImageData:
         self,
         add_mask: bool = True,
         img_format: str = "PNG",
-        colormap: Optional[Union[Dict, Sequence]] = None,
+        colormap: Optional[ColorMapType] = None,
         **kwargs,
     ) -> bytes:
         """Render data to image blob.

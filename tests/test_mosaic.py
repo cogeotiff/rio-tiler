@@ -1,7 +1,6 @@
 """tests ard_tiler.mosaic."""
 
 import os
-from typing import Tuple
 from unittest.mock import patch
 
 import numpy
@@ -15,6 +14,7 @@ from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideB
 from rio_tiler.io import COGReader, STACReader
 from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
+from rio_tiler.types import DataMaskType
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
 asset2 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog2.tif")
@@ -51,9 +51,7 @@ def _read_part(src_path: str, *args, **kwargs) -> ImageData:
         return cog.part(*args, **kwargs)
 
 
-def _read_preview(
-    src_path: str, *args, **kwargs
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def _read_preview(src_path: str, *args, **kwargs) -> DataMaskType:
     """Read preview from an asset"""
     with COGReader(src_path) as cog:
         data, mask = cog.preview(*args, **kwargs)

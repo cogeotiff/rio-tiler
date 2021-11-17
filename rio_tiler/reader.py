@@ -14,8 +14,9 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
-from .constants import WGS84_CRS, BBox, Indexes, NoData
+from .constants import WGS84_CRS
 from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from .types import BBox, DataMaskType, Indexes, NoData
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
 
@@ -32,9 +33,9 @@ def read(
     resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
     ] = None,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+) -> DataMaskType:
     """Low level read function.
 
     Args:
@@ -132,7 +133,7 @@ def part(
     vrt_options: Optional[Dict] = None,
     max_size: Optional[int] = None,
     **kwargs: Any,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+) -> DataMaskType:
     """Read part of a dataset.
 
     Args:
@@ -240,7 +241,7 @@ def preview(
     height: int = None,
     width: int = None,
     **kwargs: Any,
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+) -> DataMaskType:
     """Read decimated version of a dataset.
 
     Args:
@@ -280,7 +281,7 @@ def point(
     resampling_method: Resampling = "nearest",
     vrt_options: Optional[Dict] = None,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
     ] = None,
 ) -> List:
     """Read a pixel value for a point.

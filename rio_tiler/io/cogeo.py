@@ -18,7 +18,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_bounds
 
 from .. import reader
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS, BBox, Indexes, NoData, NumType
+from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
 from ..errors import (
     ExpressionMixingWarning,
     IncorrectTileBuffer,
@@ -27,6 +27,7 @@ from ..errors import (
 )
 from ..expression import apply_expression, parse_expression
 from ..models import BandStatistics, ImageData, Info
+from ..types import BBox, DataMaskType, Indexes, NoData, NumType
 from ..utils import (
     create_cutline,
     get_array_statistics,
@@ -95,7 +96,7 @@ class COGReader(BaseReader):
     resampling_method: Optional[Resampling] = attr.ib(default=None)
     vrt_options: Optional[Dict] = attr.ib(default=None)
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
     ] = attr.ib(default=None)
 
     # We use _kwargs to store values of nodata, unscale, vrt_options and resampling_method.
@@ -695,7 +696,7 @@ class GCPCOGReader(COGReader):
     resampling_method: Optional[Resampling] = attr.ib(default=None)
     vrt_options: Optional[Dict] = attr.ib(default=None)
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], Tuple[numpy.ndarray, numpy.ndarray]]
+        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
     ] = attr.ib(default=None)
 
     # for GCPCOGReader, dataset is not a input option.
