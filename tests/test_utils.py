@@ -127,10 +127,10 @@ def test_render_valid_colormapDict():
     """Create 'colormaped' PNG image buffer from one band array using discrete cmap."""
     arr = np.random.randint(0, 255, size=(1, 512, 512), dtype=np.uint8)
     cmap = {
-        1: [255, 255, 255, 255],
-        50: [255, 255, 0, 255],
-        100: [255, 0, 0, 255],
-        150: [0, 0, 255, 255],
+        1: (255, 255, 255, 255),
+        50: (255, 255, 0, 255),
+        100: (255, 0, 0, 255),
+        150: (0, 0, 255, 255),
     }
     assert utils.render(arr, colormap=cmap)
 

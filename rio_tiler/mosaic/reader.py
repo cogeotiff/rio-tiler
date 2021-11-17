@@ -5,10 +5,11 @@ from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, 
 
 from rasterio.crs import CRS
 
-from ..constants import MAX_THREADS, BBox
+from ..constants import MAX_THREADS
 from ..errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
 from ..models import ImageData
 from ..tasks import create_tasks, filter_tasks
+from ..types import BBox
 from ..utils import _chunks
 from .methods.base import MosaicMethodBase
 from .methods.defaults import FirstMethod

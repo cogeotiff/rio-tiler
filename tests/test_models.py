@@ -44,7 +44,7 @@ def test_imageData_AutoRescaling():
 
     # Make sure that we do not rescale uint16 data when there is a colormap
     with pytest.warns(None) as w:
-        cm = {1: [0, 0, 0, 255], 1000: [255, 255, 255, 255]}
+        cm = {1: (0, 0, 0, 255), 1000: (255, 255, 255, 255)}
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(
             img_format="JPEG", colormap=cm
         )

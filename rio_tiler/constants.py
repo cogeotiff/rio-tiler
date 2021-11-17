@@ -2,16 +2,11 @@
 
 import multiprocessing
 import os
-from typing import Sequence, Tuple, Union
 
 import morecantile
 from rasterio.crs import CRS
 
-NumType = Union[float, int]
-BBox = Tuple[float, float, float, float]
-ColorTuple = Tuple[int, int, int, int]
-NoData = Union[float, int, str]
-Indexes = Union[Sequence[int], int]
+from .types import BBox, ColorTuple, Indexes, NoData, NumType  # noqa
 
 MAX_THREADS = int(
     os.environ.get("RIO_TILER_MAX_THREADS", multiprocessing.cpu_count() * 5)

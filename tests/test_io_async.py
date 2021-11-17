@@ -10,9 +10,10 @@ import attr
 import morecantile
 import pytest
 
-from rio_tiler.constants import WEB_MERCATOR_TMS, BBox
+from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.io import AsyncBaseReader, COGReader
 from rio_tiler.models import BandStatistics, ImageData, Info
+from rio_tiler.types import BBox
 
 try:
     import contextvars  # Python 3.7+ only or via contextvars backport.

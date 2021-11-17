@@ -8,13 +8,13 @@ from typing import Dict, List, Sequence, Tuple, Union
 import attr
 import numpy
 
-from .constants import NumType
 from .errors import (
     ColorMapAlreadyRegistered,
     InvalidColorFormat,
     InvalidColorMapName,
     InvalidFormat,
 )
+from .types import ColorMapType, DataMaskType, GDALColorMapType, IntervalColorMapType
 
 try:
     from importlib.resources import files as resources_files  # type: ignore
@@ -23,7 +23,7 @@ except ImportError:
     from importlib_resources import files as resources_files  # type: ignore
 
 
-EMPTY_COLORMAP: Dict = {i: [0, 0, 0, 0] for i in range(256)}
+EMPTY_COLORMAP: GDALColorMapType = {i: (0, 0, 0, 0) for i in range(256)}
 
 DEFAULT_CMAPS_FILES = {
     f.stem: str(f) for f in (resources_files(__package__) / "cmap_data").glob("*.npy")  # type: ignore
@@ -36,15 +36,16 @@ if USER_CMAPS_DIR:
     )
 
 
-def _update_alpha(cmap: Dict, idx: Sequence[int], alpha: int = 0) -> None:
+def _update_alpha(cmap: GDALColorMapType, idx: Sequence[int], alpha: int = 0) -> None:
     """Update the alpha value of a colormap index."""
     if isinstance(idx, int):
         idx = (idx,)
+
     for i in idx:
-        cmap[i] = cmap[i][0:3] + [alpha]
+        cmap[i] = cmap[i][0:3] + (alpha,)
 
 
-def _remove_value(cmap: Dict, idx: Sequence[int]) -> None:
+def _remove_value(cmap: GDALColorMapType, idx: Sequence[int]) -> None:
     """Remove value from a colormap dict."""
     if isinstance(idx, int):
         idx = (idx,)
@@ -53,16 +54,14 @@ def _remove_value(cmap: Dict, idx: Sequence[int]) -> None:
         cmap.pop(i, None)
 
 
-def _update_cmap(cmap: Dict, values: Dict) -> None:
+def _update_cmap(cmap: GDALColorMapType, values: GDALColorMapType) -> None:
     """Update a colormap dict."""
     for i, color in values.items():
-        if len(color) == 3:
-            color += [255]
         cmap[i] = color
 
 
 # From https://github.com/mojodna/marblecutter/blob/5b9040ba6c83562a465eabdbb6e8959e6a8bf041/marblecutter/utils.py#L35
-def make_lut(colormap: Dict) -> numpy.ndarray:
+def make_lut(colormap: GDALColorMapType) -> numpy.ndarray:
     """Create a lookup table numpy.ndarray from a GDAL RGBA Color Table dictionary.
 
     Args:
@@ -74,19 +73,17 @@ def make_lut(colormap: Dict) -> numpy.ndarray:
     """
     lut = numpy.zeros(shape=(256, 4), dtype=numpy.uint8)
     for i, color in colormap.items():
-        lut[int(i)] = color
+        lut[int(i)] = numpy.array(color)
 
     return lut
 
 
-def apply_cmap(
-    data: numpy.ndarray, colormap: Union[Dict, Sequence]
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     """Apply colormap on data.
 
     Args:
         data (numpy ndarray): 1D image array to translate to RGB.
-        colormap (dict): GDAL RGBA Color Table dictionary.
+        colormap (dict or sequence): GDAL RGBA Color Table dictionary or sequence (for intervals).
 
     Returns:
         tuple: Data (numpy.ndarray) and Mask (numpy.ndarray) values.
@@ -122,8 +119,8 @@ def apply_cmap(
 
 
 def apply_discrete_cmap(
-    data: numpy.ndarray, colormap: Dict
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    data: numpy.ndarray, colormap: GDALColorMapType
+) -> DataMaskType:
     """Apply discrete colormap.
 
     Args:
@@ -136,10 +133,10 @@ def apply_discrete_cmap(
     Examples:
         >>> data = numpy.random.randint(0, 3, size=(1, 256, 256))
             cmap = {
-                0: [0, 0, 0, 0],
-                1: [255, 255, 255, 255],
-                2: [255, 0, 0, 255],
-                3: [255, 255, 0, 255],
+                0: (0, 0, 0, 0),
+                1: (255, 255, 255, 255),
+                2: (255, 0, 0, 255),
+                3: (255, 255, 0, 255),
             }
             data, mask = apply_discrete_cmap(data, cmap)
             assert data.shape == (3, 256, 256)
@@ -148,11 +145,11 @@ def apply_discrete_cmap(
     res = numpy.zeros((data.shape[1], data.shape[2], 4), dtype=numpy.uint8)
 
     for k, v in colormap.items():
-        res[data[0] == k] = v
+        res[data[0] == k] = numpy.array(v)
 
     data = numpy.transpose(res, [2, 0, 1])
 
-    # If the colormap has values between 0-255
+    # If the output data has values between 0-255
     # we cast the output array to Uint8
     if data.min() >= 0 and data.max() <= 255:
         data = data.astype("uint8")
@@ -161,8 +158,8 @@ def apply_discrete_cmap(
 
 
 def apply_intervals_cmap(
-    data: numpy.ndarray, colormap: Sequence[Sequence[Sequence[NumType]]]
-) -> Tuple[numpy.ndarray, numpy.ndarray]:
+    data: numpy.ndarray, colormap: IntervalColorMapType
+) -> DataMaskType:
     """Apply intervals colormap.
 
     Args:
@@ -175,10 +172,10 @@ def apply_intervals_cmap(
     Examples:
         >>> data = numpy.random.randint(0, 3, size=(1, 256, 256))
             cmap = [
-                ([0, 1], [0, 0, 0, 0]),
-                ([1, 2], [255, 255, 255, 255]),
-                ([2, 3], [255, 0, 0, 255]),
-                ([3, 4], [255, 255, 0, 255]),
+                ((0, 1), (0, 0, 0, 0)),
+                ((1, 2), (255, 255, 255, 255)),
+                ((2, 3), (255, 0, 0, 255)),
+                ((3, 4), (255, 255, 0, 255)),
             ]
 
             data, mask = apply_intervals_cmap(data, cmap)
@@ -188,11 +185,11 @@ def apply_intervals_cmap(
     res = numpy.zeros((data.shape[1], data.shape[2], 4), dtype=numpy.uint8)
 
     for (k, v) in colormap:
-        res[(data[0] >= k[0]) & (data[0] < k[1])] = v
+        res[(data[0] >= k[0]) & (data[0] < k[1])] = numpy.array(v)
 
     data = numpy.transpose(res, [2, 0, 1])
 
-    # If the colormap has values between 0-255
+    # If the output data has values between 0-255
     # we cast the output array to Uint8
     if data.min() >= 0 and data.max() <= 255:
         data = data.astype("uint8")
@@ -211,16 +208,16 @@ def parse_color(rgba: Union[Sequence[int], str]) -> Tuple[int, int, int, int]:
 
     Examples:
         >>> parse_color("#FFF")
-        [255, 255, 255, 255]
+        (255, 255, 255, 255)
 
         >>> parse_color("#FF0000FF")
-        [255, 0, 0, 255]
+        (255, 0, 0, 255)
 
         >>> parse_color("#FF0000")
-        [255, 0, 0, 255]
+        (255, 0, 0, 255)
 
         >>> parse_color([255, 255, 255])
-        [255, 255, 255, 255]
+        (255, 255, 255, 255)
 
     """
     if isinstance(rgba, str):
@@ -271,11 +268,11 @@ class ColorMaps:
 
     """
 
-    data: Dict[str, Union[str, Dict]] = attr.ib(
+    data: Dict[str, Union[str, ColorMapType]] = attr.ib(
         default=attr.Factory(lambda: DEFAULT_CMAPS_FILES)
     )
 
-    def get(self, name: str) -> Dict:
+    def get(self, name: str) -> ColorMapType:
         """Fetch a colormap.
 
         Args:
@@ -293,7 +290,7 @@ class ColorMaps:
             colormap = numpy.load(cmap)
             assert colormap.shape == (256, 4)
             assert colormap.dtype == numpy.uint8
-            return {idx: value.tolist() for idx, value in enumerate(colormap)}
+            return {idx: tuple(value) for idx, value in enumerate(colormap)}  # type: ignore
         else:
             return cmap
 
@@ -308,7 +305,7 @@ class ColorMaps:
 
     def register(
         self,
-        custom_cmap: Dict[str, Union[str, Dict]],
+        custom_cmap: Dict[str, Union[str, ColorMapType]],
         overwrite: bool = False,
     ) -> "ColorMaps":
         """Register a custom colormap.
@@ -318,7 +315,7 @@ class ColorMaps:
             overwrite (bool): Overwrite existing colormap with same key (default: False)
 
         Examples:
-            >>> cmap = cmap.register({"acmap": {0: [0, 0, 0, 0]}})
+            >>> cmap = cmap.register({"acmap": {0: (0, 0, 0, 0), ...}})
 
             >>> cmap = cmap.register({"acmap": "acmap.npy"})
 

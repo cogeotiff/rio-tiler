@@ -106,7 +106,7 @@ def test_info_valid():
         assert meta["colormap"]
         assert meta.colormap
 
-    with COGReader(COG_NODATA, colormap={1: [0, 0, 0, 0]}) as cog:
+    with COGReader(COG_NODATA, colormap={1: (0, 0, 0, 0)}) as cog:
         assert cog.colormap
         meta = cog.info()
         assert meta.colormap
