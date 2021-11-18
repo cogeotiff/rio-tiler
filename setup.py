@@ -27,7 +27,6 @@ extra_reqs = {
         "pytest-benchmark",
         "pytest-cov",
         "rio-cogeo>=3.0.0",
-        "tox",
     ],
     "dev": [
         "pytest",
