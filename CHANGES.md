@@ -1,11 +1,11 @@
 
-# 3.0.0a5 (TBD)
+# 3.0.0a5 (2021-11-18)
 
 * allow the definition of `geographic_crs` used in the `geographic_bounds` property (https://github.com/cogeotiff/rio-tiler/pull/458)
 * use `contextlib.ExitStack` to better manager opening/closing rasterio dataset (https://github.com/cogeotiff/rio-tiler/pull/459)
-* moves `BBox, ColorTuple, Indexes, NoData, NumType` type definitions in `rio_tiler.types`
-* better types definition for ColorMap objects
-* fix some types issues
+* moves `BBox, ColorTuple, Indexes, NoData, NumType` type definitions in `rio_tiler.types` (https://github.com/cogeotiff/rio-tiler/pull/460)
+* better types definition for ColorMap objects (https://github.com/cogeotiff/rio-tiler/pull/460)
+* fix some types issues (https://github.com/cogeotiff/rio-tiler/pull/460)
 
 # 3.0.0a4 (2021-11-10)
 
