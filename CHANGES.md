@@ -60,7 +60,7 @@ from rio_tiler.io import COGReader
 
 # For a non-earth dataset there is no available transformation from its own CRS and the default WebMercator TMS CRS.
 with COGReader("https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif") as cog:
-    >> UserWarning: Cannot dertermine min/max zoom based on dataset informations, will default to TMS min/max zoom.
+    >> UserWarning: Cannot determine min/max zoom based on dataset information, will default to TMS min/max zoom.
 
     print(cog.minzoom)
     >> 0

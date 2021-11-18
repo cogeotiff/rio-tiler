@@ -40,7 +40,7 @@
 
 ## Description
 
-`rio-tiler` was initialy designed to create [slippy map
+`rio-tiler` was initially designed to create [slippy map
 tiles](https://en.wikipedia.org/wiki/Tiled_web_map) from large raster data
 sources and render these tiles dynamically on a web map. With `rio-tiler` v2.0 we added many more helper methods to read
 data and metadata from any raster source supported by Rasterio/GDAL.

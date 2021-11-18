@@ -33,8 +33,8 @@ with COGReader(
 The `render` method accept colormap in form of:
 ```python
 {
-  value1: [R, G, B, Alpha],
-  value2: [R, G, B, Alpha],
+  value1: (R, G, B, Alpha),
+  value2: (R, G, B, Alpha),
   ...
 }
 ```
@@ -53,10 +53,10 @@ from rio_tiler.colormap import cmap
 cmap = cmap.register(
     {
         "custom_classes": {
-          0: [0, 0, 0, 0],
-          100: [255, 0, 0, 255],
-          200: [0, 255, 0, 255],
-          300: [0, 0, 255, 255],
+          0: (0, 0, 0, 0),
+          100: (255, 0, 0, 255),
+          200: (0, 255, 0, 255),
+          300: (0, 0, 255, 255),
         }
     }
 )
@@ -91,7 +91,7 @@ ndvi = matplotlib.colors.LinearSegmentedColormap.from_list(
 x = numpy.linspace(0, 1, 256)
 cmap_vals = ndvi(x)[:, :]
 cmap_uint8 = (cmap_vals * 255).astype('uint8')
-ndvi_dict = {idx: value.tolist() for idx, value in enumerate(cmap_uint8)}
+ndvi_dict = {idx: tuple(value) for idx, value in enumerate(cmap_uint8)}
 
 cmap = cmap.register({"ndvi": ndvi_dict})
 ```
@@ -104,8 +104,8 @@ Starting with `rio-tiler` 3.0, *intervals* colormap support has been added. This
     For `intervals`, colormap has to be in form of `Sequence[Tuple[Sequence, Sequence]]`:
     ```
     [
-      ([min, max], [r, g, b, a]),
-      ([min, max], [r, g, b, a]),
+      ((min, max), (r, g, b, a)),
+      ((min, max), (r, g, b, a)),
       ...
     ]
     ```
@@ -115,10 +115,10 @@ from rio_tiler.colormap import apply_cmap
 
 data = numpy.random.randint(0, 255, size=(1, 256, 256))
 cmap = [
-    ([0, 1], [0, 0, 0, 0]),
-    ([1, 10], [255, 255, 255, 255]),
-    ([10, 100], [255, 0, 0, 255]),
-    ([100, 256], [255, 255, 0, 255]),
+    ((0, 1), (0, 0, 0, 0)),
+    ((1, 10), (255, 255, 255, 255)),
+    ((10, 100), (255, 0, 0, 255)),
+    ((100, 256), (255, 255, 0, 255)),
 ]
 
 data, mask = apply_cmap(data, cmap)

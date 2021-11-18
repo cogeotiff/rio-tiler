@@ -5,10 +5,13 @@ on:
     branches:
       - master
     paths:
-      # Only rebuild website when docs have changed
+      # Only rebuild website when docs or python files have changed
       - 'README.md'
+      - 'CHANGES.md'
+      - 'CONTRIBUTING.md'
       - 'docs/**'
       - 'mkdocs.yml'
+      - 'rio_tiler/**.py'
 
 jobs:
   build:

@@ -7,7 +7,7 @@ Issues and pull requests are more than welcome.
 ```bash
 $ git clone https://github.com/cogeotiff/rio-tiler.git
 $ cd rio-tiler
-$ pip install -e .[dev]
+$ pip install -e .["dev"]
 ```
 
 ### pre-commit

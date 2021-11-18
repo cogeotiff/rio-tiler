@@ -135,6 +135,27 @@ with STACReader("mystac.json") as stac:
     )
 ```
 
+## Type hints
+
+We have moved rio-tiler's custom type definitions from `rio_tiler.constants` to `rio_tiler.types` submodules.
+
+```python
+# v2
+from rio_tiler.constants import BBox, ColorTuple, Indexes, NoData, NumType
+
+# v3
+from rio_tiler.types import BBox, ColorTuple, Indexes, NoData, NumType
+```
+
+New types have also been added:
+
+- `DataMaskType = Tuple[numpy.ndarray, numpy.ndarray]`: Tuple holding the data and the mask arrays (mostly used in `rio_tiler.readers.*` functions)
+- `ColorTuple  = Tuple[int, int, int, int]`: RGBA ColorMap entry
+- `IntervalTuple = Tuple[NumType, NumType]`: Min/Max interval entry (for colormap or rescaling)
+- `GDALColorMapType = Dict[int, ColorTuple]`: GDAL compatible colormap
+- `IntervalColorMapType = Sequence[Tuple[IntervalTuple, ColorTuple]]`: Intervals colormap
+- `ColorMapType = Union[GDALColorMapType, IntervalColorMapType]`: Supported colormap types
+
 ## Deprecation
 
 - `rio_tiler.io.base.BaseReader.metadata()` method
