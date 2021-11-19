@@ -8,13 +8,12 @@ import attr
 import morecantile
 import pytest
 
+from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import ExpressionMixingWarning, MissingBands
 from rio_tiler.io import BaseReader, COGReader, MultiBandReader
 from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
-
-default_tms = morecantile.tms.get("WebMercatorQuad")
 
 
 @attr.s
@@ -22,10 +21,10 @@ class BandFileReader(MultiBandReader):
     """Test MultiBand"""
 
     input: str = attr.ib()
-    reader: Type[BaseReader] = attr.ib(default=COGReader)
-
+    tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     reader_options: Dict = attr.ib(factory=dict)
-    tms: morecantile.TileMatrixSet = attr.ib(default=default_tms)
+
+    reader: Type[BaseReader] = attr.ib(init=False, default=COGReader)
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""

@@ -1,3 +1,10 @@
+# 3.0.0a6 (TBD)
+
+* update `MultiBaseReader` and `MultiBandReader` to be their own abstract classes instead of being subclass of `BaseReader`.
+
+**breaking changes**
+
+* put `reader` attribute outside of the `__init__` method for `MultiBaseReader` and `MultiBandReader`.
 
 # 3.0.0a5 (2021-11-18)
 
