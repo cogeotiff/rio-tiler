@@ -103,3 +103,25 @@ def test_16bit_PNG():
             assert (arr[0:10, 0:10] == 0).all()
             assert (arr[10:11, 10:11] == 25700).all()
             assert (arr[11:, 11:] == 65535).all()
+
+
+def test_merge_with_diffsize():
+    """Make sure we raise a warning"""
+    mask = numpy.zeros((256, 256), dtype="uint16") + 255
+    mask[0:10, 0:10] = 0
+    mask[10:11, 10:11] = 100
+
+    with pytest.warns(UserWarning):
+        img1 = ImageData(numpy.zeros((1, 256, 256)))
+        img2 = ImageData(numpy.zeros((1, 128, 128)))
+        img = ImageData.create_from_list([img1, img2])
+
+    assert img.count == 2
+    assert img.width == 256
+    assert img.height == 256
+
+    with pytest.warns(None) as w:
+        img1 = ImageData(numpy.zeros((1, 256, 256)))
+        img2 = ImageData(numpy.zeros((1, 256, 256)))
+        img = ImageData.create_from_list([img1, img2])
+    assert len(w) == 0

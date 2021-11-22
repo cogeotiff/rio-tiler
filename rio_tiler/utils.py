@@ -5,11 +5,13 @@ from io import BytesIO
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
 
 import numpy
+import rasterio
 from affine import Affine
 from boto3.session import Session as boto3_session
 from rasterio import windows
 from rasterio.crs import CRS
-from rasterio.enums import ColorInterp, MaskFlags
+from rasterio.dtypes import _gdal_typename
+from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.features import is_valid_geom
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
@@ -572,3 +574,43 @@ def create_cutline(
         if geom_type == "Polygon"
         else f"MULTIPOLYGON ({str_poly})"
     )
+
+
+def resize_array(
+    data: numpy.ndarray,
+    height: int,
+    width: int,
+    resampling_method: Resampling = "nearest",
+) -> numpy.ndarray:
+    """resize array to a given height and width."""
+    out_shape: Union[Tuple[int, int], Tuple[int, int, int]]
+    if len(data.shape) == 2:
+        count = 1
+        h = data.shape[0]
+        w = data.shape[1]
+        out_shape = (height, width)
+    else:
+        count = data.shape[0]
+        h = data.shape[1]
+        w = data.shape[2]
+        out_shape = (count, height, width)
+
+    # We are using GDAL MEM driver to create a new dataset from the numpy array
+    # ref: https://github.com/rasterio/rasterio/blob/master/rasterio/_io.pyx#L1946-L1955
+    info = {
+        "DATAPOINTER": data.__array_interface__["data"][0],
+        "PIXELS": w,
+        "LINES": h,
+        "BANDS": count,
+        "DATATYPE": _gdal_typename(data.dtype.name),
+    }
+    dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
+    datasetname = f"MEM:::{dataset_options}"
+    with rasterio.open(datasetname, "r+") as src:
+        # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
+        indexes = 1 if len(data.shape) == 2 else None
+        return src.read(
+            out_shape=out_shape,
+            indexes=indexes,
+            resampling=Resampling[resampling_method],
+        )

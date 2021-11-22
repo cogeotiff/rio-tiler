@@ -1,9 +1,11 @@
 # 3.0.0a6 (TBD)
 
-* update `MultiBaseReader` and `MultiBandReader` to be their own abstract classes instead of being subclass of `BaseReader`.
+* add `rio_tiler.utils.resize_array` to resize array to a given width/height (https://github.com/cogeotiff/rio-tiler/pull/463)
+* use `resize_array` in `ImageData.create_from_list` to avoid trying merging array of different sizes (https://github.com/cogeotiff/rio-tiler/pull/463)
 
 **breaking changes**
 
+* update `MultiBaseReader` and `MultiBandReader` to be their own abstract classes instead of being subclass of `BaseReader`.
 * put `reader` attribute outside of the `__init__` method for `MultiBaseReader` and `MultiBandReader`.
 
 # 3.0.0a5 (2021-11-18)

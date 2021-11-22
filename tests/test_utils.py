@@ -472,3 +472,16 @@ def test_get_array_statistics():
     assert len(stats[0]["histogram"][0]) == 4
     assert len(stats[0]["histogram"][1]) == 4
     assert stats[0]["histogram"][0][3] == 0.0  # there is no value 1000000
+
+
+def test_resize_array():
+    """make sure we resize well."""
+    arr = np.zeros((3, 256, 256), dtype="uint8")
+    arr_r = utils.resize_array(arr, 512, 256)
+    assert arr_r.shape == (3, 512, 256)
+    assert arr_r.dtype == np.uint8
+
+    arr = np.zeros((256, 256), dtype="uint8")
+    arr_r = utils.resize_array(arr, 512, 512)
+    assert arr_r.shape == (512, 512)
+    assert arr_r.dtype == np.uint8
