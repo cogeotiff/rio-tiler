@@ -1,3 +1,7 @@
+# 3.0.0a6 (TBD)
+
+* add `rio_tiler.utils.resize_array` to resize array to a given width/height (https://github.com/cogeotiff/rio-tiler/pull/463)
+* use `resize_array` in `ImageData.create_from_list` to avoid trying merging array of different sizes (https://github.com/cogeotiff/rio-tiler/pull/463)
 
 # 3.0.0a5 (2021-11-18)
 

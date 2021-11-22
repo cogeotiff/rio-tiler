@@ -19,7 +19,7 @@ from rio_color.utils import scale_dtype, to_math_type
 
 from .errors import InvalidDatatypeWarning
 from .types import ColorMapType, GDALColorMapType, IntervalTuple, NumType
-from .utils import linear_rescale, render
+from .utils import linear_rescale, render, resize_array
 
 
 class NodataTypes(str, Enum):
@@ -153,6 +153,19 @@ class ImageData:
             data (sequence): sequence of ImageData.
 
         """
+        h, w = zip(*[(img.height, img.width) for img in data])
+        if len(set(h)) > 1 or len(set(w)) > 1:
+            warnings.warn(
+                "Cannot concatenate images with different size. Will resize using max width/heigh",
+                UserWarning,
+            )
+            max_h, max_w = max(h), max(w)
+            for img in data:
+                if img.height == max_h and img.width == max_w:
+                    continue
+                img.data = resize_array(img.data, max_h, max_w)
+                img.mask = resize_array(img.mask, max_h, max_w)
+
         arr = numpy.concatenate([img.data for img in data])
         mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
         assets = list(
