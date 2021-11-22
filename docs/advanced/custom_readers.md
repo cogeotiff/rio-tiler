@@ -20,9 +20,10 @@ Main `rio_tiler.io` Abstract Base Class.
 - **maxzoom**: Dataset's maxzoom. Not in the `__init__` method.
 - **bounds**: Dataset's bounding box. Not in the `__init__` method.
 - **crs**: dataset's crs. Not in the `__init__` method.
+- **geographic_crs**: CRS to use as geographic coordinate system. Defaults to WGS84. Not in the `__init__` method.
 
 !!! important
-    BaseClass Arguments outside the `__init__` method **HAVE TO** be set in the `__attrs_post_init__` step.
+    BaseClass Arguments outside the `__init__` method and without default value **HAVE TO** be set in the `__attrs_post_init__` step.
 
 #### Methods
 
@@ -34,7 +35,7 @@ Main `rio_tiler.io` Abstract Base Class.
 
 ##### Abstract Methods
 
-Abstract methods, are mehtod that **HAVE TO** be implemented in the subclass.
+Abstract methods, are method that **HAVE TO** be implemented in the child class.
 
 - **info**: returns dataset info (`rio_tiler.models.Info`)
 - **statistics**: returns dataset band statistics (`Dict[str, rio_tiler.models.BandStatistics]`)
@@ -48,13 +49,15 @@ Example: [`COGReader`](../readers.md#cogreader)
 
 ### **AsyncBaseReader**
 
-Equivalent of `BaseReader` for async-ready readers (e.g [aiocogeo](https://github.com/geospatial-jeff/aiocogeo)). The `AsyncBaseReader` has the same properties/methods as the `BaseReader`.
+Equivalent of `BaseReader` for async-ready readers (e.g [aiocogeo](https://github.com/geospatial-jeff/aiocogeo)). The `AsyncBaseReader` has the same attributes/properties/methods as the `BaseReader`.
 
 see example of reader built using `AsyncBaseReader`: https://github.com/cogeotiff/rio-tiler/blob/832ecbd97f560c2764818bca30ca95ef25408527/tests/test_io_async.py#L49
 
 ### **MultiBaseReader**
 
-This abstract class inherit from `BaseReader`. The goal of the `MultiBaseReader` is to enable readers that need to join results from multiple files (e.g STAC).
+The goal of the `MultiBaseReader` is to enable joining results from multiple files (e.g STAC).
+
+The `MultiBaseReader` has the same attributes/properties/methods as the `BaseReader`.
 
 Example: [`STACReader`](../readers.md#stacreader)
 
@@ -140,7 +143,9 @@ with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
 
 ### **MultiBandsReader**
 
-Almost as the previous `MultiBaseReader`, the `MultiBandsReader` subclasses will merge results extracted from differents assets but taking each assets as individual bands.
+Almost as the previous `MultiBaseReader`, the `MultiBandsReader` children will merge results extracted from different file but taking each file as individual bands.
+
+The `MultiBaseReader` has the same attributes/properties/methods as the `BaseReader`.
 
 Example
 
@@ -300,7 +305,7 @@ class Reader(BaseReader):
     # We force tms to be outside the class __init__
     tms: TileMatrixSet = attr.ib(init=False, default=WEB_MERCATOR_TMS)
 
-    # We can overwrite the baseclass attribute definition and set default
+    # We overwrite the abstract base class attribute definition and set default
     minzoom: int = attr.ib(init=False, default=WEB_MERCATOR_TMS.minzoom)
     maxzoom: int = attr.ib(init=False, default=WEB_MERCATOR_TMS.maxzoom)
 

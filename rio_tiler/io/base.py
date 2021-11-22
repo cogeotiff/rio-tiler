@@ -35,6 +35,7 @@ class SpatialMixin:
         maxzoom (int): Dataset Max Zoom level. **Not in __init__**.
         bounds (tuple): Dataset bounds (left, bottom, right, top). **Not in __init__**.
         crs (rasterio.crs.CRS): Dataset crs. **Not in __init__**.
+        geographic_crs (rasterio.crs.CRS): CRS to use as geographic coordinate system. Defaults to WGS84. **Not in __init__**.
 
     """
 
@@ -325,27 +326,34 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
 
 @attr.s
-class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
+class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """MultiBaseReader Reader.
 
-    This Reader is suited for dataset that are composed of multiple assets (e.g. STAC).
+    This Abstract Base Class Reader is suited for dataset that are composed of multiple assets (e.g. STAC).
 
     Attributes:
         input (any): input data.
-        reader (rio_tiler.io.BaseReader): reader.
-        reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
+        reader (rio_tiler.io.BaseReader): reader. **Not in __init__**.
         assets (sequence): Asset list. **Not in __init__**.
 
     """
 
     input: Any = attr.ib()
-    reader: Type[BaseReader] = attr.ib()
-
-    reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+    reader_options: Dict = attr.ib(factory=dict)
 
+    reader: Type[BaseReader] = attr.ib(init=False)
     assets: Sequence[str] = attr.ib(init=False)
+
+    def __enter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
 
     @abc.abstractmethod
     def _get_asset_url(self, asset: str) -> str:
@@ -768,27 +776,34 @@ class MultiBaseReader(BaseReader, metaclass=abc.ABCMeta):
 
 
 @attr.s
-class MultiBandReader(BaseReader, metaclass=abc.ABCMeta):
+class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     """Multi Band Reader.
 
-    This Reader is suited for dataset that stores spectral bands as separate files  (e.g. Sentinel 2).
+    This Abstract Base Class Reader is suited for dataset that stores spectral bands as separate files  (e.g. Sentinel 2).
 
     Attributes:
         input (any): input data.
-        reader (rio_tiler.io.BaseReader): reader.
-        reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
+        reader (rio_tiler.io.BaseReader): reader. **Not in __init__**.
         bands (sequence): Band list. **Not in __init__**.
 
     """
 
     input: Any = attr.ib()
-    reader: Type[BaseReader] = attr.ib()
-
-    reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+    reader_options: Dict = attr.ib(factory=dict)
 
+    reader: Type[BaseReader] = attr.ib(init=False)
     bands: Sequence[str] = attr.ib(init=False)
+
+    def __enter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
 
     @abc.abstractmethod
     def _get_band_url(self, band: str) -> str:
