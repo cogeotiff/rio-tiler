@@ -32,8 +32,9 @@ nav:
     - Colormaps: 'colormap.md'
     - Supported file formats: 'supported_format.md'
   - Advanced Topics:
-    - Read Polygon-shaped regions: 'advanced/feature.md'
     - Base classes and custom readers: 'advanced/custom_readers.md'
+    - Read Polygon-shaped regions: 'advanced/feature.md'
+    - Zonal statistics: 'advanced/zonal_stats.md'
     - Create a Dynamic Tiler: 'advanced/dynamic_tiler.md'
     - TileMatrixSet: 'advanced/tms.md'
   - Examples:

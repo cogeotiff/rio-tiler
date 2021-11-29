@@ -1,3 +1,7 @@
+# 3.0.0 (2021-11-29)
+
+* no change since `3.0.0a6`
+
 # 3.0.0a6 (2021-11-22)
 
 * add `rio_tiler.utils.resize_array` to resize array to a given width/height (https://github.com/cogeotiff/rio-tiler/pull/463)

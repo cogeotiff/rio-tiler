@@ -42,9 +42,9 @@
 
 `rio-tiler` was initially designed to create [slippy map
 tiles](https://en.wikipedia.org/wiki/Tiled_web_map) from large raster data
-sources and render these tiles dynamically on a web map. With `rio-tiler` v2.0 we added many more helper methods to read
+sources and render these tiles dynamically on a web map. Since `rio-tiler` v2.0, we added many more helper methods to read
 data and metadata from any raster source supported by Rasterio/GDAL.
-This includes local files and via HTTP, AWS S3, Google Cloud Storage,
+This includes local and remote files via HTTP, AWS S3, Google Cloud Storage,
 etc.
 
 At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.WarpedVRT](https://github.com/rasterio/rasterio/blob/5b76d05fb374e64602166d6cd880c38424fad39b/rasterio/vrt.py#L15) class, which can be useful for doing re-projection and/or property overriding (e.g nodata value).
