@@ -1,3 +1,7 @@
+# 3.0.1 (TBD)
+
+* avoid useless call to `transform_bounds` if input/output CRS are equals (https://github.com/cogeotiff/rio-tiler/pull/466)
+
 # 3.0.0 (2021-11-29)
 
 * no change since `3.0.0a6`
