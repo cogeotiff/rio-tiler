@@ -1,6 +1,7 @@
-# 3.0.1 (TBD)
+# 3.0.1 (2021-12-03)
 
 * avoid useless call to `transform_bounds` if input/output CRS are equals (https://github.com/cogeotiff/rio-tiler/pull/466)
+* make sure `geographic_bounds` don't return inf or nan values (https://github.com/cogeotiff/rio-tiler/pull/467)
 
 # 3.0.0 (2021-11-29)
 
