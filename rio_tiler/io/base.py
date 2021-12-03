@@ -64,7 +64,14 @@ class SpatialMixin:
             )
         except:  # noqa
             warnings.warn(
-                "Cannot dertermine bounds in WGS84, will default to (-180.0, -90.0, 180.0, 90.0).",
+                "Cannot dertermine bounds in geographic CRS, will default to (-180.0, -90.0, 180.0, 90.0).",
+                UserWarning,
+            )
+            bounds = (-180.0, -90, 180.0, 90)
+
+        if not all(numpy.isfinite(bounds)):
+            warnings.warn(
+                "Transformation to geographic CRS returned invalid values, will default to (-180.0, -90.0, 180.0, 90.0).",
                 UserWarning,
             )
             bounds = (-180.0, -90, 180.0, 90)
