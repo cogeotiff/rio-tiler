@@ -52,6 +52,9 @@ class SpatialMixin:
     @property
     def geographic_bounds(self) -> BBox:
         """return bounds in WGS84."""
+        if self.crs == self.geographic_crs:
+            return self.bounds
+
         try:
             bounds = transform_bounds(
                 self.crs,
@@ -83,24 +86,25 @@ class SpatialMixin:
         # bounds in TileMatrixSet's CRS
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
-        # Transform the bounds to the dataset's CRS
-        try:
-            tile_bounds = transform_bounds(
-                self.tms.rasterio_crs,
-                self.crs,
-                *tile_bounds,
-                densify_pts=21,
-            )
-        except:  # noqa
-            # HACK: gdal will first throw an error for invalid transformation
-            # but if retried it will then pass.
-            # Note: It might return `+/-inf` values
-            tile_bounds = transform_bounds(
-                self.tms.rasterio_crs,
-                self.crs,
-                *tile_bounds,
-                densify_pts=21,
-            )
+        if not self.tms.rasterio_crs == self.crs:
+            # Transform the bounds to the dataset's CRS
+            try:
+                tile_bounds = transform_bounds(
+                    self.tms.rasterio_crs,
+                    self.crs,
+                    *tile_bounds,
+                    densify_pts=21,
+                )
+            except:  # noqa
+                # HACK: gdal will first throw an error for invalid transformation
+                # but if retried it will then pass.
+                # Note: It might return `+/-inf` values
+                tile_bounds = transform_bounds(
+                    self.tms.rasterio_crs,
+                    self.crs,
+                    *tile_bounds,
+                    densify_pts=21,
+                )
 
         # If tile_bounds has non-finite value in the dataset CRS we return True
         if not all(numpy.isfinite(tile_bounds)):
