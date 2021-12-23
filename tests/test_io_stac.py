@@ -566,13 +566,29 @@ def test_fetch_stac_client_options(httpx, s3_get):
 
     with STACReader(
         "http://somewhereovertherainbow.io/mystac.json",
-        fetch_options={"auth": ("user", "pass")},
+        fetch_options={
+            "auth": ("user", "pass"),
+            "headers": {"Authorization": "Bearer token"},
+        },
     ) as stac:
         assert stac.assets == ["red", "green", "blue"]
     httpx.get.assert_called_once()
     assert httpx.get.call_args[1]["auth"] == ("user", "pass")
+    assert httpx.get.call_args[1]["headers"] == {"Authorization": "Bearer token"}
     s3_get.assert_not_called()
-    httpx.mock_reset()
+
+    with STACReader(
+        "http://somewhereovertherainbow.io/mystac.json",
+        fetch_options={
+            "auth": ("user", "pass"),
+            "headers": {"Authorization": "Bearer token"},
+        },
+    ) as stac:
+        assert stac.assets == ["red", "green", "blue"]
+
+    # Check if it was cached
+    assert httpx.get.call_count == 1
+    s3_get.assert_not_called()
 
     # S3
     with open(STAC_PATH, "r") as f:
