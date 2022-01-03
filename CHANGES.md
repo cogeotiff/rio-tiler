@@ -1,5 +1,5 @@
 
-# 3.0.2 (TBD)
+# 3.0.2 (2022-01-03)
 
 * switch from `functools.lru_cache` to `cachetools.LRUCache` to allow unashable options in `rio_tiler.io.stac.fetch` function (https://github.com/cogeotiff/rio-tiler/pull/471)
 
