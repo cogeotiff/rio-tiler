@@ -1,6 +1,5 @@
 """rio_tiler.io.stac: STAC reader."""
 
-import functools
 import json
 from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
@@ -8,6 +7,8 @@ from urllib.parse import urlparse
 import attr
 import httpx
 import pystac
+from cachetools import LRUCache, cached
+from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
 from rasterio.crs import CRS
 
@@ -31,7 +32,10 @@ DEFAULT_VALID_TYPE = {
 }
 
 
-@functools.lru_cache(maxsize=512)
+@cached(
+    LRUCache(maxsize=512),
+    key=lambda filepath, **kargs: hashkey(filepath, json.dumps(kargs)),
+)
 def fetch(filepath: str, **kwargs: Any) -> Dict:
     """Fetch STAC items.
 

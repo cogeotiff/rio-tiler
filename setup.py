@@ -17,6 +17,7 @@ inst_reqs = [
     "rasterio>=1.1.7",
     "httpx",
     "rio-color",
+    "cachetools",
     "importlib_resources>=1.1.0;python_version<'3.9'",
 ]
 
