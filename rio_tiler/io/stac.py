@@ -56,8 +56,9 @@ def fetch(filepath: str, **kwargs: Any) -> Dict:
         return json.loads(aws_get_object(bucket, key, **kwargs))
 
     elif parsed.scheme in ["https", "http", "ftp"]:
-        return httpx.get(filepath, **kwargs).json()
-
+        resp = httpx.get(filepath, **kwargs)
+        resp.raise_for_status()
+        return resp.json()
     else:
         with open(filepath, "r") as f:
             return json.load(f)

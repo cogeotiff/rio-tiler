@@ -1,4 +1,8 @@
 
+# 3.0.3 (2022-01-18)
+
+* make sure we raise an HTTP exception when using an invalid STAC url (https://github.com/cogeotiff/rio-tiler/pull/475)
+
 # 3.0.2 (2022-01-03)
 
 * switch from `functools.lru_cache` to `cachetools.LRUCache` to allow unashable options in `rio_tiler.io.stac.fetch` function (https://github.com/cogeotiff/rio-tiler/pull/471)

@@ -96,6 +96,9 @@ def test_fetch_stac(httpx, s3_get):
         def json(self):
             return json.loads(self.data)
 
+        def raise_for_status(self):
+            return True
+
     with open(STAC_PATH, "r") as f:
         httpx.get.return_value = MockResponse(f.read())
 
@@ -560,6 +563,9 @@ def test_fetch_stac_client_options(httpx, s3_get):
 
         def json(self):
             return json.loads(self.data)
+
+        def raise_for_status(self):
+            return True
 
     with open(STAC_PATH, "r") as f:
         httpx.get.return_value = MockResponse(f.read())
