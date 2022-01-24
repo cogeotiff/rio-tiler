@@ -41,6 +41,12 @@ def aws_get_object(
     if not client:
         session = boto3_session()
         endpoint_url = os.environ.get("AWS_S3_ENDPOINT", None)
+        if ( endpoint_url != None ):
+            use_https = os.environ.get("AWS_HTTPS", "YES")
+            if ( use_https == "YES" ):
+                endpoint_url = "https://" + endpoint_url
+            else:
+                endpoint_url = "http://" + endpoint_url
         client = session.client("s3", endpoint_url=endpoint_url)
 
     params = {"Bucket": bucket, "Key": key}
