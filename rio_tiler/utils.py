@@ -43,7 +43,7 @@ def aws_get_object(
         endpoint_url = os.environ.get("AWS_S3_ENDPOINT", None)
         if endpoint_url is not None:
             use_https = os.environ.get("AWS_HTTPS", "YES")
-            if use_https == "YES":
+            if use_https.upper() in ["YES", "TRUE", "ON"]:
                 endpoint_url = "https://" + endpoint_url
             else:
                 endpoint_url = "http://" + endpoint_url
