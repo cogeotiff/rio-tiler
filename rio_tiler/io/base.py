@@ -18,7 +18,7 @@ from ..errors import (
     MissingBands,
     TileOutsideBounds,
 )
-from ..expression import apply_expression
+from ..expression import apply_expression, get_expression_blocks
 from ..models import BandStatistics, ImageData, Info
 from ..tasks import multi_arrays, multi_values
 from ..types import BBox, Indexes
@@ -526,7 +526,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         )
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, assets, output.data)
             output.band_names = blocks
 
@@ -590,7 +590,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         output = multi_arrays(assets, _reader, bbox, **kwargs)
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, assets, output.data)
             output.band_names = blocks
 
@@ -651,7 +651,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         output = multi_arrays(assets, _reader, **kwargs)
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, assets, output.data)
             output.band_names = blocks
 
@@ -716,7 +716,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         values = numpy.array([d for _, d in data.items()])
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             values = apply_expression(blocks, assets, values)
 
         return values.tolist()
@@ -779,7 +779,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         output = multi_arrays(assets, _reader, shape, **kwargs)
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, assets, output.data)
             output.band_names = blocks
 
@@ -991,7 +991,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         output = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, bands, output.data)
             output.band_names = blocks
 
@@ -1043,7 +1043,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         output = multi_arrays(bands, _reader, bbox, **kwargs)
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, bands, output.data)
             output.band_names = blocks
 
@@ -1093,7 +1093,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         output = multi_arrays(bands, _reader, **kwargs)
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, bands, output.data)
             output.band_names = blocks
 
@@ -1146,7 +1146,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         values = numpy.array([d for _, d in data.items()])
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             values = apply_expression(blocks, bands, values)
 
         return values.tolist()
@@ -1197,7 +1197,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         output = multi_arrays(bands, _reader, shape, **kwargs)
 
         if expression:
-            blocks = expression.split(",")
+            blocks = get_expression_blocks(expression)
             output.data = apply_expression(blocks, bands, output.data)
             output.band_names = blocks
 
