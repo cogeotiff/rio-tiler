@@ -430,6 +430,59 @@ def test_statistics_valid(rio):
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
+def test_merged_statistics_valid(rio):
+    """Should raise or return data."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_PATH) as stac:
+        with pytest.warns(UserWarning):
+            stats = stac.merged_statistics()
+            assert len(stats) == 3
+            assert isinstance(stats["red_1"], BandStatistics)
+            assert stats["red_1"]
+            assert stats["green_1"]
+            assert stats["blue_1"]
+
+        with pytest.raises(InvalidAssetName):
+            stac.merged_statistics(assets="vert")
+
+        stats = stac.merged_statistics(assets="green")
+        assert isinstance(stats["green_1"], BandStatistics)
+
+        stats = stac.merged_statistics(
+            assets=("green", "red"), hist_options={"bins": 20}
+        )
+        assert len(stats) == 2
+        assert len(stats["green_1"]["histogram"][0]) == 20
+        assert len(stats["red_1"]["histogram"][0]) == 20
+
+        # Check that asset_expression is passed
+        stats = stac.merged_statistics(
+            assets=("green", "red"), asset_expression={"green": "b1*2", "red": "b1+100"}
+        )
+        assert isinstance(stats["green_b1*2"], BandStatistics)
+        assert isinstance(stats["red_b1+100"], BandStatistics)
+
+        # Check that asset_indexes is passed
+        stats = stac.merged_statistics(
+            assets=("green", "red"), asset_indexes={"green": 1, "red": 1}
+        )
+        assert isinstance(stats["green_1"], BandStatistics)
+        assert isinstance(stats["red_1"], BandStatistics)
+
+        # Check Expression
+        stats = stac.merged_statistics(expression="green/red")
+        assert isinstance(stats["green/red"], BandStatistics)
+
+        # Check that we can use expression and asset_expression
+        stats = stac.merged_statistics(
+            expression="green/red",
+            asset_expression={"green": "b1*2", "red": "b1+100"},
+        )
+        assert isinstance(stats["green/red"], BandStatistics)
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
 def test_info_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
