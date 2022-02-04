@@ -1,3 +1,6 @@
+# unreleased
+
+* add support for setting the S3 endpoint url scheme via the `AWS_HTTPS` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/476)
 
 # 3.0.3 (2022-01-18)
 
