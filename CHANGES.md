@@ -1,3 +1,20 @@
+# unreleased
+
+* add support for setting the S3 endpoint url scheme via the `AWS_HTTPS` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/476)
+* Add semicolon `;` support for multi-blocks expression (https://github.com/cogeotiff/rio-tiler/pull/479)
+* add `rio_tiler.expression.get_expression_blocks` method to split expression (https://github.com/cogeotiff/rio-tiler/pull/479)
+
+**future deprecation**
+
+* using a comma `,` in an expression to define multiple blocks will be replaced by semicolon `;`
+
+```python
+# before
+expression = "b1+b2,b2"
+
+# new
+expression = "b1+b2;b2"
+```
 
 # 3.0.3 (2022-01-18)
 
