@@ -50,7 +50,7 @@ def get_expression_blocks(expression: str) -> List[str]:
     expr = [expr for expr in expression.split(",") if expr]
     if len(expr) > 1:
         warnings.warn(
-            "Using coma `,` for multiband expression will be deprecated in rio-tiler 4.0. Please use semicolon `;`.",
+            "Using comma `,` for multiband expression will be deprecated in rio-tiler 4.0. Please use semicolon `;`.",
             DeprecationWarning,
         )
 
