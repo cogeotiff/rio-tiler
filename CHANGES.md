@@ -6,7 +6,7 @@
 
 **future deprecation**
 
-* using coma `,` in expression to define multiple blocks will be replaced by semicolon `;`
+* using a comma `,` in an expression to define multiple blocks will be replaced by semicolon `;`
 
 ```python
 # before
