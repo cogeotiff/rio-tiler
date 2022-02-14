@@ -3,6 +3,7 @@
 * add support for setting the S3 endpoint url scheme via the `AWS_HTTPS` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/476)
 * Add semicolon `;` support for multi-blocks expression (https://github.com/cogeotiff/rio-tiler/pull/479)
 * add `rio_tiler.expression.get_expression_blocks` method to split expression (https://github.com/cogeotiff/rio-tiler/pull/479)
+* add `merged_statistics` method for `MultiBaseReader` to get statistics using between assets expression (https://github.com/cogeotiff/rio-tiler/pull/478)
 
 **future deprecation**
 
