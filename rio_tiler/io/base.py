@@ -452,6 +452,70 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         return multi_values(assets, _reader, **kwargs)
 
+    def merged_statistics(  # type: ignore
+        self,
+        assets: Union[Sequence[str], str] = None,
+        expression: Optional[str] = None,
+        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
+        categorical: bool = False,
+        categories: Optional[List[float]] = None,
+        percentiles: List[int] = [2, 98],
+        hist_options: Optional[Dict] = None,
+        max_size: int = 1024,
+        **kwargs: Any,
+    ) -> Dict[str, BandStatistics]:
+        """Return array statistics for multiple assets.
+
+        Args:
+            assets (sequence of str or str): assets to fetch info from.
+            expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
+            asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
+            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of categories to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            kwargs (optional): Options to forward to the `self.preview` method.
+
+
+        Returns:
+            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        if not expression:
+            if not assets:
+                warnings.warn(
+                    "No `assets` option passed, will fetch statistics for all available assets.",
+                    UserWarning,
+                )
+            assets = assets or self.assets
+
+        data = self.preview(
+            assets=assets,
+            expression=expression,
+            asset_indexes=asset_indexes,
+            asset_expression=asset_expression,
+            max_size=max_size,
+            **kwargs,
+        )
+
+        hist_options = hist_options or {}
+
+        stats = get_array_statistics(
+            data.as_masked(),
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            **hist_options,
+        )
+
+        return {
+            f"{data.band_names[ix]}": BandStatistics(**stats[ix])
+            for ix in range(len(stats))
+        }
+
     def tile(
         self,
         tile_x: int,

@@ -430,10 +430,11 @@ EPSG:4326
 
 #### Methods
 
-The `STACReader` as the same methods as the `COGReader` (defined by the BaseReader/MultiBaseReader classes).
+The `STACReader` has the same methods as the `COGReader` (defined by the BaseReader/MultiBaseReader classes).
 
-!!! important
-    `STACReader` methods require to set either `assets=` or `expression=` option.
+!!! Important
+    - Most of `STACReader` methods require to set either `assets=` or `expression=` option.
+    - `asset_indexes` and `asset_expression` are available for all STACReader methods except `info`.
 
 - **tile()**: Read map tile from a STAC Item
 
@@ -503,9 +504,6 @@ with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
     )
     assert img.count == 3
 ```
-
-`asset_indexes` and `asset_expression` are available for all STACReader methods expect `info`.
-
 
 - **part()**: Read a STAC item for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
 
@@ -593,7 +591,7 @@ print(info["B01"].json(exclude_none=True))
 }
 ```
 
-- **statistics()**: Return image statistics (Min/Max/Stdev)
+- **statistics()**: Return per assets statistics (Min/Max/Stdev)
 
 ```python
 with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
@@ -601,13 +599,13 @@ with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
     stats = stac.statistics(assets=["B01", "B02"], max_size=128)
 
 # stats will be in form or {"asset": {"band": BandStatistics(), ...}, ...}
-print(list(info))
+print(list(stats))
 >>> ["B01", "B02"]
 
-print(list(info["B01"]))
+print(list(stats["B01"]))
 >>> ["1"]  # B01 has only one band entry "1"
 
-print(info["B01"]["1"].json(exclude_none=True))
+print(stats["B01"]["1"].json(exclude_none=True))
 {
     "min": 283.0,
     "max": 7734.0,
@@ -630,3 +628,57 @@ print(info["B01"]["1"].json(exclude_none=True))
     "percentile_98": 5026.76
 }
 ```
+
+- **merged_statistics()**: Return statistics when merging assets
+
+The `merged_statistics` enable the use of `expression` to perform assets mixing (e.g `"asset1/asset2"`). The main difference with the `statistics` method is that we will first use the `self.preview` method to obtain a merged array and then calculate the statistics.
+
+```python
+with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
+    # stac.statistics(assets=?, asset_expression=?, asset_indexes=?, **kwargs)
+    stats = stac.merged_statistics(assets=["B01", "B02"], max_size=128)
+
+# stats will be in form or {"band": BandStatistics(), ...}
+print(list(stats))
+>>> ["B01_1", "B02_1"]
+
+assert isinstance(stats["B01_1"], BandStatistics)
+
+print(info["B01_1"].json(exclude_none=True))
+{
+    "min": 283.0,
+    "max": 7734.0,
+    "mean": 1996.959687371452,
+    "count": 12155.0,
+    "sum": 24273045.0,
+    "std": 1218.4455268717047,
+    "median": 1866.0,
+    "majority": 322.0,
+    "minority": 283.0,
+    "unique": 4015.0,
+    "histogram": [
+        [3257.0, 2410.0, 2804.0, 1877.0, 1050.0, 423.0, 199.0, 93.0, 31.0, 11.0],
+        [283.0, 1028.1, 1773.2, 2518.3, 3263.4, 4008.5, 4753.6, 5498.7, 6243.8, 6988.900000000001, 7734.0]
+    ],
+    "valid_percent": 74.19,
+    "masked_pixels": 4229.0,
+    "valid_pixels": 12155.0,
+    "percentile_2": 326.08000000000004,
+    "percentile_98": 5026.76
+}
+
+with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
+    # stac.statistics(assets=?, asset_expression=?, asset_indexes=?, **kwargs)
+    stats = stac.merged_statistics(expression=["B01/B02"], max_size=128)
+
+print(list(stats))
+>>> ["B01/B02"]
+
+assert isinstance(stats["B01/B02"], BandStatistics)
+```
+
+### STAC Expression
+
+When using `expression`, the reader might consider assets as `1 band` data. Expression using multi bands are not supported (e.g: `asset1_b1 + asset2_b2`).
+
+If assets have difference number of bands and the `asset_indexes` is not specified the process will fail because it will try to apply an expression using arrays of different sizes.
