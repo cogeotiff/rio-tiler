@@ -82,7 +82,7 @@ def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     """Apply colormap on data.
 
     Args:
-        data (numpy ndarray): 1D image array to translate to RGB.
+        data (numpy.ndarray): 1D image array to translate to RGB.
         colormap (dict or sequence): GDAL RGBA Color Table dictionary or sequence (for intervals).
 
     Returns:
@@ -124,7 +124,7 @@ def apply_discrete_cmap(
     """Apply discrete colormap.
 
     Args:
-        data (numpy ndarray): 1D image array to translate to RGB.
+        data (numpy.ndarray): 1D image array to translate to RGB.
         color_map (dict): Discrete ColorMap dictionary.
 
     Returns:
@@ -163,7 +163,7 @@ def apply_intervals_cmap(
     """Apply intervals colormap.
 
     Args:
-        data (numpy ndarray): 1D image array to translate to RGB.
+        data (numpy.ndarray): 1D image array to translate to RGB.
         color_map (Sequence): Sequence of intervals and color in form of [([min, max], [r, g, b, a]), ...].
 
     Returns:
@@ -276,7 +276,7 @@ class ColorMaps:
         """Fetch a colormap.
 
         Args:
-            name (dict): colormap name.
+            name (str): colormap name.
 
         Returns
             dict: colormap dictionary.
@@ -312,7 +312,7 @@ class ColorMaps:
 
         Args:
             custom_cmap (dict): custom colormap(s) to register.
-            overwrite (bool): Overwrite existing colormap with same key (default: False)
+            overwrite (bool): Overwrite existing colormap with same key. Defaults to False.
 
         Examples:
             >>> cmap = cmap.register({"acmap": {0: (0, 0, 0, 0), ...}})

@@ -91,13 +91,13 @@ def get_array_statistics(
 
     Args:
         data (numpy.ma.MaskedArray): input masked array data to get the statistics from.
-        categorical (bool): treat input data as categorical data. Defaults to False.
+        categorical (bool): treat input data as categorical data. Defaults to `False`.
         categories (list of numbers, optional): list of categories to return value for.
         percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
         kwargs (optional): options to forward to `numpy.histogram` function (only applies for non-categorical data).
 
     Returns:
-        list of dict
+        list: list of array statistics (dict)
 
     Examples:
         >>> data = numpy.ma.zeros((1, 256, 256))
@@ -544,6 +544,7 @@ def create_cutline(
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
         geometry (dict): GeoJSON feature or GeoJSON geometry. By default the coordinates are considered to be in the dataset CRS. Use `geometry_crs` to set a specific CRS.
         geometry_crs (rasterio.crs.CRS, optional): Input geometry Coordinate Reference System
+
     Returns:
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 

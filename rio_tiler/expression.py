@@ -13,7 +13,7 @@ def parse_expression(expression: str, cast: bool = True) -> Tuple:
 
     Args:
         expression (str): band math/combination expression.
-        cast (bool): cast band names to integers (convert to index values).
+        cast (bool): cast band names to integers (convert to index values). Defaults to True.
 
     Returns:
         tuple: band names/indexes.
@@ -37,7 +37,7 @@ def get_expression_blocks(expression: str) -> List[str]:
         expression (str): band math/combination expression.
 
     Returns:
-        tuple: expression blocks.
+        list: expression blocks (str).
 
     Examples:
         >>> parse_expression("b1/b2,b2+b1")
