@@ -171,7 +171,7 @@ def test_tile_valid_default():
         assert not mask.all()
 
         # Expression
-        img = cog.tile(43, 24, 7, expression="b1*2,b1-100")
+        img = cog.tile(43, 24, 7, expression="b1*2;b1-100")
         assert img.data.shape == (2, 256, 256)
         assert img.band_names == ["b1*2", "b1-100"]
 
@@ -245,7 +245,7 @@ def test_point_valid():
         pts = cog.point(lon, lat)
         assert len(pts) == 1
 
-        pts = cog.point(lon, lat, expression="b1*2,b1-100")
+        pts = cog.point(lon, lat, expression="b1*2;b1-100")
         assert len(pts) == 2
 
         with pytest.warns(ExpressionMixingWarning):
@@ -285,7 +285,7 @@ def test_area_valid():
         data, mask = cog.part(bbox, max_size=30)
         assert data.shape == (1, 9, 30)
 
-        img = cog.part(bbox, expression="b1*2,b1-100")
+        img = cog.part(bbox, expression="b1*2;b1-100")
         assert img.data.shape == (2, 11, 40)
         assert img.band_names == ["b1*2", "b1-100"]
 
@@ -318,7 +318,7 @@ def test_preview_valid():
         data, mask = cog.preview()
         assert data.shape == (1, 1024, 1021)
 
-        img = cog.preview(max_size=128, expression="b1*2,b1-100")
+        img = cog.preview(max_size=128, expression="b1*2;b1-100")
         assert img.data.shape == (2, 128, 128)
         assert img.band_names == ["b1*2", "b1-100"]
 
@@ -387,7 +387,7 @@ def test_statistics():
 
     # Check results for expression
     with COGReader(COGEO) as cog:
-        stats = cog.statistics(expression="b1,b1*2")
+        stats = cog.statistics(expression="b1;b1*2")
         assert stats["b1"]
         assert stats["b1*2"]
         assert stats["b1"].min == stats["b1*2"].min / 2
@@ -622,7 +622,7 @@ def test_feature_valid():
         img = cog.feature(feature, max_size=30)
         assert img.data.shape == (1, 11, 30)
 
-        img = cog.feature(feature, expression="b1*2,b1-100", max_size=1024)
+        img = cog.feature(feature, expression="b1*2;b1-100", max_size=1024)
         assert img.data.shape == (2, 348, 1024)
         assert img.band_names == ["b1*2", "b1-100"]
 
