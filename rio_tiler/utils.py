@@ -22,6 +22,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 from .colormap import apply_cmap
 from .constants import WEB_MERCATOR_CRS
 from .errors import RioTilerError
+from .expression import get_expression_blocks
 from .types import BBox, ColorMapType, IntervalTuple
 
 
@@ -66,7 +67,7 @@ def get_bands_names(
 ) -> List[str]:
     """Define bands names based on expression, indexes or band count."""
     if expression:
-        return expression.split(",")
+        return get_expression_blocks(expression)
 
     elif indexes:
         return [str(idx) for idx in indexes]
@@ -258,28 +259,33 @@ def get_vrt_transform(
         tuple: VRT transform (affine.Affine), width (int) and height (int)
 
     """
-    dst_transform, _, _ = calculate_default_transform(
-        src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
-    )
+    if src_dst.crs != dst_crs:
+        dst_transform, _, _ = calculate_default_transform(
+            src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
+        )
+    else:
+        dst_transform = src_dst.transform
 
     # If bounds window is aligned with the dataset internal tile we align the bounds with the pixels.
     # This is to limit the number of internal block fetched.
     if _requested_tile_aligned_with_internal_tile(
         src_dst, bounds, height, width, dst_crs
     ):
+        # Get Window for the input bounds
+        # e.g Window(col_off=17920.0, row_off=11007.999999999998, width=255.99999999999636, height=256.0000000000018)
         col_off, row_off, w, h = windows.from_bounds(
-            *bounds,
-            transform=src_dst.transform,
-            width=width,
-            height=height,
+            *bounds, transform=dst_transform
         ).flatten()
 
+        # Round Window
         w = windows.Window(
             round(col_off, window_precision),
             round(row_off, window_precision),
             round(w, window_precision),
             round(h, window_precision),
         )
+
+        # Get Bounds for the rounded window
         bounds = src_dst.window_bounds(w)
 
     w, s, e, n = bounds

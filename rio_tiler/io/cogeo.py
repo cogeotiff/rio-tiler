@@ -25,7 +25,7 @@ from ..errors import (
     NoOverviewWarning,
     TileOutsideBounds,
 )
-from ..expression import apply_expression, parse_expression
+from ..expression import apply_expression, get_expression_blocks, parse_expression
 from ..models import BandStatistics, ImageData, Info
 from ..types import BBox, DataMaskType, Indexes, NoData, NumType
 from ..utils import (
@@ -417,7 +417,7 @@ class COGReader(BaseReader):
         )
 
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
@@ -482,7 +482,7 @@ class COGReader(BaseReader):
         )
 
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
@@ -539,7 +539,7 @@ class COGReader(BaseReader):
         )
 
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             point = apply_expression(blocks, bands, numpy.array(point)).tolist()
 
@@ -631,7 +631,7 @@ class COGReader(BaseReader):
         data, mask = reader.read(self.dataset, indexes=indexes, **kwargs)
 
         if expression:
-            blocks = expression.lower().split(",")
+            blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
 
