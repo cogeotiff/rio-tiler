@@ -66,7 +66,7 @@ benchmark_dataset = [
     dict(equator, dtype="int8", nodata_type="alpha"),
     dict(equator, dtype="int8", nodata_type="nodata"),
     dict(equator, dtype="int8", nodata_type="mask"),
-    dict(equator, dtype="int8", nodata_type="none"),
+    # dict(equator, dtype="int8", nodata_type="none"),
     dict(equator, dtype="uint16", nodata_type="alpha"),
     dict(equator, dtype="uint16", nodata_type="nodata"),
     dict(equator, dtype="uint16", nodata_type="mask"),
