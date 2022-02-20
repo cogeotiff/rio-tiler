@@ -41,25 +41,17 @@ cog_path = os.path.join(os.path.dirname(__file__), "fixtures", "mask")
 def test_mask_bilinear(cloudoptimized_geotiff):
     """Test mask read with bilinear resampling"""
     src_path = cloudoptimized_geotiff(
-        cog_path, **equator, dtype="uint8", nodata_type="mask"
+        cog_path, **equator, dtype="uint8", nodata_type="alpha"
     )
     with COGReader(src_path) as cog:
-        data, mask = cog.tile(
-            535,
-            498,
-            10,
-            tilesize=256,
+        data, mask = cog.preview(
             resampling_method="bilinear",
             force_binary_mask=True,
         )
         masknodata = (data[0] != 0).astype(numpy.uint8) * 255
         numpy.testing.assert_array_equal(mask, masknodata)
 
-        data, mask = cog.tile(
-            535,
-            498,
-            10,
-            tilesize=256,
+        data, mask = cog.preview(
             resampling_method="bilinear",
             force_binary_mask=False,
         )

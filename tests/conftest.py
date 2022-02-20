@@ -48,7 +48,7 @@ def cloudoptimized_geotiff():
         arr[:, 0:500, 0:500] = 0
 
         # Mask
-        mask = numpy.zeros((1, y_size, x_size), dtype=numpy.uint8) + 255
+        mask = numpy.zeros((1, y_size, x_size), dtype=dtype) + 255
         mask[:, 0:500, 0:500] = 0
 
         # Input Profile
@@ -92,13 +92,12 @@ def cloudoptimized_geotiff():
 
                     # Write Mask
                     if nodata_type == "mask":
-                        mem.write_mask(mask)
+                        mem.write_mask(mask.astype("uint8"))
 
                     output_profile = {
                         "driver": "COG",
                         "blocksize": tilesize,
                         "compress": "DEFLATE",
-                        "dtype": dtype,
                     }
                     copy(mem, fout, **output_profile)
 
