@@ -7,9 +7,8 @@ import pytest
 import rasterio
 from rasterio.enums import ColorInterp
 from rasterio.io import MemoryFile
+from rasterio.shutil import copy
 from rasterio.transform import from_bounds
-from rio_cogeo.cogeo import cog_translate
-from rio_cogeo.profiles import cog_profiles
 
 with rasterio.Env() as env:
     drivers = env.drivers()
@@ -43,27 +42,24 @@ def cloudoptimized_geotiff():
         if not os.path.isdir(output_dir):
             os.makedirs(output_dir)
 
-        profile_options = {"blockxsize": tilesize, "blockysize": tilesize}
-        output_profile = cog_profiles.get("deflate")
-        output_profile.update(profile_options)
+        # Data
+        arr = numpy.random.randint(1, 255, size=(nband, y_size, x_size)).astype(dtype)
 
-        arr = numpy.random.randint(1, 255, size=(nband, y_size, x_size)).astype(
-            numpy.uint8
-        )
         arr[:, 0:500, 0:500] = 0
 
-        mask = numpy.zeros((1, y_size, x_size), dtype=numpy.uint8) + 255
+        # Mask
+        mask = numpy.zeros((1, y_size, x_size), dtype=dtype) + 255
         mask[:, 0:500, 0:500] = 0
 
-        w, s, e, n = bounds
+        # Input Profile
         src_profile = dict(
             driver="GTiff",
             count=nband,
-            dtype="uint8",
+            dtype=dtype,
             height=y_size,
             width=x_size,
             crs=crs,
-            transform=from_bounds(w, s, e, n, x_size, y_size),
+            transform=from_bounds(*bounds, x_size, y_size),
         )
         if nodata_type in ["nodata", "mask"]:
             src_profile["nodata"] = 0
@@ -75,32 +71,35 @@ def cloudoptimized_geotiff():
             GDAL_TIFF_INTERNAL_MASK=True,
             GDAL_TIFF_OVR_BLOCKSIZE="128",
         )
+        with rasterio.Env(**gdal_config):
+            with MemoryFile() as memfile:
+                with memfile.open(**src_profile) as mem:
+                    ci = [ColorInterp.gray]
+                    if nband > 1:
+                        ci += [ColorInterp.undefined] * (nband - 1)
 
-        with MemoryFile() as memfile:
-            with memfile.open(**src_profile) as mem:
-                ci = [ColorInterp.gray]
-                if nband > 1:
-                    ci += [ColorInterp.undefined] * (nband - 1)
+                    if nodata_type == "alpha":
+                        data = numpy.concatenate([arr, mask])
+                        ci += [ColorInterp.alpha]
 
-                if nodata_type == "alpha":
-                    data = numpy.concatenate([arr, mask])
-                    ci += [ColorInterp.alpha]
-                else:
-                    data = arr
+                    else:
+                        data = arr
 
-                mem.colorinterp = ci
-                mem.write(data)
+                    mem.colorinterp = ci
 
-                cog_translate(
-                    mem,
-                    fout,
-                    output_profile,
-                    config=gdal_config,
-                    in_memory=True,
-                    dtype=dtype,
-                    quiet=True,
-                    add_mask=True if nodata_type == "mask" else False,
-                )
+                    # Write Data
+                    mem.write(data)
+
+                    # Write Mask
+                    if nodata_type == "mask":
+                        mem.write_mask(mask.astype("uint8"))
+
+                    output_profile = {
+                        "driver": "COG",
+                        "blocksize": tilesize,
+                        "compress": "DEFLATE",
+                    }
+                    copy(mem, fout, **output_profile)
 
         return fout
 

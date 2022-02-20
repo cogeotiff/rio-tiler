@@ -17,6 +17,10 @@ expression = "b1+b2,b2"
 expression = "b1+b2;b2"
 ```
 
+**breaking changes**
+
+* update morecantile requirement to `>=3.1,<4.0`. WebMercatorQuad TMS is now aligned with GDAL and Mercantile TMS definition.
+
 # 3.0.3 (2022-01-18)
 
 * make sure we raise an HTTP exception when using an invalid STAC url (https://github.com/cogeotiff/rio-tiler/pull/475)
