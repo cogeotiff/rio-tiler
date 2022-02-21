@@ -1,4 +1,4 @@
-# unreleased
+# 3.1.0 (2022-02-21)
 
 * add support for setting the S3 endpoint url scheme via the `AWS_HTTPS` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/476)
 * Add semicolon `;` support for multi-blocks expression (https://github.com/cogeotiff/rio-tiler/pull/479)
