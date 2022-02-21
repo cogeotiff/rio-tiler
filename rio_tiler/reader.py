@@ -58,6 +58,13 @@ def read(
     if isinstance(indexes, int):
         indexes = (indexes,)
 
+    if indexes is None:
+        indexes = non_alpha_indexes(src_dst)
+        if indexes != src_dst.indexes:
+            warnings.warn(
+                "Alpha band was removed from the output data array", AlphaBandWarning
+            )
+
     vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
     if nodata is not None:
@@ -66,54 +73,40 @@ def read(
     if has_alpha_band(src_dst):
         vrt_params.update(dict(add_alpha=False))
 
-    if indexes is None:
-        indexes = non_alpha_indexes(src_dst)
-        if indexes != src_dst.indexes:
-            warnings.warn(
-                "Alpha band was removed from the output data array", AlphaBandWarning
-            )
-
-    out_shape = (len(indexes), height, width) if height and width else None
-    mask_out_shape = (height, width) if height and width else None
-    resampling = Resampling[resampling_method]
-
     if vrt_options:
         vrt_params.update(vrt_options)
 
     with WarpedVRT(src_dst, **vrt_params) as vrt:
         if ColorInterp.alpha in vrt.colorinterp:
-            idx = vrt.colorinterp.index(ColorInterp.alpha) + 1
-            indexes = tuple(indexes) + (idx,)
-            if out_shape:
-                out_shape = (len(indexes), height, width)
-
+            indexes = tuple(indexes) + (vrt.colorinterp.index(ColorInterp.alpha) + 1,)
             data = vrt.read(
                 indexes=indexes,
                 window=window,
-                out_shape=out_shape,
-                resampling=resampling,
+                out_shape=(len(indexes), height, width) if height and width else None,
+                resampling=Resampling[resampling_method],
             )
             data, mask = data[0:-1], data[-1].astype("uint8")
+
         else:
             data = vrt.read(
                 indexes=indexes,
                 window=window,
-                out_shape=out_shape,
-                resampling=resampling,
+                out_shape=(len(indexes), height, width) if height and width else None,
+                resampling=Resampling[resampling_method],
             )
             mask = vrt.dataset_mask(
                 window=window,
-                out_shape=mask_out_shape,
-                resampling=resampling,
+                out_shape=(height, width) if height and width else None,
+                resampling=Resampling[resampling_method],
             )
 
-        if force_binary_mask:
-            mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
+    if force_binary_mask:
+        mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
 
-        if unscale:
-            data = data.astype("float32", casting="unsafe")
-            numpy.multiply(data, vrt.scales[0], out=data, casting="unsafe")
-            numpy.add(data, vrt.offsets[0], out=data, casting="unsafe")
+    if unscale:
+        data = data.astype("float32", casting="unsafe")
+        numpy.multiply(data, src_dst.scales[0], out=data, casting="unsafe")
+        numpy.add(data, src_dst.offsets[0], out=data, casting="unsafe")
 
     if post_process:
         data, mask = post_process(data, mask)
@@ -316,35 +309,28 @@ def point(
 
     indexes = indexes if indexes is not None else src_dst.indexes
 
-    vrt_params: Dict[str, Any] = {
-        "add_alpha": True,
-        "resampling": Resampling[resampling_method],
-    }
+    vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
     if nodata is not None:
-        vrt_params.update({"nodata": nodata, "add_alpha": False, "src_nodata": nodata})
+        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
 
     if has_alpha_band(src_dst):
-        vrt_params.update({"add_alpha": False})
+        vrt_params.update(dict(add_alpha=False))
 
     if vrt_options:
         vrt_params.update(vrt_options)
 
-    with WarpedVRT(src_dst, **vrt_params) as vrt_dst:
-        values = list(
-            vrt_dst.sample([(lon[0], lat[0])], indexes=indexes, masked=masked)
-        )[0]
+    with WarpedVRT(src_dst, **vrt_params) as vrt:
+        values = list(vrt.sample([(lon[0], lat[0])], indexes=indexes, masked=masked))[0]
         point_values = values.data
         mask = values.mask * 255 if masked else numpy.zeros(point_values.shape)
 
-        if unscale:
-            point_values = point_values.astype("float32", casting="unsafe")
-            numpy.multiply(
-                point_values, vrt_dst.scales[0], out=point_values, casting="unsafe"
-            )
-            numpy.add(
-                point_values, vrt_dst.offsets[0], out=point_values, casting="unsafe"
-            )
+    if unscale:
+        point_values = point_values.astype("float32", casting="unsafe")
+        numpy.multiply(
+            point_values, src_dst.scales[0], out=point_values, casting="unsafe"
+        )
+        numpy.add(point_values, src_dst.offsets[0], out=point_values, casting="unsafe")
 
     if post_process:
         point_values, _ = post_process(point_values, mask)
