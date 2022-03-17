@@ -1,3 +1,7 @@
+# 3.1.1 (2022-03-17)
+
+* forward `band names` to ImageData output in `mosaic_reader` (https://github.com/cogeotiff/rio-tiler/pull/486)
+
 # 3.1.0 (2022-02-21)
 
 * add support for setting the S3 endpoint url scheme via the `AWS_HTTPS` environment variables in `aws_get_object` function using boto3 (https://github.com/cogeotiff/rio-tiler/pull/476)

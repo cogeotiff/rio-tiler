@@ -75,6 +75,7 @@ def mosaic_reader(
     assets_used: List = []
     crs: Optional[CRS] = None
     bounds: Optional[BBox] = None
+    band_names: Optional[List[str]] = None
 
     for chunks in _chunks(mosaic_assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
@@ -87,6 +88,7 @@ def mosaic_reader(
 
             crs = img.crs
             bounds = img.bounds
+            band_names = img.band_names
 
             assets_used.append(asset)
             pixel_selection.feed(img.as_masked())
@@ -94,7 +96,14 @@ def mosaic_reader(
             if pixel_selection.is_done:
                 data, mask = pixel_selection.data
                 return (
-                    ImageData(data, mask, assets=assets_used, crs=crs, bounds=bounds),
+                    ImageData(
+                        data,
+                        mask,
+                        assets=assets_used,
+                        crs=crs,
+                        bounds=bounds,
+                        band_names=band_names,
+                    ),
                     assets_used,
                 )
 
@@ -103,6 +112,13 @@ def mosaic_reader(
         raise EmptyMosaicError("Method returned an empty array")
 
     return (
-        ImageData(data, mask, assets=assets_used, crs=crs, bounds=bounds),
+        ImageData(
+            data,
+            mask,
+            assets=assets_used,
+            crs=crs,
+            bounds=bounds,
+            band_names=band_names,
+        ),
         assets_used,
     )
