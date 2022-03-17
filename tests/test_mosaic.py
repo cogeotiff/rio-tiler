@@ -68,6 +68,15 @@ def test_mosaic_tiler():
     assert t[0][-1][-1] == 8682
     assert t.dtype == m.dtype
 
+    img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
+    assert img.band_names == ["1", "2", "3"]
+
+    img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, indexes=[1])
+    assert img.band_names == ["1"]
+
+    img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, expression="b1*3")
+    assert img.band_names == ["b1*3"]
+
     # Test last pixel selection
     assetsr = list(reversed(assets))
     (t, m), _ = mosaic.mosaic_reader(assetsr, _read_tile, x, y, z)
@@ -262,6 +271,40 @@ def test_stac_mosaic_tiler(rio):
     assert assets_used == [stac_asset]
     assert data.shape == (1, 256, 256)
     assert mask.shape == (256, 256)
+
+    img, _ = mosaic.mosaic_reader(
+        [stac_asset],
+        _reader,
+        71,
+        102,
+        8,
+        assets="green",
+        threads=0,
+    )
+    assert img.band_names == ["green_1"]
+
+    img, _ = mosaic.mosaic_reader(
+        [stac_asset],
+        _reader,
+        71,
+        102,
+        8,
+        assets=["green"],
+        asset_expression={"green": "b1*2"},
+        threads=0,
+    )
+    assert img.band_names == ["green_b1*2"]
+
+    img, _ = mosaic.mosaic_reader(
+        [stac_asset],
+        _reader,
+        71,
+        102,
+        8,
+        expression="green*2",
+        threads=0,
+    )
+    assert img.band_names == ["green*2"]
 
 
 def test_mosaic_tiler_Stdev():
