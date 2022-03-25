@@ -1,5 +1,6 @@
 """tests rio_tiler.utils"""
 
+import math
 import os
 from io import BytesIO
 
@@ -34,6 +35,7 @@ COG_NOWEB = os.path.join(os.path.dirname(__file__), "fixtures", "noweb.tif")
 NOCOG = os.path.join(os.path.dirname(__file__), "fixtures", "nocog.tif")
 COGEO = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
+COG_NAN = os.path.join(os.path.dirname(__file__), "fixtures", "cog_nodata_nan.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -472,6 +474,14 @@ def test_get_array_statistics():
     assert len(stats[0]["histogram"][0]) == 4
     assert len(stats[0]["histogram"][1]) == 4
     assert stats[0]["histogram"][0][3] == 0.0  # there is no value 1000000
+
+    # COG_NAN has nodata value set to 0.0 but also contains NaN values
+    with rasterio.open(COG_NAN) as src:
+        arr = src.read(masked=True)
+    stats = utils.get_array_statistics(arr)
+    assert not math.isnan(stats[0]["min"])
+    assert not math.isnan(stats[0]["max"])
+    assert not math.isnan(stats[0]["max"])
 
 
 def test_resize_array():

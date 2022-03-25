@@ -134,6 +134,9 @@ def get_array_statistics(
     output: List[Dict[Any, Any]] = []
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
 
+    # Avoid non masked nan/inf values
+    numpy.ma.fix_invalid(data, copy=False)
+
     for b in range(data.shape[0]):
         keys, counts = numpy.unique(data[b].compressed(), return_counts=True)
 
@@ -156,7 +159,7 @@ def get_array_statistics(
                 h_keys,
             ]
         else:
-            h_counts, h_keys = numpy.histogram(data[b][~data[b].mask], **kwargs)
+            h_counts, h_keys = numpy.histogram(data[b].compressed(), **kwargs)
             histogram = [h_counts.tolist(), h_keys.tolist()]
 
         percentiles_values = numpy.percentile(
