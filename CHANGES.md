@@ -1,3 +1,7 @@
+# Unreleased
+
+* avoid calculating statistics for non-finite values (https://github.com/cogeotiff/rio-tiler/pull/489)
+
 # 3.1.1 (2022-03-17)
 
 * forward `band names` to ImageData output in `mosaic_reader` (https://github.com/cogeotiff/rio-tiler/pull/486)
