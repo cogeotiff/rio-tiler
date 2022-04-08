@@ -1,6 +1,7 @@
 # Unreleased
 
 * Switch to `pyproject.toml` and `flit` for packaging
+* Catch discrete colormap with negative values
 
 # 3.1.2 (2022-03-25)
 
