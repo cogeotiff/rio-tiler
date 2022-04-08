@@ -1,2 +1,0 @@
-include rio_tiler/cmap_data/*.npy
-include rio_tiler/py.typed

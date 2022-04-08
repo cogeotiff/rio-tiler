@@ -73,9 +73,9 @@ def mosaic_reader(
         chunk_size = threads if threads > 1 else len(mosaic_assets)
 
     assets_used: List = []
-    crs: Optional[CRS] = None
-    bounds: Optional[BBox] = None
-    band_names: Optional[List[str]] = None
+    crs: Optional[CRS]
+    bounds: Optional[BBox]
+    band_names: List[str]
 
     for chunks in _chunks(mosaic_assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)

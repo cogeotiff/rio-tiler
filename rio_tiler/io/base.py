@@ -373,7 +373,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
-        assets = "|".join([fr"\b{asset}\b" for asset in self.assets])
+        assets = "|".join([rf"\b{asset}\b" for asset in self.assets])
         _re = re.compile(assets.replace("\\\\", "\\"))
         return tuple(set(re.findall(_re, expression)))
 
@@ -445,8 +445,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.statistics(
                     *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
-                    expression=asset_expression.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
+                    expression=asset_expression.get(asset),  # type: ignore
                     **kwargs,
                 )
 
@@ -573,8 +573,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.tile(
                     *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
-                    expression=asset_expression.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
+                    expression=asset_expression.get(asset),  # type: ignore
                     **kwargs,
                 )
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
@@ -644,8 +644,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.part(
                     *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
-                    expression=asset_expression.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
+                    expression=asset_expression.get(asset),  # type: ignore
                     **kwargs,
                 )
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
@@ -705,8 +705,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_asset_url(asset)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.preview(
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
-                    expression=asset_expression.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
+                    expression=asset_expression.get(asset),  # type: ignore
                     **kwargs,
                 )
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
@@ -771,8 +771,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 return cog.point(
                     *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
-                    expression=asset_expression.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
+                    expression=asset_expression.get(asset),  # type: ignore
                     **kwargs,
                 )
 
@@ -833,8 +833,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.feature(
                     *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
-                    expression=asset_expression.get(asset),
+                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
+                    expression=asset_expression.get(asset),  # type: ignore
                     **kwargs,
                 )
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
@@ -887,7 +887,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
-        bands = "|".join([fr"\b{band}\b" for band in self.bands])
+        bands = "|".join([rf"\b{band}\b" for band in self.bands])
         _re = re.compile(bands.replace("\\\\", "\\"))
         return tuple(set(re.findall(_re, expression)))
 

@@ -122,7 +122,7 @@ class ImageData:
     bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
     crs: Optional[CRS] = attr.ib(default=None)
     metadata: Optional[Dict] = attr.ib(factory=dict)
-    band_names: Optional[List[str]] = attr.ib()
+    band_names: List[str] = attr.ib()
 
     @data.validator
     def _validate_data(self, attribute, value):

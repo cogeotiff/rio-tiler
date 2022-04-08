@@ -246,7 +246,7 @@ def parse_color(rgba: Union[Sequence[int], str]) -> Tuple[int, int, int, int]:
 
         match = re.match(hex_pattern, rgba)
         rgba = [
-            int(n * factor, 16) for n in match.groupdict().values() if n is not None
+            int(n * factor, 16) for n in match.groupdict().values() if n is not None  # type: ignore
         ]
 
     if len(rgba) > 4 or len(rgba) < 3:

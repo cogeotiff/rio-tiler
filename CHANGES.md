@@ -1,3 +1,7 @@
+# Unreleased
+
+* Switch to `pyproject.toml` and `flit` for packaging
+
 # 3.1.2 (2022-03-25)
 
 * avoid calculating statistics for non-finite values (https://github.com/cogeotiff/rio-tiler/pull/489)

@@ -171,7 +171,7 @@ class COGReader(BaseReader):
 
         # The minzoom is defined by the resolution of the maximum theoretical overview level
         overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
-        ovr_resolution = resolution * (2 ** overview_level)
+        ovr_resolution = resolution * (2**overview_level)
         minzoom = self.tms.zoom_for_res(ovr_resolution)
 
         return (minzoom, maxzoom)
@@ -416,7 +416,7 @@ class COGReader(BaseReader):
             **kwargs,
         )
 
-        if expression:
+        if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
@@ -481,7 +481,7 @@ class COGReader(BaseReader):
             **kwargs,
         )
 
-        if expression:
+        if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)
@@ -538,7 +538,7 @@ class COGReader(BaseReader):
             self.dataset, (lon, lat), indexes=indexes, coord_crs=coord_crs, **kwargs
         )
 
-        if expression:
+        if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             point = apply_expression(blocks, bands, numpy.array(point)).tolist()
@@ -630,7 +630,7 @@ class COGReader(BaseReader):
 
         data, mask = reader.read(self.dataset, indexes=indexes, **kwargs)
 
-        if expression:
+        if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
             data = apply_expression(blocks, bands, data)

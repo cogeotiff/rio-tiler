@@ -36,12 +36,12 @@ To manually deploy docs (note you should never need to do this because Github
 Actions deploys automatically for new commits.):
 
 ```bash
-$ mkdocs gh-deploy
+$ mkdocs gh-deploy -f docs/mkdocs.yml
 ```
 
 ```bash
 pdocs as_markdown \
-   --output_dir docs/api/ \
+   --output_dir docs/src/api/ \
    --exclude_source \
    --overwrite \
    rio_tiler.colormap \
