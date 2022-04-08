@@ -164,12 +164,21 @@ def test_apply_discrete_cmap():
     cm = deepcopy(colormap.EMPTY_COLORMAP)
     cm.pop(255)
     cm[1000] = (255, 255, 255, 255)
-
     d, m = colormap.apply_cmap(data, cm)
     dd, mm = colormap.apply_discrete_cmap(data, cm)
+    numpy.testing.assert_array_equal(dd, d)
+    numpy.testing.assert_array_equal(mm, m)
 
     cm = {1: (0, 0, 0, 255), 256: (255, 255, 255, 255)}
     assert colormap.apply_cmap(data, cm)
+
+    # Test with negative value
+    cm = {-100: (255, 255, 255, 255), 1: (0, 0, 0, 255), 256: (255, 255, 255, 255)}
+    data[0, 5:, 5:] = -100
+    d, m = colormap.apply_cmap(data, cm)
+    dd, mm = colormap.apply_discrete_cmap(data, cm)
+    numpy.testing.assert_array_equal(dd, d)
+    numpy.testing.assert_array_equal(mm, m)
 
 
 def test_apply_intervals_cmap():
