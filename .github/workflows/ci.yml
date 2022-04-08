@@ -8,13 +8,15 @@ on:
     tags:
     - '*'
   pull_request:
+env:
+  LATEST_PY_VERSION: '3.9'
 
 jobs:
   tests:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ["3.7", "3.8", "3.9"]
+        python-version: ['3.7', '3.8', '3.9']
 
     steps:
       - uses: actions/checkout@v2
@@ -32,13 +34,14 @@ jobs:
         run: python -m pip install .["test"]
 
       - name: Run pre-commit
+        if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
         run: pre-commit run --all-files
 
       - name: Run tests
         run: python -m pytest --cov rio_tiler --cov-report xml --cov-report term-missing --benchmark-skip
 
       - name: Upload Results
-        if: success()
+        if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
         uses: codecov/codecov-action@v1
         with:
           file: ./coverage.xml
@@ -54,7 +57,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: ${{ env.LATEST_PY_VERSION }}
 
       - name: Install dependencies
         run: |
@@ -79,7 +82,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v1
         with:
-          python-version: 3.8
+          python-version: ${{ env.LATEST_PY_VERSION }}
 
       - name: Install dependencies
         run: |
