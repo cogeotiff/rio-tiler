@@ -1,5 +1,7 @@
 """rio-tiler."""
 
+__version__ = "3.1.2"
+
 from . import (  # noqa
     colormap,
     constants,
@@ -12,5 +14,3 @@ from . import (  # noqa
     tasks,
     utils,
 )
-
-__version__ = "3.1.2"

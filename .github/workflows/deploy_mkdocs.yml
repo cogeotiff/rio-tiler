@@ -36,7 +36,7 @@ jobs:
       - name: update API docs
         run: |
           pdocs as_markdown \
-            --output_dir docs/api/ \
+            --output_dir docs/src/api/ \
             --exclude_source \
             --overwrite \
             rio_tiler.colormap \
@@ -56,4 +56,4 @@ jobs:
             rio_tiler.utils
 
       - name: Deploy docs
-        run: mkdocs gh-deploy --force
+        run: mkdocs gh-deploy -f docs/mkdocs.yml --force

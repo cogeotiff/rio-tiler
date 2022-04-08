@@ -2,7 +2,7 @@
 site_name: 'rio-tiler'
 site_description: 'User friendly Rasterio plugin to read raster datasets.'
 
-docs_dir: 'docs'
+docs_dir: 'src'
 site_dir: 'build'
 
 # Repository
@@ -85,7 +85,7 @@ theme:
   font:
     text: 'Nunito Sans'
     code: 'Fira Code'
-  custom_dir: 'docs/overrides'
+  custom_dir: 'src/overrides'
 
 # These extensions are chosen to be a superset of Pandoc's Markdown.
 # This way, I can write in Pandoc's Markdown and have it be supported here.

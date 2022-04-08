@@ -1,0 +1,90 @@
+[project]
+name = "rio-tiler"
+description = "User friendly Rasterio plugin to read raster datasets."
+readme = "README.md"
+requires-python = ">=3.7"
+license = {file = "LICENSE"}
+authors = [
+    {name = "Vincent Sarago", email = "vincent@developmentseed.com"},
+]
+keywords = ["COGEO", "Cloud Optimized Geotiff", "rasterio", "slippy-map", "STAC"]
+classifiers = [
+    "Intended Audience :: Information Technology",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: BSD License",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Topic :: Scientific/Engineering :: GIS",
+]
+dynamic = ["version"]
+dependencies = [
+    "attrs",
+    "boto3",
+    "cachetools",
+    "httpx",
+    "numexpr",
+    "numpy",
+    "morecantile>=3.1,<4.0",
+    "pydantic",
+    "pystac>=0.5.4",
+    "rasterio>=1.1.7",
+    "rio-color",
+    "importlib_resources>=1.1.0; python_version < '3.9'",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest",
+    "pytest-asyncio",
+    "pytest-benchmark",
+    "pytest-cov",
+]
+dev = [
+    "pre-commit",
+]
+docs = [
+    "nbconvert",
+    "mkdocs",
+    "mkdocs-jupyter",
+    "mkdocs-material",
+    "pygments",
+]
+
+[project.urls]
+Source = "https://github.com/cogeotiff/rio-tiler"
+Documentation = "https://cogeotiff.github.io/rio-tiler/"
+
+[build-system]
+requires = ["flit>=3.2,<4"]
+build-backend = "flit_core.buildapi"
+
+[tool.flit.module]
+name = "rio_tiler"
+
+[tool.flit.sdist]
+exclude = [
+    "tests/",
+    "docs/",
+    ".github/",
+    "CHANGES.md",
+    "CONTRIBUTING.md",
+]
+
+[tool.isort]
+profile = "black"
+known_first_party = ["rio_tiler"]
+known_third_party = [
+    "rasterio",
+    "morecantile",
+    "affine",
+    "pystac",
+]
+default_section = "THIRDPARTY"
+
+[tool.mypy]
+no_strict_optional = "True"
+
+[tool.pydocstyle]
+select = "D1"
+match = "(?!test).*.py"

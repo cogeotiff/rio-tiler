@@ -145,8 +145,8 @@ data, mask = apply_cmap(data, cmap)
 ### Update images for new colormaps
 
 To regenerate these images for new colormaps, update the list of colormaps at
-the top of `scripts/colormap_thumb.py` and then run
+the top of `docs/scripts/colormap_thumb.py` and then run
 
 ```bash
-python scripts/colormap_thumb.py
+python docs/scripts/colormap_thumb.py
 ```
