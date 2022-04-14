@@ -539,6 +539,22 @@ def pansharpening_brovey(
         return numpy.clip(ratio * rgb, 0, numpy.iinfo(pan_dtype).max).astype(pan_dtype)
 
 
+def _convert_to_raster_space(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    poly_coordinates: List,
+) -> List[str]:
+    polygons = []
+    for point in poly_coordinates:
+        xs, ys = zip(*coords(point))
+        src_y, src_x = rowcol(src_dst.transform, xs, ys)
+        src_x = [max(0, min(src_dst.width, x)) for x in src_x]
+        src_y = [max(0, min(src_dst.height, y)) for y in src_y]
+        polygon = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
+        polygons.append(f"({polygon})")
+
+    return polygons
+
+
 def create_cutline(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     geometry: Dict,
@@ -553,7 +569,6 @@ def create_cutline(
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
         geometry (dict): GeoJSON feature or GeoJSON geometry. By default the coordinates are considered to be in the dataset CRS. Use `geometry_crs` to set a specific CRS.
         geometry_crs (rasterio.crs.CRS, optional): Input geometry Coordinate Reference System
-
     Returns:
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 
@@ -565,33 +580,28 @@ def create_cutline(
         raise RioTilerError("Invalid geometry")
 
     geom_type = geometry["type"]
-    if geom_type not in ["Polygon", "MultiPolygon"]:
-        raise RioTilerError(
-            "Invalid geometry type: {geom_type}. Should be Polygon or MultiPolygon"
-        )
 
     if geometry_crs:
         geometry = transform_geom(geometry_crs, src_dst.crs, geometry)
 
-    polys = []
-    geom = (
-        [geometry["coordinates"]] if geom_type == "Polygon" else geometry["coordinates"]
-    )
-    for p in geom:
-        xs, ys = zip(*coords(p))
-        src_y, src_x = rowcol(src_dst.transform, xs, ys)
-        src_x = [max(0, min(src_dst.width, x)) for x in src_x]
-        src_y = [max(0, min(src_dst.height, y)) for y in src_y]
-        poly = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
-        polys.append(f"(({poly}))")
+    if geom_type == "Polygon":
+        polys = ",".join(_convert_to_raster_space(src_dst, geometry["coordinates"]))
+        wkt = f"POLYGON ({polys})"
 
-    str_poly = ",".join(polys)
+    elif geom_type == "MultiPolygon":
+        multi_polys = []
+        for poly in geometry["coordinates"]:
+            polys = ",".join(_convert_to_raster_space(src_dst, poly))
+            multi_polys.append(f"({polys})")
+        str_multipoly = ",".join(multi_polys)
+        wkt = f"MULTIPOLYGON ({str_multipoly})"
 
-    return (
-        f"POLYGON {str_poly}"
-        if geom_type == "Polygon"
-        else f"MULTIPOLYGON ({str_poly})"
-    )
+    else:
+        raise RioTilerError(
+            "Invalid geometry type: {geom_type}. Should be Polygon or MultiPolygon"
+        )
+
+    return wkt
 
 
 def resize_array(
