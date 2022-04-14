@@ -1,3 +1,7 @@
+# 3.1.4 (2022-04-14)
+
+* Fix cutline creation for MultiPolygon (author @Fernigithub, https://github.com/cogeotiff/rio-tiler/pull/493)
+
 # 3.1.3 (2022-04-08)
 
 * Switch to `pyproject.toml` and `flit` for packaging (https://github.com/cogeotiff/rio-tiler/pull/490)

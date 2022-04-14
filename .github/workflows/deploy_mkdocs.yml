@@ -10,7 +10,6 @@ on:
       - 'CHANGES.md'
       - 'CONTRIBUTING.md'
       - 'docs/**'
-      - 'mkdocs.yml'
       - 'rio_tiler/**.py'
 
 jobs:
