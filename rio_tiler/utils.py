@@ -551,7 +551,7 @@ def create_cutline(
 
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
-        geometry (dict): GeoJSON feature or GeoJSON geometry. By default the cordinates are considered to be in the dataset CRS. Use `geometry_crs` to set a specific CRS.
+        geometry (dict): GeoJSON feature or GeoJSON geometry. By default the coordinates are considered to be in the dataset CRS. Use `geometry_crs` to set a specific CRS.
         geometry_crs (rasterio.crs.CRS, optional): Input geometry Coordinate Reference System
     Returns:
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
