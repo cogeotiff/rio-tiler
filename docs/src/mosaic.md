@@ -45,7 +45,7 @@ Inputs:
 - **chunk_size**: optional, control the number of assets to process per loop.
 - **threads**: optional, number of threads to use in each loop.
 - **allowed_exceptions**: optional, allow some exceptions to be ignored.
-- **\*kwargs**: tiler specific keyword arguments.
+- **\*\*kwargs**: tiler specific keyword arguments.
 
 Returns:
 - img, assets_used : tuple of ImageData and list of used assets to construct the output data.
