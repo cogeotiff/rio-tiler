@@ -522,6 +522,7 @@ def test_cog_with_internal_gcps():
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
     assert cog.dataset.closed
+    assert cog.dataset.src_dataset.closed
 
     # Pass dataset (should be a WarpedVRT)
     with rasterio.open(COG_GCPS) as dst:
@@ -550,7 +551,10 @@ def test_cog_with_internal_gcps():
                 assert mask.shape == (256, 256)
 
             assert not cog.dataset.closed
+            assert not cog.dataset.src_dataset.closed
+
         assert cog.dataset.closed
+    assert cog.dataset.src_dataset.closed
 
 
 def parse_img(content: bytes) -> Dict[Any, Any]:
