@@ -244,7 +244,7 @@ import pystac
 
 @attr.s
 class CustomSTACReader(COGReader):
-    """Custom COG Reader with GCPS support."""
+    """Custom COG Reader support."""
 
     # This will keep the STAC item info within the instance
     item: pystac.Item = attr.ib(default=None, init=False)

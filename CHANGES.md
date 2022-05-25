@@ -1,3 +1,18 @@
+
+# NEXT (TBD)
+
+* Deprecate `rio_tiler.io.GCPCOGReader` and allow GPCS dataset to be opened by `rio_tiler.io.COGReader`
+
+```python
+# before
+with GCPCOGReader("my.tif") as cog:
+    ...
+
+# now, COGReader will find the gcps and create an internal WarpedVRT using the gpcs and crs
+with COGReader("my.tif") as cog:
+    ...
+```
+
 # 3.1.4 (2022-04-14)
 
 * Fix cutline creation for MultiPolygon (author @Fernigithub, https://github.com/cogeotiff/rio-tiler/pull/493)
