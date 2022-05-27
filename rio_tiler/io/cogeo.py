@@ -119,9 +119,19 @@ class COGReader(BaseReader):
         if self.post_process is not None:
             self._kwargs["post_process"] = self.post_process
 
-        self.dataset = self.dataset or self._ctx_stack.enter_context(
-            rasterio.open(self.input)
-        )
+        if not self.dataset:
+            dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
+            if dataset.gcps[0]:
+                self.dataset = self._ctx_stack.enter_context(
+                    WarpedVRT(
+                        dataset,
+                        src_crs=dataset.gcps[1],
+                        src_transform=transform.from_gcps(dataset.gcps[0]),
+                    )
+                )
+            else:
+                self.dataset = dataset
+
         self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
 
@@ -704,6 +714,11 @@ class GCPCOGReader(COGReader):
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
+        warnings.warn(
+            "GCPCOGReader is deprecated and will be removed in 4.0. Please use COGReader.",
+            DeprecationWarning,
+        )
+
         self.src_dataset = self.src_dataset or self._ctx_stack.enter_context(
             rasterio.open(self.input)
         )
