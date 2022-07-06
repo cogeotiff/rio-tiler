@@ -80,7 +80,7 @@ def test_MultiBandReader():
         assert stats["b1"]
         assert stats["b2"]
 
-        stats = cog.statistics(expression="b1,b1+b2,b1-100")
+        stats = cog.statistics(expression="b1;b1+b2;b1-100")
         assert stats["b1"]
         assert stats["b1+b2"]
         assert stats["b1-100"]

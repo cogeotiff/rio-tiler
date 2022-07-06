@@ -101,6 +101,35 @@ def to_coordsbbox(bbox) -> Optional[BoundingBox]:
     return BoundingBox(*bbox) if bbox else None
 
 
+def rescale_image(
+    data: numpy.ndarray,
+    mask: numpy.ndarray,
+    in_range: Sequence[IntervalTuple],
+    out_range: Sequence[IntervalTuple] = ((0, 255),),
+    out_dtype: Union[str, numpy.number] = "uint8",
+):
+    """Rescale image data."""
+    if len(data.shape) < 3:
+        data = numpy.expand_dims(data, axis=0)
+
+    nbands = data.shape[0]
+
+    if len(in_range) != nbands:
+        in_range = ((in_range[0]),) * nbands
+
+    if len(out_range) != nbands:
+        out_range = ((out_range[0]),) * nbands
+
+    for bdx in range(nbands):
+        data[bdx] = numpy.where(
+            mask,
+            linear_rescale(data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]),
+            0,
+        )
+
+    return data.astype(out_dtype)
+
+
 @attr.s
 class ImageData:
     """Image Data class.
@@ -230,33 +259,20 @@ class ImageData:
             else Affine.scale(self.width, -self.height)
         )
 
-    def _rescale(
+    def rescale(
         self,
-        data: numpy.ndarray,
-        mask: numpy.ndarray,
         in_range: Sequence[IntervalTuple],
         out_range: Sequence[IntervalTuple] = ((0, 255),),
         out_dtype: Union[str, numpy.number] = "uint8",
     ):
-        """Rescale data."""
-        nbands = data.shape[0]
+        """Rescale data in place."""
+        self.data = rescale_image(self.data, self.mask, in_range, out_range, out_dtype)
 
-        if len(in_range) != nbands:
-            in_range = ((in_range[0]),) * nbands
-
-        if len(out_range) != nbands:
-            out_range = ((out_range[0]),) * nbands
-
-        for bdx in range(nbands):
-            data[bdx] = numpy.where(
-                mask,
-                linear_rescale(
-                    data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
-                ),
-                0,
-            )
-
-        return data.astype(out_dtype)
+    def apply_color_formula(self, color_formula: Optional[str]):
+        """Apply rio-color formula in place."""
+        self.data[self.data < 0] = 0
+        for ops in parse_operations(color_formula):
+            self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
 
     def post_process(
         self,
@@ -286,7 +302,7 @@ class ImageData:
         mask = self.mask.copy()
 
         if in_range:
-            data = self._rescale(data, mask, in_range, out_dtype=out_dtype, **kwargs)
+            data = rescale_image(data, mask, in_range, out_dtype=out_dtype, **kwargs)
 
         if color_formula:
             data[data < 0] = 0
@@ -338,14 +354,14 @@ class ImageData:
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = self._rescale(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, self.mask, in_range=datatype_range)
 
             elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
                 warnings.warn(
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = self._rescale(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, self.mask, in_range=datatype_range)
 
             elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
                 "uint8",
@@ -356,7 +372,7 @@ class ImageData:
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = self._rescale(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, self.mask, in_range=datatype_range)
 
         if add_mask:
             return render(

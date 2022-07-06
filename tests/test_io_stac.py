@@ -189,7 +189,7 @@ def test_tile_valid(rio):
             102,
             8,
             assets=("green", "red"),
-            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
         )
         assert img.data.shape == (3, 256, 256)
         assert img.mask.shape == (256, 256)
@@ -257,7 +257,7 @@ def test_part_valid(rio):
         img = stac.part(
             bbox,
             assets=("green", "red"),
-            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
         )
         assert img.data.shape == (3, 73, 83)
         assert img.mask.shape == (73, 83)
@@ -317,7 +317,7 @@ def test_preview_valid(rio):
 
         img = stac.preview(
             assets=("green", "red"),
-            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
         )
         assert img.data.shape == (3, 259, 255)
         assert img.mask.shape == (259, 255)
@@ -376,7 +376,7 @@ def test_point_valid(rio):
             -80.477,
             33.4453,
             assets=("green", "red"),
-            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
         )
         assert len(data) == 2
         assert len(data[0]) == 2
@@ -588,7 +588,7 @@ def test_feature_valid(rio):
         img = stac.feature(
             feat,
             assets=("green", "red"),
-            asset_expression={"green": "b1*2,b1", "red": "b1*2"},
+            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
         )
         assert img.data.shape == (3, 118, 96)
         assert img.mask.shape == (118, 96)

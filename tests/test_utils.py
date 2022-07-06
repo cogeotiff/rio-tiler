@@ -415,8 +415,9 @@ def test_get_bands_names():
     assert b == ["1", "2", "3"]
 
     # band names should be created from expression first
-    b = utils.get_bands_names(indexes=[1, 2, 3], expression="b3,b2,b1", count=None)
-    assert b == ["b3", "b2", "b1"]
+    with pytest.warns(DeprecationWarning):
+        b = utils.get_bands_names(indexes=[1, 2, 3], expression="b3,b2,b1", count=None)
+        assert b == ["b3", "b2", "b1"]
 
     # if not indexes nor expression create band names from count
     b = utils.get_bands_names(indexes=None, expression=None, count=1)
