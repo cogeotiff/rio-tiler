@@ -1,5 +1,5 @@
 
-# NEXT (TBD)
+# 3.1.5 (TBD)
 
 * Deprecate `rio_tiler.io.GCPCOGReader` and allow GPCS dataset to be opened by `rio_tiler.io.COGReader`
 
@@ -12,6 +12,9 @@ with GCPCOGReader("my.tif") as cog:
 with COGReader("my.tif") as cog:
     ...
 ```
+
+* add `ImageData.rescale` to rescale the array in place
+* add `ImageData.apply_color_formula` to apply color formula in place
 
 # 3.1.4 (2022-04-14)
 

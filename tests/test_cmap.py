@@ -185,8 +185,8 @@ def test_apply_intervals_cmap():
     """Should return valid data and mask."""
     cm = [
         # ([min, max], [r, g, b, a])
-        ((1, 2), (0, 0, 0, 255)),
-        ((2, 3), (255, 255, 255, 255)),
+        ((1, 2), (255, 0, 0, 255)),
+        ((2, 3), (255, 240, 255, 255)),
     ]
     data = numpy.zeros(shape=(1, 10, 10), dtype=numpy.uint16)
     data[0, 0:2, 0:2] = 1000
@@ -195,6 +195,8 @@ def test_apply_intervals_cmap():
     d, m = colormap.apply_intervals_cmap(data, cm)
     assert d.shape == (3, 10, 10)
     assert m.shape == (10, 10)
+    assert d[0, 3, 4] == 255
+    assert d[1, 5, 5] == 240
 
     mask = numpy.zeros(shape=(10, 10), dtype=numpy.uint8)
     mask[2:5, 2:5] = 255
@@ -208,14 +210,14 @@ def test_apply_intervals_cmap():
 
     cm = [
         # ((min, max), (r, g, b, a))
-        ((1, 2), (0, 0, 0, 255)),
+        ((0, 2), (0, 255, 0, 255)),
         ((2, 3), (255, 255, 255, 255)),
-        ((3, 1000), (255, 0, 0, 255)),
+        ((3, 1001), (255, 0, 0, 255)),
     ]
     d, m = colormap.apply_intervals_cmap(data, cm)
     assert d.shape == (3, 10, 10)
     assert m.shape == (10, 10)
-    d[:, 0, 0] == [255, 0, 0, 255]
+    assert d[0, 0, 0] == 255
 
 
 @pytest.mark.parametrize(
