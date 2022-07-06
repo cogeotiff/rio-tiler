@@ -1,5 +1,5 @@
 
-# 3.2.0 (TBD)
+# 3.1.5 (TBD)
 
 * Deprecate `rio_tiler.io.GCPCOGReader` and allow GPCS dataset to be opened by `rio_tiler.io.COGReader`
 
