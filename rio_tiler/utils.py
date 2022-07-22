@@ -394,7 +394,7 @@ def _requested_tile_aligned_with_internal_tile(
         return False
 
     col_off, row_off, w, h = windows.from_bounds(
-        *bounds, transform=src_dst.transform, height=height, width=width
+        *bounds, transform=src_dst.transform
     ).flatten()
 
     if round(w) % 64 and round(h) % 64:
