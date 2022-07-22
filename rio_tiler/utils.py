@@ -1,6 +1,7 @@
 """rio_tiler.utils: utility functions."""
 
 import os
+import warnings
 from io import BytesIO
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
 
@@ -393,7 +394,7 @@ def _requested_tile_aligned_with_internal_tile(
         return False
 
     col_off, row_off, w, h = windows.from_bounds(
-        *bounds, transform=src_dst.transform, height=height, width=width
+        *bounds, transform=src_dst.transform
     ).flatten()
 
     if round(w) % 64 and round(h) % 64:
@@ -488,14 +489,16 @@ def render(
     )
     output_profile.update(creation_options)
 
-    with MemoryFile() as memfile:
-        with memfile.open(**output_profile) as dst:
-            dst.write(data, indexes=list(range(1, count + 1)))
-            # Use Mask as an alpha band
-            if mask is not None:
-                dst.write(mask.astype(data.dtype), indexes=count + 1)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
+        with MemoryFile() as memfile:
+            with memfile.open(**output_profile) as dst:
+                dst.write(data, indexes=list(range(1, count + 1)))
+                # Use Mask as an alpha band
+                if mask is not None:
+                    dst.write(mask.astype(data.dtype), indexes=count + 1)
 
-        return memfile.read()
+            return memfile.read()
 
 
 def mapzen_elevation_rgb(data: numpy.ndarray) -> numpy.ndarray:
@@ -632,13 +635,27 @@ def resize_array(
         "BANDS": count,
         "DATATYPE": _gdal_typename(data.dtype.name),
     }
+    # ref: https://github.com/rasterio/rasterio/pull/2512
+    strides = data.__array_interface__.get("strides", None)
+    if strides is not None:
+        if len(strides) == 2:
+            lineoffset, pixeloffset = strides
+            info.update(LINEOFFSET=lineoffset, PIXELOFFSET=pixeloffset)
+        else:
+            bandoffset, lineoffset, pixeloffset = strides
+            info.update(
+                BANDOFFSET=bandoffset, LINEOFFSET=lineoffset, PIXELOFFSET=pixeloffset
+            )
+
     dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
     datasetname = f"MEM:::{dataset_options}"
-    with rasterio.open(datasetname, "r+") as src:
-        # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
-        indexes = 1 if len(data.shape) == 2 else None
-        return src.read(
-            out_shape=out_shape,
-            indexes=indexes,
-            resampling=Resampling[resampling_method],
-        )
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
+        with rasterio.open(datasetname, "r+") as src:
+            # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
+            indexes = 1 if len(data.shape) == 2 else None
+            return src.read(
+                out_shape=out_shape,
+                indexes=indexes,
+                resampling=Resampling[resampling_method],
+            )

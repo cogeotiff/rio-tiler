@@ -1,4 +1,9 @@
 
+# 3.1.6 (2022-07-22)
+
+* Hide `NotGeoreferencedWarning` warnings in `utils.render` and `utils.resize_array`
+* update `MultiBaseReader` and `MultiBandReader` `points` method to prepare for numpy changes.
+
 # 3.1.5 (2022-07-06)
 
 * Deprecate `rio_tiler.io.GCPCOGReader` and allow GPCS dataset to be opened by `rio_tiler.io.COGReader`

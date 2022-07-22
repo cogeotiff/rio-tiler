@@ -778,12 +778,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         data = multi_values(assets, _reader, lon, lat, **kwargs)
 
-        values = numpy.array([d for _, d in data.items()])
+        values = [numpy.array(d) for _, d in data.items()]
         if expression:
             blocks = get_expression_blocks(expression)
             values = apply_expression(blocks, assets, values)
 
-        return values.tolist()
+        return [v.tolist() for v in values]
 
     def feature(
         self,
@@ -1208,12 +1208,12 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         data = multi_values(bands, _reader, lon, lat, **kwargs)
 
-        values = numpy.array([d for _, d in data.items()])
+        values = [numpy.array(d) for _, d in data.items()]
         if expression:
             blocks = get_expression_blocks(expression)
             values = apply_expression(blocks, bands, values)
 
-        return values.tolist()
+        return [v.tolist() for v in values]
 
     def feature(
         self,
