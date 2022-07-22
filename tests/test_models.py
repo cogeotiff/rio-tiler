@@ -14,18 +14,14 @@ def test_imageData_AutoRescaling():
     """Test ImageData auto rescaling."""
     with pytest.warns(InvalidDatatypeWarning) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="float32")).render(img_format="PNG")
-        assert len(w.list) == 2  # NotGeoreferencedWarning and InvalidDatatypeWarning
+        assert len(w.list) == 1
 
     with pytest.warns(None) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="uint8")).render(img_format="PNG")
-        assert len(w.list) == 1  # only NotGeoreferencedWarning
+        assert len(w.list) == 0
 
     with pytest.warns(InvalidDatatypeWarning) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="int8")).render(img_format="PNG")
-
-    with pytest.warns(None) as w:
-        ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(img_format="PNG")
-        assert len(w.list) == 1
 
     with pytest.warns(None) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(img_format="GTiff")
@@ -48,7 +44,7 @@ def test_imageData_AutoRescaling():
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(
             img_format="JPEG", colormap=cm
         )
-        assert len(w.list) == 1  # only NotGeoreferencedWarning
+        assert len(w.list) == 0
 
 
 @pytest.mark.parametrize(
