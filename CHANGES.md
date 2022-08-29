@@ -1,4 +1,8 @@
 
+# 4.0.0 (TBD)
+
+* update rasterio requirement to `>=1.3` to allow python 3.10 support
+
 # 3.1.6 (2022-07-22)
 
 * Hide `NotGeoreferencedWarning` warnings in `utils.render` and `utils.resize_array`

@@ -15,6 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dynamic = ["version"]
@@ -28,7 +29,7 @@ dependencies = [
     "morecantile>=3.1,<4.0",
     "pydantic",
     "pystac>=0.5.4",
-    "rasterio>=1.1.7",
+    "rasterio>=1.3.0",
     "rio-color",
     "importlib_resources>=1.1.0; python_version < '3.9'",
 ]
