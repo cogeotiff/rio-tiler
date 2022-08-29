@@ -636,9 +636,12 @@ def test_imageData_output():
 
         img = cog.preview(max_size=128)
         assert img.data.shape == (1, 128, 128)
-        assert img.bounds == cog.dataset.bounds
         meta = parse_img(img.render(img_format="GTiff"))
         assert meta["crs"] == cog.dataset.crs
+        # Bounds should be the same but VRT might introduce some rounding issue
+        for x, y in zip(img.bounds, cog.dataset.bounds):
+            assert round(x, 5) == round(y, 5)
+        # assert img.bounds == cog.dataset.bounds
 
 
 def test_feature_valid():

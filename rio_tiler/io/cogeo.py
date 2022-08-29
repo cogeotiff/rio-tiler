@@ -15,7 +15,7 @@ from rasterio.features import bounds as featureBounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform, transform_bounds
+from rasterio.warp import calculate_default_transform
 
 from .. import reader
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
@@ -414,7 +414,7 @@ class COGReader(BaseReader):
         if not dst_crs:
             dst_crs = bounds_crs
 
-        data, mask = reader.part(
+        img = reader.part(
             self.dataset,
             bbox,
             max_size=max_size,
@@ -429,19 +429,16 @@ class COGReader(BaseReader):
         if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
-            data = apply_expression(blocks, bands, data)
-
-        if bounds_crs and bounds_crs != dst_crs:
-            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+            img.data = apply_expression(blocks, bands, img.data)
 
         return ImageData(
-            data,
-            mask,
-            bounds=bbox,
-            crs=dst_crs,
+            img.data,
+            img.mask,
+            bounds=img.bounds,
+            crs=img.crs,
             assets=[self.input],
             band_names=get_bands_names(
-                indexes=indexes, expression=expression, count=data.shape[0]
+                indexes=indexes, expression=expression, count=img.count
             ),
         )
 
@@ -482,7 +479,7 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        data, mask = reader.preview(
+        img = reader.preview(
             self.dataset,
             indexes=indexes,
             max_size=max_size,
@@ -494,16 +491,16 @@ class COGReader(BaseReader):
         if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
-            data = apply_expression(blocks, bands, data)
+            img.data = apply_expression(blocks, bands, img.data)
 
         return ImageData(
-            data,
-            mask,
-            bounds=self.bounds,
-            crs=self.crs,
+            img.data,
+            img.mask,
+            bounds=img.bounds,
+            crs=img.crs,
             assets=[self.input],
             band_names=get_bands_names(
-                indexes=indexes, expression=expression, count=data.shape[0]
+                indexes=indexes, expression=expression, count=img.count
             ),
         )
 
@@ -638,21 +635,21 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        data, mask = reader.read(self.dataset, indexes=indexes, **kwargs)
+        img = reader.read(self.dataset, indexes=indexes, **kwargs)
 
         if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
-            data = apply_expression(blocks, bands, data)
+            img.data = apply_expression(blocks, bands, img.data)
 
         return ImageData(
-            data,
-            mask,
-            bounds=self.bounds,
-            crs=self.crs,
+            img.data,
+            img.mask,
+            bounds=img.bounds,
+            crs=img.crs,
             assets=[self.input],
             band_names=get_bands_names(
-                indexes=indexes, expression=expression, count=data.shape[0]
+                indexes=indexes, expression=expression, count=img.count
             ),
         )
 

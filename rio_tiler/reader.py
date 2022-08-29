@@ -16,6 +16,7 @@ from rasterio.warp import transform_bounds
 
 from .constants import WGS84_CRS
 from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from .models import ImageData
 from .types import BBox, DataMaskType, Indexes, NoData
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
@@ -35,7 +36,7 @@ def read(
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
     ] = None,
-) -> DataMaskType:
+) -> ImageData:
     """Low level read function.
 
     Args:
@@ -77,6 +78,11 @@ def read(
         vrt_params.update(vrt_options)
 
     with WarpedVRT(src_dst, **vrt_params) as vrt:
+        if not window:
+            window = windows.Window(
+                col_off=0, row_off=0, width=vrt.width, height=vrt.height
+            )
+
         if ColorInterp.alpha in vrt.colorinterp:
             indexes = tuple(indexes) + (vrt.colorinterp.index(ColorInterp.alpha) + 1,)
             data = vrt.read(
@@ -100,18 +106,23 @@ def read(
                 resampling=Resampling[resampling_method],
             )
 
-    if force_binary_mask:
-        mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
+        if force_binary_mask:
+            mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
 
-    if unscale:
-        data = data.astype("float32", casting="unsafe")
-        numpy.multiply(data, src_dst.scales[0], out=data, casting="unsafe")
-        numpy.add(data, src_dst.offsets[0], out=data, casting="unsafe")
+        if unscale:
+            data = data.astype("float32", casting="unsafe")
+            numpy.multiply(data, src_dst.scales[0], out=data, casting="unsafe")
+            numpy.add(data, src_dst.offsets[0], out=data, casting="unsafe")
 
-    if post_process:
-        data, mask = post_process(data, mask)
+        if post_process:
+            data, mask = post_process(data, mask)
 
-    return data, mask
+        return ImageData(
+            data,
+            mask,
+            bounds=windows.bounds(window, vrt.transform),
+            crs=vrt.crs,
+        )
 
 
 def part(
@@ -126,7 +137,7 @@ def part(
     vrt_options: Optional[Dict] = None,
     max_size: Optional[int] = None,
     **kwargs: Any,
-) -> DataMaskType:
+) -> ImageData:
     """Read part of a dataset.
 
     Args:
@@ -134,7 +145,7 @@ def part(
         bounds (tuple): Output bounds (left, bottom, right, top). By default the coordinates are considered to be in either the dataset CRS or in the `dst_crs` if set. Use `bounds_crs` to set a specific CRS.
         height (int, optional): Output height of the array.
         width (int, optional): Output width of the array.
-        padding (int, optional): Padding to apply to each edge of the tile when retrieving data to assist in reducing resampling artefacts along edges. Defaults to `0`.
+        padding (int, optional): Padding to apply to each bbox edge. Helps reduce resampling artefacts along edges. Defaults to `0`.
         dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system.
         bounds_crs (rasterio.crs.CRS, optional): Overwrite bounds Coordinate Reference System.
         minimum_overlap (float, optional): Minimum % overlap for which to raise an error with dataset not covering enough of the tile.
@@ -234,7 +245,7 @@ def preview(
     height: int = None,
     width: int = None,
     **kwargs: Any,
-) -> DataMaskType:
+) -> ImageData:
     """Read decimated version of a dataset.
 
     Args:
