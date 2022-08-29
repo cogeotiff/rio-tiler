@@ -1,6 +1,9 @@
 
 # 4.0.0 (TBD)
 
+**breaking changes**
+
+* remove python 3.7 support
 * update rasterio requirement to `>=1.3` to allow python 3.10 support
 
 # 3.1.6 (2022-07-22)
