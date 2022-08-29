@@ -7,7 +7,7 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 import attr
 import numpy
 import rasterio
-from morecantile import BoundingBox, Tile, TileMatrixSet
+from morecantile import Tile, TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -19,12 +19,7 @@ from rasterio.warp import calculate_default_transform
 
 from .. import reader
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
-from ..errors import (
-    ExpressionMixingWarning,
-    IncorrectTileBuffer,
-    NoOverviewWarning,
-    TileOutsideBounds,
-)
+from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
 from ..expression import apply_expression, get_expression_blocks, parse_expression
 from ..models import BandStatistics, ImageData, Info
 from ..types import BBox, DataMaskType, Indexes, NoData, NumType
@@ -312,6 +307,7 @@ class COGReader(BaseReader):
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         tile_buffer: Optional[NumType] = None,
+        buffer: Optional[float] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a COG.
@@ -323,7 +319,8 @@ class COGReader(BaseReader):
             tilesize (int, optional): Output image size. Defaults to `256`.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            tile_buffer (int or float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
+            tile_buffer (int or float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258). DEPRECATED
+            buffer (float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
@@ -336,25 +333,12 @@ class COGReader(BaseReader):
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
-        if tile_buffer is not None:
-            if tile_buffer % 0.5:
-                raise IncorrectTileBuffer(
-                    "`tile_buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
-                )
 
-            x_res = (tile_bounds.right - tile_bounds.left) / tilesize
-            y_res = (tile_bounds.top - tile_bounds.bottom) / tilesize
-
-            # Buffered Tile Bounds
-            tile_bounds = BoundingBox(
-                tile_bounds.left - x_res * tile_buffer,
-                tile_bounds.bottom - y_res * tile_buffer,
-                tile_bounds.right + x_res * tile_buffer,
-                tile_bounds.top + y_res * tile_buffer,
+        if tile_buffer:
+            warnings.warn(
+                "`tile_buffer` is deprecated, use `buffer`.", DeprecationWarning
             )
-
-            # Buffered Tile Size
-            tilesize += int(tile_buffer * 2)
+            buffer = tile_buffer
 
         return self.part(
             tile_bounds,
@@ -365,6 +349,7 @@ class COGReader(BaseReader):
             max_size=None,
             indexes=indexes,
             expression=expression,
+            buffer=buffer,
             **kwargs,
         )
 
@@ -378,6 +363,7 @@ class COGReader(BaseReader):
         max_size: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
+        buffer: Optional[float] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG.
@@ -391,6 +377,7 @@ class COGReader(BaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
+            buffer (float, optional): Buffer on each side of the given aoi. It must be a multiple of `0.5`. Output **image size** will be expanded to `output imagesize + 2 * buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
             kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
@@ -423,6 +410,7 @@ class COGReader(BaseReader):
             bounds_crs=bounds_crs,
             dst_crs=dst_crs,
             indexes=indexes,
+            buffer=buffer,
             **kwargs,
         )
 
@@ -562,6 +550,7 @@ class COGReader(BaseReader):
         max_size: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
+        buffer: Optional[NumType] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG defined by a geojson feature.
@@ -575,6 +564,7 @@ class COGReader(BaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
+            buffer (int or float, optional): Buffer on each side of the given aoi. It must be a multiple of `0.5`. Output **image size** will be expanded to `output imagesize + 2 * buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
@@ -601,6 +591,7 @@ class COGReader(BaseReader):
             width=width,
             height=height,
             vrt_options=vrt_options,
+            buffer=buffer,
             **kwargs,
         )
 

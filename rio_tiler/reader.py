@@ -15,7 +15,12 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from .constants import WGS84_CRS
-from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from .errors import (
+    AlphaBandWarning,
+    InvalidBufferSize,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from .models import ImageData
 from .types import BBox, DataMaskType, Indexes, NoData
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
@@ -136,6 +141,7 @@ def part(
     minimum_overlap: Optional[float] = None,
     vrt_options: Optional[Dict] = None,
     max_size: Optional[int] = None,
+    buffer: Optional[float] = None,
     **kwargs: Any,
 ) -> ImageData:
     """Read part of a dataset.
@@ -164,6 +170,11 @@ def part(
         warnings.warn(
             "'max_size' will be ignored with with 'height' and 'width' set.",
             UserWarning,
+        )
+
+    if buffer and buffer % 0.5:
+        raise InvalidBufferSize(
+            "`buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
         )
 
     if bounds_crs:
@@ -203,6 +214,32 @@ def part(
             else:
                 width = max_size
                 height = math.ceil(width * ratio)
+
+    if buffer:
+        height = height or vrt_height
+        width = width or vrt_width
+        # get ratio between output size and vrt size
+        y_ratio = vrt_height / height
+        x_ratio = vrt_width / width
+
+        # apply buffer to the output height/width
+        height += int(buffer * 2)
+        width += int(buffer * 2)
+
+        # get new vrt_width (should be linear)
+        new_vrt_height = round(y_ratio * height)
+        new_vrt_width = round(x_ratio * width)
+
+        # new transform
+        y_off = (new_vrt_height - vrt_height) / 2
+        x_off = (new_vrt_width - vrt_width) / 2
+
+        vrt_transform = vrt_transform * Affine.translation(-x_off, -y_off)
+        vrt_height = new_vrt_height
+        vrt_width = new_vrt_width
+        window = windows.Window(
+            col_off=0, row_off=0, width=vrt_width, height=vrt_height
+        )
 
     out_height = height or vrt_height
     out_width = width or vrt_width
