@@ -391,44 +391,24 @@ def test_point():
 
 def test_part_with_buffer():
     """Make sure buffer works as expected."""
-    bounds = (
-        -11663507.036777973,
-        4715018.0897710975,
-        -11663487.927520901,
-        4715037.199028169,
-    )
+    bounds = [
+        -6574807.42497772,
+        12210356.646387195,
+        -6261721.357121638,
+        12523442.714243278,
+    ]
+    # Read part at full resolution
+    with rasterio.open(COG) as src_dst:
+        img_no_buffer = reader.part(src_dst, bounds, dst_crs=constants.WEB_MERCATOR_CRS)
 
-    x_res = (bounds[2] - bounds[0]) / 16
-    y_res = (bounds[3] - bounds[1]) / 16
+    x_size = img_no_buffer.width
+    y_size = img_no_buffer.height
 
-    # apply a 2 pixel buffer
-    bounds_with_buffer = (
-        bounds[0] - x_res * 2,
-        bounds[1] - y_res * 2,
-        bounds[2] + x_res * 2,
-        bounds[3] + y_res * 2,
-    )
-    with rasterio.open(S3_PATH) as src_dst:
-        img = reader.part(src_dst, bounds_with_buffer, 20, 20)
-        assert img.width == 20
-        assert img.height == 20
+    x_res = (bounds[2] - bounds[0]) / x_size
+    y_res = (bounds[3] - bounds[1]) / y_size
 
-    with rasterio.open(S3_PATH) as src_dst:
-        imgb = reader.part(src_dst, bounds, 16, 16, buffer=2)
-        assert imgb.width == 20
-        assert imgb.height == 20
-
-    assert img.bounds == imgb.bounds
-
-    # Test when dst_crs != dataset crs
-    bounds = (
-        -104.7750663757324,
-        38.95353532141203,
-        -104.77489471435543,
-        38.95366881479646,
-    )
-    x_res = (bounds[2] - bounds[0]) / 16
-    y_res = (bounds[3] - bounds[1]) / 16
+    nx = x_size + 4
+    ny = y_size + 4
 
     # apply a 2 pixel buffer
     bounds_with_buffer = (
@@ -437,14 +417,28 @@ def test_part_with_buffer():
         bounds[2] + x_res * 2,
         bounds[3] + y_res * 2,
     )
-    with rasterio.open(S3_PATH) as src_dst:
-        img = reader.part(src_dst, bounds_with_buffer, 20, 20)
-        assert img.width == 20
-        assert img.height == 20
+    with rasterio.open(COG) as src_dst:
+        img = reader.part(
+            src_dst,
+            bounds_with_buffer,
+            height=ny,
+            width=nx,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+        )
+        assert img.width == nx
+        assert img.height == ny
 
-    with rasterio.open(S3_PATH) as src_dst:
-        imgb = reader.part(src_dst, bounds, 16, 16, buffer=2)
-        assert imgb.width == 20
-        assert imgb.height == 20
+    with rasterio.open(COG) as src_dst:
+        imgb = reader.part(
+            src_dst, bounds, buffer=2, dst_crs=constants.WEB_MERCATOR_CRS
+        )
+        assert imgb.width == nx
+        assert imgb.height == ny
 
+    assert numpy.array_equal(img.data, imgb.data)
     assert img.bounds == imgb.bounds
+
+    # No resampling is involved. Because we read the full resolution data
+    # all arrays should be equal
+    numpy.array_equal(img_no_buffer.data, imgb.data[:, 2:-2, 2:-2])
+    numpy.array_equal(img_no_buffer.data, img.data[:, 2:-2, 2:-2])
