@@ -12,7 +12,7 @@ import rasterio
 from morecantile import TileMatrixSet
 from pyproj import CRS
 from rasterio import transform
-from rasterio.io import DatasetReader, MemoryFile
+from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 
@@ -24,7 +24,7 @@ from rio_tiler.errors import (
     NoOverviewWarning,
     TileOutsideBounds,
 )
-from rio_tiler.io import COGReader, GCPCOGReader
+from rio_tiler.io import COGReader
 from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -452,57 +452,6 @@ def test_COGReader_Options():
 
 def test_cog_with_internal_gcps():
     """Make sure file gets re-projected using gcps."""
-    with pytest.warns(DeprecationWarning):
-        with GCPCOGReader(COG_GCPS, nodata=0) as cog:
-            assert cog.bounds
-            assert cog.nodata == 0
-            assert isinstance(cog.src_dataset, DatasetReader)
-            assert isinstance(cog.dataset, WarpedVRT)
-
-            assert cog.minzoom == 7
-            assert cog.maxzoom == 10
-
-            metadata = cog.info()
-            assert len(metadata.band_metadata) == 1
-            assert metadata.band_descriptions == [("1", "")]
-
-            tile_z = 8
-            tile_x = 183
-            tile_y = 120
-            data, mask = cog.tile(tile_x, tile_y, tile_z)
-            assert data.shape == (1, 256, 256)
-            assert mask.shape == (256, 256)
-
-        # https://github.com/rasterio/rasterio/issues/2092
-        # assert cog.dataset.closed
-        assert cog.src_dataset.closed
-
-    with pytest.warns(DeprecationWarning):
-        with rasterio.open(COG_GCPS) as dst:
-            with GCPCOGReader(None, src_dataset=dst, nodata=0) as cog:
-                assert cog.bounds
-                assert cog.nodata == 0
-                assert isinstance(cog.src_dataset, DatasetReader)
-                assert isinstance(cog.dataset, WarpedVRT)
-
-                assert cog.minzoom == 7
-                assert cog.maxzoom == 10
-
-                metadata = cog.info()
-                assert len(metadata.band_metadata) == 1
-                assert metadata.band_descriptions == [("1", "")]
-
-                tile_z = 8
-                tile_x = 183
-                tile_y = 120
-                data, mask = cog.tile(tile_x, tile_y, tile_z)
-                assert data.shape == (1, 256, 256)
-                assert mask.shape == (256, 256)
-            # https://github.com/rasterio/rasterio/issues/2092
-            # assert cog.dataset.closed
-            assert not cog.src_dataset.closed
-        assert cog.src_dataset.closed
-
     with COGReader(COG_GCPS, nodata=0) as cog:
         assert cog.bounds
         assert cog.nodata == 0
