@@ -3,7 +3,7 @@
 import abc
 import re
 import warnings
-from typing import Any, Coroutine, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
 import numpy
@@ -214,116 +214,6 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     @abc.abstractmethod
     def feature(self, shape: Dict, **kwargs: Any) -> ImageData:
-        """Read a Dataset for a GeoJSON feature.
-
-        Args:
-            shape (dict): Valid GeoJSON feature.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
-
-        """
-        ...
-
-
-@attr.s
-class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
-    """Rio-tiler.io AsyncBaseReader."""
-
-    input: Any = attr.ib()
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    async def __aenter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
-
-    @abc.abstractmethod
-    async def info(self) -> Coroutine[Any, Any, Info]:
-        """Return Dataset's info.
-
-        Returns:
-            rio_tile.models.Info: Dataset info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def statistics(
-        self,
-        **kwargs: Any,
-    ) -> Coroutine[Any, Any, Dict[str, BandStatistics]]:
-        """Return bands statistics from a dataset.
-
-        Returns:
-            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def tile(
-        self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any
-    ) -> Coroutine[Any, Any, ImageData]:
-        """Read a Map tile from the Dataset.
-
-        Args:
-            tile_x (int): Tile's horizontal index.
-            tile_y (int): Tile's vertical index.
-            tile_z (int): Tile's zoom level index.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def part(self, bbox: BBox, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
-        """Read a Part of a Dataset.
-
-        Args:
-            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def preview(self, **kwargs: Any) -> Coroutine[Any, Any, ImageData]:
-        """Read a preview of a Dataset.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def point(
-        self, lon: float, lat: float, **kwargs: Any
-    ) -> Coroutine[Any, Any, List]:
-        """Read a value from a Dataset.
-
-        Args:
-            lon (float): Longitude.
-            lat (float): Latitude.
-
-        Returns:
-            list: Pixel value per bands/assets.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def feature(
-        self, shape: Dict, **kwargs: Any
-    ) -> Coroutine[Any, Any, ImageData]:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
