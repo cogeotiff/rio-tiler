@@ -203,8 +203,6 @@ def part(
         src_dst, bounds, height, width, dst_crs=dst_crs
     )
 
-    window = windows.Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
-
     if max_size and not (width and height):
         if max(vrt_width, vrt_height) > max_size:
             ratio = vrt_height / vrt_width
@@ -215,34 +213,36 @@ def part(
                 width = max_size
                 height = math.ceil(width * ratio)
 
+    out_height = height or vrt_height
+    out_width = width or vrt_width
+
     if buffer:
         height = height or vrt_height
         width = width or vrt_width
-        # get ratio between output size and vrt size
-        y_ratio = vrt_height / height
-        x_ratio = vrt_width / width
 
-        # apply buffer to the output height/width
-        height += int(buffer * 2)
-        width += int(buffer * 2)
+        # Get output resolution
+        x_res = (bounds[2] - bounds[0]) / out_width
+        y_res = (bounds[3] - bounds[1]) / out_height
 
-        # get new vrt_width (should be linear)
-        new_vrt_height = round(y_ratio * height)
-        new_vrt_width = round(x_ratio * width)
-
-        # new transform
-        y_off = (new_vrt_height - vrt_height) / 2
-        x_off = (new_vrt_width - vrt_width) / 2
-
-        vrt_transform = vrt_transform * Affine.translation(-x_off, -y_off)
-        vrt_height = new_vrt_height
-        vrt_width = new_vrt_width
-        window = windows.Window(
-            col_off=0, row_off=0, width=vrt_width, height=vrt_height
+        # apply buffer to bounds
+        bounds = (
+            bounds[0] - x_res * buffer,
+            bounds[1] - y_res * buffer,
+            bounds[2] + x_res * buffer,
+            bounds[3] + y_res * buffer,
         )
 
-    out_height = height or vrt_height
-    out_width = width or vrt_width
+        # new output size
+        out_height += int(buffer * 2)
+        out_width += int(buffer * 2)
+
+        # re-calculate the transform given the new bounds, height and width
+        vrt_transform, vrt_width, vrt_height = get_vrt_transform(
+            src_dst, bounds, out_height, out_width, dst_crs=dst_crs
+        )
+
+    window = windows.Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
+
     if padding > 0 and not is_aligned(src_dst, bounds, out_height, out_width, dst_crs):
         vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
         orig_vrt_height = vrt_height
