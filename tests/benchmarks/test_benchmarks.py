@@ -16,7 +16,7 @@ def read_tile(src_path, tile):
     """Benchmark rio-tiler.utils._tile_read."""
     # We make sure to not store things in cache.
     with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
-        with COGReader(src_path, minzoom=0, maxzoom=24) as cog:
+        with COGReader(src_path) as cog:
             return cog.tile(*tile)
 
 
