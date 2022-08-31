@@ -68,18 +68,6 @@ def test_spatial_info_valid():
     cog.close()
     assert cog.dataset.closed
 
-    with COGReader(COG_NODATA, minzoom=3) as cog:
-        assert cog.minzoom == 3
-        assert cog.maxzoom == 9
-
-    with COGReader(COG_NODATA, maxzoom=12) as cog:
-        assert cog.minzoom == 5
-        assert cog.maxzoom == 12
-
-    with COGReader(COG_NODATA, minzoom=3, maxzoom=12) as cog:
-        assert cog.minzoom == 3
-        assert cog.maxzoom == 12
-
 
 def test_bounds_valid():
     """Should work as expected (get bounds)"""

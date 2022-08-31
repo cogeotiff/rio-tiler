@@ -83,9 +83,6 @@ class COGReader(BaseReader):
     )
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
-
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     colormap: Dict = attr.ib(default=None)
@@ -105,6 +102,9 @@ class COGReader(BaseReader):
 
     # Context Manager to handle rasterio open/close
     _ctx_stack = attr.ib(init=False, factory=contextlib.ExitStack)
+
+    _minzoom: int = attr.ib(init=False, default=None)
+    _maxzoom: int = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
@@ -136,9 +136,6 @@ class COGReader(BaseReader):
         self.crs = self.dataset.crs
 
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
-
-        if self.minzoom is None or self.maxzoom is None:
-            self._set_zooms()
 
         if self.colormap is None:
             self._get_colormap()
@@ -198,9 +195,23 @@ class COGReader(BaseReader):
             )
             minzoom, maxzoom = self.tms.minzoom, self.tms.maxzoom
 
-        self.minzoom = self.minzoom if self.minzoom is not None else minzoom
-        self.maxzoom = self.maxzoom if self.maxzoom is not None else maxzoom
+        self._minzoom = minzoom
+        self._maxzoom = maxzoom
         return
+
+    @property
+    def minzoom(self):
+        """Return dataset minzoom."""
+        if self._minzoom is None or self._maxzoom is None:
+            self._set_zooms()
+        return self._minzoom
+
+    @property
+    def maxzoom(self):
+        """Return dataset maxzoom."""
+        if self._minzoom is None or self._maxzoom is None:
+            self._set_zooms()
+        return self._maxzoom
 
     def _get_colormap(self):
         """Retrieve the internal colormap."""
