@@ -156,7 +156,7 @@ class COGReader(BaseReader):
         """Support using with Context Managers."""
         self.close()
 
-    def _get_vrt_info(self):
+    def _dst_geom_in_tms_crs(self):
         """Return dataset info in TMS projection."""
         if self.dataset.crs != self.tms.rasterio_crs:
             dst_affine, w, h = calculate_default_transform(
@@ -181,7 +181,7 @@ class COGReader(BaseReader):
             tilesize = self.tms.tileMatrix[0].tileWidth
 
             try:
-                dst_affine, w, h = self._get_vrt_info()
+                dst_affine, w, h = self._dst_geom_in_tms_crs()
 
                 # The minzoom is defined by the resolution of the maximum theoretical overview level
                 # We assume `tilesize`` is the smallest overview size
@@ -208,7 +208,7 @@ class COGReader(BaseReader):
         """Define dataset maximum zoom level."""
         if self._maxzoom is None:
             try:
-                dst_affine, _, _ = self._get_vrt_info()
+                dst_affine, _, _ = self._dst_geom_in_tms_crs()
 
                 # The maxzoom is defined by finding the minimum difference between
                 # the raster resolution and the zoom level resolution
