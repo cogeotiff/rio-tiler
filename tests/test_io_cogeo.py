@@ -21,7 +21,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     AlphaBandWarning,
     ExpressionMixingWarning,
-    IncorrectTileBuffer,
+    InvalidBufferSize,
     NoOverviewWarning,
     TileOutsideBounds,
 )
@@ -200,7 +200,7 @@ def test_tile_valid_default():
     # We are using a file that is aligned with the grid so no resampling should be involved
     with COGReader(COG_WEB) as cog:
         img = cog.tile(147, 182, 9)
-        img_buffer = cog.tile(147, 182, 9, tile_buffer=10)
+        img_buffer = cog.tile(147, 182, 9, buffer=10)
         assert img_buffer.width == 276
         assert img_buffer.height == 276
         assert not img.bounds == img_buffer.bounds
@@ -215,26 +215,26 @@ def test_tile_invalid_bounds():
 
 
 def test_tile_with_incorrect_float_buffer():
-    with pytest.raises(IncorrectTileBuffer):
+    with pytest.raises(InvalidBufferSize):
         with COGReader(COGEO) as cog:
-            cog.tile(43, 24, 7, tile_buffer=0.8)
+            cog.tile(43, 24, 7, buffer=0.8)
 
 
 def test_tile_with_int_buffer():
     with COGReader(COGEO) as cog:
-        data, mask = cog.tile(43, 24, 7, tile_buffer=1)
+        data, mask = cog.tile(43, 24, 7, buffer=1)
     assert data.shape == (1, 258, 258)
     assert mask.all()
 
     with COGReader(COGEO) as cog:
-        data, mask = cog.tile(43, 24, 7, tile_buffer=0)
+        data, mask = cog.tile(43, 24, 7, buffer=0)
     assert data.shape == (1, 256, 256)
     assert mask.all()
 
 
 def test_tile_with_correct_float_buffer():
     with COGReader(COGEO) as cog:
-        data, mask = cog.tile(43, 24, 7, tile_buffer=0.5)
+        data, mask = cog.tile(43, 24, 7, buffer=0.5)
     assert data.shape == (1, 257, 257)
     assert mask.all()
 

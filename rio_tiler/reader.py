@@ -15,7 +15,12 @@ from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from .constants import WGS84_CRS
-from .errors import AlphaBandWarning, PointOutsideBounds, TileOutsideBounds
+from .errors import (
+    AlphaBandWarning,
+    InvalidBufferSize,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from .models import ImageData
 from .types import BBox, DataMaskType, Indexes, NoData
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
@@ -136,6 +141,7 @@ def part(
     minimum_overlap: Optional[float] = None,
     vrt_options: Optional[Dict] = None,
     max_size: Optional[int] = None,
+    buffer: Optional[float] = None,
     **kwargs: Any,
 ) -> ImageData:
     """Read part of a dataset.
@@ -166,6 +172,11 @@ def part(
             UserWarning,
         )
 
+    if buffer and buffer % 0.5:
+        raise InvalidBufferSize(
+            "`buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
+        )
+
     if bounds_crs:
         bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
 
@@ -192,8 +203,6 @@ def part(
         src_dst, bounds, height, width, dst_crs=dst_crs
     )
 
-    window = windows.Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
-
     if max_size and not (width and height):
         if max(vrt_width, vrt_height) > max_size:
             ratio = vrt_height / vrt_width
@@ -206,6 +215,34 @@ def part(
 
     out_height = height or vrt_height
     out_width = width or vrt_width
+
+    if buffer:
+        height = height or vrt_height
+        width = width or vrt_width
+
+        # Get output resolution
+        x_res = (bounds[2] - bounds[0]) / out_width
+        y_res = (bounds[3] - bounds[1]) / out_height
+
+        # apply buffer to bounds
+        bounds = (
+            bounds[0] - x_res * buffer,
+            bounds[1] - y_res * buffer,
+            bounds[2] + x_res * buffer,
+            bounds[3] + y_res * buffer,
+        )
+
+        # new output size
+        out_height += int(buffer * 2)
+        out_width += int(buffer * 2)
+
+        # re-calculate the transform given the new bounds, height and width
+        vrt_transform, vrt_width, vrt_height = get_vrt_transform(
+            src_dst, bounds, out_height, out_width, dst_crs=dst_crs
+        )
+
+    window = windows.Window(col_off=0, row_off=0, width=vrt_width, height=vrt_height)
+
     if padding > 0 and not is_aligned(src_dst, bounds, out_height, out_width, dst_crs):
         vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
         orig_vrt_height = vrt_height
