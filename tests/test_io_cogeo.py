@@ -1,6 +1,7 @@
 """tests rio_tiler.io.cogeo.COGReader"""
 
 import os
+import warnings
 from io import BytesIO
 from typing import Any, Dict
 
@@ -800,15 +801,18 @@ def test_no_overviews():
 
 def test_nonearthbody():
     """COGReader should work with non-earth dataset."""
+    EUROPA_SPHERE = CRS.from_proj4("+proj=longlat +R=1560800 +no_defs")
+
     with pytest.warns(UserWarning):
         with COGReader(COG_EUROPA) as cog:
             assert cog.minzoom == 0
             assert cog.maxzoom == 24
 
-    with pytest.warns(None) as warnings:
-        with COGReader(COG_EUROPA) as cog:
+    # Warns because of zoom level in WebMercator can't be defined
+    with pytest.warns(UserWarning) as warnings:
+        with COGReader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as cog:
             assert cog.info()
-            assert len(warnings) == 2
+            assert len(warnings) == 1
 
             img = cog.read()
             assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
@@ -826,27 +830,27 @@ def test_nonearthbody():
             lat = (cog.bounds[1] + cog.bounds[3]) / 2
             assert cog.point(lon, lat, coord_crs=cog.crs)[0] is not None
 
-    europa_crs = CRS.from_authority("ESRI", 104915)
-    tms = TileMatrixSet.custom(
-        crs=europa_crs,
-        extent=europa_crs.area_of_use.bounds,
-        matrix_scale=[2, 1],
-    )
-    with pytest.warns(None) as warnings:
-        with COGReader(COG_EUROPA, tms=tms) as cog:
-            assert cog.minzoom == 4
-            assert cog.maxzoom == 6
+    with pytest.warns(UserWarning) as warnings:
+        europa_crs = CRS.from_authority("ESRI", 104915)
+        tms = TileMatrixSet.custom(
+            crs=europa_crs,
+            extent=europa_crs.area_of_use.bounds,
+            matrix_scale=[2, 1],
+        )
 
-            # Get Tile covering the UL corner
-            bounds = transform_bounds(cog.crs, tms.rasterio_crs, *cog.bounds)
-            t = tms._tile(bounds[0], bounds[1], cog.minzoom)
-            img = cog.tile(t.x, t.y, t.z)
+    with COGReader(COG_EUROPA, tms=tms, geographic_crs=EUROPA_SPHERE) as cog:
+        assert cog.info()
+        assert cog.minzoom == 4
+        assert cog.maxzoom == 6
 
-            assert img.height == 256
-            assert img.width == 256
-            assert img.crs == tms.rasterio_crs
+        # Get Tile covering the UL corner
+        bounds = transform_bounds(cog.crs, tms.rasterio_crs, *cog.bounds)
+        t = tms._tile(bounds[0], bounds[1], cog.minzoom)
+        img = cog.tile(t.x, t.y, t.z)
 
-            assert len(warnings) == 0
+        assert img.height == 256
+        assert img.width == 256
+        assert img.crs == tms.rasterio_crs
 
 
 def test_nonearth_custom():
@@ -878,13 +882,11 @@ def test_nonearth_custom():
             default=rasterio.crs.CRS.from_proj4("+proj=longlat +R=3396190 +no_defs"),
         )
 
-    with pytest.warns(None) as warnings:
+    with warnings.catch_warnings():
         with MarsReader(COG_MARS, tms=mars_tms) as cog:
             assert cog.geographic_bounds[0] > -180
 
-    assert len(warnings) == 0
-
-    with pytest.warns(None) as warnings:
+    with warnings.catch_warnings():
         with COGReader(
             COG_MARS,
             tms=mars_tms,
@@ -893,5 +895,3 @@ def test_nonearth_custom():
             ),
         ) as cog:
             assert cog.geographic_bounds[0] > -180
-
-    assert len(warnings) == 0
