@@ -812,7 +812,7 @@ def test_nonearthbody():
     with pytest.warns(UserWarning) as warnings:
         with COGReader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as cog:
             assert cog.info()
-            assert len(warnings) == 1
+            assert len(warnings) == 2
 
             img = cog.read()
             assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
@@ -895,3 +895,33 @@ def test_nonearth_custom():
             ),
         ) as cog:
             assert cog.geographic_bounds[0] > -180
+
+
+def test_tms_tilesize_and_zoom():
+    """Test the influence of tms tilesize on COG zoom levels."""
+    with COGReader(COG_NODATA) as cog:
+        assert cog.minzoom == 5
+        assert cog.maxzoom == 9
+
+    tms_128 = TileMatrixSet.custom(
+        WEB_MERCATOR_TMS.xy_bbox,
+        WEB_MERCATOR_TMS.crs,
+        title="mercator with 64 tilesize",
+        tile_width=64,
+        tile_height=64,
+    )
+    with COGReader(COG_NODATA, tms=tms_128) as cog:
+        assert cog.minzoom == 5
+        assert cog.maxzoom == 11
+
+    tms_2048 = TileMatrixSet.custom(
+        WEB_MERCATOR_TMS.xy_bbox,
+        WEB_MERCATOR_TMS.crs,
+        title="mercator with 2048 tilesize",
+        tile_width=2048,
+        tile_height=2048,
+    )
+    with COGReader(COG_NODATA, tms=tms_2048) as cog:
+        print(cog.minzoom, cog.maxzoom)
+        assert cog.minzoom == 5
+        assert cog.maxzoom == 6
