@@ -164,8 +164,8 @@ class STACReader(MultiBaseReader):
     item: pystac.Item = attr.ib(default=None, converter=_to_pystac_item)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
+    minzoom: int = attr.ib()
+    maxzoom: int = attr.ib()
 
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
@@ -202,13 +202,13 @@ class STACReader(MultiBaseReader):
         if not self.assets:
             raise MissingAssets("No valid asset found")
 
-        if self.minzoom is None:
-            # TODO get minzoom from PROJ extension
-            self.minzoom = self.tms.minzoom
+    @minzoom.default
+    def _minzoom(self):
+        return self.tms.minzoom
 
-        if self.maxzoom is None:
-            # TODO get maxzoom from PROJ extension
-            self.maxzoom = self.tms.maxzoom
+    @maxzoom.default
+    def _maxzoom(self):
+        return self.tms.maxzoom
 
     def _get_asset_url(self, asset: str) -> str:
         """Validate asset names and return asset's url.

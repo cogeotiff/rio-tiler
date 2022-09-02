@@ -2,7 +2,7 @@
 
 import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import attr
 import numpy
@@ -78,9 +78,6 @@ class COGReader(BaseReader):
     )
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
-
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     colormap: Dict = attr.ib(default=None)
@@ -100,6 +97,9 @@ class COGReader(BaseReader):
 
     # Context Manager to handle rasterio open/close
     _ctx_stack = attr.ib(init=False, factory=contextlib.ExitStack)
+
+    _minzoom: int = attr.ib(init=False, default=None)
+    _maxzoom: int = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
@@ -132,9 +132,6 @@ class COGReader(BaseReader):
 
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
-        if self.minzoom is None or self.maxzoom is None:
-            self._set_zooms()
-
         if self.colormap is None:
             self._get_colormap()
 
@@ -154,8 +151,8 @@ class COGReader(BaseReader):
         """Support using with Context Managers."""
         self.close()
 
-    def get_zooms(self, tilesize: int = 256) -> Tuple[int, int]:
-        """Calculate raster min/max zoom level for input TMS."""
+    def _dst_geom_in_tms_crs(self):
+        """Return dataset info in TMS projection."""
         if self.dataset.crs != self.tms.rasterio_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.dataset.crs,
@@ -169,33 +166,69 @@ class COGReader(BaseReader):
             w = self.dataset.width
             h = self.dataset.height
 
-        # The maxzoom is defined by finding the minimum difference between
-        # the raster resolution and the zoom level resolution
-        resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
-        maxzoom = self.tms.zoom_for_res(resolution)
+        return dst_affine, w, h
 
-        # The minzoom is defined by the resolution of the maximum theoretical overview level
-        overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
-        ovr_resolution = resolution * (2**overview_level)
-        minzoom = self.tms.zoom_for_res(ovr_resolution)
+    def get_minzoom(self) -> int:
+        """Define dataset minimum zoom level."""
+        if self._minzoom is None:
+            # We assume the TMS tilesize to be constant over all matrices
+            # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
+            tilesize = self.tms.tileMatrix[0].tileWidth
 
-        return (minzoom, maxzoom)
+            try:
+                dst_affine, w, h = self._dst_geom_in_tms_crs()
 
-    def _set_zooms(self):
-        """Calculate raster min/max zoom level."""
-        try:
-            minzoom, maxzoom = self.get_zooms()
-        except:  # noqa
-            # if we can't get min/max zoom from the dataset we default to TMS min/max zoom
-            warnings.warn(
-                "Cannot dertermine min/max zoom based on dataset information, will default to TMS min/max zoom.",
-                UserWarning,
-            )
-            minzoom, maxzoom = self.tms.minzoom, self.tms.maxzoom
+                # The minzoom is defined by the resolution of the maximum theoretical overview level
+                # We assume `tilesize`` is the smallest overview size
+                overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
 
-        self.minzoom = self.minzoom if self.minzoom is not None else minzoom
-        self.maxzoom = self.maxzoom if self.maxzoom is not None else maxzoom
-        return
+                # Get the resolution of the overview
+                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+                ovr_resolution = resolution * (2**overview_level)
+
+                # Find what TMS matrix match the overview resolution
+                self._minzoom = self.tms.zoom_for_res(ovr_resolution)
+
+            except:  # noqa
+                # if we can't get max zoom from the dataset we default to TMS maxzoom
+                warnings.warn(
+                    "Cannot determine minzoom based on dataset information, will default to TMS minzoom.",
+                    UserWarning,
+                )
+                self._minzoom = self.tms.minzoom
+
+        return self._minzoom
+
+    def get_maxzoom(self) -> int:
+        """Define dataset maximum zoom level."""
+        if self._maxzoom is None:
+            try:
+                dst_affine, _, _ = self._dst_geom_in_tms_crs()
+
+                # The maxzoom is defined by finding the minimum difference between
+                # the raster resolution and the zoom level resolution
+                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+                self._maxzoom = self.tms.zoom_for_res(resolution)
+
+            except:  # noqa
+                # if we can't get min/max zoom from the dataset we default to TMS maxzoom
+                warnings.warn(
+                    "Cannot determine maxzoom based on dataset information, will default to TMS maxzoom.",
+                    UserWarning,
+                )
+                self._maxzoom = self.tms.maxzoom
+
+        return self._maxzoom
+
+    @property
+    def minzoom(self):
+        """Return dataset minzoom."""
+        return self.get_minzoom()
+
+    @property
+    def maxzoom(self):
+        """Return dataset maxzoom."""
+        return self.get_maxzoom()
 
     def _get_colormap(self):
         """Retrieve the internal colormap."""

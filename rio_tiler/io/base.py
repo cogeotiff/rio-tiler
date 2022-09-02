@@ -31,8 +31,6 @@ class SpatialMixin:
 
     Attributes:
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        minzoom (int): Dataset Min Zoom level. **Not in __init__**.
-        maxzoom (int): Dataset Max Zoom level. **Not in __init__**.
         bounds (tuple): Dataset bounds (left, bottom, right, top). **Not in __init__**.
         crs (rasterio.crs.CRS): Dataset crs. **Not in __init__**.
         geographic_crs (rasterio.crs.CRS): CRS to use as geographic coordinate system. Defaults to WGS84. **Not in __init__**.
@@ -40,9 +38,6 @@ class SpatialMixin:
     """
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    minzoom: int = attr.ib(init=False)
-    maxzoom: int = attr.ib(init=False)
 
     bounds: BBox = attr.ib(init=False)
     crs: CRS = attr.ib(init=False)
@@ -64,7 +59,7 @@ class SpatialMixin:
             )
         except:  # noqa
             warnings.warn(
-                "Cannot dertermine bounds in geographic CRS, will default to (-180.0, -90.0, 180.0, 90.0).",
+                "Cannot determine bounds in geographic CRS, will default to (-180.0, -90.0, 180.0, 90.0).",
                 UserWarning,
             )
             bounds = (-180.0, -90, 180.0, 90)
@@ -243,9 +238,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    reader_options: Dict = attr.ib(factory=dict)
+
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
 
     reader: Type[BaseReader] = attr.ib(init=False)
+    reader_options: Dict = attr.ib(factory=dict)
+
     assets: Sequence[str] = attr.ib(init=False)
 
     def __enter__(self):
@@ -757,9 +756,13 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    reader_options: Dict = attr.ib(factory=dict)
+
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
 
     reader: Type[BaseReader] = attr.ib(init=False)
+    reader_options: Dict = attr.ib(factory=dict)
+
     bands: Sequence[str] = attr.ib(init=False)
 
     def __enter__(self):

@@ -6,6 +6,8 @@
 * remove python 3.7 support
 * update rasterio requirement to `>=1.3` to allow python 3.10 support
 * `rio_tiler.readers.read()`, `rio_tiler.readers.part()`, `rio_tiler.readers.preview()` now return a ImageData object
+* remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.SpatialMixin` base class
+* remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.COGReader` (now defined as properties).
 
 # 3.1.6 (2022-07-22)
 
