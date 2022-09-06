@@ -67,6 +67,10 @@ def get_bands_names(
     count: Optional[int] = None,
 ) -> List[str]:
     """Define bands names based on expression, indexes or band count."""
+    warnings.warn(
+        "`get_bands_names` is deprecated, and will be removed in rio-tiler 4.0`.",
+        DeprecationWarning,
+    )
     if expression:
         return get_expression_blocks(expression)
 

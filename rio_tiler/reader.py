@@ -71,6 +71,8 @@ def read(
                 "Alpha band was removed from the output data array", AlphaBandWarning
             )
 
+    band_names = [f"b{idx}" for idx in indexes]
+
     vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
     if nodata is not None:
@@ -127,6 +129,7 @@ def read(
             mask,
             bounds=windows.bounds(window, vrt.transform),
             crs=vrt.crs,
+            band_names=band_names,
         )
 
 

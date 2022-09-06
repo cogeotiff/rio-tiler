@@ -18,6 +18,7 @@ from rio_color.operations import parse_operations
 from rio_color.utils import scale_dtype, to_math_type
 
 from .errors import InvalidDatatypeWarning
+from .expression import apply_expression, get_expression_blocks
 from .types import ColorMapType, GDALColorMapType, IntervalTuple, NumType
 from .utils import linear_rescale, render, resize_array
 
@@ -163,7 +164,7 @@ class ImageData:
 
     @band_names.default
     def _default_names(self):
-        return [f"{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.count)]
 
     @mask.default
     def _default_mask(self):
@@ -273,6 +274,13 @@ class ImageData:
         self.data[self.data < 0] = 0
         for ops in parse_operations(color_formula):
             self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
+
+    def apply_expression(self, expression: str, bands: Optional[List[str]] = None):
+        """Apply expression in place."""
+        blocks = get_expression_blocks(expression)
+        bands = bands or self.band_names
+        self.data = apply_expression(blocks, bands, self.data)
+        self.band_names = blocks
 
     def post_process(
         self,

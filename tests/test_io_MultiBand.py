@@ -59,86 +59,88 @@ class BandFileReader(MultiBandReader):
 def test_MultiBandReader():
     """Should work as expected."""
     with BandFileReader(PREFIX) as cog:
-        assert cog.bands == ["b1", "b2"]
+        assert cog.bands == ["band1", "band2"]
         assert cog.minzoom is not None
         assert cog.maxzoom is not None
         assert cog.bounds
         assert cog.bounds
         assert cog.crs
 
-        assert sorted(cog.parse_expression("b1/b2")) == ["b1", "b2"]
+        assert sorted(cog.parse_expression("band1/band2")) == ["band1", "band2"]
 
         with pytest.warns(UserWarning):
             meta = cog.info()
-        assert meta.band_descriptions == [("b1", ""), ("b2", "")]
+        assert meta.band_descriptions == [("band1", ""), ("band2", "")]
 
-        meta = cog.info(bands="b1")
-        assert meta.band_descriptions == [("b1", "")]
+        meta = cog.info(bands="band1")
+        assert meta.band_descriptions == [("band1", "")]
 
-        meta = cog.info(bands=("b1", "b2"))
-        assert meta.band_descriptions == [("b1", ""), ("b2", "")]
+        meta = cog.info(bands=("band1", "band2"))
+        assert meta.band_descriptions == [("band1", ""), ("band2", "")]
 
         with pytest.warns(UserWarning):
             stats = cog.statistics()
-            assert stats["b1"]
-            assert stats["b2"]
+            assert stats["band1"]
+            assert stats["band2"]
 
-        stats = cog.statistics(bands="b1")
-        assert "b1" in stats
-        assert isinstance(stats["b1"], BandStatistics)
+        stats = cog.statistics(bands="band1")
+        assert "band1" in stats
+        assert isinstance(stats["band1"], BandStatistics)
 
-        stats = cog.statistics(bands=("b1", "b2"))
-        assert stats["b1"]
-        assert stats["b2"]
+        stats = cog.statistics(bands=("band1", "band2"))
+        assert stats["band1"]
+        assert stats["band2"]
 
-        stats = cog.statistics(expression="b1;b1+b2;b1-100")
-        assert stats["b1"]
-        assert stats["b1+b2"]
-        assert stats["b1-100"]
+        stats = cog.statistics(expression="band1;band1+band2;band1-100")
+        assert stats["band1"]
+        assert stats["band1+band2"]
+        assert stats["band1-100"]
 
         with pytest.raises(MissingBands):
             cog.tile(238, 218, 9)
 
-        tile = cog.tile(238, 218, 9, bands="b1")
+        tile = cog.tile(238, 218, 9, bands="band1")
         assert tile.data.shape == (1, 256, 256)
-        assert tile.band_names == ["b1"]
+        assert tile.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = cog.tile(238, 218, 9, bands="b1", expression="b1*2")
+            tile = cog.tile(238, 218, 9, bands="band1", expression="band1*2")
         assert tile.data.shape == (1, 256, 256)
-        assert tile.band_names == ["b1*2"]
+        assert tile.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
             cog.part((-11.5, 24.5, -11.0, 25.0))
 
-        tile = cog.part((-11.5, 24.5, -11.0, 25.0), bands="b1")
+        tile = cog.part((-11.5, 24.5, -11.0, 25.0), bands="band1")
         assert tile.data.any()
-        assert tile.band_names == ["b1"]
+        assert tile.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = cog.part((-11.5, 24.5, -11.0, 25.0), bands="b1", expression="b1*2")
+            tile = cog.part(
+                (-11.5, 24.5, -11.0, 25.0), bands="band1", expression="band1*2"
+            )
         assert tile.data.any()
-        assert tile.band_names == ["b1*2"]
+        assert tile.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
             cog.preview()
 
-        tile = cog.preview(bands="b1")
+        tile = cog.preview(bands="band1")
         assert tile.data.any()
-        assert tile.band_names == ["b1"]
+        assert tile.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = cog.preview(bands="b1", expression="b1*2")
+            tile = cog.preview(bands="band1", expression="band1*2")
         assert tile.data.any()
-        assert tile.band_names == ["b1*2"]
+        assert tile.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
             cog.point(-11.5, 24.5)
 
-        assert cog.point(-11.5, 24.5, bands="b1")
+        assert cog.point(-11.5, 24.5, bands="band1")
 
         with pytest.warns(ExpressionMixingWarning):
-            assert cog.point(-11.5, 24.5, bands="b1", expression="b1*2")
+            assert cog.point(-11.5, 24.5, bands="band1", expression="band1*2")
 
         feat = {
             "type": "Feature",
@@ -162,11 +164,11 @@ def test_MultiBandReader():
         with pytest.raises(MissingBands):
             cog.feature(feat)
 
-        img = cog.feature(feat, bands="b1")
+        img = cog.feature(feat, bands="band1")
         assert img.data.any()
         assert not img.mask.all()
-        assert img.band_names == ["b1"]
+        assert img.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.feature(feat, bands="b1", expression="b1*2")
-            assert img.band_names == ["b1*2"]
+            img = cog.feature(feat, bands="band1", expression="band1*2")
+            assert img.band_names == ["band1*2"]

@@ -1,6 +1,8 @@
 
 # 4.0.0 (TBD)
 
+* add `apply_expression` method in `rio_tiler.models.ImageData` class
+
 **breaking changes**
 
 * remove python 3.7 support
@@ -8,6 +10,42 @@
 * `rio_tiler.readers.read()`, `rio_tiler.readers.part()`, `rio_tiler.readers.preview()` now return a ImageData object
 * remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.SpatialMixin` base class
 * remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.COGReader` (now defined as properties).
+* use `b` prefix for band names in `rio_tiler.models.ImageData` class (and in rio-tiler's readers)
+    ```python
+    # before
+    with COGReader("cog.tif") as cog:
+        img = cog.read()
+        print(cog.band_names)
+        >>> ["1", "2", "3"]
+
+        print(cog.info().band_metadata)
+        >>> [("1", {}), ("2", {}), ("3", {})]
+
+        print(cog.info().band_descriptions)
+        >>> [("1", ""), ("2", ""), ("3", "")]
+
+        print(list(cog.statistics()))
+        >>> ["1", "2", "3"]
+
+    # now
+    with COGReader("cog.tif") as cog:
+        img = cog.read()
+        print(img.band_names)
+        >>> ["b1", "b2", "b3"]
+
+        print(cog.info().band_metadata)
+        >>> [("b1", {}), ("b2", {}), ("b3", {})]
+
+        print(cog.info().band_descriptions)
+        >>> [("b1", ""), ("b2", ""), ("b3", "")]
+
+        print(list(cog.statistics()))
+        >>> ["b1", "b2", "b3"]
+
+    with STACReader("stac.json") as stac:
+        print(stac.tile(701, 102, 8, assets=("green", "red")).band_names)
+        >>> ["green_b1", "red_b1"]
+    ```
 
 # 3.1.6 (2022-07-22)
 

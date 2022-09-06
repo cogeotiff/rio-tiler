@@ -115,7 +115,7 @@ def test_info_valid():
         assert meta.offset
         assert meta.band_metadata
         band_meta = meta.band_metadata[0]
-        assert band_meta[0] == "1"
+        assert band_meta[0] == "b1"
         assert "STATISTICS_MAXIMUM" in band_meta[1]
 
     with COGReader(COG_ALPHA) as cog:
@@ -142,7 +142,7 @@ def test_tile_valid_default():
         img = cog.tile(43, 24, 7)
         assert img.data.shape == (1, 256, 256)
         assert img.mask.all()
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         # Validate that Tile and Part gives the same result
         tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
@@ -183,7 +183,7 @@ def test_tile_valid_default():
             ),
         )
         assert img.data.shape == (2, 256, 256)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
     # We are using a file that is aligned with the grid so no resampling should be involved
     with COGReader(COG_WEB) as cog:
@@ -267,7 +267,7 @@ def test_area_valid():
     with COGReader(COG_NODATA) as cog:
         img = cog.part(bbox)
         assert img.data.shape == (1, 11, 40)
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
         assert data.shape == (1, 28, 30)
@@ -295,7 +295,7 @@ def test_area_valid():
             ),
         )
         assert img.data.shape == (2, 11, 40)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
 
 def test_preview_valid():
@@ -303,7 +303,7 @@ def test_preview_valid():
     with COGReader(COGEO) as cog:
         img = cog.preview(max_size=128)
         assert img.data.shape == (1, 128, 128)
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         data, mask = cog.preview()
         assert data.shape == (1, 1024, 1021)
@@ -328,7 +328,7 @@ def test_preview_valid():
             ),
         )
         assert img.data.shape == (2, 128, 128)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
 
 def test_statistics():
@@ -336,21 +336,21 @@ def test_statistics():
     with COGReader(COGEO) as cog:
         stats = cog.statistics()
         assert len(stats) == 1
-        assert isinstance(stats["1"], BandStatistics)
-        assert stats["1"].percentile_2
-        assert stats["1"].percentile_98
+        assert isinstance(stats["b1"], BandStatistics)
+        assert stats["b1"].percentile_2
+        assert stats["b1"].percentile_98
 
     with COGReader(COGEO) as cog:
         stats = cog.statistics(percentiles=[3])
-        assert stats["1"].percentile_3
+        assert stats["b1"].percentile_3
 
     with COGReader(COGEO) as cog:
         stats = cog.statistics(percentiles=[3])
-        assert stats["1"].percentile_3
+        assert stats["b1"].percentile_3
 
     with COGReader(COG_CMAP) as cog:
         stats = cog.statistics(categorical=True)
-        assert stats["1"].histogram[1] == [
+        assert stats["b1"].histogram[1] == [
             1.0,
             3.0,
             4.0,
@@ -365,7 +365,7 @@ def test_statistics():
         ]
 
         stats = cog.statistics(categorical=True, categories=[1, 3])
-        assert stats["1"].histogram[1] == [
+        assert stats["b1"].histogram[1] == [
             1.0,
             3.0,
         ]
@@ -373,7 +373,7 @@ def test_statistics():
     # make sure kwargs are passed to `preview`
     with COGReader(COGEO) as cog:
         stats = cog.statistics(width=100, height=100, max_size=None)
-        assert stats["1"].count == 10000.0
+        assert stats["b1"].count == 10000.0
 
     # Check results for expression
     with COGReader(COGEO) as cog:
@@ -451,7 +451,7 @@ def test_cog_with_internal_gcps():
 
         metadata = cog.info()
         assert len(metadata.band_metadata) == 1
-        assert metadata.band_descriptions == [("1", "")]
+        assert metadata.band_descriptions == [("b1", "")]
 
         tile_z = 8
         tile_x = 183
@@ -479,7 +479,7 @@ def test_cog_with_internal_gcps():
 
                 metadata = cog.info()
                 assert len(metadata.band_metadata) == 1
-                assert metadata.band_descriptions == [("1", "")]
+                assert metadata.band_descriptions == [("b1", "")]
 
                 tile_z = 8
                 tile_x = 183
@@ -611,7 +611,7 @@ def test_feature_valid():
     with COGReader(COG_NODATA) as cog:
         img = cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         img = cog.feature(feature, dst_crs=cog.dataset.crs, max_size=1024)
         assert img.data.shape == (1, 1024, 869)
@@ -642,7 +642,7 @@ def test_feature_valid():
             max_size=1024,
         )
         assert img.data.shape == (2, 348, 1024)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
         # feature overlaping on mask area
         mask_feat = {

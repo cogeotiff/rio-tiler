@@ -69,10 +69,10 @@ def test_mosaic_tiler():
     assert t.dtype == m.dtype
 
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
-    assert img.band_names == ["1", "2", "3"]
+    assert img.band_names == ["b1", "b2", "b3"]
 
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, indexes=[1])
-    assert img.band_names == ["1"]
+    assert img.band_names == ["b1"]
 
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, expression="b1*3")
     assert img.band_names == ["b1*3"]
@@ -281,7 +281,7 @@ def test_stac_mosaic_tiler(rio):
         assets="green",
         threads=0,
     )
-    assert img.band_names == ["green_1"]
+    assert img.band_names == ["green_b1"]
 
     img, _ = mosaic.mosaic_reader(
         [stac_asset],
@@ -301,10 +301,10 @@ def test_stac_mosaic_tiler(rio):
         71,
         102,
         8,
-        expression="green*2",
+        expression="green_b1*2",
         threads=0,
     )
-    assert img.band_names == ["green*2"]
+    assert img.band_names == ["green_b1*2"]
 
 
 def test_mosaic_tiler_Stdev():
