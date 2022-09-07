@@ -226,6 +226,22 @@ def test_tile_valid(rio):
         assert img_check.band_names == ["green_b1*2", "red_b1+100"]
         numpy.array_equal(img.data, img_check.data[0] / img_check.data[1])
 
+        # Make sure we raise an error when expression bands do not match data shape
+        with pytest.raises(ValueError):
+            img = stac.tile(
+                71,
+                102,
+                8,
+                expression="green/red",
+                asset_indexes={
+                    "green": (
+                        1,
+                        1,
+                    ),
+                    "red": 1,
+                },
+            )
+
 
 @patch("rio_tiler.io.cogeo.rasterio")
 def test_part_valid(rio):

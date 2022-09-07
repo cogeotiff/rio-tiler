@@ -74,6 +74,11 @@ def apply_expression(
         numpy.array: output data.
 
     """
+    if len(bands) != data.shape[0]:
+        raise ValueError(
+            f"Incompatible number of bands ({bands}) and data shape {data.shape}"
+        )
+
     return numpy.array(
         [
             numpy.nan_to_num(

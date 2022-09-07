@@ -639,7 +639,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 return cog.point(*args, indexes=idx, expression=expr, **kwargs)
 
         data = multi_values(assets, _reader, lon, lat, **kwargs)
-        values = [numpy.array(d) for _, d in data.items()]
+        values = numpy.array([numpy.array(d) for _, d in data.items()])
         if expression:
             blocks = get_expression_blocks(expression)
             values = apply_expression(blocks, assets, values)
@@ -1061,7 +1061,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         data = multi_values(bands, _reader, lon, lat, **kwargs)
 
-        values = [numpy.array(d) for _, d in data.items()]
+        values = numpy.array([numpy.array(d) for _, d in data.items()])
         if expression:
             blocks = get_expression_blocks(expression)
             values = apply_expression(blocks, bands, values)
