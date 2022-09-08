@@ -468,7 +468,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         img = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs)
         if expression:
-            img.apply_expression(expression, bands=assets)  # type: ignore
+            return img.apply_expression(expression, bands=assets)  # type: ignore
 
         return img
 
@@ -526,7 +526,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         img = multi_arrays(assets, _reader, bbox, **kwargs)
         if expression:
-            img.apply_expression(expression, bands=assets)  # type: ignore
+            return img.apply_expression(expression, bands=assets)  # type: ignore
 
         return img
 
@@ -582,7 +582,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         img = multi_arrays(assets, _reader, **kwargs)
         if expression:
-            img.apply_expression(expression, bands=assets)  # type: ignore
+            return img.apply_expression(expression, bands=assets)  # type: ignore
 
         return img
 
@@ -700,7 +700,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         img = multi_arrays(assets, _reader, shape, **kwargs)
         if expression:
-            img.apply_expression(expression, bands=assets)  # type: ignore
+            return img.apply_expression(expression, bands=assets)  # type: ignore
 
         return img
 
@@ -914,7 +914,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
@@ -964,7 +964,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = multi_arrays(bands, _reader, bbox, **kwargs)
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
@@ -1012,7 +1012,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = multi_arrays(bands, _reader, **kwargs)
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
@@ -1114,6 +1114,6 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = multi_arrays(bands, _reader, shape, **kwargs)
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img

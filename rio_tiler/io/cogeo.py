@@ -443,7 +443,7 @@ class COGReader(BaseReader):
         img.assets = [self.input]
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
@@ -495,7 +495,7 @@ class COGReader(BaseReader):
         img.assets = [self.input]
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
@@ -543,7 +543,7 @@ class COGReader(BaseReader):
         if expression and indexes:
             blocks = get_expression_blocks(expression)
             bands = [f"b{bidx}" for bidx in indexes]
-            point = apply_expression(blocks, bands, numpy.array(point)).tolist()
+            return apply_expression(blocks, bands, numpy.array(point)).tolist()
 
         return point
 
@@ -637,7 +637,7 @@ class COGReader(BaseReader):
         img.assets = [self.input]
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
