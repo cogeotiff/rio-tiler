@@ -232,20 +232,24 @@ def test_point_valid():
     lon = -56.624124590533825
     lat = 73.52687881825946
     with COGReader(COG_NODATA) as cog:
-        pts = cog.point(lon, lat)
+        pts, names = cog.point(lon, lat)
         assert len(pts) == 1
+        assert names == ["b1"]
 
-        pts = cog.point(lon, lat, expression="b1*2;b1-100")
+        pts, names = cog.point(lon, lat, expression="b1*2;b1-100")
         assert len(pts) == 2
+        assert names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            pts = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
+            pts, names = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
             assert len(pts) == 1
+            assert names == ["b1*2"]
 
-        pts = cog.point(lon, lat, indexes=1)
+        pts, names = cog.point(lon, lat, indexes=1)
         assert len(pts) == 1
+        assert names == ["b1"]
 
-        pts = cog.point(
+        pts, names = cog.point(
             lon,
             lat,
             indexes=(
@@ -254,6 +258,7 @@ def test_point_valid():
             ),
         )
         assert len(pts) == 2
+        assert names == ["b1", "b1"]
 
 
 def test_area_valid():
@@ -406,11 +411,11 @@ def test_COGReader_Options():
         assert not numpy.array_equal(data_default, data)
 
     with COGReader(COG_SCALE, unscale=True) as cog:
-        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
+        p, _ = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
         assert round(p[0], 3) == 1000.892
 
         # passing unscale in method should overwrite the defaults
-        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
+        p, _ = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
         assert p[0] == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
@@ -432,10 +437,10 @@ def test_COGReader_Options():
     lon = -56.624124590533825
     lat = 73.52687881825946
     with COGReader(COG_NODATA, post_process=callback) as cog:
-        pts = cog.point(lon, lat)
+        pts, _ = cog.point(lon, lat)
 
     with COGReader(COG_NODATA) as cog:
-        pts_init = cog.point(lon, lat)
+        pts_init, _ = cog.point(lon, lat)
     assert pts[0] == pts_init[0] * 2
 
 

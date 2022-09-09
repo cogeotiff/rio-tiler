@@ -289,22 +289,10 @@ def test_stac_mosaic_tiler(rio):
         71,
         102,
         8,
-        assets=["green"],
-        asset_expression={"green": "b1*2"},
+        expression="green_b1*2",
         threads=0,
     )
     assert img.band_names == ["green_b1*2"]
-
-    img, _ = mosaic.mosaic_reader(
-        [stac_asset],
-        _reader,
-        71,
-        102,
-        8,
-        expression="green*2",
-        threads=0,
-    )
-    assert img.band_names == ["green*2"]
 
 
 def test_mosaic_tiler_Stdev():
