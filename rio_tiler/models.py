@@ -276,7 +276,7 @@ class ImageData:
             self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
 
     def apply_expression(self, expression: str) -> "ImageData":
-        """Apply expression in place."""
+        """Apply expression to the image data."""
         blocks = get_expression_blocks(expression)
         return ImageData(
             apply_expression(blocks, self.band_names, self.data),
