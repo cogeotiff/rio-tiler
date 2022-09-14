@@ -275,12 +275,18 @@ class ImageData:
         for ops in parse_operations(color_formula):
             self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
 
-    def apply_expression(self, expression: str, bands: Optional[List[str]] = None):
-        """Apply expression in place."""
+    def apply_expression(self, expression: str) -> "ImageData":
+        """Apply expression to the image data."""
         blocks = get_expression_blocks(expression)
-        bands = bands or self.band_names
-        self.data = apply_expression(blocks, bands, self.data)
-        self.band_names = blocks
+        return ImageData(
+            apply_expression(blocks, self.band_names, self.data),
+            self.mask,
+            assets=self.assets,
+            crs=self.crs,
+            bounds=self.bounds,
+            band_names=blocks,
+            metadata=self.metadata,
+        )
 
     def post_process(
         self,

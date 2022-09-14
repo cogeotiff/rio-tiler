@@ -2,7 +2,7 @@
 
 import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
@@ -443,7 +443,7 @@ class COGReader(BaseReader):
         img.assets = [self.input]
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
@@ -495,7 +495,7 @@ class COGReader(BaseReader):
         img.assets = [self.input]
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 
@@ -507,7 +507,7 @@ class COGReader(BaseReader):
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
-    ) -> List:
+    ) -> Tuple[List, List[str]]:
         """Read a pixel value from a COG.
 
         Args:
@@ -520,6 +520,7 @@ class COGReader(BaseReader):
 
         Returns:
             list: Pixel value per band indexes.
+            list: band names
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -536,16 +537,18 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        point = reader.point(
+        values, band_names = reader.point(
             self.dataset, (lon, lat), indexes=indexes, coord_crs=coord_crs, **kwargs
         )
 
-        if expression and indexes:
+        if expression:
             blocks = get_expression_blocks(expression)
-            bands = [f"b{bidx}" for bidx in indexes]
-            point = apply_expression(blocks, bands, numpy.array(point)).tolist()
+            return (
+                apply_expression(blocks, band_names, numpy.array(values)).tolist(),
+                blocks,
+            )
 
-        return point
+        return values, band_names
 
     def feature(
         self,
@@ -637,7 +640,7 @@ class COGReader(BaseReader):
         img.assets = [self.input]
 
         if expression:
-            img.apply_expression(expression)
+            return img.apply_expression(expression)
 
         return img
 

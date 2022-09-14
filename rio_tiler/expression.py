@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from typing import List, Sequence, Tuple, Union
+from typing import List, Sequence, Tuple
 
 import numexpr
 import numpy
@@ -59,7 +59,7 @@ def get_expression_blocks(expression: str) -> List[str]:
 
 def apply_expression(
     blocks: Sequence[str],
-    bands: Sequence[Union[str, int]],
+    bands: Sequence[str],
     data: numpy.ndarray,
 ) -> numpy.ndarray:
     """Apply rio-tiler expression.

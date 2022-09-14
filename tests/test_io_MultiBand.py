@@ -137,7 +137,17 @@ def test_MultiBandReader():
         with pytest.raises(MissingBands):
             cog.point(-11.5, 24.5)
 
-        assert cog.point(-11.5, 24.5, bands="band1")
+        pts, names = cog.point(-11.5, 24.5, bands="band1")
+        assert len(pts) == 1
+        assert names == ["band1"]
+
+        pts, names = cog.point(-11.5, 24.5, bands=("band1", "band2"))
+        assert len(pts) == 2
+        assert names == ["band1", "band2"]
+
+        pts, names = cog.point(-11.5, 24.5, expression="band1/band2")
+        assert len(pts) == 1
+        assert names == ["band1/band2"]
 
         with pytest.warns(ExpressionMixingWarning):
             assert cog.point(-11.5, 24.5, bands="band1", expression="band1*2")
