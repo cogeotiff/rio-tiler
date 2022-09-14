@@ -271,8 +271,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
-        assets = "|".join([rf"\b{asset}\B" for asset in self.assets])
-        _re = re.compile(assets.replace("\\\\", "\\"))
+        assets = "|".join([asset for asset in self.assets])
+        _re = re.compile(rf"\b({assets})_b\d+")
         return tuple(set(re.findall(_re, expression)))
 
     def info(  # type: ignore
@@ -383,7 +383,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         if asset_expression:
-            _AssetExpressionWarning
+            _AssetExpressionWarning()
 
         if not expression:
             if not assets:
@@ -444,7 +444,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         if asset_expression:
-            _AssetExpressionWarning
+            _AssetExpressionWarning()
 
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
@@ -508,7 +508,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         if asset_expression:
-            _AssetExpressionWarning
+            _AssetExpressionWarning()
 
         if isinstance(assets, str):
             assets = (assets,)
@@ -565,7 +565,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         if asset_expression:
-            _AssetExpressionWarning
+            _AssetExpressionWarning()
 
         if isinstance(assets, str):
             assets = (assets,)
@@ -627,7 +627,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         if asset_expression:
-            _AssetExpressionWarning
+            _AssetExpressionWarning()
 
         if isinstance(assets, str):
             assets = (assets,)
@@ -700,7 +700,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         """
         if asset_expression:
-            _AssetExpressionWarning
+            _AssetExpressionWarning()
 
         if isinstance(assets, str):
             assets = (assets,)
