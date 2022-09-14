@@ -121,3 +121,17 @@ def test_merge_with_diffsize():
         img2 = ImageData(numpy.zeros((1, 256, 256)))
         img = ImageData.create_from_list([img1, img2])
     assert len(w) == 0
+
+
+def test_apply_expression():
+    """Apply expression"""
+    img = ImageData(numpy.zeros((2, 256, 256)))
+    img2 = img.apply_expression("b1+b2")
+    assert img.count == 2
+    assert img.width == 256
+    assert img.height == 256
+    assert img.band_names == ["b1", "b2"]
+    assert img2.count == 1
+    assert img2.width == 256
+    assert img2.height == 256
+    assert img2.band_names == ["b1+b2"]

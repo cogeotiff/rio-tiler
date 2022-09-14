@@ -115,7 +115,7 @@ def test_info_valid():
         assert meta.offset
         assert meta.band_metadata
         band_meta = meta.band_metadata[0]
-        assert band_meta[0] == "1"
+        assert band_meta[0] == "b1"
         assert "STATISTICS_MAXIMUM" in band_meta[1]
 
     with COGReader(COG_ALPHA) as cog:
@@ -142,7 +142,7 @@ def test_tile_valid_default():
         img = cog.tile(43, 24, 7)
         assert img.data.shape == (1, 256, 256)
         assert img.mask.all()
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         # Validate that Tile and Part gives the same result
         tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
@@ -183,7 +183,7 @@ def test_tile_valid_default():
             ),
         )
         assert img.data.shape == (2, 256, 256)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
     # We are using a file that is aligned with the grid so no resampling should be involved
     with COGReader(COG_WEB) as cog:
@@ -232,20 +232,24 @@ def test_point_valid():
     lon = -56.624124590533825
     lat = 73.52687881825946
     with COGReader(COG_NODATA) as cog:
-        pts = cog.point(lon, lat)
+        pts, names = cog.point(lon, lat)
         assert len(pts) == 1
+        assert names == ["b1"]
 
-        pts = cog.point(lon, lat, expression="b1*2;b1-100")
+        pts, names = cog.point(lon, lat, expression="b1*2;b1-100")
         assert len(pts) == 2
+        assert names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            pts = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
+            pts, names = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
             assert len(pts) == 1
+            assert names == ["b1*2"]
 
-        pts = cog.point(lon, lat, indexes=1)
+        pts, names = cog.point(lon, lat, indexes=1)
         assert len(pts) == 1
+        assert names == ["b1"]
 
-        pts = cog.point(
+        pts, names = cog.point(
             lon,
             lat,
             indexes=(
@@ -254,6 +258,7 @@ def test_point_valid():
             ),
         )
         assert len(pts) == 2
+        assert names == ["b1", "b1"]
 
 
 def test_area_valid():
@@ -267,7 +272,7 @@ def test_area_valid():
     with COGReader(COG_NODATA) as cog:
         img = cog.part(bbox)
         assert img.data.shape == (1, 11, 40)
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
         assert data.shape == (1, 28, 30)
@@ -295,7 +300,7 @@ def test_area_valid():
             ),
         )
         assert img.data.shape == (2, 11, 40)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
 
 def test_preview_valid():
@@ -303,7 +308,7 @@ def test_preview_valid():
     with COGReader(COGEO) as cog:
         img = cog.preview(max_size=128)
         assert img.data.shape == (1, 128, 128)
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         data, mask = cog.preview()
         assert data.shape == (1, 1024, 1021)
@@ -328,7 +333,7 @@ def test_preview_valid():
             ),
         )
         assert img.data.shape == (2, 128, 128)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
 
 def test_statistics():
@@ -336,21 +341,21 @@ def test_statistics():
     with COGReader(COGEO) as cog:
         stats = cog.statistics()
         assert len(stats) == 1
-        assert isinstance(stats["1"], BandStatistics)
-        assert stats["1"].percentile_2
-        assert stats["1"].percentile_98
+        assert isinstance(stats["b1"], BandStatistics)
+        assert stats["b1"].percentile_2
+        assert stats["b1"].percentile_98
 
     with COGReader(COGEO) as cog:
         stats = cog.statistics(percentiles=[3])
-        assert stats["1"].percentile_3
+        assert stats["b1"].percentile_3
 
     with COGReader(COGEO) as cog:
         stats = cog.statistics(percentiles=[3])
-        assert stats["1"].percentile_3
+        assert stats["b1"].percentile_3
 
     with COGReader(COG_CMAP) as cog:
         stats = cog.statistics(categorical=True)
-        assert stats["1"].histogram[1] == [
+        assert stats["b1"].histogram[1] == [
             1.0,
             3.0,
             4.0,
@@ -365,7 +370,7 @@ def test_statistics():
         ]
 
         stats = cog.statistics(categorical=True, categories=[1, 3])
-        assert stats["1"].histogram[1] == [
+        assert stats["b1"].histogram[1] == [
             1.0,
             3.0,
         ]
@@ -373,7 +378,7 @@ def test_statistics():
     # make sure kwargs are passed to `preview`
     with COGReader(COGEO) as cog:
         stats = cog.statistics(width=100, height=100, max_size=None)
-        assert stats["1"].count == 10000.0
+        assert stats["b1"].count == 10000.0
 
     # Check results for expression
     with COGReader(COGEO) as cog:
@@ -406,11 +411,11 @@ def test_COGReader_Options():
         assert not numpy.array_equal(data_default, data)
 
     with COGReader(COG_SCALE, unscale=True) as cog:
-        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
+        p, _ = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
         assert round(p[0], 3) == 1000.892
 
         # passing unscale in method should overwrite the defaults
-        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
+        p, _ = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
         assert p[0] == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
@@ -432,10 +437,10 @@ def test_COGReader_Options():
     lon = -56.624124590533825
     lat = 73.52687881825946
     with COGReader(COG_NODATA, post_process=callback) as cog:
-        pts = cog.point(lon, lat)
+        pts, _ = cog.point(lon, lat)
 
     with COGReader(COG_NODATA) as cog:
-        pts_init = cog.point(lon, lat)
+        pts_init, _ = cog.point(lon, lat)
     assert pts[0] == pts_init[0] * 2
 
 
@@ -451,7 +456,7 @@ def test_cog_with_internal_gcps():
 
         metadata = cog.info()
         assert len(metadata.band_metadata) == 1
-        assert metadata.band_descriptions == [("1", "")]
+        assert metadata.band_descriptions == [("b1", "")]
 
         tile_z = 8
         tile_x = 183
@@ -479,7 +484,7 @@ def test_cog_with_internal_gcps():
 
                 metadata = cog.info()
                 assert len(metadata.band_metadata) == 1
-                assert metadata.band_descriptions == [("1", "")]
+                assert metadata.band_descriptions == [("b1", "")]
 
                 tile_z = 8
                 tile_x = 183
@@ -611,7 +616,7 @@ def test_feature_valid():
     with COGReader(COG_NODATA) as cog:
         img = cog.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
-        assert img.band_names == ["1"]
+        assert img.band_names == ["b1"]
 
         img = cog.feature(feature, dst_crs=cog.dataset.crs, max_size=1024)
         assert img.data.shape == (1, 1024, 869)
@@ -642,7 +647,7 @@ def test_feature_valid():
             max_size=1024,
         )
         assert img.data.shape == (2, 348, 1024)
-        assert img.band_names == ["1", "1"]
+        assert img.band_names == ["b1", "b1"]
 
         # feature overlaping on mask area
         mask_feat = {

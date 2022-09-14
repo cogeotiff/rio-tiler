@@ -71,6 +71,8 @@ def read(
                 "Alpha band was removed from the output data array", AlphaBandWarning
             )
 
+    band_names = [f"b{idx}" for idx in indexes]
+
     vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
     if nodata is not None:
@@ -127,6 +129,7 @@ def read(
             mask,
             bounds=windows.bounds(window, vrt.transform),
             crs=vrt.crs,
+            band_names=band_names,
         )
 
 
@@ -324,7 +327,7 @@ def point(
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
     ] = None,
-) -> List:
+) -> Tuple[List, List[str]]:
     """Read a pixel value for a point.
 
     Args:
@@ -341,6 +344,7 @@ def point(
 
     Returns:
         list: Pixel value per band indexes.
+        list: band names
 
     """
     if isinstance(indexes, int):
@@ -356,6 +360,8 @@ def point(
         raise PointOutsideBounds("Point is outside dataset bounds")
 
     indexes = indexes if indexes is not None else src_dst.indexes
+
+    band_names = [f"b{idx}" for idx in indexes]
 
     vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
     nodata = nodata if nodata is not None else src_dst.nodata
@@ -383,4 +389,4 @@ def point(
     if post_process:
         point_values, _ = post_process(point_values, mask)
 
-    return point_values.tolist()
+    return point_values.tolist(), band_names

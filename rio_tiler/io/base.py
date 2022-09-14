@@ -1,6 +1,7 @@
 """rio_tiler.io.base: ABC class for rio-tiler readers."""
 
 import abc
+import itertools
 import re
 import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
@@ -23,6 +24,13 @@ from ..models import BandStatistics, ImageData, Info
 from ..tasks import multi_arrays, multi_values
 from ..types import BBox, Indexes
 from ..utils import get_array_statistics
+
+
+def _AssetExpressionWarning():
+    warnings.warn(
+        "asset_expression is deprecated and will be removed in 4.0. Use pure Expression",
+        DeprecationWarning,
+    )
 
 
 @attr.s
@@ -194,7 +202,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def point(self, lon: float, lat: float, **kwargs: Any) -> List:
+    def point(self, lon: float, lat: float, **kwargs: Any) -> Tuple[List, List[str]]:
         """Read a value from a Dataset.
 
         Args:
@@ -203,6 +211,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         Returns:
             list: Pixel value per bands/assets.
+            list: band names
 
         """
         ...
@@ -262,8 +271,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
-        assets = "|".join([rf"\b{asset}\b" for asset in self.assets])
-        _re = re.compile(assets.replace("\\\\", "\\"))
+        assets = "|".join([asset for asset in self.assets])
+        _re = re.compile(rf"\b({assets})_b\d+")
         return tuple(set(re.findall(_re, expression)))
 
     def info(  # type: ignore
@@ -360,7 +369,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).
+            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             categorical (bool): treat input data as categorical data. Defaults to False.
             categories (list of numbers, optional): list of categories to return value for.
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
@@ -373,6 +382,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
+        if asset_expression:
+            _AssetExpressionWarning()
+
         if not expression:
             if not assets:
                 warnings.warn(
@@ -385,7 +397,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets=assets,
             expression=expression,
             asset_indexes=asset_indexes,
-            asset_expression=asset_expression,
             max_size=max_size,
             **kwargs,
         )
@@ -425,13 +436,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).
+            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.tile` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
+        if asset_expression:
+            _AssetExpressionWarning()
+
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
@@ -455,35 +469,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         asset_indexes = asset_indexes or {}
-        asset_expression = asset_expression or {}
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
+            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.tile(
-                    *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
-                    expression=asset_expression.get(asset),  # type: ignore
-                    **kwargs,
-                )
+                data = cog.tile(*args, indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
-        output = multi_arrays(
-            assets,
-            _reader,
-            tile_x,
-            tile_y,
-            tile_z,
-            **kwargs,
-        )
-
+        img = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs)
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, assets, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img
 
     def part(
         self,
@@ -501,13 +500,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).
+            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).  **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
+        if asset_expression:
+            _AssetExpressionWarning()
+
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -526,28 +528,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         asset_indexes = asset_indexes or {}
-        asset_expression = asset_expression or {}
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
+            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.part(
-                    *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
-                    expression=asset_expression.get(asset),  # type: ignore
-                    **kwargs,
-                )
+                data = cog.part(*args, indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
-        output = multi_arrays(assets, _reader, bbox, **kwargs)
-
+        img = multi_arrays(assets, _reader, bbox, **kwargs)
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, assets, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img
 
     def preview(
         self,
@@ -563,13 +557,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).
+            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.preview` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
+        if asset_expression:
+            _AssetExpressionWarning()
+
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -588,27 +585,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         asset_indexes = asset_indexes or {}
-        asset_expression = asset_expression or {}
 
         def _reader(asset: str, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
+            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.preview(
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
-                    expression=asset_expression.get(asset),  # type: ignore
-                    **kwargs,
-                )
+                data = cog.preview(indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
-        output = multi_arrays(assets, _reader, **kwargs)
-
+        img = multi_arrays(assets, _reader, **kwargs)
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, assets, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img
 
     def point(
         self,
@@ -619,7 +609,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
         asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         **kwargs: Any,
-    ) -> List:
+    ) -> Tuple[List, List[str]]:
         """Read pixel value from multiple assets.
 
         Args:
@@ -628,13 +618,17 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).
+            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
             list: Pixel values per assets.
+            list: band names
 
         """
+        if asset_expression:
+            _AssetExpressionWarning()
+
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -653,26 +647,34 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         asset_indexes = asset_indexes or {}
-        asset_expression = asset_expression or {}
 
-        def _reader(asset: str, *args, **kwargs: Any) -> Dict:
+        def _reader(asset: str, *args, **kwargs: Any) -> Tuple[List, List[str]]:
             url = self._get_asset_url(asset)
+            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.point(
-                    *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
-                    expression=asset_expression.get(asset),  # type: ignore
-                    **kwargs,
+                points, band_names = cog.point(*args, indexes=idx, **kwargs)
+                return (
+                    points,
+                    [f"{asset}_{n}" for n in band_names],
                 )
 
         data = multi_values(assets, _reader, lon, lat, **kwargs)
+        values, band_names = zip(*[(v, b) for _, (v, b) in data.items()])
 
-        values = [numpy.array(d) for _, d in data.items()]
+        # Create an array with all the point values
+        values = numpy.array(list(itertools.chain.from_iterable(values)))
+
+        # Create a list of all point's band name
+        band_names = list(itertools.chain.from_iterable(band_names))
+
         if expression:
             blocks = get_expression_blocks(expression)
-            values = apply_expression(blocks, assets, values)
+            return (
+                apply_expression(blocks, band_names, values).tolist(),
+                blocks,
+            )
 
-        return [v.tolist() for v in values]
+        return values.tolist(), band_names
 
     def feature(
         self,
@@ -690,13 +692,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).
+            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.feature` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
+        if asset_expression:
+            _AssetExpressionWarning()
+
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -715,28 +720,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         asset_indexes = asset_indexes or {}
-        asset_expression = asset_expression or {}
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
+            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.feature(
-                    *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
-                    expression=asset_expression.get(asset),  # type: ignore
-                    **kwargs,
-                )
+                data = cog.feature(*args, indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
-        output = multi_arrays(assets, _reader, shape, **kwargs)
-
+        img = multi_arrays(assets, _reader, shape, **kwargs)
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, assets, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img
 
 
 @attr.s
@@ -942,17 +939,15 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.tile(*args, **kwargs)
-                data.band_names = [band]
+                data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
-        output = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
+        img = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
 
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, bands, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img
 
     def part(
         self,
@@ -994,17 +989,15 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.part(*args, **kwargs)
-                data.band_names = [band]
+                data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
-        output = multi_arrays(bands, _reader, bbox, **kwargs)
+        img = multi_arrays(bands, _reader, bbox, **kwargs)
 
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, bands, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img
 
     def preview(
         self,
@@ -1044,17 +1037,15 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.preview(**kwargs)
-                data.band_names = [band]
+                data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
-        output = multi_arrays(bands, _reader, **kwargs)
+        img = multi_arrays(bands, _reader, **kwargs)
 
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, bands, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img
 
     def point(
         self,
@@ -1063,7 +1054,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
-    ) -> List:
+    ) -> Tuple[List, List[str]]:
         """Read a pixel values from multiple bands.
 
         Args:
@@ -1075,6 +1066,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         Returns:
             list: Pixel value per bands.
+            list: band names
 
         """
         if isinstance(bands, str):
@@ -1094,19 +1086,27 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(band: str, *args, **kwargs: Any) -> Dict:
+        def _reader(band: str, *args, **kwargs: Any) -> Tuple[numpy.array, List[str]]:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.point(*args, **kwargs)[0]  # We only return the first value
+                values, _ = cog.point(*args, **kwargs)
+                return (
+                    values[0],  # We only return the first value
+                    [band],
+                )
 
         data = multi_values(bands, _reader, lon, lat, **kwargs)
+        values, band_names = zip(*[(v, b) for b, (v, _) in data.items()])
+        values = numpy.array(values)
 
-        values = [numpy.array(d) for _, d in data.items()]
         if expression:
             blocks = get_expression_blocks(expression)
-            values = apply_expression(blocks, bands, values)
+            return (
+                apply_expression(blocks, band_names, values).tolist(),
+                blocks,
+            )
 
-        return [v.tolist() for v in values]
+        return [v.tolist() for v in values], list(band_names)
 
     def feature(
         self,
@@ -1148,14 +1148,12 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
                 data = cog.feature(*args, **kwargs)
-                data.band_names = [band]
+                data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
-        output = multi_arrays(bands, _reader, shape, **kwargs)
+        img = multi_arrays(bands, _reader, shape, **kwargs)
 
         if expression:
-            blocks = get_expression_blocks(expression)
-            output.data = apply_expression(blocks, bands, output.data)
-            output.band_names = blocks
+            return img.apply_expression(expression)
 
-        return output
+        return img

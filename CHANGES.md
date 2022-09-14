@@ -1,6 +1,8 @@
 
 # 4.0.0 (TBD)
 
+* add `apply_expression` method in `rio_tiler.models.ImageData` class
+
 **breaking changes**
 
 * remove python 3.7 support
@@ -8,6 +10,99 @@
 * `rio_tiler.readers.read()`, `rio_tiler.readers.part()`, `rio_tiler.readers.preview()` now return a ImageData object
 * remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.SpatialMixin` base class
 * remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.COGReader` (now defined as properties).
+* use `b` prefix for band names in `rio_tiler.models.ImageData` class (and in rio-tiler's readers)
+    ```python
+    # before
+    with COGReader("cog.tif") as cog:
+        img = cog.read()
+        print(cog.band_names)
+        >>> ["1", "2", "3"]
+
+        print(cog.info().band_metadata)
+        >>> [("1", {}), ("2", {}), ("3", {})]
+
+        print(cog.info().band_descriptions)
+        >>> [("1", ""), ("2", ""), ("3", "")]
+
+        print(list(cog.statistics()))
+        >>> ["1", "2", "3"]
+
+    # now
+    with COGReader("cog.tif") as cog:
+        img = cog.read()
+        print(img.band_names)
+        >>> ["b1", "b2", "b3"]
+
+        print(cog.info().band_metadata)
+        >>> [("b1", {}), ("b2", {}), ("b3", {})]
+
+        print(cog.info().band_descriptions)
+        >>> [("b1", ""), ("b2", ""), ("b3", "")]
+
+        print(list(cog.statistics()))
+        >>> ["b1", "b2", "b3"]
+
+    with STACReader("stac.json") as stac:
+        print(stac.tile(701, 102, 8, assets=("green", "red")).band_names)
+        >>> ["green_b1", "red_b1"]
+    ```
+
+* depreciate `asset_expression` in MultiBaseReader. Use of expression is now possible
+* `expression` for MultiBaseReader must be in form of `{asset}_b{index}`
+
+    ```python
+    # before
+    with STACReader("stac.json") as stac:
+        stac.tile(701, 102, 8, expression="green/red")
+
+    # now
+    with STACReader("stac.json") as stac:
+        stac.tile(701, 102, 8, expression="green_b1/red_b1")
+    ```
+
+* `rio_tiler.reader.point()` (and all Reader's point methods) now return a **Tuple** of values and band names
+
+    ```python
+    # before
+    with rasterio.open("cog.tif") as src::
+        v = rio_tiler.reader.point(10.20, -42.0)
+        print(v)
+        >>> [0, 0, 0]
+
+    with COGReader("cog.tif") as cog:
+        print(cog.point(10.20, -42.0))
+        >>> [0, 0, 0]
+
+    # now
+    with rasterio.open("cog.tif") as src::
+        v, band_names = rio_tiler.reader.point(10.20, -42)
+        print(v)
+        >>> [0, 0, 0]
+        print(band_names)
+        >>> ["b1", "b2", "b3"]
+
+    with COGReader("cog.tif") as cog:
+        print(cog.point(10.20, -42.0))
+        >>> ([0, 0, 0], ["b1", "b2", "b3"])
+    ```
+
+* `MultiBaseReader.point()` method now returns data as flat (merged) list (instead of a list of list)
+
+    ```python
+    # before
+    with STACReader("stac.json") as stac:
+        pt = stac.point(10.20, -42, assets=("green", "red"))
+        print(pt)
+        >>> [[0], [0]]
+
+    # now
+    with STACReader("stac.json") as stac:
+        pt, names = stac.point(10.20, -42, assets=("green", "red"))
+        print(pt)
+        >>> [0, 0]
+        print(names)
+        >>> ["green_b1", "red_b1"]
+    ```
 
 # 3.1.6 (2022-07-22)
 

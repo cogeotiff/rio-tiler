@@ -2,7 +2,7 @@
 
 import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
@@ -23,13 +23,7 @@ from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBoun
 from ..expression import apply_expression, get_expression_blocks, parse_expression
 from ..models import BandStatistics, ImageData, Info
 from ..types import BBox, DataMaskType, Indexes, NoData, NumType
-from ..utils import (
-    create_cutline,
-    get_array_statistics,
-    get_bands_names,
-    has_alpha_band,
-    has_mask_band,
-)
+from ..utils import create_cutline, get_array_statistics, has_alpha_band, has_mask_band
 from .base import BaseReader
 
 
@@ -259,10 +253,10 @@ class COGReader(BaseReader):
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
             "band_metadata": [
-                (f"{ix}", self.dataset.tags(ix)) for ix in self.dataset.indexes
+                (f"b{ix}", self.dataset.tags(ix)) for ix in self.dataset.indexes
             ],
             "band_descriptions": [
-                (f"{ix}", _get_descr(ix)) for ix in self.dataset.indexes
+                (f"b{ix}", _get_descr(ix)) for ix in self.dataset.indexes
             ],
             "dtype": self.dataset.meta["dtype"],
             "colorinterp": [
@@ -446,22 +440,12 @@ class COGReader(BaseReader):
             buffer=buffer,
             **kwargs,
         )
+        img.assets = [self.input]
 
-        if expression and indexes:
-            blocks = get_expression_blocks(expression)
-            bands = [f"b{bidx}" for bidx in indexes]
-            img.data = apply_expression(blocks, bands, img.data)
+        if expression:
+            return img.apply_expression(expression)
 
-        return ImageData(
-            img.data,
-            img.mask,
-            bounds=img.bounds,
-            crs=img.crs,
-            assets=[self.input],
-            band_names=get_bands_names(
-                indexes=indexes, expression=expression, count=img.count
-            ),
-        )
+        return img
 
     def preview(
         self,
@@ -508,22 +492,12 @@ class COGReader(BaseReader):
             height=height,
             **kwargs,
         )
+        img.assets = [self.input]
 
-        if expression and indexes:
-            blocks = get_expression_blocks(expression)
-            bands = [f"b{bidx}" for bidx in indexes]
-            img.data = apply_expression(blocks, bands, img.data)
+        if expression:
+            return img.apply_expression(expression)
 
-        return ImageData(
-            img.data,
-            img.mask,
-            bounds=img.bounds,
-            crs=img.crs,
-            assets=[self.input],
-            band_names=get_bands_names(
-                indexes=indexes, expression=expression, count=img.count
-            ),
-        )
+        return img
 
     def point(
         self,
@@ -533,7 +507,7 @@ class COGReader(BaseReader):
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
-    ) -> List:
+    ) -> Tuple[List, List[str]]:
         """Read a pixel value from a COG.
 
         Args:
@@ -546,6 +520,7 @@ class COGReader(BaseReader):
 
         Returns:
             list: Pixel value per band indexes.
+            list: band names
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -562,16 +537,18 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        point = reader.point(
+        values, band_names = reader.point(
             self.dataset, (lon, lat), indexes=indexes, coord_crs=coord_crs, **kwargs
         )
 
-        if expression and indexes:
+        if expression:
             blocks = get_expression_blocks(expression)
-            bands = [f"b{bidx}" for bidx in indexes]
-            point = apply_expression(blocks, bands, numpy.array(point)).tolist()
+            return (
+                apply_expression(blocks, band_names, numpy.array(values)).tolist(),
+                blocks,
+            )
 
-        return point
+        return values, band_names
 
     def feature(
         self,
@@ -660,22 +637,12 @@ class COGReader(BaseReader):
             indexes = parse_expression(expression)
 
         img = reader.read(self.dataset, indexes=indexes, **kwargs)
+        img.assets = [self.input]
 
-        if expression and indexes:
-            blocks = get_expression_blocks(expression)
-            bands = [f"b{bidx}" for bidx in indexes]
-            img.data = apply_expression(blocks, bands, img.data)
+        if expression:
+            return img.apply_expression(expression)
 
-        return ImageData(
-            img.data,
-            img.mask,
-            bounds=img.bounds,
-            crs=img.crs,
-            assets=[self.input],
-            band_names=get_bands_names(
-                indexes=indexes, expression=expression, count=img.count
-            ),
-        )
+        return img
 
 
 @attr.s
