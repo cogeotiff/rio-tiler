@@ -384,7 +384,7 @@ def test_point():
     with rasterio.open(S3_MASK_PATH) as src_dst:
         # Test with COG + internal mask
         assert not reader.point(src_dst, [-104.7753105, 38.953548]).data[0]
-        assert reader.point(src_dst, [-104.7753105415, 38.953548], masked=False).data[
+        assert reader.point(src_dst, [-104.7753105415, 38.953548]).data[
             0
         ] == numpy.array([0])
 
