@@ -390,10 +390,10 @@ def test_point():
 
     with rasterio.open(S3_ALPHA_PATH) as src_dst:
         # Test with COG + Alpha Band
-        assert not reader.point(src_dst, [-104.77519499, 38.95367054]).data[0]
-        assert reader.point(src_dst, [-104.77519499, 38.95367054], masked=False).data[
-            0
-        ] == numpy.array([0])
+        assert reader.point(src_dst, [-104.77519499, 38.95367054]).data[0] == 69
+        assert (
+            reader.point(src_dst, [-104.77519499, 38.95367054]).mask[0] == 0
+        )  # Masked
 
 
 def test_part_with_buffer():

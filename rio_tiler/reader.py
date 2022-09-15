@@ -319,7 +319,6 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Indexes] = None,
     coord_crs: CRS = WGS84_CRS,
-    masked: bool = True,
     nodata: Optional[NoData] = None,
     unscale: bool = False,
     resampling_method: Resampling = "nearest",
@@ -335,7 +334,6 @@ def point(
         coordinates (tuple): Coordinates in form of (X, Y).
         indexes (sequence of int or int, optional): Band indexes.
         coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
-        masked (bool): Mask samples that fall outside the extent of the dataset. Defaults to `True`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
