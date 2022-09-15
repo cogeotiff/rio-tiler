@@ -60,7 +60,7 @@
         stac.tile(701, 102, 8, expression="green_b1/red_b1")
     ```
 
-* `rio_tiler.reader.point()` (and all Reader's point methods) now return a **Tuple** of values and band names
+* `rio_tiler.reader.point()` (and all Reader's point methods) now return a **rio_tiler.models.PointData** object
 
     ```python
     # before
@@ -77,31 +77,27 @@
     with rasterio.open("cog.tif") as src::
         v, band_names = rio_tiler.reader.point(10.20, -42)
         print(v)
-        >>> [0, 0, 0]
-        print(band_names)
-        >>> ["b1", "b2", "b3"]
+        >>> PointData(
+            data=array([3744], dtype=uint16),
+            mask=array([255], dtype=uint8),
+            band_names=['b1'],
+            coordinates=(10.20, -42),
+            crs=CRS.from_epsg(4326),
+            assets=['cog.tif'],
+            metadata={}
+        )
 
     with COGReader("cog.tif") as cog:
         print(cog.point(10.20, -42.0))
-        >>> ([0, 0, 0], ["b1", "b2", "b3"])
-    ```
-
-* `MultiBaseReader.point()` method now returns data as flat (merged) list (instead of a list of list)
-
-    ```python
-    # before
-    with STACReader("stac.json") as stac:
-        pt = stac.point(10.20, -42, assets=("green", "red"))
-        print(pt)
-        >>> [[0], [0]]
-
-    # now
-    with STACReader("stac.json") as stac:
-        pt, names = stac.point(10.20, -42, assets=("green", "red"))
-        print(pt)
-        >>> [0, 0]
-        print(names)
-        >>> ["green_b1", "red_b1"]
+        >>> PointData(
+            data=array([3744], dtype=uint16),
+            mask=array([255], dtype=uint8),
+            band_names=['b1'],
+            coordinates=(10.20, -42),
+            crs=CRS.from_epsg(4326),
+            assets=['cog.tif'],
+            metadata={}
+        )
     ```
 
 # 3.1.6 (2022-07-22)

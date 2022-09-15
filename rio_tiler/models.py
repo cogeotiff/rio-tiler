@@ -132,6 +132,119 @@ def rescale_image(
 
 
 @attr.s
+class PointData:
+    """Point Data class.
+
+    Attributes:
+        data (numpy.ndarray): pixel values.
+        mask (numpy.ndarray): rasterio mask values.
+        assets (list, optional): list of assets used to construct the data values.
+        coordinates (tuple): Point's coordinates.
+        crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
+        metadata (dict, optional): Additional metadata. Defaults to `{}`.
+        band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
+
+    """
+
+    data: numpy.ndarray = attr.ib()
+    mask: numpy.ndarray = attr.ib()
+    band_names: List[str] = attr.ib()
+    coordinates: Optional[Tuple[float, float]] = attr.ib(default=None)
+    crs: Optional[CRS] = attr.ib(default=None)
+    assets: Optional[List] = attr.ib(default=None)
+    metadata: Optional[Dict] = attr.ib(factory=dict)
+
+    @data.validator
+    def _validate_data(self, attribute, value):
+        """PointsData data has to be a 1d array."""
+        if not len(value.shape) == 1:
+            raise ValueError("PointsData data has to be a 1D array")
+
+    @coordinates.validator
+    def _validate_coordinates(self, attribute, value):
+        """coordinates has to be a 2d list."""
+        if value and not len(value) == 2:
+            raise ValueError("Coordinates data has to be a 2d list")
+
+    @band_names.default
+    def _default_names(self):
+        return [f"{ix + 1}" for ix in range(self.count)]
+
+    @mask.default
+    def _default_mask(self):
+        return numpy.zeros(self.data.shape[0], dtype="uint8") + 255
+
+    def __iter__(self):
+        """Allow for variable expansion."""
+        for i in self.data:
+            yield i
+
+    @property
+    def count(self) -> int:
+        """Number of band."""
+        return self.data.shape[0]
+
+    @classmethod
+    def create_from_list(cls, data: Sequence["PointData"]):
+        """Create PointData from a sequence of PointsData objects.
+
+        Args:
+            data (sequence): sequence of PointData.
+
+        """
+        # validate coordinates
+        if all([pt.coordinates or pt.crs or None for pt in data]):
+            lon, lat, crs = zip(*[(*(pt.coordinates or []), pt.crs) for pt in data])
+            if len(set(lon)) > 1 or len(set(lat)) > 1 or len(set(crs)) > 1:
+                raise Exception(
+                    "Cannot concatenate points with different coordinates/CRS."
+                )
+
+        arr = numpy.concatenate([pt.data for pt in data])
+        mask = numpy.concatenate([pt.mask for pt in data])
+
+        assets = list(
+            dict.fromkeys(
+                itertools.chain.from_iterable([pt.assets for pt in data if pt.assets])
+            )
+        )
+
+        band_names = list(
+            itertools.chain.from_iterable(
+                [pt.band_names for pt in data if pt.band_names]
+            )
+        )
+
+        return cls(
+            arr,
+            mask,
+            assets=assets,
+            crs=data[0].crs,
+            coordinates=data[0].coordinates,
+            band_names=band_names,
+        )
+
+    def as_masked(self) -> numpy.ma.MaskedArray:
+        """return a numpy masked array."""
+        data = numpy.ma.array(self.data)
+        data.mask = self.mask == 0
+        return data
+
+    def apply_expression(self, expression: str) -> "PointData":
+        """Apply expression to the image data."""
+        blocks = get_expression_blocks(expression)
+        return PointData(
+            apply_expression(blocks, self.band_names, self.data),
+            self.mask,
+            assets=self.assets,
+            crs=self.crs,
+            coordinates=self.coordinates,
+            band_names=blocks,
+            metadata=self.metadata,
+        )
+
+
+@attr.s
 class ImageData:
     """Image Data class.
 

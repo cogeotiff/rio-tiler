@@ -2,7 +2,7 @@
 
 import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import attr
 import numpy
@@ -20,8 +20,8 @@ from rasterio.warp import calculate_default_transform
 from .. import reader
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
 from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
-from ..expression import apply_expression, get_expression_blocks, parse_expression
-from ..models import BandStatistics, ImageData, Info
+from ..expression import parse_expression
+from ..models import BandStatistics, ImageData, Info, PointData
 from ..types import BBox, DataMaskType, Indexes, NoData, NumType
 from ..utils import create_cutline, get_array_statistics, has_alpha_band, has_mask_band
 from .base import BaseReader
@@ -507,7 +507,7 @@ class COGReader(BaseReader):
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
-    ) -> Tuple[List, List[str]]:
+    ) -> PointData:
         """Read a pixel value from a COG.
 
         Args:
@@ -519,8 +519,7 @@ class COGReader(BaseReader):
             kwargs (optional): Options to forward to the `rio_tiler.reader.point` function.
 
         Returns:
-            list: Pixel value per band indexes.
-            list: band names
+            PointData
 
         """
         kwargs = {**self._kwargs, **kwargs}
@@ -537,18 +536,15 @@ class COGReader(BaseReader):
         if expression:
             indexes = parse_expression(expression)
 
-        values, band_names = reader.point(
+        pt = reader.point(
             self.dataset, (lon, lat), indexes=indexes, coord_crs=coord_crs, **kwargs
         )
+        pt.assets = [self.input]
 
         if expression:
-            blocks = get_expression_blocks(expression)
-            return (
-                apply_expression(blocks, band_names, numpy.array(values)).tolist(),
-                blocks,
-            )
+            return pt.apply_expression(expression)
 
-        return values, band_names
+        return pt
 
     def feature(
         self,
