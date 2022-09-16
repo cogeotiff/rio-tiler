@@ -6,7 +6,7 @@ from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Un
 
 from .constants import MAX_THREADS
 from .logger import logger
-from .models import ImageData
+from .models import ImageData, PointData
 
 TaskType = Sequence[Tuple[Union[futures.Future, Callable], Any]]
 
@@ -68,6 +68,21 @@ def multi_arrays(
     """Merge arrays returned from tasks."""
     tasks = create_tasks(reader, asset_list, threads, *args, **kwargs)
     return ImageData.create_from_list(
+        [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
+    )
+
+
+def multi_points(
+    asset_list: Sequence,
+    reader: Callable[..., PointData],
+    *args: Any,
+    threads: int = MAX_THREADS,
+    allowed_exceptions: Optional[Tuple] = None,
+    **kwargs: Any,
+) -> PointData:
+    """Merge points returned from tasks."""
+    tasks = create_tasks(reader, asset_list, threads, *args, **kwargs)
+    return PointData.create_from_list(
         [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
     )
 

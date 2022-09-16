@@ -1,7 +1,6 @@
 """rio_tiler.io.base: ABC class for rio-tiler readers."""
 
 import abc
-import itertools
 import re
 import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
@@ -19,9 +18,8 @@ from ..errors import (
     MissingBands,
     TileOutsideBounds,
 )
-from ..expression import apply_expression, get_expression_blocks
-from ..models import BandStatistics, ImageData, Info
-from ..tasks import multi_arrays, multi_values
+from ..models import BandStatistics, ImageData, Info, PointData
+from ..tasks import multi_arrays, multi_points, multi_values
 from ..types import BBox, Indexes
 from ..utils import get_array_statistics
 
@@ -202,7 +200,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def point(self, lon: float, lat: float, **kwargs: Any) -> Tuple[List, List[str]]:
+    def point(self, lon: float, lat: float, **kwargs: Any) -> PointData:
         """Read a value from a Dataset.
 
         Args:
@@ -210,8 +208,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             lat (float): Latitude.
 
         Returns:
-            list: Pixel value per bands/assets.
-            list: band names
+            rio_tiler.models.PointData: PointData instance with data, mask and spatial info.
 
         """
         ...
@@ -609,7 +606,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
         asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         **kwargs: Any,
-    ) -> Tuple[List, List[str]]:
+    ) -> PointData:
         """Read pixel value from multiple assets.
 
         Args:
@@ -622,8 +619,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
-            list: Pixel values per assets.
-            list: band names
+            PointData
 
         """
         if asset_expression:
@@ -648,33 +644,19 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         asset_indexes = asset_indexes or {}
 
-        def _reader(asset: str, *args, **kwargs: Any) -> Tuple[List, List[str]]:
+        def _reader(asset: str, *args, **kwargs: Any) -> PointData:
             url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                points, band_names = cog.point(*args, indexes=idx, **kwargs)
-                return (
-                    points,
-                    [f"{asset}_{n}" for n in band_names],
-                )
+                data = cog.point(*args, indexes=idx, **kwargs)
+                data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                return data
 
-        data = multi_values(assets, _reader, lon, lat, **kwargs)
-        values, band_names = zip(*[(v, b) for _, (v, b) in data.items()])
-
-        # Create an array with all the point values
-        values = numpy.array(list(itertools.chain.from_iterable(values)))
-
-        # Create a list of all point's band name
-        band_names = list(itertools.chain.from_iterable(band_names))
-
+        data = multi_points(assets, _reader, lon, lat, **kwargs)
         if expression:
-            blocks = get_expression_blocks(expression)
-            return (
-                apply_expression(blocks, band_names, values).tolist(),
-                blocks,
-            )
+            return data.apply_expression(expression)
 
-        return values.tolist(), band_names
+        return data
 
     def feature(
         self,
@@ -1054,7 +1036,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         bands: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
-    ) -> Tuple[List, List[str]]:
+    ) -> PointData:
         """Read a pixel values from multiple bands.
 
         Args:
@@ -1065,8 +1047,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
-            list: Pixel value per bands.
-            list: band names
+            PointData
 
         """
         if isinstance(bands, str):
@@ -1086,27 +1067,18 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via expression or bands options."
             )
 
-        def _reader(band: str, *args, **kwargs: Any) -> Tuple[numpy.array, List[str]]:
+        def _reader(band: str, *args, **kwargs: Any) -> PointData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                values, _ = cog.point(*args, **kwargs)
-                return (
-                    values[0],  # We only return the first value
-                    [band],
-                )
+                data = cog.point(*args, **kwargs)
+                data.band_names = [band]  # use `band` as name instead of band index
+                return data
 
-        data = multi_values(bands, _reader, lon, lat, **kwargs)
-        values, band_names = zip(*[(v, b) for b, (v, _) in data.items()])
-        values = numpy.array(values)
-
+        data = multi_points(bands, _reader, lon, lat, **kwargs)
         if expression:
-            blocks = get_expression_blocks(expression)
-            return (
-                apply_expression(blocks, band_names, values).tolist(),
-                blocks,
-            )
+            return data.apply_expression(expression)
 
-        return [v.tolist() for v in values], list(band_names)
+        return data
 
     def feature(
         self,

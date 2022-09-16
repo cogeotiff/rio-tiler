@@ -2,7 +2,7 @@
 
 import math
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Tuple, Union
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import numpy
 from affine import Affine
@@ -21,7 +21,7 @@ from .errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
-from .models import ImageData
+from .models import ImageData, PointData
 from .types import BBox, DataMaskType, Indexes, NoData
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from .utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
@@ -65,7 +65,7 @@ def read(
         indexes = (indexes,)
 
     if indexes is None:
-        indexes = non_alpha_indexes(src_dst)
+        indexes = non_alpha_indexes(src_dst) if nodata is None else src_dst.indexes
         if indexes != src_dst.indexes:
             warnings.warn(
                 "Alpha band was removed from the output data array", AlphaBandWarning
@@ -319,7 +319,6 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Indexes] = None,
     coord_crs: CRS = WGS84_CRS,
-    masked: bool = True,
     nodata: Optional[NoData] = None,
     unscale: bool = False,
     resampling_method: Resampling = "nearest",
@@ -327,7 +326,7 @@ def point(
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
     ] = None,
-) -> Tuple[List, List[str]]:
+) -> PointData:
     """Read a pixel value for a point.
 
     Args:
@@ -335,7 +334,6 @@ def point(
         coordinates (tuple): Coordinates in form of (X, Y).
         indexes (sequence of int or int, optional): Band indexes.
         coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
-        masked (bool): Mask samples that fall outside the extent of the dataset. Defaults to `True`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
@@ -343,10 +341,15 @@ def point(
         post_process (callable, optional): Function to apply on output data and mask values.
 
     Returns:
-        list: Pixel value per band indexes.
-        list: band names
+        PointData
 
     """
+    if vrt_options:
+        warnings.warn(
+            "'vrt_options' has no influence over the `point()` method.",
+            UserWarning,
+        )
+
     if isinstance(indexes, int):
         indexes = (indexes,)
 
@@ -359,34 +362,38 @@ def point(
     ):
         raise PointOutsideBounds("Point is outside dataset bounds")
 
-    indexes = indexes if indexes is not None else src_dst.indexes
+    if indexes is None:
+        indexes = non_alpha_indexes(src_dst) if nodata is None else src_dst.indexes
+        if indexes != src_dst.indexes:
+            warnings.warn(
+                "Alpha band was removed from the output data array", AlphaBandWarning
+            )
 
     band_names = [f"b{idx}" for idx in indexes]
 
-    vrt_params = dict(add_alpha=True, resampling=Resampling[resampling_method])
-    nodata = nodata if nodata is not None else src_dst.nodata
+    values = list(src_dst.sample([(lon[0], lat[0])], indexes=indexes, masked=True))[0]
+    data = values.data
+    is_masked = ~values.mask
+
     if nodata is not None:
-        vrt_params.update(dict(nodata=nodata, add_alpha=False, src_nodata=nodata))
+        # https://github.com/rasterio/rasterio/blob/dc6b8682869bf16f2235da5e3e6eb5a2c7723b79/rasterio/_io.pyx#L1035
+        # if one band is masked then all bands should
+        is_masked = ~numpy.logical_or.reduce(data == nodata)
 
-    if has_alpha_band(src_dst):
-        vrt_params.update(dict(add_alpha=False))
-
-    if vrt_options:
-        vrt_params.update(vrt_options)
-
-    with WarpedVRT(src_dst, **vrt_params) as vrt:
-        values = list(vrt.sample([(lon[0], lat[0])], indexes=indexes, masked=masked))[0]
-        point_values = values.data
-        mask = values.mask * 255 if masked else numpy.zeros(point_values.shape)
+    mask = numpy.repeat(is_masked, len(data)) * numpy.uint8(255)
 
     if unscale:
-        point_values = point_values.astype("float32", casting="unsafe")
-        numpy.multiply(
-            point_values, src_dst.scales[0], out=point_values, casting="unsafe"
-        )
-        numpy.add(point_values, src_dst.offsets[0], out=point_values, casting="unsafe")
+        data = data.astype("float32", casting="unsafe")
+        numpy.multiply(data, src_dst.scales[0], out=data, casting="unsafe")
+        numpy.add(data, src_dst.offsets[0], out=data, casting="unsafe")
 
     if post_process:
-        point_values, _ = post_process(point_values, mask)
+        data, _ = post_process(data, mask)
 
-    return point_values.tolist(), band_names
+    return PointData(
+        data,
+        mask,
+        coordinates=coordinates,
+        crs=coord_crs,
+        band_names=band_names,
+    )

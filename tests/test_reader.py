@@ -369,32 +369,31 @@ def test_tile_read_vrt_option():
 def test_point():
     """Read point values"""
     with rasterio.open(COG_SCALE) as src_dst:
-        p, name = reader.point(
-            src_dst, [310000, 4100000], coord_crs=src_dst.crs, indexes=1
-        )
-        assert p == [8917]
-        assert name == ["b1"]
+        pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs, indexes=1)
+        assert pt.data == numpy.array([8917])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
 
-        p, name = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
-        assert p == [8917]
-        assert name == ["b1"]
+        pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
+        assert pt.data == numpy.array([8917])
+        assert pt.band_names == ["b1"]
 
         with pytest.raises(PointOutsideBounds):
             reader.point(src_dst, [810000, 4100000], coord_crs=src_dst.crs)
 
     with rasterio.open(S3_MASK_PATH) as src_dst:
         # Test with COG + internal mask
-        assert not reader.point(src_dst, [-104.7753105, 38.953548])[0][0]
-        assert (
-            reader.point(src_dst, [-104.7753105415, 38.953548], masked=False)[0][0] == 0
-        )
+        assert not reader.point(src_dst, [-104.7753105, 38.953548]).data[0]
+        assert reader.point(src_dst, [-104.7753105415, 38.953548]).data[
+            0
+        ] == numpy.array([0])
 
     with rasterio.open(S3_ALPHA_PATH) as src_dst:
         # Test with COG + Alpha Band
-        assert not reader.point(src_dst, [-104.77519499, 38.95367054])[0][0]
+        assert reader.point(src_dst, [-104.77519499, 38.95367054]).data[0]
         assert (
-            reader.point(src_dst, [-104.77519499, 38.95367054], masked=False)[0][0] == 0
-        )
+            reader.point(src_dst, [-104.77519499, 38.95367054]).mask[0] == 0
+        )  # Masked
 
 
 def test_part_with_buffer():

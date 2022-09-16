@@ -232,24 +232,24 @@ def test_point_valid():
     lon = -56.624124590533825
     lat = 73.52687881825946
     with COGReader(COG_NODATA) as cog:
-        pts, names = cog.point(lon, lat)
-        assert len(pts) == 1
-        assert names == ["b1"]
+        pt = cog.point(lon, lat)
+        assert len(pt.data) == 1
+        assert pt.band_names == ["b1"]
 
-        pts, names = cog.point(lon, lat, expression="b1*2;b1-100")
-        assert len(pts) == 2
-        assert names == ["b1*2", "b1-100"]
+        pt = cog.point(lon, lat, expression="b1*2;b1-100")
+        assert len(pt.data) == 2
+        assert pt.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            pts, names = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
-            assert len(pts) == 1
-            assert names == ["b1*2"]
+            pt = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
+            assert len(pt.data) == 1
+            assert pt.band_names == ["b1*2"]
 
-        pts, names = cog.point(lon, lat, indexes=1)
-        assert len(pts) == 1
-        assert names == ["b1"]
+        pt = cog.point(lon, lat, indexes=1)
+        assert len(pt.data) == 1
+        assert pt.band_names == ["b1"]
 
-        pts, names = cog.point(
+        pt = cog.point(
             lon,
             lat,
             indexes=(
@@ -257,8 +257,8 @@ def test_point_valid():
                 1,
             ),
         )
-        assert len(pts) == 2
-        assert names == ["b1", "b1"]
+        assert len(pt.data) == 2
+        assert pt.band_names == ["b1", "b1"]
 
 
 def test_area_valid():
@@ -411,12 +411,12 @@ def test_COGReader_Options():
         assert not numpy.array_equal(data_default, data)
 
     with COGReader(COG_SCALE, unscale=True) as cog:
-        p, _ = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
-        assert round(p[0], 3) == 1000.892
+        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
+        assert round(float(p.data[0]), 3) == 1000.892
 
         # passing unscale in method should overwrite the defaults
-        p, _ = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
-        assert p[0] == 8917
+        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
+        assert p.data[0] == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
     with COGReader(COGEO, vrt_options={"cutline": cutline}) as cog:
@@ -437,11 +437,11 @@ def test_COGReader_Options():
     lon = -56.624124590533825
     lat = 73.52687881825946
     with COGReader(COG_NODATA, post_process=callback) as cog:
-        pts, _ = cog.point(lon, lat)
+        pt = cog.point(lon, lat)
 
     with COGReader(COG_NODATA) as cog:
-        pts_init, _ = cog.point(lon, lat)
-    assert pts[0] == pts_init[0] * 2
+        pt_init = cog.point(lon, lat)
+    assert pt.data[0] == pt_init.data[0] * 2
 
 
 def test_cog_with_internal_gcps():
@@ -833,7 +833,7 @@ def test_nonearthbody():
 
             lon = (cog.bounds[0] + cog.bounds[2]) / 2
             lat = (cog.bounds[1] + cog.bounds[3]) / 2
-            assert cog.point(lon, lat, coord_crs=cog.crs)[0] is not None
+            assert cog.point(lon, lat, coord_crs=cog.crs).data[0] is not None
 
     with pytest.warns(UserWarning) as warnings:
         europa_crs = CRS.from_authority("ESRI", 104915)
@@ -927,6 +927,5 @@ def test_tms_tilesize_and_zoom():
         tile_height=2048,
     )
     with COGReader(COG_NODATA, tms=tms_2048) as cog:
-        print(cog.minzoom, cog.maxzoom)
         assert cog.minzoom == 5
         assert cog.maxzoom == 6

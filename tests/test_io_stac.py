@@ -4,6 +4,7 @@ import json
 import os
 from unittest.mock import patch
 
+import numpy
 import pytest
 import rasterio
 
@@ -341,51 +342,49 @@ def test_point_valid(rio):
         with pytest.raises(MissingAssets):
             stac.point(-80.477, 33.4453)
 
-        data, names = stac.point(-80.477, 33.4453, assets="green")
-        assert len(data) == 1
-        assert names == ["green_b1"]
+        pt = stac.point(-80.477, 33.4453, assets="green")
+        assert len(pt.data) == 1
+        assert pt.band_names == ["green_b1"]
 
-        data, names = stac.point(-80.477, 33.4453, assets=("green",))
-        assert len(data) == 1
-        assert names == ["green_b1"]
+        pt = stac.point(-80.477, 33.4453, assets=("green",))
+        assert len(pt.data) == 1
+        assert pt.band_names == ["green_b1"]
 
-        data, names = stac.point(-80.477, 33.4453, assets=("green", "red"))
-        assert len(data) == 2
-        assert data == [7994, 7003]
-        assert names == ["green_b1", "red_b1"]
+        pt = stac.point(-80.477, 33.4453, assets=("green", "red"))
+        assert len(pt.data) == 2
+        assert numpy.array_equal(pt.data, numpy.array([7994, 7003]))
+        assert pt.band_names == ["green_b1", "red_b1"]
 
-        data, names = stac.point(-80.477, 33.4453, expression="green_b1/red_b1")
-        assert len(data) == 1
-        assert data == [7994 / 7003]
-        assert names == ["green_b1/red_b1"]
+        pt = stac.point(-80.477, 33.4453, expression="green_b1/red_b1")
+        assert len(pt.data) == 1
+        assert numpy.array_equal(pt.data, numpy.array([7994 / 7003]))
+        assert pt.band_names == ["green_b1/red_b1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            data, names = stac.point(
+            pt = stac.point(
                 -80.477, 33.4453, assets=("green", "red"), expression="green_b1/red_b1"
             )
-            assert len(data) == 1
-            assert names == ["green_b1/red_b1"]
+            assert len(pt.data) == 1
+            assert pt.band_names == ["green_b1/red_b1"]
 
-        data, names = stac.point(
+        pt = stac.point(
             -80.477,
             33.4453,
             assets=("green", "red"),
             asset_indexes={"green": (1, 1), "red": 1},
         )
-        assert len(data) == 3
-        assert data == [7994, 7994, 7003]
-        assert names == ["green_b1", "green_b1", "red_b1"]
+        assert len(pt.data) == 3
+        assert numpy.array_equal(pt.data, numpy.array([7994, 7994, 7003]))
+        assert pt.band_names == ["green_b1", "green_b1", "red_b1"]
 
-        data, names = stac.point(-80.477, 33.4453, assets=("green", "red"), indexes=1)
-        assert len(data) == 2
-        assert data == [7994, 7003]
-        assert names == ["green_b1", "red_b1"]
+        pt = stac.point(-80.477, 33.4453, assets=("green", "red"), indexes=1)
+        assert len(pt.data) == 2
+        assert numpy.array_equal(pt.data, numpy.array([7994, 7003]))
+        assert pt.band_names == ["green_b1", "red_b1"]
 
-        data, names = stac.point(
-            -80.477, 33.4453, expression="green_b1*2;green_b1;red_b1*2"
-        )
-        assert len(data) == 3
-        assert names == ["green_b1*2", "green_b1", "red_b1*2"]
+        pt = stac.point(-80.477, 33.4453, expression="green_b1*2;green_b1;red_b1*2")
+        assert len(pt.data) == 3
+        assert pt.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
 @patch("rio_tiler.io.cogeo.rasterio")
