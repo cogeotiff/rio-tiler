@@ -512,6 +512,12 @@ def test_parse_expression():
             stac.parse_expression("greenish_b1*red_b1+red_b1/blue_b1+2.0;red_b1")
         ) == ["blue", "red"]
 
+    # make sure we match full word only
+    with STACReader(STAC_PATH) as stac:
+        assert sorted(
+            stac.parse_expression("green_b10foo*red_b1+red_b1/blue_b1+2.0;red_b1")
+        ) == ["blue", "red"]
+
 
 @patch("rio_tiler.io.cogeo.rasterio")
 def test_feature_valid(rio):

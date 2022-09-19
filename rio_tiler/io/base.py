@@ -268,8 +268,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
-        assets = "|".join([asset for asset in self.assets])
-        _re = re.compile(rf"\b({assets})_b\d+")
+        assets = "|".join(self.assets)
+        _re = re.compile(rf"\b({assets})_b\d+\b")
         return tuple(set(re.findall(_re, expression)))
 
     def info(  # type: ignore
