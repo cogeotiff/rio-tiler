@@ -34,11 +34,7 @@ class COGReader(BaseReader):
     Attributes:
         input (str): Cloud Optimized GeoTIFF path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
-        bounds (tuple): Dataset bounds (left, bottom, right, top).
-        crs (rasterio.crs.CRS): Dataset CRS.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        minzoom (int, optional): Set minzoom for the tiles.
-        maxzoom (int, optional): Set maxzoom for the tiles.
         geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
         colormap (dict, optional): Overwrite internal colormap.
         nodata (int or float or str, optional): Global options, overwrite internal nodata value.

@@ -130,11 +130,12 @@ class STACReader(MultiBaseReader):
     Attributes:
         input (str): STAC Item path, URL or S3 URL.
         item (dict or pystac.Item, STAC): Stac Item.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         minzoom (int, optional): Set minzoom for the tiles.
         maxzoom (int, optional): Set maxzoom for the tiles.
         geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
-        include (set of string, optional): Only Include specific assets.
-        exclude (set of string, optional): Exclude specific assets.
+        include_assets (set of string, optional): Only Include specific assets.
+        exclude_assets (set of string, optional): Exclude specific assets.
         include_asset_types (set of string, optional): Only include some assets base on their type.
         exclude_asset_types (set of string, optional): Exclude some assets base on their type.
         reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.COGReader`.

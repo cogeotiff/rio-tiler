@@ -138,11 +138,11 @@ class PointData:
     Attributes:
         data (numpy.ndarray): pixel values.
         mask (numpy.ndarray): rasterio mask values.
-        assets (list, optional): list of assets used to construct the data values.
+        band_names (list): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
         coordinates (tuple): Point's coordinates.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
+        assets (list, optional): list of assets used to construct the data values.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
-        band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
 
     """
 

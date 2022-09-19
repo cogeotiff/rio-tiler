@@ -37,9 +37,6 @@ class SpatialMixin:
 
     Attributes:
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        bounds (tuple): Dataset bounds (left, bottom, right, top). **Not in __init__**.
-        crs (rasterio.crs.CRS): Dataset crs. **Not in __init__**.
-        geographic_crs (rasterio.crs.CRS): CRS to use as geographic coordinate system. Defaults to WGS84. **Not in __init__**.
 
     """
 
@@ -52,7 +49,7 @@ class SpatialMixin:
 
     @property
     def geographic_bounds(self) -> BBox:
-        """return bounds in WGS84."""
+        """Return dataset bounds in geographic_crs."""
         if self.crs == self.geographic_crs:
             return self.bounds
 
@@ -128,7 +125,13 @@ class SpatialMixin:
 
 @attr.s
 class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
-    """Rio-tiler.io BaseReader."""
+    """Rio-tiler.io BaseReader.
+
+    Attributes:
+        input (any): Reader's input.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+
+    """
 
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
@@ -236,9 +239,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     Attributes:
         input (any): input data.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Set dataset's minzoom.
+        maxzoom (int, optional): Set dataset's maxzoom.
         reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
-        reader (rio_tiler.io.BaseReader): reader. **Not in __init__**.
-        assets (sequence): Asset list. **Not in __init__**.
 
     """
 
@@ -727,9 +730,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     Attributes:
         input (any): input data.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Set dataset's minzoom.
+        maxzoom (int, optional): Set dataset's maxzoom.
         reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
-        reader (rio_tiler.io.BaseReader): reader. **Not in __init__**.
-        bands (sequence): Band list. **Not in __init__**.
 
     """
 
