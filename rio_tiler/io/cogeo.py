@@ -286,6 +286,8 @@ class COGReader(BaseReader):
         percentiles: List[int] = [2, 98],
         hist_options: Optional[Dict] = None,
         max_size: int = 1024,
+        indexes: Optional[Indexes] = None,
+        expression: Optional[str] = None,
         **kwargs: Any,
     ) -> Dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
@@ -296,7 +298,7 @@ class COGReader(BaseReader):
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
-            kwargs (optional): Options to forward to `self.preview`.
+            kwargs (optional): Options to forward to `self.read`.
 
         Returns:
             Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
@@ -304,7 +306,9 @@ class COGReader(BaseReader):
         """
         kwargs = {**self._kwargs, **kwargs}
 
-        data = self.preview(max_size=max_size, **kwargs)
+        data = self.read(
+            max_size=max_size, indexes=indexes, expression=expression, **kwargs
+        )
 
         hist_options = hist_options or {}
 
@@ -409,9 +413,6 @@ class COGReader(BaseReader):
         """
         kwargs = {**self._kwargs, **kwargs}
 
-        if isinstance(indexes, int):
-            indexes = (indexes,)
-
         if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
@@ -460,40 +461,20 @@ class COGReader(BaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            kwargs (optional): Options to forward to the `rio_tiler.reader.preview` function.
+            kwargs (optional): Options to forward to the `self.read` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        kwargs = {**self._kwargs, **kwargs}
-
-        if isinstance(indexes, int):
-            indexes = (indexes,)
-
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        img = reader.preview(
-            self.dataset,
+        return self.read(
             indexes=indexes,
+            expression=expression,
             max_size=max_size,
-            width=width,
             height=height,
+            width=width,
             **kwargs,
         )
-        img.assets = [self.input]
-
-        if expression:
-            return img.apply_expression(expression)
-
-        return img
 
     def point(
         self,
@@ -519,9 +500,6 @@ class COGReader(BaseReader):
 
         """
         kwargs = {**self._kwargs, **kwargs}
-
-        if isinstance(indexes, int):
-            indexes = (indexes,)
 
         if indexes and expression:
             warnings.warn(
@@ -615,9 +593,6 @@ class COGReader(BaseReader):
 
         """
         kwargs = {**self._kwargs, **kwargs}
-
-        if isinstance(indexes, int):
-            indexes = (indexes,)
 
         if indexes and expression:
             warnings.warn(

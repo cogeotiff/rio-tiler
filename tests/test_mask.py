@@ -47,16 +47,19 @@ def test_mask_bilinear(cloudoptimized_geotiff):
         data, mask = cog.preview(
             resampling_method="bilinear",
             force_binary_mask=True,
+            max_size=100,
         )
         masknodata = (data[0] != 0).astype(numpy.uint8) * 255
         numpy.testing.assert_array_equal(mask, masknodata)
 
-        data, mask = cog.preview(
+        dataf, maskf = cog.preview(
             resampling_method="bilinear",
             force_binary_mask=False,
+            max_size=100,
         )
-        masknodata = (data[0] != 0).astype(numpy.uint8) * 255
-        assert not numpy.array_equal(mask, masknodata)
+        masknodata = (dataf[0] != 0).astype(numpy.uint8) * 255
+        assert not numpy.array_equal(maskf, masknodata)
+        assert not numpy.array_equal(maskf, mask)
 
 
 @pytest.mark.parametrize("resampling", ["bilinear", "nearest"])

@@ -19,7 +19,6 @@ from rasterio.warp import transform_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
-    AlphaBandWarning,
     ExpressionMixingWarning,
     InvalidBufferSize,
     NoOverviewWarning,
@@ -709,14 +708,13 @@ def test_tile_read_alpha():
     """Read masked area."""
     # non-boundless tile covering the alpha masked part
     with COGReader(COG_ALPHA) as cog:
-        with pytest.warns(AlphaBandWarning):
-            nb = cog.dataset.count
-            img = cog.tile(876432, 1603670, 22)
-            assert (
-                not nb == img.count
-            )  # rio-tiler removes the alpha band from the `data` array
-            assert img.data.shape == (3, 256, 256)
-            assert not img.mask.all()
+        nb = cog.dataset.count
+        img = cog.tile(876432, 1603670, 22)
+        assert (
+            not nb == img.count
+        )  # rio-tiler removes the alpha band from the `data` array
+        assert img.data.shape == (3, 256, 256)
+        assert not img.mask.all()
 
 
 def test_tile_read_mask():
