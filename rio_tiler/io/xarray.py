@@ -64,8 +64,7 @@ class XarrayReader(BaseReader):
 
     """
 
-    dataset: Optional[xarray.DataArray] = attr.ib(default=None)  # Xarray or rio Xarray
-    crs: Optional[CRS] = attr.ib(default=WGS84_CRS)
+    input: xarray.DataArray = attr.ib()  # Xarray or rio Xarray
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
@@ -85,11 +84,9 @@ class XarrayReader(BaseReader):
             self._kwargs.update(**self.config)
 
         # TODO: Get bounds
-        self.bounds = tuple(self.dataset.rio.bounds())
+        self.bounds = tuple(self.input.rio.bounds())
 
-        # Make sure we have CRS in the dataarray
-        if not self.dataset.rio.crs:
-            self.dataset.rio.write_crs(self.crs, inplace=True)
+        self.crs = self.input.rio.crs
 
     def close(self):
         """Close rasterio dataset."""
@@ -105,14 +102,14 @@ class XarrayReader(BaseReader):
             dst_affine, w, h = calculate_default_transform(
                 self.crs,
                 self.tms.rasterio_crs,
-                self.dataset.rio.width,
-                self.dataset.rio.height,
+                self.input.rio.width,
+                self.input.rio.height,
                 *self.bounds,
             )
         else:
-            dst_affine = list(self.dataset.rio.transform())
-            w = self.dataset.width
-            h = self.dataset.height
+            dst_affine = list(self.input.rio.transform())
+            w = self.input.rio.width
+            h = self.input.rio.height
 
         return dst_affine, w, h
 
@@ -230,7 +227,7 @@ class XarrayReader(BaseReader):
             self.tms.rasterio_crs, self.crs, *tile_bounds, densify_pts=21
         )
 
-        source_arr = self.dataset.rio.clip_box(*dst_bounds).data
+        source_arr = self.input.rio.clip_box(*dst_bounds).data
         output_arr = numpy.zeros(
             (source_arr.shape[0], tilesize, tilesize), dtype=source_arr.dtype
         )
