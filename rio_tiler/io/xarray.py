@@ -193,7 +193,6 @@ class XarrayReader(BaseReader):
         """Return bands statistics from a dataset."""
         raise NotImplementedError
 
-    # TODO: Do we want time dimension?
     def tile(
         self,
         tile_x: int,
@@ -227,16 +226,14 @@ class XarrayReader(BaseReader):
             self.tms.rasterio_crs, self.crs, *tile_bounds, densify_pts=21
         )
 
-        source_arr = self.input.rio.clip_box(*dst_bounds).data
+        source_arr = self.input.rio.clip_box(*dst_bounds)
         output_arr = numpy.zeros(
             (source_arr.shape[0], tilesize, tilesize), dtype=source_arr.dtype
         )
         reproject(
-            source_arr,
+            source_arr.data,
             output_arr,
-            src_transform=from_bounds(
-                *dst_bounds, height=source_arr.shape[1], width=source_arr.shape[2]
-            ),
+            src_transform=source_arr.rio.transform(),
             src_crs=self.crs,
             dst_transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
             dst_crs=self.tms.rasterio_crs,
