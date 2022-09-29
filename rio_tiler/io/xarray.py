@@ -7,6 +7,8 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import attr
 import numpy
 import rasterio
+import rioxarray
+import xarray
 from morecantile import Tile, TileMatrixSet
 from rasterio import transform
 from rasterio.crs import CRS
@@ -14,8 +16,9 @@ from rasterio.enums import Resampling
 from rasterio.features import bounds as featureBounds
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
+from rasterio.transform import from_bounds
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform
+from rasterio.warp import calculate_default_transform, reproject, transform_bounds
 
 from .. import reader
 from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
@@ -27,15 +30,11 @@ from ..utils import create_cutline, get_array_statistics, has_alpha_band, has_ma
 from .base import BaseReader
 
 
-import xarray
-
-
 @attr.s
 class XarrayReader(BaseReader):
     """Xarray Reader.
 
     Attributes:
-        input (str): Zarr path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
@@ -65,8 +64,8 @@ class XarrayReader(BaseReader):
 
     """
 
-    input: str = attr.ib()
-    dataset: Any = attr.ib(default=None)  # Xarray or rio Xarray
+    dataset: Optional[xarray.DataArray] = attr.ib(default=None)  # Xarray or rio Xarray
+    crs: Optional[CRS] = attr.ib(default=WGS84_CRS)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
@@ -77,43 +76,74 @@ class XarrayReader(BaseReader):
     # _kwargs is used avoid having to set those values on each method call.
     _kwargs: Dict[str, Any] = attr.ib(init=False, factory=dict)
 
-    # Context Manager to handle rasterio open/close
-    _ctx_stack = attr.ib(init=False, factory=contextlib.ExitStack)
-
     _minzoom: int = attr.ib(init=False, default=None)
     _maxzoom: int = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
         if self.config:
-            self._kwargs.update(**default)
-
-        if not self.dataset:
-            # self.dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
-            # TODO
-            pass
+            self._kwargs.update(**self.config)
 
         # TODO: Get bounds
-        self.bounds = tuple(self.dataset.bounds)
+        self.bounds = tuple(self.dataset.rio.bounds())
 
-        # TODO Get CRS
-        self.crs = WGS84_CRS
-
+        # Make sure we have CRS in the dataarray
+        if not self.dataset.rio.crs:
+            self.dataset.rio.write_crs(self.crs, inplace=True)
 
     def close(self):
         """Close rasterio dataset."""
-        self._ctx_stack.close()
+        pass
 
     def __exit__(self, exc_type, exc_value, traceback):
         """Support using with Context Managers."""
         self.close()
 
+    def _dst_geom_in_tms_crs(self):
+        """Return dataset info in TMS projection."""
+        if self.crs != self.tms.rasterio_crs:
+            dst_affine, w, h = calculate_default_transform(
+                self.crs,
+                self.tms.rasterio_crs,
+                self.dataset.rio.width,
+                self.dataset.rio.height,
+                *self.bounds,
+            )
+        else:
+            dst_affine = list(self.dataset.rio.transform())
+            w = self.dataset.width
+            h = self.dataset.height
+
+        return dst_affine, w, h
+
     def get_minzoom(self) -> int:
         """Define dataset minimum zoom level."""
         if self._minzoom is None:
-            # TODO: Get transform from the data and figure the MaxZoom
-            # self._minzoom = self.tms.zoom_for_res(resolution)
-            pass
+            # We assume the TMS tilesize to be constant over all matrices
+            # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
+            tilesize = self.tms.tileMatrix[0].tileWidth
+
+            try:
+                dst_affine, w, h = self._dst_geom_in_tms_crs()
+
+                # The minzoom is defined by the resolution of the maximum theoretical overview level
+                # We assume `tilesize`` is the smallest overview size
+                overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
+
+                # Get the resolution of the overview
+                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+                ovr_resolution = resolution * (2**overview_level)
+
+                # Find what TMS matrix match the overview resolution
+                self._minzoom = self.tms.zoom_for_res(ovr_resolution)
+
+            except:  # noqa
+                # if we can't get min/max zoom from the dataset we default to TMS maxzoom
+                warnings.warn(
+                    "Cannot determine maxzoom based on dataset information, will default to TMS maxzoom.",
+                    UserWarning,
+                )
+                self._minzoom = self.tms.maxzoom
 
         return self._minzoom
 
@@ -122,7 +152,21 @@ class XarrayReader(BaseReader):
         if self._maxzoom is None:
             # TODO: Get transform from the data and figure the MaxZoom
             # self._minzoom = self.tms.zoom_for_res(resolution)
-            pass
+            try:
+                dst_affine, _, _ = self._dst_geom_in_tms_crs()
+
+                # The maxzoom is defined by finding the minimum difference between
+                # the raster resolution and the zoom level resolution
+                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+                self._maxzoom = self.tms.zoom_for_res(resolution)
+
+            except:  # noqa
+                # if we can't get min/max zoom from the dataset we default to TMS maxzoom
+                warnings.warn(
+                    "Cannot determine maxzoom based on dataset information, will default to TMS maxzoom.",
+                    UserWarning,
+                )
+                self._maxzoom = self.tms.maxzoom
 
         return self._maxzoom
 
@@ -138,7 +182,7 @@ class XarrayReader(BaseReader):
 
     def info(self) -> Info:
         """Return COG info."""
-        raise NotImplemented
+        raise NotImplementedError
 
     def statistics(
         self,
@@ -150,7 +194,7 @@ class XarrayReader(BaseReader):
         **kwargs: Any,
     ) -> Dict[str, BandStatistics]:
         """Return bands statistics from a dataset."""
-        raise NotImplemented
+        raise NotImplementedError
 
     # TODO: Do we want time dimension?
     def tile(
@@ -159,10 +203,6 @@ class XarrayReader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
-        variables: Any = None,
-        expression: Optional[str] = None,
-        tile_buffer: Optional[NumType] = None,  # IGNORE THIS
-        buffer: Optional[float] = None,  # WE CAN IGNORE THIS FOR NOW
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a COG.
@@ -172,19 +212,12 @@ class XarrayReader(BaseReader):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
-            indexes (int or sequence of int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            tile_buffer (int or float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258). DEPRECATED
-            buffer (float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
             kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if isinstance(indexes, int):
-            indexes = (indexes,)
-
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
@@ -192,36 +225,32 @@ class XarrayReader(BaseReader):
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
+        # Create source array by clipping the xarray dataset to extent of the tile.
+        dst_bounds = transform_bounds(
+            self.tms.rasterio_crs, self.crs, *tile_bounds, densify_pts=21
+        )
 
-        if expression:
-            indexes = parse_expression(expression)
+        source_arr = self.dataset.rio.clip_box(*dst_bounds).data
+        output_arr = numpy.zeros(
+            (source_arr.shape[0], tilesize, tilesize), dtype=source_arr.dtype
+        )
+        reproject(
+            source_arr,
+            output_arr,
+            src_transform=from_bounds(
+                *dst_bounds, height=source_arr.shape[1], width=source_arr.shape[2]
+            ),
+            src_crs=self.crs,
+            dst_transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
+            dst_crs=self.tms.rasterio_crs,
+        )
 
-        if not dst_crs:
-            dst_crs = bounds_crs
-
-        # TODO: Implement the part read
-        # img = reader.part(
-        #     self.dataset,
-        #     bbox,
-        #     max_size=max_size,
-        #     width=width,
-        #     height=height,
-        #     bounds_crs=bounds_crs,
-        #     dst_crs=dst_crs,
-        #     indexes=indexes,
-        #     buffer=buffer,
-        #     **kwargs,
-        # )
-        img.assets = [self.input]
-
-        if expression:
-            return img.apply_expression(expression)
-
+        img = ImageData(
+            output_arr,
+            bounds=tile_bounds,
+            crs=self.tms.rasterio_crs,
+            assets=[self.input],
+        )
         return img
 
     def part(
@@ -255,7 +284,7 @@ class XarrayReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplemented
+        raise NotImplementedError
 
     def preview(
         self,
@@ -280,8 +309,7 @@ class XarrayReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplemented
-
+        raise NotImplementedError
 
     def point(
         self,
@@ -306,8 +334,7 @@ class XarrayReader(BaseReader):
             PointData
 
         """
-        raise NotImplemented
-
+        raise NotImplementedError
 
     def feature(
         self,
@@ -340,8 +367,7 @@ class XarrayReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplemented
-
+        raise NotImplementedError
 
     def read(
         self,
@@ -360,4 +386,4 @@ class XarrayReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplemented
+        raise NotImplementedError
