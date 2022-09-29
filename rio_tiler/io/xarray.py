@@ -31,7 +31,7 @@ import xarray
 
 
 @attr.s
-class XARRAYReader(BaseReader):
+class XarrayReader(BaseReader):
     """Xarray Reader.
 
     Attributes:
