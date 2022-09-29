@@ -43,6 +43,10 @@ test = [
 dev = [
     "pre-commit",
 ]
+xarray = [
+    "xarray",
+    "rioxarray",
+]
 docs = [
     "nbconvert",
     "mkdocs",

@@ -7,7 +7,6 @@ from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 import attr
 import numpy
 import rasterio
-import rioxarray
 import xarray
 from morecantile import Tile, TileMatrixSet
 from rasterio import transform
