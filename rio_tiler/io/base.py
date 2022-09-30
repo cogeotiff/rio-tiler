@@ -155,7 +155,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def statistics(self, **kwargs: Any) -> Dict[str, BandStatistics]:
+    def statistics(self) -> Dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
 
         Returns:
@@ -165,7 +165,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def tile(self, tile_x: int, tile_y: int, tile_z: int, **kwargs: Any) -> ImageData:
+    def tile(self, tile_x: int, tile_y: int, tile_z: int) -> ImageData:
         """Read a Map tile from the Dataset.
 
         Args:
@@ -180,7 +180,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
+    def part(self, bbox: BBox) -> ImageData:
         """Read a Part of a Dataset.
 
         Args:
@@ -193,7 +193,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def preview(self, **kwargs: Any) -> ImageData:
+    def preview(self) -> ImageData:
         """Read a preview of a Dataset.
 
         Returns:
@@ -203,7 +203,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def point(self, lon: float, lat: float, **kwargs: Any) -> PointData:
+    def point(self, lon: float, lat: float) -> PointData:
         """Read a value from a Dataset.
 
         Args:
@@ -217,7 +217,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def feature(self, shape: Dict, **kwargs: Any) -> ImageData:
+    def feature(self, shape: Dict) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
@@ -275,7 +275,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         _re = re.compile(rf"\b({assets})_b\d+\b")
         return tuple(set(re.findall(_re, expression)))
 
-    def info(  # type: ignore
+    def info(
         self, assets: Union[Sequence[str], str] = None, **kwargs: Any
     ) -> Dict[str, Info]:
         """Return metadata from multiple assets.
@@ -305,7 +305,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         return multi_values(assets, _reader, **kwargs)
 
-    def statistics(  # type: ignore
+    def statistics(
         self,
         assets: Union[Sequence[str], str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
@@ -350,7 +350,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         return multi_values(assets, _reader, **kwargs)
 
-    def merged_statistics(  # type: ignore
+    def merged_statistics(
         self,
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
