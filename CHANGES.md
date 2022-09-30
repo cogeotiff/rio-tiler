@@ -2,6 +2,7 @@
 # 4.0.0 (TBD)
 
 * add `apply_expression` method in `rio_tiler.models.ImageData` class
+* update `rio-tiler.reader.read/part` to avoid using WarpedVRT when no reprojection or nodata override is needed
 
 **breaking changes**
 
@@ -99,6 +100,11 @@
             metadata={}
         )
     ```
+
+* deleted `rio_tiler.reader.preview` function and updated `rio_tiler.reader.read` to allow width/height/max_size options
+* reordered keyword options in all `rio_tiler.reader` function for consistency
+* removed `AlphaBandWarning` warning when automatically excluding alpha band from data
+
 
 # 3.1.6 (2022-07-22)
 
