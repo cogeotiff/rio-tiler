@@ -68,32 +68,13 @@ class XarrayReader(BaseReader):
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
-    config = attr.ib(factory=dict)
-
-    # We use _kwargs to store values of nodata, unscale, vrt_options and resampling_method.
-    # _kwargs is used avoid having to set those values on each method call.
-    _kwargs: Dict[str, Any] = attr.ib(init=False, factory=dict)
-
     _minzoom: int = attr.ib(init=False, default=None)
     _maxzoom: int = attr.ib(init=False, default=None)
 
     def __attrs_post_init__(self):
-        """Define _kwargs, open dataset and get info."""
-        if self.config:
-            self._kwargs.update(**self.config)
-
-        # TODO: Get bounds
+        """Set bounds and CRS."""
         self.bounds = tuple(self.input.rio.bounds())
-
         self.crs = self.input.rio.crs
-
-    def close(self):
-        """Close rasterio dataset."""
-        pass
-
-    def __exit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        self.close()
 
     def _dst_geom_in_tms_crs(self):
         """Return dataset info in TMS projection."""
@@ -177,7 +158,7 @@ class XarrayReader(BaseReader):
         return self.get_maxzoom()
 
     def info(self) -> Info:
-        """Return COG info."""
+        """Return xarray.DataArray info."""
         raise NotImplementedError
 
     def statistics(
@@ -198,16 +179,14 @@ class XarrayReader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
-        **kwargs: Any,
     ) -> ImageData:
-        """Read a Web Map tile from a COG.
+        """Read a Web Map tile from a xarray.DataArray.
 
         Args:
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
-            kwargs (optional): Options to forward to the `COGReader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -224,8 +203,8 @@ class XarrayReader(BaseReader):
         dst_bounds = transform_bounds(
             self.tms.rasterio_crs, self.crs, *tile_bounds, densify_pts=21
         )
-
         source_arr = self.input.rio.clip_box(*dst_bounds)
+
         output_arr = numpy.zeros(
             (source_arr.shape[0], tilesize, tilesize), dtype=source_arr.dtype
         )
@@ -238,12 +217,7 @@ class XarrayReader(BaseReader):
             dst_crs=self.tms.rasterio_crs,
         )
 
-        img = ImageData(
-            output_arr,
-            bounds=tile_bounds,
-            crs=self.tms.rasterio_crs,
-            assets=[self.input],
-        )
+        img = ImageData(output_arr, bounds=tile_bounds, crs=self.tms.rasterio_crs)
         return img
 
     def part(
@@ -251,13 +225,6 @@ class XarrayReader(BaseReader):
         bbox: BBox,
         dst_crs: Optional[CRS] = None,
         bounds_crs: CRS = WGS84_CRS,
-        indexes: Optional[Union[int, Sequence]] = None,
-        expression: Optional[str] = None,
-        max_size: Optional[int] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-        buffer: Optional[float] = None,
-        **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG.
 
@@ -265,19 +232,17 @@ class XarrayReader(BaseReader):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
-            indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
-            height (int, optional): Output height of the array.
-            width (int, optional): Output width of the array.
-            buffer (float, optional): Buffer on each side of the given aoi. It must be a multiple of `0.5`. Output **image size** will be expanded to `output imagesize + 2 * buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
-            kwargs (optional): Options to forward to the `rio_tiler.reader.part` function.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        dst_crs = dst_crs or self.crs
+        if bounds_crs:
+            bounds = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        source_arr = self.input.rio.clip_box(*bounds)
+        return ImageData(source_arr.data, bounds=bounds, crs=dst_crs)
 
     def preview(
         self,
@@ -286,17 +251,13 @@ class XarrayReader(BaseReader):
         max_size: int = 1024,
         height: Optional[int] = None,
         width: Optional[int] = None,
-        **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a COG.
 
         Args:
-            indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            kwargs (optional): Options to forward to the `rio_tiler.reader.preview` function.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -309,19 +270,13 @@ class XarrayReader(BaseReader):
         lon: float,
         lat: float,
         coord_crs: CRS = WGS84_CRS,
-        indexes: Optional[Indexes] = None,
-        expression: Optional[str] = None,
-        **kwargs: Any,
     ) -> PointData:
-        """Read a pixel value from a COG.
+        """Read a pixel value from a xarray.DataArray.
 
         Args:
             lon (float): Longitude.
             lat (float): Latitude.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
-            indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            kwargs (optional): Options to forward to the `rio_tiler.reader.point` function.
 
         Returns:
             PointData
@@ -334,12 +289,9 @@ class XarrayReader(BaseReader):
         shape: Dict,
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
-        indexes: Optional[Indexes] = None,
-        expression: Optional[str] = None,
         max_size: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
-        buffer: Optional[NumType] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a COG defined by a geojson feature.
@@ -348,32 +300,9 @@ class XarrayReader(BaseReader):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            buffer (int or float, optional): Buffer on each side of the given aoi. It must be a multiple of `0.5`. Output **image size** will be expanded to `output imagesize + 2 * buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
-            kwargs (optional): Options to forward to the `COGReader.part` method.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
-
-        """
-        raise NotImplementedError
-
-    def read(
-        self,
-        indexes: Optional[Indexes] = None,
-        expression: Optional[str] = None,
-        **kwargs: Any,
-    ) -> ImageData:
-        """Read the COG.
-
-        Args:
-            indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            kwargs (optional): Options to forward to the `rio_tiler.reader.read` function.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
