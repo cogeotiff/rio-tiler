@@ -163,25 +163,17 @@ def test_aligned_with_internaltile():
     """Check if COG is in WebMercator and aligned with internal tiles."""
     bounds = WEB_MERCATOR_TMS.bounds(43, 25, 7)
     with rasterio.open(COG_DST) as src_dst:
-        assert not utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert not utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
     with rasterio.open(NOCOG) as src_dst:
-        assert not utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert not utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
     bounds = WEB_MERCATOR_TMS.bounds(147, 182, 9)
     with rasterio.open(COG_NOWEB) as src_dst:
-        assert not utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert not utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
     with rasterio.open(COG_WEB_TILED) as src_dst:
-        assert utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
 
 def test_find_non_alpha():
