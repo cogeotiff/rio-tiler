@@ -276,9 +276,7 @@ def get_vrt_transform(
 
     # If bounds window is aligned with the dataset internal tile we align the bounds with the pixels.
     # This is to limit the number of internal block fetched.
-    if _requested_tile_aligned_with_internal_tile(
-        src_dst, bounds, height, width, dst_crs
-    ):
+    if _requested_tile_aligned_with_internal_tile(src_dst, bounds, bounds_crs=dst_crs):
         # Get Window for the input bounds
         # e.g Window(col_off=17920.0, row_off=11007.999999999998, width=255.99999999999636, height=256.0000000000018)
         col_off, row_off, w, h = windows.from_bounds(
@@ -386,8 +384,6 @@ def linear_rescale(
 def _requested_tile_aligned_with_internal_tile(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: BBox,
-    height: Optional[int] = None,
-    width: Optional[int] = None,
     bounds_crs: CRS = WEB_MERCATOR_CRS,
 ) -> bool:
     """Check if tile is aligned with internal tiles."""

@@ -5,6 +5,7 @@ import os
 import numpy
 import pytest
 import rasterio
+from rasterio.warp import transform_bounds
 
 from rio_tiler import constants, reader
 from rio_tiler.errors import PointOutsideBounds, TileOutsideBounds
@@ -368,6 +369,18 @@ def test_tile_read_vrt_option():
 
 def test_point():
     """Read point values"""
+    with rasterio.open(COG) as src_dst:
+        pt = reader.point(
+            src_dst,
+            [-53.54620193828792, 73.28439084323475],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+        )
+        assert pt.data == numpy.array([1])
+        assert pt.mask == numpy.array([0])
+        assert pt.band_names == ["b1"]
+
     with rasterio.open(COG_SCALE) as src_dst:
         pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs, indexes=1)
         assert pt.data == numpy.array([8917])
@@ -380,13 +393,6 @@ def test_point():
 
         with pytest.raises(PointOutsideBounds):
             reader.point(src_dst, [810000, 4100000], coord_crs=src_dst.crs)
-
-    with rasterio.open(S3_MASK_PATH) as src_dst:
-        # Test with COG + internal mask
-        assert not reader.point(src_dst, [-104.7753105, 38.953548]).data[0]
-        assert reader.point(src_dst, [-104.7753105415, 38.953548]).data[
-            0
-        ] == numpy.array([0])
 
     with rasterio.open(S3_ALPHA_PATH) as src_dst:
         # Test with COG + Alpha Band
@@ -449,3 +455,167 @@ def test_part_with_buffer():
     # all arrays should be equal
     numpy.array_equal(img_no_buffer.data, imgb.data[:, 2:-2, 2:-2])
     numpy.array_equal(img_no_buffer.data, img.data[:, 2:-2, 2:-2])
+
+
+def test_read():
+    """Test reader.read function."""
+    with rasterio.open(COG) as src:
+        img = reader.read(src)
+        assert img.width == src.width
+        assert img.height == src.height
+        assert img.count == src.count
+        assert img.bounds == src.bounds
+        assert img.crs == src.crs
+
+    with rasterio.open(COG) as src:
+        with pytest.warns(UserWarning):
+            img = reader.read(src, max_size=1000, width=100, height=100)
+        assert img.width == 100
+        assert img.height == 100
+        assert img.count == src.count
+        assert img.bounds == src.bounds
+        assert img.crs == src.crs
+
+    with rasterio.open(COG) as src:
+        img = reader.read(src, width=100, height=100)
+        assert img.width == 100
+        assert img.height == 100
+        assert img.count == src.count
+        assert img.bounds == src.bounds
+        assert img.crs == src.crs
+
+    with rasterio.open(COG) as src:
+        img = reader.read(src, max_size=100)
+        assert max(img.width, img.height) == 100
+        assert img.count == src.count
+        assert img.bounds == src.bounds
+        assert img.crs == src.crs
+
+    with rasterio.open(COG) as src:
+        img = reader.read(src, dst_crs="epsg:3857")
+        assert not img.width == src.width
+        assert not img.height == src.height
+        assert img.count == src.count
+        assert not img.bounds == src.bounds
+        assert not img.crs == src.crs
+
+    with rasterio.open(COG) as src:
+        img = reader.read(src)
+        assert img.mask.all()
+
+    with rasterio.open(COG) as src:
+        img = reader.read(src, nodata=1)
+        assert not img.mask.all()
+
+    with rasterio.open(COG) as src:
+        img = reader.read(src, window=((0, 100), (0, 100)))
+        assert img.width == 100
+        assert img.height == 100
+        assert img.count == src.count
+        assert not img.bounds == src.bounds
+        assert img.crs == src.crs
+
+    # Boundless Read
+    with rasterio.open(COG) as src:
+        img = reader.read(src, window=((-10, 100), (-10, 100)))
+        assert img.width == 110
+        assert img.height == 110
+        assert img.count == src.count
+        assert not img.bounds == src.bounds
+        assert img.crs == src.crs
+
+    with rasterio.open(COG) as src:
+        img = reader.read(src, window=((0, 4000), (0, 4000)))
+        assert img.width == 4000
+        assert img.height == 4000
+        assert img.count == src.count
+        assert not img.bounds == src.bounds
+        assert img.crs == src.crs
+
+    # Can't use boundless window with WarpedVRT
+    with rasterio.open(COG) as src:
+        with pytest.raises(ValueError):
+            reader.read(src, window=((0, 4000), (0, 4000)), dst_crs="epsg:3857")
+
+    # Unscale Dataset
+    with rasterio.open(COG_SCALE) as src:
+        assert not src.dtypes[0] == numpy.float32
+        img = reader.read(src, unscale=True)
+        assert img.data.dtype == numpy.float32
+
+    # Dataset with Alpha using WarpedVRT
+    with rasterio.open(S3_ALPHA_PATH) as src:
+        img = reader.read(src, dst_crs="epsg:3857")
+        assert not img.mask.all()
+
+
+def test_part_no_VRT():
+    """Test reader.part function without VRT."""
+    bounds = [
+        -56.6015625,
+        73.0001215118412,
+        -51.67968749999999,
+        74.23886253330774,
+    ]  # boundless part
+    # Read part at full resolution
+    with rasterio.open(COG) as src_dst:
+
+        bounds_dst_crs = transform_bounds(
+            "epsg:4326", src_dst.crs, *bounds, densify_pts=21
+        )
+
+        img = reader.part(src_dst, bounds, bounds_crs="epsg:4326")
+        assert img.height == 1453
+        assert img.width == 1613
+        assert img.mask[0, 0] == 255
+        assert img.mask[-1, -1] == 0  # boundless
+        assert img.bounds == bounds_dst_crs
+
+        # Use bbox in Image CRS
+        img_crs = reader.part(src_dst, bounds_dst_crs)
+        assert img.height == 1453
+        assert img.width == 1613
+        assert img_crs.mask[0, 0] == 255
+        assert img_crs.mask[-1, -1] == 0  # boundless
+        assert img.bounds == bounds_dst_crs
+
+        # MaxSize
+        img = reader.part(src_dst, bounds, bounds_crs="epsg:4326", max_size=1024)
+        assert img.height < 1024
+        assert img.width == 1024
+        assert img.mask[0, 0] == 255
+        assert img.mask[-1, -1] == 0  # boundless
+        assert img.bounds == bounds_dst_crs
+
+        # Width/Height
+        img = reader.part(
+            src_dst,
+            bounds,
+            bounds_crs="epsg:4326",
+            width=100,
+            height=100,
+        )
+        assert img.height == 100
+        assert img.width == 100
+        assert img.mask[0, 0] == 255
+        assert img.mask[-1, -1] == 0  # boundless
+        assert img.bounds == bounds_dst_crs
+
+        # Buffer
+        img = reader.part(src_dst, bounds, bounds_crs="epsg:4326", buffer=1)
+        assert img.height == 1455
+        assert img.width == 1615
+        assert img.mask[0, 0] == 255
+        assert img.mask[-1, -1] == 0  # boundless
+        assert not img.bounds == bounds_dst_crs
+
+        # Padding
+        img = reader.part(src_dst, bounds, bounds_crs="epsg:4326")
+        img_pad = reader.part(src_dst, bounds, bounds_crs="epsg:4326", padding=1)
+        assert img_pad.height == 1453
+        assert img_pad.width == 1613
+        assert img_pad.mask[0, 0] == 255
+        assert img_pad.mask[-1, -1] == 0  # boundless
+        assert img_pad.bounds == bounds_dst_crs
+        # Padding should not have any influence when not doing any rescaling/reprojection
+        numpy.array_equal(img_pad.data, img.data)

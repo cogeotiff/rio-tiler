@@ -444,4 +444,5 @@ def test_mosaic_tiler_with_imageDataClass():
     assert img.crs == crs1 == crs2
     assert not img.bounds == bbox
     bbox_in_crs = transform_bounds(WGS84_CRS, crs1, *bbox, densify_pts=21)
-    assert img.bounds == bbox_in_crs
+    for xc, yc in zip(img.bounds, bbox_in_crs):
+        assert round(xc, 5) == round(yc, 5)
