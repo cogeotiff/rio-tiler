@@ -1,32 +1,24 @@
 """rio_tiler.io.xarray: Xarray Reader."""
 
-import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Dict, List, Optional
 
 import attr
-import numpy
-import rasterio
 import xarray
 from morecantile import Tile, TileMatrixSet
-from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
-from rasterio.features import bounds as featureBounds
-from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
+from rasterio.features import is_valid_geom
 from rasterio.rio.overview import get_maximum_overview_level
-from rasterio.transform import from_bounds
-from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform, reproject, transform_bounds
+from rasterio.transform import from_bounds, rowcol
+from rasterio.warp import calculate_default_transform
+from rasterio.warp import transform as transform_coords
 
-from .. import reader
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
-from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
-from ..expression import parse_expression
-from ..models import BandStatistics, ImageData, Info, PointData
-from ..types import BBox, DataMaskType, Indexes, NoData, NumType
-from ..utils import create_cutline, get_array_statistics, has_alpha_band, has_mask_band
-from .base import BaseReader
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.errors import PointOutsideBounds, RioTilerError, TileOutsideBounds
+from rio_tiler.io.base import BaseReader
+from rio_tiler.models import BandStatistics, ImageData, Info, PointData
+from rio_tiler.types import BBox
 
 
 @attr.s
@@ -159,7 +151,29 @@ class XarrayReader(BaseReader):
 
     def info(self) -> Info:
         """Return xarray.DataArray info."""
-        raise NotImplementedError
+        dims = [
+            d
+            for d in self.input.dims
+            if d not in ["lat", "lon", "longitude", "latitude", "x", "y"]
+        ]
+
+        bands = [str(band) for d in dims for band in self.input[d].values]
+        metadata = [band.attrs for d in dims for band in self.input[d]]
+
+        meta = {
+            "bounds": self.geographic_bounds,
+            "minzoom": self.minzoom,
+            "maxzoom": self.maxzoom,
+            "band_metadata": [(f"b{ix + 1}", v) for ix, v in enumerate(metadata)],
+            "band_descriptions": [(f"b{ix + 1}", v) for ix, v in enumerate(bands)],
+            "dtype": str(self.input.dtype),
+            "nodata_type": "Nodata" if self.input.rio.nodata is not None else "None",
+            "name": self.input.name,
+            "count": self.input.rio.count,
+            "width": self.input.rio.width,
+            "height": self.input.rio.height,
+        }
+        return Info(**meta)
 
     def statistics(
         self,
@@ -179,14 +193,16 @@ class XarrayReader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
+        resampling_method: Resampling = "nearest",
     ) -> ImageData:
-        """Read a Web Map tile from a xarray.DataArray.
+        """Read a Web Map tile from a dataset.
 
         Args:
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
+            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -200,59 +216,62 @@ class XarrayReader(BaseReader):
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
         # Create source array by clipping the xarray dataset to extent of the tile.
-        dst_bounds = transform_bounds(
-            self.tms.rasterio_crs, self.crs, *tile_bounds, densify_pts=21
-        )
-        source_arr = self.input.rio.clip_box(*dst_bounds)
-
-        output_arr = numpy.zeros(
-            (source_arr.shape[0], tilesize, tilesize), dtype=source_arr.dtype
-        )
-        reproject(
-            source_arr.data,
-            output_arr,
-            src_transform=source_arr.rio.transform(),
-            src_crs=self.crs,
-            dst_transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
-            dst_crs=self.tms.rasterio_crs,
+        ds = self.input.rio.clip_box(*tile_bounds, crs=self.tms.rasterio_crs)
+        ds = ds.rio.reproject(
+            self.tms.rasterio_crs,
+            shape=(tilesize, tilesize),
+            transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
+            resampling=Resampling[resampling_method],
         )
 
-        img = ImageData(output_arr, bounds=tile_bounds, crs=self.tms.rasterio_crs)
-        return img
+        return ImageData(ds.data, bounds=tile_bounds, crs=self.tms.rasterio_crs)
 
     def part(
         self,
         bbox: BBox,
         dst_crs: Optional[CRS] = None,
         bounds_crs: CRS = WGS84_CRS,
+        resampling_method: Resampling = "nearest",
     ) -> ImageData:
-        """Read part of a COG.
+        """Read part of a dataset.
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
+            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        dst_crs = dst_crs or self.crs
-        if bounds_crs:
-            bounds = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+        dst_crs = dst_crs or bounds_crs
+        ds = self.input.rio.clip_box(*bbox, crs=bounds_crs)
 
-        source_arr = self.input.rio.clip_box(*bounds)
-        return ImageData(source_arr.data, bounds=bounds, crs=dst_crs)
+        if dst_crs != self.crs:
+            dst_transform, w, h = calculate_default_transform(
+                self.crs,
+                dst_crs,
+                ds.rio.width,
+                ds.rio.height,
+                *ds.rio.bounds(),
+            )
+            ds = ds.rio.reproject(
+                dst_crs,
+                shape=(h, w),
+                transform=dst_transform,
+                resampling=Resampling[resampling_method],
+            )
+
+        return ImageData(ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs)
 
     def preview(
         self,
-        indexes: Optional[Indexes] = None,
-        expression: Optional[str] = None,
         max_size: int = 1024,
         height: Optional[int] = None,
         width: Optional[int] = None,
     ) -> ImageData:
-        """Return a preview of a COG.
+        """Return a preview of a dataset.
 
         Args:
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
@@ -271,7 +290,7 @@ class XarrayReader(BaseReader):
         lat: float,
         coord_crs: CRS = WGS84_CRS,
     ) -> PointData:
-        """Read a pixel value from a xarray.DataArray.
+        """Read a pixel value from a dataset.
 
         Args:
             lon (float): Longitude.
@@ -282,30 +301,62 @@ class XarrayReader(BaseReader):
             PointData
 
         """
-        raise NotImplementedError
+        ds_lon, ds_lat = transform_coords(coord_crs, self.crs, [lon], [lat])
+
+        if not (
+            (self.bounds[0] < ds_lon[0] < self.bounds[2])
+            and (self.bounds[1] < ds_lat[0] < self.bounds[3])
+        ):
+            raise PointOutsideBounds("Point is outside dataset bounds")
+
+        x, y = rowcol(self.input.rio.transform, ds_lon, ds_lat)
+
+        return PointData(
+            self.input.data[:, y[0], y[0]], coordinates=(lon, lat), crs=coord_crs
+        )
 
     def feature(
         self,
         shape: Dict,
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
-        max_size: Optional[int] = None,
-        height: Optional[int] = None,
-        width: Optional[int] = None,
-        **kwargs: Any,
+        resampling_method: Resampling = "nearest",
     ) -> ImageData:
-        """Read part of a COG defined by a geojson feature.
+        """Read part of a dataset defined by a geojson feature.
 
         Args:
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
-            height (int, optional): Output height of the array.
-            width (int, optional): Output width of the array.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        if not dst_crs:
+            dst_crs = shape_crs
+
+        if "geometry" in shape:
+            shape = shape["geometry"]
+
+        if not is_valid_geom(shape):
+            raise RioTilerError("Invalid geometry")
+
+        ds = self.input.rio.clip([shape], crs=shape_crs)
+
+        if dst_crs != self.crs:
+            dst_transform, w, h = calculate_default_transform(
+                self.crs,
+                dst_crs,
+                ds.rio.width,
+                ds.rio.height,
+                *ds.rio.bounds(),
+            )
+            ds = ds.rio.reproject(
+                dst_crs,
+                shape=(h, w),
+                transform=dst_transform,
+                resampling=Resampling[resampling_method],
+            )
+
+        return ImageData(ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs)
