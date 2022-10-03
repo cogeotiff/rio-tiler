@@ -135,3 +135,25 @@ def test_apply_expression():
     assert img2.width == 256
     assert img2.height == 256
     assert img2.band_names == ["b1+b2"]
+
+
+def test_dataset_statistics():
+    """Make statistics are preserved on expression"""
+    data = numpy.zeros((2, 256, 256), dtype="uint8")
+    data[0, 0:10, 0:10] = 0
+    data[0, 10:11, 10:11] = 100
+    data[1, 0:10, 0:10] = 100
+    data[1, 10:11, 10:11] = 200
+    img = ImageData(data, dataset_statistics=[(0, 100), (0, 200)])
+
+    img2 = img.apply_expression("b1+b2")
+    assert img2.dataset_statistics == [(0, 300)]
+
+    img2 = img.apply_expression("b1+b2;b1*b2;b1/b1")
+    assert img2.dataset_statistics == [(0, 300), (0, 20000), (0, 1)]
+    assert img2.data[0].min() == 0
+    assert img2.data[0].max() == 300
+    assert img2.data[1].min() == 0
+    assert img2.data[1].max() == 20000
+    assert img2.data[2].min() == 0
+    assert img2.data[2].max() == 1
