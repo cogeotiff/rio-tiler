@@ -256,7 +256,8 @@ class ImageData:
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
         band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
-        dataset_statistics (list, optional): dataset statistics `{"b1": (min,max), "b2": (min,max)}`
+        dataset_statistics (list, optional): dataset statistics `[(min, max), (min, max)]`
+
     """
 
     data: numpy.ndarray = attr.ib()
@@ -266,9 +267,7 @@ class ImageData:
     crs: Optional[CRS] = attr.ib(default=None)
     metadata: Optional[Dict] = attr.ib(factory=dict)
     band_names: List[str] = attr.ib()
-    dataset_statistics: Optional[
-        List[Tuple[Optional[float], Optional[float]]]
-    ] = attr.ib(default=None)
+    dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(default=None)
 
     @data.validator
     def _validate_data(self, attribute, value):
@@ -334,11 +333,12 @@ class ImageData:
             )
         )
 
-        dataset_statistics = list(
+        stats = list(
             itertools.chain.from_iterable(
                 [img.dataset_statistics for img in data if img.dataset_statistics]
             )
         )
+        dataset_statistics = stats if len(stats) == len(band_names) else None
 
         return cls(
             arr,
@@ -408,7 +408,7 @@ class ImageData:
         blocks = get_expression_blocks(expression)
 
         stats = self.dataset_statistics
-        if numpy.array(stats).all() is not None:
+        if stats:
             res = []
             for prod in itertools.product(*stats):  # type: ignore
                 res.append(apply_expression(blocks, self.band_names, numpy.array(prod)))
@@ -498,7 +498,7 @@ class ImageData:
                 kwargs.update({"crs": self.crs})
 
         data = self.data.copy()
-        datatype_range = (dtype_ranges[str(data.dtype)],)
+        datatype_range = self.dataset_statistics or (dtype_ranges[str(data.dtype)],)
 
         if not colormap:
             if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:

@@ -188,18 +188,18 @@ def read(
                 boundless=boundless,
             )
 
-        dataset_statistics = []
+        stats = []
         for ix in indexes:
             tags = dataset.tags(ix)
-            stat_min: Optional[float] = None
-            stat_max: Optional[float] = None
             if all(
                 stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
             ):
                 stat_min = float(tags.get("STATISTICS_MINIMUM"))
                 stat_max = float(tags.get("STATISTICS_MAXIMUM"))
+                stats.append((stat_min, stat_max))
 
-            dataset_statistics.append((stat_min, stat_max))
+        # We only add dataset statistics if we have them for all the indexes
+        dataset_statistics = stats if len(stats) == len(indexes) else None
 
         if force_binary_mask:
             mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
