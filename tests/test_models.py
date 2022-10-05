@@ -5,6 +5,7 @@ from io import BytesIO
 import numpy
 import pytest
 import rasterio
+from rasterio.io import MemoryFile
 
 from rio_tiler.errors import InvalidDatatypeWarning
 from rio_tiler.models import ImageData
@@ -157,3 +158,21 @@ def test_dataset_statistics():
     assert img2.data[1].max() == 20000
     assert img2.data[2].min() == 0
     assert img2.data[2].max() == 1
+
+    data = numpy.zeros((1, 256, 256), dtype="int16")
+    data[0, 0:10, 0:10] = 0
+    data[0, 10:11, 10:11] = 1
+
+    img = ImageData(data, dataset_statistics=[(0, 1)]).render(img_format="PNG")
+    with MemoryFile(img) as mem:
+        with mem.open() as dst:
+            arr = dst.read(indexes=1)
+            assert arr.min() == 0
+            assert arr.max() == 255
+
+    img = ImageData(data).render(img_format="PNG")
+    with MemoryFile(img) as mem:
+        with mem.open() as dst:
+            arr = dst.read(indexes=1)
+            assert not arr.min() == 0
+            assert not arr.max() == 255
