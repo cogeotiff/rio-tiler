@@ -154,7 +154,7 @@ class XarrayReader(BaseReader):
         dims = [
             d
             for d in self.input.dims
-            if d not in ["lat", "lon", "longitude", "latitude", "x", "y"]
+            if d not in [ds.rio.x_dim, ds.rio.y_dim]
         ]
 
         bands = [str(band) for d in dims for band in self.input[d].values]
