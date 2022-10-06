@@ -154,9 +154,8 @@ class XarrayReader(BaseReader):
         dims = [
             d
             for d in self.input.dims
-            if d not in [ds.rio.x_dim, ds.rio.y_dim]
+            if d not in [self.input.rio.x_dim, self.input.rio.y_dim]
         ]
-
         bands = [str(band) for d in dims for band in self.input[d].values]
         metadata = [band.attrs for d in dims for band in self.input[d]]
 
