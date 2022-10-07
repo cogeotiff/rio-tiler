@@ -5,9 +5,10 @@ import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import attr
+import morecantile
 import numpy
 import rasterio
-from morecantile import Tile, TileMatrixSet
+from morecantile.utils import _parse_tile_arg
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -67,7 +68,7 @@ class COGReader(BaseReader):
         default=None
     )
 
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+    tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     colormap: Dict = attr.ib(default=None)
@@ -119,6 +120,13 @@ class COGReader(BaseReader):
 
         self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
+        if not self.crs:
+            self.tms = LocalTileMatrixSet(
+                width=self.dataset.width,
+                height=self.dataset.height,
+            )
+            self._minzoom = self.tms.minzoom
+            self._maxzoom = self.tms.maxzoom
 
         self.nodata = self.nodata if self.nodata is not None else self.dataset.nodata
 
@@ -245,7 +253,7 @@ class COGReader(BaseReader):
             nodata_type = "None"
 
         meta = {
-            "bounds": self.geographic_bounds,
+            "bounds": self.geographic_bounds if self.crs else self.bounds,
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
             "band_metadata": [
@@ -359,7 +367,7 @@ class COGReader(BaseReader):
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
             )
 
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        tile_bounds = self.tms.xy_bounds(morecantile.Tile(x=tile_x, y=tile_y, z=tile_z))
 
         if tile_buffer:
             warnings.warn(
@@ -647,7 +655,7 @@ class GCPCOGReader(COGReader):
         default=None
     )
 
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+    tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     minzoom: int = attr.ib(default=None)
     maxzoom: int = attr.ib(default=None)
 
@@ -685,3 +693,51 @@ class GCPCOGReader(COGReader):
             )
         )
         super().__attrs_post_init__()
+
+
+@attr.s
+class LocalTileMatrixSet:
+    """Fake TMS for local image."""
+
+    width: int = attr.ib()
+    height: int = attr.ib()
+    tile_size: int = attr.ib(default=256)
+    rasterio_crs: CRS = attr.ib(default=None)
+
+    _minzoom: int = attr.ib(init=False, default=0)
+    _maxzoom: int = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        """Get MaxZoom from the dataset."""
+        self._maxzoom = get_maximum_overview_level(
+            self.width,
+            self.height,
+            minsize=self.tile_size,
+        )
+
+    @property
+    def minzoom(self):
+        """Return tms minzoom."""
+        return self._minzoom
+
+    @property
+    def maxzoom(self):
+        """Return tms maxzoom."""
+        return self._maxzoom
+
+    def _ul(self, *tile: morecantile.Tile) -> morecantile.Coords:
+        """Return the upper left coordinate of the (x, y, z) tile."""
+        t = _parse_tile_arg(*tile)
+
+        res = 2.0 ** (self.maxzoom - t.z)
+        xcoord = self.tile_size * t.x * res
+        ycoord = self.tile_size * t.y * res
+
+        return morecantile.Coords(xcoord, ycoord)
+
+    def xy_bounds(self, *tile: morecantile.Tile) -> morecantile.BoundingBox:
+        """Return the bounding box of the (x, y, z) tile"""
+        t = _parse_tile_arg(*tile)
+        left, bottom = self._ul(t)
+        right, top = self._ul(morecantile.Tile(t.x + 1, t.y + 1, t.z))
+        return morecantile.BoundingBox(left, top, right, bottom)

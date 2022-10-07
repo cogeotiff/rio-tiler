@@ -24,6 +24,16 @@ from ..types import BBox, Indexes
 from ..utils import get_array_statistics
 
 
+def _normalize_bounds(bounds: BBox) -> BBox:
+    """Return BBox in correct minx, miny, maxx, maxy order."""
+    return (
+        min(bounds[0], bounds[2]),
+        min(bounds[1], bounds[3]),
+        max(bounds[0], bounds[2]),
+        max(bounds[1], bounds[3]),
+    )
+
+
 def _AssetExpressionWarning():
     warnings.warn(
         "asset_expression is deprecated and will be removed in 4.0. Use pure Expression",
@@ -115,11 +125,13 @@ class SpatialMixin:
         if not all(numpy.isfinite(tile_bounds)):
             return True
 
+        tile_bounds = _normalize_bounds(tile_bounds)
+        dst_bounds = _normalize_bounds(self.bounds)
         return (
-            (tile_bounds[0] < self.bounds[2])
-            and (tile_bounds[2] > self.bounds[0])
-            and (tile_bounds[3] > self.bounds[1])
-            and (tile_bounds[1] < self.bounds[3])
+            (tile_bounds[0] < dst_bounds[2])
+            and (tile_bounds[2] > dst_bounds[0])
+            and (tile_bounds[3] > dst_bounds[1])
+            and (tile_bounds[1] < dst_bounds[3])
         )
 
 

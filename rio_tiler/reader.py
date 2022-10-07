@@ -152,11 +152,13 @@ def read(
                 window = windows.Window.from_slices(
                     *window, height=dataset.height, width=dataset.width, boundless=True
                 )
-            if min(window.col_off, window.row_off) < 0:
-                boundless = True
 
-            wbounds = dataset.window_bounds(window)
-            if wbounds[2] > dataset.bounds[2] or wbounds[3] > dataset.bounds[3]:
+            (row_start, row_stop), (col_start, col_stop) = window.toranges()
+            if (
+                min(col_start, row_start) < 0
+                or row_stop >= dataset.width
+                or col_stop >= dataset.height
+            ):
                 boundless = True
 
         if ColorInterp.alpha in dataset.colorinterp:
@@ -459,19 +461,26 @@ def point(
         else:
             dataset = src_dst
 
-        lon, lat = transform_coords(
-            coord_crs, dataset.crs, [coordinates[0]], [coordinates[1]]
-        )
+        dst_coordinates = coordinates
+        if coord_crs != dataset.crs:
+            x, y = transform_coords(
+                coord_crs, dataset.crs, [coordinates[0]], [coordinates[1]]
+            )
+            dst_coordinates = x[0], y[0]
+
+        minx = min(dataset.bounds[0], dataset.bounds[2])
+        maxx = max(dataset.bounds[0], dataset.bounds[2])
+        miny = min(dataset.bounds[1], dataset.bounds[3])
+        maxy = max(dataset.bounds[1], dataset.bounds[3])
         if not (
-            (dataset.bounds[0] < lon[0] < dataset.bounds[2])
-            and (dataset.bounds[1] < lat[0] < dataset.bounds[3])
+            (minx <= dst_coordinates[0] < maxx) and (miny <= dst_coordinates[1] < maxy)
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
         if indexes is None:
             indexes = non_alpha_indexes(dataset)
 
-        values = list(dataset.sample([(lon[0], lat[0])], indexes=indexes, masked=True))[
+        values = list(dataset.sample([dst_coordinates], indexes=indexes, masked=True))[
             0
         ]
         data = values.data
