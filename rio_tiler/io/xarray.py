@@ -26,32 +26,21 @@ class XarrayReader(BaseReader):
     """Xarray Reader.
 
     Attributes:
-        dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
+        dataset (xarray.DataArray): Xarray DataArray dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
-        colormap (dict, optional): Overwrite internal colormap.
-        nodata (int or float or str, optional): Global options, overwrite internal nodata value.
-        unscale (bool, optional): Global options, apply internal scale and offset on all read operations.
-        resampling_method (rasterio.enums.Resampling, optional): Global options, resampling method to use for read operations.
-        vrt_options (dict, optional): Global options, WarpedVRT options to use for read operations.
-        post_process (callable, optional): Global options, Function to apply after all read operations.
 
     Examples:
-        >>> with COGReader(src_path) as cog:
-            cog.tile(...)
+        >>> ds = xarray.open_dataset(
+                "https://pangeo.blob.core.windows.net/pangeo-public/daymet-rio-tiler/na-wgs84.zarr",
+                engine="zarr",
+                decode_coords="all",
+                consolidated=True,
+            )
+            da = ds["tmax"]
 
-        >>> # Set global options
-            with COGReader(src_path, unscale=True, nodata=0) as cog:
-                cog.tile(...)
-
-        >>> with rasterio.open(src_path) as src_dst:
-                with WarpedVRT(src_dst, ...) as vrt_dst:
-                    with COGReader(None, dataset=vrt_dst) as cog:
-                        cog.tile(...)
-
-        >>> with rasterio.open(src_path) as src_dst:
-                with COGReader(None, dataset=src_dst) as cog:
-                    cog.tile(...)
+            with XarrayReader(da) as dst:
+                img = dst.tile(...)
 
     """
 
@@ -209,7 +198,7 @@ class XarrayReader(BaseReader):
         """
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside bounds"
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
@@ -223,7 +212,18 @@ class XarrayReader(BaseReader):
             resampling=Resampling[resampling_method],
         )
 
-        return ImageData(ds.data, bounds=tile_bounds, crs=self.tms.rasterio_crs)
+        # Forward valid_min/valid_max to the ImageData object
+        minv, maxv = ds.attrs.get("valid_min"), ds.attrs.get("valid_max")
+        stats = None
+        if minv is not None and maxv is not None:
+            stats = ((minv, maxv),) * ds.rio.count
+
+        return ImageData(
+            ds.data,
+            bounds=tile_bounds,
+            crs=self.tms.rasterio_crs,
+            dataset_statistics=stats,
+        )
 
     def part(
         self,
@@ -262,7 +262,15 @@ class XarrayReader(BaseReader):
                 resampling=Resampling[resampling_method],
             )
 
-        return ImageData(ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs)
+        # Forward valid_min/valid_max to the ImageData object
+        minv, maxv = ds.attrs.get("valid_min"), ds.attrs.get("valid_max")
+        stats = None
+        if minv is not None and maxv is not None:
+            stats = ((minv, maxv),) * ds.rio.count
+
+        return ImageData(
+            ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs, dataset_statistics=stats
+        )
 
     def preview(
         self,
@@ -358,4 +366,12 @@ class XarrayReader(BaseReader):
                 resampling=Resampling[resampling_method],
             )
 
-        return ImageData(ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs)
+        # Forward valid_min/valid_max to the ImageData object
+        minv, maxv = ds.attrs.get("valid_min"), ds.attrs.get("valid_max")
+        stats = None
+        if minv is not None and maxv is not None:
+            stats = ((minv, maxv),) * ds.rio.count
+
+        return ImageData(
+            ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs, dataset_statistics=stats
+        )
