@@ -121,6 +121,10 @@ class COGReader(BaseReader):
         self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
         if not self.crs:
+            warnings.warn(
+                "Dataset has no CRS defined, Will default to Local TMS.", UserWarning
+            )
+            self.geographic_crs = None
             self.tms = LocalTileMatrixSet(
                 width=self.dataset.width,
                 height=self.dataset.height,
@@ -253,7 +257,7 @@ class COGReader(BaseReader):
             nodata_type = "None"
 
         meta = {
-            "bounds": self.geographic_bounds if self.crs else self.bounds,
+            "bounds": self.geographic_bounds,
             "minzoom": self.minzoom,
             "maxzoom": self.maxzoom,
             "band_metadata": [
@@ -562,11 +566,18 @@ class COGReader(BaseReader):
         if not dst_crs:
             dst_crs = shape_crs
 
+        vrt_options = kwargs.pop("vrt_options", {})
+
         # Get BBOX of the polygon
         bbox = featureBounds(shape)
 
+        # If Dataset Origin is top Left (non-geo) we need to invert the bbox
+        # And set src_method="NO_GEOTRANSFORM" to use WarpedVRT
+        if self.bounds[1] > self.bounds[3] and not self.crs:
+            bbox = [bbox[0], bbox[3], bbox[2], bbox[1]]
+            vrt_options.update({"src_method": "NO_GEOTRANSFORM"})
+
         cutline = create_cutline(self.dataset, shape, geometry_crs=shape_crs)
-        vrt_options = kwargs.pop("vrt_options", {})
         vrt_options.update({"cutline": cutline})
 
         return self.part(
@@ -704,26 +715,16 @@ class LocalTileMatrixSet:
     tile_size: int = attr.ib(default=256)
     rasterio_crs: CRS = attr.ib(default=None)
 
-    _minzoom: int = attr.ib(init=False, default=0)
-    _maxzoom: int = attr.ib(init=False)
+    minzoom: int = attr.ib(init=False, default=0)
+    maxzoom: int = attr.ib(init=False)
 
-    def __attrs_post_init__(self):
-        """Get MaxZoom from the dataset."""
-        self._maxzoom = get_maximum_overview_level(
+    @maxzoom.default
+    def _maxzoom(self):
+        return get_maximum_overview_level(
             self.width,
             self.height,
             minsize=self.tile_size,
         )
-
-    @property
-    def minzoom(self):
-        """Return tms minzoom."""
-        return self._minzoom
-
-    @property
-    def maxzoom(self):
-        """Return tms maxzoom."""
-        return self._maxzoom
 
     def _ul(self, *tile: morecantile.Tile) -> morecantile.Coords:
         """Return the upper left coordinate of the (x, y, z) tile."""

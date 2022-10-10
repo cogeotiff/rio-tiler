@@ -13,6 +13,7 @@ import rasterio
 from morecantile import TileMatrixSet
 from pyproj import CRS
 from rasterio import transform
+from rasterio.errors import NotGeoreferencedWarning
 from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
@@ -22,6 +23,7 @@ from rio_tiler.errors import (
     ExpressionMixingWarning,
     InvalidBufferSize,
     NoOverviewWarning,
+    PointOutsideBounds,
     TileOutsideBounds,
 )
 from rio_tiler.io import COGReader
@@ -50,6 +52,8 @@ COG_MASK = os.path.join(PREFIX, "my-bucket", KEY_MASK)
 
 KEY_EXTMASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_extmask.tif"
 COG_EXTMASK = os.path.join(PREFIX, "my-bucket", KEY_EXTMASK)
+
+NO_GEO = os.path.join(PREFIX, "no_geo.jpg")
 
 
 def test_spatial_info_valid():
@@ -812,10 +816,10 @@ def test_nonearthbody():
             assert cog.maxzoom == 24
 
     # Warns because of zoom level in WebMercator can't be defined
-    with pytest.warns(UserWarning) as warnings:
+    with pytest.warns(UserWarning) as w:
         with COGReader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as cog:
             assert cog.info()
-            assert len(warnings) == 2
+            assert len(w) == 2
 
             img = cog.read()
             assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
@@ -833,7 +837,7 @@ def test_nonearthbody():
             lat = (cog.bounds[1] + cog.bounds[3]) / 2
             assert cog.point(lon, lat, coord_crs=cog.crs).data[0] is not None
 
-    with pytest.warns(UserWarning) as warnings:
+    with pytest.warns(UserWarning) as w:
         europa_crs = CRS.from_authority("ESRI", 104915)
         tms = TileMatrixSet.custom(
             crs=europa_crs,
@@ -927,3 +931,71 @@ def test_tms_tilesize_and_zoom():
     with COGReader(COG_NODATA, tms=tms_2048) as cog:
         assert cog.minzoom == 5
         assert cog.maxzoom == 6
+
+
+def test_non_geo_image():
+    """Test COGReader usage with Non-Geo Images."""
+    with pytest.warns() as w:
+        with COGReader(NO_GEO) as cog:
+            assert cog.minzoom == 0
+            assert cog.maxzoom == 3
+        assert len(w) == 2
+        assert issubclass(w[0].category, NotGeoreferencedWarning)
+        assert issubclass(w[1].category, UserWarning)
+
+    with warnings.catch_warnings():
+        with COGReader(NO_GEO) as cog:
+            assert list(cog.tms.xy_bounds(0, 0, 3)) == [0, 256, 256, 0]
+            assert list(cog.tms.xy_bounds(0, 0, 2)) == [0, 512, 512, 0]
+            assert list(cog.tms.xy_bounds(0, 0, 1)) == [0, 1024, 1024, 0]
+            assert list(cog.tms.xy_bounds(0, 0, 0)) == [0, 2048, 2048, 0]
+
+            img = cog.tile(0, 0, 3)
+            assert img.mask.all()
+
+            # Make sure no resampling was done at full resolution
+            data = cog.dataset.read(window=((0, 256), (0, 256)))
+            numpy.testing.assert_array_equal(data, img.data)
+
+            # Tile at zoom 0 should have masked part
+            img = cog.tile(0, 0, 0)
+            assert not img.mask.all()
+
+            with pytest.raises(TileOutsideBounds):
+                max_x_tile = cog.dataset.width // 256 + 1
+                max_y_tile = cog.dataset.height // 256 + 1
+                img = cog.tile(max_x_tile, max_y_tile, 3)
+
+            img = cog.part((0, 256, 256, 0), bounds_crs=None)
+            data = cog.dataset.read(window=((0, 256), (0, 256)))
+            numpy.testing.assert_array_equal(data, img.data)
+
+            img = cog.preview()
+            assert img.width == 1024
+            assert img.height == 1024
+
+            pt = cog.point(0, 0, coord_crs=None)
+            data = list(cog.dataset.sample([(0, 0)]))[0]
+            numpy.testing.assert_array_equal(pt.data, data)
+
+            pt = cog.point(1999, 1999, coord_crs=None)
+            data = list(cog.dataset.sample([(1999, 1999)]))[0]
+            numpy.testing.assert_array_equal(pt.data, data)
+
+            with pytest.raises(PointOutsideBounds):
+                cog.point(2000, 2000, coord_crs=None)
+
+            poly = {
+                "coordinates": [
+                    [
+                        [-100.0, -100.0],
+                        [500.0, -100.0],
+                        [500.0, 300.0],
+                        [-100.0, 300.0],
+                        [-100.0, -100.0],
+                    ]
+                ],
+                "type": "Polygon",
+            }
+            im = cog.feature(poly, shape_crs=None)
+            assert im.data.shape == (3, 400, 600)
