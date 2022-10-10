@@ -739,6 +739,6 @@ class LocalTileMatrixSet:
     def xy_bounds(self, *tile: morecantile.Tile) -> morecantile.BoundingBox:
         """Return the bounding box of the (x, y, z) tile"""
         t = _parse_tile_arg(*tile)
-        left, bottom = self._ul(t)
-        right, top = self._ul(morecantile.Tile(t.x + 1, t.y + 1, t.z))
-        return morecantile.BoundingBox(left, top, right, bottom)
+        left, top = self._ul(t)
+        right, bottom = self._ul(morecantile.Tile(t.x + 1, t.y + 1, t.z))
+        return morecantile.BoundingBox(left, bottom, right, top)
