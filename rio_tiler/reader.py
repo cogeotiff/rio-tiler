@@ -72,10 +72,10 @@ def read(
     max_size: Optional[int] = None,
     indexes: Optional[Indexes] = None,
     window: Optional[windows.Window] = None,
+    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     resampling_method: Resampling = "nearest",
-    force_binary_mask: bool = True,
     unscale: bool = False,
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
@@ -241,10 +241,10 @@ def part(
     minimum_overlap: Optional[float] = None,
     padding: Optional[int] = None,
     buffer: Optional[float] = None,
+    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     resampling_method: Resampling = "nearest",
-    force_binary_mask: bool = True,
     unscale: bool = False,
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
