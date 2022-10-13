@@ -3,7 +3,7 @@
 import contextlib
 import math
 import warnings
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Callable, Dict, Optional, Tuple, TypedDict, Union
 
 import numpy
 from affine import Affine
@@ -15,12 +15,22 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
-from .constants import WGS84_CRS
-from .errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
-from .models import ImageData, PointData
-from .types import BBox, DataMaskType, Indexes, NoData
-from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
-from .utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
+from rio_tiler.constants import WGS84_CRS
+from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
+from rio_tiler.models import ImageData, PointData
+from rio_tiler.types import BBox, DataMaskType, Indexes, NoData
+from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
+from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
+
+
+class Options(TypedDict, total=False):
+    """Reader Options."""
+
+    nodata: Optional[NoData]
+    vrt_options: Optional[Dict]
+    resampling_method: Optional[Resampling]
+    unscale: Optional[bool]
+    post_process: Optional[Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]]
 
 
 def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int]:
@@ -72,10 +82,10 @@ def read(
     max_size: Optional[int] = None,
     indexes: Optional[Indexes] = None,
     window: Optional[windows.Window] = None,
+    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     resampling_method: Resampling = "nearest",
-    force_binary_mask: bool = True,
     unscale: bool = False,
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
@@ -241,10 +251,10 @@ def part(
     minimum_overlap: Optional[float] = None,
     padding: Optional[int] = None,
     buffer: Optional[float] = None,
+    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     resampling_method: Resampling = "nearest",
-    force_binary_mask: bool = True,
     unscale: bool = False,
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]

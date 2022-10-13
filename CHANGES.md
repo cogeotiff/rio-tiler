@@ -8,9 +8,21 @@
 
 * remove python 3.7 support
 * update rasterio requirement to `>=1.3` to allow python 3.10 support
+* rename `rio_tiler.io.cogeo` to `rio_tiler.io.rasterio`
+* rename `COGReader` to `Reader`. We added `rio_tiler.io.COGReader` alias to `rio_tiler.io.Reader` backwards compatibility
+    ```python
+    # before
+    from rio_tiler.io import COGReader
+    from rio_tiler.io.cogeo import COGReader
+
+    # now
+    from rio_tiler.io import Reader
+    from rio_tiler.io.rasterio import Reader
+    ```
+
 * `rio_tiler.readers.read()`, `rio_tiler.readers.part()`, `rio_tiler.readers.preview()` now return a ImageData object
 * remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.SpatialMixin` base class
-* remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.COGReader` (now defined as properties).
+* remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.Reader` (now defined as properties)
 * use `b` prefix for band names in `rio_tiler.models.ImageData` class (and in rio-tiler's readers)
     ```python
     # before
@@ -29,7 +41,7 @@
         >>> ["1", "2", "3"]
 
     # now
-    with COGReader("cog.tif") as cog:
+    with Reader("cog.tif") as cog:
         img = cog.read()
         print(img.band_names)
         >>> ["b1", "b2", "b3"]
@@ -88,7 +100,7 @@
             metadata={}
         )
 
-    with COGReader("cog.tif") as cog:
+    with Reader("cog.tif") as cog:
         print(cog.point(10.20, -42.0))
         >>> PointData(
             data=array([3744], dtype=uint16),
@@ -104,6 +116,17 @@
 * deleted `rio_tiler.reader.preview` function and updated `rio_tiler.reader.read` to allow width/height/max_size options
 * reordered keyword options in all `rio_tiler.reader` function for consistency
 * removed `AlphaBandWarning` warning when automatically excluding alpha band from data
+
+* remove `nodata`, `unscale`, `resampling_method`, `vrt_options` and `post_process` options to `Reader` init method and replaced with `options`
+    ```python
+    # before
+    with COGReader("cog.tif", nodata=1, resampling_method="bilinear") as cog:
+        data = cog.preview()
+
+    # now
+    with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as cog:
+        data = cog.preview()
+    ```
 
 
 # 3.1.6 (2022-07-22)

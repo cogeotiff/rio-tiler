@@ -8,13 +8,18 @@ from typing import Dict, List, Sequence, Tuple, Union
 import attr
 import numpy
 
-from .errors import (
+from rio_tiler.errors import (
     ColorMapAlreadyRegistered,
     InvalidColorFormat,
     InvalidColorMapName,
     InvalidFormat,
 )
-from .types import ColorMapType, DataMaskType, GDALColorMapType, IntervalColorMapType
+from rio_tiler.types import (
+    ColorMapType,
+    DataMaskType,
+    GDALColorMapType,
+    IntervalColorMapType,
+)
 
 try:
     from importlib.resources import files as resources_files  # type: ignore

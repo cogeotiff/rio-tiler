@@ -1,5 +1,8 @@
 """rio-tiler.io"""
 
 from .base import BaseReader, MultiBandReader, MultiBaseReader  # noqa
-from .cogeo import COGReader  # noqa
+from .rasterio import Reader
 from .stac import STACReader  # noqa
+
+# Keep Compatibility with <4.0
+COGReader = Reader

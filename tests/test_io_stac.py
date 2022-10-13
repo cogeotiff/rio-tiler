@@ -120,7 +120,7 @@ def test_fetch_stac(httpx, s3_get):
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_tile_valid(rio):
     """Should raise or return tiles."""
     rio.open = mock_rasterio_open
@@ -208,7 +208,7 @@ def test_tile_valid(rio):
             )
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_part_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -272,7 +272,7 @@ def test_part_valid(rio):
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_preview_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -329,7 +329,7 @@ def test_preview_valid(rio):
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_point_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -387,7 +387,7 @@ def test_point_valid(rio):
         assert pt.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_statistics_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -433,7 +433,7 @@ def test_statistics_valid(rio):
         assert isinstance(stats["red"]["b1"], BandStatistics)
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_merged_statistics_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -472,7 +472,7 @@ def test_merged_statistics_valid(rio):
         assert isinstance(stats["red_b1"], BandStatistics)
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_info_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -519,7 +519,7 @@ def test_parse_expression():
         ) == ["blue", "red"]
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_feature_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -666,7 +666,7 @@ def test_fetch_stac_client_options(httpx, s3_get):
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_img_dataset_stats(rio):
     """Make sure dataset statistics are forwarded."""
     rio.open = mock_rasterio_open

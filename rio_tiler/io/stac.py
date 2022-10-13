@@ -12,11 +12,11 @@ from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
 from rasterio.crs import CRS
 
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
-from ..errors import InvalidAssetName, MissingAssets
-from ..utils import aws_get_object
-from .base import BaseReader, MultiBaseReader
-from .cogeo import COGReader
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.errors import InvalidAssetName, MissingAssets
+from rio_tiler.io.base import BaseReader, MultiBaseReader
+from rio_tiler.io.rasterio import Reader
+from rio_tiler.utils import aws_get_object
 
 DEFAULT_VALID_TYPE = {
     "image/tiff; application=geotiff",
@@ -138,7 +138,7 @@ class STACReader(MultiBaseReader):
         exclude_assets (set of string, optional): Exclude specific assets.
         include_asset_types (set of string, optional): Only include some assets base on their type.
         exclude_asset_types (set of string, optional): Exclude some assets base on their type.
-        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.COGReader`.
+        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.Reader`.
         reader_options (dict, optional): Additional option to forward to the Reader. Defaults to `{}`.
         fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`.
 
@@ -176,7 +176,7 @@ class STACReader(MultiBaseReader):
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
 
-    reader: Type[BaseReader] = attr.ib(default=COGReader)
+    reader: Type[BaseReader] = attr.ib(default=Reader)
     reader_options: Dict = attr.ib(factory=dict)
 
     fetch_options: Dict = attr.ib(factory=dict)
