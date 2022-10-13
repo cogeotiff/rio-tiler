@@ -60,7 +60,6 @@ def test_spatial_info_valid():
         assert cog.crs
         assert cog.minzoom == 5
         assert cog.maxzoom == 9
-        assert cog.nodata == cog.dataset.nodata
     assert cog.dataset.closed
 
     cog = Reader(COG_NODATA)
@@ -389,27 +388,27 @@ def test_statistics():
 
 def test_Reader_Options():
     """Set options in reader."""
-    with Reader(COGEO, nodata=1) as cog:
-        assert cog.nodata == 1
+    with Reader(COGEO, options={"nodata": 1}) as cog:
+        assert cog.info().nodata_value == 1
+        assert cog.info().nodata_type == "Nodata"
 
     with Reader(COGEO) as cog:
-        assert not cog.nodata
         assert cog.info().nodata_type == "None"
 
-    with Reader(COGEO, nodata=1) as cog:
+    with Reader(COGEO, options={"nodata": 1}) as cog:
         _, mask = cog.tile(43, 25, 7)
         assert not mask.all()
 
     # read cog using default Nearest
-    with Reader(COGEO, nodata=1) as cog:
+    with Reader(COGEO, options={"nodata": 1}) as cog:
         data_default, _ = cog.tile(43, 25, 7)
 
     # read cog using bilinear
-    with Reader(COGEO, nodata=1, resampling_method="bilinear") as cog:
+    with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as cog:
         data, _ = cog.tile(43, 25, 7)
         assert not numpy.array_equal(data_default, data)
 
-    with Reader(COG_SCALE, unscale=True) as cog:
+    with Reader(COG_SCALE, options={"unscale": True}) as cog:
         p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
         assert round(float(p.data[0]), 3) == 1000.892
 
@@ -418,7 +417,7 @@ def test_Reader_Options():
         assert p.data[0] == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
-    with Reader(COGEO, vrt_options={"cutline": cutline}) as cog:
+    with Reader(COGEO, options={"vrt_options": {"cutline": cutline}}) as cog:
         _, mask = cog.preview()
         assert not mask.all()
 
@@ -427,7 +426,7 @@ def test_Reader_Options():
         data = data * 2
         return data, mask
 
-    with Reader(COGEO, nodata=1, post_process=callback) as cog:
+    with Reader(COGEO, options={"nodata": 1, "post_process": callback}) as cog:
         data_init, _ = cog.tile(43, 25, 7, post_process=None)
         data, mask = cog.tile(43, 25, 7)
         assert mask.all()
@@ -435,7 +434,7 @@ def test_Reader_Options():
 
     lon = -56.624124590533825
     lat = 73.52687881825946
-    with Reader(COG_NODATA, post_process=callback) as cog:
+    with Reader(COG_NODATA, options={"post_process": callback}) as cog:
         pt = cog.point(lon, lat)
 
     with Reader(COG_NODATA) as cog:
@@ -445,9 +444,9 @@ def test_Reader_Options():
 
 def test_cog_with_internal_gcps():
     """Make sure file gets re-projected using gcps."""
-    with Reader(COG_GCPS, nodata=0) as cog:
+    with Reader(COG_GCPS, options={"nodata": 0}) as cog:
         assert cog.bounds
-        assert cog.nodata == 0
+        assert cog.info().nodata_value == 0
         assert isinstance(cog.dataset, WarpedVRT)
 
         assert cog.minzoom == 7
@@ -473,9 +472,9 @@ def test_cog_with_internal_gcps():
             src_crs=dst.gcps[1],
             src_transform=transform.from_gcps(dst.gcps[0]),
         ) as vrt:
-            with Reader(None, dataset=vrt, nodata=0) as cog:
+            with Reader(None, dataset=vrt, options={"nodata": 0}) as cog:
                 assert cog.bounds
-                assert cog.nodata == 0
+                assert cog.info().nodata_value == 0
                 assert isinstance(cog.dataset, WarpedVRT)
 
                 assert cog.minzoom == 7
