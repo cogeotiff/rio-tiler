@@ -1,10 +1,10 @@
 """rio_tiler.io.xarray: Xarray Reader."""
+from __future__ import annotations
 
 import warnings
 from typing import Any, Dict, List, Optional
 
 import attr
-import xarray
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -19,6 +19,16 @@ from rio_tiler.errors import PointOutsideBounds, RioTilerError, TileOutsideBound
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox
+
+try:
+    import xarray
+except ImportError:  # pragma: nocover
+    xarray = None  # type: ignore
+
+try:
+    import rioxarray
+except ImportError:  # pragma: nocover
+    rioxarray = None  # type: ignore
 
 
 @attr.s
@@ -44,7 +54,7 @@ class XarrayReader(BaseReader):
 
     """
 
-    input: xarray.DataArray = attr.ib()  # Xarray or rio Xarray
+    input: xarray.DataArray = attr.ib()
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
@@ -54,6 +64,9 @@ class XarrayReader(BaseReader):
 
     def __attrs_post_init__(self):
         """Set bounds and CRS."""
+        assert xarray is not None, "xarray must be installed to use XarrayReader"
+        assert rioxarray is not None, "rioxarray must be installed to use XarrayReader"
+
         self.bounds = tuple(self.input.rio.bounds())
         self.crs = self.input.rio.crs
 
