@@ -23,7 +23,7 @@ from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_ali
 from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
 
 
-class Options(TypedDict):
+class Options(TypedDict, total=False):
     """Reader Options."""
 
     nodata: Optional[NoData]
