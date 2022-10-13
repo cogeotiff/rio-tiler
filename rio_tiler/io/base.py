@@ -21,17 +21,7 @@ from ..errors import (
 from ..models import BandStatistics, ImageData, Info, PointData
 from ..tasks import multi_arrays, multi_points, multi_values
 from ..types import BBox, Indexes
-from ..utils import get_array_statistics
-
-
-def _normalize_bounds(bounds: BBox) -> BBox:
-    """Return BBox in correct minx, miny, maxx, maxy order."""
-    return (
-        min(bounds[0], bounds[2]),
-        min(bounds[1], bounds[3]),
-        max(bounds[0], bounds[2]),
-        max(bounds[1], bounds[3]),
-    )
+from ..utils import get_array_statistics, normalize_bounds
 
 
 def _AssetExpressionWarning():
@@ -125,8 +115,8 @@ class SpatialMixin:
         if not all(numpy.isfinite(tile_bounds)):
             return True
 
-        tile_bounds = _normalize_bounds(tile_bounds)
-        dst_bounds = _normalize_bounds(self.bounds)
+        tile_bounds = normalize_bounds(tile_bounds)
+        dst_bounds = normalize_bounds(self.bounds)
         return (
             (tile_bounds[0] < dst_bounds[2])
             and (tile_bounds[2] > dst_bounds[0])

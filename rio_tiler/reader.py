@@ -20,7 +20,12 @@ from .errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
 from .models import ImageData, PointData
 from .types import BBox, DataMaskType, Indexes, NoData
 from .utils import _requested_tile_aligned_with_internal_tile as is_aligned
-from .utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
+from .utils import (
+    get_vrt_transform,
+    has_alpha_band,
+    non_alpha_indexes,
+    normalize_bounds,
+)
 
 
 def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int]:
@@ -468,10 +473,7 @@ def point(
             )
             dst_coordinates = x[0], y[0]
 
-        minx = min(dataset.bounds[0], dataset.bounds[2])
-        maxx = max(dataset.bounds[0], dataset.bounds[2])
-        miny = min(dataset.bounds[1], dataset.bounds[3])
-        maxy = max(dataset.bounds[1], dataset.bounds[3])
+        (minx, miny, maxx, maxy) = normalize_bounds(dataset.bounds)
         if not (
             (minx <= dst_coordinates[0] < maxx) and (miny <= dst_coordinates[1] < maxy)
         ):

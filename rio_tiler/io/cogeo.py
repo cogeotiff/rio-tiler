@@ -713,10 +713,10 @@ class LocalTileMatrixSet:
     width: int = attr.ib()
     height: int = attr.ib()
     tile_size: int = attr.ib(default=256)
-    rasterio_crs: CRS = attr.ib(default=None)
 
     minzoom: int = attr.ib(init=False, default=0)
     maxzoom: int = attr.ib(init=False)
+    rasterio_crs: CRS = attr.ib(init=False, default=None)
 
     @maxzoom.default
     def _maxzoom(self):
