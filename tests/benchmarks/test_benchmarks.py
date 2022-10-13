@@ -5,7 +5,7 @@ import os
 import pytest
 import rasterio
 
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
 from . import benchmark_dataset, benchmark_tiles
 
@@ -16,7 +16,7 @@ def read_tile(src_path, tile):
     """Benchmark rio-tiler.utils._tile_read."""
     # We make sure to not store things in cache.
     with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
-        with COGReader(src_path) as cog:
+        with Reader(src_path) as cog:
             return cog.tile(*tile)
 
 

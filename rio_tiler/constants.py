@@ -6,7 +6,7 @@ import os
 import morecantile
 from rasterio.crs import CRS
 
-from .types import BBox, ColorTuple, Indexes, NoData, NumType  # noqa
+from rio_tiler.types import BBox, ColorTuple, Indexes, NoData, NumType  # noqa
 
 MAX_THREADS = int(
     os.environ.get("RIO_TILER_MAX_THREADS", multiprocessing.cpu_count() * 5)

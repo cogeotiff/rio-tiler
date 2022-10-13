@@ -20,11 +20,11 @@ from rasterio.transform import from_bounds, rowcol
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_geom
 
-from .colormap import apply_cmap
-from .constants import WEB_MERCATOR_CRS
-from .errors import RioTilerError
-from .expression import get_expression_blocks
-from .types import BBox, ColorMapType, IntervalTuple
+from rio_tiler.colormap import apply_cmap
+from rio_tiler.constants import WEB_MERCATOR_CRS
+from rio_tiler.errors import RioTilerError
+from rio_tiler.expression import get_expression_blocks
+from rio_tiler.types import BBox, ColorMapType, IntervalTuple
 
 
 def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:

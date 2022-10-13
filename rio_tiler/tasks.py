@@ -4,9 +4,9 @@ from concurrent import futures
 from functools import partial
 from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Union
 
-from .constants import MAX_THREADS
-from .logger import logger
-from .models import ImageData, PointData
+from rio_tiler.constants import MAX_THREADS
+from rio_tiler.logger import logger
+from rio_tiler.models import ImageData, PointData
 
 TaskType = Sequence[Tuple[Union[futures.Future, Callable], Any]]
 

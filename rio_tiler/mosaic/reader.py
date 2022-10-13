@@ -5,14 +5,14 @@ from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, 
 
 from rasterio.crs import CRS
 
-from ..constants import MAX_THREADS
-from ..errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
-from ..models import ImageData
-from ..tasks import create_tasks, filter_tasks
-from ..types import BBox
-from ..utils import _chunks
-from .methods.base import MosaicMethodBase
-from .methods.defaults import FirstMethod
+from rio_tiler.constants import MAX_THREADS
+from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
+from rio_tiler.models import ImageData
+from rio_tiler.mosaic.methods.base import MosaicMethodBase
+from rio_tiler.mosaic.methods.defaults import FirstMethod
+from rio_tiler.tasks import create_tasks, filter_tasks
+from rio_tiler.types import BBox
+from rio_tiler.utils import _chunks
 
 
 def mosaic_reader(

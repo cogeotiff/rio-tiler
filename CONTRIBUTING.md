@@ -56,7 +56,7 @@ pdocs as_markdown \
    rio_tiler.expression \
    rio_tiler.models \
    rio_tiler.io.base \
-   rio_tiler.io.cogeo \
+   rio_tiler.io.rasterio \
    rio_tiler.io.stac \
    rio_tiler.mosaic.methods.base \
    rio_tiler.mosaic.methods.defaults \

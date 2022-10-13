@@ -11,17 +11,17 @@ from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
 
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
-from ..errors import (
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.errors import (
     ExpressionMixingWarning,
     MissingAssets,
     MissingBands,
     TileOutsideBounds,
 )
-from ..models import BandStatistics, ImageData, Info, PointData
-from ..tasks import multi_arrays, multi_points, multi_values
-from ..types import BBox, Indexes
-from ..utils import get_array_statistics
+from rio_tiler.models import BandStatistics, ImageData, Info, PointData
+from rio_tiler.tasks import multi_arrays, multi_points, multi_values
+from rio_tiler.types import BBox, Indexes
+from rio_tiler.utils import get_array_statistics
 
 
 def _AssetExpressionWarning():
