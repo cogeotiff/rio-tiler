@@ -256,6 +256,7 @@ class ImageData:
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
         band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
+        dataset_statistics (list, optional): dataset statistics `[(min, max), (min, max)]`
 
     """
 
@@ -266,6 +267,7 @@ class ImageData:
     crs: Optional[CRS] = attr.ib(default=None)
     metadata: Optional[Dict] = attr.ib(factory=dict)
     band_names: List[str] = attr.ib()
+    dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(default=None)
 
     @data.validator
     def _validate_data(self, attribute, value):
@@ -331,8 +333,21 @@ class ImageData:
             )
         )
 
+        stats = list(
+            itertools.chain.from_iterable(
+                [img.dataset_statistics for img in data if img.dataset_statistics]
+            )
+        )
+        dataset_statistics = stats if len(stats) == len(band_names) else None
+
         return cls(
-            arr, mask, assets=assets, crs=crs, bounds=bounds, band_names=band_names
+            arr,
+            mask,
+            assets=assets,
+            crs=crs,
+            bounds=bounds,
+            band_names=band_names,
+            dataset_statistics=dataset_statistics,
         )
 
     def as_masked(self) -> numpy.ma.MaskedArray:
@@ -391,6 +406,15 @@ class ImageData:
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
         blocks = get_expression_blocks(expression)
+
+        stats = self.dataset_statistics
+        if stats:
+            res = []
+            for prod in itertools.product(*stats):  # type: ignore
+                res.append(apply_expression(blocks, self.band_names, numpy.array(prod)))
+
+            stats = list(zip([min(r) for r in zip(*res)], [max(r) for r in zip(*res)]))
+
         return ImageData(
             apply_expression(blocks, self.band_names, self.data),
             self.mask,
@@ -399,6 +423,7 @@ class ImageData:
             bounds=self.bounds,
             band_names=blocks,
             metadata=self.metadata,
+            dataset_statistics=stats,
         )
 
     def post_process(
@@ -473,7 +498,7 @@ class ImageData:
                 kwargs.update({"crs": self.crs})
 
         data = self.data.copy()
-        datatype_range = (dtype_ranges[str(data.dtype)],)
+        datatype_range = self.dataset_statistics or (dtype_ranges[str(data.dtype)],)
 
         if not colormap:
             if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:

@@ -664,3 +664,16 @@ def test_fetch_stac_client_options(httpx, s3_get):
     s3_get.assert_called_once()
     assert s3_get.call_args[1]["request_pays"]
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
+
+
+@patch("rio_tiler.io.cogeo.rasterio")
+def test_img_dataset_stats(rio):
+    """Make sure dataset statistics are forwarded."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_PATH) as stac:
+        img = stac.preview(assets=("green", "red"))
+        assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+
+        img = stac.preview(expression="green_b1/red_b1")
+        assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]

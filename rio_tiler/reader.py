@@ -188,6 +188,19 @@ def read(
                 boundless=boundless,
             )
 
+        stats = []
+        for ix in indexes:
+            tags = dataset.tags(ix)
+            if all(
+                stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
+            ):
+                stat_min = float(tags.get("STATISTICS_MINIMUM"))
+                stat_max = float(tags.get("STATISTICS_MAXIMUM"))
+                stats.append((stat_min, stat_max))
+
+        # We only add dataset statistics if we have them for all the indexes
+        dataset_statistics = stats if len(stats) == len(indexes) else None
+
         if force_binary_mask:
             mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
 
@@ -209,6 +222,7 @@ def read(
             bounds=out_bounds,
             crs=dataset.crs,
             band_names=[f"b{idx}" for idx in indexes],
+            dataset_statistics=dataset_statistics,
         )
 
     return img
@@ -387,6 +401,7 @@ def part(
             bounds=bounds,
             crs=img.crs,
             band_names=img.band_names,
+            dataset_statistics=img.dataset_statistics,
         )
 
     return read(
