@@ -666,7 +666,7 @@ def test_fetch_stac_client_options(httpx, s3_get):
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_img_dataset_stats(rio):
     """Make sure dataset statistics are forwarded."""
     rio.open = mock_rasterio_open
