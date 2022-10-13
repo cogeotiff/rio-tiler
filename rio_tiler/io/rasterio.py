@@ -1,4 +1,4 @@
-"""rio_tiler.io.cogeo: raster processing."""
+"""rio_tiler.io.rasterio: rio-tiler reader built on top Rasterio"""
 
 import contextlib
 import warnings
@@ -17,22 +17,31 @@ from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform
 
-from .. import reader
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
-from ..errors import ExpressionMixingWarning, NoOverviewWarning, TileOutsideBounds
-from ..expression import parse_expression
-from ..models import BandStatistics, ImageData, Info, PointData
-from ..types import BBox, DataMaskType, Indexes, NoData, NumType
-from ..utils import create_cutline, get_array_statistics, has_alpha_band, has_mask_band
-from .base import BaseReader
+from rio_tiler import reader
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.errors import (
+    ExpressionMixingWarning,
+    NoOverviewWarning,
+    TileOutsideBounds,
+)
+from rio_tiler.expression import parse_expression
+from rio_tiler.io.base import BaseReader
+from rio_tiler.models import BandStatistics, ImageData, Info, PointData
+from rio_tiler.types import BBox, DataMaskType, Indexes, NoData, NumType
+from rio_tiler.utils import (
+    create_cutline,
+    get_array_statistics,
+    has_alpha_band,
+    has_mask_band,
+)
 
 
 @attr.s
-class COGReader(BaseReader):
-    """Cloud Optimized GeoTIFF Reader.
+class Reader(BaseReader):
+    """Rasterio Reader.
 
     Attributes:
-        input (str): Cloud Optimized GeoTIFF path.
+        input (str): dataset path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
@@ -44,21 +53,21 @@ class COGReader(BaseReader):
         post_process (callable, optional): Global options, Function to apply after all read operations.
 
     Examples:
-        >>> with COGReader(src_path) as cog:
-            cog.tile(...)
+        >>> with Reader(src_path) as src:
+            src.tile(...)
 
         >>> # Set global options
-            with COGReader(src_path, unscale=True, nodata=0) as cog:
-                cog.tile(...)
+            with Reader(src_path, unscale=True, nodata=0) as src:
+                src.tile(...)
 
         >>> with rasterio.open(src_path) as src_dst:
                 with WarpedVRT(src_dst, ...) as vrt_dst:
-                    with COGReader(None, dataset=vrt_dst) as cog:
-                        cog.tile(...)
+                    with Reader(None, dataset=vrt_dst) as src:
+                        src.tile(...)
 
         >>> with rasterio.open(src_path) as src_dst:
-                with COGReader(None, dataset=src_dst) as cog:
-                    cog.tile(...)
+                with Reader(None, dataset=src_dst) as src:
+                    src.tile(...)
 
     """
 
@@ -613,7 +622,7 @@ class COGReader(BaseReader):
 
 
 @attr.s
-class GCPCOGReader(COGReader):
+class GCPCOGReader(Reader):
     """Custom COG Reader with GCPS support.
 
     Attributes:
@@ -631,13 +640,13 @@ class GCPCOGReader(COGReader):
         dataset (rasterio.vrtWarpedVRT): Warped VRT constructed with dataset GCPS info. **READ ONLY attribute**.
 
     Examples:
-        >>> with COGReader(src_path) as cog:
+        >>> with GCPCOGReader(src_path) as cog:
             cog.tile(...)
             assert cog.dataset
             assert cog.src_dataset
 
         >>> with rasterio.open(src_path) as src_dst:
-                with COGReader(None, src_dataset=src_dst) as cog:
+                with GCPCOGReader(None, src_dataset=src_dst) as cog:
                     cog.tile(...)
 
     """
@@ -670,7 +679,7 @@ class GCPCOGReader(COGReader):
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
         warnings.warn(
-            "GCPCOGReader is deprecated and will be removed in 4.0. Please use COGReader.",
+            "GCPCOGReader is deprecated and will be removed in 4.0. Please use Reader.",
             DeprecationWarning,
         )
 

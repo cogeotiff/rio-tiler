@@ -10,7 +10,7 @@ import pytest
 
 from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import ExpressionMixingWarning, MissingBands
-from rio_tiler.io import BaseReader, COGReader, MultiBandReader
+from rio_tiler.io import BaseReader, MultiBandReader, Reader
 from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -23,7 +23,7 @@ class BandFileReader(MultiBandReader):
     input: str = attr.ib()
     tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    reader: Type[BaseReader] = attr.ib(init=False, default=COGReader)
+    reader: Type[BaseReader] = attr.ib(init=False, default=Reader)
     reader_options: Dict = attr.ib(factory=dict)
 
     minzoom: int = attr.ib()

@@ -8,6 +8,18 @@
 
 * remove python 3.7 support
 * update rasterio requirement to `>=1.3` to allow python 3.10 support
+* rename `rio_tiler.io.cogeo` to `rio_tiler.io.rasterio`
+* rename `COGReader` to `Reader`
+    ```python
+    # before
+    from rio_tiler.io import COGReader
+    from rio_tiler.io.cogeo import COGReader
+
+    # now
+    from rio_tiler.io import Reader
+    from rio_tiler.io.rasterio import Reader
+    ```
+
 * `rio_tiler.readers.read()`, `rio_tiler.readers.part()`, `rio_tiler.readers.preview()` now return a ImageData object
 * remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.SpatialMixin` base class
 * remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.COGReader` (now defined as properties).

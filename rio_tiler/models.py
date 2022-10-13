@@ -17,10 +17,10 @@ from rasterio.transform import from_bounds
 from rio_color.operations import parse_operations
 from rio_color.utils import scale_dtype, to_math_type
 
-from .errors import InvalidDatatypeWarning
-from .expression import apply_expression, get_expression_blocks
-from .types import ColorMapType, GDALColorMapType, IntervalTuple, NumType
-from .utils import linear_rescale, render, resize_array
+from rio_tiler.errors import InvalidDatatypeWarning
+from rio_tiler.expression import apply_expression, get_expression_blocks
+from rio_tiler.types import ColorMapType, GDALColorMapType, IntervalTuple, NumType
+from rio_tiler.utils import linear_rescale, render, resize_array
 
 
 class NodataTypes(str, Enum):

@@ -11,7 +11,7 @@ from rasterio.warp import transform_bounds
 from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
-from rio_tiler.io import COGReader, STACReader
+from rio_tiler.io import Reader, STACReader
 from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
 from rio_tiler.types import DataMaskType
@@ -41,19 +41,19 @@ zo = 9
 
 def _read_tile(src_path: str, *args, **kwargs) -> ImageData:
     """Read tile from an asset"""
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         return cog.tile(*args, **kwargs)
 
 
 def _read_part(src_path: str, *args, **kwargs) -> ImageData:
     """Read part from an asset"""
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         return cog.part(*args, **kwargs)
 
 
 def _read_preview(src_path: str, *args, **kwargs) -> DataMaskType:
     """Read preview from an asset"""
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         data, mask = cog.preview(*args, **kwargs)
     return data, mask
 
@@ -249,7 +249,7 @@ def mock_rasterio_open(asset):
     return rasterio.open(asset)
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_stac_mosaic_tiler(rio):
     """Test mosaic tiler with STACReader."""
     rio.open = mock_rasterio_open
@@ -428,10 +428,10 @@ def test_mosaic_tiler_with_imageDataClass():
     assert not img.bounds
 
     bbox = [-75.98703377413767, 44.93504283293786, -71.337604723999, 47.09685599202324]
-    with COGReader(assets[0]) as cog:
+    with Reader(assets[0]) as cog:
         crs1 = cog.dataset.crs
 
-    with COGReader(assets[0]) as cog:
+    with Reader(assets[0]) as cog:
         crs2 = cog.dataset.crs
 
     img, assets_used = mosaic.mosaic_reader(
