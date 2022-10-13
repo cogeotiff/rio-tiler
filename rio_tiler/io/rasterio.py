@@ -75,12 +75,16 @@ class Reader(BaseReader):
 
     colormap: Dict = attr.ib(default=None)
 
-    options: Dict[str, Any] = attr.ib(factory=dict)
+    options: reader.Options = attr.ib()
 
     # Context Manager to handle rasterio open/close
     _ctx_stack = attr.ib(init=False, factory=contextlib.ExitStack)
     _minzoom: int = attr.ib(init=False, default=None)
     _maxzoom: int = attr.ib(init=False, default=None)
+
+    @options.default
+    def _options_default(self):
+        return {}
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
@@ -628,10 +632,14 @@ class GCPCOGReader(Reader):
 
     colormap: Dict = attr.ib(default=None)
 
-    options: Dict[str, Any] = attr.ib(factory=dict)
+    options: reader.Options = attr.ib()
 
     # for GCPCOGReader, dataset is not a input option.
     dataset: WarpedVRT = attr.ib(init=False)
+
+    @options.default
+    def _options_default(self):
+        return {}
 
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""

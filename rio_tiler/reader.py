@@ -3,7 +3,7 @@
 import contextlib
 import math
 import warnings
-from typing import Callable, Dict, Optional, Tuple, Union
+from typing import Callable, Dict, Optional, Tuple, TypedDict, Union
 
 import numpy
 from affine import Affine
@@ -21,6 +21,16 @@ from rio_tiler.models import ImageData, PointData
 from rio_tiler.types import BBox, DataMaskType, Indexes, NoData
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
+
+
+class Options(TypedDict):
+    """Reader Options."""
+
+    nodata: Optional[NoData]
+    vrt_options: Optional[Dict]
+    resampling_method: Optional[Resampling]
+    unscale: Optional[bool]
+    post_process: Optional[Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]]
 
 
 def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int]:
