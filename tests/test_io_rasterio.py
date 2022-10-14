@@ -232,10 +232,13 @@ def test_point_valid():
     with Reader(COG_NODATA) as cog:
         pt = cog.point(lon, lat)
         assert len(pt.data) == 1
+        assert len(pt.mask) == 1
         assert pt.band_names == ["b1"]
 
         pt = cog.point(lon, lat, expression="b1*2;b1-100")
         assert len(pt.data) == 2
+        assert len(pt.mask) == 1
+        assert pt.mask[0] == 255
         assert pt.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
@@ -257,6 +260,11 @@ def test_point_valid():
         )
         assert len(pt.data) == 2
         assert pt.band_names == ["b1", "b1"]
+
+        pt = cog.point(-59.53, 74.03, indexes=(1, 1, 1))
+        assert len(pt.data) == 3
+        assert pt.mask[0] == 0
+        assert pt.band_names == ["b1", "b1", "b1"]
 
 
 def test_area_valid():
@@ -809,10 +817,10 @@ def test_nonearthbody():
             assert cog.maxzoom == 24
 
     # Warns because of zoom level in WebMercator can't be defined
-    with pytest.warns(UserWarning) as warnings:
+    with pytest.warns(UserWarning) as w:
         with Reader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as cog:
             assert cog.info()
-            assert len(warnings) == 2
+            assert len(w) == 2
 
             img = cog.read()
             assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
@@ -830,7 +838,7 @@ def test_nonearthbody():
             lat = (cog.bounds[1] + cog.bounds[3]) / 2
             assert cog.point(lon, lat, coord_crs=cog.crs).data[0] is not None
 
-    with pytest.warns(UserWarning) as warnings:
+    with pytest.warns(UserWarning):
         europa_crs = CRS.from_authority("ESRI", 104915)
         tms = TileMatrixSet.custom(
             crs=europa_crs,
