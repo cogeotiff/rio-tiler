@@ -168,7 +168,7 @@ class PointData:
 
     @band_names.default
     def _default_names(self):
-        return [f"{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.count)]
 
     @mask.default
     def _default_mask(self):
@@ -498,6 +498,7 @@ class ImageData:
                 kwargs.update({"crs": self.crs})
 
         data = self.data.copy()
+        mask = self.mask.copy()
         datatype_range = self.dataset_statistics or (dtype_ranges[str(data.dtype)],)
 
         if not colormap:
@@ -506,14 +507,14 @@ class ImageData:
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, mask, in_range=datatype_range)
 
             elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
                 warnings.warn(
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, mask, in_range=datatype_range)
 
             elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
                 "uint8",
@@ -524,11 +525,11 @@ class ImageData:
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, mask, in_range=datatype_range)
 
         if add_mask:
             return render(
-                data, self.mask, img_format=img_format, colormap=colormap, **kwargs
+                data, mask, img_format=img_format, colormap=colormap, **kwargs
             )
 
         return render(data, img_format=img_format, colormap=colormap, **kwargs)

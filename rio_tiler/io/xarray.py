@@ -62,6 +62,8 @@ class XarrayReader(BaseReader):
     _minzoom: int = attr.ib(init=False, default=None)
     _maxzoom: int = attr.ib(init=False, default=None)
 
+    _dims: List = attr.ib(init=False, factory=list)
+
     def __attrs_post_init__(self):
         """Set bounds and CRS."""
         assert xarray is not None, "xarray must be installed to use XarrayReader"
@@ -69,6 +71,12 @@ class XarrayReader(BaseReader):
 
         self.bounds = tuple(self.input.rio.bounds())
         self.crs = self.input.rio.crs
+
+        self._dims = [
+            d
+            for d in self.input.dims
+            if d not in [self.input.rio.x_dim, self.input.rio.y_dim]
+        ]
 
     def _dst_geom_in_tms_crs(self):
         """Return dataset info in TMS projection."""
@@ -153,13 +161,8 @@ class XarrayReader(BaseReader):
 
     def info(self) -> Info:
         """Return xarray.DataArray info."""
-        dims = [
-            d
-            for d in self.input.dims
-            if d not in [self.input.rio.x_dim, self.input.rio.y_dim]
-        ]
-        bands = [str(band) for d in dims for band in self.input[d].values]
-        metadata = [band.attrs for d in dims for band in self.input[d]]
+        bands = [str(band) for d in self._dims for band in self.input[d].values]
+        metadata = [band.attrs for d in self._dims for band in self.input[d]]
 
         meta = {
             "bounds": self.geographic_bounds,
@@ -173,6 +176,7 @@ class XarrayReader(BaseReader):
             "count": self.input.rio.count,
             "width": self.input.rio.width,
             "height": self.input.rio.height,
+            "attrs": self.input.attrs,
         }
         return Info(**meta)
 
@@ -231,11 +235,14 @@ class XarrayReader(BaseReader):
         if minv is not None and maxv is not None:
             stats = ((minv, maxv),) * ds.rio.count
 
+        band_names = [str(band) for d in self._dims for band in self.input[d].values]
+
         return ImageData(
             ds.data,
             bounds=tile_bounds,
             crs=self.tms.rasterio_crs,
             dataset_statistics=stats,
+            band_names=band_names,
         )
 
     def part(
@@ -281,8 +288,14 @@ class XarrayReader(BaseReader):
         if minv is not None and maxv is not None:
             stats = ((minv, maxv),) * ds.rio.count
 
+        band_names = [str(band) for d in self._dims for band in self.input[d].values]
+
         return ImageData(
-            ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs, dataset_statistics=stats
+            ds.data,
+            bounds=ds.rio.bounds(),
+            crs=ds.rio.crs,
+            dataset_statistics=stats,
+            band_names=band_names,
         )
 
     def preview(
@@ -329,10 +342,15 @@ class XarrayReader(BaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        x, y = rowcol(self.input.rio.transform, ds_lon, ds_lat)
+        x, y = rowcol(self.input.rio.transform(), ds_lon, ds_lat)
+
+        band_names = [str(band) for d in self._dims for band in self.input[d].values]
 
         return PointData(
-            self.input.data[:, y[0], y[0]], coordinates=(lon, lat), crs=coord_crs
+            self.input.data[:, y[0], y[0]],
+            coordinates=(lon, lat),
+            crs=coord_crs,
+            band_names=band_names,
         )
 
     def feature(
@@ -385,6 +403,12 @@ class XarrayReader(BaseReader):
         if minv is not None and maxv is not None:
             stats = ((minv, maxv),) * ds.rio.count
 
+        band_names = [str(band) for d in self._dims for band in self.input[d].values]
+
         return ImageData(
-            ds.data, bounds=ds.rio.bounds(), crs=ds.rio.crs, dataset_statistics=stats
+            ds.data,
+            bounds=ds.rio.bounds(),
+            crs=ds.rio.crs,
+            dataset_statistics=stats,
+            band_names=band_names,
         )

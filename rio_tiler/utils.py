@@ -464,19 +464,19 @@ def render(
             mask = numpy.expand_dims(mask, axis=0)
             data = numpy.concatenate((data, mask))
 
-        bio = BytesIO()
-        numpy.save(bio, data)
-        bio.seek(0)
-        return bio.getvalue()
+        with BytesIO() as bio:
+            numpy.save(bio, data)
+            bio.seek(0)
+            return bio.getvalue()
 
     elif img_format == "NPZ":
-        bio = BytesIO()
-        if mask is not None:
-            numpy.savez_compressed(bio, data=data, mask=mask)
-        else:
-            numpy.savez_compressed(bio, data=data)
-        bio.seek(0)
-        return bio.getvalue()
+        with BytesIO() as bio:
+            if mask is not None:
+                numpy.savez_compressed(bio, data=data, mask=mask)
+            else:
+                numpy.savez_compressed(bio, data=data)
+            bio.seek(0)
+            return bio.getvalue()
 
     count, height, width = data.shape
 

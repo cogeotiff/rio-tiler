@@ -39,6 +39,10 @@ test = [
     "pytest-asyncio",
     "pytest-benchmark",
     "pytest-cov",
+
+    # XarrayReader
+    "xarray",
+    "rioxarray",
 ]
 dev = [
     "pre-commit",
