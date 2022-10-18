@@ -1,21 +1,38 @@
 
 # 4.0.0 (TBD)
 
+* add python 3.10 support
 * add `apply_expression` method in `rio_tiler.models.ImageData` class
-* update `rio-tiler.reader.read/part` to avoid using WarpedVRT when no reprojection or nodata override is needed
+* update `rio-tiler.reader.read/part` to avoid using WarpedVRT when no *reprojection* or *nodata override* is needed
 * add `rio_tiler.io.rasterio.ImageReader` to work either with Non-geo or Geo images in a Non-geo manner (a.k.a: in the pixel coordinates system)
+    ```python
+    with ImageReader("image.jpg") as src:
+        im = src.part((0, 100, 100, 0))
 
-```python
-with ImageReader("image.jpg") as src:
-    im = src.part((0, 100, 100, 0))
+    with ImageReader("image.jpg") as src:
+        im = src.tile(0, 0, src.maxzoom)
+        print(im.bounds)
 
+    >>> BoundingBox(left=0.0, bottom=256.0, right=256.0, top=0.0)
+    ```
 
-with ImageReader("image.jpg") as src:
-    im = src.tile(0, 0, src.maxzoom)
-    print(im.bounds)
+* add `rio_tiler.io.xarray.XarrayReader` to work with `xarray.DataArray`
+    ```python
+    import xarray
+    from rio_tiler.io import XarrayReader
 
->> BoundingBox(left=0.0, bottom=256.0, right=256.0, top=0.0)
-```
+    with xarray.open_dataset(
+        "https://ncsa.osn.xsede.org/Pangeo/pangeo-forge/noaa-coastwatch-geopolar-sst-feedstock/noaa-coastwatch-geopolar-sst.zarr",
+        engine="zarr",
+        decode_coords="all"
+    ) as src:
+        ds = src["analysed_sst"][:1]
+        ds.rio.write_crs("epsg:4326", inplace=True)
+
+        with XarrayReader(ds) as dst:
+            img = dst.tile(1, 1, 2)
+    ```
+    note: `xarray` and `rioxarray` optional dependencies are needed for the reader
 
 **breaking changes**
 
@@ -139,7 +156,6 @@ with ImageReader("image.jpg") as src:
     with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as cog:
         data = cog.preview()
     ```
-
 
 # 3.1.6 (2022-07-22)
 
