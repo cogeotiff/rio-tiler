@@ -395,13 +395,23 @@ class ImageData:
         out_dtype: Union[str, numpy.number] = "uint8",
     ):
         """Rescale data in place."""
-        self.data = rescale_image(self.data, self.mask, in_range, out_range, out_dtype)
+        self.data = rescale_image(
+            self.data.copy(),
+            self.mask,
+            in_range=in_range,
+            out_range=out_range,
+            out_dtype=out_dtype,
+        )
 
     def apply_color_formula(self, color_formula: Optional[str]):
         """Apply rio-color formula in place."""
-        self.data[self.data < 0] = 0
+        out = self.data.copy()
+        out[out < 0] = 0
+
         for ops in parse_operations(color_formula):
-            self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
+            out = scale_dtype(ops(to_math_type(out)), numpy.uint8)
+
+        self.data = out
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
@@ -417,7 +427,7 @@ class ImageData:
 
         return ImageData(
             apply_expression(blocks, self.band_names, self.data),
-            self.mask,
+            self.mask.copy(),
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
