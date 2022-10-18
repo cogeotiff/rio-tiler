@@ -3,6 +3,19 @@
 
 * add `apply_expression` method in `rio_tiler.models.ImageData` class
 * update `rio-tiler.reader.read/part` to avoid using WarpedVRT when no reprojection or nodata override is needed
+* add `rio_tiler.io.rasterio.ImageReader` to work either with Non-geo or Geo images in a Non-geo manner (a.k.a: in the pixel coordinates system)
+
+```python
+with ImageReader("image.jpg") as src:
+    im = src.part((0, 100, 100, 0))
+
+
+with ImageReader("image.jpg") as src:
+    im = src.tile(0, 0, src.maxzoom)
+    print(im.bounds)
+
+>> BoundingBox(left=0.0, bottom=256.0, right=256.0, top=0.0)
+```
 
 **breaking changes**
 
@@ -116,7 +129,6 @@
 * deleted `rio_tiler.reader.preview` function and updated `rio_tiler.reader.read` to allow width/height/max_size options
 * reordered keyword options in all `rio_tiler.reader` function for consistency
 * removed `AlphaBandWarning` warning when automatically excluding alpha band from data
-
 * remove `nodata`, `unscale`, `resampling_method`, `vrt_options` and `post_process` options to `Reader` init method and replaced with `options`
     ```python
     # before

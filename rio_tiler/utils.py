@@ -657,3 +657,13 @@ def resize_array(
                 indexes=indexes,
                 resampling=Resampling[resampling_method],
             )
+
+
+def normalize_bounds(bounds: BBox) -> BBox:
+    """Return BBox in correct minx, miny, maxx, maxy order."""
+    return (
+        min(bounds[0], bounds[2]),
+        min(bounds[1], bounds[3]),
+        max(bounds[0], bounds[2]),
+        max(bounds[1], bounds[3]),
+    )

@@ -2,30 +2,39 @@
 
 import contextlib
 import warnings
-from typing import Any, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union
 
 import attr
+import numpy
 import rasterio
-from morecantile import Tile, TileMatrixSet
+from affine import Affine
+from morecantile import BoundingBox, Coords, Tile, TileMatrixSet
+from morecantile.utils import _parse_tile_arg
 from rasterio import transform
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.features import bounds as featureBounds
+from rasterio.features import geometry_mask
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
+from rasterio.transform import from_bounds as transform_from_bounds
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform
+from rasterio.windows import Window
+from rasterio.windows import from_bounds as window_from_bounds
 
 from rio_tiler import reader
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
     NoOverviewWarning,
+    PointOutsideBounds,
     TileOutsideBounds,
 )
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, Indexes, NumType
+from rio_tiler.types import BBox, DataMaskType, Indexes, NumType
 from rio_tiler.utils import (
     create_cutline,
     get_array_statistics,
@@ -125,9 +134,9 @@ class Reader(BaseReader):
 
     def _dst_geom_in_tms_crs(self):
         """Return dataset info in TMS projection."""
-        if self.dataset.crs != self.tms.rasterio_crs:
+        if self.crs != self.tms.rasterio_crs:
             dst_affine, w, h = calculate_default_transform(
-                self.dataset.crs,
+                self.crs,
                 self.tms.rasterio_crs,
                 self.dataset.width,
                 self.dataset.height,
@@ -659,3 +668,277 @@ class GCPCOGReader(Reader):
             )
         )
         super().__attrs_post_init__()
+
+
+@attr.s
+class LocalTileMatrixSet:
+    """Fake TMS for non-geo image."""
+
+    width: int = attr.ib()
+    height: int = attr.ib()
+    tile_size: int = attr.ib(default=256)
+
+    minzoom: int = attr.ib(init=False, default=0)
+    maxzoom: int = attr.ib(init=False)
+
+    rasterio_crs: CRS = attr.ib(init=False, default=None)
+
+    @maxzoom.default
+    def _maxzoom(self):
+        return get_maximum_overview_level(
+            self.width,
+            self.height,
+            minsize=self.tile_size,
+        )
+
+    def _ul(self, *tile: Tile) -> Coords:
+        """Return the upper left coordinate of the (x, y, z) tile."""
+        t = _parse_tile_arg(*tile)
+
+        res = 2.0 ** (self.maxzoom - t.z)
+        xcoord = self.tile_size * t.x * res
+        ycoord = self.tile_size * t.y * res
+
+        return Coords(xcoord, ycoord)
+
+    def xy_bounds(self, *tile: Tile) -> BoundingBox:
+        """Return the bounding box of the (x, y, z) tile"""
+        t = _parse_tile_arg(*tile)
+        left, top = self._ul(t)
+        right, bottom = self._ul(Tile(t.x + 1, t.y + 1, t.z))
+        return BoundingBox(left, bottom, right, top)
+
+
+@attr.s
+class ImageReader(Reader):
+    """Non Geo Image Reader"""
+
+    tms: TileMatrixSet = attr.ib(init=False)
+
+    crs: CRS = attr.ib(init=False, default=None)
+    geographic_crs: CRS = attr.ib(init=False, default=None)
+
+    transform: Affine = attr.ib(init=False)
+
+    def __attrs_post_init__(self):
+        """Define _kwargs, open dataset and get info."""
+
+        if not self.dataset:
+            self.dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
+
+        height, width = self.dataset.height, self.dataset.width
+        self.bounds = (0, height, width, 0)
+        self.transform = transform_from_bounds(*self.bounds, width=width, height=height)
+
+        self.tms = LocalTileMatrixSet(width=width, height=height)
+        self._minzoom = self.tms.minzoom
+        self._maxzoom = self.tms.maxzoom
+
+        if self.colormap is None:
+            self._get_colormap()
+
+        if min(
+            self.dataset.width, self.dataset.height
+        ) > 512 and not self.dataset.overviews(1):
+            warnings.warn(
+                "The dataset has no Overviews. rio-tiler performances might be impacted.",
+                NoOverviewWarning,
+            )
+
+    def tile(  # type: ignore
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        tilesize: int = 256,
+        indexes: Optional[Indexes] = None,
+        expression: Optional[str] = None,
+        force_binary_mask: bool = True,
+        resampling_method: Resampling = "nearest",
+        unscale: bool = False,
+        post_process: Optional[
+            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        ] = None,
+    ) -> ImageData:
+        """Read a Web Map tile from an Image.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+            tilesize (int, optional): Output image size. Defaults to `256`.
+            indexes (int or sequence of int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
+            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            post_process (callable, optional): Function to apply on output data and mask values.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
+            )
+
+        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+
+        return self.part(
+            tile_bounds,
+            height=tilesize,
+            width=tilesize,
+            max_size=None,
+            indexes=indexes,
+            expression=expression,
+            force_binary_mask=force_binary_mask,
+            resampling_method=resampling_method,
+            unscale=unscale,
+            post_process=post_process,
+        )
+
+    def part(  # type: ignore
+        self,
+        bbox: BBox,
+        indexes: Optional[Union[int, Sequence]] = None,
+        expression: Optional[str] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        force_binary_mask: bool = True,
+        resampling_method: Resampling = "nearest",
+        unscale: bool = False,
+        post_process: Optional[
+            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        ] = None,
+    ) -> ImageData:
+        """Read part of an Image.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top).
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
+            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            post_process (callable, optional): Function to apply on output data and mask values.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        window = window_from_bounds(*bbox, transform=self.transform)
+        img = reader.read(
+            self.dataset,
+            window=window,
+            max_size=max_size,
+            width=width,
+            height=height,
+            indexes=indexes,
+            force_binary_mask=force_binary_mask,
+            resampling_method=resampling_method,
+            unscale=unscale,
+            post_process=post_process,
+        )
+        img.assets = [self.input]
+
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    def point(  # type: ignore
+        self,
+        x: float,
+        y: float,
+        indexes: Optional[Indexes] = None,
+        expression: Optional[str] = None,
+        unscale: bool = False,
+        post_process: Optional[
+            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        ] = None,
+    ) -> PointData:
+        """Read a pixel value from an Image.
+
+        Args:
+            lon (float): X coordinate.
+            lat (float): Y coordinate.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            post_process (callable, optional): Function to apply on output data and mask values.
+
+        Returns:
+            PointData
+
+        """
+        if not ((0 <= x < self.dataset.width) and (0 <= y < self.dataset.height)):
+            raise PointOutsideBounds("Point is outside dataset bounds")
+
+        img = self.read(
+            indexes=indexes,
+            expression=expression,
+            unscale=unscale,
+            post_process=post_process,
+            window=Window(x, y, 1, 1),
+        )
+
+        return PointData(
+            img.data[:, 0, 0],
+            numpy.array([img.mask[0, 0]]),
+            assets=img.assets,
+            coordinates=self.dataset.xy(x, y),
+            crs=self.dataset.crs,
+            band_names=img.band_names,
+        )
+
+    def feature(  # type: ignore
+        self,
+        shape: Dict,
+        indexes: Optional[Indexes] = None,
+        expression: Optional[str] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        force_binary_mask: bool = True,
+        resampling_method: Resampling = "nearest",
+        unscale: bool = False,
+        post_process: Optional[
+            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        ] = None,
+    ) -> ImageData:
+        """Read part of an Image defined by a geojson feature."""
+        bbox = featureBounds(shape)
+
+        # If Image Origin is top Left (non-geo) we need to invert the bbox
+        bbox = [bbox[0], bbox[3], bbox[2], bbox[1]]
+
+        img = self.part(
+            bbox,
+            indexes=indexes,
+            max_size=max_size,
+            height=height,
+            width=width,
+            force_binary_mask=force_binary_mask,
+            resampling_method=resampling_method,
+            unscale=unscale,
+            post_process=post_process,
+        )
+
+        shape = shape.get("geometry", shape)
+        mask = geometry_mask([shape], (img.height, img.width), self.transform)
+        img.mask = mask * 255
+        return img
