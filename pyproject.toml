@@ -39,9 +39,17 @@ test = [
     "pytest-asyncio",
     "pytest-benchmark",
     "pytest-cov",
+
+    # XarrayReader
+    "xarray",
+    "rioxarray",
 ]
 dev = [
     "pre-commit",
+]
+xarray = [
+    "xarray",
+    "rioxarray",
 ]
 docs = [
     "nbconvert",

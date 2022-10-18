@@ -168,7 +168,7 @@ class PointData:
 
     @band_names.default
     def _default_names(self):
-        return [f"{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.count)]
 
     @mask.default
     def _default_mask(self):
@@ -509,7 +509,6 @@ class ImageData:
 
         data = self.data.copy()
         mask = self.mask.copy()
-
         datatype_range = self.dataset_statistics or (dtype_ranges[str(data.dtype)],)
 
         if not colormap:
