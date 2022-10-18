@@ -395,13 +395,23 @@ class ImageData:
         out_dtype: Union[str, numpy.number] = "uint8",
     ):
         """Rescale data in place."""
-        self.data = rescale_image(self.data, self.mask, in_range, out_range, out_dtype)
+        self.data = rescale_image(
+            self.data.copy(),
+            self.mask,
+            in_range=in_range,
+            out_range=out_range,
+            out_dtype=out_dtype,
+        )
 
     def apply_color_formula(self, color_formula: Optional[str]):
         """Apply rio-color formula in place."""
-        self.data[self.data < 0] = 0
+        out = self.data.copy()
+        out[out < 0] = 0
+
         for ops in parse_operations(color_formula):
-            self.data = scale_dtype(ops(to_math_type(self.data)), numpy.uint8)
+            out = scale_dtype(ops(to_math_type(out)), numpy.uint8)
+
+        self.data = out
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
@@ -417,7 +427,7 @@ class ImageData:
 
         return ImageData(
             apply_expression(blocks, self.band_names, self.data),
-            self.mask,
+            self.mask.copy(),
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
@@ -498,6 +508,8 @@ class ImageData:
                 kwargs.update({"crs": self.crs})
 
         data = self.data.copy()
+        mask = self.mask.copy()
+
         datatype_range = self.dataset_statistics or (dtype_ranges[str(data.dtype)],)
 
         if not colormap:
@@ -506,14 +518,14 @@ class ImageData:
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, mask, in_range=datatype_range)
 
             elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
                 warnings.warn(
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, mask, in_range=datatype_range)
 
             elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
                 "uint8",
@@ -524,11 +536,11 @@ class ImageData:
                     f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, self.mask, in_range=datatype_range)
+                data = rescale_image(data, mask, in_range=datatype_range)
 
         if add_mask:
             return render(
-                data, self.mask, img_format=img_format, colormap=colormap, **kwargs
+                data, mask, img_format=img_format, colormap=colormap, **kwargs
             )
 
         return render(data, img_format=img_format, colormap=colormap, **kwargs)

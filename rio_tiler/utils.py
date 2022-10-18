@@ -376,9 +376,9 @@ def linear_rescale(
     """
     imin, imax = in_range
     omin, omax = out_range
-    image = numpy.clip(image, imin, imax) - imin
-    image = image / numpy.float64(imax - imin)
-    return image * (omax - omin) + omin
+    im = numpy.clip(image, imin, imax) - imin
+    im = im / numpy.float64(imax - imin)
+    return im * (omax - omin) + omin
 
 
 def _requested_tile_aligned_with_internal_tile(
@@ -461,22 +461,20 @@ def render(
     elif img_format == "NPY":
         # If mask is not None we add it as the last band
         if mask is not None:
-            mask = numpy.expand_dims(mask, axis=0)
-            data = numpy.concatenate((data, mask))
+            m = numpy.expand_dims(mask, axis=0)
+            data = numpy.concatenate((data, m))
 
-        bio = BytesIO()
-        numpy.save(bio, data)
-        bio.seek(0)
-        return bio.getvalue()
+        with BytesIO() as bio:
+            numpy.save(bio, data)
+            return bio.getvalue()
 
     elif img_format == "NPZ":
-        bio = BytesIO()
-        if mask is not None:
-            numpy.savez_compressed(bio, data=data, mask=mask)
-        else:
-            numpy.savez_compressed(bio, data=data)
-        bio.seek(0)
-        return bio.getvalue()
+        with BytesIO() as bio:
+            if mask is not None:
+                numpy.savez_compressed(bio, data=data, mask=mask)
+            else:
+                numpy.savez_compressed(bio, data=data)
+            return bio.getvalue()
 
     count, height, width = data.shape
 
