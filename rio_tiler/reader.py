@@ -162,11 +162,13 @@ def read(
                 window = windows.Window.from_slices(
                     *window, height=dataset.height, width=dataset.width, boundless=True
                 )
-            if min(window.col_off, window.row_off) < 0:
-                boundless = True
 
-            wbounds = dataset.window_bounds(window)
-            if wbounds[2] > dataset.bounds[2] or wbounds[3] > dataset.bounds[3]:
+            (row_start, row_stop), (col_start, col_stop) = window.toranges()
+            if (
+                min(col_start, row_start) < 0
+                or row_stop >= dataset.width
+                or col_stop >= dataset.height
+            ):
                 boundless = True
 
         if ColorInterp.alpha in dataset.colorinterp:
@@ -500,7 +502,7 @@ def point(
             0
         ]
         data = values.data
-        mask = numpy.repeat(~values.mask, len(data)) * numpy.uint8(255)
+        mask = ~values.mask * numpy.uint8(255)
 
         if unscale:
             data = data.astype("float32", casting="unsafe")

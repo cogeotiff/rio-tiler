@@ -21,7 +21,7 @@ from rio_tiler.errors import (
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.tasks import multi_arrays, multi_points, multi_values
 from rio_tiler.types import BBox, Indexes
-from rio_tiler.utils import get_array_statistics
+from rio_tiler.utils import get_array_statistics, normalize_bounds
 
 
 def _AssetExpressionWarning():
@@ -115,11 +115,14 @@ class SpatialMixin:
         if not all(numpy.isfinite(tile_bounds)):
             return True
 
+        tile_bounds = normalize_bounds(tile_bounds)
+        dst_bounds = normalize_bounds(self.bounds)
+
         return (
-            (tile_bounds[0] < self.bounds[2])
-            and (tile_bounds[2] > self.bounds[0])
-            and (tile_bounds[3] > self.bounds[1])
-            and (tile_bounds[1] < self.bounds[3])
+            (tile_bounds[0] < dst_bounds[2])
+            and (tile_bounds[2] > dst_bounds[0])
+            and (tile_bounds[3] > dst_bounds[1])
+            and (tile_bounds[1] < dst_bounds[3])
         )
 
 
