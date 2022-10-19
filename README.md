@@ -47,16 +47,16 @@ data and metadata from any raster source supported by Rasterio/GDAL.
 This includes local and remote files via HTTP, AWS S3, Google Cloud Storage,
 etc.
 
-At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.WarpedVRT](https://github.com/rasterio/rasterio/blob/5b76d05fb374e64602166d6cd880c38424fad39b/rasterio/vrt.py#L15) class, which can be useful for doing re-projection and/or property overriding (e.g nodata value).
+At the low level, `rio-tiler` is *just* a wrapper around the [rasterio](https://github.com/rasterio/rasterio) and [GDAL](https://github.com/osgeo/gdal) libraries.
 
 ## Features
 
 - Read any dataset supported by GDAL/Rasterio
 
     ```python
-    from rio_tiler.io import COGReader
+    from rio_tiler.io import Reader
 
-    with COGReader("my.tif") as image:
+    with Reader("my.tif") as image:
         print(image.dataset)  # rasterio opened dataset
         img = image.read()    # similar to rasterio.open("my.tif").read() but returns a rio_tiler.models.ImageData object
     ```
@@ -64,9 +64,9 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
 - User friendly `tile`, `part`, `feature`, `point` reading methods
 
     ```python
-    from rio_tiler.io import COGReader
+    from rio_tiler.io import Reader
 
-    with COGReader("my.tif") as image:
+    with Reader("my.tif") as image:
         img = image.tile(x, y, z)            # read mercator tile z-x-y
         img = image.part(bbox)               # read the data intersecting a bounding box
         img = image.feature(geojson_feature) # read the data intersecting a geojson feature
@@ -76,9 +76,9 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
 - Enable property assignment (e.g nodata) on data reading
 
     ```python
-    from rio_tiler.io import COGReader
+    from rio_tiler.io import Reader
 
-    with COGReader("my.tif") as image:
+    with Reader("my.tif") as image:
         img = image.tile(x, y, z, nodata=-9999) # read mercator tile z-x-y
     ```
 
@@ -107,14 +107,46 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
         )
     ```
 
+- [Xarray](https://xarray.dev) support
+
+    ```python
+    import xarray
+    from rio_tiler.io import XarrayReader
+
+    ds = xarray.open_dataset(
+        "https://pangeo.blob.core.windows.net/pangeo-public/daymet-rio-tiler/na-wgs84.zarr/",
+        engine="zarr",
+        decode_coords="all",
+        consolidated=True,
+    )
+    da = ds["tmax"]
+    with XarrayReader(da) as dst:
+        print(dst.info())
+        img = dst.tile(1, 1, 2)
+    ```
+    *Note: The XarrayReader needs optional dependencies to be installed `pip install rio-tiler["xarray"]`.*
+
+- Non-Geo Image support
+
+    ```python
+    from rio_tiler.io import ImageReader
+
+    with ImageReader("image.jpeg") as src:
+        im = src.tile(0, 0, src.maxzoom)  # read top-left `tile`
+        im = src.part((0, 100, 100, 0))  # read top-left 100x100 pixels
+        pt = src.point(0, 0)  # read pixel value
+    ```
+
+    *Note: `ImageReader` is also compatible with proper geo-referenced raster datasets.*
+
 - [Mosaic](https://cogeotiff.github.io/rio-tiler/mosaic/) (merging or stacking)
 
     ```python
-    from rio_tiler.io import COGReader
+    from rio_tiler.io import Reader
     from rio_tiler.mosaic import mosaic_reader
 
     def reader(file, x, y, z, **kwargs):
-        with COGReader(file) as image:
+        with Reader(file) as image:
             return image.tile(x, y, z, **kwargs)
 
     img, assets = mosaic_reader(["image1.tif", "image2.tif"], reader, x, y, z)
@@ -124,11 +156,11 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio.vrt.Warpe
 
     ```python
     import morecantile
-    from rio_tiler.io import COGReader
+    from rio_tiler.io import Reader
 
     # Use EPSG:4326 (WGS84) grid
     wgs84_grid = morecantile.tms.get("WorldCRS84Quad")
-    with COGReader("my.tif", tms=wgs84_grid) as cog:
+    with Reader("my.tif", tms=wgs84_grid) as cog:
         img = cog.tile(1, 1, 1)
     ```
 
