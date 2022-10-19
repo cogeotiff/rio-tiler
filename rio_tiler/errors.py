@@ -13,8 +13,8 @@ class TileOutsideBounds(RioTilerError):
     """Z-X-Y Tile is outside image bounds."""
 
 
-class IncorrectTileBuffer(RioTilerError):
-    """Tile buffer is a float but not half of an integer"""
+class InvalidBufferSize(RioTilerError):
+    "`buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
 
 
 class PointOutsideBounds(RioTilerError):

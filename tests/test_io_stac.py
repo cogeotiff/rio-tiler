@@ -4,6 +4,7 @@ import json
 import os
 from unittest.mock import patch
 
+import numpy
 import pytest
 import rasterio
 
@@ -119,7 +120,7 @@ def test_fetch_stac(httpx, s3_get):
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_tile_valid(rio):
     """Should raise or return tiles."""
     rio.open = mock_rasterio_open
@@ -138,22 +139,29 @@ def test_tile_valid(rio):
         img = stac.tile(71, 102, 8, assets="green")
         assert img.data.shape == (1, 256, 256)
         assert img.mask.shape == (256, 256)
-        assert img.band_names == ["green_1"]
+        assert img.band_names == ["green_b1"]
 
-        data, mask = stac.tile(71, 102, 8, assets=("green",))
-        assert data.shape == (1, 256, 256)
-        assert mask.shape == (256, 256)
-
-        img = stac.tile(71, 102, 8, expression="green/red")
+        img = stac.tile(71, 102, 8, assets=("green",))
         assert img.data.shape == (1, 256, 256)
         assert img.mask.shape == (256, 256)
-        # Note: Here we loose the information about the band
-        assert img.band_names == ["green/red"]
+        assert img.band_names == ["green_b1"]
+
+        img = stac.tile(71, 102, 8, assets=("green", "red"))
+        assert img.data.shape == (2, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_b1", "red_b1"]
+
+        img = stac.tile(71, 102, 8, expression="green_b1/red_b1")
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_b1/red_b1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = stac.tile(71, 102, 8, assets=("green", "red"), expression="green/red")
+            img = stac.tile(
+                71, 102, 8, assets=("green", "red"), expression="green_b1/red_b1"
+            )
             assert img.data.shape == (1, 256, 256)
-            assert img.band_names == ["green/red"]
+            assert img.band_names == ["green_b1/red_b1"]
 
         img = stac.tile(
             71,
@@ -170,7 +178,7 @@ def test_tile_valid(rio):
         )
         assert img.data.shape == (3, 256, 256)
         assert img.mask.shape == (256, 256)
-        assert img.band_names == ["green_1", "green_1", "red_1"]
+        assert img.band_names == ["green_b1", "green_b1", "red_b1"]
 
         # check backward compatibility for `indexes`
         img = stac.tile(
@@ -178,25 +186,29 @@ def test_tile_valid(rio):
             102,
             8,
             assets=("green", "red"),
-            indexes=1,
+            indexes=(1, 1),
         )
-        assert img.data.shape == (2, 256, 256)
+        assert img.data.shape == (4, 256, 256)
         assert img.mask.shape == (256, 256)
-        assert img.band_names == ["green_1", "red_1"]
+        assert img.band_names == ["green_b1", "green_b1", "red_b1", "red_b1"]
 
-        img = stac.tile(
-            71,
-            102,
-            8,
-            assets=("green", "red"),
-            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
-        )
+        img = stac.tile(71, 102, 8, expression="green_b1*2;green_b1;red_b1*2")
         assert img.data.shape == (3, 256, 256)
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
+        # Should raise KeyError because of missing band 2
+        with pytest.raises(KeyError):
+            img = stac.tile(
+                71,
+                102,
+                8,
+                expression="green_b1/red_b2",
+                asset_indexes={"green": 1, "red": 1},
+            )
 
-@patch("rio_tiler.io.cogeo.rasterio")
+
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_part_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -214,25 +226,25 @@ def test_part_valid(rio):
         img = stac.part(bbox, assets="green")
         assert img.data.shape == (1, 73, 83)
         assert img.mask.shape == (73, 83)
-        assert img.band_names == ["green_1"]
+        assert img.band_names == ["green_b1"]
 
-        data, mask = stac.part(bbox, assets=("green",))
-        assert data.shape == (1, 73, 83)
-        assert mask.shape == (73, 83)
-
-        img = stac.part(bbox, expression="green/red")
+        img = stac.part(bbox, assets=("green",))
         assert img.data.shape == (1, 73, 83)
         assert img.mask.shape == (73, 83)
-        assert img.band_names == ["green/red"]
 
-        data, mask = stac.part(bbox, assets="green", max_size=30)
-        assert data.shape == (1, 27, 30)
-        assert mask.shape == (27, 30)
+        img = stac.part(bbox, expression="green_b1/red_b1")
+        assert img.data.shape == (1, 73, 83)
+        assert img.mask.shape == (73, 83)
+        assert img.band_names == ["green_b1/red_b1"]
+
+        img = stac.part(bbox, assets="green", max_size=30)
+        assert img.data.shape == (1, 27, 30)
+        assert img.mask.shape == (27, 30)
 
         with pytest.warns(ExpressionMixingWarning):
-            img = stac.part(bbox, assets=("green", "red"), expression="green/red")
+            img = stac.part(bbox, assets=("green", "red"), expression="green_b1/red_b1")
             assert img.data.shape == (1, 73, 83)
-            assert img.band_names == ["green/red"]
+            assert img.band_names == ["green_b1/red_b1"]
 
         img = stac.part(
             bbox,
@@ -247,24 +259,20 @@ def test_part_valid(rio):
         )
         assert img.data.shape == (3, 73, 83)
         assert img.mask.shape == (73, 83)
-        assert img.band_names == ["green_1", "green_1", "red_1"]
+        assert img.band_names == ["green_b1", "green_b1", "red_b1"]
 
         img = stac.part(bbox, assets=("green", "red"), indexes=1)
         assert img.data.shape == (2, 73, 83)
         assert img.mask.shape == (73, 83)
-        assert img.band_names == ["green_1", "red_1"]
+        assert img.band_names == ["green_b1", "red_b1"]
 
-        img = stac.part(
-            bbox,
-            assets=("green", "red"),
-            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
-        )
+        img = stac.part(bbox, expression="green_b1*2;green_b1;red_b1*2")
         assert img.data.shape == (3, 73, 83)
         assert img.mask.shape == (73, 83)
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_preview_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -280,21 +288,21 @@ def test_preview_valid(rio):
         img = stac.preview(assets="green")
         assert img.data.shape == (1, 259, 255)
         assert img.mask.shape == (259, 255)
-        assert img.band_names == ["green_1"]
+        assert img.band_names == ["green_b1"]
 
-        data, mask = stac.preview(assets=("green",))
-        assert data.shape == (1, 259, 255)
-        assert mask.shape == (259, 255)
-
-        img = stac.preview(expression="green/red")
+        img = stac.preview(assets=("green",))
         assert img.data.shape == (1, 259, 255)
         assert img.mask.shape == (259, 255)
-        assert img.band_names == ["green/red"]
+
+        img = stac.preview(expression="green_b1/red_b1")
+        assert img.data.shape == (1, 259, 255)
+        assert img.mask.shape == (259, 255)
+        assert img.band_names == ["green_b1/red_b1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = stac.preview(assets=("green", "red"), expression="green/red")
+            img = stac.preview(assets=("green", "red"), expression="green_b1/red_b1")
             assert img.data.shape == (1, 259, 255)
-            assert img.band_names == ["green/red"]
+            assert img.band_names == ["green_b1/red_b1"]
 
         img = stac.preview(
             assets=("green", "red"),
@@ -308,23 +316,20 @@ def test_preview_valid(rio):
         )
         assert img.data.shape == (3, 259, 255)
         assert img.mask.shape == (259, 255)
-        assert img.band_names == ["green_1", "green_1", "red_1"]
+        assert img.band_names == ["green_b1", "green_b1", "red_b1"]
 
         img = stac.preview(assets=("green", "red"), indexes=1)
         assert img.data.shape == (2, 259, 255)
         assert img.mask.shape == (259, 255)
-        assert img.band_names == ["green_1", "red_1"]
+        assert img.band_names == ["green_b1", "red_b1"]
 
-        img = stac.preview(
-            assets=("green", "red"),
-            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
-        )
+        img = stac.preview(expression="green_b1*2;green_b1;red_b1*2")
         assert img.data.shape == (3, 259, 255)
         assert img.mask.shape == (259, 255)
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_point_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -337,53 +342,52 @@ def test_point_valid(rio):
         with pytest.raises(MissingAssets):
             stac.point(-80.477, 33.4453)
 
-        data = stac.point(-80.477, 33.4453, assets="green")
-        assert len(data) == 1
+        pt = stac.point(-80.477, 33.4453, assets="green")
+        assert len(pt.data) == 1
+        assert pt.band_names == ["green_b1"]
 
-        data = stac.point(-80.477, 33.4453, assets=("green",))
-        assert len(data) == 1
+        pt = stac.point(-80.477, 33.4453, assets=("green",))
+        assert len(pt.data) == 1
+        assert pt.band_names == ["green_b1"]
 
-        data = stac.point(-80.477, 33.4453, expression="green/red")
-        assert len(data) == 1
+        pt = stac.point(-80.477, 33.4453, assets=("green", "red"))
+        assert len(pt.data) == 2
+        assert numpy.array_equal(pt.data, numpy.array([7994, 7003]))
+        assert pt.band_names == ["green_b1", "red_b1"]
+
+        pt = stac.point(-80.477, 33.4453, expression="green_b1/red_b1")
+        assert len(pt.data) == 1
+        assert numpy.array_equal(pt.data, numpy.array([7994 / 7003]))
+        assert pt.band_names == ["green_b1/red_b1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            data = stac.point(
-                -80.477, 33.4453, assets=("green", "red"), expression="green/red"
+            pt = stac.point(
+                -80.477, 33.4453, assets=("green", "red"), expression="green_b1/red_b1"
             )
-            assert len(data) == 1
+            assert len(pt.data) == 1
+            assert pt.band_names == ["green_b1/red_b1"]
 
-        data = stac.point(
+        pt = stac.point(
             -80.477,
             33.4453,
             assets=("green", "red"),
             asset_indexes={"green": (1, 1), "red": 1},
         )
-        assert len(data) == 2
-        assert len(data[0]) == 2
-        assert len(data[1]) == 1
+        assert len(pt.data) == 3
+        assert numpy.array_equal(pt.data, numpy.array([7994, 7994, 7003]))
+        assert pt.band_names == ["green_b1", "green_b1", "red_b1"]
 
-        data = stac.point(
-            -80.477,
-            33.4453,
-            assets=("green", "red"),
-            indexes=1,
-        )
-        assert len(data) == 2
-        assert len(data[0]) == 1
-        assert len(data[1]) == 1
+        pt = stac.point(-80.477, 33.4453, assets=("green", "red"), indexes=1)
+        assert len(pt.data) == 2
+        assert numpy.array_equal(pt.data, numpy.array([7994, 7003]))
+        assert pt.band_names == ["green_b1", "red_b1"]
 
-        data = stac.point(
-            -80.477,
-            33.4453,
-            assets=("green", "red"),
-            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
-        )
-        assert len(data) == 2
-        assert len(data[0]) == 2
-        assert len(data[1]) == 1
+        pt = stac.point(-80.477, 33.4453, expression="green_b1*2;green_b1;red_b1*2")
+        assert len(pt.data) == 3
+        assert pt.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_statistics_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -400,11 +404,11 @@ def test_statistics_valid(rio):
 
         stats = stac.statistics(assets="green")
         assert stats["green"]
-        assert isinstance(stats["green"]["1"], BandStatistics)
+        assert isinstance(stats["green"]["b1"], BandStatistics)
 
         stats = stac.statistics(assets=("green", "red"), hist_options={"bins": 20})
         assert len(stats) == 2
-        assert len(stats["green"]["1"]["histogram"][0]) == 20
+        assert len(stats["green"]["b1"]["histogram"][0]) == 20
 
         # Check that asset_expression is passed
         stats = stac.statistics(
@@ -419,17 +423,17 @@ def test_statistics_valid(rio):
             assets=("green", "red"), asset_indexes={"green": 1, "red": 1}
         )
         assert stats["green"]
-        assert isinstance(stats["green"]["1"], BandStatistics)
-        assert isinstance(stats["red"]["1"], BandStatistics)
+        assert isinstance(stats["green"]["b1"], BandStatistics)
+        assert isinstance(stats["red"]["b1"], BandStatistics)
 
         # Check that asset_indexes is passed
         stats = stac.statistics(assets=("green", "red"), indexes=1)
         assert stats["green"]
-        assert isinstance(stats["green"]["1"], BandStatistics)
-        assert isinstance(stats["red"]["1"], BandStatistics)
+        assert isinstance(stats["green"]["b1"], BandStatistics)
+        assert isinstance(stats["red"]["b1"], BandStatistics)
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_merged_statistics_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -438,28 +442,25 @@ def test_merged_statistics_valid(rio):
         with pytest.warns(UserWarning):
             stats = stac.merged_statistics()
             assert len(stats) == 3
-            assert isinstance(stats["red_1"], BandStatistics)
-            assert stats["red_1"]
-            assert stats["green_1"]
-            assert stats["blue_1"]
+            assert isinstance(stats["red_b1"], BandStatistics)
+            assert stats["red_b1"]
+            assert stats["green_b1"]
+            assert stats["blue_b1"]
 
         with pytest.raises(InvalidAssetName):
             stac.merged_statistics(assets="vert")
 
         stats = stac.merged_statistics(assets="green")
-        assert isinstance(stats["green_1"], BandStatistics)
+        assert isinstance(stats["green_b1"], BandStatistics)
 
         stats = stac.merged_statistics(
             assets=("green", "red"), hist_options={"bins": 20}
         )
         assert len(stats) == 2
-        assert len(stats["green_1"]["histogram"][0]) == 20
-        assert len(stats["red_1"]["histogram"][0]) == 20
+        assert len(stats["green_b1"]["histogram"][0]) == 20
+        assert len(stats["red_b1"]["histogram"][0]) == 20
 
-        # Check that asset_expression is passed
-        stats = stac.merged_statistics(
-            assets=("green", "red"), asset_expression={"green": "b1*2", "red": "b1+100"}
-        )
+        stats = stac.merged_statistics(expression="green_b1*2;green_b1;red_b1+100")
         assert isinstance(stats["green_b1*2"], BandStatistics)
         assert isinstance(stats["red_b1+100"], BandStatistics)
 
@@ -467,22 +468,11 @@ def test_merged_statistics_valid(rio):
         stats = stac.merged_statistics(
             assets=("green", "red"), asset_indexes={"green": 1, "red": 1}
         )
-        assert isinstance(stats["green_1"], BandStatistics)
-        assert isinstance(stats["red_1"], BandStatistics)
-
-        # Check Expression
-        stats = stac.merged_statistics(expression="green/red")
-        assert isinstance(stats["green/red"], BandStatistics)
-
-        # Check that we can use expression and asset_expression
-        stats = stac.merged_statistics(
-            expression="green/red",
-            asset_expression={"green": "b1*2", "red": "b1+100"},
-        )
-        assert isinstance(stats["green/red"], BandStatistics)
+        assert isinstance(stats["green_b1"], BandStatistics)
+        assert isinstance(stats["red_b1"], BandStatistics)
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_info_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -506,16 +496,30 @@ def test_info_valid(rio):
 
 
 def test_parse_expression():
-    """."""
+    """Parse assets expressions."""
     with STACReader(STAC_PATH) as stac:
-        assert sorted(stac.parse_expression("green*red+red/blue+2.0")) == [
+        assert sorted(
+            stac.parse_expression("green_b1*red_b1+red_b1/blue_b1+2.0;red_b1")
+        ) == [
             "blue",
             "green",
             "red",
         ]
 
+    # make sure we match full word only
+    with STACReader(STAC_PATH) as stac:
+        assert sorted(
+            stac.parse_expression("greenish_b1*red_b1+red_b1/blue_b1+2.0;red_b1")
+        ) == ["blue", "red"]
 
-@patch("rio_tiler.io.cogeo.rasterio")
+    # make sure we match full word only
+    with STACReader(STAC_PATH) as stac:
+        assert sorted(
+            stac.parse_expression("green_b10foo*red_b1+red_b1/blue_b1+2.0;red_b1")
+        ) == ["blue", "red"]
+
+
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_feature_valid(rio):
     """Should raise or return data."""
     rio.open = mock_rasterio_open
@@ -553,43 +557,41 @@ def test_feature_valid(rio):
         img = stac.feature(feat, assets="green")
         assert img.data.shape == (1, 118, 96)
         assert img.mask.shape == (118, 96)
-        assert img.band_names == ["green_1"]
+        assert img.band_names == ["green_b1"]
 
-        data, mask = stac.feature(feat, assets=("green",))
-        assert data.shape == (1, 118, 96)
-        assert mask.shape == (118, 96)
-
-        img = stac.feature(feat, expression="green/red")
+        img = stac.feature(feat, assets=("green",))
         assert img.data.shape == (1, 118, 96)
         assert img.mask.shape == (118, 96)
-        assert img.band_names == ["green/red"]
 
-        data, mask = stac.feature(feat, assets="green", max_size=30)
-        assert data.shape == (1, 30, 25)
-        assert mask.shape == (30, 25)
+        img = stac.feature(feat, expression="green_b1/red_b1")
+        assert img.data.shape == (1, 118, 96)
+        assert img.mask.shape == (118, 96)
+        assert img.band_names == ["green_b1/red_b1"]
+
+        img = stac.feature(feat, assets="green", max_size=30)
+        assert img.data.shape == (1, 30, 25)
+        assert img.mask.shape == (30, 25)
 
         with pytest.warns(ExpressionMixingWarning):
-            img = stac.feature(feat, assets=("green", "red"), expression="green/red")
+            img = stac.feature(
+                feat, assets=("green", "red"), expression="green_b1/red_b1"
+            )
             assert img.data.shape == (1, 118, 96)
-            assert img.band_names == ["green/red"]
+            assert img.band_names == ["green_b1/red_b1"]
 
         img = stac.feature(
             feat, assets=("green", "red"), asset_indexes={"green": (1, 1), "red": 1}
         )
         assert img.data.shape == (3, 118, 96)
         assert img.mask.shape == (118, 96)
-        assert img.band_names == ["green_1", "green_1", "red_1"]
+        assert img.band_names == ["green_b1", "green_b1", "red_b1"]
 
         img = stac.feature(feat, assets=("green", "red"), indexes=1)
         assert img.data.shape == (2, 118, 96)
         assert img.mask.shape == (118, 96)
-        assert img.band_names == ["green_1", "red_1"]
+        assert img.band_names == ["green_b1", "red_b1"]
 
-        img = stac.feature(
-            feat,
-            assets=("green", "red"),
-            asset_expression={"green": "b1*2;b1", "red": "b1*2"},
-        )
+        img = stac.feature(feat, expression="green_b1*2;green_b1;red_b1*2")
         assert img.data.shape == (3, 118, 96)
         assert img.mask.shape == (118, 96)
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
@@ -662,3 +664,16 @@ def test_fetch_stac_client_options(httpx, s3_get):
     s3_get.assert_called_once()
     assert s3_get.call_args[1]["request_pays"]
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
+
+
+@patch("rio_tiler.io.rasterio.rasterio")
+def test_img_dataset_stats(rio):
+    """Make sure dataset statistics are forwarded."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_PATH) as stac:
+        img = stac.preview(assets=("green", "red"))
+        assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+
+        img = stac.preview(expression="green_b1/red_b1")
+        assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]

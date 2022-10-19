@@ -1,4 +1,162 @@
 
+# 4.0.0 (TBD)
+
+* add python 3.10 support
+* add `apply_expression` method in `rio_tiler.models.ImageData` class
+* update `rio-tiler.reader.read/part` to avoid using WarpedVRT when no *reprojection* or *nodata override* is needed
+* add `rio_tiler.io.rasterio.ImageReader` to work either with Non-geo or Geo images in a Non-geo manner (a.k.a: in the pixel coordinates system)
+    ```python
+    with ImageReader("image.jpg") as src:
+        im = src.part((0, 100, 100, 0))
+
+    with ImageReader("image.jpg") as src:
+        im = src.tile(0, 0, src.maxzoom)
+        print(im.bounds)
+
+    >>> BoundingBox(left=0.0, bottom=256.0, right=256.0, top=0.0)
+    ```
+
+* add `rio_tiler.io.xarray.XarrayReader` to work with `xarray.DataArray`
+    ```python
+    import xarray
+    from rio_tiler.io import XarrayReader
+
+    with xarray.open_dataset(
+        "https://ncsa.osn.xsede.org/Pangeo/pangeo-forge/noaa-coastwatch-geopolar-sst-feedstock/noaa-coastwatch-geopolar-sst.zarr",
+        engine="zarr",
+        decode_coords="all"
+    ) as src:
+        ds = src["analysed_sst"][:1]
+        ds.rio.write_crs("epsg:4326", inplace=True)
+
+        with XarrayReader(ds) as dst:
+            img = dst.tile(1, 1, 2)
+    ```
+    note: `xarray` and `rioxarray` optional dependencies are needed for the reader
+
+**breaking changes**
+
+* remove python 3.7 support
+* update rasterio requirement to `>=1.3` to allow python 3.10 support
+* rename `rio_tiler.io.cogeo` to `rio_tiler.io.rasterio`
+* rename `COGReader` to `Reader`. We added `rio_tiler.io.COGReader` alias to `rio_tiler.io.Reader` backwards compatibility
+    ```python
+    # before
+    from rio_tiler.io import COGReader
+    from rio_tiler.io.cogeo import COGReader
+
+    # now
+    from rio_tiler.io import Reader
+    from rio_tiler.io.rasterio import Reader
+    ```
+
+* `rio_tiler.readers.read()`, `rio_tiler.readers.part()`, `rio_tiler.readers.preview()` now return a ImageData object
+* remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.SpatialMixin` base class
+* remove `minzoom` and `maxzoom` attribute in `rio_tiler.io.Reader` (now defined as properties)
+* use `b` prefix for band names in `rio_tiler.models.ImageData` class (and in rio-tiler's readers)
+    ```python
+    # before
+    with COGReader("cog.tif") as cog:
+        img = cog.read()
+        print(cog.band_names)
+        >>> ["1", "2", "3"]
+
+        print(cog.info().band_metadata)
+        >>> [("1", {}), ("2", {}), ("3", {})]
+
+        print(cog.info().band_descriptions)
+        >>> [("1", ""), ("2", ""), ("3", "")]
+
+        print(list(cog.statistics()))
+        >>> ["1", "2", "3"]
+
+    # now
+    with Reader("cog.tif") as cog:
+        img = cog.read()
+        print(img.band_names)
+        >>> ["b1", "b2", "b3"]
+
+        print(cog.info().band_metadata)
+        >>> [("b1", {}), ("b2", {}), ("b3", {})]
+
+        print(cog.info().band_descriptions)
+        >>> [("b1", ""), ("b2", ""), ("b3", "")]
+
+        print(list(cog.statistics()))
+        >>> ["b1", "b2", "b3"]
+
+    with STACReader("stac.json") as stac:
+        print(stac.tile(701, 102, 8, assets=("green", "red")).band_names)
+        >>> ["green_b1", "red_b1"]
+    ```
+
+* depreciate `asset_expression` in MultiBaseReader. Use of expression is now possible
+* `expression` for MultiBaseReader must be in form of `{asset}_b{index}`
+
+    ```python
+    # before
+    with STACReader("stac.json") as stac:
+        stac.tile(701, 102, 8, expression="green/red")
+
+    # now
+    with STACReader("stac.json") as stac:
+        stac.tile(701, 102, 8, expression="green_b1/red_b1")
+    ```
+
+* `rio_tiler.reader.point()` (and all Reader's point methods) now return a **rio_tiler.models.PointData** object
+
+    ```python
+    # before
+    with rasterio.open("cog.tif") as src::
+        v = rio_tiler.reader.point(10.20, -42.0)
+        print(v)
+        >>> [0, 0, 0]
+
+    with COGReader("cog.tif") as cog:
+        print(cog.point(10.20, -42.0))
+        >>> [0, 0, 0]
+
+    # now
+    with rasterio.open("cog.tif") as src::
+        v = rio_tiler.reader.point(src, (10.20, -42))
+        print(v)
+        >>> PointData(
+            data=array([3744], dtype=uint16),
+            mask=array([255], dtype=uint8),
+            band_names=['b1'],
+            coordinates=(10.20, -42),
+            crs=CRS.from_epsg(4326),
+            assets=['cog.tif'],
+            metadata={}
+        )
+
+    with Reader("cog.tif") as cog:
+        print(cog.point(10.20, -42.0))
+        >>> PointData(
+            data=array([3744], dtype=uint16),
+            mask=array([255], dtype=uint8),
+            band_names=['b1'],
+            coordinates=(10.20, -42),
+            crs=CRS.from_epsg(4326),
+            assets=['cog.tif'],
+            metadata={}
+        )
+    ```
+
+* deleted `rio_tiler.reader.preview` function and updated `rio_tiler.reader.read` to allow width/height/max_size options
+* reordered keyword options in all `rio_tiler.reader` function for consistency
+* removed `AlphaBandWarning` warning when automatically excluding alpha band from data
+* remove `nodata`, `unscale`, `resampling_method`, `vrt_options` and `post_process` options to `Reader` init method and replaced with `options`
+    ```python
+    # before
+    with COGReader("cog.tif", nodata=1, resampling_method="bilinear") as cog:
+        data = cog.preview()
+
+    # now
+    with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as cog:
+        data = cog.preview()
+    ```
+
 # 3.1.6 (2022-07-22)
 
 * Hide `NotGeoreferencedWarning` warnings in `utils.render` and `utils.resize_array`

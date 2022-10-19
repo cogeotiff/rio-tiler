@@ -13,7 +13,7 @@ from rio_tiler import colormap, utils
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import RioTilerError
 from rio_tiler.expression import parse_expression
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
 from .conftest import requires_webp
 
@@ -163,25 +163,17 @@ def test_aligned_with_internaltile():
     """Check if COG is in WebMercator and aligned with internal tiles."""
     bounds = WEB_MERCATOR_TMS.bounds(43, 25, 7)
     with rasterio.open(COG_DST) as src_dst:
-        assert not utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert not utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
     with rasterio.open(NOCOG) as src_dst:
-        assert not utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert not utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
     bounds = WEB_MERCATOR_TMS.bounds(147, 182, 9)
     with rasterio.open(COG_NOWEB) as src_dst:
-        assert not utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert not utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
     with rasterio.open(COG_WEB_TILED) as src_dst:
-        assert utils._requested_tile_aligned_with_internal_tile(
-            src_dst, bounds, 256, 256
-        )
+        assert utils._requested_tile_aligned_with_internal_tile(src_dst, bounds)
 
 
 def test_find_non_alpha():
@@ -289,7 +281,7 @@ def test_cutline():
 
     feature_bounds = featureBounds(feat)
 
-    with COGReader(COGEO) as cog:
+    with Reader(COGEO) as cog:
         cutline = utils.create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
         data, mask = cog.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
@@ -314,7 +306,7 @@ def test_cutline():
         },
     }
 
-    with COGReader(COGEO) as cog:
+    with Reader(COGEO) as cog:
         with pytest.raises(RioTilerError):
             utils.create_cutline(cog.dataset, feat_line, geometry_crs="epsg:4326")
 
@@ -342,7 +334,7 @@ def test_cutline():
         ],
     }
 
-    with COGReader(COGEO) as cog:
+    with Reader(COGEO) as cog:
         c = utils.create_cutline(cog.dataset, feat_mp, geometry_crs="epsg:4326")
         assert "MULTIPOLYGON" in c
 
@@ -361,7 +353,7 @@ def test_cutline():
         ],
     }
 
-    with COGReader(COGEO) as cog:
+    with Reader(COGEO) as cog:
         with pytest.raises(RioTilerError):
             utils.create_cutline(cog.dataset, bad_poly, geometry_crs="epsg:4326")
 

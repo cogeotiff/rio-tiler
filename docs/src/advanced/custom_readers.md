@@ -1,7 +1,7 @@
 
 `rio-tiler` provides multiple [abstract base
 classes](https://docs.python.org/3.7/library/abc.html) from which it derives its
-main readers: [`COGReader`](../readers.md#cogreader) and
+main readers: [`Reader`](../readers.md#reader) and
 [`STACReader`](../readers.md#stacreader). You can also use these classes to build
 custom readers.
 
@@ -16,8 +16,6 @@ Main `rio_tiler.io` Abstract Base Class.
 - **input**: Input
 - **tms**: The TileMatrixSet define which default projection and map grid the reader uses. Defaults to WebMercatorQuad.
 
-- **minzoom**: Dataset's minzoom. Not in the `__init__` method.
-- **maxzoom**: Dataset's maxzoom. Not in the `__init__` method.
 - **bounds**: Dataset's bounding box. Not in the `__init__` method.
 - **crs**: dataset's crs. Not in the `__init__` method.
 - **geographic_crs**: CRS to use as geographic coordinate system. Defaults to WGS84. Not in the `__init__` method.
@@ -45,13 +43,7 @@ Abstract methods, are method that **HAVE TO** be implemented in the child class.
 - **point**: reads pixel value for a specific point (`List`)
 - **feature**: reads data for a geojson feature (`rio_tiler.models.ImageData`)
 
-Example: [`COGReader`](../readers.md#cogreader)
-
-### **AsyncBaseReader**
-
-Equivalent of `BaseReader` for async-ready readers (e.g [aiocogeo](https://github.com/geospatial-jeff/aiocogeo)). The `AsyncBaseReader` has the same attributes/properties/methods as the `BaseReader`.
-
-see example of reader built using `AsyncBaseReader`: https://github.com/cogeotiff/rio-tiler/blob/832ecbd97f560c2764818bca30ca95ef25408527/tests/test_io_async.py#L49
+Example: [`Reader`](../readers.md#reader)
 
 ### **MultiBaseReader**
 
@@ -69,7 +61,7 @@ from typing import Dict, Type
 import attr
 from morecantile import TileMatrixSet
 from rio_tiler.io.base import MultiBaseReader
-from rio_tiler.io import COGReader, BaseReader
+from rio_tiler.io import Reader, BaseReader
 from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.models import Info
 
@@ -81,7 +73,7 @@ class AssetFileReader(MultiBaseReader):
 
     # because we add another attribute (prefix) we need to
     # re-specify the other attribute for the class
-    reader: Type[BaseReader] = attr.ib(default=COGReader)
+    reader: Type[BaseReader] = attr.ib(default=Reader)
     reader_options: Dict = attr.ib(factory=dict)
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
@@ -111,30 +103,30 @@ class AssetFileReader(MultiBaseReader):
 # we have a directoty with "scene_b1.tif", "scene_b2.tif"
 with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
     print(cr.assets)
-    >>> ['b1', 'b2']
+    >>> ['band1', 'band2']
 
-    info = cr.info(assets=("b1", "b2"))
+    info = cr.info(assets=("band1", "band2"))
     # MultiBaseReader returns a Dict
     assert isinstance(info, dict)
     print(list(info))
-    >>> ['b1', 'b2']
+    >>> ['band1', 'band2']
 
-    assert isinstance(info["b1"], Info)
-    print(info["b1"].json(exclude_none=True))
+    assert isinstance(info["band1"], Info)
+    print(info["band1"].json(exclude_none=True))
     >>> {
         'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
         'minzoom': 7,
         'maxzoom': 9,
-        'band_metadata': [('1', {})],
-        'band_descriptions': [('1', '')],
+        'band_metadata': [('b1', {})],
+        'band_descriptions': [('b1', '')],
         'dtype': 'uint16',
         'nodata_type': 'Nodata',
         'colorinterp': ['gray']
     }
-    img = cr.tile(238, 218, 9, assets=("b1", "b2"))
+    img = cr.tile(238, 218, 9, assets=("band1", "band2"))
 
     print(img.assets)
-    >>> ['my_dir/scene_b1.tif', 'my_dir/scene_b2.tif']
+    >>> ['my_dir/scene_band1.tif', 'my_dir/scene_band2.tif']
 
     # Each assets have 1 bands, so when combining each img we get a (2, 256, 256) array.
     print(img.data.shape)
@@ -199,24 +191,24 @@ class BandFileReader(MultiBandReader):
 # we have a directoty with "scene_b1.tif", "scene_b2.tif"
 with BandFileReader(input="my_dir/", prefix="scene_") as cr:
     print(cr.bands)
-    >>> ['b1', 'b2']
+    >>> ['band1', 'band2']
 
-    print(cr.info(bands=("b1", "b2")).json(exclude_none=True))
+    print(cr.info(bands=("band1", "band2")).json(exclude_none=True))
     >>> {
         'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
         'minzoom': 7,
         'maxzoom': 9,
-        'band_metadata': [('b1', {}), ('b2', {})],
-        'band_descriptions': [('b1', ''), ('b2', '')],
+        'band_metadata': [('band1', {}), ('band2', {})],
+        'band_descriptions': [('band1', ''), ('band2', '')],
         'dtype': 'uint16',
         'nodata_type': 'Nodata',
         'colorinterp': ['gray', 'gray']
     }
 
-    img = cr.tile(238, 218, 9, bands=("b1", "b2"))
+    img = cr.tile(238, 218, 9, bands=("band1", "band2"))
 
     print(img.assets)
-    >>> ['my_dir/scene_b1.tif', 'my_dir/scene_b2.tif']
+    >>> ['my_dir/scene_band1.tif', 'my_dir/scene_band2.tif']
 
     print(img.data.shape)
     >>> (2, 256, 256)
@@ -227,7 +219,7 @@ Note: [`rio-tiler-pds`][rio-tiler-pds] readers are built using the `MultiBandRea
 [rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
 
 
-## Custom COGReader subclass
+## Custom Reader subclass
 
 The example :point_down: was created as a response to https://github.com/developmentseed/titiler/discussions/235. In short, the user needed a way to keep metadata information from an asset within a STAC item.
 
@@ -239,12 +231,12 @@ But rio-tiler has been designed to be easily customizable.
 import attr
 from rasterio.io import DatasetReader
 from rio_tiler.io.stac import fetch, _to_pystac_item
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 import pystac
 
 @attr.s
-class CustomSTACReader(COGReader):
-    """Custom COG Reader support."""
+class CustomSTACReader(Reader):
+    """Custom Reader support."""
 
     # This will keep the STAC item info within the instance
     item: pystac.Item = attr.ib(default=None, init=False)
@@ -279,7 +271,7 @@ In this `CustomSTACReader`, we are using a custom path `schema` in form of `{ite
 1. Parse the input path to get the STAC url and asset name
 2. Fetch and parse the STAC item
 3. Construct a new `input` using the asset full url.
-4. Fall back to the regular `COGReader` initialization (using `super().__attrs_post_init__()`)
+4. Fall back to the regular `Reader` initialization (using `super().__attrs_post_init__()`)
 
 
 ## Simple Reader
@@ -298,7 +290,7 @@ from morecantile import TileMatrixSet
 from rio_tiler.constants import BBox, WEB_MERCATOR_TMS
 
 @attr.s
-class Reader(BaseReader):
+class SimpleReader(BaseReader):
 
     input: DatasetReader = attr.ib()
 
@@ -355,6 +347,6 @@ class Reader(BaseReader):
         )
 
 with rasterio.open("file.tif") as src:
-    with Reader(src) as cog:
+    with SimpleReader(src) as cog:
         img = cog.tile(1, 1, 1)
 ```

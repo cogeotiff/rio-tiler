@@ -5,6 +5,7 @@ from io import BytesIO
 import numpy
 import pytest
 import rasterio
+from rasterio.io import MemoryFile
 
 from rio_tiler.errors import InvalidDatatypeWarning
 from rio_tiler.models import ImageData
@@ -121,3 +122,57 @@ def test_merge_with_diffsize():
         img2 = ImageData(numpy.zeros((1, 256, 256)))
         img = ImageData.create_from_list([img1, img2])
     assert len(w) == 0
+
+
+def test_apply_expression():
+    """Apply expression"""
+    img = ImageData(numpy.zeros((2, 256, 256)))
+    img2 = img.apply_expression("b1+b2")
+    assert img.count == 2
+    assert img.width == 256
+    assert img.height == 256
+    assert img.band_names == ["b1", "b2"]
+    assert img2.count == 1
+    assert img2.width == 256
+    assert img2.height == 256
+    assert img2.band_names == ["b1+b2"]
+
+
+def test_dataset_statistics():
+    """Make statistics are preserved on expression"""
+    data = numpy.zeros((2, 256, 256), dtype="uint8")
+    data[0, 0:10, 0:10] = 0
+    data[0, 10:11, 10:11] = 100
+    data[1, 0:10, 0:10] = 100
+    data[1, 10:11, 10:11] = 200
+    img = ImageData(data, dataset_statistics=[(0, 100), (0, 200)])
+
+    img2 = img.apply_expression("b1+b2")
+    assert img2.dataset_statistics == [(0, 300)]
+
+    img2 = img.apply_expression("b1+b2;b1*b2;b1/b1")
+    assert img2.dataset_statistics == [(0, 300), (0, 20000), (0, 1)]
+    assert img2.data[0].min() == 0
+    assert img2.data[0].max() == 300
+    assert img2.data[1].min() == 0
+    assert img2.data[1].max() == 20000
+    assert img2.data[2].min() == 0
+    assert img2.data[2].max() == 1
+
+    data = numpy.zeros((1, 256, 256), dtype="int16")
+    data[0, 0:10, 0:10] = 0
+    data[0, 10:11, 10:11] = 1
+
+    img = ImageData(data, dataset_statistics=[(0, 1)]).render(img_format="PNG")
+    with MemoryFile(img) as mem:
+        with mem.open() as dst:
+            arr = dst.read(indexes=1)
+            assert arr.min() == 0
+            assert arr.max() == 255
+
+    img = ImageData(data).render(img_format="PNG")
+    with MemoryFile(img) as mem:
+        with mem.open() as dst:
+            arr = dst.read(indexes=1)
+            assert not arr.min() == 0
+            assert not arr.max() == 255

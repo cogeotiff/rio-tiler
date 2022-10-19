@@ -2,7 +2,7 @@
 
 import numpy
 
-from .base import MosaicMethodBase
+from rio_tiler.mosaic.methods.base import MosaicMethodBase
 
 
 class FirstMethod(MosaicMethodBase):

@@ -8,7 +8,7 @@ import pytest
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
 tiles = {
     "masked": morecantile.Tile(x=535, y=498, z=10),
@@ -43,20 +43,23 @@ def test_mask_bilinear(cloudoptimized_geotiff):
     src_path = cloudoptimized_geotiff(
         cog_path, **equator, dtype="uint8", nodata_type="alpha"
     )
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         data, mask = cog.preview(
             resampling_method="bilinear",
             force_binary_mask=True,
+            max_size=100,
         )
         masknodata = (data[0] != 0).astype(numpy.uint8) * 255
         numpy.testing.assert_array_equal(mask, masknodata)
 
-        data, mask = cog.preview(
+        dataf, maskf = cog.preview(
             resampling_method="bilinear",
             force_binary_mask=False,
+            max_size=100,
         )
-        masknodata = (data[0] != 0).astype(numpy.uint8) * 255
-        assert not numpy.array_equal(mask, masknodata)
+        masknodata = (dataf[0] != 0).astype(numpy.uint8) * 255
+        assert not numpy.array_equal(maskf, masknodata)
+        assert not numpy.array_equal(maskf, mask)
 
 
 @pytest.mark.parametrize("resampling", ["bilinear", "nearest"])
@@ -67,7 +70,7 @@ def test_mask(dataset_info, tile_name, resampling, cloudoptimized_geotiff):
     src_path = cloudoptimized_geotiff(cog_path, **dataset_info)
 
     tile = tiles[tile_name]
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         data, mask = cog.tile(
             tile.x,
             tile.y,

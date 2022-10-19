@@ -11,7 +11,7 @@ from rasterio.warp import transform_bounds
 from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
-from rio_tiler.io import COGReader, STACReader
+from rio_tiler.io import Reader, STACReader
 from rio_tiler.models import ImageData
 from rio_tiler.mosaic.methods import defaults
 from rio_tiler.types import DataMaskType
@@ -41,19 +41,19 @@ zo = 9
 
 def _read_tile(src_path: str, *args, **kwargs) -> ImageData:
     """Read tile from an asset"""
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         return cog.tile(*args, **kwargs)
 
 
 def _read_part(src_path: str, *args, **kwargs) -> ImageData:
     """Read part from an asset"""
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         return cog.part(*args, **kwargs)
 
 
 def _read_preview(src_path: str, *args, **kwargs) -> DataMaskType:
     """Read preview from an asset"""
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         data, mask = cog.preview(*args, **kwargs)
     return data, mask
 
@@ -69,10 +69,10 @@ def test_mosaic_tiler():
     assert t.dtype == m.dtype
 
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z)
-    assert img.band_names == ["1", "2", "3"]
+    assert img.band_names == ["b1", "b2", "b3"]
 
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, indexes=[1])
-    assert img.band_names == ["1"]
+    assert img.band_names == ["b1"]
 
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, expression="b1*3")
     assert img.band_names == ["b1*3"]
@@ -249,7 +249,7 @@ def mock_rasterio_open(asset):
     return rasterio.open(asset)
 
 
-@patch("rio_tiler.io.cogeo.rasterio")
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_stac_mosaic_tiler(rio):
     """Test mosaic tiler with STACReader."""
     rio.open = mock_rasterio_open
@@ -281,7 +281,7 @@ def test_stac_mosaic_tiler(rio):
         assets="green",
         threads=0,
     )
-    assert img.band_names == ["green_1"]
+    assert img.band_names == ["green_b1"]
 
     img, _ = mosaic.mosaic_reader(
         [stac_asset],
@@ -289,22 +289,10 @@ def test_stac_mosaic_tiler(rio):
         71,
         102,
         8,
-        assets=["green"],
-        asset_expression={"green": "b1*2"},
+        expression="green_b1*2",
         threads=0,
     )
     assert img.band_names == ["green_b1*2"]
-
-    img, _ = mosaic.mosaic_reader(
-        [stac_asset],
-        _reader,
-        71,
-        102,
-        8,
-        expression="green*2",
-        threads=0,
-    )
-    assert img.band_names == ["green*2"]
 
 
 def test_mosaic_tiler_Stdev():
@@ -440,10 +428,10 @@ def test_mosaic_tiler_with_imageDataClass():
     assert not img.bounds
 
     bbox = [-75.98703377413767, 44.93504283293786, -71.337604723999, 47.09685599202324]
-    with COGReader(assets[0]) as cog:
+    with Reader(assets[0]) as cog:
         crs1 = cog.dataset.crs
 
-    with COGReader(assets[0]) as cog:
+    with Reader(assets[0]) as cog:
         crs2 = cog.dataset.crs
 
     img, assets_used = mosaic.mosaic_reader(
@@ -456,4 +444,5 @@ def test_mosaic_tiler_with_imageDataClass():
     assert img.crs == crs1 == crs2
     assert not img.bounds == bbox
     bbox_in_crs = transform_bounds(WGS84_CRS, crs1, *bbox, densify_pts=21)
-    assert img.bounds == bbox_in_crs
+    for xc, yc in zip(img.bounds, bbox_in_crs):
+        assert round(xc, 5) == round(yc, 5)

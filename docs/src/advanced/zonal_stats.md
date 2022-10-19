@@ -12,8 +12,8 @@ from rio_tiler.models import BandStatistics
 from geojson_pydantic.features import Feature, FeatureCollection
 from geojson_pydantic.geometries import Polygon
 
-class COGReader(io.COGReader):
-    """Custom COGReader with zonal_statistics method."""
+class Reader(io.Reader):
+    """Custom Reader with zonal_statistics method."""
 
     def zonal_statistics(
             self,
@@ -49,7 +49,7 @@ class COGReader(io.COGReader):
                 geojson = FeatureCollection(features=[geojson])
 
             for feature in geojson:
-                # Get data overlapping with the feature (using COGReader.feature method)
+                # Get data overlapping with the feature (using Reader.feature method)
                 data = self.feature(
                     feature.dict(exclude_none=True),
                     max_size=max_size,

@@ -12,11 +12,11 @@ from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
 from rasterio.crs import CRS
 
-from ..constants import WEB_MERCATOR_TMS, WGS84_CRS
-from ..errors import InvalidAssetName, MissingAssets
-from ..utils import aws_get_object
-from .base import BaseReader, MultiBaseReader
-from .cogeo import COGReader
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.errors import InvalidAssetName, MissingAssets
+from rio_tiler.io.base import BaseReader, MultiBaseReader
+from rio_tiler.io.rasterio import Reader
+from rio_tiler.utils import aws_get_object
 
 DEFAULT_VALID_TYPE = {
     "image/tiff; application=geotiff",
@@ -130,14 +130,15 @@ class STACReader(MultiBaseReader):
     Attributes:
         input (str): STAC Item path, URL or S3 URL.
         item (dict or pystac.Item, STAC): Stac Item.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         minzoom (int, optional): Set minzoom for the tiles.
         maxzoom (int, optional): Set maxzoom for the tiles.
         geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
-        include (set of string, optional): Only Include specific assets.
-        exclude (set of string, optional): Exclude specific assets.
+        include_assets (set of string, optional): Only Include specific assets.
+        exclude_assets (set of string, optional): Exclude specific assets.
         include_asset_types (set of string, optional): Only include some assets base on their type.
         exclude_asset_types (set of string, optional): Exclude some assets base on their type.
-        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.COGReader`.
+        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.Reader`.
         reader_options (dict, optional): Additional option to forward to the Reader. Defaults to `{}`.
         fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`.
 
@@ -164,8 +165,8 @@ class STACReader(MultiBaseReader):
     item: pystac.Item = attr.ib(default=None, converter=_to_pystac_item)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
+    minzoom: int = attr.ib()
+    maxzoom: int = attr.ib()
 
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
@@ -175,7 +176,7 @@ class STACReader(MultiBaseReader):
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
 
-    reader: Type[BaseReader] = attr.ib(default=COGReader)
+    reader: Type[BaseReader] = attr.ib(default=Reader)
     reader_options: Dict = attr.ib(factory=dict)
 
     fetch_options: Dict = attr.ib(factory=dict)
@@ -202,13 +203,13 @@ class STACReader(MultiBaseReader):
         if not self.assets:
             raise MissingAssets("No valid asset found")
 
-        if self.minzoom is None:
-            # TODO get minzoom from PROJ extension
-            self.minzoom = self.tms.minzoom
+    @minzoom.default
+    def _minzoom(self):
+        return self.tms.minzoom
 
-        if self.maxzoom is None:
-            # TODO get maxzoom from PROJ extension
-            self.maxzoom = self.tms.maxzoom
+    @maxzoom.default
+    def _maxzoom(self):
+        return self.tms.maxzoom
 
     def _get_asset_url(self, asset: str) -> str:
         """Validate asset names and return asset's url.

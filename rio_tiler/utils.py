@@ -20,11 +20,11 @@ from rasterio.transform import from_bounds, rowcol
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_geom
 
-from .colormap import apply_cmap
-from .constants import WEB_MERCATOR_CRS
-from .errors import RioTilerError
-from .expression import get_expression_blocks
-from .types import BBox, ColorMapType, IntervalTuple
+from rio_tiler.colormap import apply_cmap
+from rio_tiler.constants import WEB_MERCATOR_CRS
+from rio_tiler.errors import RioTilerError
+from rio_tiler.expression import get_expression_blocks
+from rio_tiler.types import BBox, ColorMapType, IntervalTuple
 
 
 def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
@@ -67,6 +67,10 @@ def get_bands_names(
     count: Optional[int] = None,
 ) -> List[str]:
     """Define bands names based on expression, indexes or band count."""
+    warnings.warn(
+        "`get_bands_names` is deprecated, and will be removed in rio-tiler 4.0`.",
+        DeprecationWarning,
+    )
     if expression:
         return get_expression_blocks(expression)
 
@@ -272,9 +276,7 @@ def get_vrt_transform(
 
     # If bounds window is aligned with the dataset internal tile we align the bounds with the pixels.
     # This is to limit the number of internal block fetched.
-    if _requested_tile_aligned_with_internal_tile(
-        src_dst, bounds, height, width, dst_crs
-    ):
+    if _requested_tile_aligned_with_internal_tile(src_dst, bounds, bounds_crs=dst_crs):
         # Get Window for the input bounds
         # e.g Window(col_off=17920.0, row_off=11007.999999999998, width=255.99999999999636, height=256.0000000000018)
         col_off, row_off, w, h = windows.from_bounds(
@@ -374,16 +376,14 @@ def linear_rescale(
     """
     imin, imax = in_range
     omin, omax = out_range
-    image = numpy.clip(image, imin, imax) - imin
-    image = image / numpy.float64(imax - imin)
-    return image * (omax - omin) + omin
+    im = numpy.clip(image, imin, imax) - imin
+    im = im / numpy.float64(imax - imin)
+    return im * (omax - omin) + omin
 
 
 def _requested_tile_aligned_with_internal_tile(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: BBox,
-    height: Optional[int] = None,
-    width: Optional[int] = None,
     bounds_crs: CRS = WEB_MERCATOR_CRS,
 ) -> bool:
     """Check if tile is aligned with internal tiles."""
@@ -461,22 +461,20 @@ def render(
     elif img_format == "NPY":
         # If mask is not None we add it as the last band
         if mask is not None:
-            mask = numpy.expand_dims(mask, axis=0)
-            data = numpy.concatenate((data, mask))
+            m = numpy.expand_dims(mask, axis=0)
+            data = numpy.concatenate((data, m))
 
-        bio = BytesIO()
-        numpy.save(bio, data)
-        bio.seek(0)
-        return bio.getvalue()
+        with BytesIO() as bio:
+            numpy.save(bio, data)
+            return bio.getvalue()
 
     elif img_format == "NPZ":
-        bio = BytesIO()
-        if mask is not None:
-            numpy.savez_compressed(bio, data=data, mask=mask)
-        else:
-            numpy.savez_compressed(bio, data=data)
-        bio.seek(0)
-        return bio.getvalue()
+        with BytesIO() as bio:
+            if mask is not None:
+                numpy.savez_compressed(bio, data=data, mask=mask)
+            else:
+                numpy.savez_compressed(bio, data=data)
+            return bio.getvalue()
 
     count, height, width = data.shape
 
@@ -659,3 +657,13 @@ def resize_array(
                 indexes=indexes,
                 resampling=Resampling[resampling_method],
             )
+
+
+def normalize_bounds(bounds: BBox) -> BBox:
+    """Return BBox in correct minx, miny, maxx, maxy order."""
+    return (
+        min(bounds[0], bounds[2]),
+        min(bounds[1], bounds[3]),
+        max(bounds[0], bounds[2]),
+        max(bounds[1], bounds[3]),
+    )

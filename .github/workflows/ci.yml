@@ -16,7 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        python-version: ['3.7', '3.8', '3.9']
+        python-version: ['3.8', '3.9', '3.10']
 
     steps:
       - uses: actions/checkout@v2
@@ -28,17 +28,16 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install pre-commit codecov
-
-      - name: Install module
-        run: python -m pip install .["test"]
+          python -m pip install -e .["test"]
 
       - name: Run pre-commit
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
-        run: pre-commit run --all-files
+        run: |
+          python -m pip install pre-commit
+          pre-commit run --all-files
 
       - name: Run tests
-        run: python -m pytest --cov rio_tiler --cov-report xml --cov-report term-missing --benchmark-skip
+        run: python -m pytest --cov rio_tiler --cov-report xml --cov-report term-missing --benchmark-skip -s -vv
 
       - name: Upload Results
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
@@ -73,20 +72,20 @@ jobs:
       - name: Run Benchmark
         run: python -m pytest --benchmark-only --benchmark-autosave --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
 
-      - name: Store and Compare benchmark result
-        uses: benchmark-action/github-action-benchmark@v1
-        with:
-          name: rio-tiler Benchmarks
-          tool: 'pytest'
-          output-file-path: output.json
-          alert-threshold: '130%'
-          comment-on-alert: true
-          fail-on-alert: true
-          # GitHub API token to make a commit comment
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          # Make a commit on `gh-pages` only if master
-          auto-push: ${{ github.ref == 'refs/heads/master' }}
-          benchmark-data-dir-path: benchmarks
+      # - name: Store and Compare benchmark result
+      #   uses: benchmark-action/github-action-benchmark@v1
+      #   with:
+      #     name: rio-tiler Benchmarks
+      #     tool: 'pytest'
+      #     output-file-path: output.json
+      #     alert-threshold: '130%'
+      #     comment-on-alert: true
+      #     fail-on-alert: true
+      #     # GitHub API token to make a commit comment
+      #     github-token: ${{ secrets.GITHUB_TOKEN }}
+      #     # Make a commit on `gh-pages` only if master
+      #     auto-push: ${{ github.ref == 'refs/heads/master' }}
+      #     benchmark-data-dir-path: benchmarks
 
   publish:
     needs: [tests]

@@ -2,7 +2,7 @@
 
 import re
 import warnings
-from typing import List, Sequence, Tuple, Union
+from typing import List, Sequence, Tuple
 
 import numexpr
 import numpy
@@ -59,7 +59,7 @@ def get_expression_blocks(expression: str) -> List[str]:
 
 def apply_expression(
     blocks: Sequence[str],
-    bands: Sequence[Union[str, int]],
+    bands: Sequence[str],
     data: numpy.ndarray,
 ) -> numpy.ndarray:
     """Apply rio-tiler expression.
@@ -74,6 +74,11 @@ def apply_expression(
         numpy.array: output data.
 
     """
+    if len(bands) != data.shape[0]:
+        raise ValueError(
+            f"Incompatible number of bands ({bands}) and data shape {data.shape}"
+        )
+
     return numpy.array(
         [
             numpy.nan_to_num(

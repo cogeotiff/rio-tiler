@@ -51,8 +51,9 @@ nav:
     - rio_tiler.models: api/rio_tiler/models.md
     - rio_tiler.io:
       - rio_tiler.io.base: api/rio_tiler/io/base.md
-      - rio_tiler.io.cogeo: api/rio_tiler/io/cogeo.md
+      - rio_tiler.io.rasterio: api/rio_tiler/io/rasterio.md
       - rio_tiler.io.stac: api/rio_tiler/io/stac.md
+      - rio_tiler.io.xarray: api/rio_tiler/io/xarray.md
     - rio_tiler.mosaic:
       - rio_tiler.mosaic.reader: api/rio_tiler/mosaic/reader.md
       - rio_tiler.mosaic.methods:
@@ -64,6 +65,7 @@ nav:
     - rio_tiler.utils: api/rio_tiler/utils.md
   - Migration from v1.0 to v2.0: 'v2_migration.md'
   - Migration from v2.0 to v3.0: 'v3_migration.md'
+  - Migration from v3.0 to v4.0: 'v4_migration.md'
   - Development - Contributing: 'contributing.md'
   - Release Notes: 'release-notes.md'
 
