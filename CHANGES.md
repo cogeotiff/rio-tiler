@@ -118,7 +118,7 @@
 
     # now
     with rasterio.open("cog.tif") as src::
-        v, band_names = rio_tiler.reader.point(10.20, -42)
+        v = rio_tiler.reader.point(src, (10.20, -42))
         print(v)
         >>> PointData(
             data=array([3744], dtype=uint16),
