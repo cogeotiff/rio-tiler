@@ -129,8 +129,6 @@ class XarrayReader(BaseReader):
     def get_maxzoom(self) -> int:
         """Define dataset maximum zoom level."""
         if self._maxzoom is None:
-            # TODO: Get transform from the data and figure the MaxZoom
-            # self._minzoom = self.tms.zoom_for_res(resolution)
             try:
                 dst_affine, _, _ = self._dst_geom_in_tms_crs()
 

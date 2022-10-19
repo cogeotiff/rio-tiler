@@ -53,14 +53,14 @@ Returns:
 ### Examples
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.mosaic import mosaic_reader
 from rio_tiler.mosaic.methods import defaults
 from rio_tiler.models import ImageData
 
 
 def tiler(src_path: str, *args, **kwargs) -> ImageData:
-    with COGReader(src_path) as cog:
+    with Reader(src_path) as cog:
         return cog.tile(*args, **kwargs)
 
 mosaic_assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]

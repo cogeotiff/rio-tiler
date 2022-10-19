@@ -36,6 +36,42 @@ from rio_tiler.io.cogeo import COGReader
 from rio_tiler.io.rasterio import Reader
 ```
 
+## **Band names**
+
+Band names are now prefixed with `b` (e.g `b1`, `b2`)
+
+```python
+# before
+with COGReader(
+  "http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"
+) as src:
+    stats = src.statistics()
+   print(list(stats))
+   >>> ["1", "2", "3"]
+
+    info = src.info()
+    print(info.band_metadata)
+    >>> [("1", {}), ("2", {}), ("3", {})]
+
+    print(info.band_descriptions)
+    >>> [("1", ""), ("2", ""), ("3", "")]
+
+# now
+with Reader(
+  "http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"
+) as src:
+    stats = src.statistics()
+    print(list(stats))
+    >>> ["b1", "b2", "b3"]
+
+    info = src.info()
+    print(info.band_metadata)
+    >>> [("b1", {}), ("b2", {}), ("b3", {})]
+
+    print(info.band_descriptions)
+    >>> [("b1", ""), ("b2", ""), ("b3", "")]
+```
+
 ## MultiBaseReader **Expressions**
 
 We updated the `expression` format for `MultiBaseReader` (e.g STAC) to include **band names** and not only the asset name
@@ -259,3 +295,32 @@ with xarray.open_dataset(
 ```
 
 Note: Users might experience some really bad performance depending on the chunking of the original zarr.
+
+## Dataset Statistics
+
+Starting with rio-tiler 4.0, if the input dataset has [`statistics`](https://gdal.org/user/raster_data_model.html#raster-band) (e.g `STATISTICS_MINIMUM`, `STATISTICS_MAXIMUM`) within its metadata, rio-tiler will try to use it to rescale automatically the output image.
+
+```python
+from rio_tiler.io import Reader
+
+with Reader("https://data.geo.admin.ch/ch.swisstopo.swissalti3d/swissalti3d_2019_2573-1085/swissalti3d_2019_2573-1085_0.5_2056_5728.tif") as src:
+    info = src.info()
+    print(info.band_metadata)
+    >>> [('b1',
+    {'STATISTICS_COVARIANCES': '10685.98787505646',
+    'STATISTICS_EXCLUDEDVALUES': '-9999',
+    'STATISTICS_MAXIMUM': '2015.0944824219',
+    'STATISTICS_MEAN': '1754.471184271',
+    'STATISTICS_MINIMUM': '1615.8128662109',
+    'STATISTICS_SKIPFACTORX': '1',
+    'STATISTICS_SKIPFACTORY': '1',
+    'STATISTICS_STDDEV': '103.37305197708'})]
+
+    img = src.preview()
+    # The min/max statistics are saved within every output image object
+    print(img.dataset_statistics)
+    >>> [(1615.8128662109, 2015.0944824219)]
+
+    buffer = img.render()
+    >>> rio-tiler/rio_tiler/models.py:516: InvalidDatatypeWarning: Invalid type: `float32` for the `PNG` driver. Data will be rescaled using min/max type bounds  or dataset_statistics.
+```

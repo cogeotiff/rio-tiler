@@ -14,6 +14,7 @@ This class has helper methods like `render` which forward internal data and mask
 - **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/master/rasterio/crs.py#L21), optional)
 - **metadata**: additional metadata (dict, optional)
 - **band_names**: image band's names
+- **dataset_statistics**: Dataset's min/max values (list of (min,max), optional)
 
 ```python
 import numpy
@@ -30,7 +31,7 @@ print(ImageData(d, m))
     bounds=None,
     crs=None,
     metadata={},
-    band_names=['1', '2', '3'],
+    band_names=['b1', 'b2', 'b3'],
 )
 ```
 
@@ -76,7 +77,7 @@ print(image.shape)
 >>> (256, 256, 3)
 ```
 
-- **post_process()**: Apply rescaling or/and rio-color formula to the data array. Returns a new ImageData instance.
+- **post_process**: Apply rescaling or/and rio-color formula to the data array. Returns a new ImageData instance.
 
 ```python
 import numpy
@@ -114,6 +115,80 @@ image = img.post_process(
     color_formula="Gamma RGB 3.1",
 )
 assert isinstance(image, ImageData)
+```
+
+- **rescale()**: linear rescaling of the data in place
+
+!!! info "New in version 3.1.5"
+
+```python
+import numpy
+from rio_tiler.models import ImageData
+
+d = numpy.random.randint(0, 3000, (3, 256, 256))
+m = numpy.zeros((256, 256)) + 255
+
+img = ImageData(d, m)
+
+print(img.data.dtype)
+>>> 'int64'
+
+print(img.data.max())
+>>> 2999
+
+# rescale and apply rio-color formula
+img.rescale(in_range=((0, 3000),),)
+print(img.data.max())
+>>> 254
+
+print(img.data.dtype)
+>>> 'uint8'
+```
+
+- **apply_color_formula()**: Apply `rio-color`'s color formula in place
+
+!!! info "New in version 3.1.5"
+
+```python
+import numpy
+from rio_tiler.models import ImageData
+
+d = numpy.random.randint(0, 3000, (3, 256, 256))
+m = numpy.zeros((256, 256)) + 255
+
+img = ImageData(d, m)
+
+print(img.data.dtype)
+>>> 'int64'
+
+img.apply_color_formula("Gamma RGB 3.1")
+print(img.data.dtype)
+>>> 'uint8'
+```
+
+- **apply_expression()**: Apply band math expression
+
+!!! info "New in version 4.0"
+
+```python
+import numpy
+from rio_tiler.models import ImageData
+
+d = numpy.random.randint(0, 3000, (3, 256, 256))
+m = numpy.zeros((256, 256)) + 255
+
+img = ImageData(d, m)
+print(img.band_names)
+>>> ["b1", "b2", "b3"]  # Defaults
+
+ratio = img.apply_expression("b1/b2")  # Returns a new ImageData object
+assert isinstance(ratio, ImageData)
+
+print(ratio.band_names)
+>>> ["b1/b2"]
+
+print(ratio.data.shape)
+>>> (1, 256, 256)
 ```
 
 - **render()**: Render the data/mask to an image buffer (forward data and mask to rio_tiler.utils.render).
@@ -165,14 +240,91 @@ print(get_meta(buf))
 Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for a driver (e.g `float` for `PNG`),
 `rio-tiler` will automatically rescale the data using the `min/max` value for the datatype (ref: https://github.com/cogeotiff/rio-tiler/pull/391).
 
+
+## PointData
+
+!!! info "New in version 4.0"
+
+#### Attributes
+
+- **data**: point array (numpy.ndarray)
+- **mask**: gdal/rasterio mask array (numpy.ndarray)
+- **assets**: assets list used to create the data array (list, optional)
+- **coordinates**: Coordinates of the point (Tuple[float, float], optional)
+- **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/master/rasterio/crs.py#L21), optional)
+- **metadata**: additional metadata (dict, optional)
+- **band_names**: values band's names
+
+```python
+import numpy
+from rio_tiler.models import PointData
+
+d = numpy.zeros((3))
+m = numpy.zeros((1), dtype="uint8") + 255
+
+print(PointData(d, m))
+>>> PointData(
+    data=array([0., 0., 0.]),
+    mask=array([255]),
+    assets=None,
+    coordinates=None,
+    crs=None,
+    metadata={},
+    band_names=['b1', 'b2', 'b3'],
+)
+```
+
+#### Properties
+
+- **count**: number of bands in the data array (int)
+
+#### Methods
+
+- **as_masked()**: Return the data array as a `numpy.ma.MaskedArray`
+
+```python
+import numpy
+from rio_tiler.models import PointData
+
+d = numpy.zeros((3))
+m = numpy.zeros((1), dtype="uint8") + 255
+
+masked = PointData(d, m).as_masked()
+print(type(masked))
+>>> numpy.ma.core.MaskedArray
+```
+
+- **apply_expression()**: Apply band math expression
+
+```python
+import numpy
+from rio_tiler.models import PointData
+
+d = numpy.random.randint(0, 3000, (3))
+m = numpy.zeros((1), dtype="uint8") + 255
+
+pts = PointData(d, m)
+print(pts.band_names)
+>>> ["b1", "b2", "b3"]  # Defaults
+
+ratio = pts.apply_expression("b1/b2")  # Returns a new PointData object
+assert isinstance(ratio, PointData)
+
+print(ratio.band_names)
+>>> ["b1/b2"]
+
+print(ratio.count)
+>>> 1
+```
+
 ## Others
 
-Readers methods (`info`, `metadata` and `stats`) returning metadata like results return [pydantic](https://pydantic-docs.helpmanual.io) models to make sure the values are valids.
+Readers methods returning metadata like results (`info()` and `statistics()`) return [pydantic](https://pydantic-docs.helpmanual.io) models to make sure the values are valids.
 
 ### Info
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import Info
 
 # Schema
@@ -308,10 +460,10 @@ print(Info.schema())
 }
 
 # Example
-with COGReader(
+with Reader(
   "http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"
-) as cog:
-    info = cog.info()
+) as src:
+    info = src.info()
 
 print(info["nodata_type"])
 >>> "None"
@@ -324,8 +476,8 @@ print(info.json(exclude_none=True))
     'bounds': [-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608],
     'minzoom': 16,
     'maxzoom': 22,
-    'band_metadata': [('1', {}), ('2', {}), ('3', {})],
-    'band_descriptions': [('1', ''), ('2', ''), ('3', '')],
+    'band_metadata': [('b1', {}), ('b2', {}), ('b3', {})],
+    'band_descriptions': [('b1', ''), ('b2', ''), ('b3', '')],
     'dtype': 'uint8',
     'nodata_type': 'None',
     'colorinterp': ['red', 'green', 'blue'],
@@ -337,12 +489,12 @@ print(info.json(exclude_none=True))
 }
 ```
 
-Note: starting with `rio-tiler>=2.0.8`, additional metadata can be set (e.g. driver, count, width, height, overviews in `COGReader.info()`)
+Note: starting with `rio-tiler>=2.0.8`, additional metadata can be set (e.g. driver, count, width, height, overviews in `Reader.info()`)
 
 ### BandStatistics
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import BandStatistics
 
 # Schema
@@ -441,19 +593,19 @@ print(BandStatistics.schema())
 }
 
 # Example
-with COGReader(
+with Reader(
   "http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"
-) as cog:
-    stats = cog.statistics()
-    assert isinstance(stats["1"], BandStatistics)
+) as src:
+    stats = src.statistics()
+    assert isinstance(stats["b1"], BandStatistics)
 
-print(stats["1"]["min"])
+print(stats["b1"]["min"])
 >>> 0.0
 
-print(stats["1"].min)
+print(stats["b1"].min)
 >>> 0.0
 
-print(stats["1"].json(exclude_none=True))
+print(stats["b1"].json(exclude_none=True))
 >>> {
     "min": 0,
     "max": 255,

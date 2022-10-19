@@ -1,7 +1,7 @@
 
 `rio-tiler` can work with all raster formats supported by [GDAL](https://gdal.org). That's being said, `rio-tiler` works better with data format that supports **partial reading**, like [Cloud Optimized GeoTIFF](http://cogeo.org).
 
-On interesting feature of Cloud Optimized GeoTIFF is the internal overviews which enable fast preview of the data. For example, when using the `COGReader.preview` method, rio-tiler will only fetch the internal overviews instead of the whole data, to be able to construct the output array. Doing this reduce the amount of data transfer and thus increase the process speed.
+On interesting feature of Cloud Optimized GeoTIFF is the internal overviews which enable fast preview of the data. For example, when using the `Reader.preview` method, rio-tiler will only fetch the internal overviews instead of the whole data, to be able to construct the output array. Doing this reduce the amount of data transfer and thus increase the process speed.
 
 ### VRT
 
@@ -11,3 +11,14 @@ GDAL's [Virtual format](https://gdal.org/drivers/raster/vrt.html#raster-vrt) is 
     Map Tile reading from VRT might not be efficient if overviews are not present, because GDAL will try to open a lot of files.
 
 ![](img/vrt_tile.png)
+
+
+### Xarray
+
+!!! info "New in version 4.0"
+
+When `xarray` and `rioxarray` are installed in your environment, you can use `rio_tiler.io.XarrayReader` to read `xarray.DataArray` using the *usual* rio-tiler's Readers methods (`part()`, `tile()`, `feature()`).
+
+!!! warnings
+    - Datarray must be fully geo-referenced with a CRS and X,Y variables (longitude, latitude)
+    - Performance is largely dependant on the chunking of the array

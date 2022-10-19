@@ -20,7 +20,7 @@ your own API.
 
 ### Requirements
 
-- `rio-tiler ~= 3.0`
+- `rio-tiler ~= 4.0`
 - `fastapi`
 - `uvicorn`
 
@@ -49,7 +49,7 @@ from starlette.requests import Request
 from starlette.responses import Response
 
 from rio_tiler.profiles import img_profiles
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
 
 app = FastAPI(
@@ -75,7 +75,7 @@ def tile(
     url: str = Query(..., description="Cloud Optimized GeoTIFF URL."),
 ):
     """Handle tile requests."""
-    with COGReader(url) as cog:
+    with Reader(url) as cog:
         img = cog.tile(x, y, z)
     content = img.render(img_format="PNG", **img_profiles.get("png"))
     return Response(content, media_type="image/png")
@@ -90,7 +90,7 @@ def tilejson(
     tile_url = request.url_for("tile", {"z": "{z}", "x": "{x}", "y": "{y}"})
     tile_url = f"{tile_url}?url={url}"
 
-    with COGReader(url) as cog:
+    with Reader(url) as cog:
         return {
             "bounds": cog.geographic_bounds,
             "minzoom": cog.minzoom,

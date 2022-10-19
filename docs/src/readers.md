@@ -1,16 +1,16 @@
 
-`rio-tiler`'s  COGReader and STACReader are built from its abstract base classes (`AsyncBaseReader`, `BaseReader`, `MultiBandReader`, `MultiBaseReader`). Those Classes implements defaults interfaces which helps the integration in broader application. To learn more about `rio-tiler`'s base classes see [Base classes and custom readers](advanced/custom_readers.md)
+`rio-tiler`'s  Reader are built from its abstract base classes (`BaseReader`, `MultiBandReader`, `MultiBaseReader`). Those Classes implements defaults interfaces which helps the integration in broader application. To learn more about `rio-tiler`'s base classes see [Base classes and custom readers](advanced/custom_readers.md)
 
-## rio_tiler.io.COGReader
+## rio_tiler.io.rasterio.Reader
 
-The `COGReader` is designed to work with simple raster datasets (e.g COG, GeoTIFF, ...).
+The `Reader` is designed to work with simple raster datasets (e.g COG, GeoTIFF, ...).
 
 The class is derived from the `rio_tiler.io.base.BaseReader` base class.
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
-COGReader.__mro__
->>> (rio_tiler.io.cogeo.COGReader,
+Reader.__mro__
+>>> (rio_tiler.io.rasterio.Reader,
  rio_tiler.io.base.BaseReader,
  rio_tiler.io.base.SpatialMixin,
  object)
@@ -21,29 +21,30 @@ COGReader.__mro__
 - **input** (str): filepath
 - **dataset** (rasterio dataset, optional): rasterio opened dataset
 - **tms** (morecantile.TileMatrixSet, optional): morecantile TileMatrixSet used for tile reading (defaults to WebMercator)
-- **minzoom** (int, optional): dataset's minimum zoom level (for input tms)
-- **maxzoom** (int, optional): dataset's maximum zoom level (for input tms)
+- **geographic_crs** (rasterio.crs.CRS, optional): CRS to use to calculate the geographic bounds (default to WGS84)
 - **colormap** (dict, optional): dataset's colormap
+- **options** (rio_tiler.reader.Options, optional): Options to forward to rio_tiler.reader functions (e.g nodata, vrt_options, resampling)
 
 #### Properties
 
 - **bounds**: dataset's bounds (in dataset crs)
 - **crs**: dataset's crs
 - **geographic_bounds**: dataset's bounds in WGS84
-
+- **minzoom**: dataset minzoom (in TMS)
+- **maxzoom**: dataset maxzoom (in TMS)
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
-with COGReader("myfile.tif") as cog:
-    print(cog.dataset)
-    print(cog.tms.identifier)
-    print(cog.minzoom)
-    print(cog.maxzoom)
-    print(cog.bounds)
-    print(cog.crs)
-    print(cog.geographic_bounds)
-    print(cog.colormap)
+with Reader("myfile.tif") as src:
+    print(src.dataset)
+    print(src.tms.identifier)
+    print(src.minzoom)
+    print(src.maxzoom)
+    print(src.bounds)
+    print(src.crs)
+    print(src.geographic_bounds)
+    print(src.colormap)
 
 >> <open DatasetReader name='myfile.tif' mode='r'>
 WebMercatorQuad
@@ -60,51 +61,53 @@ EPSG:32620
 - **read()**: Read the entire dataset
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import ImageData
 
-with COGReader("myfile.tif") as cog:
-    img = cog.read()
+with Reader("myfile.tif") as src:
+    img = src.read()
     assert isinstance(img, ImageData)
-    assert img.crs == cog.dataset.crs
+    assert img.crs == src.dataset.crs
     assert img.assets == ["myfile.tif"]
-    assert img.width == cog.dataset.width
-    assert img.height == cog.dataset.height
-    assert img.count == cog.dataset.count
+    assert img.width == src.dataset.width
+    assert img.height == src.dataset.height
+    assert img.count == src.dataset.count
 
 # With indexes
-with COGReader("myfile.tif") as cog:
-    img = cog.read(indexes=1)  # or cog.read(indexes=(1,))
+with Reader("myfile.tif") as src:
+    img = src.read(indexes=1)  # or src.read(indexes=(1,))
     assert img.count == 1
+    assert img.band_names == ["b1"]
 
 # With expression
-with COGReader("myfile.tif") as cog:
-    img = cog.read(expression="B1/B2")
+with Reader("myfile.tif") as src:
+    img = src.read(expression="b1/b2")
     assert img.count == 1
+    assert img.band_names == ["b1/b2"]
 ```
 
 - **tile()**: Read map tile from a raster
 
 ```python
 from rio_tiler.contants import WEB_MERCATOR_CRS
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import ImageData
 
-with COGReader("myfile.tif") as cog:
-    # cog.tile(tile_x, tile_y, tile_z, **kwargs)
-    img = cog.tile(1, 2, 3, tilesize=256)
+with Reader("myfile.tif") as src:
+    # src.tile(tile_x, tile_y, tile_z, **kwargs)
+    img = src.tile(1, 2, 3, tilesize=256)
     assert isinstance(img, ImageData)
     assert img.crs == WEB_MERCATOR_CRS
     assert img.assets == ["myfile.tif"]
 
 # With indexes
-with COGReader("myfile.tif") as cog:
-    img = cog.tile(1, 2, 3, tilesize=256, indexes=1)
+with Reader("myfile.tif") as src:
+    img = src.tile(1, 2, 3, tilesize=256, indexes=1)
     assert img.count == 1
 
 # With expression
-with COGReader("myfile.tif") as cog:
-    img = cog.tile(1, 2, 3, tilesize=256, expression="B1/B2")
+with Reader("myfile.tif") as src:
+    img = src.tile(1, 2, 3, tilesize=256, expression="B1/B2")
     assert img.count == 1
 
 # Using buffer
@@ -112,14 +115,14 @@ with COGReader("myfile.tif") as cog:
 # ref:
 # - https://github.com/cogeotiff/rio-tiler/issues/365
 # - https://github.com/cogeotiff/rio-tiler/pull/405
-with COGReader("myfile.tif") as cog:
+with Reader("myfile.tif") as src:
     # add 0.5 pixel on each side of the tile
-    img = cog.tile(1, 2, 3, tile_buffer=0.5)
+    img = src.tile(1, 2, 3, buffer=0.5)
     assert img.width == 257
     assert img.height == 257
 
     # add 1 pixel on each side of the tile
-    img = cog.tile(1, 2, 3, tile_buffer=1)
+    img = src.tile(1, 2, 3, buffer=1)
     assert img.width == 258
     assert img.height == 258
 ```
@@ -127,40 +130,40 @@ with COGReader("myfile.tif") as cog:
 - **part()**: Read a raster for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import ImageData
 
-with COGReader("myfile.tif") as cog:
-    # cog.part((minx, miny, maxx, maxy), **kwargs)
-    img = cog.part((10, 10, 20, 20))
+with Reader("myfile.tif") as src:
+    # src.part((minx, miny, maxx, maxy), **kwargs)
+    img = src.part((10, 10, 20, 20))
     assert isinstance(img, ImageData)
     assert img.crs == WGS84_CRS
     assert img.assets == ["myfile.tif"]
     assert img.bounds == (10, 10, 20, 20)
 
-# Pass bbox in WGS84 (default) but return data in the input COG CRS
-with COGReader("myfile.tif") as cog:
-    img = cog.part((10, 10, 20, 20), dst_crs=cog.dataset.crs)
-    assert img.crs == cog.dataset.crs
+# Pass bbox in WGS84 (default) but return data in the input dataset CRS
+with Reader("myfile.tif") as src:
+    img = src.part((10, 10, 20, 20), dst_crs=src.dataset.crs)
+    assert img.crs == src.dataset.crs
 
 # Limit output size
-with COGReader("myfile.tif") as cog:
-    img = cog.part((10, 10, 20, 20), max_size=2000)
+with Reader("myfile.tif") as src:
+    img = src.part((10, 10, 20, 20), max_size=2000)
 
 # With indexes
-with COGReader("myfile.tif") as cog:
-    img = cog.part((10, 10, 20, 20), indexes=1)
+with Reader("myfile.tif") as src:
+    img = src.part((10, 10, 20, 20), indexes=1)
 
 # With expression
-with COGReader("myfile.tif") as cog:
-    img = cog.part((10, 10, 20, 20), expression="B1/B2")
+with Reader("myfile.tif") as src:
+    img = src.part((10, 10, 20, 20), expression="b1/b2")
 ```
 
 - **feature()**: Read a raster for a geojson feature. By default the feature is considered to be in WGS84.
 
 ```python
 from rio_tiler.constants import WGS84_CRS
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import ImageData
 
 feat = {
@@ -180,83 +183,87 @@ feat = {
     },
 }
 
-with COGReader("myfile.tif") as cog:
-    # cog.part(geojson_feature, **kwargs)
-    img = cog.feature(feat)
+with Reader("myfile.tif") as src:
+    # src.part(geojson_feature, **kwargs)
+    img = src.feature(feat)
     assert isinstance(img, ImageData)
     assert img.crs == WGS84_CRS
     assert img.assets == ["myfile.tif"]
     assert img.bounds == (-55.61, 72.36, -53.83, 73.05)  # bbox of the input feature
 
-# Pass bbox in WGS84 (default) but return data in the input COG CRS
-with COGReader("myfile.tif") as cog:
-    img = cog.feature(feat, dst_crs=cog.dataset.crs)
-    assert img.crs == cog.dataset.crs
+# Pass bbox in WGS84 (default) but return data in the input dataset CRS
+with Reader("myfile.tif") as src:
+    img = src.feature(feat, dst_crs=src.dataset.crs)
+    assert img.crs == src.dataset.crs
 
 # Limit output size
-with COGReader("myfile.tif") as cog:
-    img = cog.feature(feat, max_size=2000)
+with Reader("myfile.tif") as src:
+    img = src.feature(feat, max_size=2000)
 
 # Read high resolution
-with COGReader("myfile.tif") as cog:
-    img = cog.feature(feat, max_size=None)
+with Reader("myfile.tif") as src:
+    img = src.feature(feat, max_size=None)
 
 # With indexes
-with COGReader("myfile.tif") as cog:
-    img = cog.feature(feat, indexes=1)
+with Reader("myfile.tif") as src:
+    img = src.feature(feat, indexes=1)
 
 # With expression
-with COGReader("myfile.tif") as cog:
-    img = cog.feature(feat, expression="B1/B2")
+with Reader("myfile.tif") as src:
+    img = src.feature(feat, expression="b1/b2")
 ```
 
 - **preview()**: Read a preview of a raster
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import ImageData
 
-with COGReader("myfile.tif") as cog:
-    img = cog.preview()
+with Reader("myfile.tif") as src:
+    img = src.preview()
     assert isinstance(img, ImageData)
 
 # With indexes
-with COGReader("myfile.tif") as cog:
-    img = cog.preview(indexes=1)
+with Reader("myfile.tif") as src:
+    img = src.preview(indexes=1)
 
 # With expression
-with COGReader("myfile.tif") as cog:
-    img = cog.preview(expression="B1+2,B1*4")
+with Reader("myfile.tif") as src:
+    img = src.preview(expression="b1+2;b1*4")
 ```
 
-- **point()**: Read the pixel values of a raster for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
+- **point()**: Read the pixel values of a raster for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
+from rio_tiler.models import PointData
 
-with COGReader("myfile.tif") as cog:
-    # cog.point(lon, lat)
-    print(cog.point(-100, 25))
+with Reader("myfile.tif") as src:
+    # src.point(lon, lat)
+    pt = src.point(-100, 25)
+    assert isinstance(pt, PointData)
 
 # With indexes
-with COGReader("myfile.tif") as cog:
-    print(cog.point(-100, 25, indexes=1))
+with Reader("myfile.tif") as src:
+    pt = src.point(-100, 25, indexes=1)
+    print(pt.data)
 >>> [1]
 
 # With expression
-with COGReader("myfile.tif") as cog:
-    print(cog.point(-100, 25, expression="B1+2,B1*4"))
+with Reader("myfile.tif") as src:
+    pt = src.point(-100, 25, expression="b1+2;b1*4")
+    print(pt.data)
 >>> [3, 4]
 ```
 
 - **info()**: Return simple metadata about the dataset
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 from rio_tiler.models import Info
 
-with COGReader("myfile.tif") as cog:
-    info = cog.info()
+with Reader("myfile.tif") as src:
+    info = src.info()
     assert isinstance(info, Info)
 
 print(info.dict(exclude_none=True))
@@ -264,8 +271,8 @@ print(info.dict(exclude_none=True))
     "bounds": [-119.05915661478785, 13.102845359730287, -84.91821332299578, 33.995073647795806],
     "minzoom": 3,
     "maxzoom": 12,
-    "band_metadata": [["1", {}]],
-    "band_descriptions": [["1", ""]],
+    "band_metadata": [["b1", {}]],
+    "band_descriptions": [["b1", ""]],
     "dtype": "int8",
     "colorinterp": ["palette"],
     "nodata_type": "Nodata",
@@ -285,21 +292,21 @@ print(info.dict(exclude_none=True))
 - **statistics()**: Return image statistics (Min/Max/Stdev)
 
 ```python
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
-with COGReader("myfile.tif") as cog:
-    stats = cog.statistics()
+with Reader("myfile.tif") as src:
+    stats = src.statistics()
     assert isinstance(stats, dict)
 
 # stats will be in form or {"band": BandStatistics(), ...}
 print(stats)
 >>> {
-    '1': BandStatistics(...),
-    '2': BandStatistics(...),
-    '3': BandStatistics(...)
+    'b1': BandStatistics(...),
+    'b2': BandStatistics(...),
+    'b3': BandStatistics(...)
 }
 
-print(stats["1"].dict())
+print(stats["b1"].dict())
 >>> {
     "min": 1,
     "max": 7872,
@@ -322,16 +329,16 @@ print(stats["1"].dict())
     "percentile_2": 1
 }
 
-with COGReader("myfile_with_colormap.tif") as cog:
-    stats = cog.statistics(categorical=True, categories=[1, 2])  # we limit the categories to 2 defined value (defaults to all dataset values)
+with Reader("myfile_with_colormap.tif") as src:
+    stats = src.statistics(categorical=True, categories=[1, 2])  # we limit the categories to 2 defined value (defaults to all dataset values)
     assert isinstance(stats, dict)
 
 print(stats)
 >>> {
-    '1': BandStatistics(...)
+    'b1': BandStatistics(...)
 }
 # For categorical data, the histogram will represent the density of EACH value.
-print(stats["1"].dict())
+print(stats["b1"].dict())
 >>> {
     ...
     "histogram": [
@@ -344,7 +351,7 @@ print(stats["1"].dict())
 
 #### Read Options
 
-`COGReader` accepts several input options which will be forwarded to the `rio_tiler.reader.read` function (low level function accessing the data), those options can be set as reader's attribute or within each method calls:
+`Reader` accepts several input options which will be forwarded to the `rio_tiler.reader.read` function (low level function accessing the data), those options can be set as reader's attribute or within each method calls:
 
 - **nodata**: Overwrite the nodata value (or set if not present)
 - **unscale**: Apply internal rescaling factors
@@ -353,16 +360,16 @@ print(stats["1"].dict())
 - **post_process**: Function to apply after the read operations
 
 ```python
-with COGReader("my_cog.tif", nodata=0) as cog:
-   cog.tile(1, 1, 1)
+with Reader("my_cog.tif", options={"nodata": 0}) as src:
+   src.tile(1, 1, 1)
 
 # is equivalent to
 
-with COGReader("my_cog.tif") as cog:
-    cog.tile(1, 1, 1, nodata=0)
+with Reader("my_cog.tif") as src:
+    src.tile(1, 1, 1, nodata=0)
 ```
 
-## rio_tiler.io.STACReader
+## rio_tiler.io.stac.STACReader
 
 In `rio-tiler` v2, we added a `rio_tiler.io.STACReader` to allow tile/metadata fetching of assets withing a STAC item.
 
@@ -385,11 +392,12 @@ STACReader.__mro__
 - **tms** (morecantile.TileMatrixSet, optional): morecantile TileMatrixSet used for tile reading (defaults to WebMercator)
 - **minzoom** (int, optional): dataset's minimum zoom level (for input tms)
 - **maxzoom** (int, optional): dataset's maximum zoom level (for input tms)
+- **geographic_crs** (rasterio.crs.CRS, optional): CRS to use to calculate the geographic bounds (default to WGS84)
 - **include_assets** (set, optional): Set of assets to include from the `available` asset list
 - **exclude_assets** (set, optional): Set of assets to exclude from the `available` asset list
 - **include_asset_types** (set, optional): asset types to consider as valid type for the reader
 - **exclude_asset_types** (set, optional): asset types to consider as invalid type for the reader
-- **reader** (BaseReader, optional): Reader to use to read assets (defaults to COGReader)
+- **reader** (BaseReader, optional): Reader to use to read assets (defaults to rio_tiler.io.rasterio.Reader)
 - **reader_options** (dict, optional): Options to forward to the reader init
 - **fetch_options** (dict, optional): Options to pass to the `httpx.get` or `boto3` when fetching the STAC item
 
@@ -430,7 +438,7 @@ EPSG:4326
 
 #### Methods
 
-The `STACReader` has the same methods as the `COGReader` (defined by the BaseReader/MultiBaseReader classes).
+The `STACReader` has the same methods as the `Reader` (defined by the BaseReader/MultiBaseReader classes).
 
 !!! Important
     - Most of `STACReader` methods require to set either `assets=` or `expression=` option.
@@ -461,7 +469,7 @@ print(img.assets)
     'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B02.tif',
 ]
 print(img.band_names)
->>> ['B01_1', 'B02_1']
+>>> ['B01_b1', 'B02_b1']
 
 # Using `expression=`
 with STACReader(stac_url, exclude_assets={"thumbnail"}) as stac:
@@ -470,25 +478,9 @@ with STACReader(stac_url, exclude_assets={"thumbnail"}) as stac:
         103,
         8,
         tilesize=256,
-        expression="B01/B02",
+        expression="B01_b1/B02_b1",
     )
     assert img.count == 1
-
-
-# Using `assets=` + `asset_expression` (apply band math in an asset)
-with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
-    img = stac.tile(
-        145,
-        103,
-        8,
-        tilesize=256,
-        assets=["B01", "B02"],
-        asset_expression={
-            "B01": "b1+500",  # add 500 to the first band
-            "B02": "b1-100",  # substract 100 to the first band
-        }
-    )
-    assert img.count == 2
 
 # Using `assets=` + `asset_indexes` (select a specific index in an asset)
 with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
@@ -548,17 +540,17 @@ with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
     assert img.count == 2  # each assets have one band
 ```
 
-- **point()**: Read the pixel values for assets for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
+- **point()**: Read the pixel values for assets for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
 
 ```python
 with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
     # stac.point(lon, lat, assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)
     data = stac.point(24.1, 31.9, assets=["B01", "B02"])
 
-print(data)
+print(data.data)
 >>> [
-    [3595],  # values for B01
-    [3198]  # values for B02
+    3595,  # values for B01
+    3198  # values for B02
 ]
 ```
 
@@ -577,8 +569,8 @@ print(info["B01"].json(exclude_none=True))
     "bounds": [23.106076243528157, 31.505173744374172, 24.296464503939948, 32.519334871696195],
     "minzoom": 8,
     "maxzoom": 11,
-    "band_metadata": [["1", {}]],
-    "band_descriptions": [["1", ""]],
+    "band_metadata": [["b1", {}]],
+    "band_descriptions": [["b1", ""]],
     "dtype": "uint16",
     "nodata_type": "Nodata",
     "colorinterp": ["gray"],
@@ -603,9 +595,9 @@ print(list(stats))
 >>> ["B01", "B02"]
 
 print(list(stats["B01"]))
->>> ["1"]  # B01 has only one band entry "1"
+>>> ["b1"]  # B01 has only one band entry "1"
 
-print(stats["B01"]["1"].json(exclude_none=True))
+print(stats["B01"]["b1"].json(exclude_none=True))
 {
     "min": 283.0,
     "max": 7734.0,
@@ -640,11 +632,11 @@ with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
 
 # stats will be in form or {"band": BandStatistics(), ...}
 print(list(stats))
->>> ["B01_1", "B02_1"]
+>>> ["B01_b1", "B02_b1"]
 
-assert isinstance(stats["B01_1"], BandStatistics)
+assert isinstance(stats["B01_b1"], BandStatistics)
 
-print(info["B01_1"].json(exclude_none=True))
+print(info["B01_b1"].json(exclude_none=True))
 {
     "min": 283.0,
     "max": 7734.0,
@@ -669,16 +661,511 @@ print(info["B01_1"].json(exclude_none=True))
 
 with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
     # stac.statistics(assets=?, asset_expression=?, asset_indexes=?, **kwargs)
-    stats = stac.merged_statistics(expression=["B01/B02"], max_size=128)
+    stats = stac.merged_statistics(expression=["B01_b1/B02_b1"], max_size=128)
 
 print(list(stats))
->>> ["B01/B02"]
+>>> ["B01_b1/B02_b1"]
 
-assert isinstance(stats["B01/B02"], BandStatistics)
+assert isinstance(stats["B01_b1/B02_b1"], BandStatistics)
 ```
 
 ### STAC Expression
 
-When using `expression`, the reader might consider assets as `1 band` data. Expression using multi bands are not supported (e.g: `asset1_b1 + asset2_b2`).
+When using `expression`, the user will need to explicitly pass the band number to use within the asset e.g: `asset1_b1 + asset2_b2`.
 
-If assets have difference number of bands and the `asset_indexes` is not specified the process will fail because it will try to apply an expression using arrays of different sizes.
+
+## rio_tiler.io.rasterio.ImageReader
+
+The `Reader` is designed to work with simple raster datasets in their pixel coordinates.
+
+The class is derived from the `rio_tiler.io.rasterio.Reader` class.
+```python
+from rio_tiler.io import ImageReader
+
+ImageReader.__mro__
+>>> (rio_tiler.io.rasterio.ImageReader,
+ rio_tiler.io.rasterio.Reader,
+ rio_tiler.io.base.BaseReader,
+ rio_tiler.io.base.SpatialMixin,
+ object)
+```
+
+#### Attributes
+
+- **input** (str): filepath
+- **dataset** (rasterio dataset, optional): rasterio opened dataset
+- **colormap** (dict, optional): dataset's colormap
+- **options** (rio_tiler.reader.Options, optional): Options to forward to rio_tiler.reader functions (e.g nodata, vrt_options, resampling)
+
+#### Properties
+
+- **bounds**: dataset's bounds (in dataset crs)
+- **transform**: dataset Affine transform (in pixel coordinates)
+- **minzoom**: dataset minzoom
+- **maxzoom**: dataset maxzoom
+
+```python
+from rio_tiler.io import ImageReader
+
+with ImageReader("image.jpg") as src:
+    print(src.dataset)
+    print(src.minzoom)
+    print(src.maxzoom)
+    print(src.transform)
+    print(src.bounds)
+    print(src.colormap)
+
+>> <open DatasetReader name='image.jpeg' mode='r'>
+0
+3
+Affine(1.0, 0.0, 0.0,  0.0, 1.0, 0.0)
+(0, 2000, 2000, 0)
+{}
+```
+
+#### Methods
+
+- **read()**: Read the entire dataset
+
+```python
+from rio_tiler.io import ImageReader
+from rio_tiler.models import ImageData
+
+with ImageReader("image.jpeg") as src:
+    img = src.read()
+    assert isinstance(img, ImageData)
+    assert not img.crs
+    assert img.assets == ["image.jpeg"]
+    assert img.width == src.dataset.width
+    assert img.height == src.dataset.height
+    assert img.count == src.dataset.count
+
+# With indexes
+with ImageReader("image.jpeg") as src:
+    img = src.read(indexes=1)  # or src.read(indexes=(1,))
+    assert img.count == 1
+    assert img.band_names == ["b1"]
+
+# With expression
+with ImageReader("image.jpeg") as src:
+    img = src.read(expression="b1/b2")
+    assert img.count == 1
+    assert img.band_names == ["b1/b2"]
+```
+
+- **tile()**: Read tile from the image
+
+For ImageReader we are using a custom `LocalTileMatrixSet` constructed from the dataset width and height. The origin is the Top-Left of the image.
+
+```python
+from rio_tiler.io import ImageReader
+from rio_tiler.models import ImageData
+
+with ImageReader("image.jpeg") as src:
+    # src.tile(tile_x, tile_y, tile_z, **kwargs)
+    img = src.tile(0, 0, src.maxzoom)
+    assert isinstance(img, ImageData)
+    assert not img.crs
+    assert img.bounds == (0, 256, 256, 0)
+
+    img = src.tile(0, 0, src.minzoom)
+    assert isinstance(img, ImageData)
+    assert img.bounds[0] == 0
+    assert img.bounds[3] == 0
+
+# With indexes
+with ImageReader("image.jpeg") as src:
+    img = src.tile(1, 2, 3, tilesize=256, indexes=1)
+    assert img.count == 1
+
+# With expression
+with ImageReader("image.jpeg") as src:
+    img = src.tile(1, 2, 3, tilesize=256, expression="B1/B2")
+    assert img.count == 1
+```
+
+- **part()**: Read an image for a given bounding box (`bbox`). The origin is the Top-Left of the image.
+
+```python
+from rio_tiler.io import ImageReader
+from rio_tiler.models import ImageData
+
+with ImageReader("image.jpeg") as src:
+    # src.part((left, bottom, right, top), **kwargs)
+    img = src.part((0, 256, 256, 0))  # read the top-left 256x256 square of the image
+    assert isinstance(img, ImageData)
+    assert img.assets == ["myfile.tif"]
+    assert img.bounds == (0, 256, 256, 0)
+
+# Limit output size
+with ImageReader("image.jpeg") as src:
+    img = src.part((0, 256, 256, 0), max_size=50)
+
+# With indexes
+with ImageReader("image.jpeg") as src:
+    img = src.part((0, 256, 256, 0), indexes=1)
+
+# With expression
+with ImageReader("image.jpeg") as src:
+    img = src.part((0, 256, 256, 0), expression="b1/b2")
+```
+
+- **feature()**: Read an image for a geojson feature. In the pixel coordinate system.
+
+```python
+from rio_tiler.io import ImageReader
+from rio_tiler.models import ImageData
+
+feat = {
+    "coordinates": [
+        [
+            [-100.0, -100.0],
+            [1000.0, 100.0],
+            [500.0, 1000.0],
+            [-50.0, 500.0],
+            [-100.0, -100.0],
+        ]
+    ],
+    "type": "Polygon",
+}
+
+with ImageReader("image.jpeg") as src:
+    # src.part(geojson_feature, **kwargs)
+    img = src.feature(feat)
+    assert isinstance(img, ImageData)
+    assert img.assets == ["image.jpeg"]
+    assert img.bounds == (-100.0, 1000.0, 1000.0, -100.0)  # bbox of the input feature
+
+# Limit output size
+with ImageReader("image.jpeg") as src:
+    img = src.feature(feat, max_size=100)
+
+# Read high resolution
+with ImageReader("image.jpeg") as src:
+    img = src.feature(feat, max_size=None)
+
+# With indexes
+with ImageReader("image.jpeg") as src:
+    img = src.feature(feat, indexes=1)
+
+# With expression
+with ImageReader("image.jpeg") as src:
+    img = src.feature(feat, expression="b1/b2")
+```
+
+- **preview()**: Read a preview of a raster
+
+```python
+from rio_tiler.io import ImageReader
+from rio_tiler.models import ImageData
+
+with ImageReader("image.jpeg") as src:
+    img = src.preview()
+    assert isinstance(img, ImageData)
+
+# With indexes
+with ImageReader("image.jpeg") as src:
+    img = src.preview(indexes=1)
+
+# With expression
+with ImageReader("image.jpeg") as src:
+    img = src.preview(expression="b1+2;b1*4")
+```
+
+- **point()**: Read the pixel values of a raster for a given `x, y` coordinates. The origin is the Top-Left of the image.
+
+```python
+from rio_tiler.io import ImageReader
+from rio_tiler.models import PointData
+
+with ImageReader("image.jpeg") as src:
+    # src.point(x, y)
+    pt = src.point(0, 0)  # pixel at the origin
+    assert isinstance(pt, PointData)
+
+# With indexes
+with ImageReader("image.jpeg") as src:
+    pt = src.point(0,0 , indexes=1)
+    print(pt.data)
+>>> [1]
+
+# With expression
+with ImageReader("image.jpeg") as src:
+    pt = src.point(0, 0, expression="b1+2;b1*4")
+    print(pt.data)
+>>> [3, 4]
+```
+
+- **info()**: Return simple metadata about the dataset
+
+```python
+from rio_tiler.io import ImageReader
+from rio_tiler.models import Info
+
+with ImageReader("image.jpeg") as src:
+    info = src.info()
+    assert isinstance(info, Info)
+
+print(info.dict(exclude_none=True))
+>>> {
+    "bounds": [0, 4000, 4000, 0],
+    "minzoom": 0,
+    "maxzoom": 3,
+    "band_metadata": [["b1", {}]],
+    "band_descriptions": [["b1", ""]],
+    "dtype": "int8",
+    "colorinterp": ["palette"],
+    "nodata_type": "Nodata",
+    "colormap": {
+        "0": [0, 0, 0, 0],
+        "1": [0, 61, 0, 255],
+        ...
+    },
+    "driver": "GTiff",
+    "count": 1,
+    "width": 4000,
+    "height": 4000,
+    "overviews": [2, 4, 8],
+}
+```
+
+- **statistics()**: Return image statistics (Min/Max/Stdev)
+
+```python
+from rio_tiler.io import ImageReader
+
+with ImageReader("image.jpeg") as src:
+    stats = src.statistics()
+    assert isinstance(stats, dict)
+
+# stats will be in form or {"band": BandStatistics(), ...}
+print(stats)
+>>> {
+    'b1': BandStatistics(...),
+    'b2': BandStatistics(...),
+    'b3': BandStatistics(...)
+}
+
+print(stats["b1"].dict())
+>>> {
+    "min": 1,
+    "max": 7872,
+    "mean": 2107.524612053134,
+    "count": 1045504,
+    "sum": 2203425412,
+    "std": 2271.0065537857326,
+    "median": 2800,
+    "majority": 1,
+    "minority": 7072,
+    "unique": 15,
+    "histogram": [
+        [...],
+        [...]
+    ],
+    "valid_percent": 100,
+    "masked_pixels": 0,
+    "valid_pixels": 1045504,
+    "percentile_98": 6896,
+    "percentile_2": 1
+}
+```
+
+
+
+
+
+
+
+## rio_tiler.io.xarray.XarrayReader
+
+The `Reader` is designed to work with xarray.DataReader with full geo-reference metadata (CRS) and variables (X,Y)
+
+The class is derived from the `rio_tiler.io.base.BaseReader` class.
+```python
+from rio_tiler.io.xarray import XarrayReader
+
+XarrayReader.__mro__
+>>> (rio_tiler.io.xarray.XarrayReader,
+ rio_tiler.io.base.BaseReader,
+ rio_tiler.io.base.SpatialMixin,
+ object)
+```
+
+#### Attributes
+
+- **input** (xarray.DataArray): Xarray DataArray
+- **tms** (morecantile.TileMatrixSet, optional): morecantile TileMatrixSet used for tile reading (defaults to WebMercator)
+- **geographic_crs** (rasterio.crs.CRS, optional): CRS to use to calculate the geographic bounds (default to WGS84)
+
+#### Properties
+
+- **bounds**: dataset's bounds (in dataset crs)
+- **crs**: dataset's crs
+- **geographic_bounds**: dataset's bounds in WGS84
+- **minzoom**: dataset minzoom (in TMS)
+- **maxzoom**: dataset maxzoom (in TMS)
+
+
+```python
+import numpy
+import xarray
+from datetime import datetime
+from rio_tiler.io.xarray import XarrayReader
+
+arr = numpy.random.randn(1, 33, 35)
+data = xarray.DataArray(
+    arr,
+    dims=("time", "y", "x"),
+    coords={
+        "x": list(range(-170, 180, 10)),
+        "y": list(range(-80, 85, 5)),
+        "time": [datetime(2022, 1, 1)],
+    },
+)
+data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+data.rio.write_crs("epsg:4326", inplace=True)
+
+with XarrayReader(data) as src:
+    print(src.input)
+    print(src.tms.identifier)
+    print(src.minzoom)
+    print(src.maxzoom)
+    print(src.bounds)
+    print(src.crs)
+    print(src.geographic_bounds)
+
+>> <xarray.DataArray (time: 1, y: 33, x: 35)>
+WebMercatorQuad
+0
+0
+(-175.0, -82.5, 175.0, 82.5)
+EPSG:4326
+(-175.0, -82.5, 175.0, 82.5)
+```
+
+#### Methods
+
+- **tile()**: Read map tile from a raster
+
+```python
+from rio_tiler.contants import WEB_MERCATOR_CRS
+from rio_tiler.io import XarrayReader
+from rio_tiler.models import ImageData
+
+with XarrayReader(data) as src:
+    # src.tile(tile_x, tile_y, tile_z, tilesize, resampling_method)
+    img = src.tile(1, 2, 3)
+    assert isinstance(img, ImageData)
+    assert img.crs == WEB_MERCATOR_CRS
+```
+
+- **part()**: Read a DataArray for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
+
+```python
+from rio_tiler.io import XarrayReader
+from rio_tiler.models import ImageData
+
+with XarrayReader(data) as src:
+    # src.part((minx, miny, maxx, maxy), dst_crs, bounds_crs, resampling_method)
+    img = src.part((10, 10, 20, 20))
+    assert isinstance(img, ImageData)
+    assert img.crs == WGS84_CRS
+    assert img.bounds == (10, 10, 20, 20)
+
+# Pass bbox in WGS84 (default) but return data in the input dataset CRS
+with XarrayReader(data) as src:
+    img = src.part((10, 10, 20, 20), dst_crs=src.dataset.crs)
+    assert img.crs == src.dataset.crs
+```
+
+- **feature()**: Read a DataArray for a geojson feature. By default the feature is considered to be in WGS84.
+
+```python
+from rio_tiler.constants import WGS84_CRS
+from rio_tiler.io import XarrayReader
+from rio_tiler.models import ImageData
+
+feat = {
+    "type": "Feature",
+    "properties": {},
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-54.45, 73.05],
+                [-55.05, 72.79],
+                [-55.61, 72.46],
+                [-53.83, 72.36],
+                [-54.45, 73.05],
+            ]
+        ],
+    },
+}
+
+with XarrayReader(data) as src:
+    # src.part(geojson_feature, **kwargs)
+    img = src.feature(feat)
+    assert isinstance(img, ImageData)
+    assert img.crs == WGS84_CRS
+    assert img.bounds == (-55.61, 72.36, -53.83, 73.05)  # bbox of the input feature
+
+# Pass bbox in WGS84 (default) but return data in the input dataset CRS
+with XarrayReader(data) as src:
+    img = src.feature(feat, dst_crs=src.dataset.crs)
+    assert img.crs == src.dataset.crs
+```
+
+- **point()**: Read the pixel values of a DataArray for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
+
+```python
+from rio_tiler.io import XarrayReader
+from rio_tiler.models import PointData
+
+with XarrayReader(data) as src:
+    # src.point(lon, lat, coord_crs)
+    pt = src.point(-100, 25)
+    assert isinstance(pt, PointData)
+```
+
+- **info()**: Return simple metadata about the DataArray
+
+```python
+from rio_tiler.io import XarrayReader
+from rio_tiler.models import Info
+
+with XarrayReader(data) as src:
+    info = src.info()
+    assert isinstance(info, Info)
+
+print(info.json(exclude_none=True))
+>>> {
+    "bounds": [-175.0, -82.5, 175.0, 82.5],
+    "minzoom": 0,
+    "maxzoom": 0,
+    "band_metadata": [["b1", {}]],
+    "band_descriptions": [["b1", "2022-01-01T00:00:00.000000000"]],
+    "dtype": "float64",
+    "nodata_type": "None",
+    "width": 35,
+    "attrs": {
+        "valid_min": -3.148671506292848,
+        "valid_max": 4.214148915352746
+    },
+    "count": 1,
+    "height": 33
+}
+```
+
+- **preview()**:
+
+!!! Important
+
+    Not Implemented
+
+
+- **statistics()**:
+
+!!! Important
+
+    Not Implemented
+```

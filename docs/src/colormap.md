@@ -8,26 +8,25 @@ to `rio_tiler.utils.render`:
 
 ```python
 from rio_tiler.colormap import cmap
-from rio_tiler.io import COGReader
+from rio_tiler.io import Reader
 
 # Get Colormap
 # You can list available colormap names with `cmap.list()`
 cm = cmap.get("cfastie")
 
-with COGReader(
-  "s3://landsat-pds/c1/L8/015/029/LC08_L1GT_015029_20200119_20200119_01_RT/LC08_L1GT_015029_20200119_20200119_01_RT_B8.TIF",
-  nodata=0,
-) as cog:
-    img = cog.tile(150, 187, 9)
+with Reader(
+  "https://sentinel-cogs.s3.amazonaws.com/sentinel-s2-l2a-cogs/29/R/KH/2020/2/S2A_29RKH_20200219_0_L2A/B01.tif",
+) as src:
+    img = src.tile(239, 220, 9)
 
     # Rescale the data linearly from 0-10000 to 0-255
-    image_rescale = img.post_process(
+    img.rescale(
         in_range=((0, 10000),),
         out_range=((0, 255),)
     )
 
     # Apply colormap and create a PNG buffer
-    buff = image_rescale.render(colormap=cm) # this returns a buffer (PNG by default)
+    buff = img.render(colormap=cm) # this returns a buffer (PNG by default)
 ```
 
 The `render` method accept colormap in form of:

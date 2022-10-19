@@ -514,14 +514,14 @@ class ImageData:
         if not colormap:
             if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
                 data = rescale_image(data, mask, in_range=datatype_range)
 
             elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
                 data = rescale_image(data, mask, in_range=datatype_range)
@@ -532,7 +532,7 @@ class ImageData:
                 "uint16",
             ]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds.",
+                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
                 data = rescale_image(data, mask, in_range=datatype_range)

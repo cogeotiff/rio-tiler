@@ -107,7 +107,7 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio](https://
         )
     ```
 
-- [Xarray](https://xarray.dev) support
+- [Xarray](https://xarray.dev) support **(>=4.0)**
 
     ```python
     import xarray
@@ -126,7 +126,7 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio](https://
     ```
     *Note: The XarrayReader needs optional dependencies to be installed `pip install rio-tiler["xarray"]`.*
 
-- Non-Geo Image support
+- Non-Geo Image support **(>=4.0)**
 
     ```python
     from rio_tiler.io import ImageReader
