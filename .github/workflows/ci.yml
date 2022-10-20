@@ -1,10 +1,10 @@
 name: CI
 
-# On every pull request, but only on push to master
+# On every pull request, but only on push to main
 on:
   push:
     branches:
-    - master
+    - main
     tags:
     - '*'
   pull_request:
@@ -83,8 +83,8 @@ jobs:
       #     fail-on-alert: true
       #     # GitHub API token to make a commit comment
       #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     # Make a commit on `gh-pages` only if master
-      #     auto-push: ${{ github.ref == 'refs/heads/master' }}
+      #     # Make a commit on `gh-pages` only if main
+      #     auto-push: ${{ github.ref == 'refs/heads/main' }}
       #     benchmark-data-dir-path: benchmarks
 
   publish:

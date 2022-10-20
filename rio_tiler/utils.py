@@ -625,7 +625,7 @@ def resize_array(
         out_shape = (count, height, width)
 
     # We are using GDAL MEM driver to create a new dataset from the numpy array
-    # ref: https://github.com/rasterio/rasterio/blob/master/rasterio/_io.pyx#L1946-L1955
+    # https://github.com/rasterio/rasterio/blob/824a8dc40dd3475c3bfdcafc42d18f1c63c02f28/rasterio/_io.pyx#L2025-L2097
     info = {
         "DATAPOINTER": data.__array_interface__["data"][0],
         "PIXELS": w,

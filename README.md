@@ -11,7 +11,7 @@
       <img src="https://github.com/cogeotiff/rio-tiler/workflows/CI/badge.svg" alt="Test">
   </a>
   <a href="https://codecov.io/gh/cogeotiff/rio-tiler" target="_blank">
-      <img src="https://codecov.io/gh/cogeotiff/rio-tiler/branch/master/graph/badge.svg" alt="Coverage">
+      <img src="https://codecov.io/gh/cogeotiff/rio-tiler/branch/main/graph/badge.svg" alt="Coverage">
   </a>
   <a href="https://pypi.org/project/rio-tiler" target="_blank">
       <img src="https://img.shields.io/pypi/v/rio-tiler?color=%2334D058&label=pypi%20package" alt="Package version">
@@ -22,10 +22,10 @@
   <a href="https://pypistats.org/packages/rio-tiler" target="_blank">
       <img src="https://img.shields.io/pypi/dm/rio-tiler.svg" alt="Downloads">
   </a>
-  <a href="https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE.txt" target="_blank">
+  <a href="https://github.com/cogeotiff/rio-tiler/blob/main/LICENSE.txt" target="_blank">
       <img src="https://img.shields.io/github/license/cogeotiff/rio-tiler.svg" alt="Downloads">
   </a>
-  <a href="https://mybinder.org/v2/gh/cogeotiff/rio-tiler/master?filepath=docs%2Fexamples%2F" target="_blank" alt="Binder">
+  <a href="https://mybinder.org/v2/gh/cogeotiff/rio-tiler/main?filepath=docs%2Fexamples%2F" target="_blank" alt="Binder">
       <img src="https://mybinder.org/badge_logo.svg" alt="Binder">
   </a>
 </p>
@@ -211,18 +211,18 @@ Create Mapbox Vector Tiles from raster sources
 
 ## Contribution & Development
 
-See [CONTRIBUTING.md](https://github.com/cogeotiff/rio-tiler/blob/master/CONTRIBUTING.md)
+See [CONTRIBUTING.md](https://github.com/cogeotiff/rio-tiler/blob/main/CONTRIBUTING.md)
 
 ## Authors
 
 The `rio-tiler` project was begun at Mapbox and was transferred to the `cogeotiff` Github organization in January 2019.
 
-See [AUTHORS.txt](https://github.com/cogeotiff/rio-tiler/blob/master/AUTHORS.txt) for a listing of individual contributors.
+See [AUTHORS.txt](https://github.com/cogeotiff/rio-tiler/blob/main/AUTHORS.txt) for a listing of individual contributors.
 
 ## Changes
 
-See [CHANGES.md](https://github.com/cogeotiff/rio-tiler/blob/master/CHANGES.md).
+See [CHANGES.md](https://github.com/cogeotiff/rio-tiler/blob/main/CHANGES.md).
 
 ## License
 
-See [LICENSE](https://github.com/cogeotiff/rio-tiler/blob/master/LICENSE)
+See [LICENSE](https://github.com/cogeotiff/rio-tiler/blob/main/LICENSE)

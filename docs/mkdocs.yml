@@ -8,7 +8,7 @@ site_dir: 'build'
 # Repository
 repo_name: 'cogeotiff/rio-tiler'
 repo_url: 'https://github.com/cogeotiff/rio-tiler'
-edit_uri: 'blob/master/docs/src/'
+edit_uri: 'blob/main/docs/src/'
 site_url: 'https://cogeotiff.github.io/rio-tiler/'
 
 # Social links
