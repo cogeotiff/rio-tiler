@@ -54,9 +54,17 @@ def test_non_geo_image():
             assert img.height == 1024
 
             pt = src.point(0, 0)
+            assert list(pt.data) == [31, 34, 17]
             assert len(pt.mask) == 1
             assert pt.mask[0] == 255
             data = list(src.dataset.sample([(0, 0)]))[0]
+            numpy.testing.assert_array_equal(pt.data, data)
+
+            pt = src.point(50, 100)
+            assert list(pt.data) == [48, 55, 14]
+            assert len(pt.mask) == 1
+            assert pt.mask[0] == 255
+            data = list(src.dataset.sample([(50, 100)]))[0]
             numpy.testing.assert_array_equal(pt.data, data)
 
             pt = src.point(1999, 1999)

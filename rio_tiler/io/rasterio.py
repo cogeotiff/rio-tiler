@@ -893,7 +893,7 @@ class ImageReader(Reader):
             expression=expression,
             unscale=unscale,
             post_process=post_process,
-            window=Window(x, y, 1, 1),
+            window=Window(col_off=x, row_off=y, width=1, height=1),
         )
 
         return PointData(
