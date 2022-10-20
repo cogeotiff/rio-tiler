@@ -1,5 +1,5 @@
 
-# 4.0.0 (TBD)
+# 4.0.0a0 (2022-10-20)
 
 * add python 3.10 support
 * add `apply_expression` method in `rio_tiler.models.ImageData` class
