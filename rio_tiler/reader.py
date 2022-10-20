@@ -26,6 +26,7 @@ from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
 class Options(TypedDict, total=False):
     """Reader Options."""
 
+    force_binary_mask: Optional[bool]
     nodata: Optional[NoData]
     vrt_options: Optional[Dict]
     resampling_method: Optional[Resampling]
@@ -434,6 +435,7 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Indexes] = None,
     coord_crs: CRS = WGS84_CRS,
+    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     resampling_method: Resampling = "nearest",
@@ -486,38 +488,32 @@ def point(
         else:
             dataset = src_dst
 
-        lon, lat = transform_coords(
-            coord_crs, dataset.crs, [coordinates[0]], [coordinates[1]]
-        )
+        lon, lat = coordinates
+        if coord_crs != dataset.crs:
+            xs, ys = transform_coords(coord_crs, dataset.crs, [lon], [lat])
+            lon, lat = xs[0], ys[0]
+
         if not (
-            (dataset.bounds[0] < lon[0] < dataset.bounds[2])
-            and (dataset.bounds[1] < lat[0] < dataset.bounds[3])
+            (dataset.bounds[0] < lon < dataset.bounds[2])
+            and (dataset.bounds[1] < lat < dataset.bounds[3])
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        if indexes is None:
-            indexes = non_alpha_indexes(dataset)
-
-        values = list(dataset.sample([(lon[0], lat[0])], indexes=indexes, masked=True))[
-            0
-        ]
-        data = values.data
-        mask = ~values.mask * numpy.uint8(255)
-
-        if unscale:
-            data = data.astype("float32", casting="unsafe")
-            numpy.multiply(data, dataset.scales[0], out=data, casting="unsafe")
-            numpy.add(data, dataset.offsets[0], out=data, casting="unsafe")
-
-        if post_process:
-            data, _ = post_process(data, mask)
-
-        pts = PointData(
-            data,
-            mask,
-            coordinates=coordinates,
-            crs=coord_crs,
-            band_names=[f"b{idx}" for idx in indexes],
+        row, col = dataset.index(lon, lat)
+        img = read(
+            dataset,
+            indexes=indexes,
+            window=windows.Window(row_off=row, col_off=col, width=1, height=1),
+            resampling_method=resampling_method,
+            force_binary_mask=force_binary_mask,
+            unscale=unscale,
+            post_process=post_process,
         )
 
-    return pts
+    return PointData(
+        img.data[:, 0, 0],
+        numpy.array([img.mask[0, 0]]),
+        coordinates=coordinates,
+        crs=coord_crs,
+        band_names=img.band_names,
+    )

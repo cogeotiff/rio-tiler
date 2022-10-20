@@ -84,4 +84,3 @@ def test_xarray_reader():
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
         assert img.crs.to_epsg() == 3857
-        print(img)
