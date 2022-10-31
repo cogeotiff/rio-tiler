@@ -7,7 +7,9 @@ from io import BytesIO
 import numpy as np
 import pytest
 import rasterio
+from rasterio.enums import ColorInterp
 from rasterio.features import bounds as featureBounds
+from rasterio.io import MemoryFile
 
 from rio_tiler import colormap, utils
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
@@ -488,3 +490,46 @@ def test_resize_array():
     arr_r = utils.resize_array(arr, 512, 512)
     assert arr_r.shape == (512, 512)
     assert arr_r.dtype == np.uint8
+
+
+def test_render_colorinterp():
+    """Save data to numpy binary."""
+
+    def parse(content):
+        with MemoryFile(content) as mem:
+            with mem.open() as dst:
+                return dst.profile, dst.colorinterp
+
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+
+    profile, color = parse(utils.render(arr, mask=mask, img_format="PNG"))
+    assert profile["driver"] == "PNG"
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+
+    profile, color = parse(utils.render(arr, mask=mask, img_format="JPEG"))
+    assert profile["driver"] == "JPEG"
+    assert profile["count"] == 3
+    assert ColorInterp.alpha not in color
+
+    profile, color = parse(utils.render(arr, mask=mask, img_format="WEBP"))
+    assert profile["driver"] == "WEBP"
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+
+    profile, color = parse(utils.render(arr, mask=mask, img_format="GTiff"))
+    assert profile["driver"] == "GTiff"
+    assert profile["count"] == 4
+    # by default GDAL will assign red,green,blue,alpha for uint8+4bands dataset
+    assert ColorInterp.alpha in color
+    assert ColorInterp.red in color
+
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint16)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+    profile, color = parse(utils.render(arr, mask=mask, img_format="GTiff"))
+    assert profile["driver"] == "GTiff"
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+    assert ColorInterp.red not in color
+    assert ColorInterp.gray in color

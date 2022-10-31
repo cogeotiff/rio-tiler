@@ -1,4 +1,8 @@
 
+## Next (TBD)
+
+* assign ColorInterp.alpha to rendered image when we add the mask band
+
 # 4.0.0a0 (2022-10-20)
 
 * add python 3.10 support

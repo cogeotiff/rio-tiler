@@ -494,6 +494,8 @@ def render(
                 dst.write(data, indexes=list(range(1, count + 1)))
                 # Use Mask as an alpha band
                 if mask is not None:
+                    if ColorInterp.alpha not in dst.colorinterp:
+                        dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
                     dst.write(mask.astype(data.dtype), indexes=count + 1)
 
             return memfile.read()
