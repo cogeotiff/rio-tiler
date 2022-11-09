@@ -8,6 +8,7 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import attr
 import numpy
 from affine import Affine
+from color_operations import parse_operations, scale_dtype, to_math_type
 from pydantic import BaseModel
 from rasterio import windows
 from rasterio.coords import BoundingBox
@@ -16,8 +17,6 @@ from rasterio.dtypes import dtype_ranges
 from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
-from rio_color.operations import parse_operations
-from rio_color.utils import scale_dtype, to_math_type
 
 from rio_tiler.errors import InvalidDatatypeWarning
 from rio_tiler.expression import apply_expression, get_expression_blocks
@@ -406,7 +405,7 @@ class ImageData:
         )
 
     def apply_color_formula(self, color_formula: Optional[str]):
-        """Apply rio-color formula in place."""
+        """Apply color-operations formula in place."""
         out = self.data.copy()
         out[out < 0] = 0
 
@@ -490,7 +489,7 @@ class ImageData:
         Args:
             in_range (tuple): input min/max bounds value to rescale from.
             out_dtype (str, optional): output datatype after rescaling. Defaults to `uint8`.
-            color_formula (str, optional): rio-color formula (see: https://github.com/mapbox/rio-color).
+            color_formula (str, optional): color-ops formula (see: https://github.com/vincentsarago/color-ops).
             kwargs (optional): keyword arguments to forward to `rio_tiler.utils.linear_rescale`.
 
         Returns:
