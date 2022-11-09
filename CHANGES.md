@@ -1,5 +1,5 @@
 
-## Next (TBD)
+# 4.0.0a1 (2022-11-10)
 
 * assign ColorInterp.alpha to rendered image when we add the mask band
 * add `.clip(bbox: BBox)` and `.resize(height: int, width: int)` methods to ImageData object
