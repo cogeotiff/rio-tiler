@@ -9,9 +9,11 @@ import attr
 import numpy
 from affine import Affine
 from pydantic import BaseModel
+from rasterio import windows
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
+from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
 from rio_color.operations import parse_operations
@@ -19,7 +21,7 @@ from rio_color.utils import scale_dtype, to_math_type
 
 from rio_tiler.errors import InvalidDatatypeWarning
 from rio_tiler.expression import apply_expression, get_expression_blocks
-from rio_tiler.types import ColorMapType, GDALColorMapType, IntervalTuple, NumType
+from rio_tiler.types import BBox, ColorMapType, GDALColorMapType, IntervalTuple, NumType
 from rio_tiler.utils import linear_rescale, render, resize_array
 
 
@@ -434,6 +436,46 @@ class ImageData:
             band_names=blocks,
             metadata=self.metadata,
             dataset_statistics=stats,
+        )
+
+    def resize(
+        self,
+        height: int,
+        width: int,
+        resampling_method: Resampling = "nearest",
+    ) -> "ImageData":
+        """Resize data and mask."""
+        data = resize_array(self.data, height, width, resampling_method)
+        mask = resize_array(self.mask, height, width, resampling_method)
+
+        return ImageData(
+            data,
+            mask,
+            assets=self.assets,
+            crs=self.crs,
+            bounds=self.bounds,
+            band_names=self.band_names,
+            metadata=self.metadata,
+            dataset_statistics=self.dataset_statistics,
+        )
+
+    def clip(self, bbox: BBox) -> "ImageData":
+        """Clip data and mask to a bbox."""
+        row_slice, col_slice = windows.from_bounds(
+            *bbox, transform=self.transform
+        ).toslices()
+        data = self.data[:, row_slice, col_slice]
+        mask = self.mask[row_slice, col_slice]
+
+        return ImageData(
+            data,
+            mask,
+            assets=self.assets,
+            crs=self.crs,
+            bounds=bbox,
+            band_names=self.band_names,
+            metadata=self.metadata,
+            dataset_statistics=self.dataset_statistics,
         )
 
     def post_process(

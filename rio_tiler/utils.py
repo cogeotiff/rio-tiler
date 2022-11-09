@@ -607,31 +607,21 @@ def create_cutline(
     return wkt
 
 
-def resize_array(
-    data: numpy.ndarray,
-    height: int,
-    width: int,
-    resampling_method: Resampling = "nearest",
-) -> numpy.ndarray:
-    """resize array to a given height and width."""
-    out_shape: Union[Tuple[int, int], Tuple[int, int, int]]
+def _array_gdal_name(data: numpy.ndarray) -> str:
+    """Return GDAL MEM dataset name."""
     if len(data.shape) == 2:
         count = 1
-        h = data.shape[0]
-        w = data.shape[1]
-        out_shape = (height, width)
+        height = data.shape[0]
+        width = data.shape[1]
     else:
         count = data.shape[0]
-        h = data.shape[1]
-        w = data.shape[2]
-        out_shape = (count, height, width)
+        height = data.shape[1]
+        width = data.shape[2]
 
-    # We are using GDAL MEM driver to create a new dataset from the numpy array
-    # https://github.com/rasterio/rasterio/blob/824a8dc40dd3475c3bfdcafc42d18f1c63c02f28/rasterio/_io.pyx#L2025-L2097
     info = {
         "DATAPOINTER": data.__array_interface__["data"][0],
-        "PIXELS": w,
-        "LINES": h,
+        "PIXELS": width,
+        "LINES": height,
         "BANDS": count,
         "DATATYPE": _gdal_typename(data.dtype.name),
     }
@@ -648,7 +638,23 @@ def resize_array(
             )
 
     dataset_options = ",".join(f"{name}={val}" for name, val in info.items())
-    datasetname = f"MEM:::{dataset_options}"
+    return f"MEM:::{dataset_options}"
+
+
+def resize_array(
+    data: numpy.ndarray,
+    height: int,
+    width: int,
+    resampling_method: Resampling = "nearest",
+) -> numpy.ndarray:
+    """resize array to a given height and width."""
+    out_shape: Union[Tuple[int, int], Tuple[int, int, int]]
+    if len(data.shape) == 2:
+        out_shape = (height, width)
+    else:
+        out_shape = (data.shape[0], height, width)
+
+    datasetname = _array_gdal_name(data)
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
         with rasterio.open(datasetname, "r+") as src:

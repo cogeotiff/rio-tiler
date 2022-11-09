@@ -176,3 +176,32 @@ def test_dataset_statistics():
             arr = dst.read(indexes=1)
             assert not arr.min() == 0
             assert not arr.max() == 255
+
+
+def test_resize():
+    """Resize ImageData and check original image"""
+    data = numpy.zeros((3, 1024, 1024), dtype="uint8")
+    img = ImageData(data)
+
+    img_r = img.resize(256, 256)
+    assert img_r.count == 3
+    assert img_r.width == 256
+    assert img_r.height == 256
+    assert img.width == 1024
+    assert img.height == 1024
+    assert img_r.mask.shape == (256, 256)
+    assert img.mask.shape == (1024, 1024)
+
+
+def test_clip():
+    """Resize ImageData and check original image"""
+    data = numpy.zeros((3, 1024, 1024), dtype="uint8")
+    img = ImageData(data, crs="epsg:4326", bounds=(-180, -90, 180, 90))
+
+    img_c = img.clip((-100, -50, 100, 50))
+    assert img_c.count == 3
+    assert img_c.bounds == (-100, -50, 100, 50)
+
+    assert img.width == 1024
+    assert img.height == 1024
+    assert img.mask.shape == (1024, 1024)
