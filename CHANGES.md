@@ -3,6 +3,8 @@
 
 * assign ColorInterp.alpha to rendered image when we add the mask band
 * add `.clip(bbox: BBox)` and `.resize(height: int, width: int)` methods to ImageData object
+* add python 3.11 support
+* replace `rio-color` by `color-operations` module
 
 # 4.0.0a0 (2022-10-20)
 

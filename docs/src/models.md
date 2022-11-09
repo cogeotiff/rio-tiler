@@ -77,7 +77,7 @@ print(image.shape)
 >>> (256, 256, 3)
 ```
 
-- **post_process**: Apply rescaling or/and rio-color formula to the data array. Returns a new ImageData instance.
+- **post_process**: Apply rescaling or/and `color-operations` formula to the data array. Returns a new ImageData instance.
 
 ```python
 import numpy
@@ -109,7 +109,7 @@ print(image.data.dtype)
 print(image.data.max())
 >>> 254
 
-# rescale and apply rio-color formula
+# rescale and apply color-operations formula
 image = img.post_process(
     in_range=((0, 3000),),
     color_formula="Gamma RGB 3.1",
@@ -136,7 +136,7 @@ print(img.data.dtype)
 print(img.data.max())
 >>> 2999
 
-# rescale and apply rio-color formula
+# rescale and apply color-operations formula
 img.rescale(in_range=((0, 3000),),)
 print(img.data.max())
 >>> 254
@@ -145,7 +145,7 @@ print(img.data.dtype)
 >>> 'uint8'
 ```
 
-- **apply_color_formula()**: Apply `rio-color`'s color formula in place
+- **apply_color_formula()**: Apply `color-operations`'s color formula in place
 
 !!! info "New in version 3.1.5"
 

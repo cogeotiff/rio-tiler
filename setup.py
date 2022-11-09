@@ -34,7 +34,7 @@ setup(
         "pydantic",
         "pystac>=0.5.4",
         "rasterio>=1.3.0",
-        "rio-color",
+        "color-operations",
         "importlib_resources>=1.1.0; python_version < '3.9'",
     ],
 )
