@@ -306,7 +306,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
             asset_meta = self._get_asset_info(asset)
-            print(asset_meta)
             url = asset_meta["url"]
             with self.ctx(**asset_meta.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
