@@ -43,8 +43,8 @@ def test_mask_bilinear(cloudoptimized_geotiff):
     src_path = cloudoptimized_geotiff(
         cog_path, **equator, dtype="uint8", nodata_type="alpha"
     )
-    with Reader(src_path) as cog:
-        data, mask = cog.preview(
+    with Reader(src_path) as src:
+        data, mask = src.preview(
             resampling_method="bilinear",
             force_binary_mask=True,
             max_size=100,
@@ -52,7 +52,7 @@ def test_mask_bilinear(cloudoptimized_geotiff):
         masknodata = (data[0] != 0).astype(numpy.uint8) * 255
         numpy.testing.assert_array_equal(mask, masknodata)
 
-        dataf, maskf = cog.preview(
+        dataf, maskf = src.preview(
             resampling_method="bilinear",
             force_binary_mask=False,
             max_size=100,
@@ -70,8 +70,8 @@ def test_mask(dataset_info, tile_name, resampling, cloudoptimized_geotiff):
     src_path = cloudoptimized_geotiff(cog_path, **dataset_info)
 
     tile = tiles[tile_name]
-    with Reader(src_path) as cog:
-        data, mask = cog.tile(
+    with Reader(src_path) as src:
+        data, mask = src.tile(
             tile.x,
             tile.y,
             tile.z,

@@ -429,8 +429,8 @@ def render(
         bytes: image body.
 
     Examples:
-        >>> with COGReader("my_tif.tif") as cog:
-            img = cog.preview()
+        >>> with Reader("my_tif.tif") as src:
+            img = src.preview()
             with open('test.jpg', 'wb') as f:
                 f.write(render(img.data, img.mask, img_format="jpeg"))
 

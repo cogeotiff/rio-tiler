@@ -160,8 +160,8 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio](https://
 
     # Use EPSG:4326 (WGS84) grid
     wgs84_grid = morecantile.tms.get("WorldCRS84Quad")
-    with Reader("my.tif", tms=wgs84_grid) as cog:
-        img = cog.tile(1, 1, 1)
+    with Reader("my.tif", tms=wgs84_grid) as src:
+        img = src.tile(1, 1, 1)
     ```
 
 ## Install

@@ -283,15 +283,15 @@ def test_cutline():
 
     feature_bounds = featureBounds(feat)
 
-    with Reader(COGEO) as cog:
-        cutline = utils.create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
-        data, mask = cog.part(feature_bounds, vrt_options={"cutline": cutline})
+    with Reader(COGEO) as src:
+        cutline = utils.create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
 
         cutline = utils.create_cutline(
-            cog.dataset, feat["geometry"], geometry_crs="epsg:4326"
+            src.dataset, feat["geometry"], geometry_crs="epsg:4326"
         )
-        data, mask = cog.part(feature_bounds, vrt_options={"cutline": cutline})
+        data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
 
     feat_line = {
@@ -308,9 +308,9 @@ def test_cutline():
         },
     }
 
-    with Reader(COGEO) as cog:
+    with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(cog.dataset, feat_line, geometry_crs="epsg:4326")
+            utils.create_cutline(src.dataset, feat_line, geometry_crs="epsg:4326")
 
     feat_mp = {
         "type": "MultiPolygon",
@@ -336,8 +336,8 @@ def test_cutline():
         ],
     }
 
-    with Reader(COGEO) as cog:
-        c = utils.create_cutline(cog.dataset, feat_mp, geometry_crs="epsg:4326")
+    with Reader(COGEO) as src:
+        c = utils.create_cutline(src.dataset, feat_mp, geometry_crs="epsg:4326")
         assert "MULTIPOLYGON" in c
 
     bad_poly = {
@@ -355,9 +355,9 @@ def test_cutline():
         ],
     }
 
-    with Reader(COGEO) as cog:
+    with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(cog.dataset, bad_poly, geometry_crs="epsg:4326")
+            utils.create_cutline(src.dataset, bad_poly, geometry_crs="epsg:4326")
 
 
 def test_parse_expression():

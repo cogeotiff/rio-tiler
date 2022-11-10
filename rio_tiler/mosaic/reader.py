@@ -43,15 +43,15 @@ def mosaic_reader(
 
     Examples:
         >>> def reader(asset: str, *args, **kwargs) -> ImageData:
-                with COGReader(asset) as cog:
-                    return cog.tile(*args, **kwargs)
+                with Reader(asset) as src:
+                    return src.tile(*args, **kwargs)
 
             x, y, z = 10, 10, 4
             img = mosaic_reader(["cog.tif", "cog2.tif"], reader, x, y, z)
 
         >>> def reader(asset: str, *args, **kwargs) -> ImageData:
-                with COGReader(asset) as cog:
-                    return cog.preview(*args, **kwargs)
+                with Reader(asset) as src:
+                    return src.preview(*args, **kwargs)
 
             img = mosaic_reader(["cog.tif", "cog2.tif"], reader)
 

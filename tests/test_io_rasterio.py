@@ -54,30 +54,30 @@ COG_EXTMASK = os.path.join(PREFIX, "my-bucket", KEY_EXTMASK)
 
 def test_spatial_info_valid():
     """Should work as expected (get spatial info)"""
-    with Reader(COG_NODATA) as cog:
-        assert not cog.dataset.closed
-        assert cog.bounds
-        assert cog.crs
-        assert cog.minzoom == 5
-        assert cog.maxzoom == 9
-    assert cog.dataset.closed
+    with Reader(COG_NODATA) as src:
+        assert not src.dataset.closed
+        assert src.bounds
+        assert src.crs
+        assert src.minzoom == 5
+        assert src.maxzoom == 9
+    assert src.dataset.closed
 
-    cog = Reader(COG_NODATA)
-    assert not cog.dataset.closed
-    cog.close()
-    assert cog.dataset.closed
+    src = Reader(COG_NODATA)
+    assert not src.dataset.closed
+    src.close()
+    assert src.dataset.closed
 
 
 def test_bounds_valid():
     """Should work as expected (get bounds)"""
-    with Reader(COG_NODATA) as cog:
-        assert len(cog.bounds) == 4
+    with Reader(COG_NODATA) as src:
+        assert len(src.bounds) == 4
 
 
 def test_info_valid():
     """Should work as expected (get file info)"""
-    with Reader(COG_SCALE) as cog:
-        meta = cog.info()
+    with Reader(COG_SCALE) as src:
+        meta = src.info()
         assert meta["scale"]
         assert meta.scale
         assert meta.offset
@@ -88,20 +88,20 @@ def test_info_valid():
         assert meta.overviews
         assert meta.driver
 
-    with Reader(COG_CMAP) as cog:
-        assert cog.colormap
-        meta = cog.info()
+    with Reader(COG_CMAP) as src:
+        assert src.colormap
+        meta = src.info()
         assert meta["colormap"]
         assert meta.colormap
 
-    with Reader(COG_NODATA, colormap={1: (0, 0, 0, 0)}) as cog:
-        assert cog.colormap
-        meta = cog.info()
+    with Reader(COG_NODATA, colormap={1: (0, 0, 0, 0)}) as src:
+        assert src.colormap
+        meta = src.info()
         assert meta.colormap
         assert meta.nodata_value
 
-    with Reader(COG_TAGS) as cog:
-        meta = cog.info()
+    with Reader(COG_TAGS) as src:
+        meta = src.info()
         assert meta.bounds
         assert meta.minzoom
         assert meta.maxzoom
@@ -116,35 +116,35 @@ def test_info_valid():
         assert band_meta[0] == "b1"
         assert "STATISTICS_MAXIMUM" in band_meta[1]
 
-    with Reader(COG_ALPHA) as cog:
-        meta = cog.info()
+    with Reader(COG_ALPHA) as src:
+        meta = src.info()
         assert meta.nodata_type == "Alpha"
 
-    with Reader(COG_MASK) as cog:
-        meta = cog.info()
+    with Reader(COG_MASK) as src:
+        meta = src.info()
         assert meta.nodata_type == "Mask"
 
-    with Reader(COGEO) as cog:
-        meta = cog.info()
+    with Reader(COGEO) as src:
+        meta = src.info()
         assert meta.nodata_type == "None"
 
-    with Reader(COG_NODATA) as cog:
-        meta = cog.info()
+    with Reader(COG_NODATA) as src:
+        meta = src.info()
         assert meta.nodata_type == "Nodata"
 
 
 def test_tile_valid_default():
     """Should return a 3 bands array and a full valid mask."""
-    with Reader(COG_NODATA) as cog:
+    with Reader(COG_NODATA) as src:
         # Full tile
-        img = cog.tile(43, 24, 7)
+        img = src.tile(43, 24, 7)
         assert img.data.shape == (1, 256, 256)
         assert img.mask.all()
         assert img.band_names == ["b1"]
 
         # Validate that Tile and Part gives the same result
         tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
-        data_part, _ = cog.part(
+        data_part, _ = src.part(
             tile_bounds,
             bounds_crs=WEB_MERCATOR_TMS.crs,
             width=256,
@@ -154,24 +154,24 @@ def test_tile_valid_default():
         assert numpy.array_equal(img.data, data_part)
 
         # Partial tile
-        data, mask = cog.tile(42, 24, 7)
+        data, mask = src.tile(42, 24, 7)
         assert data.shape == (1, 256, 256)
         assert not mask.all()
 
         # Expression
-        img = cog.tile(43, 24, 7, expression="b1*2;b1-100")
+        img = src.tile(43, 24, 7, expression="b1*2;b1-100")
         assert img.data.shape == (2, 256, 256)
         assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.tile(43, 24, 7, indexes=(1, 2, 3), expression="b1*2")
+            img = src.tile(43, 24, 7, indexes=(1, 2, 3), expression="b1*2")
             assert img.data.shape == (1, 256, 256)
         assert img.band_names == ["b1*2"]
 
-        data, mask = cog.tile(43, 24, 7, indexes=1)
+        data, mask = src.tile(43, 24, 7, indexes=1)
         assert data.shape == (1, 256, 256)
 
-        img = cog.tile(
+        img = src.tile(
             43,
             24,
             7,
@@ -184,9 +184,9 @@ def test_tile_valid_default():
         assert img.band_names == ["b1", "b1"]
 
     # We are using a file that is aligned with the grid so no resampling should be involved
-    with Reader(COG_WEB) as cog:
-        img = cog.tile(147, 182, 9)
-        img_buffer = cog.tile(147, 182, 9, buffer=10)
+    with Reader(COG_WEB) as src:
+        img = src.tile(147, 182, 9)
+        img_buffer = src.tile(147, 182, 9, buffer=10)
         assert img_buffer.width == 276
         assert img_buffer.height == 276
         assert not img.bounds == img_buffer.bounds
@@ -196,31 +196,31 @@ def test_tile_valid_default():
 def test_tile_invalid_bounds():
     """Should raise an error with invalid tile."""
     with pytest.raises(TileOutsideBounds):
-        with Reader(COGEO) as cog:
-            cog.tile(38, 24, 7)
+        with Reader(COGEO) as src:
+            src.tile(38, 24, 7)
 
 
 def test_tile_with_incorrect_float_buffer():
     with pytest.raises(InvalidBufferSize):
-        with Reader(COGEO) as cog:
-            cog.tile(43, 24, 7, buffer=0.8)
+        with Reader(COGEO) as src:
+            src.tile(43, 24, 7, buffer=0.8)
 
 
 def test_tile_with_int_buffer():
-    with Reader(COGEO) as cog:
-        data, mask = cog.tile(43, 24, 7, buffer=1)
+    with Reader(COGEO) as src:
+        data, mask = src.tile(43, 24, 7, buffer=1)
     assert data.shape == (1, 258, 258)
     assert mask.all()
 
-    with Reader(COGEO) as cog:
-        data, mask = cog.tile(43, 24, 7, buffer=0)
+    with Reader(COGEO) as src:
+        data, mask = src.tile(43, 24, 7, buffer=0)
     assert data.shape == (1, 256, 256)
     assert mask.all()
 
 
 def test_tile_with_correct_float_buffer():
-    with Reader(COGEO) as cog:
-        data, mask = cog.tile(43, 24, 7, buffer=0.5)
+    with Reader(COGEO) as src:
+        data, mask = src.tile(43, 24, 7, buffer=0.5)
     assert data.shape == (1, 257, 257)
     assert mask.all()
 
@@ -229,28 +229,28 @@ def test_point_valid():
     """Read point."""
     lon = -56.624124590533825
     lat = 73.52687881825946
-    with Reader(COG_NODATA) as cog:
-        pt = cog.point(lon, lat)
+    with Reader(COG_NODATA) as src:
+        pt = src.point(lon, lat)
         assert len(pt.data) == 1
         assert len(pt.mask) == 1
         assert pt.band_names == ["b1"]
 
-        pt = cog.point(lon, lat, expression="b1*2;b1-100")
+        pt = src.point(lon, lat, expression="b1*2;b1-100")
         assert len(pt.data) == 2
         assert len(pt.mask) == 1
         assert pt.mask[0] == 255
         assert pt.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            pt = cog.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
+            pt = src.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
             assert len(pt.data) == 1
             assert pt.band_names == ["b1*2"]
 
-        pt = cog.point(lon, lat, indexes=1)
+        pt = src.point(lon, lat, indexes=1)
         assert len(pt.data) == 1
         assert pt.band_names == ["b1"]
 
-        pt = cog.point(
+        pt = src.point(
             lon,
             lat,
             indexes=(
@@ -261,7 +261,7 @@ def test_point_valid():
         assert len(pt.data) == 2
         assert pt.band_names == ["b1", "b1"]
 
-        pt = cog.point(-59.53, 74.03, indexes=(1, 1, 1))
+        pt = src.point(-59.53, 74.03, indexes=(1, 1, 1))
         assert len(pt.data) == 3
         assert pt.mask[0] == 0
         assert pt.band_names == ["b1", "b1", "b1"]
@@ -275,30 +275,30 @@ def test_area_valid():
         -56.530950796449005,
         73.52687881825946,
     )
-    with Reader(COG_NODATA) as cog:
-        img = cog.part(bbox)
+    with Reader(COG_NODATA) as src:
+        img = src.part(bbox)
         assert img.data.shape == (1, 11, 40)
         assert img.band_names == ["b1"]
 
-        data, mask = cog.part(bbox, dst_crs=cog.dataset.crs)
+        data, mask = src.part(bbox, dst_crs=src.dataset.crs)
         assert data.shape == (1, 28, 30)
 
-        data, mask = cog.part(bbox, max_size=30)
+        data, mask = src.part(bbox, max_size=30)
         assert data.shape == (1, 9, 30)
 
-        img = cog.part(bbox, expression="b1*2;b1-100")
+        img = src.part(bbox, expression="b1*2;b1-100")
         assert img.data.shape == (2, 11, 40)
         assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.part(bbox, indexes=(1, 2, 3), expression="b1*2")
+            img = src.part(bbox, indexes=(1, 2, 3), expression="b1*2")
             assert img.data.shape == (1, 11, 40)
             assert img.band_names == ["b1*2"]
 
-        data, mask = cog.part(bbox, indexes=1)
+        data, mask = src.part(bbox, indexes=1)
         assert data.shape == (1, 11, 40)
 
-        img = cog.part(
+        img = src.part(
             bbox,
             indexes=(
                 1,
@@ -311,27 +311,27 @@ def test_area_valid():
 
 def test_preview_valid():
     """Read preview."""
-    with Reader(COGEO) as cog:
-        img = cog.preview(max_size=128)
+    with Reader(COGEO) as src:
+        img = src.preview(max_size=128)
         assert img.data.shape == (1, 128, 128)
         assert img.band_names == ["b1"]
 
-        data, mask = cog.preview()
+        data, mask = src.preview()
         assert data.shape == (1, 1024, 1021)
 
-        img = cog.preview(max_size=128, expression="b1*2;b1-100")
+        img = src.preview(max_size=128, expression="b1*2;b1-100")
         assert img.data.shape == (2, 128, 128)
         assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.preview(max_size=128, indexes=(1, 2, 3), expression="b1*2")
+            img = src.preview(max_size=128, indexes=(1, 2, 3), expression="b1*2")
             assert img.data.shape == (1, 128, 128)
             assert img.band_names == ["b1*2"]
 
-        data, mask = cog.preview(max_size=128, indexes=1)
+        data, mask = src.preview(max_size=128, indexes=1)
         assert data.shape == (1, 128, 128)
 
-        img = cog.preview(
+        img = src.preview(
             max_size=128,
             indexes=(
                 1,
@@ -344,23 +344,23 @@ def test_preview_valid():
 
 def test_statistics():
     """tests statistics method."""
-    with Reader(COGEO) as cog:
-        stats = cog.statistics()
+    with Reader(COGEO) as src:
+        stats = src.statistics()
         assert len(stats) == 1
         assert isinstance(stats["b1"], BandStatistics)
         assert stats["b1"].percentile_2
         assert stats["b1"].percentile_98
 
-    with Reader(COGEO) as cog:
-        stats = cog.statistics(percentiles=[3])
+    with Reader(COGEO) as src:
+        stats = src.statistics(percentiles=[3])
         assert stats["b1"].percentile_3
 
-    with Reader(COGEO) as cog:
-        stats = cog.statistics(percentiles=[3])
+    with Reader(COGEO) as src:
+        stats = src.statistics(percentiles=[3])
         assert stats["b1"].percentile_3
 
-    with Reader(COG_CMAP) as cog:
-        stats = cog.statistics(categorical=True)
+    with Reader(COG_CMAP) as src:
+        stats = src.statistics(categorical=True)
         assert stats["b1"].histogram[1] == [
             1.0,
             3.0,
@@ -375,20 +375,20 @@ def test_statistics():
             12.0,
         ]
 
-        stats = cog.statistics(categorical=True, categories=[1, 3])
+        stats = src.statistics(categorical=True, categories=[1, 3])
         assert stats["b1"].histogram[1] == [
             1.0,
             3.0,
         ]
 
     # make sure kwargs are passed to `preview`
-    with Reader(COGEO) as cog:
-        stats = cog.statistics(width=100, height=100, max_size=None)
+    with Reader(COGEO) as src:
+        stats = src.statistics(width=100, height=100, max_size=None)
         assert stats["b1"].count == 10000.0
 
     # Check results for expression
-    with Reader(COGEO) as cog:
-        stats = cog.statistics(expression="b1;b1*2")
+    with Reader(COGEO) as src:
+        stats = src.statistics(expression="b1;b1*2")
         assert stats["b1"]
         assert stats["b1*2"]
         assert stats["b1"].min == stats["b1*2"].min / 2
@@ -396,37 +396,37 @@ def test_statistics():
 
 def test_Reader_Options():
     """Set options in reader."""
-    with Reader(COGEO, options={"nodata": 1}) as cog:
-        assert cog.info().nodata_value == 1
-        assert cog.info().nodata_type == "Nodata"
+    with Reader(COGEO, options={"nodata": 1}) as src:
+        assert src.info().nodata_value == 1
+        assert src.info().nodata_type == "Nodata"
 
-    with Reader(COGEO) as cog:
-        assert cog.info().nodata_type == "None"
+    with Reader(COGEO) as src:
+        assert src.info().nodata_type == "None"
 
-    with Reader(COGEO, options={"nodata": 1}) as cog:
-        _, mask = cog.tile(43, 25, 7)
+    with Reader(COGEO, options={"nodata": 1}) as src:
+        _, mask = src.tile(43, 25, 7)
         assert not mask.all()
 
     # read cog using default Nearest
-    with Reader(COGEO, options={"nodata": 1}) as cog:
-        data_default, _ = cog.tile(43, 25, 7)
+    with Reader(COGEO, options={"nodata": 1}) as src:
+        data_default, _ = src.tile(43, 25, 7)
 
     # read cog using bilinear
-    with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as cog:
-        data, _ = cog.tile(43, 25, 7)
+    with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as src:
+        data, _ = src.tile(43, 25, 7)
         assert not numpy.array_equal(data_default, data)
 
-    with Reader(COG_SCALE, options={"unscale": True}) as cog:
-        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs)
+    with Reader(COG_SCALE, options={"unscale": True}) as src:
+        p = src.point(310000, 4100000, coord_crs=src.dataset.crs)
         assert round(float(p.data[0]), 3) == 1000.892
 
         # passing unscale in method should overwrite the defaults
-        p = cog.point(310000, 4100000, coord_crs=cog.dataset.crs, unscale=False)
+        p = src.point(310000, 4100000, coord_crs=src.dataset.crs, unscale=False)
         assert p.data[0] == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
-    with Reader(COGEO, options={"vrt_options": {"cutline": cutline}}) as cog:
-        _, mask = cog.preview()
+    with Reader(COGEO, options={"vrt_options": {"cutline": cutline}}) as src:
+        _, mask = src.preview()
         assert not mask.all()
 
     def callback(data, mask):
@@ -434,44 +434,44 @@ def test_Reader_Options():
         data = data * 2
         return data, mask
 
-    with Reader(COGEO, options={"nodata": 1, "post_process": callback}) as cog:
-        data_init, _ = cog.tile(43, 25, 7, post_process=None)
-        data, mask = cog.tile(43, 25, 7)
+    with Reader(COGEO, options={"nodata": 1, "post_process": callback}) as src:
+        data_init, _ = src.tile(43, 25, 7, post_process=None)
+        data, mask = src.tile(43, 25, 7)
         assert mask.all()
         assert data[0, 0, 0] == data_init[0, 0, 0] * 2
 
     lon = -56.624124590533825
     lat = 73.52687881825946
-    with Reader(COG_NODATA, options={"post_process": callback}) as cog:
-        pt = cog.point(lon, lat)
+    with Reader(COG_NODATA, options={"post_process": callback}) as src:
+        pt = src.point(lon, lat)
 
-    with Reader(COG_NODATA) as cog:
-        pt_init = cog.point(lon, lat)
+    with Reader(COG_NODATA) as src:
+        pt_init = src.point(lon, lat)
     assert pt.data[0] == pt_init.data[0] * 2
 
 
 def test_cog_with_internal_gcps():
     """Make sure file gets re-projected using gcps."""
-    with Reader(COG_GCPS, options={"nodata": 0}) as cog:
-        assert cog.bounds
-        assert cog.info().nodata_value == 0
-        assert isinstance(cog.dataset, WarpedVRT)
+    with Reader(COG_GCPS, options={"nodata": 0}) as src:
+        assert src.bounds
+        assert src.info().nodata_value == 0
+        assert isinstance(src.dataset, WarpedVRT)
 
-        assert cog.minzoom == 7
-        assert cog.maxzoom == 10
+        assert src.minzoom == 7
+        assert src.maxzoom == 10
 
-        metadata = cog.info()
+        metadata = src.info()
         assert len(metadata.band_metadata) == 1
         assert metadata.band_descriptions == [("b1", "")]
 
         tile_z = 8
         tile_x = 183
         tile_y = 120
-        data, mask = cog.tile(tile_x, tile_y, tile_z)
+        data, mask = src.tile(tile_x, tile_y, tile_z)
         assert data.shape == (1, 256, 256)
         assert mask.shape == (256, 256)
-    assert cog.dataset.closed
-    assert cog.dataset.src_dataset.closed
+    assert src.dataset.closed
+    assert src.dataset.src_dataset.closed
 
     # Pass dataset (should be a WarpedVRT)
     with rasterio.open(COG_GCPS) as dst:
@@ -480,30 +480,29 @@ def test_cog_with_internal_gcps():
             src_crs=dst.gcps[1],
             src_transform=transform.from_gcps(dst.gcps[0]),
         ) as vrt:
-            with Reader(None, dataset=vrt, options={"nodata": 0}) as cog:
-                assert cog.bounds
-                assert cog.info().nodata_value == 0
-                assert isinstance(cog.dataset, WarpedVRT)
+            with Reader(None, dataset=vrt, options={"nodata": 0}) as src:
+                assert src.bounds
+                assert src.info().nodata_value == 0
+                assert isinstance(src.dataset, WarpedVRT)
+                assert src.minzoom == 7
+                assert src.maxzoom == 10
 
-                assert cog.minzoom == 7
-                assert cog.maxzoom == 10
-
-                metadata = cog.info()
+                metadata = src.info()
                 assert len(metadata.band_metadata) == 1
                 assert metadata.band_descriptions == [("b1", "")]
 
                 tile_z = 8
                 tile_x = 183
                 tile_y = 120
-                data, mask = cog.tile(tile_x, tile_y, tile_z)
+                data, mask = src.tile(tile_x, tile_y, tile_z)
                 assert data.shape == (1, 256, 256)
                 assert mask.shape == (256, 256)
 
-            assert not cog.dataset.closed
-            assert not cog.dataset.src_dataset.closed
+            assert not src.dataset.closed
+            assert not src.dataset.src_dataset.closed
 
-        assert cog.dataset.closed
-    assert cog.dataset.src_dataset.closed
+        assert src.dataset.closed
+    assert src.dataset.src_dataset.closed
 
 
 def parse_img(content: bytes) -> Dict[Any, Any]:
@@ -515,8 +514,8 @@ def parse_img(content: bytes) -> Dict[Any, Any]:
 
 def test_imageData_output():
     """Test ImageData output."""
-    with Reader(COG_NODATA) as cog:
-        img = cog.tile(43, 24, 7)
+    with Reader(COG_NODATA) as src:
+        img = src.tile(43, 24, 7)
         assert img.data.shape == (1, 256, 256)
         assert img.mask.all()
         assert img.count == 1
@@ -538,7 +537,7 @@ def test_imageData_output():
         assert numpy.array_equal(arr[0:1], img.data)
         assert numpy.array_equal(arr[1], img.mask)
 
-        img = cog.tile(43, 24, 7)
+        img = src.tile(43, 24, 7)
         assert img.data.dtype == "uint16"
 
         imgc = img.post_process(color_formula="Gamma R 3.1")
@@ -571,26 +570,26 @@ def test_imageData_output():
             -56.530950796449005,
             73.52687881825946,
         )
-        img = cog.part(bbox)
+        img = src.part(bbox)
         assert img.data.shape == (1, 11, 40)
         meta = parse_img(img.render(img_format="GTiff"))
         assert meta["crs"] == WGS84_CRS
         assert img.bounds == bbox
 
-        img = cog.part(bbox, dst_crs=cog.dataset.crs)
+        img = src.part(bbox, dst_crs=src.dataset.crs)
         assert img.data.shape == (1, 28, 30)
         meta = parse_img(img.render(img_format="GTiff"))
-        assert meta["crs"] == cog.dataset.crs
+        assert meta["crs"] == src.dataset.crs
         assert not img.bounds == bbox
 
-        img = cog.preview(max_size=128)
+        img = src.preview(max_size=128)
         assert img.data.shape == (1, 128, 128)
         meta = parse_img(img.render(img_format="GTiff"))
-        assert meta["crs"] == cog.dataset.crs
+        assert meta["crs"] == src.dataset.crs
         # Bounds should be the same but VRT might introduce some rounding issue
-        for x, y in zip(img.bounds, cog.dataset.bounds):
+        for x, y in zip(img.bounds, src.dataset.bounds):
             assert round(x, 5) == round(y, 5)
-        # assert img.bounds == cog.dataset.bounds
+        # assert img.bounds == src.dataset.bounds
 
 
 def test_feature_valid():
@@ -619,32 +618,32 @@ def test_feature_valid():
         },
     }
 
-    with Reader(COG_NODATA) as cog:
-        img = cog.feature(feature, max_size=1024)
+    with Reader(COG_NODATA) as src:
+        img = src.feature(feature, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
         assert img.band_names == ["b1"]
 
-        img = cog.feature(feature, dst_crs=cog.dataset.crs, max_size=1024)
+        img = src.feature(feature, dst_crs=src.dataset.crs, max_size=1024)
         assert img.data.shape == (1, 1024, 869)
 
-        img = cog.feature(feature, max_size=30)
+        img = src.feature(feature, max_size=30)
         assert img.data.shape == (1, 11, 30)
 
-        img = cog.feature(feature, expression="b1*2;b1-100", max_size=1024)
+        img = src.feature(feature, expression="b1*2;b1-100", max_size=1024)
         assert img.data.shape == (2, 348, 1024)
         assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.feature(
+            img = src.feature(
                 feature, indexes=(1, 2, 3), expression="b1*2", max_size=1024
             )
             assert img.data.shape == (1, 348, 1024)
             assert img.band_names == ["b1*2"]
 
-        img = cog.feature(feature, indexes=1, max_size=1024)
+        img = src.feature(feature, indexes=1, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
 
-        img = cog.feature(
+        img = src.feature(
             feature,
             indexes=(
                 1,
@@ -673,7 +672,7 @@ def test_feature_valid():
             },
         }
 
-        img = cog.feature(mask_feat, max_size=1024)
+        img = src.feature(mask_feat, max_size=1024)
         assert not img.mask.all()
 
         outside_mask_feature = {
@@ -694,29 +693,29 @@ def test_feature_valid():
                 ],
             },
         }
-        img = cog.feature(outside_mask_feature, max_size=1024)
+        img = src.feature(outside_mask_feature, max_size=1024)
         assert not img.mask.all()
 
 
 def test_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
     """Ignore Padding when COG is aligned."""
-    with Reader(COG_WEB) as cog:
-        img = cog.tile(147, 182, 9, padding=0, resampling_method="bilinear")
-        img2 = cog.tile(147, 182, 9, padding=100, resampling_method="bilinear")
+    with Reader(COG_WEB) as src:
+        img = src.tile(147, 182, 9, padding=0, resampling_method="bilinear")
+        img2 = src.tile(147, 182, 9, padding=100, resampling_method="bilinear")
         assert numpy.array_equal(img.data, img2.data)
 
-    with Reader(COGEO) as cog:
-        img = cog.tile(43, 24, 7, padding=0, resampling_method="bilinear")
-        img2 = cog.tile(43, 24, 7, padding=100, resampling_method="bilinear")
+    with Reader(COGEO) as src:
+        img = src.tile(43, 24, 7, padding=0, resampling_method="bilinear")
+        img2 = src.tile(43, 24, 7, padding=100, resampling_method="bilinear")
         assert not numpy.array_equal(img.data, img2.data)
 
 
 def test_tile_read_alpha():
     """Read masked area."""
     # non-boundless tile covering the alpha masked part
-    with Reader(COG_ALPHA) as cog:
-        nb = cog.dataset.count
-        img = cog.tile(876432, 1603670, 22)
+    with Reader(COG_ALPHA) as src:
+        nb = src.dataset.count
+        img = src.tile(876432, 1603670, 22)
         assert (
             not nb == img.count
         )  # rio-tiler removes the alpha band from the `data` array
@@ -728,14 +727,14 @@ def test_tile_read_mask():
     """Read masked area."""
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR"):
         # non-boundless tile covering the masked part
-        with Reader(COG_MASK) as cog:
-            img = cog.tile(876431, 1603669, 22, tilesize=16)
+        with Reader(COG_MASK) as src:
+            img = src.tile(876431, 1603669, 22, tilesize=16)
             assert img.data.shape == (3, 16, 16)
             assert img.mask.shape == (16, 16)
             assert not img.mask.all()
 
             # boundless tile covering the masked part
-            img = cog.tile(876431, 1603668, 22, tilesize=256)
+            img = src.tile(876431, 1603668, 22, tilesize=256)
             assert img.data.shape == (3, 256, 256)
             assert not img.mask.all()
 
@@ -744,8 +743,8 @@ def test_tile_read_extmask():
     """Read masked area."""
     # non-boundless tile covering the masked part
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="TRUE"):
-        with Reader(COG_EXTMASK) as cog:
-            img = cog.tile(876431, 1603669, 22)
+        with Reader(COG_EXTMASK) as src:
+            img = src.tile(876431, 1603669, 22)
             assert img.data.shape == (3, 256, 256)
             assert img.mask.shape == (256, 256)
             assert not img.mask.all()
@@ -753,45 +752,45 @@ def test_tile_read_extmask():
 
 def test_dateline():
     """Read tile from data crossing the antimeridian."""
-    with Reader(COG_DLINE) as cog:
-        img = cog.tile(0, 84, 8, tilesize=64)
+    with Reader(COG_DLINE) as src:
+        img = src.tile(0, 84, 8, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
-        img = cog.tile(255, 84, 8, tilesize=64)
+        img = src.tile(255, 84, 8, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
 
 def test_fullEarth():
     """Should read tile for COG spanning the whole earth."""
-    with Reader(COG_EARTH) as cog:
-        img = cog.tile(1, 42, 7, tilesize=64)
+    with Reader(COG_EARTH) as src:
+        img = src.tile(1, 42, 7, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
-        img = cog.tile(127, 42, 7, tilesize=64)
+        img = src.tile(127, 42, 7, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
-    with Reader(COG_EARTH, tms=morecantile.tms.get("EuropeanETRS89_LAEAQuad")) as cog:
-        img = cog.tile(0, 0, 1, tilesize=64)
+    with Reader(COG_EARTH, tms=morecantile.tms.get("EuropeanETRS89_LAEAQuad")) as src:
+        img = src.tile(0, 0, 1, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
 
 def test_read():
     """Should read the entire dataset."""
-    with Reader(COGEO) as cog:
-        img = cog.read()
-        assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
-        assert img.width == cog.dataset.width
-        assert img.height == cog.dataset.height
-        assert img.count == cog.dataset.count
+    with Reader(COGEO) as src:
+        img = src.read()
+        assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
+        assert img.width == src.dataset.width
+        assert img.height == src.dataset.height
+        assert img.count == src.dataset.count
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.read(indexes=(1, 2, 3), expression="b1*2")
+            img = src.read(indexes=(1, 2, 3), expression="b1*2")
             assert img.data.shape == (1, 2667, 2658)
 
-        img = cog.read(indexes=1)
+        img = src.read(indexes=1)
         assert img.data.shape == (1, 2667, 2658)
 
-        img = cog.read(
+        img = src.read(
             indexes=(
                 1,
                 1,
@@ -812,31 +811,31 @@ def test_nonearthbody():
     EUROPA_SPHERE = CRS.from_proj4("+proj=longlat +R=1560800 +no_defs")
 
     with pytest.warns(UserWarning):
-        with Reader(COG_EUROPA) as cog:
-            assert cog.minzoom == 0
-            assert cog.maxzoom == 24
+        with Reader(COG_EUROPA) as src:
+            assert src.minzoom == 0
+            assert src.maxzoom == 24
 
     # Warns because of zoom level in WebMercator can't be defined
     with pytest.warns(UserWarning) as w:
-        with Reader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as cog:
-            assert cog.info()
+        with Reader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as src:
+            assert src.info()
             assert len(w) == 2
 
-            img = cog.read()
-            assert numpy.array_equal(img.data, cog.dataset.read(indexes=(1,)))
-            assert img.width == cog.dataset.width
-            assert img.height == cog.dataset.height
-            assert img.count == cog.dataset.count
+            img = src.read()
+            assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
+            assert img.width == src.dataset.width
+            assert img.height == src.dataset.height
+            assert img.count == src.dataset.count
 
-            img = cog.preview()
-            assert img.bounds == cog.bounds
+            img = src.preview()
+            assert img.bounds == src.bounds
 
-            part = cog.part(cog.bounds, bounds_crs=cog.crs)
-            assert part.bounds == cog.bounds
+            part = src.part(src.bounds, bounds_crs=src.crs)
+            assert part.bounds == src.bounds
 
-            lon = (cog.bounds[0] + cog.bounds[2]) / 2
-            lat = (cog.bounds[1] + cog.bounds[3]) / 2
-            assert cog.point(lon, lat, coord_crs=cog.crs).data[0] is not None
+            lon = (src.bounds[0] + src.bounds[2]) / 2
+            lat = (src.bounds[1] + src.bounds[3]) / 2
+            assert src.point(lon, lat, coord_crs=src.crs).data[0] is not None
 
     with pytest.warns(UserWarning):
         europa_crs = CRS.from_authority("ESRI", 104915)
@@ -846,15 +845,15 @@ def test_nonearthbody():
             matrix_scale=[2, 1],
         )
 
-    with Reader(COG_EUROPA, tms=tms, geographic_crs=EUROPA_SPHERE) as cog:
-        assert cog.info()
-        assert cog.minzoom == 4
-        assert cog.maxzoom == 6
+    with Reader(COG_EUROPA, tms=tms, geographic_crs=EUROPA_SPHERE) as src:
+        assert src.info()
+        assert src.minzoom == 4
+        assert src.maxzoom == 6
 
         # Get Tile covering the UL corner
-        bounds = transform_bounds(cog.crs, tms.rasterio_crs, *cog.bounds)
-        t = tms._tile(bounds[0], bounds[1], cog.minzoom)
-        img = cog.tile(t.x, t.y, t.z)
+        bounds = transform_bounds(src.crs, tms.rasterio_crs, *src.bounds)
+        t = tms._tile(bounds[0], bounds[1], src.minzoom)
+        img = src.tile(t.x, t.y, t.z)
 
         assert img.height == 256
         assert img.width == 256
@@ -891,8 +890,8 @@ def test_nonearth_custom():
         )
 
     with warnings.catch_warnings():
-        with MarsReader(COG_MARS, tms=mars_tms) as cog:
-            assert cog.geographic_bounds[0] > -180
+        with MarsReader(COG_MARS, tms=mars_tms) as src:
+            assert src.geographic_bounds[0] > -180
 
     with warnings.catch_warnings():
         with Reader(
@@ -901,15 +900,15 @@ def test_nonearth_custom():
             geographic_crs=rasterio.crs.CRS.from_proj4(
                 "+proj=longlat +R=3396190 +no_defs"
             ),
-        ) as cog:
-            assert cog.geographic_bounds[0] > -180
+        ) as src:
+            assert src.geographic_bounds[0] > -180
 
 
 def test_tms_tilesize_and_zoom():
     """Test the influence of tms tilesize on COG zoom levels."""
-    with Reader(COG_NODATA) as cog:
-        assert cog.minzoom == 5
-        assert cog.maxzoom == 9
+    with Reader(COG_NODATA) as src:
+        assert src.minzoom == 5
+        assert src.maxzoom == 9
 
     tms_128 = TileMatrixSet.custom(
         WEB_MERCATOR_TMS.xy_bbox,
@@ -918,9 +917,9 @@ def test_tms_tilesize_and_zoom():
         tile_width=64,
         tile_height=64,
     )
-    with Reader(COG_NODATA, tms=tms_128) as cog:
-        assert cog.minzoom == 5
-        assert cog.maxzoom == 11
+    with Reader(COG_NODATA, tms=tms_128) as src:
+        assert src.minzoom == 5
+        assert src.maxzoom == 11
 
     tms_2048 = TileMatrixSet.custom(
         WEB_MERCATOR_TMS.xy_bbox,
@@ -929,6 +928,6 @@ def test_tms_tilesize_and_zoom():
         tile_width=2048,
         tile_height=2048,
     )
-    with Reader(COG_NODATA, tms=tms_2048) as cog:
-        assert cog.minzoom == 5
-        assert cog.maxzoom == 6
+    with Reader(COG_NODATA, tms=tms_2048) as src:
+        assert src.minzoom == 5
+        assert src.maxzoom == 6

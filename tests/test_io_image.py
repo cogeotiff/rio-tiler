@@ -14,7 +14,7 @@ GEO = os.path.join(PREFIX, "cog_nonearth.tif")
 
 
 def test_non_geo_image():
-    """Test COGReader usage with Non-Geo Images."""
+    """Test ImageReader usage with Non-Geo Images."""
     with pytest.warns() as w:
         with ImageReader(NO_GEO) as src:
             assert src.minzoom == 0

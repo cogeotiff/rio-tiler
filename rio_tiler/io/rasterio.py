@@ -220,7 +220,7 @@ class Reader(BaseReader):
             pass
 
     def info(self) -> Info:
-        """Return COG info."""
+        """Return Dataset info."""
 
         def _get_descr(ix):
             """Return band description."""
@@ -330,7 +330,7 @@ class Reader(BaseReader):
         buffer: Optional[float] = None,
         **kwargs: Any,
     ) -> ImageData:
-        """Read a Web Map tile from a COG.
+        """Read a Web Map tile from a Dataset.
 
         Args:
             tile_x (int): Tile's horizontal index.
@@ -341,7 +341,7 @@ class Reader(BaseReader):
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             tile_buffer (int or float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258). DEPRECATED
             buffer (float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
-            kwargs (optional): Options to forward to the `COGReader.part` method.
+            kwargs (optional): Options to forward to the `Reader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -386,7 +386,7 @@ class Reader(BaseReader):
         buffer: Optional[float] = None,
         **kwargs: Any,
     ) -> ImageData:
-        """Read part of a COG.
+        """Read part of a Dataset.
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
@@ -446,7 +446,7 @@ class Reader(BaseReader):
         width: Optional[int] = None,
         **kwargs: Any,
     ) -> ImageData:
-        """Return a preview of a COG.
+        """Return a preview of a Dataset.
 
         Args:
             indexes (sequence of int or int, optional): Band indexes.
@@ -478,7 +478,7 @@ class Reader(BaseReader):
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> PointData:
-        """Read a pixel value from a COG.
+        """Read a pixel value from a Dataset.
 
         Args:
             lon (float): Longitude.
@@ -526,7 +526,7 @@ class Reader(BaseReader):
         buffer: Optional[NumType] = None,
         **kwargs: Any,
     ) -> ImageData:
-        """Read part of a COG defined by a geojson feature.
+        """Read part of a Dataset defined by a geojson feature.
 
         Args:
             shape (dict): Valid GeoJSON feature.
@@ -538,7 +538,7 @@ class Reader(BaseReader):
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
             buffer (int or float, optional): Buffer on each side of the given aoi. It must be a multiple of `0.5`. Output **image size** will be expanded to `output imagesize + 2 * buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
-            kwargs (optional): Options to forward to the `COGReader.part` method.
+            kwargs (optional): Options to forward to the `Reader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -574,7 +574,7 @@ class Reader(BaseReader):
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
-        """Read the COG.
+        """Read the Dataset.
 
         Args:
             indexes (sequence of int or int, optional): Band indexes.

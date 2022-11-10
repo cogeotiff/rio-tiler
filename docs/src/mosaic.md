@@ -60,8 +60,8 @@ from rio_tiler.models import ImageData
 
 
 def tiler(src_path: str, *args, **kwargs) -> ImageData:
-    with Reader(src_path) as cog:
-        return cog.tile(*args, **kwargs)
+    with Reader(src_path) as src:
+        return src.tile(*args, **kwargs)
 
 mosaic_assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
 x = 1000

@@ -41,20 +41,20 @@ zo = 9
 
 def _read_tile(src_path: str, *args, **kwargs) -> ImageData:
     """Read tile from an asset"""
-    with Reader(src_path) as cog:
-        return cog.tile(*args, **kwargs)
+    with Reader(src_path) as src:
+        return src.tile(*args, **kwargs)
 
 
 def _read_part(src_path: str, *args, **kwargs) -> ImageData:
     """Read part from an asset"""
-    with Reader(src_path) as cog:
-        return cog.part(*args, **kwargs)
+    with Reader(src_path) as src:
+        return src.part(*args, **kwargs)
 
 
 def _read_preview(src_path: str, *args, **kwargs) -> DataMaskType:
     """Read preview from an asset"""
-    with Reader(src_path) as cog:
-        data, mask = cog.preview(*args, **kwargs)
+    with Reader(src_path) as src:
+        data, mask = src.preview(*args, **kwargs)
     return data, mask
 
 
@@ -428,11 +428,11 @@ def test_mosaic_tiler_with_imageDataClass():
     assert not img.bounds
 
     bbox = [-75.98703377413767, 44.93504283293786, -71.337604723999, 47.09685599202324]
-    with Reader(assets[0]) as cog:
-        crs1 = cog.dataset.crs
+    with Reader(assets[0]) as src:
+        crs1 = src.dataset.crs
 
-    with Reader(assets[0]) as cog:
-        crs2 = cog.dataset.crs
+    with Reader(assets[0]) as src:
+        crs2 = src.dataset.crs
 
     img, assets_used = mosaic.mosaic_reader(
         assets, _read_part, bbox=bbox, dst_crs=crs1, bounds_crs=WGS84_CRS, max_size=1024

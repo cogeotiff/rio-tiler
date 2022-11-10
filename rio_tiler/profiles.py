@@ -37,7 +37,7 @@ class ImagesProfiles(UserDict):
     """
 
     def __init__(self):
-        """Initialize COGProfiles dict."""
+        """Initialize ImagesProfiles dict."""
         self.data = {}
         self.data.update(
             {

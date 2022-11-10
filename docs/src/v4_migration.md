@@ -143,8 +143,8 @@ with COGReader("cog.tif") as cog:
     >>> [0, 0, 0]
 
 # now
-with Reader("cog.tif") as cog:
-    print(cog.point(10.20, -42.0))
+with Reader("cog.tif") as src:
+    print(src.point(10.20, -42.0))
     >>> PointData(
         data=array([3744], dtype=uint16),
         mask=array([255], dtype=uint8),
@@ -199,8 +199,8 @@ with COGReader("cog.tif", nodata=1, resampling_method="bilinear") as cog:
     data = cog.preview()
 
 # now
-with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as cog:
-    data = cog.preview()
+with Reader(COGEO, options={"nodata": 1, "resampling_method": "bilinear"}) as src:
+    data = src.preview()
 ```
 
 ## Base classes **minzoom** and **maxzoom**

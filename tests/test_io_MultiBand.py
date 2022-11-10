@@ -45,11 +45,11 @@ class BandFileReader(MultiBandReader):
                 for p in pathlib.Path(self.input).glob("*scene_*.tif")
             ]
         )
-        with self.reader(self._get_band_url(self.bands[0])) as cog:
-            self.bounds = cog.bounds
-            self.crs = cog.crs
-            self.minzoom = cog.minzoom
-            self.maxzoom = cog.maxzoom
+        with self.reader(self._get_band_url(self.bands[0])) as src:
+            self.bounds = src.bounds
+            self.crs = src.crs
+            self.minzoom = src.minzoom
+            self.maxzoom = src.maxzoom
 
     def _get_band_url(self, band: str) -> str:
         """Validate band's name and return band's url."""
@@ -58,99 +58,99 @@ class BandFileReader(MultiBandReader):
 
 def test_MultiBandReader():
     """Should work as expected."""
-    with BandFileReader(PREFIX) as cog:
-        assert cog.bands == ["band1", "band2"]
-        assert cog.minzoom is not None
-        assert cog.maxzoom is not None
-        assert cog.bounds
-        assert cog.bounds
-        assert cog.crs
+    with BandFileReader(PREFIX) as src:
+        assert src.bands == ["band1", "band2"]
+        assert src.minzoom is not None
+        assert src.maxzoom is not None
+        assert src.bounds
+        assert src.bounds
+        assert src.crs
 
-        assert sorted(cog.parse_expression("band1/band2")) == ["band1", "band2"]
+        assert sorted(src.parse_expression("band1/band2")) == ["band1", "band2"]
 
         with pytest.warns(UserWarning):
-            meta = cog.info()
+            meta = src.info()
         assert meta.band_descriptions == [("band1", ""), ("band2", "")]
 
-        meta = cog.info(bands="band1")
+        meta = src.info(bands="band1")
         assert meta.band_descriptions == [("band1", "")]
 
-        meta = cog.info(bands=("band1", "band2"))
+        meta = src.info(bands=("band1", "band2"))
         assert meta.band_descriptions == [("band1", ""), ("band2", "")]
 
         with pytest.warns(UserWarning):
-            stats = cog.statistics()
+            stats = src.statistics()
             assert stats["band1"]
             assert stats["band2"]
 
-        stats = cog.statistics(bands="band1")
+        stats = src.statistics(bands="band1")
         assert "band1" in stats
         assert isinstance(stats["band1"], BandStatistics)
 
-        stats = cog.statistics(bands=("band1", "band2"))
+        stats = src.statistics(bands=("band1", "band2"))
         assert stats["band1"]
         assert stats["band2"]
 
-        stats = cog.statistics(expression="band1;band1+band2;band1-100")
+        stats = src.statistics(expression="band1;band1+band2;band1-100")
         assert stats["band1"]
         assert stats["band1+band2"]
         assert stats["band1-100"]
 
         with pytest.raises(MissingBands):
-            cog.tile(238, 218, 9)
+            src.tile(238, 218, 9)
 
-        tile = cog.tile(238, 218, 9, bands="band1")
+        tile = src.tile(238, 218, 9, bands="band1")
         assert tile.data.shape == (1, 256, 256)
         assert tile.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = cog.tile(238, 218, 9, bands="band1", expression="band1*2")
+            tile = src.tile(238, 218, 9, bands="band1", expression="band1*2")
         assert tile.data.shape == (1, 256, 256)
         assert tile.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
-            cog.part((-11.5, 24.5, -11.0, 25.0))
+            src.part((-11.5, 24.5, -11.0, 25.0))
 
-        tile = cog.part((-11.5, 24.5, -11.0, 25.0), bands="band1")
+        tile = src.part((-11.5, 24.5, -11.0, 25.0), bands="band1")
         assert tile.data.any()
         assert tile.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = cog.part(
+            tile = src.part(
                 (-11.5, 24.5, -11.0, 25.0), bands="band1", expression="band1*2"
             )
         assert tile.data.any()
         assert tile.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
-            cog.preview()
+            src.preview()
 
-        tile = cog.preview(bands="band1")
+        tile = src.preview(bands="band1")
         assert tile.data.any()
         assert tile.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = cog.preview(bands="band1", expression="band1*2")
+            tile = src.preview(bands="band1", expression="band1*2")
         assert tile.data.any()
         assert tile.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
-            cog.point(-11.5, 24.5)
+            src.point(-11.5, 24.5)
 
-        pt = cog.point(-11.5, 24.5, bands="band1")
+        pt = src.point(-11.5, 24.5, bands="band1")
         assert len(pt.data) == 1
         assert pt.band_names == ["band1"]
 
-        pt = cog.point(-11.5, 24.5, bands=("band1", "band2"))
+        pt = src.point(-11.5, 24.5, bands=("band1", "band2"))
         assert len(pt.data) == 2
         assert pt.band_names == ["band1", "band2"]
 
-        pt = cog.point(-11.5, 24.5, expression="band1/band2")
+        pt = src.point(-11.5, 24.5, expression="band1/band2")
         assert len(pt.data) == 1
         assert pt.band_names == ["band1/band2"]
 
         with pytest.warns(ExpressionMixingWarning):
-            assert cog.point(-11.5, 24.5, bands="band1", expression="band1*2")
+            assert src.point(-11.5, 24.5, bands="band1", expression="band1*2")
 
         feat = {
             "type": "Feature",
@@ -172,13 +172,13 @@ def test_MultiBandReader():
             },
         }
         with pytest.raises(MissingBands):
-            cog.feature(feat)
+            src.feature(feat)
 
-        img = cog.feature(feat, bands="band1")
+        img = src.feature(feat, bands="band1")
         assert img.data.any()
         assert not img.mask.all()
         assert img.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            img = cog.feature(feat, bands="band1", expression="band1*2")
+            img = src.feature(feat, bands="band1", expression="band1*2")
             assert img.band_names == ["band1*2"]

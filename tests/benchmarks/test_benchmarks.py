@@ -16,8 +16,8 @@ def read_tile(src_path, tile):
     """Benchmark rio-tiler.utils._tile_read."""
     # We make sure to not store things in cache.
     with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
-        with Reader(src_path) as cog:
-            return cog.tile(*tile)
+        with Reader(src_path) as src:
+            return src.tile(*tile)
 
 
 @pytest.mark.parametrize("tile_name", ["full", "boundless"])

@@ -303,8 +303,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.info()
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                return src.info()
 
         return multi_values(assets, _reader, **kwargs)
 
@@ -343,8 +343,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
             url = self._get_asset_url(asset)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.statistics(
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                return src.statistics(
                     *args,
                     indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
                     expression=asset_expression.get(asset),  # type: ignore
@@ -476,8 +476,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.tile(*args, indexes=idx, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.tile(*args, indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
@@ -535,8 +535,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.part(*args, indexes=idx, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.part(*args, indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
@@ -592,8 +592,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.preview(indexes=idx, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.preview(indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
@@ -653,8 +653,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args, **kwargs: Any) -> PointData:
             url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.point(*args, indexes=idx, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.point(*args, indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
@@ -712,8 +712,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.feature(*args, indexes=idx, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.feature(*args, indexes=idx, **kwargs)
                 data.band_names = [f"{asset}_{n}" for n in data.band_names]
                 return data
 
@@ -794,8 +794,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> Info:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                return cog.info()
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                return src.info()
 
         bands_metadata = multi_values(bands, _reader, *args, **kwargs)
 
@@ -925,8 +925,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.tile(*args, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.tile(*args, **kwargs)
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -975,8 +975,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.part(*args, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.part(*args, **kwargs)
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -1023,8 +1023,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.preview(**kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.preview(**kwargs)
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -1075,8 +1075,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args, **kwargs: Any) -> PointData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.point(*args, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.point(*args, **kwargs)
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -1124,8 +1124,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as cog:  # type: ignore
-                data = cog.feature(*args, **kwargs)
+            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                data = src.feature(*args, **kwargs)
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
