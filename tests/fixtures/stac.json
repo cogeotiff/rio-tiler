@@ -1,6 +1,8 @@
 {
   "stac_version": "0.9.0",
-  "stac_extensions": [],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/file/v2.1.0/schema.json"
+  ],
   "type": "Feature",
   "id": "JQT-123456789",
   "bbox": [-81.3085227080129, 32.10817938759764, -78.81735409341113, 34.22870275071835],
@@ -48,15 +50,18 @@
   "assets": {
     "red": {
       "href": "http://somewhere-over-the-rainbow.io/red.tif",
-      "title": "red"
+      "title": "red",
+      "file:header_size": 16384
     },
     "green": {
         "href": "http://somewhere-over-the-rainbow.io/green.tif",
-        "title": "green"
-    },
+        "title": "green",
+        "file:header_size": 30000
+      },
     "blue": {
         "href": "http://somewhere-over-the-rainbow.io/blue.tif",
-        "title": "blue"
+        "title": "blue",
+        "file:header_size": 20000
     },
     "thumbnail": {
       "href": "http://cool-sat.com/catalog/a-fake-item/thumbnail.png",

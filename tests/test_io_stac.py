@@ -605,7 +605,7 @@ def test_relative_assets():
         assert len(stac.assets) == 5
 
         for asset in stac.assets:
-            assert stac._get_asset_url(asset).startswith(PREFIX)
+            assert stac._get_asset_info(asset)["url"].startswith(PREFIX)
 
 
 @patch("rio_tiler.io.stac.aws_get_object")

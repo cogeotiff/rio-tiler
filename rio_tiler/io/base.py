@@ -1,6 +1,7 @@
 """rio_tiler.io.base: ABC class for rio-tiler readers."""
 
 import abc
+import contextlib
 import re
 import warnings
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
@@ -20,7 +21,7 @@ from rio_tiler.errors import (
 )
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.tasks import multi_arrays, multi_points, multi_values
-from rio_tiler.types import BBox, Indexes
+from rio_tiler.types import AssetInfo, BBox, Indexes
 from rio_tiler.utils import get_array_statistics, normalize_bounds
 
 
@@ -259,6 +260,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     assets: Sequence[str] = attr.ib(init=False)
 
+    ctx: Any = attr.ib(init=False, default=contextlib.nullcontext)
+
     def __enter__(self):
         """Support using with Context Managers."""
         return self
@@ -268,7 +271,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _get_asset_url(self, asset: str) -> str:
+    def _get_asset_info(self, asset: str) -> AssetInfo:
         """Validate asset name and construct url."""
         ...
 
@@ -302,9 +305,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets = (assets,)
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
-            url = self._get_asset_url(asset)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
-                return src.info()
+            asset_meta = self._get_asset_info(asset)
+            print(asset_meta)
+            url = asset_meta["url"]
+            with self.ctx(**asset_meta.get("env", {})):
+                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                    return src.info()
 
         return multi_values(assets, _reader, **kwargs)
 
@@ -342,14 +348,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_expression = asset_expression or {}
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
-            url = self._get_asset_url(asset)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
-                return src.statistics(
-                    *args,
-                    indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
-                    expression=asset_expression.get(asset),  # type: ignore
-                    **kwargs,
-                )
+            asset_meta = self._get_asset_info(asset)
+            url = asset_meta["url"]
+            with self.ctx(**asset_meta.get("env", {})):
+                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                    return src.statistics(
+                        *args,
+                        indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
+                        expression=asset_expression.get(asset),  # type: ignore
+                        **kwargs,
+                    )
 
         return multi_values(assets, _reader, **kwargs)
 
@@ -474,12 +482,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes = asset_indexes or {}
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
-                data = src.tile(*args, indexes=idx, **kwargs)
-                data.band_names = [f"{asset}_{n}" for n in data.band_names]
-                return data
+
+            asset_meta = self._get_asset_info(asset)
+            url = asset_meta["url"]
+            with self.ctx(**asset_meta.get("env", {})):
+                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                    data = src.tile(*args, indexes=idx, **kwargs)
+                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    return data
 
         img = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs)
         if expression:
@@ -533,12 +544,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes = asset_indexes or {}
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
-                data = src.part(*args, indexes=idx, **kwargs)
-                data.band_names = [f"{asset}_{n}" for n in data.band_names]
-                return data
+
+            asset_meta = self._get_asset_info(asset)
+            url = asset_meta["url"]
+            with self.ctx(**asset_meta.get("env", {})):
+                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                    data = src.part(*args, indexes=idx, **kwargs)
+                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    return data
 
         img = multi_arrays(assets, _reader, bbox, **kwargs)
         if expression:
@@ -590,12 +604,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes = asset_indexes or {}
 
         def _reader(asset: str, **kwargs: Any) -> ImageData:
-            url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
-                data = src.preview(indexes=idx, **kwargs)
-                data.band_names = [f"{asset}_{n}" for n in data.band_names]
-                return data
+
+            asset_meta = self._get_asset_info(asset)
+            url = asset_meta["url"]
+            with self.ctx(**asset_meta.get("env", {})):
+                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                    data = src.preview(indexes=idx, **kwargs)
+                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    return data
 
         img = multi_arrays(assets, _reader, **kwargs)
         if expression:
@@ -651,12 +668,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes = asset_indexes or {}
 
         def _reader(asset: str, *args, **kwargs: Any) -> PointData:
-            url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
-                data = src.point(*args, indexes=idx, **kwargs)
-                data.band_names = [f"{asset}_{n}" for n in data.band_names]
-                return data
+
+            asset_meta = self._get_asset_info(asset)
+            url = asset_meta["url"]
+            with self.ctx(**asset_meta.get("env", {})):
+                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                    data = src.point(*args, indexes=idx, **kwargs)
+                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    return data
 
         data = multi_points(assets, _reader, lon, lat, **kwargs)
         if expression:
@@ -710,12 +730,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes = asset_indexes or {}
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            url = self._get_asset_url(asset)
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
-                data = src.feature(*args, indexes=idx, **kwargs)
-                data.band_names = [f"{asset}_{n}" for n in data.band_names]
-                return data
+
+            asset_meta = self._get_asset_info(asset)
+            url = asset_meta["url"]
+            with self.ctx(**asset_meta.get("env", {})):
+                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                    data = src.feature(*args, indexes=idx, **kwargs)
+                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    return data
 
         img = multi_arrays(assets, _reader, shape, **kwargs)
         if expression:
