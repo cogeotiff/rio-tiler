@@ -1,0 +1,6 @@
+notebooks/
+.github/
+webmap/
+.idea/
+Dockerfile
+.ipynb_checkpoints/
