@@ -1,12 +1,14 @@
 """rio_tiler.io.stac: STAC reader."""
 
 import json
+import math
 from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
 import attr
 import httpx
 import pystac
+import rasterio
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
@@ -16,6 +18,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import InvalidAssetName, MissingAssets
 from rio_tiler.io.base import BaseReader, MultiBaseReader
 from rio_tiler.io.rasterio import Reader
+from rio_tiler.types import AssetInfo
 from rio_tiler.utils import aws_get_object
 
 DEFAULT_VALID_TYPE = {
@@ -181,6 +184,8 @@ class STACReader(MultiBaseReader):
 
     fetch_options: Dict = attr.ib(factory=dict)
 
+    ctx: Any = attr.ib(default=rasterio.Env)
+
     def __attrs_post_init__(self):
         """Fetch STAC Item and get list of valid assets."""
         self.item = self.item or pystac.Item.from_dict(
@@ -211,7 +216,7 @@ class STACReader(MultiBaseReader):
     def _maxzoom(self):
         return self.tms.maxzoom
 
-    def _get_asset_url(self, asset: str) -> str:
+    def _get_asset_info(self, asset: str) -> AssetInfo:
         """Validate asset names and return asset's url.
 
         Args:
@@ -224,4 +229,11 @@ class STACReader(MultiBaseReader):
         if asset not in self.assets:
             raise InvalidAssetName(f"{asset} is not valid")
 
-        return self.item.assets[asset].get_absolute_href()
+        asset_info = self.item.assets[asset]
+        info = AssetInfo(url=asset_info.get_absolute_href())
+
+        if "file:header_size" in asset_info.extra_fields:
+            h = asset_info.extra_fields["file:header_size"]
+            info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": 16384 * math.ceil(h / 16384)}
+
+        return info

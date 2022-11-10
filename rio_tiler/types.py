@@ -1,6 +1,6 @@
 """rio-tiler types."""
 
-from typing import Dict, Sequence, Tuple, Union
+from typing import Dict, Optional, Sequence, Tuple, TypedDict, Union
 
 import numpy
 
@@ -25,3 +25,10 @@ ColorMapType = Union[
     GDALColorMapType,
     IntervalColorMapType,
 ]
+
+
+class AssetInfo(TypedDict, total=False):
+    """Asset Reader Options."""
+
+    url: str
+    env: Optional[Dict]
