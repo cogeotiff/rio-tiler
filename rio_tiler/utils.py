@@ -23,7 +23,6 @@ from rasterio.warp import calculate_default_transform, transform_geom
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS
 from rio_tiler.errors import RioTilerError
-from rio_tiler.expression import get_expression_blocks
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple
 
 
@@ -59,31 +58,6 @@ def aws_get_object(
 
     response = client.get_object(**params)
     return response["Body"].read()
-
-
-def get_bands_names(
-    indexes: Optional[Sequence[int]] = None,
-    expression: Optional[str] = None,
-    count: Optional[int] = None,
-) -> List[str]:
-    """Define bands names based on expression, indexes or band count."""
-    warnings.warn(
-        "`get_bands_names` is deprecated, and will be removed in rio-tiler 4.0`.",
-        DeprecationWarning,
-    )
-    if expression:
-        return get_expression_blocks(expression)
-
-    elif indexes:
-        return [str(idx) for idx in indexes]
-
-    elif count:
-        return [str(idx + 1) for idx in range(count)]
-
-    else:
-        raise ValueError(
-            "one of expression or indexes or count must be passed to define band names."
-        )
 
 
 def get_array_statistics(

@@ -1,4 +1,8 @@
 
+# 4.0.0 (TDB)
+
+* no change since 4.0.0a2
+
 # 4.0.0a2 (2022-11-15)
 
 * use of `file:header_size` extension in `STACReader` to set `GDAL_INGESTED_BYTES_AT_OPEN` environment variable

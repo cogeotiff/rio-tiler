@@ -326,7 +326,6 @@ class Reader(BaseReader):
         tilesize: int = 256,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
-        tile_buffer: Optional[NumType] = None,
         buffer: Optional[float] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -339,7 +338,6 @@ class Reader(BaseReader):
             tilesize (int, optional): Output image size. Defaults to `256`.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            tile_buffer (int or float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258). DEPRECATED
             buffer (float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
             kwargs (optional): Options to forward to the `Reader.part` method.
 
@@ -353,12 +351,6 @@ class Reader(BaseReader):
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
-
-        if tile_buffer:
-            warnings.warn(
-                "`tile_buffer` is deprecated, use `buffer`.", DeprecationWarning
-            )
-            buffer = tile_buffer
 
         return self.part(
             tile_bounds,
@@ -603,71 +595,6 @@ class Reader(BaseReader):
             return img.apply_expression(expression)
 
         return img
-
-
-@attr.s
-class GCPCOGReader(Reader):
-    """Custom COG Reader with GCPS support.
-
-    Attributes:
-        input (str): Cloud Optimized GeoTIFF path.
-        src_dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        minzoom (int, optional): Overwrite Min Zoom level.
-        maxzoom (int, optional): Overwrite Max Zoom level.
-        colormap (dict, optional): Overwrite internal colormap.
-        options (dict, optional): Options to forward to low-level reader methods.
-        dataset (rasterio.vrtWarpedVRT): Warped VRT constructed with dataset GCPS info. **READ ONLY attribute**.
-
-    Examples:
-        >>> with GCPCOGReader(src_path) as cog:
-            cog.tile(...)
-            assert cog.dataset
-            assert cog.src_dataset
-
-        >>> with rasterio.open(src_path) as src_dst:
-                with GCPCOGReader(None, src_dataset=src_dst) as cog:
-                    cog.tile(...)
-
-    """
-
-    input: str = attr.ib()
-    src_dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
-        default=None
-    )
-
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
-
-    colormap: Dict = attr.ib(default=None)
-
-    options: reader.Options = attr.ib()
-
-    # for GCPCOGReader, dataset is not a input option.
-    dataset: WarpedVRT = attr.ib(init=False)
-
-    @options.default
-    def _options_default(self):
-        return {}
-
-    def __attrs_post_init__(self):
-        """Define _kwargs, open dataset and get info."""
-        warnings.warn(
-            "GCPCOGReader is deprecated and will be removed in 4.0. Please use Reader.",
-            DeprecationWarning,
-        )
-
-        self.src_dataset = self.src_dataset or self._ctx_stack.enter_context(
-            rasterio.open(self.input)
-        )
-        self.dataset = self._ctx_stack.enter_context(
-            WarpedVRT(
-                self.src_dataset,
-                src_crs=self.src_dataset.gcps[1],
-                src_transform=transform.from_gcps(self.src_dataset.gcps[0]),
-            )
-        )
-        super().__attrs_post_init__()
 
 
 @attr.s
