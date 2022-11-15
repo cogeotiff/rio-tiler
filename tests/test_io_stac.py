@@ -4,9 +4,11 @@ import json
 import os
 from unittest.mock import patch
 
+import attr
 import numpy
 import pytest
 import rasterio
+from rasterio._env import get_gdal_config
 
 from rio_tiler.errors import (
     ExpressionMixingWarning,
@@ -14,12 +16,13 @@ from rio_tiler.errors import (
     MissingAssets,
     TileOutsideBounds,
 )
-from rio_tiler.io import STACReader
+from rio_tiler.io import Reader, STACReader
 from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
+STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -605,7 +608,7 @@ def test_relative_assets():
         assert len(stac.assets) == 5
 
         for asset in stac.assets:
-            assert stac._get_asset_url(asset).startswith(PREFIX)
+            assert stac._get_asset_info(asset)["url"].startswith(PREFIX)
 
 
 @patch("rio_tiler.io.stac.aws_get_object")
@@ -677,3 +680,17 @@ def test_img_dataset_stats(rio):
 
         img = stac.preview(expression="green_b1/red_b1")
         assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
+
+
+@attr.s
+class CustomReader(Reader):
+    def __attrs_post_init__(self):
+        assert get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
+        super().__attrs_post_init__()
+
+
+def test_gdal_env_setting():
+
+    with STACReader(STAC_GDAL_PATH, reader=CustomReader) as stac:
+        assert not get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
+        assert stac.preview(assets=["red", "green", "blue"])
