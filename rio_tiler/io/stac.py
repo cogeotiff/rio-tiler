@@ -1,7 +1,6 @@
 """rio_tiler.io.stac: STAC reader."""
 
 import json
-import math
 from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
@@ -234,6 +233,6 @@ class STACReader(MultiBaseReader):
 
         if "file:header_size" in asset_info.extra_fields:
             h = asset_info.extra_fields["file:header_size"]
-            info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": 16384 * math.ceil(h / 16384)}
+            info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": h}
 
         return info

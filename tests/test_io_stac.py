@@ -685,12 +685,12 @@ def test_img_dataset_stats(rio):
 @attr.s
 class CustomReader(Reader):
     def __attrs_post_init__(self):
-        assert get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 65536
+        assert get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
         super().__attrs_post_init__()
 
 
 def test_gdal_env_setting():
 
     with STACReader(STAC_GDAL_PATH, reader=CustomReader) as stac:
-        assert not get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 65536
+        assert not get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
         assert stac.preview(assets=["red", "green", "blue"])
