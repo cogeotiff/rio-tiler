@@ -1,10 +1,15 @@
 
-# 4.0.0a1 (2022-11-10)
+# 4.0.0a1 (2022-11-15)
 
 * assign ColorInterp.alpha to rendered image when we add the mask band
 * add `.clip(bbox: BBox)` and `.resize(height: int, width: int)` methods to ImageData object
 * add python 3.11 support
 * replace `rio-color` by `color-operations` module
+* use of `file:header_size` extension in `STACReader` to set `GDAL_INGESTED_BYTES_AT_OPEN` environment variable
+
+**breaking changes**
+
+* renamed `MultiBaseReader._get_asset_url` to `MultiBaseReader._get_asset_info` and change the output to return a dictionary in form of `{"url": ..., "env": ...}`
 
 # 4.0.0a0 (2022-10-20)
 
