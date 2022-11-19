@@ -1,7 +1,9 @@
 
-# 4.0.0 (TDB)
+# 4.0.0 (2022-11-21)
 
-* no change since 4.0.0a2
+* remove deprecated code
+  * `asset_expression` in MultiBaseReader
+  * `GCPCOGReader`
 
 # 4.0.0a2 (2022-11-15)
 
