@@ -1,7 +1,6 @@
 """rio-tiler.expression: Parse and Apply expression."""
 
 import re
-import warnings
 from typing import List, Sequence, Tuple
 
 import numexpr
@@ -19,7 +18,7 @@ def parse_expression(expression: str, cast: bool = True) -> Tuple:
         tuple: band names/indexes.
 
     Examples:
-        >>> parse_expression("b1,b2")
+        >>> parse_expression("b1;b2")
             (2, 1)
 
         >>> parse_expression("B1/B2", cast=False)
@@ -44,17 +43,7 @@ def get_expression_blocks(expression: str) -> List[str]:
             ("b1/b2", "b2+b1")
 
     """
-    if ";" in expression:
-        return [expr for expr in expression.split(";") if expr]
-
-    expr = [expr for expr in expression.split(",") if expr]
-    if len(expr) > 1:
-        warnings.warn(
-            "Using comma `,` for multiband expression will be deprecated in rio-tiler 4.0. Please use semicolon `;`.",
-            DeprecationWarning,
-        )
-
-    return expr
+    return [expr for expr in expression.split(";") if expr]
 
 
 def apply_expression(

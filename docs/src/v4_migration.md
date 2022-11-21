@@ -72,6 +72,22 @@ with Reader(
     >>> [("b1", ""), ("b2", ""), ("b3", "")]
 ```
 
+## MultiBaseReader `_get_asset_url`
+
+We replaced `_get_asset_url` method in `MultibaseReader` by `_get_asset_info` which should return a dictionary in form of `{"url": ..., "env": ...}` (ref: https://github.com/cogeotiff/rio-tiler/pull/552)
+
+```python
+# before
+with STACReader("stac.json") as stac:
+    print(stac._get_asset_url("green"))
+    >>> "green.tif"
+
+# new
+with STACReader("stac.json") as stac:
+    print(stac._get_asset_info("green"))
+    >>> {"url": "green.tif", "env": {}}
+```
+
 ## MultiBaseReader **Expressions**
 
 We updated the `expression` format for `MultiBaseReader` (e.g STAC) to include **band names** and not only the asset name

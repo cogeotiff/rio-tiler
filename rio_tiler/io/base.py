@@ -25,13 +25,6 @@ from rio_tiler.types import AssetInfo, BBox, Indexes
 from rio_tiler.utils import get_array_statistics, normalize_bounds
 
 
-def _AssetExpressionWarning():
-    warnings.warn(
-        "asset_expression is deprecated and will be removed in 4.0. Use pure Expression",
-        DeprecationWarning,
-    )
-
-
 @attr.s
 class SpatialMixin:
     """Spatial Info Mixin.
@@ -365,7 +358,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
-        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         categorical: bool = False,
         categories: Optional[List[float]] = None,
         percentiles: List[int] = [2, 98],
@@ -379,7 +371,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             categorical (bool): treat input data as categorical data. Defaults to False.
             categories (list of numbers, optional): list of categories to return value for.
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
@@ -392,9 +383,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        if asset_expression:
-            _AssetExpressionWarning()
-
         if not expression:
             if not assets:
                 warnings.warn(
@@ -434,7 +422,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
-        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Wep Map tiles from multiple assets.
@@ -446,16 +433,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.tile` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if asset_expression:
-            _AssetExpressionWarning()
-
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
@@ -503,7 +486,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
-        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple assets.
@@ -513,16 +495,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}).  **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.part` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if asset_expression:
-            _AssetExpressionWarning()
-
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -564,7 +542,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
-        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple assets.
@@ -573,16 +550,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.preview` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if asset_expression:
-            _AssetExpressionWarning()
-
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -626,7 +599,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
-        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         **kwargs: Any,
     ) -> PointData:
         """Read pixel value from multiple assets.
@@ -637,16 +609,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.point` method.
 
         Returns:
             PointData
 
         """
-        if asset_expression:
-            _AssetExpressionWarning()
-
         if isinstance(assets, str):
             assets = (assets,)
 
@@ -689,7 +657,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
-        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple assets.
@@ -699,16 +666,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets (sequence of str or str, optional): assets to fetch info from.
             expression (str, optional): rio-tiler expression for the asset list (e.g. asset1/asset2+asset3).
             asset_indexes (dict, optional): Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}).
-            asset_expression (dict, optional): rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). **Deprecated**
             kwargs (optional): Options to forward to the `self.reader.feature` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if asset_expression:
-            _AssetExpressionWarning()
-
         if isinstance(assets, str):
             assets = (assets,)
 

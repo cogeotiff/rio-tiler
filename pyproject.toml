@@ -61,23 +61,44 @@ docs = [
 ]
 
 [project.urls]
-Source = "https://github.com/cogeotiff/rio-tiler"
+Homepage = 'https://cogeotiff.github.io/rio-tiler/'
 Documentation = "https://cogeotiff.github.io/rio-tiler/"
+Issues = "https://github.com/cogeotiff/rio-tiler/issues"
+Source = "https://github.com/cogeotiff/rio-tiler"
+Changelog = "https://cogeotiff.github.io/rio-tiler/release-notes/"
+
+
+[tool.hatch.version]
+path = "rio_tiler/__init__.py"
+
+[tool.hatch.build.targets.sdist]
+exclude = [
+  "/tests",
+  "/docs",
+  ".github",
+  ".history",
+  ".bumpversion.cfg",
+  ".flake8",
+  ".gitignore",
+  ".pre-commit-config.yaml",
+  "AUTHORS.txt",
+  "CHANGES.md",
+  "CONTRIBUTING.md",
+]
 
 [build-system]
-requires = ["flit>=3.2,<4"]
-build-backend = "flit_core.buildapi"
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
-[tool.flit.module]
-name = "rio_tiler"
+[tool.coverage.run]
+branch = true
+parallel = true
 
-[tool.flit.sdist]
-exclude = [
-    "tests/",
-    "docs/",
-    ".github/",
-    "CHANGES.md",
-    "CONTRIBUTING.md",
+[tool.coverage.report]
+exclude_lines = [
+  "no cov",
+  "if __name__ == .__main__.:",
+  "if TYPE_CHECKING:",
 ]
 
 [tool.isort]

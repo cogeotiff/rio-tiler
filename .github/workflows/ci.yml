@@ -105,21 +105,25 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install flit
-          python -m pip install .
+          python -m pip install hatch
+          python -m hatch build
 
       - name: Set tag version
         id: tag
-        # https://stackoverflow.com/questions/58177786/get-the-current-pushed-tag-in-github-actions
-        run: echo ::set-output name=tag::${GITHUB_REF#refs/*/}
+        run: |
+          echo "version=${GITHUB_REF#refs/*/}"
+          echo "version=${GITHUB_REF#refs/*/}" >> $GITHUB_OUTPUT
 
       - name: Set module version
         id: module
-        run: echo ::set-output name=version::$(python -c 'from importlib.metadata import version; print(version("rio_tiler"))')
+        run: |
+          hatch --quiet version
+          echo "version=$(hatch --quiet version)" >> $GITHUB_OUTPUT
 
       - name: Build and publish
-        if: steps.tag.outputs.tag == steps.module.outputs.version
+        if: ${{ steps.tag.outputs.version }} == ${{ steps.module.outputs.version}}
         env:
-          FLIT_USERNAME: ${{ secrets.PYPI_USERNAME }}
-          FLIT_PASSWORD: ${{ secrets.PYPI_PASSWORD }}
-        run: flit publish
+          HATCH_INDEX_USER: ${{ secrets.PYPI_USERNAME }}
+          HATCH_INDEX_AUTH: ${{ secrets.PYPI_PASSWORD }}
+        run: |
+          python -m hatch publish

@@ -1,4 +1,10 @@
 
+# 4.0.0 (2022-11-21)
+
+* remove deprecated code
+  * `asset_expression` in MultiBaseReader
+  * `GCPCOGReader`
+
 # 4.0.0a2 (2022-11-15)
 
 * use of `file:header_size` extension in `STACReader` to set `GDAL_INGESTED_BYTES_AT_OPEN` environment variable

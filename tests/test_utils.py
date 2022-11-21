@@ -403,21 +403,6 @@ def test_render_numpy():
     np.array_equal(mask, arr_res["mask"])
 
 
-def test_get_bands_names():
-    """should return correct list of bands names."""
-    b = utils.get_bands_names(indexes=[1, 2, 3], expression=None, count=None)
-    assert b == ["1", "2", "3"]
-
-    # band names should be created from expression first
-    with pytest.warns(DeprecationWarning):
-        b = utils.get_bands_names(indexes=[1, 2, 3], expression="b3,b2,b1", count=None)
-        assert b == ["b3", "b2", "b1"]
-
-    # if not indexes nor expression create band names from count
-    b = utils.get_bands_names(indexes=None, expression=None, count=1)
-    assert b == ["1"]
-
-
 def test_get_array_statistics():
     """Should return a valid dict with array statistics."""
     with rasterio.open(COGEO) as src:
