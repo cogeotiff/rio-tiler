@@ -1,3 +1,25 @@
+# 4.1.0 (2022-11-22)
+
+* add `asset_as_band` option in `MultiBaseReader` tile, part, preview, feature and point methods
+
+```python
+with STACReader(STAC_PATH) as stac:
+    img = stac.tile(71, 102, 8, assets="green")
+    assert img.band_names == ["green_b1"]
+
+with STACReader(STAC_PATH) as stac:
+    img = stac.tile(71, 102, 8, assets="green", asset_as_band=True)
+    assert img.band_names == ["green"]
+
+# For expression, without `asset_as_band` tag, users have to pass `_b{n}` suffix to indicate the band index
+with STACReader(STAC_PATH) as stac:
+    img = stac.tile(71, 102, 8, expression="green_b1/red_b1")
+    assert img.band_names == ["green_b1/red_b1"]
+
+with STACReader(STAC_PATH) as stac:
+    img = stac.tile(71, 102, 8, expression="green/red", asset_as_band=True)
+    assert img.band_names == ["green/red"]
+```
 
 # 4.0.0 (2022-11-21)
 

@@ -11,6 +11,7 @@ import rasterio
 from rasterio._env import get_gdal_config
 
 from rio_tiler.errors import (
+    AssetAsBandError,
     ExpressionMixingWarning,
     InvalidAssetName,
     MissingAssets,
@@ -694,3 +695,90 @@ def test_gdal_env_setting():
     with STACReader(STAC_GDAL_PATH, reader=CustomReader) as stac:
         assert not get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
         assert stac.preview(assets=["red", "green", "blue"])
+
+
+@patch("rio_tiler.io.rasterio.rasterio")
+def test_asset_as_band(rio):
+    """Validate use of asset as band option."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_PATH) as stac:
+        img = stac.tile(71, 102, 8, assets="green", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green"]
+
+        # Can't use asset_as_band with multiple bands
+        with pytest.raises(AssetAsBandError):
+            stac.tile(71, 102, 8, assets="green", indexes=(1, 1), asset_as_band=True)
+
+        img = stac.tile(71, 102, 8, expression="green/red", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green/red"]
+
+        bbox = (-80.477, 32.7988, -79.737, 33.4453)
+        img = stac.part(bbox, assets="green", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green"]
+
+        with pytest.raises(AssetAsBandError):
+            stac.part(bbox, assets="green", indexes=(1, 1), asset_as_band=True)
+
+        img = stac.part(bbox, expression="green/red", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green/red"]
+
+        img = stac.preview(assets="green", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green"]
+
+        with pytest.raises(AssetAsBandError):
+            stac.preview(assets="green", indexes=(1, 1), asset_as_band=True)
+
+        img = stac.preview(expression="green/red", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green/red"]
+
+        pt = stac.point(-80.477, 33.4453, assets="green", asset_as_band=True)
+        assert len(pt.data) == 1
+        assert pt.band_names == ["green"]
+
+        with pytest.raises(AssetAsBandError):
+            stac.point(
+                -80.477, 33.4453, assets="green", indexes=(1, 1), asset_as_band=True
+            )
+
+        pt = stac.point(-80.477, 33.4453, expression="green/red", asset_as_band=True)
+        assert len(pt.data) == 1
+        assert pt.band_names == ["green/red"]
+
+        feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-80.013427734375, 33.03169299978312],
+                        [-80.3045654296875, 32.588477769459146],
+                        [-80.05462646484375, 32.42865847084369],
+                        [-79.45037841796875, 32.6093028087336],
+                        [-79.47235107421875, 33.43602551072033],
+                        [-79.89532470703125, 33.47956309444182],
+                        [-80.1068115234375, 33.37870592138779],
+                        [-80.30181884765625, 33.27084277265288],
+                        [-80.0628662109375, 33.146750228776455],
+                        [-80.013427734375, 33.03169299978312],
+                    ]
+                ],
+            },
+        }
+        img = stac.feature(feat, assets="green", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green"]
+
+        with pytest.raises(AssetAsBandError):
+            stac.feature(feat, assets="green", indexes=(1, 1), asset_as_band=True)
+
+        img = stac.feature(feat, expression="green/red", asset_as_band=True)
+        assert img.count == 1
+        assert img.band_names == ["green/red"]

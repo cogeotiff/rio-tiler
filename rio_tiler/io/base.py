@@ -14,6 +14,7 @@ from rasterio.warp import transform_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
+    AssetAsBandError,
     ExpressionMixingWarning,
     MissingAssets,
     MissingBands,
@@ -268,10 +269,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Validate asset name and construct url."""
         ...
 
-    def parse_expression(self, expression: str) -> Tuple:
+    def parse_expression(self, expression: str, asset_as_band: bool = False) -> Tuple:
         """Parse rio-tiler band math expression."""
         assets = "|".join(self.assets)
-        _re = re.compile(rf"\b({assets})_b\d+\b")
+        if asset_as_band:
+            _re = re.compile(rf"\b({assets})\b")
+        else:
+            _re = re.compile(rf"\b({assets})_b\d+\b")
         return tuple(set(re.findall(_re, expression)))
 
     def info(
@@ -422,6 +426,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Wep Map tiles from multiple assets.
@@ -454,7 +459,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         if expression:
-            assets = self.parse_expression(expression)
+            assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
         if not assets:
             raise MissingAssets(
@@ -471,7 +476,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.ctx(**asset_meta.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.tile(*args, indexes=idx, **kwargs)
-                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    if asset_as_band:
+                        if len(data.band_names) > 1:
+                            raise AssetAsBandError(
+                                "Can't use asset_as_band for multibands asset"
+                            )
+                        data.band_names = [asset]
+                    else:
+                        data.band_names = [f"{asset}_{n}" for n in data.band_names]
+
                     return data
 
         img = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs)
@@ -486,6 +499,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple assets.
@@ -511,7 +525,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         if expression:
-            assets = self.parse_expression(expression)
+            assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
         if not assets:
             raise MissingAssets(
@@ -528,7 +542,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.ctx(**asset_meta.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.part(*args, indexes=idx, **kwargs)
-                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    if asset_as_band:
+                        if len(data.band_names) > 1:
+                            raise AssetAsBandError(
+                                "Can't use asset_as_band for multibands asset"
+                            )
+                        data.band_names = [asset]
+                    else:
+                        data.band_names = [f"{asset}_{n}" for n in data.band_names]
+
                     return data
 
         img = multi_arrays(assets, _reader, bbox, **kwargs)
@@ -542,6 +564,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple assets.
@@ -566,7 +589,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         if expression:
-            assets = self.parse_expression(expression)
+            assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
         if not assets:
             raise MissingAssets(
@@ -583,7 +606,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.ctx(**asset_meta.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.preview(indexes=idx, **kwargs)
-                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    if asset_as_band:
+                        if len(data.band_names) > 1:
+                            raise AssetAsBandError(
+                                "Can't use asset_as_band for multibands asset"
+                            )
+                        data.band_names = [asset]
+                    else:
+                        data.band_names = [f"{asset}_{n}" for n in data.band_names]
+
                     return data
 
         img = multi_arrays(assets, _reader, **kwargs)
@@ -599,6 +630,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_as_band: bool = False,
         **kwargs: Any,
     ) -> PointData:
         """Read pixel value from multiple assets.
@@ -625,7 +657,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         if expression:
-            assets = self.parse_expression(expression)
+            assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
         if not assets:
             raise MissingAssets(
@@ -642,7 +674,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.ctx(**asset_meta.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.point(*args, indexes=idx, **kwargs)
-                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    if asset_as_band:
+                        if len(data.band_names) > 1:
+                            raise AssetAsBandError(
+                                "Can't use asset_as_band for multibands asset"
+                            )
+                        data.band_names = [asset]
+                    else:
+                        data.band_names = [f"{asset}_{n}" for n in data.band_names]
+
                     return data
 
         data = multi_points(assets, _reader, lon, lat, **kwargs)
@@ -657,6 +697,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets: Union[Sequence[str], str] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple assets.
@@ -682,7 +723,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         if expression:
-            assets = self.parse_expression(expression)
+            assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
         if not assets:
             raise MissingAssets(
@@ -699,7 +740,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.ctx(**asset_meta.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.feature(*args, indexes=idx, **kwargs)
-                    data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                    if asset_as_band:
+                        if len(data.band_names) > 1:
+                            raise AssetAsBandError(
+                                "Can't use asset_as_band for multibands asset"
+                            )
+                        data.band_names = [asset]
+                    else:
+                        data.band_names = [f"{asset}_{n}" for n in data.band_names]
+
                     return data
 
         img = multi_arrays(assets, _reader, shape, **kwargs)
