@@ -673,6 +673,21 @@ assert isinstance(stats["B01_b1/B02_b1"], BandStatistics)
 
 When using `expression`, the user will need to explicitly pass the band number to use within the asset e.g: `asset1_b1 + asset2_b2`.
 
+### Asset As Band
+
+in rio-tiler `4.1.0`, we've added `asset_as_band: bool` option to the data methods (tile, feature, part, preview, point) to tell the reader to treat each asset as a dataset band. This is specifically useful for `expression`
+
+```python
+# For expression, without `asset_as_band` tag, users have to pass `_b{n}` suffix to indicate the band index
+with STACReader(STAC_PATH) as stac:
+    img = stac.tile(71, 102, 8, expression="green_b1/red_b1")
+    assert img.band_names == ["green_b1/red_b1"]
+
+# With `asset_as_band=True`, expression can be the asset names
+with STACReader(STAC_PATH) as stac:
+    img = stac.tile(71, 102, 8, expression="green/red", asset_as_band=True)
+    assert img.band_names == ["green/red"]
+```
 
 ## rio_tiler.io.rasterio.ImageReader
 
