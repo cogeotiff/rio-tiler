@@ -1,4 +1,4 @@
-# 4.1.0 (2022-11-22)
+# 4.1.0 (2022-11-24)
 
 * add `asset_as_band` option in `MultiBaseReader` tile, part, preview, feature and point methods
 
