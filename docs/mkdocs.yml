@@ -43,6 +43,7 @@ nav:
     - rio-tiler + morecantile: 'examples/Using-tms.ipynb'
     - rio-tiler + STAC: 'examples/Using-rio-tiler-STACReader.ipynb'
     - Non-Earth dataset: 'examples/Using-nonEarth-dataset.ipynb'
+    - Xarray + rio-tiler: 'examples/Using-rio-tiler-XarrayReader.ipynb'
   - API:
     - rio_tiler.colormap: api/rio_tiler/colormap.md
     - rio_tiler.constants: api/rio_tiler/constants.md
