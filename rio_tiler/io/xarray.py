@@ -410,4 +410,3 @@ class XarrayReader(BaseReader):
             dataset_statistics=stats,
             band_names=band_names,
         )
-
