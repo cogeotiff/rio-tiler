@@ -15,7 +15,7 @@ planet = os.path.join(PREFIX, "PLANET_SCOPE_3D.nc")
 
 def test_xarray_reader():
     """test XarrayReader."""
-    arr = numpy.random.randn(1, 33, 35)
+    arr = numpy.arange(0.0, 33*35).reshape(1, 33, 35)
     data = xarray.DataArray(
         arr,
         dims=("time", "y", "x"),
@@ -55,6 +55,12 @@ def test_xarray_reader():
         assert pt.count == 1
         assert pt.band_names == ["2022-01-01T00:00:00.000000000"]
         assert pt.coordinates
+        xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
+        for xy in xys: 
+            x = xy[0]
+            y = xy[1]
+            pt = dst.point(x, y)
+            assert pt.data[0] == data.sel(x=x, y=y, method='nearest')
 
         feat = {
             "type": "Feature",
