@@ -340,12 +340,12 @@ class XarrayReader(BaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        x, y = rowcol(self.input.rio.transform(), ds_lon, ds_lat)
+        y, x = rowcol(self.input.rio.transform(), ds_lon, ds_lat)
 
         band_names = [str(band) for d in self._dims for band in self.input[d].values]
 
         return PointData(
-            self.input.data[:, y[0], y[0]],
+            self.input.data[:, y[0], x[0]],
             coordinates=(lon, lat),
             crs=coord_crs,
             band_names=band_names,

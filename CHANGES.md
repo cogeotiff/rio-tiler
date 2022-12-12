@@ -1,3 +1,7 @@
+# 4.1.1 (2022-12-12)
+
+* fix invalid coordinates slicing for `XArrayReader.point()` method (author @benjaminleighton, https://github.com/cogeotiff/rio-tiler/pull/559)
+
 # 4.1.0 (2022-11-24)
 
 * add `asset_as_band` option in `MultiBaseReader` tile, part, preview, feature and point methods
