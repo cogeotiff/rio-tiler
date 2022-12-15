@@ -1,3 +1,8 @@
+
+# 4.1.2 (2022-12-15)
+
+* raise `InvalidPointDataError` error when trying to create PointData from an empty list in `PointData.create_from_list`
+
 # 4.1.1 (2022-12-12)
 
 * fix invalid coordinates slicing for `XArrayReader.point()` method (author @benjaminleighton, https://github.com/cogeotiff/rio-tiler/pull/559)

@@ -18,7 +18,7 @@ from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
 
-from rio_tiler.errors import InvalidDatatypeWarning
+from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
 from rio_tiler.expression import apply_expression, get_expression_blocks
 from rio_tiler.types import BBox, ColorMapType, GDALColorMapType, IntervalTuple, NumType
 from rio_tiler.utils import linear_rescale, render, resize_array
@@ -193,11 +193,14 @@ class PointData:
             data (sequence): sequence of PointData.
 
         """
+        if not data:
+            raise InvalidPointDataError("Empty PointData list.")
+
         # validate coordinates
         if all([pt.coordinates or pt.crs or None for pt in data]):
             lon, lat, crs = zip(*[(*(pt.coordinates or []), pt.crs) for pt in data])
             if len(set(lon)) > 1 or len(set(lat)) > 1 or len(set(crs)) > 1:
-                raise Exception(
+                raise InvalidPointDataError(
                     "Cannot concatenate points with different coordinates/CRS."
                 )
 
