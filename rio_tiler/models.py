@@ -173,7 +173,7 @@ class PointData:
 
     @mask.default
     def _default_mask(self):
-        return numpy.zeros(self.data.shape[0], dtype="uint8") + 255
+        return numpy.array([255], dtype="uint8")
 
     def __iter__(self):
         """Allow for variable expansion."""
@@ -205,7 +205,9 @@ class PointData:
                 )
 
         arr = numpy.concatenate([pt.data for pt in data])
-        mask = numpy.concatenate([pt.mask for pt in data])
+        mask = numpy.concatenate([pt.mask for pt in data]).all() * numpy.array(
+            [255], dtype="uint8"
+        )
 
         assets = list(
             dict.fromkeys(

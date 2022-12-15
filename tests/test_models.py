@@ -213,7 +213,8 @@ def test_point_data():
     pt = PointData(numpy.zeros((3), dtype="uint16"))
     assert pt.count == 3
     assert pt.data.shape == (3,)
-    assert pt.mask.shape == (3,)
+    assert pt.mask.shape == (1,)
+    assert pt.mask.tolist() == [255]
     assert pt.band_names == ["b1", "b2", "b3"]
 
     with pytest.raises(ValueError):
@@ -239,6 +240,15 @@ def test_point_data():
     pts = PointData.create_from_list([pt1, pt2])
     assert pts.data.tolist() == [1, 2, 3]
     assert pts.band_names == ["b1", "b2", "b1+b2"]
+    assert pts.mask.tolist() == [255]
+
+    pts = PointData.create_from_list(
+        [
+            PointData(numpy.array([1]), mask=numpy.array([255])),
+            PointData(numpy.array([1]), mask=numpy.array([0])),
+        ]
+    )
+    assert pts.mask.tolist() == [0]
 
     with pytest.raises(InvalidPointDataError):
         PointData.create_from_list([])

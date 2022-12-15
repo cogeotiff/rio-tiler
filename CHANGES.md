@@ -1,4 +1,8 @@
 
+# 4.1.3 (2022-12-15)
+
+* fix invalid definition of `PointData.mask` when mask is not provided. Makes sure it's a one element array.
+
 # 4.1.2 (2022-12-15)
 
 * raise `InvalidPointDataError` error when trying to create PointData from an empty list in `PointData.create_from_list`
