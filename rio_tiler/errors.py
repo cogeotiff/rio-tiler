@@ -75,3 +75,7 @@ class InvalidDatatypeWarning(UserWarning):
 
 class AssetAsBandError(RioTilerError):
     """Can't use asset_as_band with multiple bands."""
+
+
+class InvalidPointDataError(RioTilerError):
+    """Invalid PointData."""

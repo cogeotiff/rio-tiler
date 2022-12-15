@@ -5,10 +5,11 @@ from io import BytesIO
 import numpy
 import pytest
 import rasterio
+from rasterio.crs import CRS
 from rasterio.io import MemoryFile
 
-from rio_tiler.errors import InvalidDatatypeWarning
-from rio_tiler.models import ImageData
+from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
+from rio_tiler.models import ImageData, PointData
 
 
 def test_imageData_AutoRescaling():
@@ -205,3 +206,59 @@ def test_clip():
     assert img.width == 1024
     assert img.height == 1024
     assert img.mask.shape == (1024, 1024)
+
+
+def test_point_data():
+    """Test Point Data Model."""
+    pt = PointData(numpy.zeros((3), dtype="uint16"))
+    assert pt.count == 3
+    assert pt.data.shape == (3,)
+    assert pt.mask.shape == (3,)
+    assert pt.band_names == ["b1", "b2", "b3"]
+
+    with pytest.raises(ValueError):
+        PointData(numpy.zeros((3, 3)))
+
+    with pytest.raises(ValueError):
+        PointData(numpy.zeros((3), dtype="uint16"), coordinates=(0,))
+
+    for p in PointData(numpy.zeros((3), dtype="uint16")):
+        assert p == 0
+
+    pt = PointData(numpy.zeros((3), dtype="uint16"))
+    arr = pt.as_masked()
+    assert numpy.ma.is_mask(arr.mask)
+
+    pt1 = PointData(numpy.array([1, 2]))
+    pt2 = pt1.apply_expression("b1+b2")
+    assert pt1.count == 2
+    assert pt1.band_names == ["b1", "b2"]
+    assert pt2.count == 1
+    assert pt2.band_names == ["b1+b2"]
+
+    pts = PointData.create_from_list([pt1, pt2])
+    assert pts.data.tolist() == [1, 2, 3]
+    assert pts.band_names == ["b1", "b2", "b1+b2"]
+
+    with pytest.raises(InvalidPointDataError):
+        PointData.create_from_list([])
+
+    with pytest.raises(InvalidPointDataError):
+        PointData.create_from_list(
+            [
+                PointData(numpy.array([1]), coordinates=(0, 0)),
+                PointData(numpy.array([1]), coordinates=(0, 1)),
+            ]
+        )
+
+    with pytest.raises(InvalidPointDataError):
+        PointData.create_from_list(
+            [
+                PointData(
+                    numpy.array([1]), coordinates=(0, 0), crs=CRS.from_epsg(3857)
+                ),
+                PointData(
+                    numpy.array([1]), coordinates=(0, 0), crs=CRS.from_epsg(4326)
+                ),
+            ]
+        )
