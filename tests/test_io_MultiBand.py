@@ -140,10 +140,12 @@ def test_MultiBandReader():
         pt = src.point(-11.5, 24.5, bands="band1")
         assert len(pt.data) == 1
         assert pt.band_names == ["band1"]
+        assert len(pt.mask) == 1
 
         pt = src.point(-11.5, 24.5, bands=("band1", "band2"))
         assert len(pt.data) == 2
         assert pt.band_names == ["band1", "band2"]
+        assert len(pt.mask) == 1
 
         pt = src.point(-11.5, 24.5, expression="band1/band2")
         assert len(pt.data) == 1
