@@ -12,7 +12,7 @@ from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
 from rio_tiler.io import Reader, STACReader
-from rio_tiler.models import ImageData
+from rio_tiler.models import ImageData, PointData
 from rio_tiler.mosaic.methods import defaults
 from rio_tiler.types import DataMaskType
 
@@ -56,6 +56,12 @@ def _read_preview(src_path: str, *args, **kwargs) -> DataMaskType:
     with Reader(src_path) as src:
         data, mask = src.preview(*args, **kwargs)
     return data, mask
+
+
+def _read_point(src_path: str, *args, **kwargs) -> PointData:
+    """Read point from an asset"""
+    with Reader(src_path) as src:
+        return src.point(*args, **kwargs)
 
 
 def test_mosaic_tiler():
@@ -403,7 +409,6 @@ def test_mosaic_tiler_with_imageDataClass():
     assert img.mask.all()
     assert img.data[0][-1][-1] == 8682
     assert len(img.assets) == 1
-
     assert img.crs == WEB_MERCATOR_TMS.crs
     assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(x, y, z)
 
@@ -446,3 +451,113 @@ def test_mosaic_tiler_with_imageDataClass():
     bbox_in_crs = transform_bounds(WGS84_CRS, crs1, *bbox, densify_pts=21)
     for xc, yc in zip(img.bounds, bbox_in_crs):
         assert round(xc, 5) == round(yc, 5)
+
+
+def test_mosaic_point():
+    """Test mosaic point."""
+    cog1 = (-75.38645768740565, 45.769670480435394)
+    both = (-73.69990294755982, 45.49950291143219)
+    cog2 = (-72.02385676824944, 46.06897125935538)
+
+    pt, _ = mosaic.mosaic_point_reader(assets, _read_point, *cog1)
+    assert pt.data.tolist() == [8405, 8378, 9198]
+    assert pt.mask.tolist() == [255]
+    assert pt.assets == [asset1]
+    assert pt.crs == WGS84_CRS
+    assert pt.coordinates == cog1
+
+    pt, _ = mosaic.mosaic_point_reader(assets, _read_point, *cog2)
+    assert pt.data.tolist() == [9141, 9786, 9457]
+    assert pt.mask.tolist() == [255]
+    assert pt.assets == [asset2]
+    assert pt.crs == WGS84_CRS
+    assert pt.coordinates == cog2
+
+    pt, _ = mosaic.mosaic_point_reader(assets, _read_point, *both)
+    assert pt.data.tolist() == [9443, 9640, 10326]
+    assert pt.mask.tolist() == [255]
+    assert pt.assets == [asset1]
+    assert pt.crs == WGS84_CRS
+    assert pt.coordinates == both
+
+    pt, _ = mosaic.mosaic_point_reader(
+        assets, _read_point, *both, pixel_selection=defaults.LowestMethod
+    )
+    assert pt.data.tolist() == [9443, 9640, 10326]
+    assert pt.mask.tolist() == [255]
+    assert pt.assets == [asset1, asset2]
+    assert pt.crs == WGS84_CRS
+    assert pt.coordinates == both
+
+    pt, _ = mosaic.mosaic_point_reader(
+        assets, _read_point, *both, pixel_selection=defaults.HighestMethod
+    )
+    assert pt.data.tolist() == [9947, 10268, 10879]
+    assert pt.mask.tolist() == [255]
+    assert pt.assets == [asset1, asset2]
+    assert pt.crs == WGS84_CRS
+    assert pt.coordinates == both
+
+    with pytest.raises(EmptyMosaicError):
+        mosaic.mosaic_point_reader(assets, _read_point, -78, 43)
+
+
+@pytest.mark.parametrize(
+    "m",
+    [
+        defaults.FirstMethod,
+        defaults.HighestMethod,
+        defaults.LowestMethod,
+        defaults.MeanMethod,
+        defaults.MedianMethod,
+        defaults.StdevMethod,
+    ],
+)
+def test_mosaic_all_methods(m):
+    pt, _ = mosaic.mosaic_point_reader(
+        assets, _read_point, -73.69990294755982, 45.49950291143219, pixel_selection=m
+    )
+    assert len(pt.data) == 3
+    assert len(pt.mask) == 1
+    assert len(pt.assets) > 0
+    assert pt.crs == WGS84_CRS
+    assert pt.coordinates == (-73.69990294755982, 45.49950291143219)
+
+    img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, pixel_selection=m)
+    assert img.data.shape == (3, 256, 256)
+    assert img.mask.shape == (256, 256)
+    assert img.mask.all()
+    assert img.crs == WEB_MERCATOR_TMS.crs
+    assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(x, y, z)
+
+
+@pytest.mark.parametrize(
+    "m",
+    [
+        defaults.LastBandHigh,
+        defaults.LastBandLow,
+    ],
+)
+def test_mosaic_methods_last(m):
+    pt, _ = mosaic.mosaic_point_reader(
+        assets,
+        _read_point,
+        -73.69990294755982,
+        45.49950291143219,
+        pixel_selection=m,
+        indexes=(1, 2, 3, 3),
+    )
+    assert len(pt.data) == 3
+    assert len(pt.mask) == 1
+    assert len(pt.assets) > 0
+    assert pt.crs == WGS84_CRS
+    assert pt.coordinates == (-73.69990294755982, 45.49950291143219)
+
+    img, _ = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, indexes=(1, 2, 3, 3), pixel_selection=m
+    )
+    assert img.data.shape == (3, 256, 256)
+    assert img.mask.shape == (256, 256)
+    assert img.mask.all()
+    assert img.crs == WEB_MERCATOR_TMS.crs
+    assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(x, y, z)

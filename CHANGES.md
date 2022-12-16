@@ -1,3 +1,13 @@
+# 4.1.4 (2022-12-16)
+
+* add `rio_tiler.mosaic.mosaic_point_reader` function to create Point value from multiple observation
+    ```python
+    def reader(asset: str, *args, **kwargs) -> PointData:
+        with Reader(asset) as src:
+            return src.point(*args, **kwargs)
+
+    pt: PointData = mosaic_point_reader(["cog.tif", "cog2.tif"], reader, 0, 0)
+    ```
 
 # 4.1.3 (2022-12-15)
 

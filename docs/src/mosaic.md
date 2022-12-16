@@ -22,8 +22,9 @@ how to handle these cases for each pixel:
 - **LastBandHigh**: Use last band (highest) as a decision factor (note: the last band will be excluded from in the output)
 - **LastBandLow**: Use last band (lowest) as a decision factor (note: the last band will be excluded from in the output)
 
-### API
+## API
 
+### Image
 ```python
 rio_tiler.mosaic.mosaic_reader(
     mosaic_assets: Sequence[str],
@@ -50,7 +51,7 @@ Inputs:
 Returns:
 - img, assets_used : tuple of ImageData and list of used assets to construct the output data.
 
-### Examples
+##### Examples
 
 ```python
 from rio_tiler.io import Reader
@@ -82,15 +83,63 @@ img, _ = mosaic_reader(
     z,
     pixel_selection=defaults.HighestMethod()
 )
+```
 
-# Use Lowest value: defaults.LowestMethod()
-mg, _ = mosaic_reader(
+### Point
+```python
+rio_tiler.mosaic.mosaic_point_reader(
+    mosaic_assets: Sequence[str],
+    reader: Callable[..., PointData],
+    *args: Any,
+    pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
+    chunk_size: Optional[int] = None,
+    threads: int = MAX_THREADS,
+    allowed_exceptions: Tuple = (TileOutsideBounds,),
+    **kwargs,
+)
+```
+Inputs:
+
+- **mosaic_assets** : list, tuple of rio-tiler compatible assets (url or sceneid)
+- **reader**: Callable that returns a `PointData` instance
+- **\*args**: arguments to be forwarded to the callable.
+- **pixel_selection** : optional **pixel selection** algorithm (default: "first").
+- **chunk_size**: optional, control the number of assets to process per loop.
+- **threads**: optional, number of threads to use in each loop.
+- **allowed_exceptions**: optional, allow some exceptions to be ignored.
+- **\*\*kwargs**: tiler specific keyword arguments.
+
+Returns:
+- point, assets_used : tuple of PointData and list of used assets to construct the output data.
+
+##### Examples
+
+```python
+from rio_tiler.io import Reader
+from rio_tiler.mosaic import mosaic_reader
+from rio_tiler.mosaic.methods import defaults
+from rio_tiler.models import PointData
+
+
+def point_reader(src_path: str, *args, **kwargs) -> PointData:
+    with Reader(src_path) as src:
+        return src.point(*args, **kwargs)
+
+mosaic_assets = ["mytif1.tif", "mytif2.tif", "mytif3.tif"]
+
+
+# Use Default First value method
+pt, _ = mosaic_point_reader(mosaic_assets, point_reader, -40, 32)
+assert isinstance(pt, PointData)
+assert len(pt.data) == 3
+
+# Use Highest value: defaults.HighestMethod()
+img, _ = mosaic_point_reader(
     mosaic_assets,
-    tiler,
-    x,
-    y,
-    z,
-    pixel_selection=defaults.LowestMethod()
+    point_reader,
+    -40,
+    32,
+    pixel_selection=defaults.HighestMethod()
 )
 ```
 
