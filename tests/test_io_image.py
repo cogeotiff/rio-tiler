@@ -10,6 +10,7 @@ from rio_tiler.io.rasterio import ImageReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 NO_GEO = os.path.join(PREFIX, "no_geo.jpg")
+NO_GEO_PORTRAIT = os.path.join(PREFIX, "no_geo2.jpg")
 GEO = os.path.join(PREFIX, "cog_nonearth.tif")
 
 
@@ -88,6 +89,11 @@ def test_non_geo_image():
             }
             im = src.feature(poly)
             assert im.data.shape == (3, 1100, 1100)
+
+    with warnings.catch_warnings():
+        with ImageReader(NO_GEO_PORTRAIT) as src:
+            img = src.tile(5, 2, 3)
+            assert not img.mask.all()
 
 
 def test_with_geo_image():
