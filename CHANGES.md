@@ -1,3 +1,8 @@
+
+# 4.1.5 (2022-12-20)
+
+* Fix inverted col/row check when doing window read of a non WarpedVRT dataset
+
 # 4.1.4 (2022-12-16)
 
 * add `rio_tiler.mosaic.mosaic_point_reader` function to create Point value from multiple observation

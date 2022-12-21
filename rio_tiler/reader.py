@@ -167,8 +167,8 @@ def read(
             (row_start, row_stop), (col_start, col_stop) = window.toranges()
             if (
                 min(col_start, row_start) < 0
-                or row_stop >= dataset.width
-                or col_stop >= dataset.height
+                or col_stop >= dataset.width
+                or row_stop >= dataset.height
             ):
                 boundless = True
 
