@@ -18,6 +18,7 @@ from rasterio.enums import Resampling
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
 
+from rio_tiler.colormap import apply_cmap
 from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
 from rio_tiler.expression import apply_expression, get_expression_blocks
 from rio_tiler.types import BBox, ColorMapType, GDALColorMapType, IntervalTuple, NumType
@@ -407,6 +408,18 @@ class ImageData:
             in_range=in_range,
             out_range=out_range,
             out_dtype=out_dtype,
+        )
+
+    def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
+        """Apply colormap to the image data."""
+        data, alpha = apply_cmap(self.data, colormap)
+        return ImageData(
+            data,
+            numpy.bitwise_and(alpha, self.mask),
+            assets=self.assets,
+            crs=self.crs,
+            bounds=self.bounds,
+            metadata=self.metadata,
         )
 
     def apply_color_formula(self, color_formula: Optional[str]):
