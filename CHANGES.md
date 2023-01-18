@@ -1,4 +1,9 @@
 
+# 4.1.6 (2023-01-18)
+
+* add `apply_colormap` method to the ImageData class
+* fix potential datatype overflow when calculating the intersection of mask and alpha band when using Colormap
+
 # 4.1.5 (2022-12-20)
 
 * Fix inverted col/row check when doing window read of a non WarpedVRT dataset

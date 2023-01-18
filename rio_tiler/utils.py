@@ -417,16 +417,18 @@ def render(
 
     if colormap:
         data, alpha = apply_cmap(data, colormap)
+        # We take both the input mask and the alpha from the colormap
+        # if input mask is not provided then we assume output is wanted without alpha band
+        # this can be seen as a bug but at the time of writing we assume it's a feature.
         if mask is not None:
-            mask = (
-                mask * alpha * 255
-            )  # This is a special case when we want to mask some valid data
+            mask = numpy.bitwise_and(alpha, mask)
 
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
     if img_format == "WEBP" and data.shape[0] == 1:
         data = numpy.repeat(data, 3, axis=0)
 
     if img_format == "PNG" and data.dtype == "uint16" and mask is not None:
+        # By rio-tiler design, mask should always be between 0 and 255
         mask = linear_rescale(mask, (0, 255), (0, 65535)).astype("uint16")
 
     elif img_format == "JPEG":
@@ -448,6 +450,7 @@ def render(
                 numpy.savez_compressed(bio, data=data, mask=mask)
             else:
                 numpy.savez_compressed(bio, data=data)
+
             return bio.getvalue()
 
     count, height, width = data.shape
@@ -466,10 +469,12 @@ def render(
         with MemoryFile() as memfile:
             with memfile.open(**output_profile) as dst:
                 dst.write(data, indexes=list(range(1, count + 1)))
+
                 # Use Mask as an alpha band
                 if mask is not None:
                     if ColorInterp.alpha not in dst.colorinterp:
                         dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
+
                     dst.write(mask.astype(data.dtype), indexes=count + 1)
 
             return memfile.read()

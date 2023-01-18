@@ -272,3 +272,38 @@ def test_point_data():
                 ),
             ]
         )
+
+
+def test_image_apply_colormap():
+    """Apply colormap to the data."""
+    cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
+    im = ImageData(numpy.zeros((1, 256, 256), dtype="uint8")).apply_colormap(cm)
+    assert im.data.shape == (3, 256, 256)
+    assert im.data[:, 0, 0].tolist() == [0, 0, 0]
+    assert im.mask[0, 0] == 255
+    assert im.mask.all()
+
+    cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
+    arr = numpy.zeros((1, 256, 256), dtype="uint8") + 1
+    arr[0, 0, 0] = 0
+    mask = numpy.zeros((256, 256), dtype="uint8") + 255
+    im = ImageData(arr, mask).apply_colormap(cm)
+
+    # data[0, 1, 1] is 1 so after colormap it should be 255,255,255 and mask should be 255
+    assert im.data[:, 1, 1].tolist() == [255, 255, 255]
+    assert im.mask[1, 1] == 255
+
+    # data[0, 0, 0] is 0 so after colormap it should be 0,0,0 and mask should be 255 (based on the colormap Alpha value)
+    assert im.data[:, 0, 0].tolist() == [0, 0, 0]
+    assert im.mask[0, 0] == 255
+
+    cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
+    arr = numpy.zeros((1, 256, 256), dtype="uint8") + 1
+    arr[0, 0, 0] = 0
+    mask = numpy.zeros((256, 256), dtype="uint8") + 255
+    mask[0, 0] = 0
+
+    im = ImageData(arr, mask).apply_colormap(cm)
+    # data[0, 0, 0] is 0 so after colormap it should be 0,0,0 and mask should be 0 (because it was masked by the original mask)
+    assert im.data[:, 0, 0].tolist() == [0, 0, 0]
+    assert im.mask[0, 0] == 0
