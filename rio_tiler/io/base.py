@@ -23,7 +23,7 @@ from rio_tiler.errors import (
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.tasks import multi_arrays, multi_points, multi_values
 from rio_tiler.types import AssetInfo, BBox, Indexes
-from rio_tiler.utils import get_array_statistics, normalize_bounds
+from rio_tiler.utils import normalize_bounds
 
 
 @attr.s
@@ -402,21 +402,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             max_size=max_size,
             **kwargs,
         )
-
-        hist_options = hist_options or {}
-
-        stats = get_array_statistics(
-            data.as_masked(),
+        return data.statistics(
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,
-            **hist_options,
+            hist_options=hist_options,
         )
-
-        return {
-            f"{data.band_names[ix]}": BandStatistics(**stats[ix])
-            for ix in range(len(stats))
-        }
 
     def tile(
         self,
@@ -896,21 +887,12 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             max_size=max_size,
             **kwargs,
         )
-
-        hist_options = hist_options or {}
-
-        stats = get_array_statistics(
-            data.as_masked(),
+        return data.statistics(
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,
-            **hist_options,
+            hist_options=hist_options,
         )
-
-        return {
-            f"{data.band_names[ix]}": BandStatistics(**stats[ix])
-            for ix in range(len(stats))
-        }
 
     def tile(
         self,
