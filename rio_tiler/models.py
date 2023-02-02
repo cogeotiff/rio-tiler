@@ -346,11 +346,25 @@ class ImageData:
                     arr = dataset.read(indexes=indexes)
                     mask = dataset.dataset_mask()
 
+                stats = []
+                for ix in indexes:
+                    tags = dataset.tags(ix)
+                    if all(
+                        stat in tags
+                        for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
+                    ):
+                        stat_min = float(tags.get("STATISTICS_MINIMUM"))
+                        stat_max = float(tags.get("STATISTICS_MAXIMUM"))
+                        stats.append((stat_min, stat_max))
+
+                dataset_statistics = stats if len(stats) == len(indexes) else None
+
                 return cls(
                     arr,
                     mask,
                     crs=dataset.crs,
                     bounds=dataset.bounds,
+                    dataset_statistics=dataset_statistics,
                 )
 
     @classmethod
