@@ -71,9 +71,7 @@ def apply_expression(
     return numpy.array(
         [
             numpy.nan_to_num(
-                numexpr.evaluate(
-                    bloc.strip(), local_dict=dict(zip(bands, data, strict=False))  # type: ignore
-                )
+                numexpr.evaluate(bloc.strip(), local_dict=dict(zip(bands, data)))
             )
             for bloc in blocks
             if bloc
