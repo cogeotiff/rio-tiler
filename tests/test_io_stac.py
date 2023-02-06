@@ -39,6 +39,7 @@ def mock_rasterio_open(asset):
 @patch("rio_tiler.io.stac.aws_get_object")
 @patch("rio_tiler.io.stac.httpx")
 def test_fetch_stac(httpx, s3_get):
+    """Test STACReader."""
     # Local path
     with STACReader(STAC_PATH) as stac:
         assert stac.minzoom == 0
@@ -606,7 +607,7 @@ def test_feature_valid(rio):
 def test_relative_assets():
     """Should return absolute href for assets"""
     with STACReader(STAC_REL_PATH) as stac:
-        for (key, asset) in stac.item.assets.items():
+        for (_key, asset) in stac.item.assets.items():
             assert asset.get_absolute_href().startswith(PREFIX)
         assert len(stac.assets) == 5
 
@@ -617,6 +618,7 @@ def test_relative_assets():
 @patch("rio_tiler.io.stac.aws_get_object")
 @patch("rio_tiler.io.stac.httpx")
 def test_fetch_stac_client_options(httpx, s3_get):
+    """test options forwarding."""
     # HTTP
     class MockResponse:
         def __init__(self, data):
@@ -687,13 +689,16 @@ def test_img_dataset_stats(rio):
 
 @attr.s
 class CustomReader(Reader):
+    """Custom Reader for STAC."""
+
     def __attrs_post_init__(self):
+        """Post Init."""
         assert get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
         super().__attrs_post_init__()
 
 
 def test_gdal_env_setting():
-
+    """Test Env settings."""
     with STACReader(STAC_GDAL_PATH, reader=CustomReader) as stac:
         assert not get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
         assert stac.preview(assets=["red", "green", "blue"])

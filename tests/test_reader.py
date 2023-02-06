@@ -98,6 +98,7 @@ def test_tile_read_valid():
 
 
 def test_resampling_returns_different_results():
+    """Make sure resampling works."""
     bounds = [
         -6574807.42497772,
         12210356.646387195,
@@ -361,7 +362,7 @@ def test_tile_read_vrt_option():
             bounds,
             tilesize,
             tilesize,
-            vrt_options=dict(source_extra=10, num_threads=10),
+            vrt_options={"source_extra": 10, "num_threads": 10},
         )
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)

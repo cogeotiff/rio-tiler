@@ -113,8 +113,18 @@ known_third_party = [
 default_section = "THIRDPARTY"
 
 [tool.mypy]
-no_strict_optional = "True"
+no_strict_optional = true
 
-[tool.pydocstyle]
-select = "D1"
-match = "(?!test).*.py"
+[tool.ruff]
+select = [
+    "D1",  # pydocstyle errors
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long, handled by black
+    "B008",  # do not perform function calls in argument defaults
+    "B905",  # ignore zip() without an explicit strict= parameter, only support with python >3.10
+]

@@ -34,7 +34,7 @@ DEFAULT_VALID_TYPE = {
 }
 
 
-@cached(
+@cached(  # type: ignore
     LRUCache(maxsize=512),
     key=lambda filepath, **kargs: hashkey(filepath, json.dumps(kargs)),
 )

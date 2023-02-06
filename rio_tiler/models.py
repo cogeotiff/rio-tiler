@@ -512,7 +512,12 @@ class ImageData:
             for prod in itertools.product(*stats):  # type: ignore
                 res.append(apply_expression(blocks, self.band_names, numpy.array(prod)))
 
-            stats = list(zip([min(r) for r in zip(*res)], [max(r) for r in zip(*res)]))
+            stats = list(
+                zip(
+                    [min(r) for r in zip(*res)],
+                    [max(r) for r in zip(*res)],
+                )
+            )
 
         return ImageData(
             apply_expression(blocks, self.band_names, self.data),
@@ -677,7 +682,7 @@ class ImageData:
         self,
         categorical: bool = False,
         categories: Optional[List[float]] = None,
-        percentiles: List[int] = [2, 98],
+        percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
     ) -> Dict[str, BandStatistics]:
         """Return statistics from ImageData."""

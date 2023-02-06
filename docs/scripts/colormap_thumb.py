@@ -142,7 +142,7 @@ def plot_color_gradients(cmap_category, cmap_list):
 
     axes[0].set_title(cmap_category + " colormaps", fontsize=14)
 
-    for ax, name in zip(axes, cmap_list):
+    for ax, name in zip(axes, cmap_list, strict=True):
         ax.imshow(gradient, aspect="auto", cmap=make_colormap(name))
         ax.text(
             -0.01,

@@ -1,3 +1,5 @@
+"""Tests ImageReader."""
+
 import os
 import warnings
 

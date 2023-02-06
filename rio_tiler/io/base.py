@@ -364,7 +364,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
         categorical: bool = False,
         categories: Optional[List[float]] = None,
-        percentiles: List[int] = [2, 98],
+        percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
         max_size: int = 1024,
         **kwargs: Any,
@@ -852,7 +852,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         expression: Optional[str] = None,
         categorical: bool = False,
         categories: Optional[List[float]] = None,
-        percentiles: List[int] = [2, 98],
+        percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
         max_size: int = 1024,
         **kwargs: Any,

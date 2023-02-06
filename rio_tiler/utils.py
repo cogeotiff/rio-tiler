@@ -64,7 +64,7 @@ def get_array_statistics(
     data: numpy.ma.MaskedArray,
     categorical: bool = False,
     categories: Optional[List[float]] = None,
-    percentiles: List[int] = [2, 98],
+    percentiles: Optional[List[int]] = None,
     **kwargs: Any,
 ) -> List[Dict[Any, Any]]:
     """Calculate per band array statistics.
@@ -107,6 +107,8 @@ def get_array_statistics(
         ]
 
     """
+    percentiles = percentiles or [2, 98]
+
     if len(data.shape) < 3:
         data = numpy.expand_dims(data, axis=0)
 
@@ -207,13 +209,17 @@ def get_overview_level(
     if target_res > src_res:
         res = [src_res * decim for decim in src_dst.overviews(1)]
 
-        for ovr_idx in range(ovr_idx, len(res) - 1):
+        for idx in range(ovr_idx, len(res) - 1):
+            ovr_idx = idx
             ovrRes = src_res if ovr_idx < 0 else res[ovr_idx]
             nextRes = res[ovr_idx + 1]
+
             if (ovrRes < target_res) and (nextRes > target_res):
                 break
+
             if abs(ovrRes - target_res) < 1e-1:
                 break
+
         else:
             ovr_idx = len(res) - 1
 
@@ -455,13 +461,13 @@ def render(
 
     count, height, width = data.shape
 
-    output_profile = dict(
-        driver=img_format,
-        dtype=data.dtype,
-        count=count + 1 if mask is not None else count,
-        height=height,
-        width=width,
-    )
+    output_profile = {
+        "driver": img_format,
+        "dtype": data.dtype,
+        "count": count + 1 if mask is not None else count,
+        "height": height,
+        "width": width,
+    }
     output_profile.update(creation_options)
 
     with warnings.catch_warnings():

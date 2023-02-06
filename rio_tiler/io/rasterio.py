@@ -271,7 +271,7 @@ class Reader(BaseReader):
         self,
         categorical: bool = False,
         categories: Optional[List[float]] = None,
-        percentiles: List[int] = [2, 98],
+        percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
         max_size: int = 1024,
         indexes: Optional[Indexes] = None,
