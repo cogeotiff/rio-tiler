@@ -514,6 +514,7 @@ def test_mosaic_point():
     ],
 )
 def test_mosaic_all_methods(m):
+    """Test mosaic methods."""
     pt, _ = mosaic.mosaic_point_reader(
         assets, _read_point, -73.69990294755982, 45.49950291143219, pixel_selection=m
     )
@@ -539,6 +540,7 @@ def test_mosaic_all_methods(m):
     ],
 )
 def test_mosaic_methods_last(m):
+    """test LAST mosaic method."""
     pt, _ = mosaic.mosaic_point_reader(
         assets,
         _read_point,

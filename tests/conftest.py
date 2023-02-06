@@ -52,25 +52,25 @@ def cloudoptimized_geotiff():
         mask[:, 0:500, 0:500] = 0
 
         # Input Profile
-        src_profile = dict(
-            driver="GTiff",
-            count=nband,
-            dtype=dtype,
-            height=y_size,
-            width=x_size,
-            crs=crs,
-            transform=from_bounds(*bounds, x_size, y_size),
-        )
+        src_profile = {
+            "driver": "GTiff",
+            "count": nband,
+            "dtype": dtype,
+            "height": y_size,
+            "width": x_size,
+            "crs": crs,
+            "transform": from_bounds(*bounds, x_size, y_size),
+        }
         if nodata_type in ["nodata", "mask"]:
             src_profile["nodata"] = 0
         elif nodata_type == "alpha":
             src_profile["count"] = nband + 1
 
-        gdal_config = dict(
-            GDAL_NUM_THREADS="ALL_CPUS",
-            GDAL_TIFF_INTERNAL_MASK=True,
-            GDAL_TIFF_OVR_BLOCKSIZE="128",
-        )
+        gdal_config = {
+            "GDAL_NUM_THREADS": "ALL_CPUS",
+            "GDAL_TIFF_INTERNAL_MASK": True,
+            "GDAL_TIFF_OVR_BLOCKSIZE": "128",
+        }
         with rasterio.Env(**gdal_config):
             with MemoryFile() as memfile:
                 with memfile.open(**src_profile) as mem:

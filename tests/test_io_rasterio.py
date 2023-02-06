@@ -201,12 +201,14 @@ def test_tile_invalid_bounds():
 
 
 def test_tile_with_incorrect_float_buffer():
+    """should raise InvalidBufferSize."""
     with pytest.raises(InvalidBufferSize):
         with Reader(COGEO) as src:
             src.tile(43, 24, 7, buffer=0.8)
 
 
 def test_tile_with_int_buffer():
+    """should pass without issues."""
     with Reader(COGEO) as src:
         data, mask = src.tile(43, 24, 7, buffer=1)
     assert data.shape == (1, 258, 258)
@@ -219,6 +221,7 @@ def test_tile_with_int_buffer():
 
 
 def test_tile_with_correct_float_buffer():
+    """should pass without issues."""
     with Reader(COGEO) as src:
         data, mask = src.tile(43, 24, 7, buffer=0.5)
     assert data.shape == (1, 257, 257)

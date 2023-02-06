@@ -325,7 +325,7 @@ class ColorMaps:
             >>> cmap = cmap.register({"acmap": "acmap.npy"})
 
         """
-        for name, cmap in custom_cmap.items():
+        for name, _ in custom_cmap.items():
             if not overwrite and name in self.data:
                 raise ColorMapAlreadyRegistered(
                     f"{name} is already registered. Use force=True to overwrite."
