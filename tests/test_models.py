@@ -307,3 +307,52 @@ def test_image_apply_colormap():
     # data[0, 0, 0] is 0 so after colormap it should be 0,0,0 and mask should be 0 (because it was masked by the original mask)
     assert im.data[:, 0, 0].tolist() == [0, 0, 0]
     assert im.mask[0, 0] == 0
+
+
+def test_image_from_array():
+    """Create ImageData from arrays."""
+    arr = numpy.zeros((1, 256, 256), dtype="uint8")
+    im = ImageData.from_array(arr)
+    assert im.data.shape == (1, 256, 256)
+    assert im.mask.all()
+
+    arr = numpy.ma.MaskedArray(numpy.zeros((1, 256, 256), dtype="uint8"))
+    im = ImageData.from_array(arr)
+    assert im.data.shape == (1, 256, 256)
+    assert im.mask.all()
+
+    arr = numpy.ma.MaskedArray(
+        numpy.zeros((1, 256, 256), dtype="uint8"),
+        mask=numpy.zeros((256, 256), dtype="uint8"),
+    )
+    im = ImageData.from_array(arr)
+    assert im.data.shape == (1, 256, 256)
+    assert im.mask.all()
+
+
+def test_image_from_bytes():
+    """Create ImageData from bytes."""
+    im = ImageData(numpy.zeros((1, 256, 256), dtype="uint8"))
+    assert im.data.shape == (1, 256, 256)
+
+    im_r = ImageData.from_bytes(im.render(img_format="PNG", add_mask=True))
+    assert im_r.data.shape == (1, 256, 256)
+    assert im.mask.all()
+
+    data = numpy.zeros((1, 256, 256), dtype="uint8")
+    data[0:100, 0:100] = 1
+    mask = numpy.zeros((256, 256), dtype="uint8") + 255
+    mask[0:10, 0:10] = 0
+    img = ImageData(data, mask)
+
+    im = ImageData.from_bytes(img.render(img_format="PNG", add_mask=True))
+    assert im.data.shape == (1, 256, 256)
+    assert not im.mask.all()
+
+    im = ImageData.from_bytes(img.render(img_format="PNG", add_mask=False))
+    assert im.data.shape == (1, 256, 256)
+    assert im.mask.all()
+
+    im = ImageData.from_bytes(img.render(img_format="JPEG", add_mask=False))
+    assert im.data.shape == (1, 256, 256)
+    assert im.mask.all()

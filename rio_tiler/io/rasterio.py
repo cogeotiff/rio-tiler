@@ -35,12 +35,7 @@ from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, DataMaskType, Indexes, NumType
-from rio_tiler.utils import (
-    create_cutline,
-    get_array_statistics,
-    has_alpha_band,
-    has_mask_band,
-)
+from rio_tiler.utils import create_cutline, has_alpha_band, has_mask_band
 
 
 @attr.s
@@ -302,21 +297,12 @@ class Reader(BaseReader):
         data = self.read(
             max_size=max_size, indexes=indexes, expression=expression, **kwargs
         )
-
-        hist_options = hist_options or {}
-
-        stats = get_array_statistics(
-            data.as_masked(),
+        return data.statistics(
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,
-            **hist_options,
+            hist_options=hist_options,
         )
-
-        return {
-            f"{data.band_names[ix]}": BandStatistics(**stats[ix])
-            for ix in range(len(stats))
-        }
 
     def tile(
         self,

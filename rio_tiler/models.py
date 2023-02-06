@@ -14,7 +14,8 @@ from rasterio import windows
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
-from rasterio.enums import Resampling
+from rasterio.enums import ColorInterp, Resampling
+from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
 
@@ -22,7 +23,13 @@ from rio_tiler.colormap import apply_cmap
 from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
 from rio_tiler.expression import apply_expression, get_expression_blocks
 from rio_tiler.types import BBox, ColorMapType, GDALColorMapType, IntervalTuple, NumType
-from rio_tiler.utils import linear_rescale, render, resize_array
+from rio_tiler.utils import (
+    get_array_statistics,
+    linear_rescale,
+    non_alpha_indexes,
+    render,
+    resize_array,
+)
 
 
 class NodataTypes(str, Enum):
@@ -76,7 +83,7 @@ class Info(SpatialInfo):
 
 
 class BandStatistics(RioTilerBaseModel):
-    """Image statistics"""
+    """Band statistics"""
 
     min: float
     max: float
@@ -298,7 +305,70 @@ class ImageData:
             yield i
 
     @classmethod
-    def create_from_list(cls, data: Sequence["ImageData"]):
+    def from_array(cls, data: numpy.ndarray) -> "ImageData":
+        """Create ImageData from a numpy array.
+
+        Args:
+            data (numpy.ndarray): Numpy array or Numpy masked array.
+
+        """
+        if len(data.shape) < 3:
+            data = numpy.expand_dims(data, axis=0)
+
+        if isinstance(data, numpy.ma.MaskedArray):
+            data = data.data
+            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(data)) * numpy.uint8(
+                255
+            )
+            return cls(data, mask)
+
+        return cls(data)
+
+    @classmethod
+    def from_bytes(cls, data: bytes) -> "ImageData":
+        """Create ImageData from bytes.
+
+        Args:
+            data (bytes): raster dataset as bytes.
+
+        """
+        with MemoryFile(data) as m:
+            with m.open() as dataset:
+                indexes = non_alpha_indexes(dataset)
+                if ColorInterp.alpha in dataset.colorinterp:
+                    alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
+                    idx = tuple(indexes) + (alpha_idx,)
+
+                    arr = dataset.read(indexes=idx)
+                    arr, mask = arr[0:-1], arr[-1].astype("uint8")
+
+                else:
+                    arr = dataset.read(indexes=indexes)
+                    mask = dataset.dataset_mask()
+
+                stats = []
+                for ix in indexes:
+                    tags = dataset.tags(ix)
+                    if all(
+                        stat in tags
+                        for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
+                    ):
+                        stat_min = float(tags.get("STATISTICS_MINIMUM"))
+                        stat_max = float(tags.get("STATISTICS_MAXIMUM"))
+                        stats.append((stat_min, stat_max))
+
+                dataset_statistics = stats if len(stats) == len(indexes) else None
+
+                return cls(
+                    arr,
+                    mask,
+                    crs=dataset.crs,
+                    bounds=dataset.bounds,
+                    dataset_statistics=dataset_statistics,
+                )
+
+    @classmethod
+    def create_from_list(cls, data: Sequence["ImageData"]) -> "ImageData":
         """Create ImageData from a sequence of ImageData objects.
 
         Args:
@@ -602,3 +672,26 @@ class ImageData:
             )
 
         return render(data, img_format=img_format, colormap=colormap, **kwargs)
+
+    def statistics(
+        self,
+        categorical: bool = False,
+        categories: Optional[List[float]] = None,
+        percentiles: List[int] = [2, 98],
+        hist_options: Optional[Dict] = None,
+    ) -> Dict[str, BandStatistics]:
+        """Return statistics from ImageData."""
+        hist_options = hist_options or {}
+
+        stats = get_array_statistics(
+            self.as_masked(),
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            **hist_options,
+        )
+
+        return {
+            f"{self.band_names[ix]}": BandStatistics(**stats[ix])
+            for ix in range(len(stats))
+        }
