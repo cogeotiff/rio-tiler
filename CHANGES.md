@@ -1,4 +1,9 @@
 
+# 4.1.7 (2023-02-07)
+
+* add `from_array` and `from_bytes` ImageData creation methods
+* add `statistics` method to ImageData
+
 # 4.1.6 (2023-01-18)
 
 * add `apply_colormap` method to the ImageData class
