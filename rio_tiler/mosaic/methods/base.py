@@ -1,6 +1,7 @@
 """rio-tiler.mosaic.methods abc class."""
 
 import abc
+from typing import Optional, Tuple
 
 import numpy
 
@@ -10,11 +11,11 @@ class MosaicMethodBase(abc.ABC):
 
     def __init__(self):
         """Init backend."""
-        self.tile = None
-        self.exit_when_filled = False
+        self.tile: Optional[numpy.ma.MaskedArray] = None
+        self.exit_when_filled: bool = False
 
     @property
-    def is_done(self):
+    def is_done(self) -> bool:
         """Check if the tile filling is done.
 
         Returns:
@@ -30,15 +31,18 @@ class MosaicMethodBase(abc.ABC):
         return False
 
     @property
-    def data(self):
+    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
         """Return data and mask."""
         if self.tile is not None:
-            return self.tile.data, (~self.tile.mask[0] * 255).astype(self.tile.dtype)
+            data = numpy.ma.getdata(self.tile)
+            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(self.tile))
+            return (data, mask * numpy.uint8(255))
+
         else:
             return None, None
 
     @abc.abstractmethod
-    def feed(self, tile):
+    def feed(self, tile: numpy.ma.MaskedArray):
         """Fill mosaic tile.
 
         Args:

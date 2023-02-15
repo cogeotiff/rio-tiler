@@ -1,4 +1,9 @@
 
+# 4.1.8 (2023-02-15)
+
+* Fix dtype issue when working with Mosaics Methods. Mask should always been of type `Uint8`.
+* Fix `ImageData.from_array` method when working with Masked array
+
 # 4.1.7 (2023-02-07)
 
 * add `from_array` and `from_bytes` ImageData creation methods
