@@ -329,6 +329,18 @@ def test_image_from_array():
     assert im.data.shape == (1, 256, 256)
     assert im.mask.all()
 
+    mask = numpy.zeros((256, 256), dtype="uint8")  # 0 no masked
+    mask[0:10, 0:10] = 1  # masked
+    arr = numpy.ma.MaskedArray(
+        numpy.zeros((1, 256, 256), dtype="uint8"),
+        mask,
+    )
+    im = ImageData.from_array(arr)
+    assert im.data.shape == (1, 256, 256)
+    assert not im.mask.all()
+    assert im.mask[0, 0] == 0
+    assert im.mask[11, 11] == 255
+
 
 def test_image_from_bytes():
     """Create ImageData from bytes."""

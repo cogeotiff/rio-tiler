@@ -305,24 +305,22 @@ class ImageData:
             yield i
 
     @classmethod
-    def from_array(cls, data: numpy.ndarray) -> "ImageData":
+    def from_array(cls, arr: numpy.ndarray) -> "ImageData":
         """Create ImageData from a numpy array.
 
         Args:
-            data (numpy.ndarray): Numpy array or Numpy masked array.
+            arr (numpy.ndarray): Numpy array or Numpy masked array.
 
         """
-        if len(data.shape) < 3:
-            data = numpy.expand_dims(data, axis=0)
+        if len(arr.shape) < 3:
+            arr = numpy.expand_dims(arr, axis=0)
 
-        if isinstance(data, numpy.ma.MaskedArray):
-            data = data.data
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(data)) * numpy.uint8(
-                255
-            )
-            return cls(data, mask)
+        if isinstance(arr, numpy.ma.MaskedArray):
+            data = numpy.ma.getdata(arr)
+            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(arr))
+            return cls(data, mask * numpy.uint8(255))
 
-        return cls(data)
+        return cls(arr)
 
     @classmethod
     def from_bytes(cls, data: bytes) -> "ImageData":
