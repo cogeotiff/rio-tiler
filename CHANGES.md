@@ -1,4 +1,8 @@
 
+# 4.1.9 (2023-02-28)
+
+* Automatically expand 2D numpy array to 3D when creating ImageData
+
 # 4.1.8 (2023-02-15)
 
 * Fix dtype issue when working with Mosaics Methods. Mask should always been of type `Uint8`.

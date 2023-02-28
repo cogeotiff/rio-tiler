@@ -258,6 +258,14 @@ class PointData:
         )
 
 
+def to_3d(data: numpy.ndarray) -> numpy.ndarray:
+    """Makes sure we have a 3D array."""
+    if len(data.shape) < 3:
+        data = numpy.expand_dims(data, axis=0)
+
+    return data
+
+
 @attr.s
 class ImageData:
     """Image Data class.
@@ -274,7 +282,7 @@ class ImageData:
 
     """
 
-    data: numpy.ndarray = attr.ib()
+    data: numpy.ndarray = attr.ib(converter=to_3d)
     mask: numpy.ndarray = attr.ib()
     assets: Optional[List] = attr.ib(default=None)
     bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
@@ -282,14 +290,6 @@ class ImageData:
     metadata: Optional[Dict] = attr.ib(factory=dict)
     band_names: List[str] = attr.ib()
     dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(default=None)
-
-    @data.validator
-    def _validate_data(self, attribute, value):
-        """ImageData data has to be a 3d array in form of (count, height, width)"""
-        if not len(value.shape) == 3:
-            raise ValueError(
-                "ImageData data has to be an array in form of (count, height, width)"
-            )
 
     @band_names.default
     def _default_names(self):
