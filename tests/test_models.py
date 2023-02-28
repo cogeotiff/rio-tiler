@@ -368,3 +368,13 @@ def test_image_from_bytes():
     im = ImageData.from_bytes(img.render(img_format="JPEG", add_mask=False))
     assert im.data.shape == (1, 256, 256)
     assert im.mask.all()
+
+
+def test_2d_image():
+    """Create Image Data from 2d array."""
+    data = numpy.zeros((256, 256))
+    im = ImageData(data)
+    assert im.count == 1
+    assert im.width == 256
+    assert im.height == 256
+    assert im.mask.all()
