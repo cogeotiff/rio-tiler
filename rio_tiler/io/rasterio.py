@@ -93,17 +93,29 @@ class Reader(BaseReader):
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
         if not self.dataset:
-            dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
-            if dataset.gcps[0]:
-                self.dataset = self._ctx_stack.enter_context(
-                    WarpedVRT(
-                        dataset,
-                        src_crs=dataset.gcps[1],
-                        src_transform=transform.from_gcps(dataset.gcps[0]),
-                    )
+            self.dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
+
+        if self.dataset.gcps[0]:
+            vrt_options = {
+                "src_crs": self.dataset.gcps[1],
+                "src_transform": transform.from_gcps(self.dataset.gcps[0]),
+            }
+
+            nodata = self.dataset.nodata
+            if nodata is not None:
+                vrt_options.update(
+                    {"nodata": nodata, "add_alpha": False, "src_nodata": nodata}
                 )
+
             else:
-                self.dataset = dataset
+                vrt_options["add_alpha"] = True
+
+            if has_alpha_band(self.dataset):
+                vrt_options.update({"add_alpha": False})
+
+            self.dataset = self._ctx_stack.enter_context(
+                WarpedVRT(self.dataset, **vrt_options)
+            )
 
         self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
@@ -852,6 +864,6 @@ class ImageReader(Reader):
         )
 
         shape = shape.get("geometry", shape)
-        mask = geometry_mask([shape], (img.height, img.width), self.transform)
-        img.mask = mask * 255
+        img.array.mask = geometry_mask([shape], (img.height, img.width), self.transform)
+
         return img

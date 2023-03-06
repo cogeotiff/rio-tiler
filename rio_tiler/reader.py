@@ -9,7 +9,7 @@ import numpy
 from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
-from rasterio.enums import ColorInterp, Resampling
+from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
@@ -31,7 +31,7 @@ class Options(TypedDict, total=False):
     vrt_options: Optional[Dict]
     resampling_method: Optional[Resampling]
     unscale: Optional[bool]
-    post_process: Optional[Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]]
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]]
 
 
 def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int]:
@@ -89,7 +89,7 @@ def read(
     resampling_method: Resampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
     ] = None,
 ) -> ImageData:
     """Low level read function.
@@ -184,7 +184,9 @@ def read(
                 resampling=resampling,
                 boundless=boundless,
             )
-            data, mask = data[0:-1], data[-1].astype("uint8")
+            mask = ~data[-1].astype("bool")
+            data = numpy.ma.MaskedArray(data[0:-1])
+            data.mask = mask
 
         else:
             data = dataset.read(
@@ -193,12 +195,7 @@ def read(
                 out_shape=(len(indexes), height, width) if height and width else None,
                 resampling=resampling,
                 boundless=boundless,
-            )
-            mask = dataset.dataset_mask(
-                window=window,
-                out_shape=(height, width) if height and width else None,
-                resampling=resampling,
-                boundless=boundless,
+                masked=True,
             )
 
         stats = []
@@ -214,8 +211,10 @@ def read(
         # We only add dataset statistics if we have them for all the indexes
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
+        # TODO: DEPRECATED, masked array are already using bool
         if force_binary_mask:
-            mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
+            pass
+            # mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
 
         if unscale:
             data = data.astype("float32", casting="unsafe")
@@ -223,22 +222,19 @@ def read(
             numpy.add(data, dataset.offsets[0], out=data, casting="unsafe")
 
         if post_process:
-            data, mask = post_process(data, mask)
+            data = post_process(data)
 
         out_bounds = (
             windows.bounds(window, dataset.transform) if window else dataset.bounds
         )
 
-        img = ImageData(
+        return ImageData(
             data,
-            mask,
             bounds=out_bounds,
             crs=dataset.crs,
             band_names=[f"b{idx}" for idx in indexes],
             dataset_statistics=dataset_statistics,
         )
-
-    return img
 
 
 # flake8: noqa: C901
@@ -260,7 +256,7 @@ def part(
     resampling_method: Resampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
     ] = None,
 ) -> ImageData:
     """Read part of a dataset.
@@ -408,9 +404,9 @@ def part(
             unscale=unscale,
             post_process=post_process,
         )
+
         return ImageData(
-            data=img.data[:, padding:-padding, padding:-padding],
-            mask=img.mask[padding:-padding, padding:-padding],
+            img.array[:, padding:-padding, padding:-padding],
             bounds=bounds,
             crs=img.crs,
             band_names=img.band_names,
@@ -441,7 +437,7 @@ def point(
     resampling_method: Resampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
     ] = None,
 ) -> PointData:
     """Read a pixel value for a point.

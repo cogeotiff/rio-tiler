@@ -143,9 +143,12 @@ def get_array_statistics(
             h_counts, h_keys = numpy.histogram(data[b].compressed(), **kwargs)
             histogram = [h_counts.tolist(), h_keys.tolist()]
 
-        percentiles_values = numpy.percentile(
-            data[b].compressed(), percentiles
-        ).tolist()
+        if valid_pixels:
+            percentiles_values = numpy.percentile(
+                data[b].compressed(), percentiles
+            ).tolist()
+        else:
+            percentiles_values = (numpy.nan,) * len(percentiles_names)
 
         output.append(
             {
@@ -156,8 +159,12 @@ def get_array_statistics(
                 "sum": float(data[b].sum()),
                 "std": float(data[b].std()),
                 "median": float(numpy.ma.median(data[b])),
-                "majority": float(keys[counts.tolist().index(counts.max())].tolist()),
-                "minority": float(keys[counts.tolist().index(counts.min())].tolist()),
+                "majority": float(keys[counts.tolist().index(counts.max())].tolist())
+                if valid_pixels
+                else numpy.nan,
+                "minority": float(keys[counts.tolist().index(counts.min())].tolist())
+                if valid_pixels
+                else numpy.nan,
                 "unique": float(counts.size),
                 **dict(zip(percentiles_names, percentiles_values)),
                 "histogram": histogram,

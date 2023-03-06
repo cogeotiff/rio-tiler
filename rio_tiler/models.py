@@ -112,17 +112,16 @@ def to_coordsbbox(bbox) -> Optional[BoundingBox]:
 
 
 def rescale_image(
-    data: numpy.ndarray,
-    mask: numpy.ndarray,
+    im: numpy.ma.MaskedArray,
     in_range: Sequence[IntervalTuple],
     out_range: Sequence[IntervalTuple] = ((0, 255),),
     out_dtype: Union[str, numpy.number] = "uint8",
 ):
     """Rescale image data."""
-    if len(data.shape) < 3:
-        data = numpy.expand_dims(data, axis=0)
+    if len(im.shape) < 3:
+        im = numpy.expand_dims(im, axis=0)
 
-    nbands = data.shape[0]
+    nbands = im.shape[0]
 
     if len(in_range) != nbands:
         in_range = ((in_range[0]),) * nbands
@@ -131,13 +130,15 @@ def rescale_image(
         out_range = ((out_range[0]),) * nbands
 
     for bdx in range(nbands):
-        data[bdx] = numpy.where(
-            mask,
-            linear_rescale(data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]),
+        im.data[bdx] = numpy.where(
+            im.mask[bdx],
+            linear_rescale(
+                im.data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
+            ),
             0,
         )
 
-    return data.astype(out_dtype)
+    return im.astype(out_dtype)
 
 
 @attr.s
@@ -258,12 +259,21 @@ class PointData:
         )
 
 
-def to_3d(data: numpy.ndarray) -> numpy.ndarray:
-    """Makes sure we have a 3D array."""
-    if len(data.shape) < 3:
-        data = numpy.expand_dims(data, axis=0)
+def masked_and_3d(array: numpy.ndarray) -> numpy.ma.MaskedArray:
+    """Makes sure we have a 3D array and mask"""
+    if not numpy.ma.isarray(array):
+        array = numpy.ma.asarray(array)
 
-    return data
+    if len(array.shape) < 3:
+        array = numpy.expand_dims(array, axis=0)
+
+    # when a masked array is totally valid, the mask is set to numpy.ma.nomask
+    # https://numpy.org/doc/stable/reference/maskedarray.baseclass.html#numpy.ma.nomask
+    # doing `array.mask = False` force the creation of the mask array
+    if not array.mask.shape:
+        array.mask = False
+
+    return array
 
 
 @attr.s
@@ -271,8 +281,7 @@ class ImageData:
     """Image Data class.
 
     Attributes:
-        data (numpy.ndarray): pixel values.
-        mask (numpy.ndarray): rasterio mask values.
+        data (numpy.ma.MaskedArray): image values.
         assets (list, optional): list of assets used to construct the data values.
         bounds (BoundingBox, optional): bounding box of the data.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
@@ -280,10 +289,11 @@ class ImageData:
         band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
         dataset_statistics (list, optional): dataset statistics `[(min, max), (min, max)]`
 
+    Note: `mask` should be considered as `PER_BAND` so shape should be similar as the data
+
     """
 
-    data: numpy.ndarray = attr.ib(converter=to_3d)
-    mask: numpy.ndarray = attr.ib()
+    array: numpy.ma.MaskedArray = attr.ib(converter=masked_and_3d)
     assets: Optional[List] = attr.ib(default=None)
     bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
     crs: Optional[CRS] = attr.ib(default=None)
@@ -295,9 +305,19 @@ class ImageData:
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
 
-    @mask.default
-    def _default_mask(self):
-        return numpy.zeros((self.height, self.width), dtype="uint8") + 255
+    ###########################################################################
+    # For compatibility
+    @property
+    def data(self) -> numpy.ndarray:
+        """Return data part of the masked array."""
+        return self.array.data
+
+    @property
+    def mask(self) -> numpy.ndarray:
+        """Return Mask in form of rasterio dataset mask."""
+        return numpy.logical_or.reduce(~self.array.mask) * numpy.uint8(255)
+
+    ###########################################################################
 
     def __iter__(self):
         """Allow for variable expansion (``arr, mask = ImageData``)"""
@@ -312,14 +332,7 @@ class ImageData:
             arr (numpy.ndarray): Numpy array or Numpy masked array.
 
         """
-        if len(arr.shape) < 3:
-            arr = numpy.expand_dims(arr, axis=0)
-
-        if isinstance(arr, numpy.ma.MaskedArray):
-            data = numpy.ma.getdata(arr)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(arr))
-            return cls(data, mask * numpy.uint8(255))
-
+        # TODO: Deprecate
         return cls(arr)
 
     @classmethod
@@ -336,13 +349,14 @@ class ImageData:
                 if ColorInterp.alpha in dataset.colorinterp:
                     alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
                     idx = tuple(indexes) + (alpha_idx,)
+                    data = dataset.read(indexes=idx)
 
-                    arr = dataset.read(indexes=idx)
-                    arr, mask = arr[0:-1], arr[-1].astype("uint8")
+                    mask = ~data[-1].astype("bool")
+                    data = numpy.ma.MaskedArray(data[0:-1])
+                    data.mask = mask
 
                 else:
-                    arr = dataset.read(indexes=indexes)
-                    mask = dataset.dataset_mask()
+                    data = dataset.read(indexes=indexes, masked=True)
 
                 stats = []
                 for ix in indexes:
@@ -358,8 +372,7 @@ class ImageData:
                 dataset_statistics = stats if len(stats) == len(indexes) else None
 
                 return cls(
-                    arr,
-                    mask,
+                    data,
                     crs=dataset.crs,
                     bounds=dataset.bounds,
                     dataset_statistics=dataset_statistics,
@@ -383,11 +396,10 @@ class ImageData:
             for img in data:
                 if img.height == max_h and img.width == max_w:
                     continue
-                img.data = resize_array(img.data, max_h, max_w)
-                img.mask = resize_array(img.mask, max_h, max_w)
+                img = img.resize(max_h, max_w)
 
-        arr = numpy.concatenate([img.data for img in data])
-        mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
+        arr = numpy.ma.concatenate([img.array for img in data])
+
         assets = list(
             dict.fromkeys(
                 itertools.chain.from_iterable(
@@ -417,7 +429,6 @@ class ImageData:
 
         return cls(
             arr,
-            mask,
             assets=assets,
             crs=crs,
             bounds=bounds,
@@ -427,9 +438,8 @@ class ImageData:
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
-        data = numpy.ma.array(self.data)
-        data.mask = self.mask == 0
-        return data
+        # TODO: Deprecate
+        return self.array
 
     def data_as_image(self) -> numpy.ndarray:
         """Return the data array reshaped into an image processing/visualization software friendly order.
@@ -442,17 +452,17 @@ class ImageData:
     @property
     def width(self) -> int:
         """Width of the data array."""
-        return self.data.shape[2]
+        return self.array.shape[2]
 
     @property
     def height(self) -> int:
         """Height of the data array."""
-        return self.data.shape[1]
+        return self.array.shape[1]
 
     @property
     def count(self) -> int:
         """Number of band."""
-        return self.data.shape[0]
+        return self.array.shape[0]
 
     @property
     def transform(self):
@@ -470,9 +480,8 @@ class ImageData:
         out_dtype: Union[str, numpy.number] = "uint8",
     ):
         """Rescale data in place."""
-        self.data = rescale_image(
-            self.data.copy(),
-            self.mask,
+        self.array = rescale_image(
+            self.array.copy(),
             in_range=in_range,
             out_range=out_range,
             out_dtype=out_dtype,
@@ -481,9 +490,14 @@ class ImageData:
     def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
         """Apply colormap to the image data."""
         data, alpha = apply_cmap(self.data, colormap)
+
+        # Use Dataset Mask which is fine
+        # because in theory self.array should be a 1 band image
+        array = numpy.ma.MaskedArray(data)
+        array.mask = numpy.bitwise_and(alpha == 0, self.mask == 0)
+
         return ImageData(
-            data,
-            numpy.bitwise_and(alpha, self.mask),
+            array,
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
@@ -492,13 +506,13 @@ class ImageData:
 
     def apply_color_formula(self, color_formula: Optional[str]):
         """Apply color-operations formula in place."""
-        out = self.data.copy()
+        out = self.array.data.copy()
         out[out < 0] = 0
 
         for ops in parse_operations(color_formula):
             out = scale_dtype(ops(to_math_type(out)), numpy.uint8)
 
-        self.data = out
+        self.array.data = out
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
@@ -517,9 +531,14 @@ class ImageData:
                 )
             )
 
-        return ImageData(
+        data = numpy.ma.MaskedArray(
             apply_expression(blocks, self.band_names, self.data),
-            self.mask.copy(),
+        )
+        # NOTE: We use dataset mask when mixing bands
+        data.mask = numpy.logical_or.reduce(self.array.mask)
+
+        return ImageData(
+            data,
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
@@ -536,11 +555,10 @@ class ImageData:
     ) -> "ImageData":
         """Resize data and mask."""
         data = resize_array(self.data, height, width, resampling_method)
-        mask = resize_array(self.mask, height, width, resampling_method)
+        mask = resize_array(self.array.mask, height, width, resampling_method)
 
         return ImageData(
-            data,
-            mask,
+            numpy.ma.MaskedArray(data, mask=mask),
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
@@ -554,12 +572,9 @@ class ImageData:
         row_slice, col_slice = windows.from_bounds(
             *bbox, transform=self.transform
         ).toslices()
-        data = self.data[:, row_slice, col_slice]
-        mask = self.mask[row_slice, col_slice]
 
         return ImageData(
-            data,
-            mask,
+            self.data.copy()[:, row_slice, col_slice],
             assets=self.assets,
             crs=self.crs,
             bounds=bbox,
@@ -592,20 +607,18 @@ class ImageData:
             >>> img.post_process(color_formula="Gamma RGB 4.1")
 
         """
-        data = self.data.copy()
-        mask = self.mask.copy()
+        data = self.array.copy()
 
         if in_range:
-            data = rescale_image(data, mask, in_range, out_dtype=out_dtype, **kwargs)
+            data = rescale_image(data, in_range, out_dtype=out_dtype, **kwargs)
 
         if color_formula:
-            data[data < 0] = 0
+            data.data[data.data < 0] = 0
             for ops in parse_operations(color_formula):
-                data = scale_dtype(ops(to_math_type(data)), numpy.uint8)
+                data.data = scale_dtype(ops(to_math_type(data.data)), numpy.uint8)
 
         return ImageData(
             data,
-            mask,
             crs=self.crs,
             bounds=self.bounds,
             assets=self.assets,
@@ -639,42 +652,46 @@ class ImageData:
             if "crs" not in kwargs and self.crs:
                 kwargs.update({"crs": self.crs})
 
-        data = self.data.copy()
-        mask = self.mask.copy()
-        datatype_range = self.dataset_statistics or (dtype_ranges[str(data.dtype)],)
+        array = self.array.copy()
+
+        datatype_range = self.dataset_statistics or (dtype_ranges[str(array.dtype)],)
 
         if not colormap:
-            if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:
+            if img_format in ["PNG"] and array.dtype not in ["uint8", "uint16"]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
+                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, mask, in_range=datatype_range)
+                array = rescale_image(array, in_range=datatype_range)
 
-            elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
+            elif img_format in ["JPEG", "WEBP"] and array.dtype not in ["uint8"]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
+                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, mask, in_range=datatype_range)
+                array = rescale_image(array, in_range=datatype_range)
 
-            elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
+            elif img_format in ["JP2OPENJPEG"] and array.dtype not in [
                 "uint8",
                 "int16",
                 "uint16",
             ]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
+                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, mask, in_range=datatype_range)
+                array = rescale_image(array, in_range=datatype_range)
 
         if add_mask:
             return render(
-                data, mask, img_format=img_format, colormap=colormap, **kwargs
+                array.data,
+                self.mask,  # We use dataset mask for rendering
+                img_format=img_format,
+                colormap=colormap,
+                **kwargs,
             )
 
-        return render(data, img_format=img_format, colormap=colormap, **kwargs)
+        return render(array.data, img_format=img_format, colormap=colormap, **kwargs)
 
     def statistics(
         self,
@@ -687,7 +704,7 @@ class ImageData:
         hist_options = hist_options or {}
 
         stats = get_array_statistics(
-            self.as_masked(),
+            self.array,
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,
