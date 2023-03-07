@@ -112,16 +112,16 @@ def to_coordsbbox(bbox) -> Optional[BoundingBox]:
 
 
 def rescale_image(
-    im: numpy.ma.MaskedArray,
+    array: numpy.ma.MaskedArray,
     in_range: Sequence[IntervalTuple],
     out_range: Sequence[IntervalTuple] = ((0, 255),),
     out_dtype: Union[str, numpy.number] = "uint8",
-):
-    """Rescale image data."""
-    if len(im.shape) < 3:
-        im = numpy.expand_dims(im, axis=0)
+) -> numpy.ma.MaskedArray:
+    """Rescale image data in-place."""
+    if len(array.shape) < 3:
+        array = numpy.expand_dims(array, axis=0)
 
-    nbands = im.shape[0]
+    nbands = array.shape[0]
 
     if len(in_range) != nbands:
         in_range = ((in_range[0]),) * nbands
@@ -130,15 +130,29 @@ def rescale_image(
         out_range = ((out_range[0]),) * nbands
 
     for bdx in range(nbands):
-        im.data[bdx] = numpy.where(
-            im.mask[bdx],
+        array.data[bdx] = numpy.where(
+            ~array.mask[bdx],
             linear_rescale(
-                im.data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
+                array.data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
             ),
             0,
         )
 
-    return im.astype(out_dtype)
+    return array.astype(out_dtype)
+
+
+def to_masked(array: numpy.ndarray) -> numpy.ma.MaskedArray:
+    """Makes sure we have a MaskedArray."""
+    if not numpy.ma.isarray(array):
+        array = numpy.ma.asarray(array)
+
+    # when a masked array is totally valid, the mask is set to numpy.ma.nomask
+    # https://numpy.org/doc/stable/reference/maskedarray.baseclass.html#numpy.ma.nomask
+    # doing `array.mask = False` force the creation of the mask array
+    if not array.mask.shape:
+        array.mask = False
+
+    return array
 
 
 @attr.s
@@ -146,8 +160,7 @@ class PointData:
     """Point Data class.
 
     Attributes:
-        data (numpy.ndarray): pixel values.
-        mask (numpy.ndarray): rasterio mask values.
+        array (numpy.ma.MaskedArray): pixel values.
         band_names (list): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
         coordinates (tuple): Point's coordinates.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
@@ -156,15 +169,14 @@ class PointData:
 
     """
 
-    data: numpy.ndarray = attr.ib()
-    mask: numpy.ndarray = attr.ib()
+    array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
     band_names: List[str] = attr.ib()
     coordinates: Optional[Tuple[float, float]] = attr.ib(default=None)
     crs: Optional[CRS] = attr.ib(default=None)
     assets: Optional[List] = attr.ib(default=None)
     metadata: Optional[Dict] = attr.ib(factory=dict)
 
-    @data.validator
+    @array.validator
     def _validate_data(self, attribute, value):
         """PointsData data has to be a 1d array."""
         if not len(value.shape) == 1:
@@ -180,19 +192,31 @@ class PointData:
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
 
-    @mask.default
-    def _default_mask(self):
-        return numpy.array([255], dtype="uint8")
+    ###########################################################################
+    # For compatibility
+    @property
+    def data(self) -> numpy.ndarray:
+        """Return data part of the masked array."""
+        return self.array.data
+
+    @property
+    def mask(self) -> numpy.ndarray:
+        """Return Mask in form of rasterio dataset mask."""
+        return numpy.array([numpy.logical_or.reduce(~self.array.mask)]) * numpy.uint8(
+            255
+        )
+
+    ###########################################################################
 
     def __iter__(self):
         """Allow for variable expansion."""
-        for i in self.data:
+        for i in self.array.data:
             yield i
 
     @property
     def count(self) -> int:
         """Number of band."""
-        return self.data.shape[0]
+        return self.array.shape[0]
 
     @classmethod
     def create_from_list(cls, data: Sequence["PointData"]):
@@ -213,10 +237,7 @@ class PointData:
                     "Cannot concatenate points with different coordinates/CRS."
                 )
 
-        arr = numpy.concatenate([pt.data for pt in data])
-        mask = numpy.concatenate([pt.mask for pt in data]).all() * numpy.array(
-            [255], dtype="uint8"
-        )
+        arr = numpy.ma.concatenate([pt.array for pt in data])
 
         assets = list(
             dict.fromkeys(
@@ -232,7 +253,6 @@ class PointData:
 
         return cls(
             arr,
-            mask,
             assets=assets,
             crs=data[0].crs,
             coordinates=data[0].coordinates,
@@ -241,16 +261,19 @@ class PointData:
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
-        data = numpy.ma.array(self.data)
-        data.mask = self.mask == 0
-        return data
+        # TODO: Deprecate
+        return self.array
 
     def apply_expression(self, expression: str) -> "PointData":
         """Apply expression to the image data."""
         blocks = get_expression_blocks(expression)
+
+        data = apply_expression(blocks, self.band_names, self.array)
+        # Using numexpr do not preserve mask info
+        data.mask = False
+
         return PointData(
-            apply_expression(blocks, self.band_names, self.data),
-            self.mask,
+            data,
             assets=self.assets,
             crs=self.crs,
             coordinates=self.coordinates,
@@ -349,14 +372,14 @@ class ImageData:
                 if ColorInterp.alpha in dataset.colorinterp:
                     alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
                     idx = tuple(indexes) + (alpha_idx,)
-                    data = dataset.read(indexes=idx)
+                    array = dataset.read(indexes=idx)
 
-                    mask = ~data[-1].astype("bool")
-                    data = numpy.ma.MaskedArray(data[0:-1])
-                    data.mask = mask
+                    mask = ~array[-1].astype("bool")
+                    array = numpy.ma.MaskedArray(array[0:-1])
+                    array.mask = mask
 
                 else:
-                    data = dataset.read(indexes=indexes, masked=True)
+                    array = dataset.read(indexes=indexes, masked=True)
 
                 stats = []
                 for ix in indexes:
@@ -372,7 +395,7 @@ class ImageData:
                 dataset_statistics = stats if len(stats) == len(indexes) else None
 
                 return cls(
-                    data,
+                    array,
                     crs=dataset.crs,
                     bounds=dataset.bounds,
                     dataset_statistics=dataset_statistics,
@@ -531,9 +554,7 @@ class ImageData:
                 )
             )
 
-        data = numpy.ma.MaskedArray(
-            apply_expression(blocks, self.band_names, self.data),
-        )
+        data = apply_expression(blocks, self.band_names, self.array)
         # NOTE: We use dataset mask when mixing bands
         data.mask = numpy.logical_or.reduce(self.array.mask)
 
@@ -607,18 +628,19 @@ class ImageData:
             >>> img.post_process(color_formula="Gamma RGB 4.1")
 
         """
-        data = self.array.copy()
+        array = self.array.copy()
 
         if in_range:
-            data = rescale_image(data, in_range, out_dtype=out_dtype, **kwargs)
+            array = rescale_image(array, in_range, out_dtype=out_dtype, **kwargs)
 
         if color_formula:
-            data.data[data.data < 0] = 0
+            array[array < 0] = 0
             for ops in parse_operations(color_formula):
-                data.data = scale_dtype(ops(to_math_type(data.data)), numpy.uint8)
+                array = scale_dtype(ops(to_math_type(array)), numpy.uint8)
+            array.mask = self.array.mask
 
         return ImageData(
-            data,
+            array,
             crs=self.crs,
             bounds=self.bounds,
             assets=self.assets,

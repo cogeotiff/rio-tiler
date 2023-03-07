@@ -507,8 +507,7 @@ def point(
         )
 
     return PointData(
-        img.data[:, 0, 0],
-        numpy.array([img.mask[0, 0]]),
+        img.array[:, 0, 0],
         coordinates=coordinates,
         crs=coord_crs,
         band_names=img.band_names,

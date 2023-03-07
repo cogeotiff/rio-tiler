@@ -101,18 +101,6 @@ class Reader(BaseReader):
                 "src_transform": transform.from_gcps(self.dataset.gcps[0]),
             }
 
-            nodata = self.dataset.nodata
-            if nodata is not None:
-                vrt_options.update(
-                    {"nodata": nodata, "add_alpha": False, "src_nodata": nodata}
-                )
-
-            else:
-                vrt_options["add_alpha"] = True
-
-            if has_alpha_band(self.dataset):
-                vrt_options.update({"add_alpha": False})
-
             self.dataset = self._ctx_stack.enter_context(
                 WarpedVRT(self.dataset, **vrt_options)
             )
@@ -682,7 +670,7 @@ class ImageReader(Reader):
         resampling_method: Resampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read a Web Map tile from an Image.
@@ -735,7 +723,7 @@ class ImageReader(Reader):
         resampling_method: Resampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read part of an Image.
@@ -793,7 +781,7 @@ class ImageReader(Reader):
         expression: Optional[str] = None,
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> PointData:
         """Read a pixel value from an Image.
@@ -822,8 +810,7 @@ class ImageReader(Reader):
         )
 
         return PointData(
-            img.data[:, 0, 0],
-            numpy.array([img.mask[0, 0]]),
+            img.array[:, 0, 0],
             assets=img.assets,
             coordinates=self.dataset.xy(x, y),
             crs=self.dataset.crs,
@@ -842,7 +829,7 @@ class ImageReader(Reader):
         resampling_method: Resampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read part of an Image defined by a geojson feature."""

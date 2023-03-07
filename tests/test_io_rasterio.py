@@ -432,10 +432,10 @@ def test_Reader_Options():
         _, mask = src.preview()
         assert not mask.all()
 
-    def callback(data, mask):
-        mask.fill(255)
+    def callback(data):
         data = data * 2
-        return data, mask
+        data.mask = False  # set mask to False
+        return data
 
     with Reader(COGEO, options={"nodata": 1, "post_process": callback}) as src:
         data_init, _ = src.tile(43, 25, 7, post_process=None)

@@ -50,7 +50,7 @@ def apply_expression(
     blocks: Sequence[str],
     bands: Sequence[str],
     data: numpy.ndarray,
-) -> numpy.ndarray:
+) -> numpy.ma.MaskedArray:
     """Apply rio-tiler expression.
 
     Args:
@@ -68,7 +68,7 @@ def apply_expression(
             f"Incompatible number of bands ({bands}) and data shape {data.shape}"
         )
 
-    return numpy.array(
+    return numpy.ma.MaskedArray(
         [
             numpy.nan_to_num(
                 numexpr.evaluate(bloc.strip(), local_dict=dict(zip(bands, data)))
