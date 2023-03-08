@@ -89,22 +89,17 @@ def mosaic_reader(
             tasks,
             allowed_exceptions=allowed_exceptions,
         ):
-            if isinstance(img, tuple):
-                img = ImageData(*img)
-
             crs = img.crs
             bounds = img.bounds
             band_names = img.band_names
 
             assets_used.append(asset)
-            pixel_selection.feed(img.as_masked())
+            pixel_selection.feed(img.array)
 
-            if pixel_selection.is_done:
-                data, mask = pixel_selection.data
+            if pixel_selection.is_done and pixel_selection.data is not None:
                 return (
                     ImageData(
-                        data,
-                        mask,
+                        pixel_selection.data,
                         assets=assets_used,
                         crs=crs,
                         bounds=bounds,
@@ -113,14 +108,12 @@ def mosaic_reader(
                     assets_used,
                 )
 
-    data, mask = pixel_selection.data
-    if data is None:
+    if pixel_selection.data is None:
         raise EmptyMosaicError("Method returned an empty array")
 
     return (
         ImageData(
-            data,
-            mask,
+            pixel_selection.data,
             assets=assets_used,
             crs=crs,
             bounds=bounds,
@@ -154,7 +147,7 @@ def mosaic_point_reader(
         kwargs (optional): Reader callable's keywords options.
 
     Returns:
-        tuple: ImageData and assets (list).
+        tuple: PointData and assets (list).
 
     Examples:
         >>> def reader(asset: str, *args, **kwargs) -> PointData:
@@ -195,14 +188,12 @@ def mosaic_point_reader(
             band_names = pt.band_names
 
             assets_used.append(asset)
-            pixel_selection.feed(pt.as_masked())
+            pixel_selection.feed(pt.array)
 
-            if pixel_selection.is_done:
-                data, mask = pixel_selection.data
+            if pixel_selection.is_done and pixel_selection.data is not None:
                 return (
                     PointData(
-                        data,
-                        numpy.array([mask], dtype="uint8"),
+                        pixel_selection.data,
                         assets=assets_used,
                         crs=crs,
                         coordinates=coordinates,
@@ -211,14 +202,12 @@ def mosaic_point_reader(
                     assets_used,
                 )
 
-    data, mask = pixel_selection.data
-    if data is None:
+    if pixel_selection.data is None:
         raise EmptyMosaicError("Method returned an empty array")
 
     return (
         PointData(
-            data,
-            numpy.array([mask], dtype="uint8"),
+            pixel_selection.data,
             assets=assets_used,
             crs=crs,
             coordinates=coordinates,

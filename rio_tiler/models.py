@@ -170,11 +170,11 @@ class PointData:
     """
 
     array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
-    band_names: List[str] = attr.ib()
-    coordinates: Optional[Tuple[float, float]] = attr.ib(default=None)
-    crs: Optional[CRS] = attr.ib(default=None)
-    assets: Optional[List] = attr.ib(default=None)
-    metadata: Optional[Dict] = attr.ib(factory=dict)
+    band_names: List[str] = attr.ib(kw_only=True)
+    coordinates: Optional[Tuple[float, float]] = attr.ib(default=None, kw_only=True)
+    crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
+    assets: Optional[List] = attr.ib(default=None, kw_only=True)
+    metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
 
     @array.validator
     def _validate_data(self, attribute, value):
@@ -202,7 +202,7 @@ class PointData:
     @property
     def mask(self) -> numpy.ndarray:
         """Return Mask in form of rasterio dataset mask."""
-        return numpy.array([numpy.logical_or.reduce(~self.array.mask)]) * numpy.uint8(
+        return numpy.array([numpy.logical_and.reduce(~self.array.mask)]) * numpy.uint8(
             255
         )
 
@@ -317,12 +317,16 @@ class ImageData:
     """
 
     array: numpy.ma.MaskedArray = attr.ib(converter=masked_and_3d)
-    assets: Optional[List] = attr.ib(default=None)
-    bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
-    crs: Optional[CRS] = attr.ib(default=None)
-    metadata: Optional[Dict] = attr.ib(factory=dict)
-    band_names: List[str] = attr.ib()
-    dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(default=None)
+    assets: Optional[List] = attr.ib(default=None, kw_only=True)
+    bounds: Optional[BoundingBox] = attr.ib(
+        default=None, converter=to_coordsbbox, kw_only=True
+    )
+    crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
+    metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
+    band_names: List[str] = attr.ib(kw_only=True)
+    dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
+        default=None, kw_only=True
+    )
 
     @band_names.default
     def _default_names(self):
@@ -344,7 +348,7 @@ class ImageData:
 
     def __iter__(self):
         """Allow for variable expansion (``arr, mask = ImageData``)"""
-        for i in (self.data, self.mask):
+        for i in (self.array.data, self.mask):
             yield i
 
     @classmethod
@@ -419,7 +423,11 @@ class ImageData:
             for img in data:
                 if img.height == max_h and img.width == max_w:
                     continue
-                img = img.resize(max_h, max_w)
+                arr = numpy.ma.MaskedArray(
+                    resize_array(img.array.data, max_h, max_w),
+                    mask=resize_array(img.array.mask * 1, max_h, max_w).astype("bool"),
+                )
+                img.array = arr
 
         arr = numpy.ma.concatenate([img.array for img in data])
 
@@ -470,7 +478,7 @@ class ImageData:
         (bands, rows, columns) -> (rows, columns, bands).
 
         """
-        return reshape_as_image(self.data)
+        return reshape_as_image(self.array.data)
 
     @property
     def width(self) -> int:
@@ -512,12 +520,12 @@ class ImageData:
 
     def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
         """Apply colormap to the image data."""
-        data, alpha = apply_cmap(self.data, colormap)
+        data, alpha = apply_cmap(self.array.data, colormap)
 
         # Use Dataset Mask which is fine
         # because in theory self.array should be a 1 band image
         array = numpy.ma.MaskedArray(data)
-        array.mask = numpy.bitwise_and(alpha == 0, self.mask == 0)
+        array.mask = numpy.bitwise_and(alpha, self.mask) == 0
 
         return ImageData(
             array,
@@ -575,8 +583,10 @@ class ImageData:
         resampling_method: Resampling = "nearest",
     ) -> "ImageData":
         """Resize data and mask."""
-        data = resize_array(self.data, height, width, resampling_method)
-        mask = resize_array(self.array.mask, height, width, resampling_method)
+        data = resize_array(self.array.data, height, width, resampling_method)
+        mask = resize_array(
+            self.array.mask * 1, height, width, resampling_method
+        ).astype("bool")
 
         return ImageData(
             numpy.ma.MaskedArray(data, mask=mask),
@@ -595,7 +605,7 @@ class ImageData:
         ).toslices()
 
         return ImageData(
-            self.data.copy()[:, row_slice, col_slice],
+            self.array[:, row_slice, col_slice].copy(),
             assets=self.assets,
             crs=self.crs,
             bounds=bbox,

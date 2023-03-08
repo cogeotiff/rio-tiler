@@ -9,7 +9,7 @@ import numpy
 class MosaicMethodBase(abc.ABC):
     """Abstract base class for rio-tiler-mosaic methods objects."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         """Init backend."""
         self.tile: Optional[numpy.ma.MaskedArray] = None
         self.exit_when_filled: bool = False
@@ -31,15 +31,9 @@ class MosaicMethodBase(abc.ABC):
         return False
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
-        if self.tile is not None:
-            data = numpy.ma.getdata(self.tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(self.tile))
-            return (data, mask * numpy.uint8(255))
-
-        else:
-            return None, None
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        return self.tile
 
     @abc.abstractmethod
     def feed(self, tile: numpy.ma.MaskedArray):

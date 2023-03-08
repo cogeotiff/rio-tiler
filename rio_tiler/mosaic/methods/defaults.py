@@ -71,19 +71,15 @@ class MeanMethod(MosaicMethodBase):
         self.stack: List[numpy.ma.MaskedArray] = []
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        tile: Optional[numpy.ma.MaskedArray] = None
         if self.stack:
             tile = numpy.ma.mean(numpy.ma.stack(self.stack, axis=0), axis=0)
             if self.enforce_data_type:
                 tile = tile.astype(self.stack[0].dtype)
 
-            data = numpy.ma.getdata(tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(tile))
-            return (data, mask * numpy.uint8(255))
-
-        else:
-            return None, None
+        return tile
 
     def feed(self, tile: Optional[numpy.ma.MaskedArray]):
         """Add data to tile."""
@@ -100,19 +96,15 @@ class MedianMethod(MosaicMethodBase):
         self.stack: List[numpy.ma.MaskedArray] = []
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        tile: Optional[numpy.ma.MaskedArray] = None
         if self.stack:
             tile = numpy.ma.median(numpy.ma.stack(self.stack, axis=0), axis=0)
             if self.enforce_data_type:
                 tile = tile.astype(self.stack[0].dtype)
 
-            data = numpy.ma.getdata(tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(tile))
-            return (data, mask * numpy.uint8(255))
-
-        else:
-            return None, None
+        return tile
 
     def feed(self, tile: Optional[numpy.ma.MaskedArray]):
         """Create a stack of tile."""
@@ -122,23 +114,19 @@ class MedianMethod(MosaicMethodBase):
 class StdevMethod(MosaicMethodBase):
     """Stack the tiles and return the Standard Deviation value."""
 
-    def __init__(self, enforce_data_type=True):
+    def __init__(self, enforce_data_type=True) -> None:
         """Overwrite base and init Stdev method."""
         super(StdevMethod, self).__init__()
         self.stack: List[numpy.ma.MaskedArray] = []
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        tile: Optional[numpy.ma.MaskedArray] = None
         if self.stack:
             tile = numpy.ma.std(numpy.ma.stack(self.stack, axis=0), axis=0)
 
-            data = numpy.ma.getdata(tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(tile))
-            return (data, mask * numpy.uint8(255))
-
-        else:
-            return None, None
+        return tile
 
     def feed(self, tile: Optional[numpy.ma.MaskedArray]):
         """Add data to tile."""
@@ -149,15 +137,13 @@ class LastBandHigh(MosaicMethodBase):
     """Feed the mosaic tile using the last band as decision factor."""
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        tile: Optional[numpy.ma.MaskedArray] = None
         if self.tile is not None:
-            data = numpy.ma.getdata(self.tile)[:-1]
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(self.tile))
-            return (data, mask * numpy.uint8(255))
+            tile = self.tile[:-1].copy()
 
-        else:
-            return None, None
+        return tile
 
     def feed(self, tile: Optional[numpy.ma.MaskedArray]):
         """Add data to tile."""
@@ -179,15 +165,13 @@ class LastBandLow(MosaicMethodBase):
     """Feed the mosaic tile using the last band as decision factor."""
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        tile: Optional[numpy.ma.MaskedArray] = None
         if self.tile is not None:
-            data = numpy.ma.getdata(self.tile)[:-1]
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(self.tile))
-            return (data, mask * numpy.uint8(255))
+            tile = self.tile[:-1].copy()
 
-        else:
-            return None, None
+        return tile
 
     def feed(self, tile: Optional[numpy.ma.MaskedArray]):
         """Add data to tile."""
