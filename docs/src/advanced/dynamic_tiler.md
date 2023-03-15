@@ -36,15 +36,8 @@ pip install fastapi uvicorn rio-tiler
 """rio-tiler tile server."""
 
 import os
-from enum import Enum
-from typing import Any, Dict, List, Optional
-from types import DynamicClassAttribute
 
-from urllib.parse import urlencode
-
-import uvicorn
-from fastapi import FastAPI, Path, Query
-from rasterio.crs import CRS
+from fastapi import FastAPI, Query
 from starlette.requests import Request
 from starlette.responses import Response
 
