@@ -198,6 +198,10 @@ def read(
                 masked=True,
             )
 
+            # if data has Nodata then we simply make sure the mask == the nodata
+            if dataset.nodata is not None:
+                data.mask |= data == dataset.nodata
+
         stats = []
         for ix in indexes:
             tags = dataset.tags(ix)
