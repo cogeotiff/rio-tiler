@@ -19,8 +19,9 @@
     # now
     with COGReader("cog.tif") as src:
         img = src.preview(width=128, height=128, max_size=None)
-        assert img.data.shape == (3, 128, 128)
-        assert img.mask.shape == (3, 128, 128)
+        assert isinstance(img.array, numpy.ma.MaskedArray)
+        assert img.array.data.shape == (3, 128, 128)
+        assert img.array.mask.shape == (3, 128, 128))
     ```
 
 - use numpy masked array in ImageData and PointData to store the data

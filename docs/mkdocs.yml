@@ -67,6 +67,7 @@ nav:
   - Migration from v1.0 to v2.0: 'v2_migration.md'
   - Migration from v2.0 to v3.0: 'v3_migration.md'
   - Migration from v3.0 to v4.0: 'v4_migration.md'
+  - Migration from v4.0 to v5.0: 'v5_migration.md'
   - Development - Contributing: 'contributing.md'
   - Release Notes: 'release-notes.md'
 
