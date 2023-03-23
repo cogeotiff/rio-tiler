@@ -304,7 +304,7 @@ class ImageData:
     """Image Data class.
 
     Attributes:
-        data (numpy.ma.MaskedArray): image values.
+        array (numpy.ma.MaskedArray): image values.
         assets (list, optional): list of assets used to construct the data values.
         bounds (BoundingBox, optional): bounding box of the data.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
