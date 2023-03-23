@@ -250,7 +250,7 @@ def test_mosaic_tiler():
         mosaic.mosaic_reader(assets, _read_tile, x, y, z, pixel_selection=aClass())
 
     # test with preview
-    # NOTE: We need to have fixed the output width and height because each preview could have different size
+    # NOTE: We need to have fix output width and height because each preview could have different size
     # Also because the 2 assets cover different bbox, getting the preview merged together doesn't make real sense
     (t, m), _ = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
     assert t.shape == (3, 256, 256)

@@ -18,7 +18,7 @@ from rasterio.warp import transform_bounds
 from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
 from rio_tiler.models import ImageData, PointData
-from rio_tiler.types import BBox, DataMaskType, Indexes, NoData
+from rio_tiler.types import BBox, Indexes, NoData
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
 
