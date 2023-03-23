@@ -150,11 +150,11 @@ def mosaic_point_reader(
         pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. Defaults to `rio_tiler.mosaic.methods.defaults.FirstMethod`.
         chunk_size (int, optional): Control the number of asset to process per loop.
         threads (int, optional): Number of threads to use. If <= 1, runs single threaded without an event loop. By default reads from the MAX_THREADS environment variable, and if not found defaults to multiprocessing.cpu_count() * 5.
-        allowed_exceptions (tuple, optional): List of exceptions which will be ignored. Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions. Defaults to `(TileOutsideBounds, )`.
+        allowed_exceptions (tuple, optional): List of exceptions which will be ignored. Note: `PointOutsideBounds` is likely to be raised and should be included in the allowed_exceptions. Defaults to `(TileOutsideBounds, )`.
         kwargs (optional): Reader callable's keywords options.
 
     Returns:
-        tuple: ImageData and assets (list).
+        tuple: PointData and assets (list).
 
     Examples:
         >>> def reader(asset: str, *args, **kwargs) -> PointData:
