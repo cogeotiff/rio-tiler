@@ -58,7 +58,7 @@ app = FastAPI(
             "content": {"image/png": {}}, "description": "Return an image.",
         }
     },
-    response_class=ImageResponse,
+    response_class=Response,
     description="Read COG and return a tile",
 )
 def tile(
