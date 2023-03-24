@@ -380,9 +380,9 @@ def test_cutline():
             src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326"
         )
         data, mask = src.part(triangle_bounds, vrt_options={"cutline": cutline})
-        assert sum(mask[:, 0]) == 0  # first line
-        assert sum(mask[0, :]) == 0  # first column
-        assert sum(mask[:, -1]) == 0  # last column
+        assert sum(mask[:, 0]) == 0  # first column
+        assert sum(mask[0, :]) == 0  # first line
+        assert sum(mask[-1, :]) == 0  # last line
 
 
 def test_parse_expression():
