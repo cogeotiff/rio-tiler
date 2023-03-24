@@ -375,7 +375,6 @@ def test_cutline():
     triangle_bounds = featureBounds(triangle_over_image_edge)
 
     with Reader(COG_RGB) as src:
-        from matplotlib import pyplot as plt
 
         cutline = utils.create_cutline(
             src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326"
