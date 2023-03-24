@@ -34,6 +34,7 @@ PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 COG_DST = os.path.join(os.path.dirname(__file__), "fixtures", "cog_name.tif")
 COG_WEB_TILED = os.path.join(os.path.dirname(__file__), "fixtures", "web.tif")
 COG_NOWEB = os.path.join(os.path.dirname(__file__), "fixtures", "noweb.tif")
+COG_RGB = os.path.join(os.path.dirname(__file__), "fixtures", "cog_rgb.tif")
 NOCOG = os.path.join(os.path.dirname(__file__), "fixtures", "nocog.tif")
 COGEO = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
@@ -358,6 +359,30 @@ def test_cutline():
     with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
             utils.create_cutline(src.dataset, bad_poly, geometry_crs="epsg:4326")
+
+    triangle_over_image_edge = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [-104.775390888988852, 38.953714348778355],
+                [-104.775146720379681, 38.953580769848777],
+                [-104.775389629827075, 38.953472856486307],
+                [-104.775390888988852, 38.953714348778355],
+            ]
+        ],
+    }
+
+    # Check when using `boundless cutline`
+    # https://github.com/cogeotiff/rio-tiler/issues/585
+    triangle_bounds = featureBounds(triangle_over_image_edge)
+    with Reader(COG_RGB) as src:
+        cutline = utils.create_cutline(
+            src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326"
+        )
+        data, mask = src.part(triangle_bounds, vrt_options={"cutline": cutline})
+        assert sum(mask[:, 0]) == 0  # first column
+        assert sum(mask[0, :]) == 0  # first line
+        assert sum(mask[-1, :]) == 0  # last line
 
 
 def test_parse_expression():
