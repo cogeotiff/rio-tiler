@@ -48,6 +48,10 @@
 
 - reader's `post_process` should be a Callable with `numpy.ma.MaskedArray` input/output
 
+# 4.1.10 (2023-03-24)
+
+* enable `boundless` geometry for cutline (author @yellowcap, https://github.com/cogeotiff/rio-tiler/pull/586)
+
 # 4.1.9 (2023-02-28)
 
 * Automatically expand 2D numpy array to 3D when creating ImageData
