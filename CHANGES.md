@@ -1,5 +1,5 @@
 
-# Next (TBD)
+# 4.1.10 (2023-03-24)
 
 * enable `boundless` geometry for cutline (author @yellowcap, https://github.com/cogeotiff/rio-tiler/pull/586)
 
