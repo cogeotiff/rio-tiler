@@ -22,7 +22,7 @@
   <a href="https://pypistats.org/packages/rio-tiler" target="_blank">
       <img src="https://img.shields.io/pypi/dm/rio-tiler.svg" alt="Downloads">
   </a>
-  <a href="https://github.com/cogeotiff/rio-tiler/blob/main/LICENSE.txt" target="_blank">
+  <a href="https://github.com/cogeotiff/rio-tiler/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/cogeotiff/rio-tiler.svg" alt="Downloads">
   </a>
   <a href="https://mybinder.org/v2/gh/cogeotiff/rio-tiler/main?filepath=docs%2Fexamples%2F" target="_blank" alt="Binder">
@@ -35,6 +35,14 @@
 **Documentation**: <a href="https://cogeotiff.github.io/rio-tiler/" target="_blank">https://cogeotiff.github.io/rio-tiler/</a>
 
 **Source Code**: <a href="https://github.com/cogeotiff/rio-tiler" target="_blank">https://github.com/cogeotiff/rio-tiler</a>
+
+---
+
+## rio-tiler **V5**
+
+This branch (`"dev"`) relates to development of rio-tiler `5.0` which is not yet ready for production use.
+
+If you're using *rio-tiler* (installed from pypi), you probably want either rio-tiler 4.x [Documentation](https://cogeotiff.github.io/rio-tiler/) or, the [`main`](https://github.com/cogeotiff/rio-tiler/tree/main) git branch.
 
 ---
 
