@@ -3,6 +3,7 @@
 import contextlib
 import math
 import warnings
+from enum import IntEnum
 from typing import Callable, Dict, Optional, Tuple, TypedDict, Union
 
 import numpy
@@ -18,7 +19,14 @@ from rasterio.warp import transform_bounds
 from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
 from rio_tiler.models import ImageData, PointData
-from rio_tiler.types import BBox, DataMaskType, Indexes, NoData
+from rio_tiler.types import (
+    BBox,
+    DataMaskType,
+    Indexes,
+    NoData,
+    RIOResampling,
+    WarpResampling,
+)
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
 
@@ -29,7 +37,8 @@ class Options(TypedDict, total=False):
     force_binary_mask: Optional[bool]
     nodata: Optional[NoData]
     vrt_options: Optional[Dict]
-    resampling_method: Optional[Resampling]
+    resampling_method: Optional[RIOResampling]
+    reproject_method: Optional[WarpResampling]
     unscale: Optional[bool]
     post_process: Optional[Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]]
 
@@ -86,7 +95,8 @@ def read(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
+    reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
@@ -104,7 +114,8 @@ def read(
         window (rasterio.windows.Window, optional): Window to read.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
@@ -122,7 +133,9 @@ def read(
             UserWarning,
         )
 
-    resampling = Resampling[resampling_method]
+    io_resampling = Resampling[resampling_method]
+    warp_resampling = Resampling[reproject_method]
+
     dst_crs = dst_crs or src_dst.crs
     with contextlib.ExitStack() as ctx:
         # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
@@ -130,7 +143,7 @@ def read(
             vrt_params = {
                 "crs": dst_crs,
                 "add_alpha": True,
-                "resampling": resampling,
+                "resampling": warp_resampling,
             }
 
             nodata = nodata if nodata is not None else src_dst.nodata
@@ -181,7 +194,7 @@ def read(
                 indexes=idx,
                 window=window,
                 out_shape=(len(idx), height, width) if height and width else None,
-                resampling=resampling,
+                resampling=io_resampling,
                 boundless=boundless,
             )
             data, mask = data[0:-1], data[-1].astype("uint8")
@@ -191,13 +204,13 @@ def read(
                 indexes=indexes,
                 window=window,
                 out_shape=(len(indexes), height, width) if height and width else None,
-                resampling=resampling,
+                resampling=io_resampling,
                 boundless=boundless,
             )
             mask = dataset.dataset_mask(
                 window=window,
                 out_shape=(height, width) if height and width else None,
-                resampling=resampling,
+                resampling=io_resampling,
                 boundless=boundless,
             )
 
@@ -257,7 +270,8 @@ def part(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
+    reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
@@ -279,7 +293,8 @@ def part(
         buffer (float, optional): Buffer to apply to each bbox edge. Defaults to `0.`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
@@ -373,6 +388,7 @@ def part(
             nodata=nodata,
             vrt_options=vrt_params,
             resampling_method=resampling_method,
+            reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
@@ -404,6 +420,7 @@ def part(
             height=height,
             window=window,
             resampling_method=resampling_method,
+            reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
@@ -424,6 +441,7 @@ def part(
         height=height,
         window=window,
         resampling_method=resampling_method,
+        reproject_method=reproject_method,
         force_binary_mask=force_binary_mask,
         unscale=unscale,
         post_process=post_process,
@@ -438,7 +456,8 @@ def point(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
+    reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
         Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
@@ -453,7 +472,8 @@ def point(
         coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -465,11 +485,11 @@ def point(
         indexes = (indexes,)
 
     with contextlib.ExitStack() as ctx:
-        # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
+        # Use WarpedVRT when User provided Nodata or VRT Option (cutline)
         if nodata is not None or vrt_options:
             vrt_params = {
                 "add_alpha": True,
-                "resampling": Resampling[resampling_method],
+                "resampling": Resampling[reproject_method],
             }
             nodata = nodata if nodata is not None else src_dst.nodata
             if nodata is not None:

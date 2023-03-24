@@ -117,8 +117,20 @@ def test_resampling_returns_different_results():
             dst_crs=constants.WEB_MERCATOR_CRS,
             resampling_method="bilinear",
         )
+        assert not numpy.array_equal(arr, arr2)
 
-    assert not numpy.array_equal(arr, arr2)
+        arr, _ = reader.part(
+            src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS
+        )
+        arr2, _ = reader.part(
+            src_dst,
+            bounds,
+            16,
+            16,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+            reproject_method="bilinear",
+        )
+        assert not numpy.array_equal(arr, arr2)
 
 
 def test_resampling_with_diff_padding_returns_different_results():

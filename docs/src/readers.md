@@ -357,6 +357,7 @@ print(stats["b1"].dict())
 - **unscale**: Apply internal rescaling factors
 - **vrt_options**: Pass WarpedVRT Option (see: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions)
 - **resampling_method**: Set default `resampling_method`
+- **reprojection_method**: Set default `reprojection_method`
 - **post_process**: Function to apply after the read operations
 
 ```python

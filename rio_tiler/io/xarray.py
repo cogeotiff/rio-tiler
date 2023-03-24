@@ -18,7 +18,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import PointOutsideBounds, RioTilerError, TileOutsideBounds
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox
+from rio_tiler.types import BBox, WarpResampling
 
 try:
     import xarray
@@ -196,7 +196,7 @@ class XarrayReader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
-        resampling_method: Resampling = "nearest",
+        resampling_method: WarpResampling = "nearest",
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
 
@@ -205,7 +205,7 @@ class XarrayReader(BaseReader):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
-            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -248,7 +248,7 @@ class XarrayReader(BaseReader):
         bbox: BBox,
         dst_crs: Optional[CRS] = None,
         bounds_crs: CRS = WGS84_CRS,
-        resampling_method: Resampling = "nearest",
+        resampling_method: WarpResampling = "nearest",
     ) -> ImageData:
         """Read part of a dataset.
 
@@ -256,7 +256,7 @@ class XarrayReader(BaseReader):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
-            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -356,7 +356,7 @@ class XarrayReader(BaseReader):
         shape: Dict,
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
-        resampling_method: Resampling = "nearest",
+        resampling_method: WarpResampling = "nearest",
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature.
 
@@ -364,6 +364,7 @@ class XarrayReader(BaseReader):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.

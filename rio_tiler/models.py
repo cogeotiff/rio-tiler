@@ -22,7 +22,14 @@ from rasterio.transform import from_bounds
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
 from rio_tiler.expression import apply_expression, get_expression_blocks
-from rio_tiler.types import BBox, ColorMapType, GDALColorMapType, IntervalTuple, NumType
+from rio_tiler.types import (
+    BBox,
+    ColorMapType,
+    GDALColorMapType,
+    IntervalTuple,
+    NumType,
+    RIOResampling,
+)
 from rio_tiler.utils import (
     get_array_statistics,
     linear_rescale,
@@ -532,7 +539,7 @@ class ImageData:
         self,
         height: int,
         width: int,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
     ) -> "ImageData":
         """Resize data and mask."""
         data = resize_array(self.data, height, width, resampling_method)
