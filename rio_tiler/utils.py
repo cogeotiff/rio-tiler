@@ -535,8 +535,6 @@ def _convert_to_raster_space(
     for point in poly_coordinates:
         xs, ys = zip(*coords(point))
         src_y, src_x = rowcol(src_dst.transform, xs, ys)
-        src_x = [max(0, min(src_dst.width, x)) for x in src_x]
-        src_y = [max(0, min(src_dst.height, y)) for y in src_y]
         polygon = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
         polygons.append(f"({polygon})")
 
