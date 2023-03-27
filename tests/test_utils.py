@@ -431,7 +431,11 @@ def test_render_numpy():
 def test_get_array_statistics():
     """Should return a valid dict with array statistics."""
     with rasterio.open(COGEO) as src:
-        arr = src.read(indexes=[1], masked=True)
+        arr = src.read(
+            indexes=[1],
+            masked=True,
+            out_shape=(src.count, int(src.height / 10), int(src.width / 10)),
+        )
 
     stats = utils.get_array_statistics(arr)
     assert len(stats) == 1
@@ -460,7 +464,10 @@ def test_get_array_statistics():
     assert "percentile_4" in stats[0]
 
     with rasterio.open(COG_CMAP) as src:
-        arr = src.read(masked=True)
+        arr = src.read(
+            masked=True,
+            out_shape=(src.count, int(src.height / 10), int(src.width / 10)),
+        )
 
     stats = utils.get_array_statistics(arr, categorical=True)
     assert len(stats) == 1
@@ -482,7 +489,10 @@ def test_get_array_statistics():
 
     # COG_NAN has nodata value set to 0.0 but also contains NaN values
     with rasterio.open(COG_NAN) as src:
-        arr = src.read(masked=True)
+        arr = src.read(
+            masked=True,
+            out_shape=(src.count, int(src.height / 10), int(src.width / 10)),
+        )
     stats = utils.get_array_statistics(arr)
     assert not math.isnan(stats[0]["min"])
     assert not math.isnan(stats[0]["max"])

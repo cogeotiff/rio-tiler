@@ -33,7 +33,7 @@ from rio_tiler.errors import (
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, DataMaskType, Indexes, NumType, RIOResampling
+from rio_tiler.types import BBox, Indexes, NumType, RIOResampling
 from rio_tiler.utils import create_cutline, has_alpha_band, has_mask_band
 
 
@@ -92,17 +92,17 @@ class Reader(BaseReader):
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
         if not self.dataset:
-            dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
-            if dataset.gcps[0]:
-                self.dataset = self._ctx_stack.enter_context(
-                    WarpedVRT(
-                        dataset,
-                        src_crs=dataset.gcps[1],
-                        src_transform=transform.from_gcps(dataset.gcps[0]),
-                    )
-                )
-            else:
-                self.dataset = dataset
+            self.dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
+
+        if self.dataset.gcps[0]:
+            vrt_options = {
+                "src_crs": self.dataset.gcps[1],
+                "src_transform": transform.from_gcps(self.dataset.gcps[0]),
+            }
+
+            self.dataset = self._ctx_stack.enter_context(
+                WarpedVRT(self.dataset, **vrt_options)
+            )
 
         self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
@@ -669,7 +669,7 @@ class ImageReader(Reader):
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read a Web Map tile from an Image.
@@ -722,7 +722,7 @@ class ImageReader(Reader):
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read part of an Image.
@@ -780,7 +780,7 @@ class ImageReader(Reader):
         expression: Optional[str] = None,
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> PointData:
         """Read a pixel value from an Image.
@@ -809,8 +809,7 @@ class ImageReader(Reader):
         )
 
         return PointData(
-            img.data[:, 0, 0],
-            numpy.array([img.mask[0, 0]]),
+            img.array[:, 0, 0],
             assets=img.assets,
             coordinates=self.dataset.xy(x, y),
             crs=self.dataset.crs,
@@ -829,7 +828,7 @@ class ImageReader(Reader):
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read part of an Image defined by a geojson feature."""
@@ -851,6 +850,6 @@ class ImageReader(Reader):
         )
 
         shape = shape.get("geometry", shape)
-        mask = geometry_mask([shape], (img.height, img.width), self.transform)
-        img.mask = mask * 255
+        img.array.mask = geometry_mask([shape], (img.height, img.width), self.transform)
+
         return img

@@ -1,4 +1,72 @@
 
+# 5.0.0 (TBD)
+
+- Fix potential issue when getting statistics for non-valid data
+
+**breaking changes**
+
+- remove support for non-binary mask values (e.g non-binary alpha bands, ref: [rasterio/rasterio#1721](https://github.com/rasterio/rasterio/issues/1721#issuecomment-586547617))
+
+- switch from PER-DATASET to PER-BAND mask (https://github.com/cogeotiff/rio-tiler/pull/580)
+
+    ```python
+    # before
+    with COGReader("cog.tif") as src:
+        img = src.preview(width=128, height=128, max_size=None)
+        assert img.data.shape == (3, 128, 128)
+        assert img.mask.shape == (128, 128)
+
+    # now
+    with COGReader("cog.tif") as src:
+        img = src.preview(width=128, height=128, max_size=None)
+        assert isinstance(img.array, numpy.ma.MaskedArray)
+        assert img.array.data.shape == (3, 128, 128)
+        assert img.array.mask.shape == (3, 128, 128))
+    ```
+
+- use numpy masked array in ImageData and PointData to store the data
+
+    ```python
+    # before
+    arr = numpy.zeros((1, 256, 256), dtype="uint16")
+    img = ImageData(arr)
+    assert isintance(img.data, numpy.ndarray)  # Attribute
+
+    # now
+    arr = numpy.zeros((1, 256, 256), dtype="uint16")
+    img = ImageData(arr)
+    assert isintance(img.array, numpy.ma.MaskedArray)  # Attribute
+    assert isintance(img.data, numpy.ndarray)  # property
+    assert isintance(img.mask, numpy.ndarray)  # property
+    ```
+
+- remove `ImageData.from_array` method (because we now support MaskedArray directly)
+
+- `rio_tiler.expression.apply_expression` input/output type change to `numpy.ma.MaskedArray`
+
+- rio-tiler `mosaic` methods return `numpy.ma.MaskedArray`
+
+- reader's `post_process` should be a Callable with `numpy.ma.MaskedArray` input/output
+
+- add `reproject_method` option in `rio_tiler.reader`'s method to select the `resampling` method used during reprojection
+
+    ```python
+    # before
+    with Reader("cog.tif") as src:
+        im = src.preview(
+            dst_crs="epsg:4326",
+            resampling_method="bilinear",  # use `bilinear` for both resizing and reprojection
+        )
+
+    # now
+    with Reader("cog.tif") as src:
+        im = src.preview(
+            dst_crs="epsg:4326",
+            resampling_method="cubic",  # use `cubic` for resizing
+            reproject_method="bilinear",  # use `bilinear` for reprojection
+        )
+    ```
+
 # 4.1.10 (2023-03-24)
 
 * enable `boundless` geometry for cutline (author @yellowcap, https://github.com/cogeotiff/rio-tiler/pull/586)
