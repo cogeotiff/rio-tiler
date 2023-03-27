@@ -48,6 +48,25 @@
 
 - reader's `post_process` should be a Callable with `numpy.ma.MaskedArray` input/output
 
+- add `reproject_method` option in `rio_tiler.reader`'s method to select the `resampling` method used during reprojection
+
+    ```python
+    # before
+    with Reader("cog.tif") as src:
+        im = src.preview(
+            dst_crs="epsg:4326",
+            resampling_method="bilinear",  # use `bilinear` for both resizing and reprojection
+        )
+
+    # now
+    with Reader("cog.tif") as src:
+        im = src.preview(
+            dst_crs="epsg:4326",
+            resampling_method="cubic",  # use `cubic` for resizing
+            reproject_method="bilinear",  # use `bilinear` for reprojection
+        )
+    ```
+
 # 4.1.10 (2023-03-24)
 
 * enable `boundless` geometry for cutline (author @yellowcap, https://github.com/cogeotiff/rio-tiler/pull/586)

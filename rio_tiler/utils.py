@@ -23,7 +23,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS
 from rio_tiler.errors import RioTilerError
-from rio_tiler.types import BBox, ColorMapType, IntervalTuple
+from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
 
 def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
@@ -635,7 +635,7 @@ def resize_array(
     data: numpy.ndarray,
     height: int,
     width: int,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
 ) -> numpy.ndarray:
     """resize array to a given height and width."""
     out_shape: Union[Tuple[int, int], Tuple[int, int, int]]

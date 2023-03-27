@@ -12,7 +12,6 @@ from morecantile import BoundingBox, Coords, Tile, TileMatrixSet
 from morecantile.utils import _parse_tile_arg
 from rasterio import transform
 from rasterio.crs import CRS
-from rasterio.enums import Resampling
 from rasterio.features import bounds as featureBounds
 from rasterio.features import geometry_mask
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
@@ -34,7 +33,7 @@ from rio_tiler.errors import (
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, Indexes, NumType
+from rio_tiler.types import BBox, Indexes, NumType, RIOResampling
 from rio_tiler.utils import create_cutline, has_alpha_band, has_mask_band
 
 
@@ -667,7 +666,7 @@ class ImageReader(Reader):
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         force_binary_mask: bool = True,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
             Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
@@ -683,7 +682,7 @@ class ImageReader(Reader):
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
-            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -720,7 +719,7 @@ class ImageReader(Reader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         force_binary_mask: bool = True,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
             Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
@@ -736,7 +735,7 @@ class ImageReader(Reader):
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
             force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
-            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -826,7 +825,7 @@ class ImageReader(Reader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         force_binary_mask: bool = True,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
             Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]

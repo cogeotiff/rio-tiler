@@ -1,6 +1,4 @@
 
-# Breaking changes
-
 `rio-tiler` version 5.0 introduced [many breaking changes](release-notes.md). This
 document aims to help with migrating your code to use `rio-tiler` 5.0.
 
@@ -106,3 +104,30 @@ def data(self) -> Optional[numpy.ma.MaskedArray]:
     """Return data."""
     return self.tile
 ```
+
+## Reprojection and Resizing resampling methods
+
+With `rio-tiler >=5.0`, you can now select with resampling method to use for the `reprojection` and `resizing` processes independently by using the `reproject_method` and `resampling_method` options in `rio_tiler.reader`'s function.
+
+The `resampling_method` option will control the `IO` resampling (e.g resizing) while the `reproject_method` will be using in the `WarpedVRT` for the reprojection.
+
+```python
+# before
+with Reader("cog.tif") as src:
+    im = src.preview(
+        dst_crs="epsg:4326",
+        resampling_method="bilinear",  # use `bilinear` for both resizing and reprojection
+    )
+
+# now
+with Reader("cog.tif") as src:
+    im = src.preview(
+        dst_crs="epsg:4326",
+        resampling_method="cubic",  # use `cubic` for resizing
+        reproject_method="bilinear",  # use `bilinear` for reprojection
+    )
+```
+
+
+!!! Important
+    In the `XarrayReader` we are still using only one `resampling_method` option because we are using `rioxarray` for read and reprojection processes and it does not have both options available.
