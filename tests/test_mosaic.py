@@ -14,7 +14,6 @@ from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideB
 from rio_tiler.io import Reader, STACReader
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.mosaic.methods import defaults
-from rio_tiler.types import DataMaskType
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
 asset2 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog2.tif")
@@ -51,11 +50,10 @@ def _read_part(src_path: str, *args, **kwargs) -> ImageData:
         return src.part(*args, **kwargs)
 
 
-def _read_preview(src_path: str, *args, **kwargs) -> DataMaskType:
+def _read_preview(src_path: str, *args, **kwargs) -> ImageData:
     """Read preview from an asset"""
     with Reader(src_path) as src:
-        data, mask = src.preview(*args, **kwargs)
-    return data, mask
+        return src.preview(*args, **kwargs)
 
 
 def _read_point(src_path: str, *args, **kwargs) -> PointData:
@@ -252,7 +250,7 @@ def test_mosaic_tiler():
         mosaic.mosaic_reader(assets, _read_tile, x, y, z, pixel_selection=aClass())
 
     # test with preview
-    # NOTE: We need to fix the output width and height because each preview could have different size
+    # NOTE: We need to have fix output width and height because each preview could have different size
     # Also because the 2 assets cover different bbox, getting the preview merged together doesn't make real sense
     (t, m), _ = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
     assert t.shape == (3, 256, 256)
@@ -445,8 +443,8 @@ def test_mosaic_tiler_with_imageDataClass():
     assert img.data.shape == (3, 256, 256)
     assert img.mask.shape == (256, 256)
     assert assets_used == img.assets == assets
-    assert not img.crs
-    assert not img.bounds
+    assert img.crs
+    assert img.bounds
 
     bbox = [-75.98703377413767, 44.93504283293786, -71.337604723999, 47.09685599202324]
     with Reader(assets[0]) as src:

@@ -66,15 +66,13 @@ def test_imageData_AutoRescalingAllTypes(dtype):
 
 def test_16bit_PNG():
     """Uint16 Mask value should be between 0 and 65535 for PNG."""
-    mask = numpy.zeros((256, 256), dtype="uint16") + 255
-    mask[0:10, 0:10] = 0
-    mask[10:11, 10:11] = 100
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0:10, 0:10] = True
 
     with pytest.warns(None):
-        img = ImageData(
-            numpy.zeros((1, 256, 256), dtype="uint16"),
-            mask,
-        ).render(img_format="PNG")
+        arr = numpy.ma.MaskedArray(numpy.zeros((1, 256, 256), dtype="uint16"))
+        arr.mask = mask.copy()
+        img = ImageData(arr).render(img_format="PNG")
 
         with rasterio.open(BytesIO(img)) as src:
             assert src.count == 2
@@ -83,14 +81,12 @@ def test_16bit_PNG():
             assert arr.min() == 0
             assert arr.max() == 65535
             assert (arr[0:10, 0:10] == 0).all()
-            assert (arr[10:11, 10:11] == 25700).all()
             assert (arr[11:, 11:] == 65535).all()
 
     with pytest.warns(None):
-        img = ImageData(
-            numpy.zeros((3, 256, 256), dtype="uint16"),
-            mask,
-        ).render(img_format="PNG")
+        arr = numpy.ma.MaskedArray(numpy.zeros((3, 256, 256), dtype="uint16"))
+        arr.mask = mask.copy()
+        img = ImageData(arr).render(img_format="PNG")
 
         with rasterio.open(BytesIO(img)) as src:
             assert src.count == 4
@@ -99,7 +95,6 @@ def test_16bit_PNG():
             assert arr.min() == 0
             assert arr.max() == 65535
             assert (arr[0:10, 0:10] == 0).all()
-            assert (arr[10:11, 10:11] == 25700).all()
             assert (arr[11:, 11:] == 65535).all()
 
 
@@ -244,10 +239,29 @@ def test_point_data():
 
     pts = PointData.create_from_list(
         [
-            PointData(numpy.array([1]), mask=numpy.array([255])),
-            PointData(numpy.array([1]), mask=numpy.array([0])),
+            PointData(numpy.ma.MaskedArray([1], [0])),
+            PointData(numpy.ma.MaskedArray([1], [1])),
         ]
     )
+    assert pts.array.mask.tolist() == [False, True]
+    assert pts.mask.tolist() == [0]
+
+    pts = PointData.create_from_list(
+        [
+            PointData(numpy.ma.MaskedArray([1], [0])),
+            PointData(numpy.ma.MaskedArray([1], [0])),
+        ]
+    )
+    assert pts.array.mask.tolist() == [False, False]
+    assert pts.mask.tolist() == [255]
+
+    pts = PointData.create_from_list(
+        [
+            PointData(numpy.ma.MaskedArray([1], [1])),
+            PointData(numpy.ma.MaskedArray([1], [1])),
+        ]
+    )
+    assert pts.array.mask.tolist() == [True, True]
     assert pts.mask.tolist() == [0]
 
     with pytest.raises(InvalidPointDataError):
@@ -256,8 +270,8 @@ def test_point_data():
     with pytest.raises(InvalidPointDataError):
         PointData.create_from_list(
             [
-                PointData(numpy.array([1]), coordinates=(0, 0)),
-                PointData(numpy.array([1]), coordinates=(0, 1)),
+                PointData(numpy.ma.MaskedArray([1]), coordinates=(0, 0)),
+                PointData(numpy.ma.MaskedArray([1]), coordinates=(0, 1)),
             ]
         )
 
@@ -265,10 +279,14 @@ def test_point_data():
         PointData.create_from_list(
             [
                 PointData(
-                    numpy.array([1]), coordinates=(0, 0), crs=CRS.from_epsg(3857)
+                    numpy.ma.MaskedArray([1]),
+                    coordinates=(0, 0),
+                    crs=CRS.from_epsg(3857),
                 ),
                 PointData(
-                    numpy.array([1]), coordinates=(0, 0), crs=CRS.from_epsg(4326)
+                    numpy.ma.MaskedArray([1]),
+                    coordinates=(0, 0),
+                    crs=CRS.from_epsg(4326),
                 ),
             ]
         )
@@ -284,13 +302,18 @@ def test_image_apply_colormap():
     assert im.mask.all()
 
     cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
-    arr = numpy.zeros((1, 256, 256), dtype="uint8") + 1
-    arr[0, 0, 0] = 0
-    mask = numpy.zeros((256, 256), dtype="uint8") + 255
-    im = ImageData(arr, mask).apply_colormap(cm)
+    data = numpy.zeros((1, 256, 256), dtype="uint8") + 1
+    data[0, 0, 0] = 0
 
+    im = ImageData(data)
+    assert im.array.data.shape == (1, 256, 256)
+    assert im.array.mask.shape == (1, 256, 256)
+
+    im = im.apply_colormap(cm)
     # data[0, 1, 1] is 1 so after colormap it should be 255,255,255 and mask should be 255
     assert im.data[:, 1, 1].tolist() == [255, 255, 255]
+    assert im.array.data.shape == (3, 256, 256)
+    assert im.array.mask.shape == (3, 256, 256)
     assert im.mask[1, 1] == 255
 
     # data[0, 0, 0] is 0 so after colormap it should be 0,0,0 and mask should be 255 (based on the colormap Alpha value)
@@ -300,12 +323,17 @@ def test_image_apply_colormap():
     cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
     arr = numpy.zeros((1, 256, 256), dtype="uint8") + 1
     arr[0, 0, 0] = 0
-    mask = numpy.zeros((256, 256), dtype="uint8") + 255
-    mask[0, 0] = 0
 
-    im = ImageData(arr, mask).apply_colormap(cm)
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0, 0, 0] = True
+
+    im = ImageData(numpy.ma.MaskedArray(arr, mask=mask)).apply_colormap(cm)
     # data[0, 0, 0] is 0 so after colormap it should be 0,0,0 and mask should be 0 (because it was masked by the original mask)
     assert im.data[:, 0, 0].tolist() == [0, 0, 0]
+    assert im.array.mask[:, 1, 1].tolist() == [False, False, False]
+    assert im.mask[1, 1] == 255
+
+    assert im.array.mask[:, 0, 0].tolist() == [True, True, True]
     assert im.mask[0, 0] == 0
 
 
@@ -353,9 +381,9 @@ def test_image_from_bytes():
 
     data = numpy.zeros((1, 256, 256), dtype="uint8")
     data[0:100, 0:100] = 1
-    mask = numpy.zeros((256, 256), dtype="uint8") + 255
-    mask[0:10, 0:10] = 0
-    img = ImageData(data, mask)
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0:10, 0:10] = True
+    img = ImageData(numpy.ma.MaskedArray(data, mask=mask))
 
     im = ImageData.from_bytes(img.render(img_format="PNG", add_mask=True))
     assert im.data.shape == (1, 256, 256)
