@@ -183,15 +183,15 @@ def read(
             # and then split the data and mask values
             alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
             idx = tuple(indexes) + (alpha_idx,)
-            data = dataset.read(
+            values = dataset.read(
                 indexes=idx,
                 window=window,
                 out_shape=(len(idx), height, width) if height and width else None,
                 resampling=io_resampling,
                 boundless=boundless,
             )
-            mask = ~data[-1].astype("bool")
-            data = numpy.ma.MaskedArray(data[0:-1])
+            mask = ~values[-1].astype("bool")
+            data = numpy.ma.MaskedArray(values[0:-1])
             data.mask = mask
 
         else:
@@ -224,7 +224,6 @@ def read(
         # TODO: DEPRECATED, masked array are already using bool
         if force_binary_mask:
             pass
-            # mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
 
         if unscale:
             data = data.astype("float32", casting="unsafe")
@@ -288,7 +287,6 @@ def part(
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
-        force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
