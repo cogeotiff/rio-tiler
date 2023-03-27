@@ -182,17 +182,41 @@ def read(
             # If dataset has an alpha band we need to get the mask using the alpha band index
             # and then split the data and mask values
             alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
-            idx = tuple(indexes) + (alpha_idx,)
-            values = dataset.read(
-                indexes=idx,
-                window=window,
-                out_shape=(len(idx), height, width) if height and width else None,
-                resampling=io_resampling,
-                boundless=boundless,
-            )
-            mask = ~values[-1].astype("bool")
-            data = numpy.ma.MaskedArray(values[0:-1])
-            data.mask = mask
+
+            # Read Data and Mask separately
+            # Special case (see https://github.com/rasterio/rasterio/issues/2798)
+            if dataset.dtypes[alpha_idx - 1] != dataset.dtypes[indexes[0] - 1]:
+                values = dataset.read(
+                    indexes=indexes,
+                    window=window,
+                    out_shape=(len(indexes), height, width)
+                    if height and width
+                    else None,
+                    resampling=io_resampling,
+                    boundless=boundless,
+                )
+                mask = dataset.read(
+                    indexes=(alpha_idx,),
+                    window=window,
+                    out_shape=(1, height, width) if height and width else None,
+                    resampling=io_resampling,
+                    boundless=boundless,
+                )
+                data = numpy.ma.MaskedArray(values)
+                data.mask = ~mask.astype("bool")
+
+            else:
+                idx = tuple(indexes) + (alpha_idx,)
+                values = dataset.read(
+                    indexes=idx,
+                    window=window,
+                    out_shape=(len(idx), height, width) if height and width else None,
+                    resampling=io_resampling,
+                    boundless=boundless,
+                )
+                mask = ~values[-1].astype("bool")
+                data = numpy.ma.MaskedArray(values[0:-1])
+                data.mask = mask
 
         else:
             data = dataset.read(

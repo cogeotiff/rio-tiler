@@ -9,10 +9,10 @@ from rasterio.io import MemoryFile
 from rio_tiler.io import Reader
 
 
-def test_mask_bilinear(dataset):
+def test_mask_bilinear(dataset_fixture):
     """Test mask read with bilinear resampling"""
     with MemoryFile(
-        dataset(
+        dataset_fixture(
             crs=CRS.from_epsg(32632),
             bounds=(382792.5, 362992.5, 610507.5, 595207.5),
             dtype="uint8",
