@@ -80,7 +80,7 @@ def tilejson(
     url: str = Query(..., description="Cloud Optimized GeoTIFF URL."),
 ):
     """Return TileJSON document for a COG."""
-    tile_url = request.url_for("tile", z='{z}', x='{x}', y='{y}')
+    tile_url = str(request.url_for("tile", z="{z}", x="{x}", y="{y}"))
     tile_url = f"{tile_url}?url={url}"
 
     with Reader(url) as cog:
