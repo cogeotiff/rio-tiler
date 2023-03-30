@@ -10,10 +10,11 @@ from rio_tiler.mosaic.methods.base import MosaicMethodBase
 class FirstMethod(MosaicMethodBase):
     """Feed the mosaic tile with the first pixel available."""
 
-    def __init__(self):
+    def __init__(self, cutline_mask: numpy.ndarray = None):
         """Overwrite base and init First method."""
-        super(FirstMethod, self).__init__()
-        self.exit_when_filled = True
+        super(FirstMethod, self).__init__(
+            exit_when_filled=True, cutline_mask=cutline_mask
+        )
 
     def feed(self, tile: Optional[numpy.ma.MaskedArray]):
         """Add data to tile."""

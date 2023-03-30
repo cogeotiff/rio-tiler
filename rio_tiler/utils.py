@@ -1,5 +1,4 @@
 """rio_tiler.utils: utility functions."""
-
 import os
 import warnings
 from io import BytesIO
@@ -13,7 +12,7 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
-from rasterio.features import is_valid_geom
+from rasterio.features import is_valid_geom, rasterize
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
 from rasterio.transform import from_bounds, rowcol
@@ -664,4 +663,30 @@ def normalize_bounds(bounds: BBox) -> BBox:
         min(bounds[1], bounds[3]),
         max(bounds[0], bounds[2]),
         max(bounds[1], bounds[3]),
+    )
+
+
+def compute_mask(
+    geometry: Dict,
+    height: int,
+    width: int,
+    transform: Affine,
+    all_touched: bool = False,
+) -> numpy.ndarray:
+    """Rasterize the input geometry using the raster definition in transform and size"""
+
+    if "geometry" in geometry:
+        geometry = geometry["geometry"]
+
+    if not is_valid_geom(geometry):
+        raise RioTilerError("Invalid geometry")
+
+    return rasterize(
+        [geometry],
+        out_shape=(height, width),
+        transform=transform,
+        all_touched=all_touched,
+        default_value=0,
+        fill=1,
+        dtype="uint8",
     )

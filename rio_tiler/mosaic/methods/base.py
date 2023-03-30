@@ -9,10 +9,13 @@ import numpy
 class MosaicMethodBase(abc.ABC):
     """Abstract base class for rio-tiler-mosaic methods objects."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self, cutline_mask: numpy.ndarray = None, exit_when_filled: bool = False
+    ) -> None:
         """Init backend."""
+        self.cutline_mask = cutline_mask
         self.tile: Optional[numpy.ma.MaskedArray] = None
-        self.exit_when_filled: bool = False
+        self.exit_when_filled: bool = exit_when_filled
 
     @property
     def is_done(self) -> bool:
@@ -25,8 +28,19 @@ class MosaicMethodBase(abc.ABC):
         if self.tile is None:
             return False
 
-        if self.exit_when_filled and not numpy.ma.is_masked(self.tile):
-            return True
+        if self.exit_when_filled:
+            print(
+                "Cutline/Tile masks",
+                numpy.sum(self.cutline_mask != 0),
+                numpy.sum(self.tile.mask),
+            )
+            if self.cutline_mask is not None and not numpy.sum(
+                numpy.where(self.cutline_mask == 0, self.tile.mask, 0)
+            ):
+                print("!!! YES! Stopping early")
+                return True
+            elif not numpy.ma.is_masked(self.tile):
+                return True
 
         return False
 
