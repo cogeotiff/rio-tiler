@@ -12,6 +12,7 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.features import bounds as featureBounds
 from rasterio.features import is_valid_geom, rasterize
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
@@ -21,7 +22,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS
-from rio_tiler.errors import RioTilerError
+from rio_tiler.errors import InvalidCutlineDataError, RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
 
@@ -690,3 +691,49 @@ def compute_mask(
         fill=1,
         dtype="uint8",
     )
+
+
+def get_cutline_args(
+    geometry: Optional[Dict] = None,
+    geometry_crs: Optional[CRS] = None,
+    target_resolution: Optional[float] = None,
+) -> Dict:
+    """Compute rasterization parameters for cutline mask array"""
+
+    if geometry is None:
+        return {}
+    elif geometry_crs is None or target_resolution is None:
+        raise InvalidCutlineDataError()
+
+    bbox = featureBounds(geometry)
+
+    # Compute width and height in target resolution
+    width = int(numpy.ceil((bbox[2] - bbox[0]) / target_resolution))
+    height = int(numpy.ceil((bbox[3] - bbox[1]) / target_resolution))
+
+    # Ensure bbox is a multiple of the target resolution.
+    bbox = (
+        bbox[0],
+        bbox[1],
+        bbox[0] + width * target_resolution,
+        bbox[1]
+        + height * target_resolution,  # Assuming Y min is at the top of the image
+    )
+
+    transform = Affine(
+        target_resolution,
+        0,
+        bbox[0],
+        0,
+        -target_resolution,  # Assuming Y min is at the top of the image
+        bbox[3],
+    )
+    cutline_mask = compute_mask(geometry, height, width, transform)
+
+    return {
+        "bbox": bbox,
+        "bounds_crs": geometry_crs,
+        "width": width,
+        "height": height,
+        "cutline_mask": cutline_mask,
+    }

@@ -29,15 +29,9 @@ class MosaicMethodBase(abc.ABC):
             return False
 
         if self.exit_when_filled:
-            print(
-                "Cutline/Tile masks",
-                numpy.sum(self.cutline_mask != 0),
-                numpy.sum(self.tile.mask),
-            )
             if self.cutline_mask is not None and not numpy.sum(
                 numpy.where(self.cutline_mask == 0, self.tile.mask, 0)
             ):
-                print("!!! YES! Stopping early")
                 return True
             elif not numpy.ma.is_masked(self.tile):
                 return True
