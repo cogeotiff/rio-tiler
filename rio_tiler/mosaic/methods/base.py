@@ -10,10 +10,12 @@ class MosaicMethodBase(abc.ABC):
     """Abstract base class for rio-tiler-mosaic methods objects."""
 
     def __init__(
-        self, cutline_mask: numpy.ndarray = None, exit_when_filled: bool = False
+        self,
+        cutline_mask: Optional[numpy.ndarray] = None,
+        exit_when_filled: Optional[bool] = False,
     ) -> None:
         """Init backend."""
-        self.cutline_mask = cutline_mask
+        self.cutline_mask: numpy.ndarray = cutline_mask
         self.tile: Optional[numpy.ma.MaskedArray] = None
         self.exit_when_filled: bool = exit_when_filled
 

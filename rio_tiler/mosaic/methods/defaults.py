@@ -24,6 +24,10 @@ class FirstMethod(MosaicMethodBase):
         pidex = self.tile.mask & ~tile.mask
 
         mask = numpy.where(pidex, tile.mask, self.tile.mask)
+
+        if self.cutline_mask is not None:
+            mask = numpy.where(~self.cutline_mask, mask, True)
+
         self.tile = numpy.ma.where(pidex, tile, self.tile)
         self.tile.mask = mask
 

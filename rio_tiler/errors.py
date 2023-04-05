@@ -79,7 +79,3 @@ class AssetAsBandError(RioTilerError):
 
 class InvalidPointDataError(RioTilerError):
     """Invalid PointData."""
-
-
-class InvalidCutlineDataError(RioTilerError):
-    """If geometry is specified, also specify geometry_crs and target_resolution"""

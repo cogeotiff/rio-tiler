@@ -1,21 +1,9 @@
 """rio_tiler.mosaic: create tile from multiple assets."""
 
 from inspect import isclass
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Type,
-    Union,
-    cast,
-)
+from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, cast
 
 import numpy
-from rasterio import Affine
 from rasterio.crs import CRS
 
 from rio_tiler.constants import MAX_THREADS
@@ -30,16 +18,13 @@ from rio_tiler.mosaic.methods.base import MosaicMethodBase
 from rio_tiler.mosaic.methods.defaults import FirstMethod
 from rio_tiler.tasks import create_tasks, filter_tasks
 from rio_tiler.types import BBox
-from rio_tiler.utils import _chunks, get_cutline_args
+from rio_tiler.utils import _chunks
 
 
 def mosaic_reader(
     mosaic_assets: Sequence,
     reader: Callable[..., ImageData],
     *args: Any,
-    geometry: Optional[Dict] = None,
-    geometry_crs: Optional[CRS] = None,
-    target_resolution: Optional[Union[float, int]] = None,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
     chunk_size: Optional[int] = None,
     threads: int = MAX_THREADS,
@@ -78,17 +63,11 @@ def mosaic_reader(
 
 
     """
-
-    geom_kwargs = get_cutline_args(geometry, geometry_crs, target_resolution)
-    kwargs.update(geom_kwargs)
-
     if isclass(pixel_selection):
         pixel_selection = cast(Type[MosaicMethodBase], pixel_selection)
 
         if issubclass(pixel_selection, MosaicMethodBase):
-            pixel_selection = pixel_selection(
-                cutline_mask=kwargs.get("cutline_mask", None)
-            )
+            pixel_selection = pixel_selection()
 
     if not isinstance(pixel_selection, MosaicMethodBase):
         raise InvalidMosaicMethod(
