@@ -1,31 +1,31 @@
 """rio-tiler.mosaic.methods abc class."""
 
 import abc
+from dataclasses import dataclass, field
 from typing import Optional, Tuple
 
 import numpy
 
 
+@dataclass
 class MosaicMethodBase(abc.ABC):
     """Abstract base class for rio-tiler-mosaic methods objects."""
 
-    def __init__(self) -> None:
-        """Init backend."""
-        self.tile: Optional[numpy.ma.MaskedArray] = None
-        self.exit_when_filled: bool = False
+    mosaic: Optional[numpy.ma.MaskedArray] = field(default=None, init=False)
+    exit_when_filled: bool = field(default=False, init=False)
 
     @property
     def is_done(self) -> bool:
-        """Check if the tile filling is done.
+        """Check if the mosaic filling is done.
 
         Returns:
             bool
 
         """
-        if self.tile is None:
+        if self.mosaic is None:
             return False
 
-        if self.exit_when_filled and not numpy.ma.is_masked(self.tile):
+        if self.exit_when_filled and not numpy.ma.is_masked(self.mosaic):
             return True
 
         return False
@@ -33,13 +33,13 @@ class MosaicMethodBase(abc.ABC):
     @property
     def data(self) -> Optional[numpy.ma.MaskedArray]:
         """Return data."""
-        return self.tile
+        return self.mosaic
 
     @abc.abstractmethod
-    def feed(self, tile: numpy.ma.MaskedArray):
-        """Fill mosaic tile.
+    def feed(self, array: numpy.ma.MaskedArray):
+        """Fill mosaic array.
 
         Args:
-            tile (numpy.ma.ndarray): data
+            array (numpy.ma.ndarray): data
 
         """

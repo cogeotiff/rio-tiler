@@ -2,6 +2,7 @@
 # 5.0.0 (TBD)
 
 - Fix potential issue when getting statistics for non-valid data
+- add `rio-tiler.mosaic.methods.PixelSelectionMethod` enums with all defaults methods
 
 **breaking changes**
 
@@ -66,6 +67,9 @@
             reproject_method="bilinear",  # use `bilinear` for reprojection
         )
     ```
+
+- refactored the `MosaicMethodBase` to use python's dataclass
+- changed variable names in `MosaicMethodBase` (`tile` -> `mosaic`)
 
 # 4.1.10 (2023-03-24)
 
