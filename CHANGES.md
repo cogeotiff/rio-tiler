@@ -69,7 +69,12 @@
     ```
 
 - refactored the `MosaicMethodBase` to use python's dataclass
+
 - changed variable names in `MosaicMethodBase` (`tile` -> `mosaic`)
+
+- `rio_tiler.mosaic.methods.defaults.LastBandHigh` renamed `LastBandHighMethod`
+- `rio_tiler.mosaic.methods.defaults.LastBandLow` renamed `LastBandLowMethod`
+
 
 # 4.1.10 (2023-03-24)
 

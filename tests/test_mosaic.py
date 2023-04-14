@@ -204,7 +204,7 @@ def test_mosaic_tiler():
         x,
         y,
         z,
-        pixel_selection=defaults.LastBandHigh(),
+        pixel_selection=defaults.LastBandHighMethod(),
         indexes=(1, 2, 3, 1),
     )
     assert t.shape == (3, 256, 256)
@@ -220,7 +220,7 @@ def test_mosaic_tiler():
         x,
         y,
         z,
-        pixel_selection=defaults.LastBandLow(),
+        pixel_selection=defaults.LastBandLowMethod(),
         indexes=(1, 2, 3, 1),
     )
     assert t.shape == (3, 256, 256)
@@ -549,8 +549,8 @@ def test_mosaic_all_methods(m):
 @pytest.mark.parametrize(
     "m",
     [
-        defaults.LastBandHigh,
-        defaults.LastBandLow,
+        defaults.LastBandHighMethod,
+        defaults.LastBandLowMethod,
     ],
 )
 def test_mosaic_methods_last(m):
