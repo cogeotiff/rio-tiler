@@ -102,7 +102,7 @@ def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
 @property
 def data(self) -> Optional[numpy.ma.MaskedArray]:
     """Return data."""
-    return self.tile
+    return self.mosaic  # `tile` has been renamed `array`
 ```
 
 ## Reprojection and Resizing resampling methods

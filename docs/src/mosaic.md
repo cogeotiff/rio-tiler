@@ -149,12 +149,12 @@ the `rio_tiler.mosaic.methods.base.MosaicMethodBase` abstract base class defines
 
 #### Properties
 
-- **is_done**: returns a boolean indicating if the process is done filling the tile
-- **data**: returns the output **tile** and **mask** numpy arrays
+- **is_done**: returns a boolean indicating if the process is done filling the array
+- **data**: returns the output mosaic array (numpy.masked.array)
 
 #### Methods
 
-- **feed(tile: numpy.ma.ndarray)**: update the tile and mask
+- **feed(array: numpy.ma.ndarray)**: update the tile and mask
 
 #### Writing your own Pixel Selection method
 
