@@ -44,6 +44,8 @@ test = [
     # XarrayReader
     "xarray",
     "rioxarray",
+    # S3
+    "boto3",
 ]
 dev = [
     "pre-commit",
