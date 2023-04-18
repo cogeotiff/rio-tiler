@@ -48,6 +48,9 @@ test = [
 dev = [
     "pre-commit",
 ]
+s3 = [
+    "boto3",
+]
 xarray = [
     "xarray",
     "rioxarray",
