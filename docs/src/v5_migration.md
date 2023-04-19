@@ -131,3 +131,14 @@ with Reader("cog.tif") as src:
 
 !!! Important
     In the `XarrayReader` we are still using only one `resampling_method` option because we are using `rioxarray` for read and reprojection processes and it does not have both options available.
+
+
+## Boto3 Optional dependency
+
+When needing to access STAC items using `s3://` urls, you'll need to have `boto3` installed in your python environment.
+
+```bash
+python -m pip install rio-tiler["s3"]  # or python -m pip install rio-tiler rasterio["s3"]
+```
+
+Note: if you want to access `s3://` raster dataset you'll also need `boto3` in your environment (`rasterio`'s dependency).

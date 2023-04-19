@@ -1,6 +1,7 @@
 """rio_tiler.io.stac: STAC reader."""
 
 import json
+import os
 from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
@@ -18,7 +19,13 @@ from rio_tiler.errors import InvalidAssetName, MissingAssets
 from rio_tiler.io.base import BaseReader, MultiBaseReader
 from rio_tiler.io.rasterio import Reader
 from rio_tiler.types import AssetInfo
-from rio_tiler.utils import aws_get_object
+
+try:
+    from boto3.session import Session as boto3_session
+
+except ImportError:  # pragma: nocover
+    boto3_session = None  # type: ignore
+
 
 DEFAULT_VALID_TYPE = {
     "image/tiff; application=geotiff",
@@ -32,6 +39,38 @@ DEFAULT_VALID_TYPE = {
     "application/x-hdf5",
     "application/x-hdf",
 }
+
+
+def aws_get_object(
+    bucket: str,
+    key: str,
+    request_pays: bool = False,
+    client: "boto3_session.client" = None,
+) -> bytes:
+    """AWS s3 get object content."""
+    assert boto3_session is not None, "'boto3' must be installed to use s3:// urls"
+
+    if not client:
+        session = boto3_session()
+        # AWS_S3_ENDPOINT and AWS_HTTPS are GDAL config options of vsis3 driver
+        # https://gdal.org/user/virtual_file_systems.html#vsis3-aws-s3-files
+        endpoint_url = os.environ.get("AWS_S3_ENDPOINT", None)
+        if endpoint_url is not None:
+            use_https = os.environ.get("AWS_HTTPS", "YES")
+            if use_https.upper() in ["YES", "TRUE", "ON"]:
+                endpoint_url = "https://" + endpoint_url
+
+            else:
+                endpoint_url = "http://" + endpoint_url
+
+        client = session.client("s3", endpoint_url=endpoint_url)
+
+    params = {"Bucket": bucket, "Key": key}
+    if request_pays or os.environ.get("AWS_REQUEST_PAYER", "").lower() == "requester":
+        params["RequestPayer"] = "requester"
+
+    response = client.get_object(**params)
+    return response["Body"].read()
 
 
 @cached(  # type: ignore
@@ -61,6 +100,7 @@ def fetch(filepath: str, **kwargs: Any) -> Dict:
         resp = httpx.get(filepath, **kwargs)
         resp.raise_for_status()
         return resp.json()
+
     else:
         with open(filepath, "r") as f:
             return json.load(f)

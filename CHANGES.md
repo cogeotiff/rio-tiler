@@ -73,8 +73,12 @@
 - changed variable names in `MosaicMethodBase` (`tile` -> `mosaic`)
 
 - `rio_tiler.mosaic.methods.defaults.LastBandHigh` renamed `LastBandHighMethod`
+
 - `rio_tiler.mosaic.methods.defaults.LastBandLow` renamed `LastBandLowMethod`
 
+- move `aws_get_object` from `rio_tiler.utils` to `rio_tiler.io.stac`
+
+- make `boto3` an optional dependency (`python -m pip install rio-tiler["s3"]`)
 
 # 4.1.10 (2023-03-24)
 
