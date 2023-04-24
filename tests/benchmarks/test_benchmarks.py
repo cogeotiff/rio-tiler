@@ -1,7 +1,5 @@
 """Benchmark."""
 
-import os
-
 import morecantile
 import pytest
 import rasterio

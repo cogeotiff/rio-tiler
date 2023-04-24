@@ -3,7 +3,6 @@
 from inspect import isclass
 from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, cast
 
-import numpy
 from rasterio.crs import CRS
 
 from rio_tiler.constants import MAX_THREADS
