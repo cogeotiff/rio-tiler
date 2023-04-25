@@ -1,7 +1,7 @@
 """rio_tiler.mosaic.methods.defaults: default mosaic filling methods."""
 
 from dataclasses import dataclass, field
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
 import numpy
 

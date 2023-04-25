@@ -2,7 +2,7 @@
 
 import abc
 from dataclasses import dataclass, field
-from typing import Optional, Tuple
+from typing import Optional
 
 import numpy
 
