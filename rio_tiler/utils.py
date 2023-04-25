@@ -1,6 +1,5 @@
 """rio_tiler.utils: utility functions."""
 
-import os
 import warnings
 from io import BytesIO
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
