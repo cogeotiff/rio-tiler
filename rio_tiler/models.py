@@ -334,6 +334,7 @@ class ImageData:
     dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
         default=None, kw_only=True
     )
+    cutline_mask: Optional[numpy.ndarray] = attr.ib(default=None)
 
     @band_names.default
     def _default_names(self):
@@ -421,12 +422,20 @@ class ImageData:
 
         """
         h, w = zip(*[(img.height, img.width) for img in data])
+
+        # Get cutline mask at highest resolution.
+        max_h, max_w = max(h), max(w)
+        cutline_mask = next(
+            img.cutline_mask
+            for img in data
+            if img.height == max_h and img.width == max_w
+        )
+
         if len(set(h)) > 1 or len(set(w)) > 1:
             warnings.warn(
                 "Cannot concatenate images with different size. Will resize using max width/heigh",
                 UserWarning,
             )
-            max_h, max_w = max(h), max(w)
             for img in data:
                 if img.height == max_h and img.width == max_w:
                     continue
@@ -472,6 +481,7 @@ class ImageData:
             bounds=bounds,
             band_names=band_names,
             dataset_statistics=dataset_statistics,
+            cutline_mask=cutline_mask,
         )
 
     def as_masked(self) -> numpy.ma.MaskedArray:

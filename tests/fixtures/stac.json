@@ -57,11 +57,15 @@
         "href": "http://somewhere-over-the-rainbow.io/green.tif",
         "title": "green",
         "file:header_size": 30000
-      },
+    },
     "blue": {
         "href": "http://somewhere-over-the-rainbow.io/blue.tif",
         "title": "blue",
         "file:header_size": 20000
+    },
+    "lowres": {
+        "href": "http://somewhere-over-the-rainbow.io/lowres.tif",
+        "title": "lowres"
     },
     "thumbnail": {
       "href": "http://cool-sat.com/catalog/a-fake-item/thumbnail.png",

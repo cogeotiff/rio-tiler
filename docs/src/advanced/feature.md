@@ -11,29 +11,42 @@ with Reader("my-tif.tif") as cog:
     img: ImageData = cog.feature(geojson_feature, max_size=1024)  # we limit the max_size to 1024
 ```
 
-Under the hood, the `.feature` method uses `GDALWarpVRT`'s `cutline` option and
-the `.part()` method. The below process is roughly what `.feature` does for you.
+Under the hood, the `.feature` method uses rasterio's [`rasterize`](https://rasterio.readthedocs.io/en/latest/api/rasterio.features.html#rasterio.features.rasterize)
+function and the `.part()` method. The below process is roughly what `.feature` does for you.
 
 ```python
+from rasterio.features import rasterize, bounds as featureBounds
+
 from rio_tiler.io import Reader
-from rio_tiler.utils import create_cutline
-from rasterio.features import bounds as featureBounds
 
 # Use Reader to open and read the dataset
 with Reader("my_tif.tif") as cog:
-    # Create WTT Cutline
-    cutline = create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
 
     # Get BBOX of the polygon
     bbox = featureBounds(feat)
 
-    # Read part of the data (bbox) and use the cutline to mask the data
-    data, mask = cog.part(bbox, vrt_options={'cutline': cutline}, max_size=1024)
+    # Read part of the data overlapping with the geometry bbox
+    # assuming that the geometry coordinates are in web mercator
+    img = cog.part(bbox, bounds_crs=f"EPSG:3857", max_size=1024)
+
+    # Rasterize geometry using the same geotransform parameters
+    cutline = rasterize(
+        [feat],
+        out_shape=(img.height, img.width),
+        transform=img.transform,
+        ...
+    )
+
+    # Apply geometry mask to imagery
+    img.array.mask = numpy.where(~cutline, img.array.mask, True)
 ```
 
-Another interesting fact about the `cutline` option is that it can be used with other methods:
+Another interesting way to cut features is to use the GDALWarpVRT's `cutline`
+option with the .part(), .preview(), or .tile() methods:
 
 ```python
+from rio_tiler.utils import create_cutline
+
 bbox = featureBounds(feat)
 
 # Use Reader to open and read the dataset
@@ -41,9 +54,13 @@ with Reader("my_tif.tif") as cog:
     # Create WTT Cutline
     cutline = create_cutline(cog.dataset, feat, geometry_crs="epsg:4326")
 
+    # Get a part of the geotiff but use the cutline to mask the data
+    bbox = featureBounds(feat)
+    img = cog.part(bbox, vrt_options={'cutline': cutline})
+
     # Get a preview of the whole geotiff but use the cutline to mask the data
-    data, mask = cog.preview(vrt_options={'cutline': cutline})
+    img = cog.preview(vrt_options={'cutline': cutline})
 
     # Read a mercator tile and use the cutline to mask the data
-    data, mask = cog.tile(1, 1, 1, vrt_options={'cutline': cutline})
+    img = cog.tile(1, 1, 1, vrt_options={'cutline': cutline})
 ```

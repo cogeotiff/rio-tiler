@@ -536,12 +536,7 @@ def create_cutline(
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 
     """
-    if "geometry" in geometry:
-        geometry = geometry["geometry"]
-
-    if not is_valid_geom(geometry):
-        raise RioTilerError("Invalid geometry")
-
+    geometry = _validate_shape_input(geometry)
     geom_type = geometry["type"]
 
     if geometry_crs:
@@ -635,3 +630,15 @@ def normalize_bounds(bounds: BBox) -> BBox:
         max(bounds[0], bounds[2]),
         max(bounds[1], bounds[3]),
     )
+
+
+def _validate_shape_input(shape: Dict) -> Dict:
+    """Ensure input shape is valid and reduce features to geometry"""
+
+    if "geometry" in shape:
+        shape = shape["geometry"]
+
+    if not is_valid_geom(shape):
+        raise RioTilerError("Invalid geometry")
+
+    return shape

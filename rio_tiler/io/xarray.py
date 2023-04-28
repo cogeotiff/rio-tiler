@@ -8,17 +8,17 @@ import attr
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
-from rasterio.features import is_valid_geom
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.transform import from_bounds, rowcol
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import PointOutsideBounds, RioTilerError, TileOutsideBounds
+from rio_tiler.errors import PointOutsideBounds, TileOutsideBounds
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, WarpResampling
+from rio_tiler.utils import _validate_shape_input
 
 try:
     import xarray
@@ -373,11 +373,7 @@ class XarrayReader(BaseReader):
         if not dst_crs:
             dst_crs = shape_crs
 
-        if "geometry" in shape:
-            shape = shape["geometry"]
-
-        if not is_valid_geom(shape):
-            raise RioTilerError("Invalid geometry")
+        shape = _validate_shape_input(shape)
 
         ds = self.input.rio.clip([shape], crs=shape_crs)
 

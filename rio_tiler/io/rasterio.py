@@ -13,7 +13,7 @@ from morecantile.utils import _parse_tile_arg
 from rasterio import transform
 from rasterio.crs import CRS
 from rasterio.features import bounds as featureBounds
-from rasterio.features import geometry_mask
+from rasterio.features import geometry_mask, rasterize
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.transform import from_bounds as transform_from_bounds
@@ -34,7 +34,7 @@ from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, NumType, RIOResampling
-from rio_tiler.utils import create_cutline, has_alpha_band, has_mask_band
+from rio_tiler.utils import _validate_shape_input, has_alpha_band, has_mask_band
 
 
 @attr.s
@@ -521,17 +521,17 @@ class Reader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
+        shape = _validate_shape_input(shape)
+
         if not dst_crs:
             dst_crs = shape_crs
 
         # Get BBOX of the polygon
         bbox = featureBounds(shape)
 
-        cutline = create_cutline(self.dataset, shape, geometry_crs=shape_crs)
         vrt_options = kwargs.pop("vrt_options", {})
-        vrt_options.update({"cutline": cutline})
 
-        return self.part(
+        img = self.part(
             bbox,
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
@@ -544,6 +544,20 @@ class Reader(BaseReader):
             buffer=buffer,
             **kwargs,
         )
+
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Necesary for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
 
     def read(
         self,
