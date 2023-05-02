@@ -18,7 +18,7 @@ from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.transform import from_bounds as transform_from_bounds
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform
+from rasterio.warp import calculate_default_transform, transform_geom
 from rasterio.windows import Window
 from rasterio.windows import from_bounds as window_from_bounds
 
@@ -544,6 +544,9 @@ class Reader(BaseReader):
             buffer=buffer,
             **kwargs,
         )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
 
         cutline_mask = rasterize(
             [shape],
