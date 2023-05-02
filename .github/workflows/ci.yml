@@ -69,22 +69,24 @@ jobs:
           python -m pip install -e .["test"]
 
       - name: Run Benchmark
-        run: python -m pytest --benchmark-only --benchmark-autosave --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
+        run: python -m pytest --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
 
-      # - name: Store and Compare benchmark result
-      #   uses: benchmark-action/github-action-benchmark@v1
-      #   with:
-      #     name: rio-tiler Benchmarks
-      #     tool: 'pytest'
-      #     output-file-path: output.json
-      #     alert-threshold: '130%'
-      #     comment-on-alert: true
-      #     fail-on-alert: true
-      #     # GitHub API token to make a commit comment
-      #     github-token: ${{ secrets.GITHUB_TOKEN }}
-      #     # Make a commit on `gh-pages` only if main
-      #     auto-push: ${{ github.ref == 'refs/heads/main' }}
-      #     benchmark-data-dir-path: benchmarks
+      - name: Store and Compare benchmark result
+        uses: benchmark-action/github-action-benchmark@v1
+        with:
+          name: rio-tiler Benchmarks
+          tool: 'pytest'
+          output-file-path: output.json
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: false
+          # GitHub API token to make a commit comment
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gh-pages-branch: 'gh-benchmarks'
+          # Make a commit on `gh-pages` only if dev
+          # TODO: update to main once we merge to main
+          auto-push: ${{ github.ref == 'refs/heads/dev' }}
+          benchmark-data-dir-path: dev/benchmarks
 
   publish:
     needs: [tests]
