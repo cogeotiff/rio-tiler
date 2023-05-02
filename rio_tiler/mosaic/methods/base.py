@@ -13,6 +13,7 @@ class MosaicMethodBase(abc.ABC):
 
     mosaic: Optional[numpy.ma.MaskedArray] = field(default=None, init=False)
     exit_when_filled: bool = field(default=False, init=False)
+    cutline_mask: Optional[numpy.ndarray] = field(default=None, init=False)
 
     @property
     def is_done(self) -> bool:
@@ -25,8 +26,15 @@ class MosaicMethodBase(abc.ABC):
         if self.mosaic is None:
             return False
 
-        if self.exit_when_filled and not numpy.ma.is_masked(self.mosaic):
-            return True
+        if self.exit_when_filled:
+            if (
+                self.cutline_mask is not None
+                and numpy.sum(numpy.where(~self.cutline_mask, self.mosaic.mask, False))
+                == 0
+            ):
+                return True
+            elif not numpy.ma.is_masked(self.mosaic):
+                return True
 
         return False
 

@@ -92,6 +92,8 @@ def mosaic_reader(
             bounds = img.bounds
             band_names = img.band_names
 
+            pixel_selection.cutline_mask = img.cutline_mask
+
             assets_used.append(asset)
             pixel_selection.feed(img.array)
 

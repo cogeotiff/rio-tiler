@@ -13,6 +13,7 @@ import rasterio
 from morecantile import TileMatrixSet
 from pyproj import CRS
 from rasterio import transform
+from rasterio.features import bounds as featureBounds
 from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
@@ -26,6 +27,7 @@ from rio_tiler.errors import (
 )
 from rio_tiler.io import Reader
 from rio_tiler.models import BandStatistics
+from rio_tiler.utils import create_cutline
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -698,6 +700,52 @@ def test_feature_valid():
         }
         img = src.feature(outside_mask_feature, max_size=1024)
         assert not img.mask.all()
+
+
+def test_equality_part_feature():
+    """Make sure the `feature` method returns the same thing as part+cutline."""
+    with Reader(COG_NODATA) as src:
+        feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-57.3486328125, 72.25226599952339],
+                        [-57.041015625, 72.1279362810559],
+                        [-56.722412109375, 72.06038062953813],
+                        [-54.86572265625, 72.07052969916067],
+                        [-54.613037109375, 72.63665259171732],
+                        [-56.14013671875, 72.90995232978632],
+                        [-57.3486328125, 72.25226599952339],
+                    ]
+                ],
+            },
+        }
+        img_feat = src.feature(feat)
+
+        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        bbox = featureBounds(feat)
+        img_part = src.part(bbox, vrt_options={"cutline": cutline})
+
+        assert img_feat.mask[0, 0] == img_part.mask[0, 0]
+        assert img_feat.mask[200, 200] == img_part.mask[200, 200]
+
+        # NOTE: both mask are almost equal but except pixel on the top of the image
+        # I would assume this is due to rounding issue or reprojection of the cutline by GDAL
+        # After some debugging locally I found out the rasterized mask is more precise
+        # numpy.testing.assert_array_equal(img_part.mask, img_feat.mask)
+
+        # Re-Projection
+        img_feat = src.feature(feat, dst_crs="epsg:3857")
+
+        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        bbox = featureBounds(feat)
+        img_part = src.part(bbox, vrt_options={"cutline": cutline}, dst_crs="epsg:3857")
+
+        assert img_feat.mask[0, 0] == img_part.mask[0, 0]
+        assert img_feat.mask[200, 200] == img_part.mask[200, 200]
 
 
 def test_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
