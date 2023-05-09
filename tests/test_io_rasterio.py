@@ -457,17 +457,20 @@ def test_Reader_Options():
 
 def test_cog_with_internal_gcps():
     """Make sure file gets re-projected using gcps."""
-    with Reader(COG_GCPS, options={"nodata": 0}) as src:
-        assert src.bounds
-        assert src.info().nodata_value == 0
+    with Reader(COG_GCPS) as src:
         assert isinstance(src.dataset, WarpedVRT)
-
+        assert src.bounds
         assert src.minzoom == 7
         assert src.maxzoom == 10
 
         metadata = src.info()
-        assert len(metadata.band_metadata) == 1
-        assert metadata.band_descriptions == [("b1", "")]
+        assert metadata.nodata_type == "Alpha"
+        assert len(metadata.band_metadata) == 2
+        assert metadata.band_descriptions == [("b1", ""), ("b2", "")]
+        assert metadata.colorinterp == ["gray", "alpha"]
+
+        # The topleft corner should be masked
+        assert src.preview(indexes=1).array.mask[0, 0, 0]
 
         tile_z = 8
         tile_x = 183
@@ -479,22 +482,27 @@ def test_cog_with_internal_gcps():
     assert src.dataset.src_dataset.closed
 
     # Pass dataset (should be a WarpedVRT)
+    # Do not infer mask/alpha in the VRT
     with rasterio.open(COG_GCPS) as dst:
         with WarpedVRT(
             dst,
             src_crs=dst.gcps[1],
             src_transform=transform.from_gcps(dst.gcps[0]),
         ) as vrt:
-            with Reader(None, dataset=vrt, options={"nodata": 0}) as src:
+            with Reader(None, dataset=vrt) as src:
                 assert src.bounds
-                assert src.info().nodata_value == 0
                 assert isinstance(src.dataset, WarpedVRT)
                 assert src.minzoom == 7
                 assert src.maxzoom == 10
 
                 metadata = src.info()
+                assert metadata.nodata_type == "None"
                 assert len(metadata.band_metadata) == 1
                 assert metadata.band_descriptions == [("b1", "")]
+                assert metadata.colorinterp == ["gray"]
+
+                # The topleft corner is not masked because we didn't add mask
+                assert not src.preview(indexes=1).array.mask[0, 0, 0]
 
                 tile_z = 8
                 tile_x = 183

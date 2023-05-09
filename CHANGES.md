@@ -2,13 +2,18 @@
 # 5.0.0 (TBD)
 
 - Fix potential issue when getting statistics for non-valid data
+
 - add `rio-tiler.mosaic.methods.PixelSelectionMethod` enums with all defaults methods
+
 - Add `rio-tiler.utils._validate_shape_input` function to check geojson feature inputs
+
 - Change cutline handling in the `rio-tiler.io.rasterio.Reader.feature` method. Feature
   cutlines are now rasterized into numpy arrays and applied as masks instead of using
   the cutline vrt_option. These masks are tracked in the `rio-tiler.models.ImageData.cutline_mask`
   attribute, which are used in `rio-tiler.mosaic.methods.base.MosaicMethodBase` to stop
-  mosaic building as soon as all pixels in a feature are populated 
+  mosaic building as soon as all pixels in a feature are populated
+
+- Fix missing `nodata/alpha/mask` forwarding for dataset with internal GCPS
 
 **breaking changes**
 
