@@ -98,7 +98,20 @@ class Reader(BaseReader):
             vrt_options = {
                 "src_crs": self.dataset.gcps[1],
                 "src_transform": transform.from_gcps(self.dataset.gcps[0]),
+                "add_alpha": True,
             }
+
+            if self.dataset.nodata is not None:
+                vrt_options.update(
+                    {
+                        "nodata": self.dataset.nodata,
+                        "add_alpha": False,
+                        "src_nodata": self.dataset.nodata,
+                    }
+                )
+
+            if has_alpha_band(self.dataset):
+                vrt_options.update({"add_alpha": False})
 
             self.dataset = self._ctx_stack.enter_context(
                 WarpedVRT(self.dataset, **vrt_options)
