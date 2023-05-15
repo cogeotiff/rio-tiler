@@ -21,7 +21,6 @@ classifiers = [
 dynamic = ["version"]
 dependencies = [
     "attrs",
-    "boto3",
     "cachetools",
     "httpx",
     "numexpr",
