@@ -141,10 +141,11 @@ class Reader(BaseReader):
 
     def _dst_geom_in_tms_crs(self):
         """Return dataset info in TMS projection."""
-        if self.crs != self.tms.rasterio_crs:
+        tms_crs = self.tms.rasterio_crs
+        if self.crs != tms_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.crs,
-                self.tms.rasterio_crs,
+                tms_crs,
                 self.dataset.width,
                 self.dataset.height,
                 *self.dataset.bounds,
@@ -161,7 +162,7 @@ class Reader(BaseReader):
         if self._minzoom is None:
             # We assume the TMS tilesize to be constant over all matrices
             # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
-            tilesize = self.tms.tileMatrix[0].tileWidth
+            tilesize = self.tms.matrix(self.tms.minzoom).tileWidth
 
             try:
                 dst_affine, w, h = self._dst_geom_in_tms_crs()
@@ -349,11 +350,12 @@ class Reader(BaseReader):
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        dst_crs = self.tms.rasterio_crs
 
         return self.part(
             tile_bounds,
-            dst_crs=self.tms.rasterio_crs,
-            bounds_crs=None,
+            dst_crs=dst_crs,
+            bounds_crs=dst_crs,
             height=tilesize,
             width=tilesize,
             max_size=None,

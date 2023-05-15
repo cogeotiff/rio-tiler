@@ -80,10 +80,11 @@ class XarrayReader(BaseReader):
 
     def _dst_geom_in_tms_crs(self):
         """Return dataset info in TMS projection."""
-        if self.crs != self.tms.rasterio_crs:
+        tms_crs = self.tms.rasterio_crs
+        if self.crs != tms_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.crs,
-                self.tms.rasterio_crs,
+                tms_crs,
                 self.input.rio.width,
                 self.input.rio.height,
                 *self.bounds,
@@ -100,7 +101,7 @@ class XarrayReader(BaseReader):
         if self._minzoom is None:
             # We assume the TMS tilesize to be constant over all matrices
             # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
-            tilesize = self.tms.tileMatrix[0].tileWidth
+            tilesize = self.tms.matrix(self.tms.minzoom).tileWidth
 
             try:
                 dst_affine, w, h = self._dst_geom_in_tms_crs()
@@ -217,11 +218,12 @@ class XarrayReader(BaseReader):
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        dst_crs = self.tms.rasterio_crs
 
         # Create source array by clipping the xarray dataset to extent of the tile.
-        ds = self.input.rio.clip_box(*tile_bounds, crs=self.tms.rasterio_crs)
+        ds = self.input.rio.clip_box(*tile_bounds, crs=dst_crs)
         ds = ds.rio.reproject(
-            self.tms.rasterio_crs,
+            dst_crs,
             shape=(tilesize, tilesize),
             transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
             resampling=Resampling[resampling_method],
@@ -238,7 +240,7 @@ class XarrayReader(BaseReader):
         return ImageData(
             ds.data,
             bounds=tile_bounds,
-            crs=self.tms.rasterio_crs,
+            crs=dst_crs,
             dataset_statistics=stats,
             band_names=band_names,
         )
