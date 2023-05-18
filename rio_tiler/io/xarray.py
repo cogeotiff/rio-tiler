@@ -197,7 +197,7 @@ class XarrayReader(BaseReader):
         tile_z: int,
         tilesize: int = 256,
         resampling_method: WarpResampling = "nearest",
-        auto_expand: bool = False,
+        auto_expand: bool = True
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
 
@@ -207,7 +207,7 @@ class XarrayReader(BaseReader):
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
             resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
-            auto_expand (boolean, optional): If True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. Defaults to False.
+            auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -221,9 +221,7 @@ class XarrayReader(BaseReader):
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
         # Create source array by clipping the xarray dataset to extent of the tile.
-        ds = self.input.rio.clip_box(
-            *tile_bounds, crs=self.tms.rasterio_crs, auto_expand=auto_expand
-        )
+        ds = self.input.rio.clip_box(*tile_bounds, crs=self.tms.rasterio_crs, auto_expand=auto_expand)
         ds = ds.rio.reproject(
             self.tms.rasterio_crs,
             shape=(tilesize, tilesize),
