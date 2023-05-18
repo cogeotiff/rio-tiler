@@ -3,6 +3,9 @@
 import os
 from datetime import datetime
 
+import pytest
+import rioxarray
+import morecantile
 import numpy
 import xarray
 
@@ -45,6 +48,25 @@ def test_xarray_reader():
         assert img.width == 256
         assert img.height == 256
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.dataset_statistics == ((arr.min(), arr.max()),)
+
+        # Tests for auto_expand
+        ## Test that a high-zoom tile will error with auto_expand=False
+        tms = morecantile.tms.get("WebMercatorQuad")
+        zoom = 10
+        x, y = tms.xy(-170, -80)
+        tile = tms._tile(x, y, zoom)
+        bounds = tms.xy_bounds(tile)
+        with pytest.raises(rioxarray.exceptions.OneDimensionalRaster) as error:
+            error = dst.tile(tile.x, tile.y, zoom)
+        assert str(error.value) == "At least one of the clipped raster x,y coordinates has only one point."
+        ##
+        ## Test that a high-zoom tile will succeed with auto_expand=True
+        img = dst.tile(tile.x, tile.y, zoom, auto_expand=True)
+        assert img.count == 1
+        assert img.width == 256
+        assert img.height == 256
+        assert img.bounds == bounds
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         img = dst.part((-160, -80, 160, 80))
