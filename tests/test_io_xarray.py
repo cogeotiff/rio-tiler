@@ -58,7 +58,7 @@ def test_xarray_reader():
         tile = tms._tile(x, y, zoom)
         bounds = tms.xy_bounds(tile)
         with pytest.raises(rioxarray.exceptions.OneDimensionalRaster) as error:
-            error = dst.tile(tile.x, tile.y, zoom)
+            dst.tile(tile.x, tile.y, zoom)
         assert str(error.value) == "At least one of the clipped raster x,y coordinates has only one point."
         ##
         ## Test that a high-zoom tile will succeed with auto_expand=True
