@@ -3,10 +3,10 @@
 import os
 from datetime import datetime
 
-import pytest
-import rioxarray
 import morecantile
 import numpy
+import pytest
+import rioxarray
 import xarray
 
 from rio_tiler.io import XarrayReader
