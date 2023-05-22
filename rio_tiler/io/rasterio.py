@@ -162,7 +162,7 @@ class Reader(BaseReader):
         if self._minzoom is None:
             # We assume the TMS tilesize to be constant over all matrices
             # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
-            tilesize = self.tms.matrix(self.tms.minzoom).tileWidth
+            tilesize = self.tms.tileMatrices[0].tileWidth
 
             try:
                 dst_affine, w, h = self._dst_geom_in_tms_crs()
