@@ -198,6 +198,7 @@ class XarrayReader(BaseReader):
         tile_z: int,
         tilesize: int = 256,
         resampling_method: WarpResampling = "nearest",
+        auto_expand: bool = True,
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
 
@@ -207,6 +208,7 @@ class XarrayReader(BaseReader):
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
             resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -221,7 +223,11 @@ class XarrayReader(BaseReader):
         dst_crs = self.tms.rasterio_crs
 
         # Create source array by clipping the xarray dataset to extent of the tile.
-        ds = self.input.rio.clip_box(*tile_bounds, crs=dst_crs)
+        ds = self.input.rio.clip_box(
+            *tile_bounds,
+            crs=dst_crs,
+            auto_expand=auto_expand,
+        )
         ds = ds.rio.reproject(
             dst_crs,
             shape=(tilesize, tilesize),
@@ -251,6 +257,7 @@ class XarrayReader(BaseReader):
         dst_crs: Optional[CRS] = None,
         bounds_crs: CRS = WGS84_CRS,
         resampling_method: WarpResampling = "nearest",
+        auto_expand: bool = True,
     ) -> ImageData:
         """Read part of a dataset.
 
@@ -259,13 +266,18 @@ class XarrayReader(BaseReader):
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
             resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
         dst_crs = dst_crs or bounds_crs
-        ds = self.input.rio.clip_box(*bbox, crs=bounds_crs)
+        ds = self.input.rio.clip_box(
+            *bbox,
+            crs=bounds_crs,
+            auto_expand=auto_expand,
+        )
 
         if dst_crs != self.crs:
             dst_transform, w, h = calculate_default_transform(
