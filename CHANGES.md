@@ -95,6 +95,10 @@
 
 - update `morecantile` dependency to `>=4.0`
 
+# 4.1.11 (2023-05-18)
+
+* in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
+
 # 4.1.10 (2023-03-24)
 
 * enable `boundless` geometry for cutline (author @yellowcap, https://github.com/cogeotiff/rio-tiler/pull/586)
