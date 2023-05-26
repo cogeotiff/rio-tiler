@@ -24,6 +24,7 @@ PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
+STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -799,3 +800,25 @@ def test_asset_as_band(rio):
         img = stac.feature(feat, expression="green/red", asset_as_band=True)
         assert img.count == 1
         assert img.band_names == ["green/red"]
+
+
+@patch("rio_tiler.io.rasterio.rasterio")
+def test_metadata_from_stac(rio):
+    """Make sure dataset statistics are forwarded from the raster extension."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_RASTER_PATH) as stac:
+        info = stac._get_asset_info("green")
+        assert info["dataset_statistics"] == [(6883, 62785)]
+        assert info["metadata"]
+        assert "raster:bands" in info["metadata"]
+
+        img = stac.preview(assets=("green", "red"))
+        assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+        assert img.metadata["red"]["raster:bands"]
+        assert img.metadata["green"]
+
+        img = stac.preview(expression="green_b1/red_b1")
+        assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
+        assert img.metadata["red"]["raster:bands"]
+        assert img.metadata["green"]

@@ -269,10 +269,23 @@ class STACReader(MultiBaseReader):
             raise InvalidAssetName(f"{asset} is not valid")
 
         asset_info = self.item.assets[asset]
-        info = AssetInfo(url=asset_info.get_absolute_href())
+        extras = asset_info.extra_fields
 
-        if "file:header_size" in asset_info.extra_fields:
-            h = asset_info.extra_fields["file:header_size"]
-            info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": h}
+        info = AssetInfo(
+            url=asset_info.get_absolute_href(),
+            metadata=extras,
+        )
+
+        if head := extras.get("file:header_size"):
+            info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
+
+        if bands := extras.get("raster:bands"):
+            stats = [
+                (b["statistics"]["minimum"], b["statistics"]["maximum"])
+                for b in bands
+                if {"minimum", "maximum"}.issubset(b.get("statistics", {}))
+            ]
+            if len(stats) == len(bands):
+                info["dataset_statistics"] = stats
 
         return info

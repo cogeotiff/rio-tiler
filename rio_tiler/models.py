@@ -258,12 +258,19 @@ class PointData:
             )
         )
 
+        metadata = dict(
+            itertools.chain.from_iterable(
+                [pt.metadata.items() for pt in data if pt.metadata]
+            )
+        )
+
         return cls(
             arr,
             assets=assets,
             crs=data[0].crs,
             coordinates=data[0].coordinates,
             band_names=band_names,
+            metadata=metadata,
         )
 
     def as_masked(self) -> numpy.ma.MaskedArray:
@@ -474,6 +481,12 @@ class ImageData:
         )
         dataset_statistics = stats if len(stats) == len(band_names) else None
 
+        metadata = dict(
+            itertools.chain.from_iterable(
+                [img.metadata.items() for img in data if img.metadata]
+            )
+        )
+
         return cls(
             arr,
             assets=assets,
@@ -482,6 +495,7 @@ class ImageData:
             band_names=band_names,
             dataset_statistics=dataset_statistics,
             cutline_mask=cutline_mask,
+            metadata=metadata,
         )
 
     def as_masked(self) -> numpy.ma.MaskedArray:
