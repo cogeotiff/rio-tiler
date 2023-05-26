@@ -1,0 +1,158 @@
+{
+    "type": "Feature",
+    "stac_version": "1.0.0",
+    "id": "JQT-123456789",
+    "properties": {
+        "datetime": "2023-05-26T09:31:21.530651Z"
+    },
+    "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [
+                    -81.30852270801293,
+                    32.10817938759765
+                ],
+                [
+                    -78.81735409341115,
+                    32.10817938759765
+                ],
+                [
+                    -78.81735409341115,
+                    34.22831864259706
+                ],
+                [
+                    -81.30852270801293,
+                    34.22831864259706
+                ],
+                [
+                    -81.30852270801293,
+                    32.10817938759765
+                ]
+            ]
+        ]
+    },
+    "links": [],
+    "assets": {
+        "red": {
+            "href": "http://somewhere-over-the-rainbow.io/red_nostats.tif",
+            "type": "image/tiff; application=geotiff",
+            "raster:bands": [
+                {
+                    "data_type": "uint16",
+                    "scale": 1.0,
+                    "offset": 0.0,
+                    "sampling": "point",
+                    "nodata": 0.0,
+                    "statistics": {
+                        "mean": 11195.847483731019,
+                        "minimum": 6101,
+                        "maximum": 65035,
+                        "stddev": 7215.591763103795,
+                        "valid_percent": 69.80089333030509
+                    },
+                    "histogram": {
+                        "count": 11,
+                        "min": 6101.0,
+                        "max": 65035.0,
+                        "buckets": [
+                            36776,
+                            3380,
+                            2306,
+                            1641,
+                            1015,
+                            581,
+                            289,
+                            94,
+                            14,
+                            4
+                        ]
+                    }
+                }
+            ]
+        },
+        "green": {
+            "href": "http://somewhere-over-the-rainbow.io/green_nostats.tif",
+            "type": "image/tiff; application=geotiff",
+            "raster:bands": [
+                {
+                    "data_type": "uint16",
+                    "scale": 1.0,
+                    "offset": 0.0,
+                    "sampling": "point",
+                    "nodata": 0.0,
+                    "statistics": {
+                        "mean": 11999.746702819957,
+                        "minimum": 6883,
+                        "maximum": 62785,
+                        "stddev": 6687.608561375205,
+                        "valid_percent": 69.80089333030509
+                    },
+                    "histogram": {
+                        "count": 11,
+                        "min": 6883.0,
+                        "max": 62785.0,
+                        "buckets": [
+                            36621,
+                            3509,
+                            2359,
+                            1640,
+                            1020,
+                            561,
+                            286,
+                            89,
+                            11,
+                            4
+                        ]
+                    }
+                }
+            ]
+        },
+        "blue": {
+            "href": "http://somewhere-over-the-rainbow.io/blue_nostats.tif",
+            "type": "image/tiff; application=geotiff",
+            "raster:bands": [
+                {
+                    "data_type": "uint16",
+                    "scale": 1.0,
+                    "offset": 0.0,
+                    "sampling": "point",
+                    "nodata": 0.0,
+                    "statistics": {
+                        "mean": 13093.339610361436,
+                        "minimum": 8203,
+                        "maximum": 59810,
+                        "stddev": 6639.9364142821805,
+                        "valid_percent": 69.79180861533803
+                    },
+                    "histogram": {
+                        "count": 11,
+                        "min": 8203.0,
+                        "max": 59810.0,
+                        "buckets": [
+                            36497,
+                            3334,
+                            2280,
+                            1644,
+                            1087,
+                            694,
+                            355,
+                            155,
+                            43,
+                            5
+                        ]
+                    }
+                }
+            ]
+        }
+    },
+    "bbox": [
+        -81.30852270801293,
+        32.10817938759765,
+        -78.81735409341115,
+        34.22831864259706
+    ],
+    "stac_extensions": [
+        "https://stac-extensions.github.io/raster/v1.1.0/schema.json"
+    ]
+}

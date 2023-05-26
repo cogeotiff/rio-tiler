@@ -60,3 +60,5 @@ class AssetInfo(TypedDict, total=False):
 
     url: str
     env: Optional[Dict]
+    metadata: Optional[Dict]
+    dataset_statistics: Optional[Sequence[Tuple[float, float]]]

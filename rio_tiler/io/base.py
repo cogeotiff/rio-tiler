@@ -278,6 +278,25 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             _re = re.compile(rf"\b({assets})_b\d+\b")
         return tuple(set(re.findall(_re, expression)))
 
+    def _update_statistics(
+        self,
+        img: ImageData,
+        indexes: Optional[Indexes] = None,
+        statistics: Optional[Sequence[Tuple[float, float]]] = None,
+    ):
+        """Update ImageData Statistics from AssetInfo."""
+        if isinstance(indexes, int):
+            indexes = (indexes,)
+
+        if indexes is None:
+            indexes = tuple(range(1, img.count + 1))
+
+        if not img.dataset_statistics and statistics:
+            if max(max(indexes), len(indexes)) > len(statistics):  # type: ignore
+                return
+
+            img.dataset_statistics = [statistics[bidx - 1] for bidx in indexes]
+
     def info(
         self, assets: Union[Sequence[str], str] = None, **kwargs: Any
     ) -> Dict[str, Info]:
@@ -302,9 +321,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             assets = (assets,)
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
-            asset_meta = self._get_asset_info(asset)
-            url = asset_meta["url"]
-            with self.ctx(**asset_meta.get("env", {})):
+            asset_info = self._get_asset_info(asset)
+            url = asset_info["url"]
+            with self.ctx(**asset_info.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     return src.info()
 
@@ -344,9 +363,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_expression = asset_expression or {}
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
-            asset_meta = self._get_asset_info(asset)
-            url = asset_meta["url"]
-            with self.ctx(**asset_meta.get("env", {})):
+            asset_info = self._get_asset_info(asset)
+            url = asset_info["url"]
+            with self.ctx(**asset_info.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     return src.statistics(
                         *args,
@@ -462,11 +481,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
 
-            asset_meta = self._get_asset_info(asset)
-            url = asset_meta["url"]
-            with self.ctx(**asset_meta.get("env", {})):
+            asset_info = self._get_asset_info(asset)
+            url = asset_info["url"]
+            with self.ctx(**asset_info.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.tile(*args, indexes=idx, **kwargs)
+
+                    self._update_statistics(
+                        data,
+                        indexes=idx,
+                        statistics=asset_info.get("dataset_statistics"),
+                    )
+                    if metadata := asset_info.get("metadata"):
+                        data.metadata.update(metadata)
+
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
@@ -528,11 +556,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
 
-            asset_meta = self._get_asset_info(asset)
-            url = asset_meta["url"]
-            with self.ctx(**asset_meta.get("env", {})):
+            asset_info = self._get_asset_info(asset)
+            url = asset_info["url"]
+            with self.ctx(**asset_info.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.part(*args, indexes=idx, **kwargs)
+
+                    self._update_statistics(
+                        data,
+                        indexes=idx,
+                        statistics=asset_info.get("dataset_statistics"),
+                    )
+                    if metadata := asset_info.get("metadata"):
+                        data.metadata.update(metadata)
+
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
@@ -592,11 +629,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, **kwargs: Any) -> ImageData:
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
 
-            asset_meta = self._get_asset_info(asset)
-            url = asset_meta["url"]
-            with self.ctx(**asset_meta.get("env", {})):
+            asset_info = self._get_asset_info(asset)
+            url = asset_info["url"]
+            with self.ctx(**asset_info.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.preview(indexes=idx, **kwargs)
+
+                    self._update_statistics(
+                        data,
+                        indexes=idx,
+                        statistics=asset_info.get("dataset_statistics"),
+                    )
+                    if metadata := asset_info.get("metadata"):
+                        data.metadata.update(metadata)
+
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
@@ -660,11 +706,15 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args, **kwargs: Any) -> PointData:
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
 
-            asset_meta = self._get_asset_info(asset)
-            url = asset_meta["url"]
-            with self.ctx(**asset_meta.get("env", {})):
+            asset_info = self._get_asset_info(asset)
+            url = asset_info["url"]
+            with self.ctx(**asset_info.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.point(*args, indexes=idx, **kwargs)
+
+                    if metadata := asset_info.get("metadata"):
+                        data.metadata.update(metadata)
+
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
@@ -726,11 +776,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
 
-            asset_meta = self._get_asset_info(asset)
-            url = asset_meta["url"]
-            with self.ctx(**asset_meta.get("env", {})):
+            asset_info = self._get_asset_info(asset)
+            url = asset_info["url"]
+            with self.ctx(**asset_info.get("env", {})):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.feature(*args, indexes=idx, **kwargs)
+
+                    self._update_statistics(
+                        data,
+                        indexes=idx,
+                        statistics=asset_info.get("dataset_statistics"),
+                    )
+                    if metadata := asset_info.get("metadata"):
+                        data.metadata.update(metadata)
+
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
