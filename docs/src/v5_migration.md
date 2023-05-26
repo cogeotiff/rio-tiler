@@ -142,3 +142,20 @@ python -m pip install rio-tiler["s3"]  # or python -m pip install rio-tiler rast
 ```
 
 Note: if you want to access `s3://` raster dataset you'll also need `boto3` in your environment (`rasterio`'s dependency).
+
+
+## changes in method/function/variable names
+
+Some function or method names have changed in `rio-tiler` V5
+
+- `rio_tiler.mosaic.methods.LastBandHigh` -> `rio_tiler.mosaic.methods.LastBandHighMethod`
+
+- `rio_tiler.mosaic.methods.LastBandLow` -> `rio_tiler.mosaic.methods.LastBandLowMethod`
+
+- in the `MosaicMethodBase` the variable `tile` has been renamed `mosaic`
+
+- `rio_tiler.utils.aws_get_object` -> `rio_tiler.io.stac.aws_get_object`
+
+- In `ImageData`/`PointData` objects the pixel values are stored in a variable named `array` (it was `data` previously). A `.data` property has been added for compatibility.
+
+- In `ImageData`/`PointData` the `.mask` attribute has been replaced by a `.mask` property

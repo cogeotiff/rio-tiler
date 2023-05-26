@@ -95,6 +95,23 @@
 
 - update `morecantile` dependency to `>=4.0`
 
+- add `metadata` in ImageData/PointData from rasterio dataset `tags`
+
+- forward statistics from the **raster STAC extension** to the ImageData object
+
+    ```python
+    with STACReader(STAC_RASTER_PATH) as stac:
+        info = stac._get_asset_info("green")
+        assert info["dataset_statistics"] == [(6883, 62785)]
+        assert info["metadata"]
+        assert "raster:bands" in info["metadata"]
+
+        img = stac.preview(assets=("green", "red"))
+        assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+        assert img.metadata["green"]  # extra_fields from the STAC assets (e.g `"raster:bands"`)
+        assert img.metadata["red"]
+    ```
+
 # 4.1.11 (2023-05-18)
 
 * in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
