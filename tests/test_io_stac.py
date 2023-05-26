@@ -803,7 +803,7 @@ def test_asset_as_band(rio):
 
 
 @patch("rio_tiler.io.rasterio.rasterio")
-def test_stats_from_stac(rio):
+def test_metadata_from_stac(rio):
     """Make sure dataset statistics are forwarded from the raster extension."""
     rio.open = mock_rasterio_open
 
@@ -815,6 +815,10 @@ def test_stats_from_stac(rio):
 
         img = stac.preview(assets=("green", "red"))
         assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+        assert img.metadata["red"]["raster:bands"]
+        assert img.metadata["green"]
 
         img = stac.preview(expression="green_b1/red_b1")
         assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
+        assert img.metadata["red"]["raster:bands"]
+        assert img.metadata["green"]

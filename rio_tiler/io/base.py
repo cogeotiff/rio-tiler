@@ -492,8 +492,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                         indexes=idx,
                         statistics=asset_info.get("dataset_statistics"),
                     )
-                    if metadata := asset_info.get("metadata"):
-                        data.metadata.update(metadata)
+
+                    metadata = data.metadata or {}
+                    if m := asset_info.get("metadata"):
+                        metadata.update(m)
+                    data.metadata = {asset: metadata}
 
                     if asset_as_band:
                         if len(data.band_names) > 1:
@@ -567,8 +570,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                         indexes=idx,
                         statistics=asset_info.get("dataset_statistics"),
                     )
-                    if metadata := asset_info.get("metadata"):
-                        data.metadata.update(metadata)
+
+                    metadata = data.metadata or {}
+                    if m := asset_info.get("metadata"):
+                        metadata.update(m)
+                    data.metadata = {asset: metadata}
 
                     if asset_as_band:
                         if len(data.band_names) > 1:
@@ -640,8 +646,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                         indexes=idx,
                         statistics=asset_info.get("dataset_statistics"),
                     )
-                    if metadata := asset_info.get("metadata"):
-                        data.metadata.update(metadata)
+
+                    metadata = data.metadata or {}
+                    if m := asset_info.get("metadata"):
+                        metadata.update(m)
+                    data.metadata = {asset: metadata}
 
                     if asset_as_band:
                         if len(data.band_names) > 1:
@@ -712,8 +721,10 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                     data = src.point(*args, indexes=idx, **kwargs)
 
-                    if metadata := asset_info.get("metadata"):
-                        data.metadata.update(metadata)
+                    metadata = data.metadata or {}
+                    if m := asset_info.get("metadata"):
+                        metadata.update(m)
+                    data.metadata = {asset: metadata}
 
                     if asset_as_band:
                         if len(data.band_names) > 1:
@@ -787,8 +798,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                         indexes=idx,
                         statistics=asset_info.get("dataset_statistics"),
                     )
-                    if metadata := asset_info.get("metadata"):
-                        data.metadata.update(metadata)
+
+                    metadata = data.metadata or {}
+                    if m := asset_info.get("metadata"):
+                        metadata.update(m)
+                    data.metadata = {asset: metadata}
 
                     if asset_as_band:
                         if len(data.band_names) > 1:
@@ -1002,6 +1016,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                 data = src.tile(*args, **kwargs)
+                if data.metadata:
+                    data.metadata = {band: data.metadata}
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -1052,6 +1068,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                 data = src.part(*args, **kwargs)
+                if data.metadata:
+                    data.metadata = {band: data.metadata}
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -1100,6 +1118,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                 data = src.preview(**kwargs)
+                if data.metadata:
+                    data.metadata = {band: data.metadata}
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -1152,6 +1172,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                 data = src.point(*args, **kwargs)
+                if data.metadata:
+                    data.metadata = {band: data.metadata}
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 
@@ -1201,6 +1223,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
                 data = src.feature(*args, **kwargs)
+                if data.metadata:
+                    data.metadata = {band: data.metadata}
                 data.band_names = [band]  # use `band` as name instead of band index
                 return data
 

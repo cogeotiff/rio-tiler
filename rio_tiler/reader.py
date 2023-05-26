@@ -267,6 +267,7 @@ def read(
             crs=dataset.crs,
             band_names=[f"b{idx}" for idx in indexes],
             dataset_statistics=dataset_statistics,
+            metadata=dataset.tags(),
         )
 
 
@@ -447,6 +448,7 @@ def part(
             crs=img.crs,
             band_names=img.band_names,
             dataset_statistics=img.dataset_statistics,
+            metadata=img.metadata,
         )
 
     return read(
@@ -550,4 +552,5 @@ def point(
         coordinates=coordinates,
         crs=coord_crs,
         band_names=img.band_names,
+        metadata=dataset.tags(),
     )

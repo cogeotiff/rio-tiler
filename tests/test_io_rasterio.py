@@ -990,3 +990,11 @@ def test_tms_tilesize_and_zoom():
     with Reader(COG_NODATA, tms=tms_2048) as src:
         assert src.minzoom == 5
         assert src.maxzoom == 6
+
+
+def test_metadata_img():
+    """Check metadata in ImageData."""
+    with Reader(COG_TAGS) as src:
+        img = src.preview()
+        assert img.dataset_statistics
+        assert img.metadata
