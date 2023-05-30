@@ -1,6 +1,5 @@
 """tests rio_tiler.io.xarray.XarrayReader"""
 
-import os
 from datetime import datetime
 
 import morecantile
@@ -10,10 +9,6 @@ import rioxarray
 import xarray
 
 from rio_tiler.io import XarrayReader
-
-PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
-
-planet = os.path.join(PREFIX, "PLANET_SCOPE_3D.nc")
 
 
 def test_xarray_reader():
@@ -115,3 +110,155 @@ def test_xarray_reader():
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
         assert img.crs.to_epsg() == 3857
+
+
+def test_xarray_reader_external_nodata():
+    """test XarrayReader."""
+    # Create a 360/180 dataset that covers the whole world
+    arr = numpy.arange(0.0, 360 * 180).reshape(1, 180, 360)
+    arr[:, 0:50, 0:50] = 0  # we set the top-left corner to 0
+
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-179.5, 180.5, 1),
+            "y": numpy.arange(89.5, -90.5, -1),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data) as dst:
+        info = dst.info()
+        assert info.height == 180
+        assert info.width == 360
+        assert info.count == 1
+
+    with XarrayReader(data) as dst:
+        # TILE
+        img = dst.tile(0, 0, 1)
+        assert img.mask.all()
+        assert img.data[0, 0, 0] == 0
+        assert img.data[0, 100, 100]
+
+        # overwrite the nodata value to 0
+        img = dst.tile(0, 0, 1, nodata=0)
+        assert not img.mask.all()  # not all the mask value are set to 255
+        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+
+        # PART
+        img = dst.part((-160, -80, 160, 80))
+        assert img.mask.all()
+        assert img.data[0, 0, 0] == 0
+        assert img.data[0, 100, 100]
+
+        # overwrite the nodata value to 0
+        img = dst.part((-160, -80, 160, 80), nodata=0)
+        assert not img.mask.all()  # not all the mask value are set to 255
+        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+
+        # POINT
+        pt = dst.point(-179, 89)
+        assert pt.mask[0] == 255
+
+        # overwrite the nodata value to 0
+        pt = dst.point(-179, 89, nodata=0)
+        assert pt.count == 1
+        assert pt.mask[0] == 0
+
+        feat = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-180.0, 0],
+                        [-180.0, 85.0511287798066],
+                        [0, 85.0511287798066],
+                        [0, 6.023673383202919e-13],
+                        [-180.0, 0],
+                    ]
+                ],
+            },
+            "properties": {"title": "XYZ tile (0, 0, 1)"},
+        }
+
+        # FEATURE
+        img = dst.feature(feat)
+        assert img.mask.all()
+        assert img.data[0, 0, 0] == 0
+        assert img.data[0, 50, 100]
+
+        # overwrite the nodata value to 0
+        img = dst.feature(feat, nodata=0)
+        assert not img.mask.all()  # not all the mask value are set to 255
+        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+        assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
+
+
+def test_xarray_reader_internal_nodata():
+    """test XarrayReader."""
+    # Create a 360/180 dataset that covers the whole world
+    arr = numpy.arange(0.0, 360 * 180).reshape(1, 180, 360)
+    arr[:, 0:50, 0:50] = 0  # we set the top-left corner to 0
+
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-179.5, 180.5, 1),
+            "y": numpy.arange(89.5, -90.5, -1),
+            "time": [datetime(2022, 1, 1)],
+        },
+        attrs={
+            "missing_value": 0,
+        },
+    )
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    with XarrayReader(data) as dst:
+        # TILE
+        img = dst.tile(0, 0, 1)
+        assert not img.mask.all()  # not all the mask value are set to 255
+        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+
+        # PART
+        img = dst.part((-160, -80, 160, 80))
+        assert not img.mask.all()  # not all the mask value are set to 255
+        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+
+        # POINT
+        pt = dst.point(-179, 89)
+        assert pt.count == 1
+        assert pt.mask[0] == 0
+
+        feat = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-180.0, 0],
+                        [-180.0, 85.0511287798066],
+                        [0, 85.0511287798066],
+                        [0, 6.023673383202919e-13],
+                        [-180.0, 0],
+                    ]
+                ],
+            },
+            "properties": {"title": "XYZ tile (0, 0, 1)"},
+        }
+
+        # FEATURE
+        img = dst.feature(feat)
+        assert not img.mask.all()  # not all the mask value are set to 255
+        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+        assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
