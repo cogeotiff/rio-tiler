@@ -259,7 +259,9 @@ def test_mosaic_tiler():
     # test with preview
     # NOTE: We need to have fix output width and height because each preview could have different size
     # Also because the 2 assets cover different bbox, getting the preview merged together doesn't make real sense
-    (t, m), _ = mosaic.mosaic_reader(assets, _read_preview, width=256, height=256)
+    (t, m), _ = mosaic.mosaic_reader(
+        assets, _read_preview, width=256, height=256, max_size=None
+    )
     assert t.shape == (3, 256, 256)
     assert m.shape == (256, 256)
     assert t.dtype == "uint16"
@@ -445,6 +447,7 @@ def test_mosaic_tiler_with_imageDataClass():
         _read_preview,
         width=256,
         height=256,
+        max_size=None,
         pixel_selection=defaults.LowestMethod(),
     )
     assert img.data.shape == (3, 256, 256)

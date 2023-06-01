@@ -19,6 +19,8 @@
 
 - handle internal and user provided `nodata` values in `rio_tiler.io.XarrayReader` to create mask
 
+- add `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_PROFILE` and `AWS_REGION` environnement overrides for `rio_tiler.io.stac.aws_get_object` function
+
 **breaking changes**
 
 - remove support for non-binary mask values (e.g non-binary alpha bands, ref: [rasterio/rasterio#1721](https://github.com/rasterio/rasterio/issues/1721#issuecomment-586547617))

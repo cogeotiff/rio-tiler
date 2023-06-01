@@ -11,6 +11,7 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import is_valid_geom
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
@@ -448,7 +449,11 @@ def render(
     output_profile.update(creation_options)
 
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
         with MemoryFile() as memfile:
             with memfile.open(**output_profile) as dst:
                 dst.write(data, indexes=list(range(1, count + 1)))
@@ -611,7 +616,11 @@ def resize_array(
 
     datasetname = _array_gdal_name(data)
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
         with rasterio.open(datasetname, "r+") as src:
             # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
             indexes = 1 if len(data.shape) == 2 else None
