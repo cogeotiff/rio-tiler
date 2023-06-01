@@ -275,7 +275,11 @@ class PointData:
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
-        # TODO: Deprecate
+        warnings.warn(
+            "'PointData.as_masked' has been deprecated and will be removed"
+            "in rio-tiler 6.0. You can get the masked array directly with `PointData.array` attribute.",
+            DeprecationWarning,
+        )
         return self.array
 
     def apply_expression(self, expression: str) -> "PointData":
@@ -374,7 +378,11 @@ class ImageData:
             arr (numpy.ndarray): Numpy array or Numpy masked array.
 
         """
-        # TODO: Deprecate
+        warnings.warn(
+            "'ImageData.from_array()' has been deprecated and will be removed"
+            "in rio-tiler 6.0.",
+            DeprecationWarning,
+        )
         return cls(arr)
 
     @classmethod
@@ -500,7 +508,11 @@ class ImageData:
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
-        # TODO: Deprecate
+        warnings.warn(
+            "'ImageData.as_masked' has been deprecated and will be removed"
+            "in rio-tiler 6.0. You can get the masked array directly with `ImageData.array` attribute.",
+            DeprecationWarning,
+        )
         return self.array
 
     def data_as_image(self) -> numpy.ndarray:

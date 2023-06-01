@@ -7,31 +7,34 @@ This class has helper methods like `render` which forward internal data and mask
 
 #### Attributes
 
-- **data**: image data array (numpy.ndarray)
-- **mask**: gdal/rasterio mask data array (numpy.ndarray)
+- **array**: image array (numpy.ma.MaskedArray)
 - **assets**: assets list used to create the data array (list, optional)
 - **bounds**: bounds of the data ([rasterio.coords.BoundingBox](https://github.com/rasterio/rasterio/blob/main/rasterio/coords.py#L8), optional)
 - **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/main/rasterio/crs.py#L21), optional)
 - **metadata**: additional metadata (dict, optional)
 - **band_names**: image band's names
 - **dataset_statistics**: Dataset's min/max values (list of (min,max), optional)
+- **cutline_mask**: array representing the mask for `feature` methods
 
 ```python
 import numpy
 from rio_tiler.models import ImageData
 
 d = numpy.zeros((3, 256, 256))
-m = numpy.zeros((256, 256)) + 255
+m = numpy.zeros((3, 256, 256), dtype="bool")
+
+data = numpy.ma.MaskedArray(d, mask=m)
 
 print(ImageData(d, m))
 >>> ImageData(
-    data=array(...),
-    mask=array(...),
+    array=masked_array(...),
     assets=None,
     bounds=None,
     crs=None,
     metadata={},
     band_names=['b1', 'b2', 'b3'],
+    dataset_statistics=None,
+    cutline_mask=array(),
 )
 ```
 
@@ -42,200 +45,267 @@ print(ImageData(d, m))
 - **height**: number of row in the data array (int)
 - **count**: number of bands in the data array (int)
 - **transform**: Affine transform created from the bounds and crs ([affine.Affine](https://github.com/sgillies/affine/blob/master/affine/__init__.py#L116))
+- **data**: Return data part of the masked array.
+- **mask**: Return the mask part in form of rasterio dataset mask.
 
 #### Methods
 
-- **as_masked()**: Return the data array as a `numpy.ma.MaskedArray`
-
-```python
-import numpy
-from rio_tiler.models import ImageData
-
-d = numpy.zeros((3, 256, 256))
-m = numpy.zeros((256, 256)) + 255
-
-masked = ImageData(d, m).as_masked()
-print(type(masked))
->>> numpy.ma.core.MaskedArray
-```
-
 - **data_as_image()**: Return the data array reshaped into an image processing/visualization software friendly order
 
-```python
-import numpy
-from rio_tiler.models import ImageData
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
 
-d = numpy.zeros((3, 256, 256))
-m = numpy.zeros((256, 256)) + 255
+    d = numpy.zeros((3, 256, 256))
+    m = numpy.zeros((256, 256)) + 255
 
-img = ImageData(d, m)
-print(img.data.shape)
->>> (3, 256, 256)
+    img = ImageData(d, m)
+    print(img.data.shape)
+    >>> (3, 256, 256)
 
-image = img.data_as_image()
-print(image.shape)
->>> (256, 256, 3)
-```
+    image = img.data_as_image()
+    print(image.shape)
+    >>> (256, 256, 3)
+    ```
 
-- **post_process**: Apply rescaling or/and `color-operations` formula to the data array. Returns a new ImageData instance.
+- **clip()**: Clip data and mask to a bbox (in the ImageData CRS).
 
-```python
-import numpy
-from rio_tiler.models import ImageData
+    !!! info "New in version 4.0.0"
 
-d = numpy.random.randint(0, 3000, (3, 256, 256))
-m = numpy.zeros((256, 256)) + 255
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
 
-img = ImageData(d, m)
+    data = numpy.zeros((3, 1024, 1024), dtype="uint8")
+    img = ImageData(data, crs="epsg:4326", bounds=(-180, -90, 180, 90))
 
-print(img.data.dtype)
->>> 'int64'
+    img_c = img.clip((-100, -50, 100, 50))
+    assert img_c.count == 3
+    assert img_c.bounds == (-100, -50, 100, 50)
+    ```
 
-print(img.data.max())
->>> 2999
+- **resize()**: Resize data and mask.
 
-# rescale the data from 0 -> 3000 to 0 -> 255
-# by default rio-tiler will apply the same `in_range` for all the bands
-image = img.post_process(in_range=((0, 3000),))
+    !!! info "New in version 4.0.0"
 
-# or provide range for each bands
-image = img.post_process(in_range=((0, 3000), (0, 1000), (0, 2000)))
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
 
-assert isinstance(image, ImageData)
+    data = numpy.zeros((3, 1024, 1024), dtype="uint8")
+    img = ImageData(data)
 
-print(image.data.dtype)
->>> 'uint8'
+    img_r = img.resize(256, 256)
+    assert img_r.count == 3
+    assert img_r.width == 256
+    assert img_r.height == 256
+    ```
 
-print(image.data.max())
->>> 254
+- **post_process()**: Apply rescaling or/and `color-operations` formula to the data array. Returns a new ImageData instance.
 
-# rescale and apply color-operations formula
-image = img.post_process(
-    in_range=((0, 3000),),
-    color_formula="Gamma RGB 3.1",
-)
-assert isinstance(image, ImageData)
-```
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
+
+    d = numpy.random.randint(0, 3000, (3, 256, 256))
+    m = numpy.zeros((256, 256)) + 255
+
+    img = ImageData(d, m)
+
+    print(img.data.dtype)
+    >>> 'int64'
+
+    print(img.data.max())
+    >>> 2999
+
+    # rescale the data from 0 -> 3000 to 0 -> 255
+    # by default rio-tiler will apply the same `in_range` for all the bands
+    image = img.post_process(in_range=((0, 3000),))
+
+    # or provide range for each bands
+    image = img.post_process(in_range=((0, 3000), (0, 1000), (0, 2000)))
+
+    assert isinstance(image, ImageData)
+
+    print(image.data.dtype)
+    >>> 'uint8'
+
+    print(image.data.max())
+    >>> 254
+
+    # rescale and apply color-operations formula
+    image = img.post_process(
+        in_range=((0, 3000),),
+        color_formula="Gamma RGB 3.1",
+    )
+    assert isinstance(image, ImageData)
+    ```
+
+- **statistics()**: Return statistics from ImageData.
+
+    !!! info "New in version 4.1.7"
+
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
+
+    data = numpy.zeros((1, 256, 256), dtype="uint8")
+    data[0, 0:10, 0:10] = 0
+    data[0, 10:11, 10:11] = 100
+    img = ImageData(data)
+    stats = img.statistics(categorical=True)
+
+    print(stats["b1"].min)
+    >>> 0
+
+    print(stats["b1"].max)
+    >>> 100
+
+    print(stats["b1"].majority)
+    >>> 0
+
+    print(stats["b1"].minority)
+    >>> 100
+
+    print(stats["b1"].unique)
+    >>> 2.0
+    ```
 
 - **rescale()**: linear rescaling of the data in place
 
-!!! info "New in version 3.1.5"
+    !!! info "New in version 3.1.5"
 
-```python
-import numpy
-from rio_tiler.models import ImageData
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
 
-d = numpy.random.randint(0, 3000, (3, 256, 256))
-m = numpy.zeros((256, 256)) + 255
+    d = numpy.random.randint(0, 3000, (3, 256, 256))
+    m = numpy.zeros((256, 256)) + 255
 
-img = ImageData(d, m)
+    img = ImageData(d, m)
 
-print(img.data.dtype)
->>> 'int64'
+    print(img.data.dtype)
+    >>> 'int64'
 
-print(img.data.max())
->>> 2999
+    print(img.data.max())
+    >>> 2999
 
-# rescale and apply color-operations formula
-img.rescale(in_range=((0, 3000),),)
-print(img.data.max())
->>> 254
+    # rescale and apply color-operations formula
+    img.rescale(in_range=((0, 3000),),)
+    print(img.data.max())
+    >>> 254
 
-print(img.data.dtype)
->>> 'uint8'
-```
+    print(img.data.dtype)
+    >>> 'uint8'
+    ```
 
 - **apply_color_formula()**: Apply `color-operations`'s color formula in place
 
-!!! info "New in version 3.1.5"
+    !!! info "New in version 3.1.5"
 
-```python
-import numpy
-from rio_tiler.models import ImageData
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
 
-d = numpy.random.randint(0, 3000, (3, 256, 256))
-m = numpy.zeros((256, 256)) + 255
+    d = numpy.random.randint(0, 3000, (3, 256, 256))
+    m = numpy.zeros((256, 256)) + 255
 
-img = ImageData(d, m)
+    img = ImageData(d, m)
 
-print(img.data.dtype)
->>> 'int64'
+    print(img.data.dtype)
+    >>> 'int64'
 
-img.apply_color_formula("Gamma RGB 3.1")
-print(img.data.dtype)
->>> 'uint8'
-```
+    img.apply_color_formula("Gamma RGB 3.1")
+    print(img.data.dtype)
+    >>> 'uint8'
+    ```
+
+- **apply_colormap()**: Apply colormap to the image data
+
+    !!! info "New in version 4.1.6"
+
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
+
+    cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
+    im = ImageData(numpy.zeros((1, 256, 256), dtype="uint8")).apply_colormap(cm)
+    assert im.data.shape == (3, 256, 256)
+    assert im.data[:, 0, 0].tolist() == [0, 0, 0]
+    assert im.mask[0, 0] == 255
+    assert im.mask.all()
+    ```
 
 - **apply_expression()**: Apply band math expression
 
-!!! info "New in version 4.0"
+    !!! info "New in version 4.0"
 
-```python
-import numpy
-from rio_tiler.models import ImageData
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
 
-d = numpy.random.randint(0, 3000, (3, 256, 256))
-m = numpy.zeros((256, 256)) + 255
+    d = numpy.random.randint(0, 3000, (3, 256, 256))
+    m = numpy.zeros((256, 256)) + 255
 
-img = ImageData(d, m)
-print(img.band_names)
->>> ["b1", "b2", "b3"]  # Defaults
+    img = ImageData(d, m)
+    print(img.band_names)
+    >>> ["b1", "b2", "b3"]  # Defaults
 
-ratio = img.apply_expression("b1/b2")  # Returns a new ImageData object
-assert isinstance(ratio, ImageData)
+    ratio = img.apply_expression("b1/b2")  # Returns a new ImageData object
+    assert isinstance(ratio, ImageData)
 
-print(ratio.band_names)
->>> ["b1/b2"]
+    print(ratio.band_names)
+    >>> ["b1/b2"]
 
-print(ratio.data.shape)
->>> (1, 256, 256)
-```
+    print(ratio.data.shape)
+    >>> (1, 256, 256)
+    ```
 
 - **render()**: Render the data/mask to an image buffer (forward data and mask to rio_tiler.utils.render).
 
-```python
-import numpy
-from rasterio.io import MemoryFile
-from rio_tiler.models import ImageData
+    ```python
+    import numpy
+    from rasterio.io import MemoryFile
+    from rio_tiler.models import ImageData
 
-def get_meta(content):
-    with MemoryFile(content) as mem:
-        with mem.open() as dst:
-            return dst.meta
+    def get_meta(content):
+        with MemoryFile(content) as mem:
+            with mem.open() as dst:
+                return dst.meta
 
-d = numpy.zeros((3, 256, 256), dtype="uint8")
-m = numpy.zeros((256, 256)) + 255
+    d = numpy.zeros((3, 256, 256), dtype="uint8")
+    m = numpy.zeros((256, 256)) + 255
 
-img = ImageData(d, m)
+    img = ImageData(d, m)
 
-# create a PNG image
-buf = img.render(img_format="png")
-print(get_meta(buf))
->>> {
-    'driver': 'PNG',
-    'dtype': 'uint8',
-    'nodata': None,
-    'width': 256,
-    'height': 256,
-    'count': 4,
-    'crs': None,
-    'transform': Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
-}
+    # create a PNG image
+    buf = img.render(img_format="png")
+    print(get_meta(buf))
+    >>> {
+        'driver': 'PNG',
+        'dtype': 'uint8',
+        'nodata': None,
+        'width': 256,
+        'height': 256,
+        'count': 4,
+        'crs': None,
+        'transform': Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+    }
 
-# create a JPEG image
-buf = img.render(img_format="jpeg")
-print(get_meta(buf))
->>> {
-    'driver': 'JPEG',
-    'dtype': 'uint8',
-    'nodata': None,
-    'width': 256,
-    'height': 256,
-    'count': 3,
-    'crs': None,
-    'transform': Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
-}
-```
+    # create a JPEG image
+    buf = img.render(img_format="jpeg")
+    print(get_meta(buf))
+    >>> {
+        'driver': 'JPEG',
+        'dtype': 'uint8',
+        'nodata': None,
+        'width': 256,
+        'height': 256,
+        'count': 3,
+        'crs': None,
+        'transform': Affine(1.0, 0.0, 0.0, 0.0, 1.0, 0.0)
+    }
+    ```
 
 Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for a driver (e.g `float` for `PNG`),
 `rio-tiler` will automatically rescale the data using the `min/max` value for the datatype (ref: https://github.com/cogeotiff/rio-tiler/pull/391).
@@ -247,8 +317,7 @@ Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for 
 
 #### Attributes
 
-- **data**: point array (numpy.ndarray)
-- **mask**: gdal/rasterio mask array (numpy.ndarray)
+- **array**: image array (numpy.ma.MaskedArray)
 - **assets**: assets list used to create the data array (list, optional)
 - **coordinates**: Coordinates of the point (Tuple[float, float], optional)
 - **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/master/rasterio/crs.py#L21), optional)
@@ -260,23 +329,27 @@ import numpy
 from rio_tiler.models import PointData
 
 d = numpy.zeros((3))
-m = numpy.zeros((1), dtype="uint8") + 255
+m = numpy.zeros((1), dtype="bool")
 
-print(PointData(d, m))
+data = numpy.ma.MaskedArray(d, mask=m)
+
+print(PointData(data))
 >>> PointData(
-    data=array([0., 0., 0.]),
-    mask=array([255]),
-    assets=None,
+    array=masked_array(data=[0.0, 0.0, 0.0], mask=[False, False, False], fill_value=1e+20),
+    band_names=['b1', 'b2', 'b3'],
     coordinates=None,
     crs=None,
+    assets=None,
     metadata={},
-    band_names=['b1', 'b2', 'b3'],
+)
 )
 ```
 
 #### Properties
 
 - **count**: number of bands in the data array (int)
+- **data**: Return data part of the masked array.
+- **mask**: Return the mask part in form of rasterio dataset mask.
 
 #### Methods
 

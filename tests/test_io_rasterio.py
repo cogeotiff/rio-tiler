@@ -534,7 +534,7 @@ def test_imageData_output():
         assert img.count == 1
         assert img.data_as_image().shape == (256, 256, 1)
 
-        assert numpy.array_equal(~img.as_masked().mask[0] * 255, img.mask)
+        assert numpy.array_equal(~img.array.mask[0] * 255, img.mask)
 
         assert img.crs == WEB_MERCATOR_TMS.crs
         assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
