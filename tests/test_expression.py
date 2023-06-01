@@ -1,5 +1,7 @@
 """test rio_tiler.expression functions."""
 
+import warnings
+
 import numpy
 import pytest
 
@@ -48,7 +50,8 @@ def test_parse_cast(expr, expected):
 )
 def test_get_blocks(expr, expected):
     """test get_expression_blocks."""
-    with pytest.warns(None):
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         assert get_expression_blocks(expr) == expected
 
 

@@ -1,7 +1,6 @@
 """Tests ImageReader."""
 
 import os
-import warnings
 
 import numpy
 import pytest
@@ -18,14 +17,12 @@ GEO = os.path.join(PREFIX, "cog_nonearth.tif")
 
 def test_non_geo_image():
     """Test ImageReader usage with Non-Geo Images."""
-    with pytest.warns() as w:
+    with pytest.warns((NotGeoreferencedWarning)):
         with ImageReader(NO_GEO) as src:
             assert src.minzoom == 0
             assert src.maxzoom == 3
-        assert len(w) == 1
-        assert issubclass(w[0].category, NotGeoreferencedWarning)
 
-    with warnings.catch_warnings():
+    with pytest.warns((NotGeoreferencedWarning)):
         with ImageReader(NO_GEO) as src:
             assert list(src.tms.xy_bounds(0, 0, 3)) == [0, 256, 256, 0]
             assert list(src.tms.xy_bounds(0, 0, 2)) == [0, 512, 512, 0]
@@ -92,7 +89,7 @@ def test_non_geo_image():
             im = src.feature(poly)
             assert im.data.shape == (3, 1100, 1100)
 
-    with warnings.catch_warnings():
+    with pytest.warns((NotGeoreferencedWarning)):
         with ImageReader(NO_GEO_PORTRAIT) as src:
             img = src.tile(5, 2, 3)
             assert not img.mask.all()

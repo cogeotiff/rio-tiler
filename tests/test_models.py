@@ -1,5 +1,6 @@
 """Test rio_tiler.models."""
 
+import warnings
 from io import BytesIO
 
 import numpy
@@ -18,16 +19,16 @@ def test_imageData_AutoRescaling():
         ImageData(numpy.zeros((1, 256, 256), dtype="float32")).render(img_format="PNG")
         assert len(w.list) == 1
 
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         ImageData(numpy.zeros((1, 256, 256), dtype="uint8")).render(img_format="PNG")
-        assert len(w.list) == 0
 
     with pytest.warns(InvalidDatatypeWarning) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="int8")).render(img_format="PNG")
 
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(img_format="GTiff")
-        assert len(w.list) == 0
 
     with pytest.warns(InvalidDatatypeWarning) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(img_format="jpeg")
@@ -41,12 +42,12 @@ def test_imageData_AutoRescaling():
         )
 
     # Make sure that we do not rescale uint16 data when there is a colormap
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         cm = {1: (0, 0, 0, 255), 1000: (255, 255, 255, 255)}
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(
             img_format="JPEG", colormap=cm
         )
-        assert len(w.list) == 0
 
 
 @pytest.mark.parametrize(
@@ -55,7 +56,8 @@ def test_imageData_AutoRescaling():
 )
 def test_imageData_AutoRescalingAllTypes(dtype):
     """Test ImageData auto rescaling."""
-    with pytest.warns(None):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # Some InvalidDatatypeWarning will be emitted
         ImageData(numpy.zeros((1, 256, 256), dtype=dtype)).render(img_format="PNG")
         ImageData(numpy.zeros((1, 256, 256), dtype=dtype)).render(img_format="JPEG")
         ImageData(numpy.zeros((3, 256, 256), dtype=dtype)).render(img_format="WEBP")
@@ -69,7 +71,7 @@ def test_16bit_PNG():
     mask = numpy.zeros((1, 256, 256), dtype="bool")
     mask[0:10, 0:10] = True
 
-    with pytest.warns(None):
+    with warnings.catch_warnings():
         arr = numpy.ma.MaskedArray(numpy.zeros((1, 256, 256), dtype="uint16"))
         arr.mask = mask.copy()
         img = ImageData(arr).render(img_format="PNG")
@@ -83,7 +85,7 @@ def test_16bit_PNG():
             assert (arr[0:10, 0:10] == 0).all()
             assert (arr[11:, 11:] == 65535).all()
 
-    with pytest.warns(None):
+    with warnings.catch_warnings():
         arr = numpy.ma.MaskedArray(numpy.zeros((3, 256, 256), dtype="uint16"))
         arr.mask = mask.copy()
         img = ImageData(arr).render(img_format="PNG")
@@ -113,11 +115,11 @@ def test_merge_with_diffsize():
     assert img.width == 256
     assert img.height == 256
 
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         img1 = ImageData(numpy.zeros((1, 256, 256)))
         img2 = ImageData(numpy.zeros((1, 256, 256)))
         img = ImageData.create_from_list([img1, img2])
-    assert len(w) == 0
 
 
 def test_apply_expression():
@@ -159,19 +161,22 @@ def test_dataset_statistics():
     data[0, 0:10, 0:10] = 0
     data[0, 10:11, 10:11] = 1
 
-    img = ImageData(data, dataset_statistics=[(0, 1)]).render(img_format="PNG")
-    with MemoryFile(img) as mem:
-        with mem.open() as dst:
-            arr = dst.read(indexes=1)
-            assert arr.min() == 0
-            assert arr.max() == 255
+    with pytest.warns(InvalidDatatypeWarning):
+        img = ImageData(data, dataset_statistics=[(0, 1)]).render(img_format="PNG")
+        with MemoryFile(img) as mem:
+            with mem.open() as dst:
+                arr = dst.read(indexes=1)
+                assert arr.min() == 0
+                assert arr.max() == 255
 
-    img = ImageData(data).render(img_format="PNG")
-    with MemoryFile(img) as mem:
-        with mem.open() as dst:
-            arr = dst.read(indexes=1)
-            assert not arr.min() == 0
-            assert not arr.max() == 255
+    with pytest.warns(InvalidDatatypeWarning):
+        img = ImageData(data).render(img_format="PNG")
+
+        with MemoryFile(img) as mem:
+            with mem.open() as dst:
+                arr = dst.read(indexes=1)
+                assert not arr.min() == 0
+                assert not arr.max() == 255
 
 
 def test_resize():
