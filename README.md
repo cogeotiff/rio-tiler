@@ -38,14 +38,6 @@
 
 ---
 
-## rio-tiler **V5**
-
-This branch (`"dev"`) relates to development of rio-tiler `5.0` which is not yet ready for production use.
-
-If you're using *rio-tiler* (installed from pypi), you probably want either rio-tiler 4.x [Documentation](https://cogeotiff.github.io/rio-tiler/) or, the [`main`](https://github.com/cogeotiff/rio-tiler/tree/main) git branch.
-
----
-
 ## Description
 
 `rio-tiler` was initially designed to create [slippy map
@@ -206,13 +198,10 @@ Create Mapbox Vector Tiles from raster sources
 
 ## Implementations
 
-[**rio-viz**][rio-viz]: Visualize Cloud Optimized GeoTIFFs locally in the browser
-
 [**titiler**][titiler]: A lightweight Cloud Optimized GeoTIFF dynamic tile server.
 
 [**cogeo-mosaic**][cogeo-mosaic]: Create mosaics of Cloud Optimized GeoTIFF based on the [mosaicJSON][mosaicjson_spec] specification.
 
-[rio-viz]: https://github.com/developmentseed/rio-viz
 [titiler]: https://github.com/developmentseed/titiler
 [cogeo-mosaic]: https://github.com/developmentseed/cogeo-mosaic
 [mosaicjson_spec]: https://github.com/developmentseed/mosaicjson-spec
