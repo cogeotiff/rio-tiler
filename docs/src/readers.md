@@ -987,11 +987,6 @@ print(stats["b1"].dict())
 ```
 
 
-
-
-
-
-
 ## rio_tiler.io.xarray.XarrayReader
 
 The `Reader` is designed to work with xarray.DataReader with full geo-reference metadata (CRS) and variables (X,Y)
