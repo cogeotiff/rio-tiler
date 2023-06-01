@@ -22,7 +22,7 @@
   <a href="https://pypistats.org/packages/rio-tiler" target="_blank">
       <img src="https://img.shields.io/pypi/dm/rio-tiler.svg" alt="Downloads">
   </a>
-  <a href="https://github.com/cogeotiff/rio-tiler/blob/main/LICENSE.txt" target="_blank">
+  <a href="https://github.com/cogeotiff/rio-tiler/blob/main/LICENSE" target="_blank">
       <img src="https://img.shields.io/github/license/cogeotiff/rio-tiler.svg" alt="Downloads">
   </a>
   <a href="https://mybinder.org/v2/gh/cogeotiff/rio-tiler/main?filepath=docs%2Fexamples%2F" target="_blank" alt="Binder">
@@ -198,13 +198,10 @@ Create Mapbox Vector Tiles from raster sources
 
 ## Implementations
 
-[**rio-viz**][rio-viz]: Visualize Cloud Optimized GeoTIFFs locally in the browser
-
 [**titiler**][titiler]: A lightweight Cloud Optimized GeoTIFF dynamic tile server.
 
 [**cogeo-mosaic**][cogeo-mosaic]: Create mosaics of Cloud Optimized GeoTIFF based on the [mosaicJSON][mosaicjson_spec] specification.
 
-[rio-viz]: https://github.com/developmentseed/rio-viz
 [titiler]: https://github.com/developmentseed/titiler
 [cogeo-mosaic]: https://github.com/developmentseed/cogeo-mosaic
 [mosaicjson_spec]: https://github.com/developmentseed/mosaicjson-spec

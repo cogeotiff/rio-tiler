@@ -1,205 +1,190 @@
 """rio_tiler.mosaic.methods.defaults: default mosaic filling methods."""
 
-from typing import List, Optional, Tuple
+from dataclasses import dataclass, field
+from typing import List, Optional
 
 import numpy
 
 from rio_tiler.mosaic.methods.base import MosaicMethodBase
 
 
+@dataclass
 class FirstMethod(MosaicMethodBase):
-    """Feed the mosaic tile with the first pixel available."""
+    """Feed the mosaic array with the first pixel available."""
 
-    def __init__(self):
-        """Overwrite base and init First method."""
-        super(FirstMethod, self).__init__()
-        self.exit_when_filled = True
+    exit_when_filled: bool = field(default=True, init=False)
 
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Add data to tile."""
-        if self.tile is None:
-            self.tile = tile
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add data to the mosaic array."""
+        if self.mosaic is None:
+            self.mosaic = array
 
-        pidex = self.tile.mask & ~tile.mask
+        else:
+            pidex = self.mosaic.mask & ~array.mask
 
-        mask = numpy.where(pidex, tile.mask, self.tile.mask)
-        self.tile = numpy.ma.where(pidex, tile, self.tile)
-        self.tile.mask = mask
+            mask = numpy.where(pidex, array.mask, self.mosaic.mask)
+            self.mosaic = numpy.ma.where(pidex, array, self.mosaic)
+            self.mosaic.mask = mask
 
 
+@dataclass
 class HighestMethod(MosaicMethodBase):
-    """Feed the mosaic tile with the highest pixel values."""
+    """Feed the mosaic array with the highest pixel values."""
 
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Add data to tile."""
-        if self.tile is None:
-            self.tile = tile
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add data to the mosaic array."""
+        if self.mosaic is None:
+            self.mosaic = array
 
-        pidex = (
-            numpy.bitwise_and(tile.data > self.tile.data, ~tile.mask) | self.tile.mask
-        )
+        else:
+            pidex = (
+                numpy.bitwise_and(array.data > self.mosaic.data, ~array.mask)
+                | self.mosaic.mask
+            )
 
-        mask = numpy.where(pidex, tile.mask, self.tile.mask)
-        self.tile = numpy.ma.where(pidex, tile, self.tile)
-        self.tile.mask = mask
+            mask = numpy.where(pidex, array.mask, self.mosaic.mask)
+            self.mosaic = numpy.ma.where(pidex, array, self.mosaic)
+            self.mosaic.mask = mask
 
 
+@dataclass
 class LowestMethod(MosaicMethodBase):
-    """Feed the mosaic tile with the lowest pixel values."""
+    """Feed the mosaic array with the lowest pixel values."""
 
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Add data to tile."""
-        if self.tile is None:
-            self.tile = tile
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add data to the mosaic array."""
+        if self.mosaic is None:
+            self.mosaic = array
 
-        pidex = (
-            numpy.bitwise_and(tile.data < self.tile.data, ~tile.mask) | self.tile.mask
-        )
+        else:
+            pidex = (
+                numpy.bitwise_and(array.data < self.mosaic.data, ~array.mask)
+                | self.mosaic.mask
+            )
 
-        mask = numpy.where(pidex, tile.mask, self.tile.mask)
-        self.tile = numpy.ma.where(pidex, tile, self.tile)
-        self.tile.mask = mask
+            mask = numpy.where(pidex, array.mask, self.mosaic.mask)
+            self.mosaic = numpy.ma.where(pidex, array, self.mosaic)
+            self.mosaic.mask = mask
 
 
+@dataclass
 class MeanMethod(MosaicMethodBase):
-    """Stack the tiles and return the Mean pixel value."""
+    """Stack the arrays and return the Mean pixel value."""
 
-    def __init__(self, enforce_data_type: bool = True):
-        """Overwrite base and init Mean method."""
-        super(MeanMethod, self).__init__()
-        self.enforce_data_type = enforce_data_type
-        self.stack: List[numpy.ma.MaskedArray] = []
+    enforce_data_type: bool = True
+    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return Mean of the data stack."""
         if self.stack:
-            tile = numpy.ma.mean(numpy.ma.stack(self.stack, axis=0), axis=0)
+            array = numpy.ma.mean(numpy.ma.stack(self.stack, axis=0), axis=0)
             if self.enforce_data_type:
-                tile = tile.astype(self.stack[0].dtype)
+                array = array.astype(self.stack[0].dtype)
 
-            data = numpy.ma.getdata(tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(tile))
-            return (data, mask * numpy.uint8(255))
+            return array
 
-        else:
-            return None, None
+        return None
 
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Add data to tile."""
-        self.stack.append(tile)
+    def feed(self, array: numpy.ma.MaskedArray):
+        """Add array to the stack."""
+        self.stack.append(array)
 
 
+@dataclass
 class MedianMethod(MosaicMethodBase):
-    """Stack the tiles and return the Median pixel value."""
+    """Stack the arrays and return the Median pixel value."""
 
-    def __init__(self, enforce_data_type: bool = True):
-        """Overwrite base and init Median method."""
-        super(MedianMethod, self).__init__()
-        self.enforce_data_type = enforce_data_type
-        self.stack: List[numpy.ma.MaskedArray] = []
+    enforce_data_type: bool = True
+    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return Median of the data stack."""
         if self.stack:
-            tile = numpy.ma.median(numpy.ma.stack(self.stack, axis=0), axis=0)
+            array = numpy.ma.median(numpy.ma.stack(self.stack, axis=0), axis=0)
             if self.enforce_data_type:
-                tile = tile.astype(self.stack[0].dtype)
+                array = array.astype(self.stack[0].dtype)
 
-            data = numpy.ma.getdata(tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(tile))
-            return (data, mask * numpy.uint8(255))
+            return array
 
-        else:
-            return None, None
+        return None
 
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Create a stack of tile."""
-        self.stack.append(tile)
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add array to the stack."""
+        self.stack.append(array)
 
 
+@dataclass
 class StdevMethod(MosaicMethodBase):
-    """Stack the tiles and return the Standard Deviation value."""
+    """Stack the arrays and return the Standard Deviation value."""
 
-    def __init__(self, enforce_data_type=True):
-        """Overwrite base and init Stdev method."""
-        super(StdevMethod, self).__init__()
-        self.stack: List[numpy.ma.MaskedArray] = []
+    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return STDDEV of the data stack."""
         if self.stack:
-            tile = numpy.ma.std(numpy.ma.stack(self.stack, axis=0), axis=0)
+            return numpy.ma.std(numpy.ma.stack(self.stack, axis=0), axis=0)
 
-            data = numpy.ma.getdata(tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(tile))
-            return (data, mask * numpy.uint8(255))
+        return None
 
-        else:
-            return None, None
-
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Add data to tile."""
-        self.stack.append(tile)
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add array to the stack."""
+        self.stack.append(array)
 
 
-class LastBandHigh(MosaicMethodBase):
-    """Feed the mosaic tile using the last band as decision factor."""
+@dataclass
+class LastBandHighMethod(MosaicMethodBase):
+    """Feed the mosaic array using the last band as decision factor (highest value)."""
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
-        if self.tile is not None:
-            data = numpy.ma.getdata(self.tile)[:-1]
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(self.tile))
-            return (data, mask * numpy.uint8(255))
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        if self.mosaic is not None:
+            return self.mosaic[:-1].copy()
+
+        return None
+
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add data to the mosaic array."""
+        if self.mosaic is None:
+            self.mosaic = array
 
         else:
-            return None, None
+            pidex = (
+                numpy.bitwise_and(array.data[-1] > self.mosaic.data[-1], ~array.mask)
+                | self.mosaic.mask
+            )
 
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Add data to tile."""
-        if self.tile is None:
-            self.tile = tile
-            return
-
-        pidex = (
-            numpy.bitwise_and(tile.data[-1] > self.tile.data[-1], ~tile.mask)
-            | self.tile.mask
-        )
-
-        mask = numpy.where(pidex, tile.mask, self.tile.mask)
-        self.tile = numpy.ma.where(pidex, tile, self.tile)
-        self.tile.mask = mask
+            mask = numpy.where(pidex, array.mask, self.mosaic.mask)
+            self.mosaic = numpy.ma.where(pidex, array, self.mosaic)
+            self.mosaic.mask = mask
 
 
-class LastBandLow(MosaicMethodBase):
-    """Feed the mosaic tile using the last band as decision factor."""
+@dataclass
+class LastBandLowMethod(MosaicMethodBase):
+    """Feed the mosaic array using the last band as decision factor (lowest value)."""
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
-        if self.tile is not None:
-            data = numpy.ma.getdata(self.tile)[:-1]
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(self.tile))
-            return (data, mask * numpy.uint8(255))
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        if self.mosaic is not None:
+            return self.mosaic[:-1].copy()
+
+        return None
+
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add data to the mosaic array."""
+        if self.mosaic is None:
+            self.mosaic = array
 
         else:
-            return None, None
+            pidex = (
+                numpy.bitwise_and(array.data[-1] < self.mosaic.data[-1], ~array.mask)
+                | self.mosaic.mask
+            )
 
-    def feed(self, tile: Optional[numpy.ma.MaskedArray]):
-        """Add data to tile."""
-        if self.tile is None:
-            self.tile = tile
-            return
-
-        pidex = (
-            numpy.bitwise_and(tile.data[-1] < self.tile.data[-1], ~tile.mask)
-            | self.tile.mask
-        )
-
-        mask = numpy.where(pidex, tile.mask, self.tile.mask)
-        self.tile = numpy.ma.where(pidex, tile, self.tile)
-        self.tile.mask = mask
+            mask = numpy.where(pidex, array.mask, self.mosaic.mask)
+            self.mosaic = numpy.ma.where(pidex, array, self.mosaic)
+            self.mosaic.mask = mask

@@ -3,13 +3,14 @@
 import contextlib
 import math
 import warnings
+from enum import IntEnum
 from typing import Callable, Dict, Optional, Tuple, TypedDict, Union
 
 import numpy
 from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
-from rasterio.enums import ColorInterp, Resampling
+from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
@@ -18,7 +19,7 @@ from rasterio.warp import transform_bounds
 from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
 from rio_tiler.models import ImageData, PointData
-from rio_tiler.types import BBox, DataMaskType, Indexes, NoData
+from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
 
@@ -29,9 +30,10 @@ class Options(TypedDict, total=False):
     force_binary_mask: Optional[bool]
     nodata: Optional[NoData]
     vrt_options: Optional[Dict]
-    resampling_method: Optional[Resampling]
+    resampling_method: Optional[RIOResampling]
+    reproject_method: Optional[WarpResampling]
     unscale: Optional[bool]
-    post_process: Optional[Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]]
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]]
 
 
 def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int]:
@@ -86,10 +88,11 @@ def read(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
+    reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
     ] = None,
 ) -> ImageData:
     """Low level read function.
@@ -104,7 +107,8 @@ def read(
         window (rasterio.windows.Window, optional): Window to read.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
@@ -122,7 +126,9 @@ def read(
             UserWarning,
         )
 
-    resampling = Resampling[resampling_method]
+    io_resampling = Resampling[resampling_method]
+    warp_resampling = Resampling[reproject_method]
+
     dst_crs = dst_crs or src_dst.crs
     with contextlib.ExitStack() as ctx:
         # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
@@ -130,7 +136,7 @@ def read(
             vrt_params = {
                 "crs": dst_crs,
                 "add_alpha": True,
-                "resampling": resampling,
+                "resampling": warp_resampling,
             }
 
             nodata = nodata if nodata is not None else src_dst.nodata
@@ -176,30 +182,55 @@ def read(
             # If dataset has an alpha band we need to get the mask using the alpha band index
             # and then split the data and mask values
             alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
-            idx = tuple(indexes) + (alpha_idx,)
-            data = dataset.read(
-                indexes=idx,
-                window=window,
-                out_shape=(len(idx), height, width) if height and width else None,
-                resampling=resampling,
-                boundless=boundless,
-            )
-            data, mask = data[0:-1], data[-1].astype("uint8")
+
+            # Read Data and Mask separately
+            # Special case (see https://github.com/rasterio/rasterio/issues/2798)
+            if dataset.dtypes[alpha_idx - 1] != dataset.dtypes[indexes[0] - 1]:
+                values = dataset.read(
+                    indexes=indexes,
+                    window=window,
+                    out_shape=(len(indexes), height, width)
+                    if height and width
+                    else None,
+                    resampling=io_resampling,
+                    boundless=boundless,
+                )
+                mask = dataset.read(
+                    indexes=(alpha_idx,),
+                    window=window,
+                    out_shape=(1, height, width) if height and width else None,
+                    resampling=io_resampling,
+                    boundless=boundless,
+                )
+                data = numpy.ma.MaskedArray(values)
+                data.mask = ~mask.astype("bool")
+
+            else:
+                idx = tuple(indexes) + (alpha_idx,)
+                values = dataset.read(
+                    indexes=idx,
+                    window=window,
+                    out_shape=(len(idx), height, width) if height and width else None,
+                    resampling=io_resampling,
+                    boundless=boundless,
+                )
+                mask = ~values[-1].astype("bool")
+                data = numpy.ma.MaskedArray(values[0:-1])
+                data.mask = mask
 
         else:
             data = dataset.read(
                 indexes=indexes,
                 window=window,
                 out_shape=(len(indexes), height, width) if height and width else None,
-                resampling=resampling,
+                resampling=io_resampling,
                 boundless=boundless,
+                masked=True,
             )
-            mask = dataset.dataset_mask(
-                window=window,
-                out_shape=(height, width) if height and width else None,
-                resampling=resampling,
-                boundless=boundless,
-            )
+
+            # if data has Nodata then we simply make sure the mask == the nodata
+            if dataset.nodata is not None:
+                data.mask |= data == dataset.nodata
 
         stats = []
         for ix in indexes:
@@ -214,8 +245,9 @@ def read(
         # We only add dataset statistics if we have them for all the indexes
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
+        # TODO: DEPRECATED, masked array are already using bool
         if force_binary_mask:
-            mask = numpy.where(mask != 0, numpy.uint8(255), numpy.uint8(0))
+            pass
 
         if unscale:
             data = data.astype("float32", casting="unsafe")
@@ -223,22 +255,20 @@ def read(
             numpy.add(data, dataset.offsets[0], out=data, casting="unsafe")
 
         if post_process:
-            data, mask = post_process(data, mask)
+            data = post_process(data)
 
         out_bounds = (
             windows.bounds(window, dataset.transform) if window else dataset.bounds
         )
 
-        img = ImageData(
+        return ImageData(
             data,
-            mask,
             bounds=out_bounds,
             crs=dataset.crs,
             band_names=[f"b{idx}" for idx in indexes],
             dataset_statistics=dataset_statistics,
+            metadata=dataset.tags(),
         )
-
-    return img
 
 
 # flake8: noqa: C901
@@ -257,10 +287,11 @@ def part(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
+    reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
     ] = None,
 ) -> ImageData:
     """Read part of a dataset.
@@ -279,8 +310,8 @@ def part(
         buffer (float, optional): Buffer to apply to each bbox edge. Defaults to `0.`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
-        force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -373,6 +404,7 @@ def part(
             nodata=nodata,
             vrt_options=vrt_params,
             resampling_method=resampling_method,
+            reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
@@ -404,17 +436,19 @@ def part(
             height=height,
             window=window,
             resampling_method=resampling_method,
+            reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
         )
+
         return ImageData(
-            data=img.data[:, padding:-padding, padding:-padding],
-            mask=img.mask[padding:-padding, padding:-padding],
+            img.array[:, padding:-padding, padding:-padding],
             bounds=bounds,
             crs=img.crs,
             band_names=img.band_names,
             dataset_statistics=img.dataset_statistics,
+            metadata=img.metadata,
         )
 
     return read(
@@ -424,6 +458,7 @@ def part(
         height=height,
         window=window,
         resampling_method=resampling_method,
+        reproject_method=reproject_method,
         force_binary_mask=force_binary_mask,
         unscale=unscale,
         post_process=post_process,
@@ -438,10 +473,11 @@ def point(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
+    reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Optional[
-        Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
     ] = None,
 ) -> PointData:
     """Read a pixel value for a point.
@@ -453,7 +489,8 @@ def point(
         coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -465,11 +502,11 @@ def point(
         indexes = (indexes,)
 
     with contextlib.ExitStack() as ctx:
-        # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
+        # Use WarpedVRT when User provided Nodata or VRT Option (cutline)
         if nodata is not None or vrt_options:
             vrt_params = {
                 "add_alpha": True,
-                "resampling": Resampling[resampling_method],
+                "resampling": Resampling[reproject_method],
             }
             nodata = nodata if nodata is not None else src_dst.nodata
             if nodata is not None:
@@ -511,9 +548,9 @@ def point(
         )
 
     return PointData(
-        img.data[:, 0, 0],
-        numpy.array([img.mask[0, 0]]),
+        img.array[:, 0, 0],
         coordinates=coordinates,
         crs=coord_crs,
         band_names=img.band_names,
+        metadata=dataset.tags(),
     )

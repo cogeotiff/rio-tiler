@@ -1,13 +1,14 @@
 """``pytest`` configuration."""
 
-import os
+from io import BytesIO
+from typing import Sequence
 
 import numpy
 import pytest
 import rasterio
+from rasterio.crs import CRS
 from rasterio.enums import ColorInterp
 from rasterio.io import MemoryFile
-from rasterio.shutil import copy
 from rasterio.transform import from_bounds
 
 with rasterio.Env() as env:
@@ -20,63 +21,53 @@ requires_webp = pytest.mark.skipif(
 
 
 @pytest.fixture
-def cloudoptimized_geotiff():
-    """Create CloudOptimized GeoTIFF fixture."""
+def dataset_fixture():
+    """raster fixture."""
 
-    def _cloudoptimized_geotiff(
-        output_dir,
-        name,
-        crs,
-        bounds,
-        dtype,
-        nodata_type,
-        tilesize=256,
-        nband=1,
-        x_size=2000,
-        y_size=2000,
+    def _dataset(
+        crs: CRS,
+        bounds: Sequence[float],
+        dtype: str,
+        nodata_type: str,
+        nband: int = 3,
+        width: int = 256,
+        height: int = 256,
     ):
-        fout = "{}/{}-{}-{}-{}b.tif".format(output_dir, name, dtype, nodata_type, nband)
-        if os.path.exists(fout):
-            return fout
-
-        if not os.path.isdir(output_dir):
-            os.makedirs(output_dir)
-
         # Data
-        arr = numpy.random.randint(1, 255, size=(nband, y_size, x_size)).astype(dtype)
+        arr = numpy.zeros((nband, height, width), dtype=dtype) + 1
+        arr[:, 0:128, 0:128] = 0
 
-        arr[:, 0:500, 0:500] = 0
-
-        # Mask
-        mask = numpy.zeros((1, y_size, x_size), dtype=dtype) + 255
-        mask[:, 0:500, 0:500] = 0
+        # Mask/Alpha
+        mask = numpy.zeros((1, height, width), dtype=dtype) + 255
+        mask[:, 0:128, 0:128] = 0
 
         # Input Profile
         src_profile = {
             "driver": "GTiff",
             "count": nband,
             "dtype": dtype,
-            "height": y_size,
-            "width": x_size,
+            "height": height,
+            "width": width,
             "crs": crs,
-            "transform": from_bounds(*bounds, x_size, y_size),
+            "transform": from_bounds(*bounds, width, height),
         }
-        if nodata_type in ["nodata", "mask"]:
+
+        if nodata_type == "nodata":
             src_profile["nodata"] = 0
+
         elif nodata_type == "alpha":
             src_profile["count"] = nband + 1
 
-        gdal_config = {
-            "GDAL_NUM_THREADS": "ALL_CPUS",
-            "GDAL_TIFF_INTERNAL_MASK": True,
-            "GDAL_TIFF_OVR_BLOCKSIZE": "128",
-        }
-        with rasterio.Env(**gdal_config):
+        with rasterio.Env(GDAL_TIFF_INTERNAL_MASK=True):
             with MemoryFile() as memfile:
                 with memfile.open(**src_profile) as mem:
-                    ci = [ColorInterp.gray]
-                    if nband > 1:
-                        ci += [ColorInterp.undefined] * (nband - 1)
+                    if nband == 3:
+                        ci = [ColorInterp.red, ColorInterp.green, ColorInterp.blue]
+
+                    else:
+                        ci = [ColorInterp.gray]
+                        if nband > 1:
+                            ci += [ColorInterp.undefined] * (nband - 1)
 
                     if nodata_type == "alpha":
                         data = numpy.concatenate([arr, mask])
@@ -92,15 +83,8 @@ def cloudoptimized_geotiff():
 
                     # Write Mask
                     if nodata_type == "mask":
-                        mem.write_mask(mask.astype("uint8"))
+                        mem.write_mask(mask[0])
 
-                    output_profile = {
-                        "driver": "COG",
-                        "blocksize": tilesize,
-                        "compress": "DEFLATE",
-                    }
-                    copy(mem, fout, **output_profile)
+                return BytesIO(memfile.read())
 
-        return fout
-
-    return _cloudoptimized_geotiff
+    return _dataset

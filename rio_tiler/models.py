@@ -14,7 +14,7 @@ from rasterio import windows
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
-from rasterio.enums import ColorInterp, Resampling
+from rasterio.enums import ColorInterp
 from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
@@ -22,7 +22,14 @@ from rasterio.transform import from_bounds
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
 from rio_tiler.expression import apply_expression, get_expression_blocks
-from rio_tiler.types import BBox, ColorMapType, GDALColorMapType, IntervalTuple, NumType
+from rio_tiler.types import (
+    BBox,
+    ColorMapType,
+    GDALColorMapType,
+    IntervalTuple,
+    NumType,
+    RIOResampling,
+)
 from rio_tiler.utils import (
     get_array_statistics,
     linear_rescale,
@@ -112,17 +119,16 @@ def to_coordsbbox(bbox) -> Optional[BoundingBox]:
 
 
 def rescale_image(
-    data: numpy.ndarray,
-    mask: numpy.ndarray,
+    array: numpy.ma.MaskedArray,
     in_range: Sequence[IntervalTuple],
     out_range: Sequence[IntervalTuple] = ((0, 255),),
     out_dtype: Union[str, numpy.number] = "uint8",
-):
-    """Rescale image data."""
-    if len(data.shape) < 3:
-        data = numpy.expand_dims(data, axis=0)
+) -> numpy.ma.MaskedArray:
+    """Rescale image data in-place."""
+    if len(array.shape) < 3:
+        array = numpy.expand_dims(array, axis=0)
 
-    nbands = data.shape[0]
+    nbands = array.shape[0]
 
     if len(in_range) != nbands:
         in_range = ((in_range[0]),) * nbands
@@ -131,13 +137,29 @@ def rescale_image(
         out_range = ((out_range[0]),) * nbands
 
     for bdx in range(nbands):
-        data[bdx] = numpy.where(
-            mask,
-            linear_rescale(data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]),
+        array.data[bdx] = numpy.where(
+            ~array.mask[bdx],
+            linear_rescale(
+                array.data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
+            ),
             0,
         )
 
-    return data.astype(out_dtype)
+    return array.astype(out_dtype)
+
+
+def to_masked(array: numpy.ndarray) -> numpy.ma.MaskedArray:
+    """Makes sure we have a MaskedArray."""
+    if not numpy.ma.isarray(array):
+        array = numpy.ma.asarray(array)
+
+    # when a masked array is totally valid, the mask is set to numpy.ma.nomask
+    # https://numpy.org/doc/stable/reference/maskedarray.baseclass.html#numpy.ma.nomask
+    # doing `array.mask = False` force the creation of the mask array
+    if not array.mask.shape:
+        array.mask = False
+
+    return array
 
 
 @attr.s
@@ -145,8 +167,7 @@ class PointData:
     """Point Data class.
 
     Attributes:
-        data (numpy.ndarray): pixel values.
-        mask (numpy.ndarray): rasterio mask values.
+        array (numpy.ma.MaskedArray): pixel values.
         band_names (list): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
         coordinates (tuple): Point's coordinates.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
@@ -155,15 +176,14 @@ class PointData:
 
     """
 
-    data: numpy.ndarray = attr.ib()
-    mask: numpy.ndarray = attr.ib()
-    band_names: List[str] = attr.ib()
-    coordinates: Optional[Tuple[float, float]] = attr.ib(default=None)
-    crs: Optional[CRS] = attr.ib(default=None)
-    assets: Optional[List] = attr.ib(default=None)
-    metadata: Optional[Dict] = attr.ib(factory=dict)
+    array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
+    band_names: List[str] = attr.ib(kw_only=True)
+    coordinates: Optional[Tuple[float, float]] = attr.ib(default=None, kw_only=True)
+    crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
+    assets: Optional[List] = attr.ib(default=None, kw_only=True)
+    metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
 
-    @data.validator
+    @array.validator
     def _validate_data(self, attribute, value):
         """PointsData data has to be a 1d array."""
         if not len(value.shape) == 1:
@@ -179,19 +199,31 @@ class PointData:
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
 
-    @mask.default
-    def _default_mask(self):
-        return numpy.array([255], dtype="uint8")
+    ###########################################################################
+    # For compatibility
+    @property
+    def data(self) -> numpy.ndarray:
+        """Return data part of the masked array."""
+        return self.array.data
+
+    @property
+    def mask(self) -> numpy.ndarray:
+        """Return Mask in form of rasterio dataset mask."""
+        return numpy.array([numpy.logical_and.reduce(~self.array.mask)]) * numpy.uint8(
+            255
+        )
+
+    ###########################################################################
 
     def __iter__(self):
         """Allow for variable expansion."""
-        for i in self.data:
+        for i in self.array.data:
             yield i
 
     @property
     def count(self) -> int:
         """Number of band."""
-        return self.data.shape[0]
+        return self.array.shape[0]
 
     @classmethod
     def create_from_list(cls, data: Sequence["PointData"]):
@@ -212,10 +244,7 @@ class PointData:
                     "Cannot concatenate points with different coordinates/CRS."
                 )
 
-        arr = numpy.concatenate([pt.data for pt in data])
-        mask = numpy.concatenate([pt.mask for pt in data]).all() * numpy.array(
-            [255], dtype="uint8"
-        )
+        arr = numpy.ma.concatenate([pt.array for pt in data])
 
         assets = list(
             dict.fromkeys(
@@ -229,27 +258,40 @@ class PointData:
             )
         )
 
+        metadata = dict(
+            itertools.chain.from_iterable(
+                [pt.metadata.items() for pt in data if pt.metadata]
+            )
+        )
+
         return cls(
             arr,
-            mask,
             assets=assets,
             crs=data[0].crs,
             coordinates=data[0].coordinates,
             band_names=band_names,
+            metadata=metadata,
         )
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
-        data = numpy.ma.array(self.data)
-        data.mask = self.mask == 0
-        return data
+        warnings.warn(
+            "'PointData.as_masked' has been deprecated and will be removed"
+            "in rio-tiler 6.0. You can get the masked array directly with `PointData.array` attribute.",
+            DeprecationWarning,
+        )
+        return self.array
 
     def apply_expression(self, expression: str) -> "PointData":
         """Apply expression to the image data."""
         blocks = get_expression_blocks(expression)
+
+        data = apply_expression(blocks, self.band_names, self.array)
+        # Using numexpr do not preserve mask info
+        data.mask = False
+
         return PointData(
-            apply_expression(blocks, self.band_names, self.data),
-            self.mask,
+            data,
             assets=self.assets,
             crs=self.crs,
             coordinates=self.coordinates,
@@ -258,12 +300,21 @@ class PointData:
         )
 
 
-def to_3d(data: numpy.ndarray) -> numpy.ndarray:
-    """Makes sure we have a 3D array."""
-    if len(data.shape) < 3:
-        data = numpy.expand_dims(data, axis=0)
+def masked_and_3d(array: numpy.ndarray) -> numpy.ma.MaskedArray:
+    """Makes sure we have a 3D array and mask"""
+    if not numpy.ma.isarray(array):
+        array = numpy.ma.asarray(array)
 
-    return data
+    if len(array.shape) < 3:
+        array = numpy.expand_dims(array, axis=0)
+
+    # when a masked array is totally valid, the mask is set to numpy.ma.nomask
+    # https://numpy.org/doc/stable/reference/maskedarray.baseclass.html#numpy.ma.nomask
+    # doing `array.mask = False` force the creation of the mask array
+    if not array.mask.shape:
+        array.mask = False
+
+    return array
 
 
 @attr.s
@@ -271,8 +322,7 @@ class ImageData:
     """Image Data class.
 
     Attributes:
-        data (numpy.ndarray): pixel values.
-        mask (numpy.ndarray): rasterio mask values.
+        array (numpy.ma.MaskedArray): image values.
         assets (list, optional): list of assets used to construct the data values.
         bounds (BoundingBox, optional): bounding box of the data.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
@@ -280,28 +330,44 @@ class ImageData:
         band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
         dataset_statistics (list, optional): dataset statistics `[(min, max), (min, max)]`
 
+    Note: `mask` should be considered as `PER_BAND` so shape should be similar as the data
+
     """
 
-    data: numpy.ndarray = attr.ib(converter=to_3d)
-    mask: numpy.ndarray = attr.ib()
-    assets: Optional[List] = attr.ib(default=None)
-    bounds: Optional[BoundingBox] = attr.ib(default=None, converter=to_coordsbbox)
-    crs: Optional[CRS] = attr.ib(default=None)
-    metadata: Optional[Dict] = attr.ib(factory=dict)
-    band_names: List[str] = attr.ib()
-    dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(default=None)
+    array: numpy.ma.MaskedArray = attr.ib(converter=masked_and_3d)
+    assets: Optional[List] = attr.ib(default=None, kw_only=True)
+    bounds: Optional[BoundingBox] = attr.ib(
+        default=None, converter=to_coordsbbox, kw_only=True
+    )
+    crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
+    metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
+    band_names: List[str] = attr.ib(kw_only=True)
+    dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
+        default=None, kw_only=True
+    )
+    cutline_mask: Optional[numpy.ndarray] = attr.ib(default=None)
 
     @band_names.default
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
 
-    @mask.default
-    def _default_mask(self):
-        return numpy.zeros((self.height, self.width), dtype="uint8") + 255
+    ###########################################################################
+    # For compatibility
+    @property
+    def data(self) -> numpy.ndarray:
+        """Return data part of the masked array."""
+        return self.array.data
+
+    @property
+    def mask(self) -> numpy.ndarray:
+        """Return Mask in form of rasterio dataset mask."""
+        return numpy.logical_or.reduce(~self.array.mask) * numpy.uint8(255)
+
+    ###########################################################################
 
     def __iter__(self):
         """Allow for variable expansion (``arr, mask = ImageData``)"""
-        for i in (self.data, self.mask):
+        for i in (self.array.data, self.mask):
             yield i
 
     @classmethod
@@ -312,14 +378,11 @@ class ImageData:
             arr (numpy.ndarray): Numpy array or Numpy masked array.
 
         """
-        if len(arr.shape) < 3:
-            arr = numpy.expand_dims(arr, axis=0)
-
-        if isinstance(arr, numpy.ma.MaskedArray):
-            data = numpy.ma.getdata(arr)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(arr))
-            return cls(data, mask * numpy.uint8(255))
-
+        warnings.warn(
+            "'ImageData.from_array()' has been deprecated and will be removed"
+            "in rio-tiler 6.0.",
+            DeprecationWarning,
+        )
         return cls(arr)
 
     @classmethod
@@ -336,13 +399,14 @@ class ImageData:
                 if ColorInterp.alpha in dataset.colorinterp:
                     alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
                     idx = tuple(indexes) + (alpha_idx,)
+                    array = dataset.read(indexes=idx)
 
-                    arr = dataset.read(indexes=idx)
-                    arr, mask = arr[0:-1], arr[-1].astype("uint8")
+                    mask = ~array[-1].astype("bool")
+                    array = numpy.ma.MaskedArray(array[0:-1])
+                    array.mask = mask
 
                 else:
-                    arr = dataset.read(indexes=indexes)
-                    mask = dataset.dataset_mask()
+                    array = dataset.read(indexes=indexes, masked=True)
 
                 stats = []
                 for ix in indexes:
@@ -358,8 +422,7 @@ class ImageData:
                 dataset_statistics = stats if len(stats) == len(indexes) else None
 
                 return cls(
-                    arr,
-                    mask,
+                    array,
                     crs=dataset.crs,
                     bounds=dataset.bounds,
                     dataset_statistics=dataset_statistics,
@@ -374,20 +437,31 @@ class ImageData:
 
         """
         h, w = zip(*[(img.height, img.width) for img in data])
+
+        # Get cutline mask at highest resolution.
+        max_h, max_w = max(h), max(w)
+        cutline_mask = next(
+            img.cutline_mask
+            for img in data
+            if img.height == max_h and img.width == max_w
+        )
+
         if len(set(h)) > 1 or len(set(w)) > 1:
             warnings.warn(
                 "Cannot concatenate images with different size. Will resize using max width/heigh",
                 UserWarning,
             )
-            max_h, max_w = max(h), max(w)
             for img in data:
                 if img.height == max_h and img.width == max_w:
                     continue
-                img.data = resize_array(img.data, max_h, max_w)
-                img.mask = resize_array(img.mask, max_h, max_w)
+                arr = numpy.ma.MaskedArray(
+                    resize_array(img.array.data, max_h, max_w),
+                    mask=resize_array(img.array.mask * 1, max_h, max_w).astype("bool"),
+                )
+                img.array = arr
 
-        arr = numpy.concatenate([img.data for img in data])
-        mask = numpy.all([img.mask for img in data], axis=0).astype(numpy.uint8) * 255
+        arr = numpy.ma.concatenate([img.array for img in data])
+
         assets = list(
             dict.fromkeys(
                 itertools.chain.from_iterable(
@@ -415,21 +489,31 @@ class ImageData:
         )
         dataset_statistics = stats if len(stats) == len(band_names) else None
 
+        metadata = dict(
+            itertools.chain.from_iterable(
+                [img.metadata.items() for img in data if img.metadata]
+            )
+        )
+
         return cls(
             arr,
-            mask,
             assets=assets,
             crs=crs,
             bounds=bounds,
             band_names=band_names,
             dataset_statistics=dataset_statistics,
+            cutline_mask=cutline_mask,
+            metadata=metadata,
         )
 
     def as_masked(self) -> numpy.ma.MaskedArray:
         """return a numpy masked array."""
-        data = numpy.ma.array(self.data)
-        data.mask = self.mask == 0
-        return data
+        warnings.warn(
+            "'ImageData.as_masked' has been deprecated and will be removed"
+            "in rio-tiler 6.0. You can get the masked array directly with `ImageData.array` attribute.",
+            DeprecationWarning,
+        )
+        return self.array
 
     def data_as_image(self) -> numpy.ndarray:
         """Return the data array reshaped into an image processing/visualization software friendly order.
@@ -437,22 +521,22 @@ class ImageData:
         (bands, rows, columns) -> (rows, columns, bands).
 
         """
-        return reshape_as_image(self.data)
+        return reshape_as_image(self.array.data)
 
     @property
     def width(self) -> int:
         """Width of the data array."""
-        return self.data.shape[2]
+        return self.array.shape[2]
 
     @property
     def height(self) -> int:
         """Height of the data array."""
-        return self.data.shape[1]
+        return self.array.shape[1]
 
     @property
     def count(self) -> int:
         """Number of band."""
-        return self.data.shape[0]
+        return self.array.shape[0]
 
     @property
     def transform(self):
@@ -470,9 +554,8 @@ class ImageData:
         out_dtype: Union[str, numpy.number] = "uint8",
     ):
         """Rescale data in place."""
-        self.data = rescale_image(
-            self.data.copy(),
-            self.mask,
+        self.array = rescale_image(
+            self.array.copy(),
             in_range=in_range,
             out_range=out_range,
             out_dtype=out_dtype,
@@ -480,10 +563,15 @@ class ImageData:
 
     def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
         """Apply colormap to the image data."""
-        data, alpha = apply_cmap(self.data, colormap)
+        data, alpha = apply_cmap(self.array.data, colormap)
+
+        # Use Dataset Mask which is fine
+        # because in theory self.array should be a 1 band image
+        array = numpy.ma.MaskedArray(data)
+        array.mask = numpy.bitwise_and(alpha, self.mask) == 0
+
         return ImageData(
-            data,
-            numpy.bitwise_and(alpha, self.mask),
+            array,
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
@@ -492,13 +580,13 @@ class ImageData:
 
     def apply_color_formula(self, color_formula: Optional[str]):
         """Apply color-operations formula in place."""
-        out = self.data.copy()
+        out = self.array.data.copy()
         out[out < 0] = 0
 
         for ops in parse_operations(color_formula):
             out = scale_dtype(ops(to_math_type(out)), numpy.uint8)
 
-        self.data = out
+        self.array.data = out
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
@@ -517,9 +605,12 @@ class ImageData:
                 )
             )
 
+        data = apply_expression(blocks, self.band_names, self.array)
+        # NOTE: We use dataset mask when mixing bands
+        data.mask = numpy.logical_or.reduce(self.array.mask)
+
         return ImageData(
-            apply_expression(blocks, self.band_names, self.data),
-            self.mask.copy(),
+            data,
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
@@ -532,15 +623,16 @@ class ImageData:
         self,
         height: int,
         width: int,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
     ) -> "ImageData":
         """Resize data and mask."""
-        data = resize_array(self.data, height, width, resampling_method)
-        mask = resize_array(self.mask, height, width, resampling_method)
+        data = resize_array(self.array.data, height, width, resampling_method)
+        mask = resize_array(
+            self.array.mask * 1, height, width, resampling_method
+        ).astype("bool")
 
         return ImageData(
-            data,
-            mask,
+            numpy.ma.MaskedArray(data, mask=mask),
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
@@ -554,12 +646,9 @@ class ImageData:
         row_slice, col_slice = windows.from_bounds(
             *bbox, transform=self.transform
         ).toslices()
-        data = self.data[:, row_slice, col_slice]
-        mask = self.mask[row_slice, col_slice]
 
         return ImageData(
-            data,
-            mask,
+            self.array[:, row_slice, col_slice].copy(),
             assets=self.assets,
             crs=self.crs,
             bounds=bbox,
@@ -592,20 +681,19 @@ class ImageData:
             >>> img.post_process(color_formula="Gamma RGB 4.1")
 
         """
-        data = self.data.copy()
-        mask = self.mask.copy()
+        array = self.array.copy()
 
         if in_range:
-            data = rescale_image(data, mask, in_range, out_dtype=out_dtype, **kwargs)
+            array = rescale_image(array, in_range, out_dtype=out_dtype, **kwargs)
 
         if color_formula:
-            data[data < 0] = 0
+            array[array < 0] = 0
             for ops in parse_operations(color_formula):
-                data = scale_dtype(ops(to_math_type(data)), numpy.uint8)
+                array = scale_dtype(ops(to_math_type(array)), numpy.uint8)
+            array.mask = self.array.mask
 
         return ImageData(
-            data,
-            mask,
+            array,
             crs=self.crs,
             bounds=self.bounds,
             assets=self.assets,
@@ -639,42 +727,46 @@ class ImageData:
             if "crs" not in kwargs and self.crs:
                 kwargs.update({"crs": self.crs})
 
-        data = self.data.copy()
-        mask = self.mask.copy()
-        datatype_range = self.dataset_statistics or (dtype_ranges[str(data.dtype)],)
+        array = self.array.copy()
+
+        datatype_range = self.dataset_statistics or (dtype_ranges[str(array.dtype)],)
 
         if not colormap:
-            if img_format in ["PNG"] and data.dtype not in ["uint8", "uint16"]:
+            if img_format in ["PNG"] and array.dtype not in ["uint8", "uint16"]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
+                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, mask, in_range=datatype_range)
+                array = rescale_image(array, in_range=datatype_range)
 
-            elif img_format in ["JPEG", "WEBP"] and data.dtype not in ["uint8"]:
+            elif img_format in ["JPEG", "WEBP"] and array.dtype not in ["uint8"]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
+                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, mask, in_range=datatype_range)
+                array = rescale_image(array, in_range=datatype_range)
 
-            elif img_format in ["JP2OPENJPEG"] and data.dtype not in [
+            elif img_format in ["JP2OPENJPEG"] and array.dtype not in [
                 "uint8",
                 "int16",
                 "uint16",
             ]:
                 warnings.warn(
-                    f"Invalid type: `{data.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
+                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
-                data = rescale_image(data, mask, in_range=datatype_range)
+                array = rescale_image(array, in_range=datatype_range)
 
         if add_mask:
             return render(
-                data, mask, img_format=img_format, colormap=colormap, **kwargs
+                array.data,
+                self.mask,  # We use dataset mask for rendering
+                img_format=img_format,
+                colormap=colormap,
+                **kwargs,
             )
 
-        return render(data, img_format=img_format, colormap=colormap, **kwargs)
+        return render(array.data, img_format=img_format, colormap=colormap, **kwargs)
 
     def statistics(
         self,
@@ -687,7 +779,7 @@ class ImageData:
         hist_options = hist_options or {}
 
         stats = get_array_statistics(
-            self.as_masked(),
+            self.array,
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,

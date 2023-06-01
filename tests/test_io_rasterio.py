@@ -13,6 +13,7 @@ import rasterio
 from morecantile import TileMatrixSet
 from pyproj import CRS
 from rasterio import transform
+from rasterio.features import bounds as featureBounds
 from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
@@ -26,6 +27,7 @@ from rio_tiler.errors import (
 )
 from rio_tiler.io import Reader
 from rio_tiler.models import BandStatistics
+from rio_tiler.utils import create_cutline
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 
@@ -432,10 +434,10 @@ def test_Reader_Options():
         _, mask = src.preview()
         assert not mask.all()
 
-    def callback(data, mask):
-        mask.fill(255)
+    def callback(data):
         data = data * 2
-        return data, mask
+        data.mask = False  # set mask to False
+        return data
 
     with Reader(COGEO, options={"nodata": 1, "post_process": callback}) as src:
         data_init, _ = src.tile(43, 25, 7, post_process=None)
@@ -455,17 +457,20 @@ def test_Reader_Options():
 
 def test_cog_with_internal_gcps():
     """Make sure file gets re-projected using gcps."""
-    with Reader(COG_GCPS, options={"nodata": 0}) as src:
-        assert src.bounds
-        assert src.info().nodata_value == 0
+    with Reader(COG_GCPS) as src:
         assert isinstance(src.dataset, WarpedVRT)
-
+        assert src.bounds
         assert src.minzoom == 7
         assert src.maxzoom == 10
 
         metadata = src.info()
-        assert len(metadata.band_metadata) == 1
-        assert metadata.band_descriptions == [("b1", "")]
+        assert metadata.nodata_type == "Alpha"
+        assert len(metadata.band_metadata) == 2
+        assert metadata.band_descriptions == [("b1", ""), ("b2", "")]
+        assert metadata.colorinterp == ["gray", "alpha"]
+
+        # The topleft corner should be masked
+        assert src.preview(indexes=1).array.mask[0, 0, 0]
 
         tile_z = 8
         tile_x = 183
@@ -477,22 +482,27 @@ def test_cog_with_internal_gcps():
     assert src.dataset.src_dataset.closed
 
     # Pass dataset (should be a WarpedVRT)
+    # Do not infer mask/alpha in the VRT
     with rasterio.open(COG_GCPS) as dst:
         with WarpedVRT(
             dst,
             src_crs=dst.gcps[1],
             src_transform=transform.from_gcps(dst.gcps[0]),
         ) as vrt:
-            with Reader(None, dataset=vrt, options={"nodata": 0}) as src:
+            with Reader(None, dataset=vrt) as src:
                 assert src.bounds
-                assert src.info().nodata_value == 0
                 assert isinstance(src.dataset, WarpedVRT)
                 assert src.minzoom == 7
                 assert src.maxzoom == 10
 
                 metadata = src.info()
+                assert metadata.nodata_type == "None"
                 assert len(metadata.band_metadata) == 1
                 assert metadata.band_descriptions == [("b1", "")]
+                assert metadata.colorinterp == ["gray"]
+
+                # The topleft corner is not masked because we didn't add mask
+                assert not src.preview(indexes=1).array.mask[0, 0, 0]
 
                 tile_z = 8
                 tile_x = 183
@@ -524,7 +534,7 @@ def test_imageData_output():
         assert img.count == 1
         assert img.data_as_image().shape == (256, 256, 1)
 
-        assert numpy.array_equal(~img.as_masked().mask[0] * 255, img.mask)
+        assert numpy.array_equal(~img.array.mask[0] * 255, img.mask)
 
         assert img.crs == WEB_MERCATOR_TMS.crs
         assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
@@ -698,6 +708,52 @@ def test_feature_valid():
         }
         img = src.feature(outside_mask_feature, max_size=1024)
         assert not img.mask.all()
+
+
+def test_equality_part_feature():
+    """Make sure the `feature` method returns the same thing as part+cutline."""
+    with Reader(COG_NODATA) as src:
+        feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-57.3486328125, 72.25226599952339],
+                        [-57.041015625, 72.1279362810559],
+                        [-56.722412109375, 72.06038062953813],
+                        [-54.86572265625, 72.07052969916067],
+                        [-54.613037109375, 72.63665259171732],
+                        [-56.14013671875, 72.90995232978632],
+                        [-57.3486328125, 72.25226599952339],
+                    ]
+                ],
+            },
+        }
+        img_feat = src.feature(feat)
+
+        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        bbox = featureBounds(feat)
+        img_part = src.part(bbox, vrt_options={"cutline": cutline})
+
+        assert img_feat.mask[0, 0] == img_part.mask[0, 0]
+        assert img_feat.mask[200, 200] == img_part.mask[200, 200]
+
+        # NOTE: both mask are almost equal but except pixel on the top of the image
+        # I would assume this is due to rounding issue or reprojection of the cutline by GDAL
+        # After some debugging locally I found out the rasterized mask is more precise
+        # numpy.testing.assert_array_equal(img_part.mask, img_feat.mask)
+
+        # Re-Projection
+        img_feat = src.feature(feat, dst_crs="epsg:3857")
+
+        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        bbox = featureBounds(feat)
+        img_part = src.part(bbox, vrt_options={"cutline": cutline}, dst_crs="epsg:3857")
+
+        assert img_feat.mask[0, 0] == img_part.mask[0, 0]
+        assert img_feat.mask[200, 200] == img_part.mask[200, 200]
 
 
 def test_tiling_ignores_padding_if_web_friendly_internal_tiles_exist():
@@ -934,3 +990,11 @@ def test_tms_tilesize_and_zoom():
     with Reader(COG_NODATA, tms=tms_2048) as src:
         assert src.minzoom == 5
         assert src.maxzoom == 6
+
+
+def test_metadata_img():
+    """Check metadata in ImageData."""
+    with Reader(COG_TAGS) as src:
+        img = src.preview()
+        assert img.dataset_statistics
+        assert img.metadata

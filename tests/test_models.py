@@ -1,5 +1,6 @@
 """Test rio_tiler.models."""
 
+import warnings
 from io import BytesIO
 
 import numpy
@@ -18,16 +19,16 @@ def test_imageData_AutoRescaling():
         ImageData(numpy.zeros((1, 256, 256), dtype="float32")).render(img_format="PNG")
         assert len(w.list) == 1
 
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         ImageData(numpy.zeros((1, 256, 256), dtype="uint8")).render(img_format="PNG")
-        assert len(w.list) == 0
 
     with pytest.warns(InvalidDatatypeWarning) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="int8")).render(img_format="PNG")
 
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(img_format="GTiff")
-        assert len(w.list) == 0
 
     with pytest.warns(InvalidDatatypeWarning) as w:
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(img_format="jpeg")
@@ -41,12 +42,12 @@ def test_imageData_AutoRescaling():
         )
 
     # Make sure that we do not rescale uint16 data when there is a colormap
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         cm = {1: (0, 0, 0, 255), 1000: (255, 255, 255, 255)}
         ImageData(numpy.zeros((1, 256, 256), dtype="uint16")).render(
             img_format="JPEG", colormap=cm
         )
-        assert len(w.list) == 0
 
 
 @pytest.mark.parametrize(
@@ -55,7 +56,8 @@ def test_imageData_AutoRescaling():
 )
 def test_imageData_AutoRescalingAllTypes(dtype):
     """Test ImageData auto rescaling."""
-    with pytest.warns(None):
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore")  # Some InvalidDatatypeWarning will be emitted
         ImageData(numpy.zeros((1, 256, 256), dtype=dtype)).render(img_format="PNG")
         ImageData(numpy.zeros((1, 256, 256), dtype=dtype)).render(img_format="JPEG")
         ImageData(numpy.zeros((3, 256, 256), dtype=dtype)).render(img_format="WEBP")
@@ -66,15 +68,13 @@ def test_imageData_AutoRescalingAllTypes(dtype):
 
 def test_16bit_PNG():
     """Uint16 Mask value should be between 0 and 65535 for PNG."""
-    mask = numpy.zeros((256, 256), dtype="uint16") + 255
-    mask[0:10, 0:10] = 0
-    mask[10:11, 10:11] = 100
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0:10, 0:10] = True
 
-    with pytest.warns(None):
-        img = ImageData(
-            numpy.zeros((1, 256, 256), dtype="uint16"),
-            mask,
-        ).render(img_format="PNG")
+    with warnings.catch_warnings():
+        arr = numpy.ma.MaskedArray(numpy.zeros((1, 256, 256), dtype="uint16"))
+        arr.mask = mask.copy()
+        img = ImageData(arr).render(img_format="PNG")
 
         with rasterio.open(BytesIO(img)) as src:
             assert src.count == 2
@@ -83,14 +83,12 @@ def test_16bit_PNG():
             assert arr.min() == 0
             assert arr.max() == 65535
             assert (arr[0:10, 0:10] == 0).all()
-            assert (arr[10:11, 10:11] == 25700).all()
             assert (arr[11:, 11:] == 65535).all()
 
-    with pytest.warns(None):
-        img = ImageData(
-            numpy.zeros((3, 256, 256), dtype="uint16"),
-            mask,
-        ).render(img_format="PNG")
+    with warnings.catch_warnings():
+        arr = numpy.ma.MaskedArray(numpy.zeros((3, 256, 256), dtype="uint16"))
+        arr.mask = mask.copy()
+        img = ImageData(arr).render(img_format="PNG")
 
         with rasterio.open(BytesIO(img)) as src:
             assert src.count == 4
@@ -99,7 +97,6 @@ def test_16bit_PNG():
             assert arr.min() == 0
             assert arr.max() == 65535
             assert (arr[0:10, 0:10] == 0).all()
-            assert (arr[10:11, 10:11] == 25700).all()
             assert (arr[11:, 11:] == 65535).all()
 
 
@@ -118,11 +115,11 @@ def test_merge_with_diffsize():
     assert img.width == 256
     assert img.height == 256
 
-    with pytest.warns(None) as w:
+    with warnings.catch_warnings():
+        warnings.simplefilter("error")
         img1 = ImageData(numpy.zeros((1, 256, 256)))
         img2 = ImageData(numpy.zeros((1, 256, 256)))
         img = ImageData.create_from_list([img1, img2])
-    assert len(w) == 0
 
 
 def test_apply_expression():
@@ -164,19 +161,22 @@ def test_dataset_statistics():
     data[0, 0:10, 0:10] = 0
     data[0, 10:11, 10:11] = 1
 
-    img = ImageData(data, dataset_statistics=[(0, 1)]).render(img_format="PNG")
-    with MemoryFile(img) as mem:
-        with mem.open() as dst:
-            arr = dst.read(indexes=1)
-            assert arr.min() == 0
-            assert arr.max() == 255
+    with pytest.warns(InvalidDatatypeWarning):
+        img = ImageData(data, dataset_statistics=[(0, 1)]).render(img_format="PNG")
+        with MemoryFile(img) as mem:
+            with mem.open() as dst:
+                arr = dst.read(indexes=1)
+                assert arr.min() == 0
+                assert arr.max() == 255
 
-    img = ImageData(data).render(img_format="PNG")
-    with MemoryFile(img) as mem:
-        with mem.open() as dst:
-            arr = dst.read(indexes=1)
-            assert not arr.min() == 0
-            assert not arr.max() == 255
+    with pytest.warns(InvalidDatatypeWarning):
+        img = ImageData(data).render(img_format="PNG")
+
+        with MemoryFile(img) as mem:
+            with mem.open() as dst:
+                arr = dst.read(indexes=1)
+                assert not arr.min() == 0
+                assert not arr.max() == 255
 
 
 def test_resize():
@@ -227,7 +227,8 @@ def test_point_data():
         assert p == 0
 
     pt = PointData(numpy.zeros((3), dtype="uint16"))
-    arr = pt.as_masked()
+    with pytest.warns(DeprecationWarning):
+        arr = pt.as_masked()
     assert numpy.ma.is_mask(arr.mask)
 
     pt1 = PointData(numpy.array([1, 2]))
@@ -244,10 +245,29 @@ def test_point_data():
 
     pts = PointData.create_from_list(
         [
-            PointData(numpy.array([1]), mask=numpy.array([255])),
-            PointData(numpy.array([1]), mask=numpy.array([0])),
+            PointData(numpy.ma.MaskedArray([1], [0])),
+            PointData(numpy.ma.MaskedArray([1], [1])),
         ]
     )
+    assert pts.array.mask.tolist() == [False, True]
+    assert pts.mask.tolist() == [0]
+
+    pts = PointData.create_from_list(
+        [
+            PointData(numpy.ma.MaskedArray([1], [0])),
+            PointData(numpy.ma.MaskedArray([1], [0])),
+        ]
+    )
+    assert pts.array.mask.tolist() == [False, False]
+    assert pts.mask.tolist() == [255]
+
+    pts = PointData.create_from_list(
+        [
+            PointData(numpy.ma.MaskedArray([1], [1])),
+            PointData(numpy.ma.MaskedArray([1], [1])),
+        ]
+    )
+    assert pts.array.mask.tolist() == [True, True]
     assert pts.mask.tolist() == [0]
 
     with pytest.raises(InvalidPointDataError):
@@ -256,8 +276,8 @@ def test_point_data():
     with pytest.raises(InvalidPointDataError):
         PointData.create_from_list(
             [
-                PointData(numpy.array([1]), coordinates=(0, 0)),
-                PointData(numpy.array([1]), coordinates=(0, 1)),
+                PointData(numpy.ma.MaskedArray([1]), coordinates=(0, 0)),
+                PointData(numpy.ma.MaskedArray([1]), coordinates=(0, 1)),
             ]
         )
 
@@ -265,10 +285,14 @@ def test_point_data():
         PointData.create_from_list(
             [
                 PointData(
-                    numpy.array([1]), coordinates=(0, 0), crs=CRS.from_epsg(3857)
+                    numpy.ma.MaskedArray([1]),
+                    coordinates=(0, 0),
+                    crs=CRS.from_epsg(3857),
                 ),
                 PointData(
-                    numpy.array([1]), coordinates=(0, 0), crs=CRS.from_epsg(4326)
+                    numpy.ma.MaskedArray([1]),
+                    coordinates=(0, 0),
+                    crs=CRS.from_epsg(4326),
                 ),
             ]
         )
@@ -284,13 +308,18 @@ def test_image_apply_colormap():
     assert im.mask.all()
 
     cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
-    arr = numpy.zeros((1, 256, 256), dtype="uint8") + 1
-    arr[0, 0, 0] = 0
-    mask = numpy.zeros((256, 256), dtype="uint8") + 255
-    im = ImageData(arr, mask).apply_colormap(cm)
+    data = numpy.zeros((1, 256, 256), dtype="uint8") + 1
+    data[0, 0, 0] = 0
 
+    im = ImageData(data)
+    assert im.array.data.shape == (1, 256, 256)
+    assert im.array.mask.shape == (1, 256, 256)
+
+    im = im.apply_colormap(cm)
     # data[0, 1, 1] is 1 so after colormap it should be 255,255,255 and mask should be 255
     assert im.data[:, 1, 1].tolist() == [255, 255, 255]
+    assert im.array.data.shape == (3, 256, 256)
+    assert im.array.mask.shape == (3, 256, 256)
     assert im.mask[1, 1] == 255
 
     # data[0, 0, 0] is 0 so after colormap it should be 0,0,0 and mask should be 255 (based on the colormap Alpha value)
@@ -300,46 +329,52 @@ def test_image_apply_colormap():
     cm = {0: (0, 0, 0, 255), 1: (255, 255, 255, 255)}
     arr = numpy.zeros((1, 256, 256), dtype="uint8") + 1
     arr[0, 0, 0] = 0
-    mask = numpy.zeros((256, 256), dtype="uint8") + 255
-    mask[0, 0] = 0
 
-    im = ImageData(arr, mask).apply_colormap(cm)
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0, 0, 0] = True
+
+    im = ImageData(numpy.ma.MaskedArray(arr, mask=mask)).apply_colormap(cm)
     # data[0, 0, 0] is 0 so after colormap it should be 0,0,0 and mask should be 0 (because it was masked by the original mask)
     assert im.data[:, 0, 0].tolist() == [0, 0, 0]
+    assert im.array.mask[:, 1, 1].tolist() == [False, False, False]
+    assert im.mask[1, 1] == 255
+
+    assert im.array.mask[:, 0, 0].tolist() == [True, True, True]
     assert im.mask[0, 0] == 0
 
 
 def test_image_from_array():
     """Create ImageData from arrays."""
-    arr = numpy.zeros((1, 256, 256), dtype="uint8")
-    im = ImageData.from_array(arr)
-    assert im.data.shape == (1, 256, 256)
-    assert im.mask.all()
+    with pytest.warns(DeprecationWarning):
+        arr = numpy.zeros((1, 256, 256), dtype="uint8")
+        im = ImageData.from_array(arr)
+        assert im.data.shape == (1, 256, 256)
+        assert im.mask.all()
 
-    arr = numpy.ma.MaskedArray(numpy.zeros((1, 256, 256), dtype="uint8"))
-    im = ImageData.from_array(arr)
-    assert im.data.shape == (1, 256, 256)
-    assert im.mask.all()
+        arr = numpy.ma.MaskedArray(numpy.zeros((1, 256, 256), dtype="uint8"))
+        im = ImageData.from_array(arr)
+        assert im.data.shape == (1, 256, 256)
+        assert im.mask.all()
 
-    arr = numpy.ma.MaskedArray(
-        numpy.zeros((1, 256, 256), dtype="uint8"),
-        mask=numpy.zeros((256, 256), dtype="uint8"),
-    )
-    im = ImageData.from_array(arr)
-    assert im.data.shape == (1, 256, 256)
-    assert im.mask.all()
+        arr = numpy.ma.MaskedArray(
+            numpy.zeros((1, 256, 256), dtype="uint8"),
+            mask=numpy.zeros((256, 256), dtype="uint8"),
+        )
+        im = ImageData.from_array(arr)
+        assert im.data.shape == (1, 256, 256)
+        assert im.mask.all()
 
-    mask = numpy.zeros((256, 256), dtype="uint8")  # 0 no masked
-    mask[0:10, 0:10] = 1  # masked
-    arr = numpy.ma.MaskedArray(
-        numpy.zeros((1, 256, 256), dtype="uint8"),
-        mask,
-    )
-    im = ImageData.from_array(arr)
-    assert im.data.shape == (1, 256, 256)
-    assert not im.mask.all()
-    assert im.mask[0, 0] == 0
-    assert im.mask[11, 11] == 255
+        mask = numpy.zeros((256, 256), dtype="uint8")  # 0 no masked
+        mask[0:10, 0:10] = 1  # masked
+        arr = numpy.ma.MaskedArray(
+            numpy.zeros((1, 256, 256), dtype="uint8"),
+            mask,
+        )
+        im = ImageData.from_array(arr)
+        assert im.data.shape == (1, 256, 256)
+        assert not im.mask.all()
+        assert im.mask[0, 0] == 0
+        assert im.mask[11, 11] == 255
 
 
 def test_image_from_bytes():
@@ -353,9 +388,9 @@ def test_image_from_bytes():
 
     data = numpy.zeros((1, 256, 256), dtype="uint8")
     data[0:100, 0:100] = 1
-    mask = numpy.zeros((256, 256), dtype="uint8") + 255
-    mask[0:10, 0:10] = 0
-    img = ImageData(data, mask)
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0:10, 0:10] = True
+    img = ImageData(numpy.ma.MaskedArray(data, mask=mask))
 
     im = ImageData.from_bytes(img.render(img_format="PNG", add_mask=True))
     assert im.data.shape == (1, 256, 256)

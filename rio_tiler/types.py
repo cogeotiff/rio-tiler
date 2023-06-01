@@ -1,6 +1,6 @@
 """rio-tiler types."""
 
-from typing import Dict, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Dict, Literal, Optional, Sequence, Tuple, TypedDict, Union
 
 import numpy
 
@@ -26,9 +26,39 @@ ColorMapType = Union[
     IntervalColorMapType,
 ]
 
+# RasterIO() resampling method.
+# ref: https://gdal.org/api/raster_c_api.html#_CPPv418GDALRIOResampleAlg
+RIOResampling = Literal[
+    "nearest",
+    "bilinear",
+    "cubic",
+    "cubic_spline",
+    "lanczos",
+    "average",
+    "mode",
+    "gauss",
+    "rms",
+]
+
+# WarpKernel resampling method.
+# ref: https://gdal.org/api/gdalwarp_cpp.html#_CPPv4N14GDALWarpKernel9eResampleE
+WarpResampling = Literal[
+    "nearest",
+    "bilinear",
+    "cubic",
+    "cubic_spline",
+    "lanczos",
+    "average",
+    "mode",
+    "sum",
+    "rms",
+]
+
 
 class AssetInfo(TypedDict, total=False):
     """Asset Reader Options."""
 
     url: str
     env: Optional[Dict]
+    metadata: Optional[Dict]
+    dataset_statistics: Optional[Sequence[Tuple[float, float]]]

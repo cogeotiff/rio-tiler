@@ -16,20 +16,20 @@ with Reader("my.tif") as cog:
     assert img.crs == CRS.from_epsg(3857)  # default image output is the TMS crs (WebMercator)
 
 # Print default grids
-for name, tms in morecantile.tms.tms.items():
-    print(name, "-", tms.rasterio_crs)
+for name in morecantile.tms.list():
+    print(name, "-", morecantile.tms.get(name).rasterio_crs)
 
->>> LINZAntarticaMapTilegrid - EPSG:5482
+>>> CanadianNAD83_LCC - EPSG:3978
     EuropeanETRS89_LAEAQuad - EPSG:3035
-    CanadianNAD83_LCC - EPSG:3978
-    UPSArcticWGS84Quad - EPSG:5041
-    NZTM2000 - EPSG:2193
+    LINZAntarticaMapTilegrid - EPSG:5482
     NZTM2000Quad - EPSG:2193
-    UTM31WGS84Quad - EPSG:32631
     UPSAntarcticWGS84Quad - EPSG:5042
-    WorldMercatorWGS84Quad - EPSG:3395
-    WorldCRS84Quad - OGC:CRS84
+    UPSArcticWGS84Quad - EPSG:5041
+    UTM31WGS84Quad - EPSG:32631
+    WGS1984Quad - EPSG:4326
     WebMercatorQuad - EPSG:3857
+    WorldCRS84Quad - OGC:CRS84
+    WorldMercatorWGS84Quad - EPSG:3395
 
 
 # Use EPSG:4326 (WGS84) grid

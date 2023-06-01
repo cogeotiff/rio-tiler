@@ -1,51 +1,53 @@
 """rio-tiler.mosaic.methods abc class."""
 
 import abc
-from typing import Optional, Tuple
+from dataclasses import dataclass, field
+from typing import Optional
 
 import numpy
 
 
+@dataclass
 class MosaicMethodBase(abc.ABC):
     """Abstract base class for rio-tiler-mosaic methods objects."""
 
-    def __init__(self):
-        """Init backend."""
-        self.tile: Optional[numpy.ma.MaskedArray] = None
-        self.exit_when_filled: bool = False
+    mosaic: Optional[numpy.ma.MaskedArray] = field(default=None, init=False)
+    exit_when_filled: bool = field(default=False, init=False)
+    cutline_mask: Optional[numpy.ndarray] = field(default=None, init=False)
 
     @property
     def is_done(self) -> bool:
-        """Check if the tile filling is done.
+        """Check if the mosaic filling is done.
 
         Returns:
             bool
 
         """
-        if self.tile is None:
+        if self.mosaic is None:
             return False
 
-        if self.exit_when_filled and not numpy.ma.is_masked(self.tile):
-            return True
+        if self.exit_when_filled:
+            if (
+                self.cutline_mask is not None
+                and numpy.sum(numpy.where(~self.cutline_mask, self.mosaic.mask, False))
+                == 0
+            ):
+                return True
+            elif not numpy.ma.is_masked(self.mosaic):
+                return True
 
         return False
 
     @property
-    def data(self) -> Tuple[Optional[numpy.ndarray], Optional[numpy.ndarray]]:
-        """Return data and mask."""
-        if self.tile is not None:
-            data = numpy.ma.getdata(self.tile)
-            mask = ~numpy.logical_or.reduce(numpy.ma.getmaskarray(self.tile))
-            return (data, mask * numpy.uint8(255))
-
-        else:
-            return None, None
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return data."""
+        return self.mosaic
 
     @abc.abstractmethod
-    def feed(self, tile: numpy.ma.MaskedArray):
-        """Fill mosaic tile.
+    def feed(self, array: numpy.ma.MaskedArray):
+        """Fill mosaic array.
 
         Args:
-            tile (numpy.ma.ndarray): data
+            array (numpy.ma.ndarray): data
 
         """

@@ -99,40 +99,40 @@ def test_MultiBandReader():
         with pytest.raises(MissingBands):
             src.tile(238, 218, 9)
 
-        tile = src.tile(238, 218, 9, bands="band1")
-        assert tile.data.shape == (1, 256, 256)
-        assert tile.band_names == ["band1"]
+        img = src.tile(238, 218, 9, bands="band1")
+        assert img.data.shape == (1, 256, 256)
+        assert img.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = src.tile(238, 218, 9, bands="band1", expression="band1*2")
-        assert tile.data.shape == (1, 256, 256)
-        assert tile.band_names == ["band1*2"]
+            img = src.tile(238, 218, 9, bands="band1", expression="band1*2")
+        assert img.data.shape == (1, 256, 256)
+        assert img.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
             src.part((-11.5, 24.5, -11.0, 25.0))
 
-        tile = src.part((-11.5, 24.5, -11.0, 25.0), bands="band1")
-        assert tile.data.any()
-        assert tile.band_names == ["band1"]
+        img = src.part((-11.5, 24.5, -11.0, 25.0), bands="band1")
+        assert img.data.any()
+        assert img.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = src.part(
+            img = src.part(
                 (-11.5, 24.5, -11.0, 25.0), bands="band1", expression="band1*2"
             )
-        assert tile.data.any()
-        assert tile.band_names == ["band1*2"]
+        assert img.data.any()
+        assert img.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
             src.preview()
 
-        tile = src.preview(bands="band1")
-        assert tile.data.any()
-        assert tile.band_names == ["band1"]
+        img = src.preview(bands="band1")
+        assert img.data.any()
+        assert img.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
-            tile = src.preview(bands="band1", expression="band1*2")
-        assert tile.data.any()
-        assert tile.band_names == ["band1*2"]
+            img = src.preview(bands="band1", expression="band1*2")
+        assert img.data.any()
+        assert img.band_names == ["band1*2"]
 
         with pytest.raises(MissingBands):
             src.point(-11.5, 24.5)
@@ -184,3 +184,8 @@ def test_MultiBandReader():
         with pytest.warns(ExpressionMixingWarning):
             img = src.feature(feat, bands="band1", expression="band1*2")
             assert img.band_names == ["band1*2"]
+
+        img = src.preview(bands=("band1", "band2"))
+        assert img.metadata
+        assert img.metadata["band1"]
+        assert img.metadata["band2"]

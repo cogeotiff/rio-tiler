@@ -24,6 +24,7 @@ PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
+STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -46,7 +47,7 @@ def test_fetch_stac(httpx, s3_get):
         assert stac.maxzoom == 24
         assert stac.bounds
         assert stac.input == STAC_PATH
-        assert stac.assets == ["red", "green", "blue"]
+        assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.assert_not_called()
     s3_get.assert_not_called()
 
@@ -55,13 +56,13 @@ def test_fetch_stac(httpx, s3_get):
         assert stac.minzoom == 0
         assert stac.maxzoom == 24
         assert not stac.input
-        assert stac.assets == ["red", "green", "blue"]
+        assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.assert_not_called()
     s3_get.assert_not_called()
 
     # Exclude red
     with STACReader(STAC_PATH, exclude_assets={"red"}) as stac:
-        assert stac.assets == ["green", "blue"]
+        assert stac.assets == ["green", "blue", "lowres"]
     httpx.assert_not_called()
     s3_get.assert_not_called()
 
@@ -109,7 +110,7 @@ def test_fetch_stac(httpx, s3_get):
         httpx.get.return_value = MockResponse(f.read())
 
     with STACReader("http://somewhereovertherainbow.io/mystac.json") as stac:
-        assert stac.assets == ["red", "green", "blue"]
+        assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.get.assert_called_once()
     s3_get.assert_not_called()
     httpx.mock_reset()
@@ -119,7 +120,7 @@ def test_fetch_stac(httpx, s3_get):
         s3_get.return_value = f.read()
 
     with STACReader("s3://somewhereovertherainbow.io/mystac.json") as stac:
-        assert stac.assets == ["red", "green", "blue"]
+        assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.assert_not_called()
     s3_get.assert_called_once()
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
@@ -448,7 +449,7 @@ def test_merged_statistics_valid(rio):
     with STACReader(STAC_PATH) as stac:
         with pytest.warns(UserWarning):
             stats = stac.merged_statistics()
-            assert len(stats) == 3
+            assert len(stats) == 4
             assert isinstance(stats["red_b1"], BandStatistics)
             assert stats["red_b1"]
             assert stats["green_b1"]
@@ -603,6 +604,15 @@ def test_feature_valid(rio):
         assert img.mask.shape == (118, 96)
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
+        with pytest.warns(
+            UserWarning,
+            match="Cannot concatenate images with different size. Will resize using max width/heigh",
+        ):
+            img = stac.feature(feat, assets=("blue", "lowres"))
+        assert img.data.shape == (2, 118, 96)
+        assert img.mask.shape == (118, 96)
+        assert img.band_names == ["blue_b1", "lowres_b1"]
+
 
 def test_relative_assets():
     """Should return absolute href for assets"""
@@ -640,7 +650,7 @@ def test_fetch_stac_client_options(httpx, s3_get):
             "headers": {"Authorization": "Bearer token"},
         },
     ) as stac:
-        assert stac.assets == ["red", "green", "blue"]
+        assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.get.assert_called_once()
     assert httpx.get.call_args[1]["auth"] == ("user", "pass")
     assert httpx.get.call_args[1]["headers"] == {"Authorization": "Bearer token"}
@@ -653,7 +663,7 @@ def test_fetch_stac_client_options(httpx, s3_get):
             "headers": {"Authorization": "Bearer token"},
         },
     ) as stac:
-        assert stac.assets == ["red", "green", "blue"]
+        assert stac.assets == ["red", "green", "blue", "lowres"]
 
     # Check if it was cached
     assert httpx.get.call_count == 1
@@ -667,7 +677,7 @@ def test_fetch_stac_client_options(httpx, s3_get):
         "s3://somewhereovertherainbow.io/mystac.json",
         fetch_options={"request_pays": True},
     ) as stac:
-        assert stac.assets == ["red", "green", "blue"]
+        assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.assert_not_called()
     s3_get.assert_called_once()
     assert s3_get.call_args[1]["request_pays"]
@@ -790,3 +800,25 @@ def test_asset_as_band(rio):
         img = stac.feature(feat, expression="green/red", asset_as_band=True)
         assert img.count == 1
         assert img.band_names == ["green/red"]
+
+
+@patch("rio_tiler.io.rasterio.rasterio")
+def test_metadata_from_stac(rio):
+    """Make sure dataset statistics are forwarded from the raster extension."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_RASTER_PATH) as stac:
+        info = stac._get_asset_info("green")
+        assert info["dataset_statistics"] == [(6883, 62785)]
+        assert info["metadata"]
+        assert "raster:bands" in info["metadata"]
+
+        img = stac.preview(assets=("green", "red"))
+        assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+        assert img.metadata["red"]["raster:bands"]
+        assert img.metadata["green"]
+
+        img = stac.preview(expression="green_b1/red_b1")
+        assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
+        assert img.metadata["red"]["raster:bands"]
+        assert img.metadata["green"]

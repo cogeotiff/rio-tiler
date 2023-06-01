@@ -1,6 +1,5 @@
 """rio_tiler.utils: utility functions."""
 
-import os
 import warnings
 from io import BytesIO
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
@@ -8,11 +7,11 @@ from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
 import numpy
 import rasterio
 from affine import Affine
-from boto3.session import Session as boto3_session
 from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.dtypes import _gdal_typename
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import is_valid_geom
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
@@ -23,41 +22,13 @@ from rasterio.warp import calculate_default_transform, transform_geom
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS
 from rio_tiler.errors import RioTilerError
-from rio_tiler.types import BBox, ColorMapType, IntervalTuple
+from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
 
 def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
     """Yield successive n-sized chunks from l."""
     for i in range(0, len(my_list), chuck_size):
         yield my_list[i : i + chuck_size]
-
-
-def aws_get_object(
-    bucket: str,
-    key: str,
-    request_pays: bool = False,
-    client: boto3_session.client = None,
-) -> bytes:
-    """AWS s3 get object content."""
-    if not client:
-        session = boto3_session()
-        # AWS_S3_ENDPOINT and AWS_HTTPS are GDAL config options of vsis3 driver
-        # https://gdal.org/user/virtual_file_systems.html#vsis3-aws-s3-files
-        endpoint_url = os.environ.get("AWS_S3_ENDPOINT", None)
-        if endpoint_url is not None:
-            use_https = os.environ.get("AWS_HTTPS", "YES")
-            if use_https.upper() in ["YES", "TRUE", "ON"]:
-                endpoint_url = "https://" + endpoint_url
-            else:
-                endpoint_url = "http://" + endpoint_url
-        client = session.client("s3", endpoint_url=endpoint_url)
-
-    params = {"Bucket": bucket, "Key": key}
-    if request_pays or os.environ.get("AWS_REQUEST_PAYER", "").lower() == "requester":
-        params["RequestPayer"] = "requester"
-
-    response = client.get_object(**params)
-    return response["Body"].read()
 
 
 def get_array_statistics(
@@ -143,9 +114,12 @@ def get_array_statistics(
             h_counts, h_keys = numpy.histogram(data[b].compressed(), **kwargs)
             histogram = [h_counts.tolist(), h_keys.tolist()]
 
-        percentiles_values = numpy.percentile(
-            data[b].compressed(), percentiles
-        ).tolist()
+        if valid_pixels:
+            percentiles_values = numpy.percentile(
+                data[b].compressed(), percentiles
+            ).tolist()
+        else:
+            percentiles_values = (numpy.nan,) * len(percentiles_names)
 
         output.append(
             {
@@ -156,8 +130,12 @@ def get_array_statistics(
                 "sum": float(data[b].sum()),
                 "std": float(data[b].std()),
                 "median": float(numpy.ma.median(data[b])),
-                "majority": float(keys[counts.tolist().index(counts.max())].tolist()),
-                "minority": float(keys[counts.tolist().index(counts.min())].tolist()),
+                "majority": float(keys[counts.tolist().index(counts.max())].tolist())
+                if valid_pixels
+                else numpy.nan,
+                "minority": float(keys[counts.tolist().index(counts.min())].tolist())
+                if valid_pixels
+                else numpy.nan,
                 "unique": float(counts.size),
                 **dict(zip(percentiles_names, percentiles_values)),
                 "histogram": histogram,
@@ -471,7 +449,11 @@ def render(
     output_profile.update(creation_options)
 
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
         with MemoryFile() as memfile:
             with memfile.open(**output_profile) as dst:
                 dst.write(data, indexes=list(range(1, count + 1)))
@@ -559,12 +541,7 @@ def create_cutline(
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 
     """
-    if "geometry" in geometry:
-        geometry = geometry["geometry"]
-
-    if not is_valid_geom(geometry):
-        raise RioTilerError("Invalid geometry")
-
+    geometry = _validate_shape_input(geometry)
     geom_type = geometry["type"]
 
     if geometry_crs:
@@ -628,7 +605,7 @@ def resize_array(
     data: numpy.ndarray,
     height: int,
     width: int,
-    resampling_method: Resampling = "nearest",
+    resampling_method: RIOResampling = "nearest",
 ) -> numpy.ndarray:
     """resize array to a given height and width."""
     out_shape: Union[Tuple[int, int], Tuple[int, int, int]]
@@ -639,7 +616,11 @@ def resize_array(
 
     datasetname = _array_gdal_name(data)
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", rasterio.errors.NotGeoreferencedWarning)
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
         with rasterio.open(datasetname, "r+") as src:
             # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
             indexes = 1 if len(data.shape) == 2 else None
@@ -658,3 +639,15 @@ def normalize_bounds(bounds: BBox) -> BBox:
         max(bounds[0], bounds[2]),
         max(bounds[1], bounds[3]),
     )
+
+
+def _validate_shape_input(shape: Dict) -> Dict:
+    """Ensure input shape is valid and reduce features to geometry"""
+
+    if "geometry" in shape:
+        shape = shape["geometry"]
+
+    if not is_valid_geom(shape):
+        raise RioTilerError("Invalid geometry")
+
+    return shape

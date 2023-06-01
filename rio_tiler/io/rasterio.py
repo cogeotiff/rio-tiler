@@ -12,14 +12,13 @@ from morecantile import BoundingBox, Coords, Tile, TileMatrixSet
 from morecantile.utils import _parse_tile_arg
 from rasterio import transform
 from rasterio.crs import CRS
-from rasterio.enums import Resampling
 from rasterio.features import bounds as featureBounds
-from rasterio.features import geometry_mask
+from rasterio.features import geometry_mask, rasterize
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.transform import from_bounds as transform_from_bounds
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform
+from rasterio.warp import calculate_default_transform, transform_geom
 from rasterio.windows import Window
 from rasterio.windows import from_bounds as window_from_bounds
 
@@ -34,8 +33,8 @@ from rio_tiler.errors import (
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, DataMaskType, Indexes, NumType
-from rio_tiler.utils import create_cutline, has_alpha_band, has_mask_band
+from rio_tiler.types import BBox, Indexes, NumType, RIOResampling
+from rio_tiler.utils import _validate_shape_input, has_alpha_band, has_mask_band
 
 
 @attr.s
@@ -93,17 +92,30 @@ class Reader(BaseReader):
     def __attrs_post_init__(self):
         """Define _kwargs, open dataset and get info."""
         if not self.dataset:
-            dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
-            if dataset.gcps[0]:
-                self.dataset = self._ctx_stack.enter_context(
-                    WarpedVRT(
-                        dataset,
-                        src_crs=dataset.gcps[1],
-                        src_transform=transform.from_gcps(dataset.gcps[0]),
-                    )
+            self.dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
+
+        if self.dataset.gcps[0]:
+            vrt_options = {
+                "src_crs": self.dataset.gcps[1],
+                "src_transform": transform.from_gcps(self.dataset.gcps[0]),
+                "add_alpha": True,
+            }
+
+            if self.dataset.nodata is not None:
+                vrt_options.update(
+                    {
+                        "nodata": self.dataset.nodata,
+                        "add_alpha": False,
+                        "src_nodata": self.dataset.nodata,
+                    }
                 )
-            else:
-                self.dataset = dataset
+
+            if has_alpha_band(self.dataset):
+                vrt_options.update({"add_alpha": False})
+
+            self.dataset = self._ctx_stack.enter_context(
+                WarpedVRT(self.dataset, **vrt_options)
+            )
 
         self.bounds = tuple(self.dataset.bounds)
         self.crs = self.dataset.crs
@@ -129,10 +141,11 @@ class Reader(BaseReader):
 
     def _dst_geom_in_tms_crs(self):
         """Return dataset info in TMS projection."""
-        if self.crs != self.tms.rasterio_crs:
+        tms_crs = self.tms.rasterio_crs
+        if self.crs != tms_crs:
             dst_affine, w, h = calculate_default_transform(
                 self.crs,
-                self.tms.rasterio_crs,
+                tms_crs,
                 self.dataset.width,
                 self.dataset.height,
                 *self.dataset.bounds,
@@ -149,7 +162,7 @@ class Reader(BaseReader):
         if self._minzoom is None:
             # We assume the TMS tilesize to be constant over all matrices
             # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
-            tilesize = self.tms.tileMatrix[0].tileWidth
+            tilesize = self.tms.tileMatrices[0].tileWidth
 
             try:
                 dst_affine, w, h = self._dst_geom_in_tms_crs()
@@ -337,11 +350,12 @@ class Reader(BaseReader):
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        dst_crs = self.tms.rasterio_crs
 
         return self.part(
             tile_bounds,
-            dst_crs=self.tms.rasterio_crs,
-            bounds_crs=None,
+            dst_crs=dst_crs,
+            bounds_crs=dst_crs,
             height=tilesize,
             width=tilesize,
             max_size=None,
@@ -522,17 +536,17 @@ class Reader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
+        shape = _validate_shape_input(shape)
+
         if not dst_crs:
             dst_crs = shape_crs
 
         # Get BBOX of the polygon
         bbox = featureBounds(shape)
 
-        cutline = create_cutline(self.dataset, shape, geometry_crs=shape_crs)
         vrt_options = kwargs.pop("vrt_options", {})
-        vrt_options.update({"cutline": cutline})
 
-        return self.part(
+        img = self.part(
             bbox,
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
@@ -545,6 +559,23 @@ class Reader(BaseReader):
             buffer=buffer,
             **kwargs,
         )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Necesary for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
 
     def read(
         self,
@@ -667,10 +698,10 @@ class ImageReader(Reader):
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         force_binary_mask: bool = True,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read a Web Map tile from an Image.
@@ -683,7 +714,7 @@ class ImageReader(Reader):
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
-            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -720,10 +751,10 @@ class ImageReader(Reader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         force_binary_mask: bool = True,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read part of an Image.
@@ -736,7 +767,7 @@ class ImageReader(Reader):
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
             force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
-            resampling_method (rasterio.enums.Resampling, optional): Rasterio's resampling algorithm. Defaults to `nearest`.
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -781,7 +812,7 @@ class ImageReader(Reader):
         expression: Optional[str] = None,
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> PointData:
         """Read a pixel value from an Image.
@@ -810,8 +841,7 @@ class ImageReader(Reader):
         )
 
         return PointData(
-            img.data[:, 0, 0],
-            numpy.array([img.mask[0, 0]]),
+            img.array[:, 0, 0],
             assets=img.assets,
             coordinates=self.dataset.xy(x, y),
             crs=self.dataset.crs,
@@ -827,10 +857,10 @@ class ImageReader(Reader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         force_binary_mask: bool = True,
-        resampling_method: Resampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
-            Callable[[numpy.ndarray, numpy.ndarray], DataMaskType]
+            Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
         ] = None,
     ) -> ImageData:
         """Read part of an Image defined by a geojson feature."""
@@ -852,6 +882,6 @@ class ImageReader(Reader):
         )
 
         shape = shape.get("geometry", shape)
-        mask = geometry_mask([shape], (img.height, img.width), self.transform)
-        img.mask = mask * 255
+        img.array.mask = geometry_mask([shape], (img.height, img.width), self.transform)
+
         return img
