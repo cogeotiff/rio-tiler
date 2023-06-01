@@ -1,3 +1,6 @@
+# 4.1.11 (2023-05-18)
+
+* in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
 
 # 5.0.0 (TBD)
 
