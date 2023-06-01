@@ -17,6 +17,8 @@
 
 - in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
 
+- handle internal and user provided `nodata` values in `rio_tiler.io.XarrayReader` to create mask
+
 **breaking changes**
 
 - remove support for non-binary mask values (e.g non-binary alpha bands, ref: [rasterio/rasterio#1721](https://github.com/rasterio/rasterio/issues/1721#issuecomment-586547617))

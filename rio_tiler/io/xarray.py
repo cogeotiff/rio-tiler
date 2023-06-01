@@ -17,7 +17,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import PointOutsideBounds, TileOutsideBounds
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, WarpResampling
+from rio_tiler.types import BBox, NoData, WarpResampling
 from rio_tiler.utils import _validate_shape_input
 
 try:
@@ -158,6 +158,11 @@ class XarrayReader(BaseReader):
         """Return dataset maxzoom."""
         return self.get_maxzoom()
 
+    @property
+    def band_names(self) -> List[str]:
+        """Return list of `band names` in DataArray."""
+        return [str(band) for d in self._dims for band in self.input[d].values]
+
     def info(self) -> Info:
         """Return xarray.DataArray info."""
         bands = [str(band) for d in self._dims for band in self.input[d].values]
@@ -199,6 +204,7 @@ class XarrayReader(BaseReader):
         tilesize: int = 256,
         resampling_method: WarpResampling = "nearest",
         auto_expand: bool = True,
+        nodata: Optional[NoData] = None,
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
 
@@ -219,11 +225,15 @@ class XarrayReader(BaseReader):
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside bounds"
             )
 
+        ds = self.input
+        if nodata is not None:
+            ds = ds.rio.write_nodata(nodata)
+
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
         dst_crs = self.tms.rasterio_crs
 
         # Create source array by clipping the xarray dataset to extent of the tile.
-        ds = self.input.rio.clip_box(
+        ds = ds.rio.clip_box(
             *tile_bounds,
             crs=dst_crs,
             auto_expand=auto_expand,
@@ -233,22 +243,24 @@ class XarrayReader(BaseReader):
             shape=(tilesize, tilesize),
             transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
             resampling=Resampling[resampling_method],
+            nodata=nodata,
         )
 
         # Forward valid_min/valid_max to the ImageData object
         minv, maxv = ds.attrs.get("valid_min"), ds.attrs.get("valid_max")
         stats = None
-        if minv is not None and maxv is not None:
+        if minv is not None and maxv is not None and nodata not in [minv, maxv]:
             stats = ((minv, maxv),) * ds.rio.count
 
-        band_names = [str(band) for d in self._dims for band in self.input[d].values]
+        arr = ds.to_masked_array()
+        arr.mask |= arr.data == ds.rio.nodata
 
         return ImageData(
-            ds.data,
+            arr,
             bounds=tile_bounds,
             crs=dst_crs,
             dataset_statistics=stats,
-            band_names=band_names,
+            band_names=self.band_names,
         )
 
     def part(
@@ -258,6 +270,7 @@ class XarrayReader(BaseReader):
         bounds_crs: CRS = WGS84_CRS,
         resampling_method: WarpResampling = "nearest",
         auto_expand: bool = True,
+        nodata: Optional[NoData] = None,
     ) -> ImageData:
         """Read part of a dataset.
 
@@ -273,7 +286,12 @@ class XarrayReader(BaseReader):
 
         """
         dst_crs = dst_crs or bounds_crs
-        ds = self.input.rio.clip_box(
+
+        ds = self.input
+        if nodata is not None:
+            ds = ds.rio.write_nodata(nodata)
+
+        ds = ds.rio.clip_box(
             *bbox,
             crs=bounds_crs,
             auto_expand=auto_expand,
@@ -292,6 +310,7 @@ class XarrayReader(BaseReader):
                 shape=(h, w),
                 transform=dst_transform,
                 resampling=Resampling[resampling_method],
+                nodata=nodata,
             )
 
         # Forward valid_min/valid_max to the ImageData object
@@ -300,14 +319,15 @@ class XarrayReader(BaseReader):
         if minv is not None and maxv is not None:
             stats = ((minv, maxv),) * ds.rio.count
 
-        band_names = [str(band) for d in self._dims for band in self.input[d].values]
+        arr = ds.to_masked_array()
+        arr.mask |= arr.data == ds.rio.nodata
 
         return ImageData(
-            ds.data,
+            arr,
             bounds=ds.rio.bounds(),
             crs=ds.rio.crs,
             dataset_statistics=stats,
-            band_names=band_names,
+            band_names=self.band_names,
         )
 
     def preview(
@@ -334,6 +354,7 @@ class XarrayReader(BaseReader):
         lon: float,
         lat: float,
         coord_crs: CRS = WGS84_CRS,
+        nodata: Optional[NoData] = None,
     ) -> PointData:
         """Read a pixel value from a dataset.
 
@@ -354,15 +375,20 @@ class XarrayReader(BaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        y, x = rowcol(self.input.rio.transform(), ds_lon, ds_lat)
+        ds = self.input
+        if nodata is not None:
+            ds = ds.rio.write_nodata(nodata)
 
-        band_names = [str(band) for d in self._dims for band in self.input[d].values]
+        y, x = rowcol(ds.rio.transform(), ds_lon, ds_lat)
+
+        arr = ds[:, y[0], x[0]].to_masked_array()
+        arr.mask |= arr.data == ds.rio.nodata
 
         return PointData(
-            self.input.data[:, y[0], x[0]],
+            arr,
             coordinates=(lon, lat),
             crs=coord_crs,
-            band_names=band_names,
+            band_names=self.band_names,
         )
 
     def feature(
@@ -371,6 +397,7 @@ class XarrayReader(BaseReader):
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
         resampling_method: WarpResampling = "nearest",
+        nodata: Optional[NoData] = None,
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature.
 
@@ -389,7 +416,11 @@ class XarrayReader(BaseReader):
 
         shape = _validate_shape_input(shape)
 
-        ds = self.input.rio.clip([shape], crs=shape_crs)
+        ds = self.input
+        if nodata is not None:
+            ds = ds.rio.write_nodata(nodata)
+
+        ds = ds.rio.clip([shape], crs=shape_crs)
 
         if dst_crs != self.crs:
             dst_transform, w, h = calculate_default_transform(
@@ -404,6 +435,7 @@ class XarrayReader(BaseReader):
                 shape=(h, w),
                 transform=dst_transform,
                 resampling=Resampling[resampling_method],
+                nodata=nodata,
             )
 
         # Forward valid_min/valid_max to the ImageData object
@@ -412,12 +444,13 @@ class XarrayReader(BaseReader):
         if minv is not None and maxv is not None:
             stats = ((minv, maxv),) * ds.rio.count
 
-        band_names = [str(band) for d in self._dims for band in self.input[d].values]
+        arr = ds.to_masked_array()
+        arr.mask |= arr.data == ds.rio.nodata
 
         return ImageData(
-            ds.data,
+            arr,
             bounds=ds.rio.bounds(),
             crs=ds.rio.crs,
             dataset_statistics=stats,
-            band_names=band_names,
+            band_names=self.band_names,
         )
