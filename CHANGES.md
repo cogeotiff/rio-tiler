@@ -1,3 +1,7 @@
+# 4.1.12 (2023-06-16)
+
+* fix issue with `rio_tiler.utils.get_array_statistics` when passing data with no `valid` value
+
 # 4.1.11 (2023-05-18)
 
 * in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
