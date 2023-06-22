@@ -283,6 +283,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         if not assets:
             raise InvalidExpression(
                 f"Could not find any valid assets in '{expression}' expression."
+                if asset_as_band
+                else f"Could not find any valid assets in '{expression}' expression, maybe try with `asset_as_band=True`."
             )
 
         return assets
