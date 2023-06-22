@@ -122,6 +122,14 @@
 
 * add Deprecation warning for `ImageData.from_array`, `ImageData.as_masked`, `PointData.as_masked` methods
 
+# 4.1.13 (2023-06-22)
+
+* raise InvalidExpression when passing invalid asset or band in an expression (Backported from 5.0.1)
+
+# 4.1.12 (2023-06-16)
+
+* fix issue with `rio_tiler.utils.get_array_statistics` when passing data with no `valid` value
+
 # 4.1.11 (2023-05-18)
 
 * in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
