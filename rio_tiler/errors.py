@@ -41,6 +41,10 @@ class InvalidAssetName(RioTilerError):
     """Invalid Asset name."""
 
 
+class InvalidExpression(RioTilerError):
+    """Invalid Expression."""
+
+
 class MissingAssets(RioTilerError):
     """Missing Assets."""
 

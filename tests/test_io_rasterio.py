@@ -22,6 +22,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
     InvalidBufferSize,
+    InvalidExpression,
     NoOverviewWarning,
     TileOutsideBounds,
 )
@@ -193,6 +194,13 @@ def test_tile_valid_default():
         assert img_buffer.height == 276
         assert not img.bounds == img_buffer.bounds
         assert numpy.array_equal(img.data, img_buffer.data[:, 10:266, 10:266])
+
+
+def test_invalid_expression():
+    """Should raise an error with invalid expression."""
+    with pytest.raises(InvalidExpression):
+        with Reader(COGEO) as src:
+            src.preview(expression="somethingwithoutband")
 
 
 def test_tile_invalid_bounds():
@@ -971,7 +979,7 @@ def test_tms_tilesize_and_zoom():
 
     tms_128 = TileMatrixSet.custom(
         WEB_MERCATOR_TMS.xy_bbox,
-        WEB_MERCATOR_TMS.crs,
+        CRS.from_epsg(3857),
         title="mercator with 64 tilesize",
         tile_width=64,
         tile_height=64,
@@ -982,7 +990,7 @@ def test_tms_tilesize_and_zoom():
 
     tms_2048 = TileMatrixSet.custom(
         WEB_MERCATOR_TMS.xy_bbox,
-        WEB_MERCATOR_TMS.crs,
+        CRS.from_epsg(3857),
         title="mercator with 2048 tilesize",
         tile_width=2048,
         tile_height=2048,

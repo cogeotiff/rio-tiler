@@ -1,31 +1,35 @@
 
+# 5.0.1 (2023-06-22)
+
+* raise `InvalidExpression` when passing invalid `asset` or `band` in an expression
+
 # 5.0.0 (2023-06-01)
 
-- Fix potential issue when getting statistics for non-valid data
+* Fix potential issue when getting statistics for non-valid data
 
-- add `rio-tiler.mosaic.methods.PixelSelectionMethod` enums with all defaults methods
+* add `rio-tiler.mosaic.methods.PixelSelectionMethod` enums with all defaults methods
 
-- Add `rio-tiler.utils._validate_shape_input` function to check geojson feature inputs
+* Add `rio-tiler.utils._validate_shape_input` function to check geojson feature inputs
 
-- Change cutline handling in the `rio-tiler.io.rasterio.Reader.feature` method. Feature
+* Change cutline handling in the `rio-tiler.io.rasterio.Reader.feature` method. Feature
   cutlines are now rasterized into numpy arrays and applied as masks instead of using
   the cutline vrt_option. These masks are tracked in the `rio-tiler.models.ImageData.cutline_mask`
   attribute, which are used in `rio-tiler.mosaic.methods.base.MosaicMethodBase` to stop
   mosaic building as soon as all pixels in a feature are populated
 
-- Fix missing `nodata/alpha/mask` forwarding for dataset with internal GCPS
+* Fix missing `nodata/alpha/mask` forwarding for dataset with internal GCPS
 
-- in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
+* in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/608)
 
-- handle internal and user provided `nodata` values in `rio_tiler.io.XarrayReader` to create mask
+* handle internal and user provided `nodata` values in `rio_tiler.io.XarrayReader` to create mask
 
-- add `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_PROFILE` and `AWS_REGION` environnement overrides for `rio_tiler.io.stac.aws_get_object` function
+* add `AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`, `AWS_SESSION_TOKEN`, `AWS_PROFILE` and `AWS_REGION` environnement overrides for `rio_tiler.io.stac.aws_get_object` function
 
 **breaking changes**
 
-- remove support for non-binary mask values (e.g non-binary alpha bands, ref: [rasterio/rasterio#1721](https://github.com/rasterio/rasterio/issues/1721#issuecomment-586547617))
+* remove support for non-binary mask values (e.g non-binary alpha bands, ref: [rasterio/rasterio#1721](https://github.com/rasterio/rasterio/issues/1721#issuecomment-586547617))
 
-- switch from PER-DATASET to PER-BAND mask (https://github.com/cogeotiff/rio-tiler/pull/580)
+* switch from PER-DATASET to PER-BAND mask (https://github.com/cogeotiff/rio-tiler/pull/580)
 
     ```python
     # before
@@ -42,7 +46,7 @@
         assert img.array.mask.shape == (3, 128, 128))
     ```
 
-- use numpy masked array in ImageData and PointData to store the data
+* use numpy masked array in ImageData and PointData to store the data
 
     ```python
     # before
@@ -58,15 +62,15 @@
     assert isintance(img.mask, numpy.ndarray)  # property
     ```
 
-- remove `ImageData.from_array` method (because we now support MaskedArray directly)
+* remove `ImageData.from_array` method (because we now support MaskedArray directly)
 
-- `rio_tiler.expression.apply_expression` input/output type change to `numpy.ma.MaskedArray`
+* `rio_tiler.expression.apply_expression` input/output type change to `numpy.ma.MaskedArray`
 
-- rio-tiler `mosaic` methods return `numpy.ma.MaskedArray`
+* rio-tiler `mosaic` methods return `numpy.ma.MaskedArray`
 
-- reader's `post_process` should be a Callable with `numpy.ma.MaskedArray` input/output
+* reader's `post_process` should be a Callable with `numpy.ma.MaskedArray` input/output
 
-- add `reproject_method` option in `rio_tiler.reader`'s method to select the `resampling` method used during reprojection
+* add `reproject_method` option in `rio_tiler.reader`'s method to select the `resampling` method used during reprojection
 
     ```python
     # before
@@ -85,23 +89,23 @@
         )
     ```
 
-- refactored the `MosaicMethodBase` to use python's dataclass
+* refactored the `MosaicMethodBase` to use python's dataclass
 
-- changed variable names in `MosaicMethodBase` (`tile` -> `mosaic`)
+* changed variable names in `MosaicMethodBase` (`tile` -> `mosaic`)
 
-- `rio_tiler.mosaic.methods.defaults.LastBandHigh` renamed `LastBandHighMethod`
+* `rio_tiler.mosaic.methods.defaults.LastBandHigh` renamed `LastBandHighMethod`
 
-- `rio_tiler.mosaic.methods.defaults.LastBandLow` renamed `LastBandLowMethod`
+* `rio_tiler.mosaic.methods.defaults.LastBandLow` renamed `LastBandLowMethod`
 
-- move `aws_get_object` from `rio_tiler.utils` to `rio_tiler.io.stac`
+* move `aws_get_object` from `rio_tiler.utils` to `rio_tiler.io.stac`
 
-- make `boto3` an optional dependency (`python -m pip install rio-tiler["s3"]`)
+* make `boto3` an optional dependency (`python -m pip install rio-tiler["s3"]`)
 
-- update `morecantile` dependency to `>=4.0`
+* update `morecantile` dependency to `>=4.0`
 
-- add `metadata` in ImageData/PointData from rasterio dataset `tags`
+* add `metadata` in ImageData/PointData from rasterio dataset `tags`
 
-- forward statistics from the **raster STAC extension** to the ImageData object
+* forward statistics from the **raster STAC extension** to the ImageData object
 
     ```python
     with STACReader(STAC_RASTER_PATH) as stac:
@@ -116,7 +120,7 @@
         assert img.metadata["red"]
     ```
 
-- add Deprecation warning for `ImageData.from_array`, `ImageData.as_masked`, `PointData.as_masked` methods
+* add Deprecation warning for `ImageData.from_array`, `ImageData.as_masked`, `PointData.as_masked` methods
 
 # 4.1.11 (2023-05-18)
 
