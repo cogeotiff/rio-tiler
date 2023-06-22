@@ -21,6 +21,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
     InvalidBufferSize,
+    InvalidExpression,
     NoOverviewWarning,
     TileOutsideBounds,
 )
@@ -191,6 +192,13 @@ def test_tile_valid_default():
         assert img_buffer.height == 276
         assert not img.bounds == img_buffer.bounds
         assert numpy.array_equal(img.data, img_buffer.data[:, 10:266, 10:266])
+
+
+def test_invalid_expression():
+    """Should raise an error with invalid expression."""
+    with pytest.raises(InvalidExpression):
+        with Reader(COGEO) as src:
+            src.preview(expression="somethingwithoutband")
 
 
 def test_tile_invalid_bounds():

@@ -14,6 +14,7 @@ from rio_tiler.errors import (
     AssetAsBandError,
     ExpressionMixingWarning,
     InvalidAssetName,
+    InvalidExpression,
     MissingAssets,
     TileOutsideBounds,
 )
@@ -524,6 +525,15 @@ def test_parse_expression():
         assert sorted(
             stac.parse_expression("green_b10foo*red_b1+red_b1/blue_b1+2.0;red_b1")
         ) == ["blue", "red"]
+
+    # raise exception in no assets
+    with pytest.raises(InvalidExpression):
+        with STACReader(STAC_PATH) as stac:
+            stac.parse_expression("greenfoo*redfoo", asset_as_band=True)
+
+    with pytest.raises(InvalidExpression):
+        with STACReader(STAC_PATH) as stac:
+            stac.parse_expression("greenfoo_b1*2")
 
 
 @patch("rio_tiler.io.rasterio.rasterio")

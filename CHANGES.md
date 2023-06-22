@@ -1,3 +1,7 @@
+# 4.1.13 (2023-06-22)
+
+* raise InvalidExpression when passing invalid asset or band in an expression (Backported from 5.0.1)
+
 # 4.1.12 (2023-06-16)
 
 * fix issue with `rio_tiler.utils.get_array_statistics` when passing data with no `valid` value
