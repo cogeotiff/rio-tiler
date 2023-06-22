@@ -6,6 +6,8 @@ from typing import List, Sequence, Tuple
 import numexpr
 import numpy
 
+from rio_tiler.errors import InvalidExpression
+
 
 def parse_expression(expression: str, cast: bool = True) -> Tuple:
     """Parse rio-tiler band math expression.
@@ -26,7 +28,13 @@ def parse_expression(expression: str, cast: bool = True) -> Tuple:
 
     """
     bands = set(re.findall(r"\bb(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE))
-    return tuple(map(int, bands)) if cast else tuple(bands)
+    output_bands = tuple(map(int, bands)) if cast else tuple(bands)
+    if not output_bands:
+        raise InvalidExpression(
+            f"Could not find any valid bands in '{expression}' expression."
+        )
+
+    return output_bands
 
 
 def get_expression_blocks(expression: str) -> List[str]:
@@ -68,12 +76,15 @@ def apply_expression(
             f"Incompatible number of bands ({bands}) and data shape {data.shape}"
         )
 
-    return numpy.ma.MaskedArray(
-        [
-            numpy.nan_to_num(
-                numexpr.evaluate(bloc.strip(), local_dict=dict(zip(bands, data)))
-            )
-            for bloc in blocks
-            if bloc
-        ]
-    )
+    try:
+        return numpy.ma.MaskedArray(
+            [
+                numpy.nan_to_num(
+                    numexpr.evaluate(bloc.strip(), local_dict=dict(zip(bands, data)))
+                )
+                for bloc in blocks
+                if bloc
+            ]
+        )
+    except KeyError as e:
+        raise InvalidExpression(f"Invalid band/asset name {str(e)}") from e

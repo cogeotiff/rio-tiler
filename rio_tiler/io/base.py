@@ -16,6 +16,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     AssetAsBandError,
     ExpressionMixingWarning,
+    InvalidExpression,
     MissingAssets,
     MissingBands,
     TileOutsideBounds,
@@ -271,12 +272,20 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str, asset_as_band: bool = False) -> Tuple:
         """Parse rio-tiler band math expression."""
-        assets = "|".join(self.assets)
+        input_assets = "|".join(self.assets)
+
         if asset_as_band:
-            _re = re.compile(rf"\b({assets})\b")
+            _re = re.compile(rf"\b({input_assets})\b")
         else:
-            _re = re.compile(rf"\b({assets})_b\d+\b")
-        return tuple(set(re.findall(_re, expression)))
+            _re = re.compile(rf"\b({input_assets})_b\d+\b")
+
+        assets = tuple(set(re.findall(_re, expression)))
+        if not assets:
+            raise InvalidExpression(
+                f"Could not find any valid assets in '{expression}' expression."
+            )
+
+        return assets
 
     def _update_statistics(
         self,
@@ -863,9 +872,16 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
-        bands = "|".join([rf"\b{band}\b" for band in self.bands])
-        _re = re.compile(bands.replace("\\\\", "\\"))
-        return tuple(set(re.findall(_re, expression)))
+        input_bands = "|".join([rf"\b{band}\b" for band in self.bands])
+        _re = re.compile(input_bands.replace("\\\\", "\\"))
+
+        bands = tuple(set(re.findall(_re, expression)))
+        if not bands:
+            raise InvalidExpression(
+                f"Could not find any valid bands in '{expression}' expression."
+            )
+
+        return bands
 
     def info(
         self, bands: Union[Sequence[str], str] = None, *args, **kwargs: Any
