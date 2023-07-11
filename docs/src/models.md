@@ -25,7 +25,7 @@ m = numpy.zeros((3, 256, 256), dtype="bool")
 
 data = numpy.ma.MaskedArray(d, mask=m)
 
-print(ImageData(d, m))
+print(ImageData(data))
 >>> ImageData(
     array=masked_array(...),
     assets=None,
@@ -57,9 +57,10 @@ print(ImageData(d, m))
     from rio_tiler.models import ImageData
 
     d = numpy.zeros((3, 256, 256))
-    m = numpy.zeros((256, 256)) + 255
+    m = numpy.zeros((3, 256, 256), dtype="bool")
+    data = numpy.ma.MaskedArray(d, mask=m)
 
-    img = ImageData(d, m)
+    img = ImageData(data)
     print(img.data.shape)
     >>> (3, 256, 256)
 
@@ -107,10 +108,8 @@ print(ImageData(d, m))
     import numpy
     from rio_tiler.models import ImageData
 
-    d = numpy.random.randint(0, 3000, (3, 256, 256))
-    m = numpy.zeros((256, 256)) + 255
-
-    img = ImageData(d, m)
+    data = numpy.random.randint(0, 3000, (3, 256, 256))
+    img = ImageData(data)
 
     print(img.data.dtype)
     >>> 'int64'
@@ -179,10 +178,8 @@ print(ImageData(d, m))
     import numpy
     from rio_tiler.models import ImageData
 
-    d = numpy.random.randint(0, 3000, (3, 256, 256))
-    m = numpy.zeros((256, 256)) + 255
-
-    img = ImageData(d, m)
+    data = numpy.random.randint(0, 3000, (3, 256, 256))
+    img = ImageData(data)
 
     print(img.data.dtype)
     >>> 'int64'
@@ -207,17 +204,18 @@ print(ImageData(d, m))
     import numpy
     from rio_tiler.models import ImageData
 
-    d = numpy.random.randint(0, 3000, (3, 256, 256))
-    m = numpy.zeros((256, 256)) + 255
-
-    img = ImageData(d, m)
+    data = numpy.random.randint(0, 16000, (3, 256, 256)).astype("uint16")
+    img = ImageData(data)
 
     print(img.data.dtype)
-    >>> 'int64'
+    >>> 'uint16'
 
-    img.apply_color_formula("Gamma RGB 3.1")
+    img.apply_color_formula("Gamma RGB 3.5")
     print(img.data.dtype)
     >>> 'uint8'
+
+    print(img.data.max())
+    >>> 170
     ```
 
 - **apply_colormap()**: Apply colormap to the image data
@@ -244,10 +242,9 @@ print(ImageData(d, m))
     import numpy
     from rio_tiler.models import ImageData
 
-    d = numpy.random.randint(0, 3000, (3, 256, 256))
-    m = numpy.zeros((256, 256)) + 255
+    data = numpy.random.randint(0, 3000, (3, 256, 256))
 
-    img = ImageData(d, m)
+    img = ImageData(data)
     print(img.band_names)
     >>> ["b1", "b2", "b3"]  # Defaults
 
@@ -273,10 +270,9 @@ print(ImageData(d, m))
             with mem.open() as dst:
                 return dst.meta
 
-    d = numpy.zeros((3, 256, 256), dtype="uint8")
-    m = numpy.zeros((256, 256)) + 255
+    data = numpy.zeros((3, 256, 256), dtype="uint8")
 
-    img = ImageData(d, m)
+    img = ImageData(data)
 
     # create a PNG image
     buf = img.render(img_format="png")
@@ -353,16 +349,14 @@ print(PointData(data))
 
 #### Methods
 
-- **as_masked()**: Return the data array as a `numpy.ma.MaskedArray`
+- **as_masked()**: Return the data array as a `numpy.ma.MaskedArray`  **deprecated**
 
 ```python
 import numpy
 from rio_tiler.models import PointData
 
-d = numpy.zeros((3))
-m = numpy.zeros((1), dtype="uint8") + 255
-
-masked = PointData(d, m).as_masked()
+data = numpy.zeros((3))
+masked = PointData(data).as_masked()
 print(type(masked))
 >>> numpy.ma.core.MaskedArray
 ```
@@ -373,10 +367,9 @@ print(type(masked))
 import numpy
 from rio_tiler.models import PointData
 
-d = numpy.random.randint(0, 3000, (3))
-m = numpy.zeros((1), dtype="uint8") + 255
+data = numpy.random.randint(0, 3000, (3))
 
-pts = PointData(d, m)
+pts = PointData(data)
 print(pts.band_names)
 >>> ["b1", "b2", "b3"]  # Defaults
 

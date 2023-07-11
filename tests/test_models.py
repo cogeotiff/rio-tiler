@@ -413,3 +413,18 @@ def test_2d_image():
     assert im.width == 256
     assert im.height == 256
     assert im.mask.all()
+
+
+def test_apply_color_formula():
+    """Test Apply color_formula."""
+    data = numpy.random.randint(0, 16000, (3, 256, 256)).astype("uint16")
+    img = ImageData(data)
+    assert img.data.dtype == "uint16"
+
+    img.apply_color_formula(
+        "gamma b 1.85, gamma rg 1.95, sigmoidal rgb 35 0.13, saturation 1.15"
+    )
+    assert img.data.dtype == "uint8"
+    assert img.count == 3
+    assert img.width == 256
+    assert img.height == 256
