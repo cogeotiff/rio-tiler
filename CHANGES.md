@@ -1,4 +1,8 @@
 
+# 5.0.2 (2023-07-11)
+
+* fix `ImageData.apply_color_formula()` method
+
 # 5.0.1 (2023-06-22)
 
 * raise `InvalidExpression` when passing invalid `asset` or `band` in an expression

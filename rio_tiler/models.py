@@ -586,7 +586,9 @@ class ImageData:
         for ops in parse_operations(color_formula):
             out = scale_dtype(ops(to_math_type(out)), numpy.uint8)
 
-        self.array.data = out
+        data = numpy.ma.MaskedArray(out)
+        data.mask = self.array.mask
+        self.array = data
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
