@@ -1,4 +1,9 @@
 
+# 5.0.3 (2023-07-18)
+
+* Filter useless `NotGeoreferencedWarning` warnings in  `Reader.feature()` and `ImageData.from_bytes()` methods
+* Ensure that dataset is still open when reading tags (author @JackDunnNZ, https://github.com/cogeotiff/rio-tiler/pull/628)
+
 # 5.0.2 (2023-07-11)
 
 * fix `ImageData.apply_color_formula()` method

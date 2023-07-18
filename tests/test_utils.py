@@ -2,12 +2,14 @@
 
 import math
 import os
+import warnings
 from io import BytesIO
 
 import numpy as np
 import pytest
 import rasterio
 from rasterio.enums import ColorInterp
+from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.io import MemoryFile
 
@@ -516,9 +518,15 @@ def test_render_colorinterp():
     """Save data to numpy binary."""
 
     def parse(content):
-        with MemoryFile(content) as mem:
-            with mem.open() as dst:
-                return dst.profile, dst.colorinterp
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            with MemoryFile(content) as mem:
+                with mem.open() as dst:
+                    return dst.profile, dst.colorinterp
 
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8)
