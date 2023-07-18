@@ -547,10 +547,10 @@ def point(
             post_process=post_process,
         )
 
-    return PointData(
-        img.array[:, 0, 0],
-        coordinates=coordinates,
-        crs=coord_crs,
-        band_names=img.band_names,
-        metadata=dataset.tags(),
-    )
+        return PointData(
+            img.array[:, 0, 0],
+            coordinates=coordinates,
+            crs=coord_crs,
+            band_names=img.band_names,
+            metadata=dataset.tags(),
+        )
