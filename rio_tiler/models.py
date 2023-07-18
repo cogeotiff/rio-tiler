@@ -15,6 +15,7 @@ from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
 from rasterio.enums import ColorInterp
+from rasterio.errors import NotGeoreferencedWarning
 from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
@@ -393,40 +394,46 @@ class ImageData:
             data (bytes): raster dataset as bytes.
 
         """
-        with MemoryFile(data) as m:
-            with m.open() as dataset:
-                indexes = non_alpha_indexes(dataset)
-                if ColorInterp.alpha in dataset.colorinterp:
-                    alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
-                    idx = tuple(indexes) + (alpha_idx,)
-                    array = dataset.read(indexes=idx)
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            with MemoryFile(data) as m:
+                with m.open() as dataset:
+                    indexes = non_alpha_indexes(dataset)
+                    if ColorInterp.alpha in dataset.colorinterp:
+                        alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
+                        idx = tuple(indexes) + (alpha_idx,)
+                        array = dataset.read(indexes=idx)
 
-                    mask = ~array[-1].astype("bool")
-                    array = numpy.ma.MaskedArray(array[0:-1])
-                    array.mask = mask
+                        mask = ~array[-1].astype("bool")
+                        array = numpy.ma.MaskedArray(array[0:-1])
+                        array.mask = mask
 
-                else:
-                    array = dataset.read(indexes=indexes, masked=True)
+                    else:
+                        array = dataset.read(indexes=indexes, masked=True)
 
-                stats = []
-                for ix in indexes:
-                    tags = dataset.tags(ix)
-                    if all(
-                        stat in tags
-                        for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
-                    ):
-                        stat_min = float(tags.get("STATISTICS_MINIMUM"))
-                        stat_max = float(tags.get("STATISTICS_MAXIMUM"))
-                        stats.append((stat_min, stat_max))
+                    stats = []
+                    for ix in indexes:
+                        tags = dataset.tags(ix)
+                        if all(
+                            stat in tags
+                            for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
+                        ):
+                            stat_min = float(tags.get("STATISTICS_MINIMUM"))
+                            stat_max = float(tags.get("STATISTICS_MAXIMUM"))
+                            stats.append((stat_min, stat_max))
 
-                dataset_statistics = stats if len(stats) == len(indexes) else None
+                    dataset_statistics = stats if len(stats) == len(indexes) else None
 
-                return cls(
-                    array,
-                    crs=dataset.crs,
-                    bounds=dataset.bounds,
-                    dataset_statistics=dataset_statistics,
-                )
+                    return cls(
+                        array,
+                        crs=dataset.crs,
+                        bounds=dataset.bounds,
+                        dataset_statistics=dataset_statistics,
+                    )
 
     @classmethod
     def create_from_list(cls, data: Sequence["ImageData"]) -> "ImageData":

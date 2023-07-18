@@ -7,6 +7,7 @@ import numpy
 import pytest
 import rasterio
 from rasterio.crs import CRS
+from rasterio.errors import NotGeoreferencedWarning
 from rasterio.io import MemoryFile
 
 from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
@@ -72,6 +73,11 @@ def test_16bit_PNG():
     mask[0:10, 0:10] = True
 
     with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
         arr = numpy.ma.MaskedArray(numpy.zeros((1, 256, 256), dtype="uint16"))
         arr.mask = mask.copy()
         img = ImageData(arr).render(img_format="PNG")
@@ -86,6 +92,11 @@ def test_16bit_PNG():
             assert (arr[11:, 11:] == 65535).all()
 
     with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
         arr = numpy.ma.MaskedArray(numpy.zeros((3, 256, 256), dtype="uint16"))
         arr.mask = mask.copy()
         img = ImageData(arr).render(img_format="PNG")
