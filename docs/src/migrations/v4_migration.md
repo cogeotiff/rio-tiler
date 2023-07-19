@@ -1,7 +1,7 @@
 
 # Breaking changes
 
-`rio-tiler` version 4.0 introduced [many breaking changes](release-notes.md). This
+`rio-tiler` version 4.0 introduced [many breaking changes](../release-notes.md). This
 document aims to help with migrating your code to use `rio-tiler` 4.0.
 
 ## Python >=3.8

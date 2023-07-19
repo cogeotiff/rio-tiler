@@ -1,5 +1,5 @@
 
-`rio-tiler` version 3.0 introduced [many breaking changes](release-notes.md). This
+`rio-tiler` version 3.0 introduced [many breaking changes](../release-notes.md). This
 document aims to help with migrating your code to use `rio-tiler` 3.0.
 
 ## Morecantile 2.0 -> 3.0

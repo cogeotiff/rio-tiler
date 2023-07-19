@@ -1,5 +1,5 @@
 
-`rio-tiler` version 2.0 introduced [many breaking changes](release-notes.md). This
+`rio-tiler` version 2.0 introduced [many breaking changes](../release-notes.md). This
 document aims to help with migrating your code to use `rio-tiler` 2.0.
 
 ## Python **3** only
@@ -45,7 +45,7 @@ Rasterio 1.1.7 or newer is required.
 
 With [Morecantile](https://github.com/developmentseed/morecantile) we can support more than the Web Mercator TMS.
 
-See [tms](advanced/tms.md)
+See [tms](../advanced/tms.md)
 
 ## New **rio_tiler.io** submodules
 
@@ -81,7 +81,7 @@ with COGReader("my_tif.tif") as cog:
     tile, mask = cog.tile(691559, 956905, 21, expression="b1/b2")
 ```
 
-See [`COGReader`](readers.md#cogreader) amd [`STACReader`](readers.md#stacreader) for more info.
+See [`COGReader`](../readers.md#cogreader) amd [`STACReader`](../readers.md#stacreader) for more info.
 
 ## Internal API: **rio_tiler.reader**
 
@@ -273,7 +273,7 @@ img = rio_tiler.utils.render(tile, mask, img_format="PNG")
 
 The `.io` readers now returns pydantic models hosting the results. This enables easy API definition.
 
-See [models](models.md)
+See [models](../models.md)
 
 ## Mission specific changes
 

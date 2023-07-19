@@ -44,6 +44,11 @@ nav:
     - rio-tiler + STAC: 'examples/Using-rio-tiler-STACReader.ipynb'
     - Non-Earth dataset: 'examples/Using-nonEarth-dataset.ipynb'
     - Xarray + rio-tiler: 'examples/Using-rio-tiler-XarrayReader.ipynb'
+  - Migration Guides:
+    - v1.0 -> v2.0: 'migrations/v2_migration.md'
+    - v2.0 -> v3.0: 'migrations/v3_migration.md'
+    - v3.0 -> v4.0: 'migrations/v4_migration.md'
+    - v4.0 -> v5.0: 'migrations/v5_migration.md'
   - API:
     - rio_tiler.colormap: api/rio_tiler/colormap.md
     - rio_tiler.constants: api/rio_tiler/constants.md
@@ -64,10 +69,6 @@ nav:
     - rio_tiler.reader: api/rio_tiler/reader.md
     - rio_tiler.tasks: api/rio_tiler/tasks.md
     - rio_tiler.utils: api/rio_tiler/utils.md
-  - Migration from v1.0 to v2.0: 'v2_migration.md'
-  - Migration from v2.0 to v3.0: 'v3_migration.md'
-  - Migration from v3.0 to v4.0: 'v4_migration.md'
-  - Migration from v4.0 to v5.0: 'v5_migration.md'
   - Benchmarking: advanced/benchmark.html
   - Development - Contributing: 'contributing.md'
   - Release Notes: 'release-notes.md'
