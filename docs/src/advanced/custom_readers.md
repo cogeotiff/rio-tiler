@@ -112,7 +112,7 @@ with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
     >>> ['band1', 'band2']
 
     assert isinstance(info["band1"], Info)
-    print(info["band1"].json(exclude_none=True))
+    print(info["band1"].model_dump_json(exclude_none=True))
     >>> {
         'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
         'minzoom': 7,
@@ -193,7 +193,7 @@ with BandFileReader(input="my_dir/", prefix="scene_") as cr:
     print(cr.bands)
     >>> ['band1', 'band2']
 
-    print(cr.info(bands=("band1", "band2")).json(exclude_none=True))
+    print(cr.info(bands=("band1", "band2")).model_dump_json(exclude_none=True))
     >>> {
         'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
         'minzoom': 7,
