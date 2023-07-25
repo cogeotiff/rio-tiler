@@ -8,7 +8,7 @@ import attr
 import numpy
 from affine import Affine
 from color_operations import parse_operations, scale_dtype, to_math_type
-from pydantic import BaseModel, ConfigDict
+from pydantic import BaseModel
 from rasterio import windows
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
@@ -39,15 +39,15 @@ from rio_tiler.utils import (
 )
 
 
-class RioTilerBaseModel(BaseModel):
-    """Base Model for rio-tiler models."""
+class RioTilerBaseModel:
+    """Provides dictionary access for pydantic models, for backwards compatability."""
 
     def __getitem__(self, item):
-        """Keep `getter` access for compatibility."""
+        """Access item like in Dict."""
         return self.__dict__[item]
 
 
-class Bounds(RioTilerBaseModel):
+class Bounds(RioTilerBaseModel, BaseModel):
     """Dataset Bounding box"""
 
     bounds: BoundingBox
@@ -72,10 +72,10 @@ class Info(SpatialInfo):
     offset: Optional[float] = None
     colormap: Optional[GDALColorMapType] = None
 
-    model_config = ConfigDict(extra="allow")
+    model_config = {"extra": "allow"}
 
 
-class BandStatistics(RioTilerBaseModel):
+class BandStatistics(RioTilerBaseModel, BaseModel):
     """Band statistics"""
 
     min: float
@@ -93,7 +93,7 @@ class BandStatistics(RioTilerBaseModel):
     masked_pixels: float
     valid_pixels: float
 
-    model_config = ConfigDict(extra="allow")
+    model_config = {"extra": "allow"}
 
 
 def to_coordsbbox(bbox) -> Optional[BoundingBox]:
