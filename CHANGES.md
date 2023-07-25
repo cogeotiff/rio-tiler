@@ -1,4 +1,9 @@
 
+# 6.0.1 (2023-07-25)
+
+* fix `key` access for `Info` and `BandStatistics` models for `extra` attributes
+* update deprecation notice to `7.0`
+
 # 6.0.0 (2023-07-25)
 
 * update `morecantile` requirement to `>=5.0,<6.0`
