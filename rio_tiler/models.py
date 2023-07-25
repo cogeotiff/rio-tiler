@@ -39,15 +39,19 @@ from rio_tiler.utils import (
 )
 
 
-class RioTilerBaseModel:
+class RioTilerBaseModel(BaseModel):
     """Provides dictionary access for pydantic models, for backwards compatability."""
 
     def __getitem__(self, item):
         """Access item like in Dict."""
-        return self.__dict__[item]
+        warnings.warn(
+            "'key' access will has been deprecated and will be removed in rio-tiler 7.0.",
+            DeprecationWarning,
+        )
+        return {**self.__dict__, **self.__pydantic_extra__}[item]
 
 
-class Bounds(RioTilerBaseModel, BaseModel):
+class Bounds(RioTilerBaseModel):
     """Dataset Bounding box"""
 
     bounds: BoundingBox
@@ -75,7 +79,7 @@ class Info(SpatialInfo):
     model_config = {"extra": "allow"}
 
 
-class BandStatistics(RioTilerBaseModel, BaseModel):
+class BandStatistics(RioTilerBaseModel):
     """Band statistics"""
 
     min: float
@@ -260,7 +264,7 @@ class PointData:
         """return a numpy masked array."""
         warnings.warn(
             "'PointData.as_masked' has been deprecated and will be removed"
-            "in rio-tiler 6.0. You can get the masked array directly with `PointData.array` attribute.",
+            "in rio-tiler 7.0. You can get the masked array directly with `PointData.array` attribute.",
             DeprecationWarning,
         )
         return self.array
@@ -363,7 +367,7 @@ class ImageData:
         """
         warnings.warn(
             "'ImageData.from_array()' has been deprecated and will be removed"
-            "in rio-tiler 6.0.",
+            "in rio-tiler 7.0.",
             DeprecationWarning,
         )
         return cls(arr)
@@ -499,7 +503,7 @@ class ImageData:
         """return a numpy masked array."""
         warnings.warn(
             "'ImageData.as_masked' has been deprecated and will be removed"
-            "in rio-tiler 6.0. You can get the masked array directly with `ImageData.array` attribute.",
+            "in rio-tiler 7.0. You can get the masked array directly with `ImageData.array` attribute.",
             DeprecationWarning,
         )
         return self.array

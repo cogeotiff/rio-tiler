@@ -364,6 +364,12 @@ def test_statistics():
         assert stats["b1"].percentile_2
         assert stats["b1"].percentile_98
 
+        with pytest.warns(DeprecationWarning):
+            assert stats["b1"]["percentile_2"]
+
+        with pytest.warns(DeprecationWarning):
+            assert stats["b1"]["percentile_98"]
+
     with Reader(COGEO) as src:
         stats = src.statistics(percentiles=[3])
         assert stats["b1"].percentile_3
@@ -412,6 +418,7 @@ def test_Reader_Options():
     with Reader(COGEO, options={"nodata": 1}) as src:
         assert src.info().nodata_value == 1
         assert src.info().nodata_type == "Nodata"
+        assert src.info()["nodata_type"] == "Nodata"
 
     with Reader(COGEO) as src:
         assert src.info().nodata_type == "None"
