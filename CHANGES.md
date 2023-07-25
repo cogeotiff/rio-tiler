@@ -1,5 +1,5 @@
 
-# 5.1.0 (unreleased)
+# 6.0.0 (unreleased)
 
 * update `morecantile` requirement to `>=5.0,<6.0`
 * delete `rio_tiler.models.NodataTypes` (replaced with Literal within the `Info` model)
