@@ -574,7 +574,7 @@ class Reader(BaseReader):
                 [shape],
                 out_shape=(img.height, img.width),
                 transform=img.transform,
-                all_touched=True,  # Necesary for matching masks at different resolutions
+                all_touched=True,  # Mandatory for matching masks at different resolutions
                 default_value=0,
                 fill=1,
                 dtype="uint8",
