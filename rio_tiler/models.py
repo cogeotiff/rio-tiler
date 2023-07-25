@@ -2,8 +2,7 @@
 
 import itertools
 import warnings
-from enum import Enum
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
@@ -40,25 +39,15 @@ from rio_tiler.utils import (
 )
 
 
-class NodataTypes(str, Enum):
-    """rio-tiler Nodata types."""
-
-    Alpha = "Alpha"
-    Mask = "Mask"
-    Internal = "Internal"
-    Nodata = "Nodata"
-    Empty = "None"
-
-
-class RioTilerBaseModel(BaseModel):
-    """Base Model for rio-tiler models."""
+class RioTilerBaseModel:
+    """Provides dictionary access for pydantic models, for backwards compatability."""
 
     def __getitem__(self, item):
-        """Keep `getter` access for compatibility."""
+        """Access item like in Dict."""
         return self.__dict__[item]
 
 
-class Bounds(RioTilerBaseModel):
+class Bounds(RioTilerBaseModel, BaseModel):
     """Dataset Bounding box"""
 
     bounds: BoundingBox
@@ -77,20 +66,16 @@ class Info(SpatialInfo):
     band_metadata: List[Tuple[str, Dict]]
     band_descriptions: List[Tuple[str, str]]
     dtype: str
-    nodata_type: NodataTypes
-    colorinterp: Optional[List[str]]
-    scale: Optional[float]
-    offset: Optional[float]
-    colormap: Optional[GDALColorMapType]
+    nodata_type: Literal["Alpha", "Mask", "Internal", "Nodata", "None"]
+    colorinterp: Optional[List[str]] = None
+    scale: Optional[float] = None
+    offset: Optional[float] = None
+    colormap: Optional[GDALColorMapType] = None
 
-    class Config:
-        """Config for model."""
-
-        extra = "allow"
-        use_enum_values = True
+    model_config = {"extra": "allow"}
 
 
-class BandStatistics(RioTilerBaseModel):
+class BandStatistics(RioTilerBaseModel, BaseModel):
     """Band statistics"""
 
     min: float
@@ -108,10 +93,7 @@ class BandStatistics(RioTilerBaseModel):
     masked_pixels: float
     valid_pixels: float
 
-    class Config:
-        """Config for model."""
-
-        extra = "allow"  # We allow extra values for `percentiles_{}`
+    model_config = {"extra": "allow"}
 
 
 def to_coordsbbox(bbox) -> Optional[BoundingBox]:

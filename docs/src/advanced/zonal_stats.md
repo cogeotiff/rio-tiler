@@ -51,7 +51,7 @@ class Reader(io.Reader):
             for feature in geojson:
                 # Get data overlapping with the feature (using Reader.feature method)
                 data = self.feature(
-                    feature.dict(exclude_none=True),
+                    feature.model_dump(exclude_none=True),
                     max_size=max_size,
                     **kwargs,
                 )

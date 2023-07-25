@@ -1,4 +1,9 @@
 
+# 6.0.0 (unreleased)
+
+* update `morecantile` requirement to `>=5.0,<6.0`
+* delete `rio_tiler.models.NodataTypes` (replaced with Literal within the `Info` model)
+
 # 5.0.3 (2023-07-18)
 
 * Filter useless `NotGeoreferencedWarning` warnings in  `Reader.feature()` and `ImageData.from_bytes()` methods
