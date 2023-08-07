@@ -514,7 +514,7 @@ class ImageData:
         (bands, rows, columns) -> (rows, columns, bands).
 
         """
-        return reshape_as_image(self.array.data)
+        return reshape_as_image(self.array)
 
     @property
     def width(self) -> int:
