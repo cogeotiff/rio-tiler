@@ -1,4 +1,4 @@
-# 6.0.2 (unreleased)
+# 6.0.2 (2023-08-21)
 
 * Update `data_as_image` to return masked values (author @JackDunnNZ, https://github.com/cogeotiff/rio-tiler/pull/635)
 
