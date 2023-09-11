@@ -14,6 +14,9 @@ class MosaicMethodBase(abc.ABC):
     mosaic: Optional[numpy.ma.MaskedArray] = field(default=None, init=False)
     exit_when_filled: bool = field(default=False, init=False)
     cutline_mask: Optional[numpy.ndarray] = field(default=None, init=False)
+    width: int = field(init=False)
+    height: int = field(init=False)
+    count: int = field(init=False)
 
     @property
     def is_done(self) -> bool:

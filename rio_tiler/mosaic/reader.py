@@ -1,8 +1,10 @@
 """rio_tiler.mosaic: create tile from multiple assets."""
 
+import warnings
 from inspect import isclass
 from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, cast
 
+import numpy
 from rasterio.crs import CRS
 
 from rio_tiler.constants import MAX_THREADS
@@ -17,10 +19,10 @@ from rio_tiler.mosaic.methods.base import MosaicMethodBase
 from rio_tiler.mosaic.methods.defaults import FirstMethod
 from rio_tiler.tasks import create_tasks, filter_tasks
 from rio_tiler.types import BBox
-from rio_tiler.utils import _chunks
+from rio_tiler.utils import _chunks, resize_array
 
 
-def mosaic_reader(
+def mosaic_reader(  # noqa: C901
     mosaic_assets: Sequence,
     reader: Callable[..., ImageData],
     *args: Any,
@@ -88,14 +90,42 @@ def mosaic_reader(
             tasks,
             allowed_exceptions=allowed_exceptions,
         ):
-            crs = img.crs
-            bounds = img.bounds
-            band_names = img.band_names
+            # On the first Image we set the properties
+            if len(assets_used) == 0:
+                crs = img.crs
+                bounds = img.bounds
+                band_names = img.band_names
+                pixel_selection.cutline_mask = img.cutline_mask
+                pixel_selection.width = img.width
+                pixel_selection.height = img.height
+                pixel_selection.count = img.count
 
-            pixel_selection.cutline_mask = img.cutline_mask
+            assert (
+                img.count == pixel_selection.count
+            ), "Assets HAVE TO have the same number of bands"
+            if any(
+                [
+                    img.width != pixel_selection.width,
+                    img.height != pixel_selection.height,
+                ]
+            ):
+                warnings.warn(
+                    "Cannot concatenate images with different size. Will resize using fist asset width/heigh",
+                    UserWarning,
+                )
+                h = pixel_selection.height
+                w = pixel_selection.width
+                pixel_selection.feed(
+                    numpy.ma.MaskedArray(
+                        resize_array(img.array.data, h, w),
+                        mask=resize_array(img.array.mask * 1, h, w).astype("bool"),
+                    )
+                )
+
+            else:
+                pixel_selection.feed(img.array)
 
             assets_used.append(asset)
-            pixel_selection.feed(img.array)
 
             if pixel_selection.is_done and pixel_selection.data is not None:
                 return (
@@ -184,9 +214,18 @@ def mosaic_point_reader(
             tasks,
             allowed_exceptions=allowed_exceptions,
         ):
-            crs = pt.crs
-            coordinates = pt.coordinates
-            band_names = pt.band_names
+            # On the first Image we set the properties
+            if len(assets_used) == 0:
+                crs = pt.crs
+                coordinates = pt.coordinates
+                band_names = pt.band_names
+                pixel_selection.width = 1
+                pixel_selection.height = 1
+                pixel_selection.count = pt.count
+
+            assert (
+                pt.count == pixel_selection.count
+            ), "Assets HAVE TO have the same number of bands"
 
             assets_used.append(asset)
             pixel_selection.feed(pt.array)
