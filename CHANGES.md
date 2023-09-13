@@ -1,3 +1,8 @@
+
+# 6.0.3 (2023-09-13)
+
+* return a 1x1 image when bbox is smaller than a single pixel (author @JackDunnNZ, https://github.com/cogeotiff/rio-tiler/pull/637)
+
 # 6.0.2 (2023-08-21)
 
 * Update `data_as_image` to return masked values (author @JackDunnNZ, https://github.com/cogeotiff/rio-tiler/pull/635)
