@@ -1,4 +1,10 @@
 
+# 6.1.0 (TBD)
+
+* add `width`, `height` and `count` properties in `MosaicMethodBase`
+* make sure we mosaic ImageData/PointData with same number of bands
+* resize `ImageData.array` to the first asset's width/height in `mosaic_reader`
+
 # 6.0.3 (2023-09-13)
 
 * return a 1x1 image when bbox is smaller than a single pixel (author @JackDunnNZ, https://github.com/cogeotiff/rio-tiler/pull/637)

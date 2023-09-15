@@ -18,8 +18,10 @@ from rio_tiler.mosaic.methods import defaults
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog1.tif")
 asset2 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog2.tif")
+asset3 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_cog3.tif")
 assets = [asset1, asset2]
 assets_order = [asset2, asset1]
+assets_mixed = [asset1, asset3]
 
 stac_asset = os.path.join(os.path.dirname(__file__), "fixtures", "stac.json")
 
@@ -707,3 +709,27 @@ def test_mosaic_feature():
     assert list(numpy.unique(dat.array.mask)) == [False, True]
     assert dat.assets == [asset1, asset2]
     assert dat.crs == crs
+
+
+def test_mosaic_feature_size_diff():
+    """Test mosaic feature with ."""
+    feature = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "coordinates": [
+                [
+                    [-74.08023862322486, 45.69787317293694],
+                    [-74.08023862322486, 45.2992447541925],
+                    [-73.43873302640402, 45.2992447541925],
+                    [-73.43873302640402, 45.69787317293694],
+                    [-74.08023862322486, 45.69787317293694],
+                ]
+            ],
+            "type": "Polygon",
+        },
+    }
+
+    with pytest.warns(UserWarning):
+        dat, _ = mosaic.mosaic_reader(assets_mixed, _read_feature, shape=feature)
+        assert dat.data.shape == (3, 120, 193)
