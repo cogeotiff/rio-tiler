@@ -1,5 +1,5 @@
 
-# 6.1.0 (TBD)
+# 6.1.0 (2023-09-15)
 
 * add `width`, `height` and `count` properties in `MosaicMethodBase`
 * make sure we mosaic ImageData/PointData with same number of bands
