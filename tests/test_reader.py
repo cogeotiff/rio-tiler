@@ -5,6 +5,7 @@ import os
 import numpy
 import pytest
 import rasterio
+from numpy.testing import assert_array_almost_equal
 from rasterio.warp import transform_bounds
 
 from rio_tiler import constants, reader
@@ -632,3 +633,11 @@ def test_part_no_VRT():
         assert img_pad.bounds == bounds_dst_crs
         # Padding should not have any influence when not doing any rescaling/reprojection
         numpy.array_equal(img_pad.data, img.data)
+
+        # Read bbox smaller than one pixel
+        bounds_small = [bounds[0], bounds[1], bounds[0] + 1e-6, bounds[1] + 1e-6]
+        bounds_small_dst_crs = transform_bounds("epsg:4326", src_dst.crs, *bounds_small)
+        img_small = reader.part(src_dst, bounds_small, bounds_crs="epsg:4326")
+        assert img_small.height == 1
+        assert img_small.width == 1
+        assert_array_almost_equal(img_small.bounds, bounds_small_dst_crs)

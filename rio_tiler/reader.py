@@ -417,8 +417,8 @@ def part(
             max_size, round(window.height), round(window.width)
         )
 
-    height = height or round(window.height)
-    width = width or round(window.width)
+    height = height or max(1, round(window.height))
+    width = width or max(1, round(window.width))
 
     if buffer:
         bounds, height, width = _apply_buffer(buffer, bounds, height, width)
