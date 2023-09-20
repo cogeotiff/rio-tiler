@@ -769,6 +769,7 @@ class ImageData:
         categories: Optional[List[float]] = None,
         percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
+        coverage: Optional[numpy.ndarray] = None,
     ) -> Dict[str, BandStatistics]:
         """Return statistics from ImageData."""
         hist_options = hist_options or {}
@@ -778,6 +779,7 @@ class ImageData:
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,
+            coverage=coverage,
             **hist_options,
         )
 
