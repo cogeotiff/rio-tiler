@@ -8,6 +8,7 @@ import attr
 import numpy
 from affine import Affine
 from color_operations import parse_operations, scale_dtype, to_math_type
+from numpy.typing import NDArray
 from pydantic import BaseModel
 from rasterio import windows
 from rasterio.coords import BoundingBox
@@ -796,7 +797,7 @@ class ImageData:
         shape: Dict,
         shape_crs: CRS = WGS84_CRS,
         cover_scale: int = 10,
-    ) -> numpy.array:
+    ) -> NDArray[numpy.floating]:
 
         """
         cover_scale: int, optional
