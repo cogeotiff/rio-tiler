@@ -31,6 +31,22 @@
 
 * add `rio_tiler.utils.get_coverage_array` method to create a `coverage %` array
 
+* add `cmocean` colormaps
+
+    <img src="https://raw.githubusercontent.com/cogeotiff/rio-tiler/main/docs/src/img/colormaps_for_oceanography.png" style="max-width: 500px;"></a>
+
+* allow uppercase in `cmap.get` method
+
+    ```python
+    from rio_tiler.colormap import cmap
+
+    # Before
+    cm = cmap.get("greys")
+
+    # Now
+    cm = cmap.get("Greys")
+    ```
+
 # 6.1.0 (2023-09-15)
 
 * add `width`, `height` and `count` properties in `MosaicMethodBase`

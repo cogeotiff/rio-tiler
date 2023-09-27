@@ -12,9 +12,9 @@ None
 ```python3
 def apply_expression(
     blocks: Sequence[str],
-    bands: Sequence[Union[str, int]],
+    bands: Sequence[str],
     data: numpy.ndarray
-) -> numpy.ndarray
+) -> numpy.ma.core.MaskedArray
 ```
 
     

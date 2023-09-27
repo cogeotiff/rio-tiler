@@ -26,8 +26,22 @@ class MosaicMethodBase(
 * rio_tiler.mosaic.methods.defaults.MeanMethod
 * rio_tiler.mosaic.methods.defaults.MedianMethod
 * rio_tiler.mosaic.methods.defaults.StdevMethod
-* rio_tiler.mosaic.methods.defaults.LastBandHigh
-* rio_tiler.mosaic.methods.defaults.LastBandLow
+* rio_tiler.mosaic.methods.defaults.LastBandHighMethod
+* rio_tiler.mosaic.methods.defaults.LastBandLowMethod
+
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
 
 #### Instance variables
 
@@ -35,13 +49,13 @@ class MosaicMethodBase(
 data
 ```
 
-Return data and mask.
+Return data.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -51,15 +65,15 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile
+    array: numpy.ma.core.MaskedArray
 )
 ```
 
     
-Fill mosaic tile.
+Fill mosaic array.
 
 **Parameters:**
 
 | Name | Type | Description | Default |
 |---|---|---|---|
-| tile | numpy.ma.ndarray | data | None |
+| array | numpy.ma.ndarray | data | None |

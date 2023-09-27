@@ -4,13 +4,21 @@
 # Using this script:
 import numpy as np
 import matplotlib.cm as cm
+import cmocean
 
-def generate_maps() -> None:
-    x = np.linspace(0, 1, 256)
-    for name, colormap in cm.cmap_d.items():
-        cmap_vals = colormap(x)[:, :]
-        cmap_uint8 = (cmap_vals * 255).astype('uint8')
-        np.save(f'{name.lower()}.npy', cmap_uint8)
+x = np.linspace(0, 1, 256)
+for name, colormap in cm.cmap_d.items():
+    cmap_vals = colormap(x)[:, :]
+    cmap_uint8 = (cmap_vals * 255).astype('uint8')
+    np.save(f'{name.lower()}.npy', cmap_uint8)
+
+# cmap from cmocean (https://matplotlib.org/cmocean/)
+for name, colormap in cmocean.cm.cmap_d.items():
+    if name in cm.cmap_d.keys():
+        continue
+    cmap_vals = colormap(x)[:, :]
+    cmap_uint8 = (cmap_vals * 255).astype('uint8')
+    np.save(f'{name.lower()}.npy', cmap_uint8)
 
 Additional colormaps:
 - cfastie: http://publiclab.org/notes/cfastie/08-26-2014/new-ndvi-colormap

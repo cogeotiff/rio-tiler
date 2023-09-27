@@ -38,7 +38,7 @@ Create Future Tasks.
 ```python3
 def filter_tasks(
     tasks: Sequence[Tuple[Union[concurrent.futures._base.Future, Callable], Any]],
-    allowed_exceptions: Union[Tuple, NoneType] = None
+    allowed_exceptions: Optional[Tuple] = None
 ) -> Generator
 ```
 
@@ -67,13 +67,30 @@ def multi_arrays(
     reader: Callable[..., rio_tiler.models.ImageData],
     *args: Any,
     threads: int = 40,
-    allowed_exceptions: Union[Tuple, NoneType] = None,
+    allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
 
     
 Merge arrays returned from tasks.
+
+    
+### multi_points
+
+```python3
+def multi_points(
+    asset_list: Sequence,
+    reader: Callable[..., rio_tiler.models.PointData],
+    *args: Any,
+    threads: int = 40,
+    allowed_exceptions: Optional[Tuple] = None,
+    **kwargs: Any
+) -> rio_tiler.models.PointData
+```
+
+    
+Merge points returned from tasks.
 
     
 ### multi_values
@@ -84,7 +101,7 @@ def multi_values(
     reader: Callable,
     *args: Any,
     threads: int = 40,
-    allowed_exceptions: Union[Tuple, NoneType] = None,
+    allowed_exceptions: Optional[Tuple] = None,
     **kwargs: Any
 ) -> Dict
 ```

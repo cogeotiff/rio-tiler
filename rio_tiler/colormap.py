@@ -287,7 +287,7 @@ class ColorMaps:
             dict: colormap dictionary.
 
         """
-        cmap = self.data.get(name, None)
+        cmap = self.data.get(name.lower(), None)
         if cmap is None:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
 

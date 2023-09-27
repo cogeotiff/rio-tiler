@@ -4,234 +4,29 @@ rio_tiler.io.base: ABC class for rio-tiler readers.
 
 None
 
+## Variables
+
+```python3
+WGS84_CRS
+```
+
 ## Classes
-
-### AsyncBaseReader
-
-```python3
-class AsyncBaseReader(
-    input: Any,
-    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' identifier='WebMercatorQuad'>
-)
-```
-
-#### Ancestors (in MRO)
-
-* rio_tiler.io.base.SpatialMixin
-
-#### Instance variables
-
-```python3
-geographic_bounds
-```
-
-return bounds in WGS84.
-
-#### Methods
-
-    
-#### feature
-
-```python3
-def feature(
-    self,
-    shape: Dict,
-    **kwargs: Any
-) -> Coroutine[Any, Any, rio_tiler.models.ImageData]
-```
-
-    
-Read a Dataset for a GeoJSON feature.
-
-**Parameters:**
-
-| Name | Type | Description | Default |
-|---|---|---|---|
-| shape | dict | Valid GeoJSON feature. | None |
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| rio_tiler.models.ImageData | ImageData instance with data, mask and input spatial info. |
-
-    
-#### info
-
-```python3
-def info(
-    self
-) -> Coroutine[Any, Any, rio_tiler.models.Info]
-```
-
-    
-Return Dataset's info.
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| rio_tile.models.Info | Dataset info. |
-
-    
-#### part
-
-```python3
-def part(
-    self,
-    bbox: Tuple[float, float, float, float],
-    **kwargs: Any
-) -> Coroutine[Any, Any, rio_tiler.models.ImageData]
-```
-
-    
-Read a Part of a Dataset.
-
-**Parameters:**
-
-| Name | Type | Description | Default |
-|---|---|---|---|
-| bbox | tuple | Output bounds (left, bottom, right, top) in target crs. | None |
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| rio_tiler.models.ImageData | ImageData instance with data, mask and input spatial info. |
-
-    
-#### point
-
-```python3
-def point(
-    self,
-    lon: float,
-    lat: float,
-    **kwargs: Any
-) -> Coroutine[Any, Any, List]
-```
-
-    
-Read a value from a Dataset.
-
-**Parameters:**
-
-| Name | Type | Description | Default |
-|---|---|---|---|
-| lon | float | Longitude. | None |
-| lat | float | Latitude. | None |
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| list | Pixel value per bands/assets. |
-
-    
-#### preview
-
-```python3
-def preview(
-    self,
-    **kwargs: Any
-) -> Coroutine[Any, Any, rio_tiler.models.ImageData]
-```
-
-    
-Read a preview of a Dataset.
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| rio_tiler.models.ImageData | ImageData instance with data, mask and input spatial info. |
-
-    
-#### statistics
-
-```python3
-def statistics(
-    self,
-    **kwargs: Any
-) -> Coroutine[Any, Any, Dict[str, rio_tiler.models.BandStatistics]]
-```
-
-    
-Return bands statistics from a dataset.
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| Dict[str, rio_tiler.models.BandStatistics] | bands statistics. |
-
-    
-#### tile
-
-```python3
-def tile(
-    self,
-    tile_x: int,
-    tile_y: int,
-    tile_z: int,
-    **kwargs: Any
-) -> Coroutine[Any, Any, rio_tiler.models.ImageData]
-```
-
-    
-Read a Map tile from the Dataset.
-
-**Parameters:**
-
-| Name | Type | Description | Default |
-|---|---|---|---|
-| tile_x | int | Tile's horizontal index. | None |
-| tile_y | int | Tile's vertical index. | None |
-| tile_z | int | Tile's zoom level index. | None |
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| rio_tiler.models.ImageData | ImageData instance with data, mask and tile spatial info. |
-
-    
-#### tile_exists
-
-```python3
-def tile_exists(
-    self,
-    tile_x: int,
-    tile_y: int,
-    tile_z: int
-) -> bool
-```
-
-    
-Check if a tile intersects the dataset bounds.
-
-**Parameters:**
-
-| Name | Type | Description | Default |
-|---|---|---|---|
-| tile_x | int | Tile's horizontal index. | None |
-| tile_y | int | Tile's vertical index. | None |
-| tile_z | int | Tile's zoom level index. | None |
-
-**Returns:**
-
-| Type | Description |
-|---|---|
-| bool | True if the tile intersects the dataset bounds. |
 
 ### BaseReader
 
 ```python3
 class BaseReader(
     input: Any,
-    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' identifier='WebMercatorQuad'>
+    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' id='WebMercatorQuad' crs='http://www.opengis.net/def/crs/EPSG/0/3857>
 )
 ```
+
+#### Attributes
+
+| Name | Type | Description | Default |
+|---|---|---|---|
+| input | any | Reader's input. | None |
+| tms | morecantile.TileMatrixSet | TileMatrixSet grid definition. Defaults to `WebMercatorQuad`. | `WebMercatorQuad` |
 
 #### Ancestors (in MRO)
 
@@ -239,7 +34,8 @@ class BaseReader(
 
 #### Descendants
 
-* rio_tiler.io.cogeo.COGReader
+* rio_tiler.io.rasterio.Reader
+* rio_tiler.io.xarray.XarrayReader
 
 #### Instance variables
 
@@ -247,7 +43,7 @@ class BaseReader(
 geographic_bounds
 ```
 
-return bounds in WGS84.
+Return dataset bounds in geographic_crs.
 
 #### Methods
 
@@ -257,8 +53,7 @@ return bounds in WGS84.
 ```python3
 def feature(
     self,
-    shape: Dict,
-    **kwargs: Any
+    shape: Dict
 ) -> rio_tiler.models.ImageData
 ```
 
@@ -301,8 +96,7 @@ Return Dataset's info.
 ```python3
 def part(
     self,
-    bbox: Tuple[float, float, float, float],
-    **kwargs: Any
+    bbox: Tuple[float, float, float, float]
 ) -> rio_tiler.models.ImageData
 ```
 
@@ -328,9 +122,8 @@ Read a Part of a Dataset.
 def point(
     self,
     lon: float,
-    lat: float,
-    **kwargs: Any
-) -> List
+    lat: float
+) -> rio_tiler.models.PointData
 ```
 
     
@@ -347,15 +140,14 @@ Read a value from a Dataset.
 
 | Type | Description |
 |---|---|
-| list | Pixel value per bands/assets. |
+| rio_tiler.models.PointData | PointData instance with data, mask and spatial info. |
 
     
 #### preview
 
 ```python3
 def preview(
-    self,
-    **kwargs: Any
+    self
 ) -> rio_tiler.models.ImageData
 ```
 
@@ -373,8 +165,7 @@ Read a preview of a Dataset.
 
 ```python3
 def statistics(
-    self,
-    **kwargs: Any
+    self
 ) -> Dict[str, rio_tiler.models.BandStatistics]
 ```
 
@@ -395,8 +186,7 @@ def tile(
     self,
     tile_x: int,
     tile_y: int,
-    tile_z: int,
-    **kwargs: Any
+    tile_z: int
 ) -> rio_tiler.models.ImageData
 ```
 
@@ -451,7 +241,9 @@ Check if a tile intersects the dataset bounds.
 ```python3
 class MultiBandReader(
     input: Any,
-    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' identifier='WebMercatorQuad'>,
+    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' id='WebMercatorQuad' crs='http://www.opengis.net/def/crs/EPSG/0/3857>,
+    minzoom: int = None,
+    maxzoom: int = None,
     reader_options: Dict = NOTHING
 )
 ```
@@ -462,9 +254,9 @@ class MultiBandReader(
 |---|---|---|---|
 | input | any | input data. | None |
 | tms | morecantile.TileMatrixSet | TileMatrixSet grid definition. Defaults to `WebMercatorQuad`. | `WebMercatorQuad` |
+| minzoom | int | Set dataset's minzoom. | None |
+| maxzoom | int | Set dataset's maxzoom. | None |
 | reader_options | dict, option | options to forward to the reader. Defaults to `{}`. | `{}` |
-| reader | rio_tiler.io.BaseReader | reader. **Not in __init__**. | None |
-| bands | sequence | Band list. **Not in __init__**. | None |
 
 #### Ancestors (in MRO)
 
@@ -476,7 +268,7 @@ class MultiBandReader(
 geographic_bounds
 ```
 
-return bounds in WGS84.
+Return dataset bounds in geographic_crs.
 
 #### Methods
 
@@ -488,7 +280,7 @@ def feature(
     self,
     shape: Dict,
     bands: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
+    expression: Optional[str] = None,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -559,7 +351,7 @@ def part(
     self,
     bbox: Tuple[float, float, float, float],
     bands: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
+    expression: Optional[str] = None,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -591,9 +383,9 @@ def point(
     lon: float,
     lat: float,
     bands: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
+    expression: Optional[str] = None,
     **kwargs: Any
-) -> List
+) -> rio_tiler.models.PointData
 ```
 
     
@@ -613,7 +405,7 @@ Read a pixel values from multiple bands.
 
 | Type | Description |
 |---|---|
-| list | Pixel value per bands. |
+| None | PointData |
 
     
 #### preview
@@ -622,7 +414,7 @@ Read a pixel values from multiple bands.
 def preview(
     self,
     bands: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
+    expression: Optional[str] = None,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -651,11 +443,11 @@ Read and merge previews from multiple bands.
 def statistics(
     self,
     bands: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
+    expression: Optional[str] = None,
     categorical: bool = False,
-    categories: Union[List[float], NoneType] = None,
-    percentiles: List[int] = [2, 98],
-    hist_options: Union[Dict, NoneType] = None,
+    categories: Optional[List[float]] = None,
+    percentiles: Optional[List[int]] = None,
+    hist_options: Optional[Dict] = None,
     max_size: int = 1024,
     **kwargs: Any
 ) -> Dict[str, rio_tiler.models.BandStatistics]
@@ -693,7 +485,7 @@ def tile(
     tile_y: int,
     tile_z: int,
     bands: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
+    expression: Optional[str] = None,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -752,7 +544,9 @@ Check if a tile intersects the dataset bounds.
 ```python3
 class MultiBaseReader(
     input: Any,
-    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' identifier='WebMercatorQuad'>,
+    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' id='WebMercatorQuad' crs='http://www.opengis.net/def/crs/EPSG/0/3857>,
+    minzoom: int = None,
+    maxzoom: int = None,
     reader_options: Dict = NOTHING
 )
 ```
@@ -763,9 +557,9 @@ class MultiBaseReader(
 |---|---|---|---|
 | input | any | input data. | None |
 | tms | morecantile.TileMatrixSet | TileMatrixSet grid definition. Defaults to `WebMercatorQuad`. | `WebMercatorQuad` |
+| minzoom | int | Set dataset's minzoom. | None |
+| maxzoom | int | Set dataset's maxzoom. | None |
 | reader_options | dict, option | options to forward to the reader. Defaults to `{}`. | `{}` |
-| reader | rio_tiler.io.BaseReader | reader. **Not in __init__**. | None |
-| assets | sequence | Asset list. **Not in __init__**. | None |
 
 #### Ancestors (in MRO)
 
@@ -781,7 +575,7 @@ class MultiBaseReader(
 geographic_bounds
 ```
 
-return bounds in WGS84.
+Return dataset bounds in geographic_crs.
 
 #### Methods
 
@@ -793,9 +587,9 @@ def feature(
     self,
     shape: Dict,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -811,7 +605,6 @@ Read and merge parts defined by geojson feature from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.feature` method. | None |
 
 **Returns:**
@@ -853,13 +646,12 @@ Return metadata from multiple assets.
 def merged_statistics(
     self,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
     categorical: bool = False,
-    categories: Union[List[float], NoneType] = None,
-    percentiles: List[int] = [2, 98],
-    hist_options: Union[Dict, NoneType] = None,
+    categories: Optional[List[float]] = None,
+    percentiles: Optional[List[int]] = None,
+    hist_options: Optional[Dict] = None,
     max_size: int = 1024,
     **kwargs: Any
 ) -> Dict[str, rio_tiler.models.BandStatistics]
@@ -875,7 +667,6 @@ Return array statistics for multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | categorical | bool | treat input data as categorical data. Defaults to False. | False |
 | categories | list of numbers | list of categories to return value for. | None |
 | percentiles | list of numbers | list of percentile values to calculate. Defaults to `[2, 98]`. | `[2, 98]` |
@@ -895,7 +686,8 @@ Return array statistics for multiple assets.
 ```python3
 def parse_expression(
     self,
-    expression: str
+    expression: str,
+    asset_as_band: bool = False
 ) -> Tuple
 ```
 
@@ -910,9 +702,9 @@ def part(
     self,
     bbox: Tuple[float, float, float, float],
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -928,7 +720,6 @@ Read and merge parts from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.part` method. | None |
 
 **Returns:**
@@ -946,11 +737,11 @@ def point(
     lon: float,
     lat: float,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
-) -> List
+) -> rio_tiler.models.PointData
 ```
 
     
@@ -965,14 +756,13 @@ Read pixel value from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.point` method. | None |
 
 **Returns:**
 
 | Type | Description |
 |---|---|
-| list | Pixel values per assets. |
+| None | PointData |
 
     
 #### preview
@@ -981,9 +771,9 @@ Read pixel value from multiple assets.
 def preview(
     self,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -998,7 +788,6 @@ Read and merge previews from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.preview` method. | None |
 
 **Returns:**
@@ -1014,8 +803,8 @@ Read and merge previews from multiple assets.
 def statistics(
     self,
     assets: Union[Sequence[str], str] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_expression: Optional[Dict[str, str]] = None,
     **kwargs: Any
 ) -> Dict[str, Dict[str, rio_tiler.models.BandStatistics]]
 ```
@@ -1048,9 +837,9 @@ def tile(
     tile_y: int,
     tile_z: int,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -1068,7 +857,6 @@ Read and merge Wep Map tiles from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.tile` method. | None |
 
 **Returns:**
@@ -1110,7 +898,7 @@ Check if a tile intersects the dataset bounds.
 
 ```python3
 class SpatialMixin(
-    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' identifier='WebMercatorQuad'>
+    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' id='WebMercatorQuad' crs='http://www.opengis.net/def/crs/EPSG/0/3857>
 )
 ```
 
@@ -1119,16 +907,10 @@ class SpatialMixin(
 | Name | Type | Description | Default |
 |---|---|---|---|
 | tms | morecantile.TileMatrixSet | TileMatrixSet grid definition. Defaults to `WebMercatorQuad`. | `WebMercatorQuad` |
-| minzoom | int | Dataset Min Zoom level. **Not in __init__**. | None |
-| maxzoom | int | Dataset Max Zoom level. **Not in __init__**. | None |
-| bounds | tuple | Dataset bounds (left, bottom, right, top). **Not in __init__**. | None |
-| crs | rasterio.crs.CRS | Dataset crs. **Not in __init__**. | None |
-| geographic_crs | rasterio.crs.CRS | CRS to use as geographic coordinate system. Defaults to WGS84. **Not in __init__**. | WGS84. **Not in __init__** |
 
 #### Descendants
 
 * rio_tiler.io.base.BaseReader
-* rio_tiler.io.base.AsyncBaseReader
 * rio_tiler.io.base.MultiBaseReader
 * rio_tiler.io.base.MultiBandReader
 
@@ -1138,7 +920,7 @@ class SpatialMixin(
 geographic_bounds
 ```
 
-return bounds in WGS84.
+Return dataset bounds in geographic_crs.
 
 #### Methods
 
