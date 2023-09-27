@@ -1,5 +1,5 @@
 
-# 6.2.0 (TBD)
+# 6.2.0 (2023-09-27)
 
 * allow area-weighted statistics by adding `coverage` option in `rio_tiler.utils.get_array_statistics`
 
