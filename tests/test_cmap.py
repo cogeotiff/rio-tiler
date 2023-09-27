@@ -14,11 +14,13 @@ from rio_tiler.errors import (
     InvalidFormat,
 )
 
+colormap_number = 211
+
 
 def test_get_cmaplist(monkeypatch):
     """Should work as expected return all rio-tiler colormaps."""
     monkeypatch.delenv("COLORMAP_DIRECTORY", raising=False)
-    assert len(DEFAULT_CMAPS_FILES) == 167
+    assert len(DEFAULT_CMAPS_FILES) == colormap_number
 
 
 def test_cmapObject(monkeypatch):
@@ -26,25 +28,25 @@ def test_cmapObject(monkeypatch):
     monkeypatch.delenv("COLORMAP_DIRECTORY", raising=False)
 
     cmap = colormap.cmap
-    assert len(cmap.list()) == 167
+    assert len(cmap.list()) == colormap_number
 
     with pytest.raises(InvalidColorMapName):
         cmap.get("something")
 
     # `register()` returns a new ColorMaps Objects without modifying the original
     cmap.register({"empty": colormap.EMPTY_COLORMAP})
-    assert len(cmap.list()) == 167
-    assert len(DEFAULT_CMAPS_FILES) == 167
+    assert len(cmap.list()) == colormap_number
+    assert len(DEFAULT_CMAPS_FILES) == colormap_number
 
     # check new cmap is registered and it didn't affect the original Dict
     new_cmap = cmap.register({"empty": colormap.EMPTY_COLORMAP})
-    assert len(DEFAULT_CMAPS_FILES) == 167
-    assert len(cmap.list()) == 167
-    assert len(new_cmap.list()) == 168
+    assert len(DEFAULT_CMAPS_FILES) == colormap_number
+    assert len(cmap.list()) == colormap_number
+    assert len(new_cmap.list()) == colormap_number + 1
 
     # register multiple cmap
     new_cmap = cmap.register({"empty": colormap.EMPTY_COLORMAP, "empty2": "fake.npy"})
-    assert len(new_cmap.list()) == 169
+    assert len(new_cmap.list()) == colormap_number + 2
 
     with pytest.raises(ColorMapAlreadyRegistered):
         new_cmap.register({"empty": colormap.EMPTY_COLORMAP})
