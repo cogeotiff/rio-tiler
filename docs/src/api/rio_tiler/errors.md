@@ -45,6 +45,44 @@ Exception.with_traceback(tb) --
 
 set self.__traceback__ to tb and return self.
 
+### AssetAsBandError
+
+```python3
+class AssetAsBandError(
+    /,
+    *args,
+    **kwargs
+)
+```
+
+#### Ancestors (in MRO)
+
+* rio_tiler.errors.RioTilerError
+* builtins.Exception
+* builtins.BaseException
+
+#### Class variables
+
+```python3
+args
+```
+
+#### Methods
+
+    
+#### with_traceback
+
+```python3
+def with_traceback(
+    ...
+)
+```
+
+    
+Exception.with_traceback(tb) --
+
+set self.__traceback__ to tb and return self.
+
 ### ColorMapAlreadyRegistered
 
 ```python3
@@ -160,44 +198,6 @@ Exception.with_traceback(tb) --
 
 set self.__traceback__ to tb and return self.
 
-### IncorrectTileBuffer
-
-```python3
-class IncorrectTileBuffer(
-    /,
-    *args,
-    **kwargs
-)
-```
-
-#### Ancestors (in MRO)
-
-* rio_tiler.errors.RioTilerError
-* builtins.Exception
-* builtins.BaseException
-
-#### Class variables
-
-```python3
-args
-```
-
-#### Methods
-
-    
-#### with_traceback
-
-```python3
-def with_traceback(
-    ...
-)
-```
-
-    
-Exception.with_traceback(tb) --
-
-set self.__traceback__ to tb and return self.
-
 ### InvalidAssetName
 
 ```python3
@@ -240,6 +240,44 @@ set self.__traceback__ to tb and return self.
 
 ```python3
 class InvalidBandName(
+    /,
+    *args,
+    **kwargs
+)
+```
+
+#### Ancestors (in MRO)
+
+* rio_tiler.errors.RioTilerError
+* builtins.Exception
+* builtins.BaseException
+
+#### Class variables
+
+```python3
+args
+```
+
+#### Methods
+
+    
+#### with_traceback
+
+```python3
+def with_traceback(
+    ...
+)
+```
+
+    
+Exception.with_traceback(tb) --
+
+set self.__traceback__ to tb and return self.
+
+### InvalidBufferSize
+
+```python3
+class InvalidBufferSize(
     /,
     *args,
     **kwargs
@@ -389,6 +427,44 @@ Exception.with_traceback(tb) --
 
 set self.__traceback__ to tb and return self.
 
+### InvalidExpression
+
+```python3
+class InvalidExpression(
+    /,
+    *args,
+    **kwargs
+)
+```
+
+#### Ancestors (in MRO)
+
+* rio_tiler.errors.RioTilerError
+* builtins.Exception
+* builtins.BaseException
+
+#### Class variables
+
+```python3
+args
+```
+
+#### Methods
+
+    
+#### with_traceback
+
+```python3
+def with_traceback(
+    ...
+)
+```
+
+    
+Exception.with_traceback(tb) --
+
+set self.__traceback__ to tb and return self.
+
 ### InvalidFormat
 
 ```python3
@@ -431,6 +507,44 @@ set self.__traceback__ to tb and return self.
 
 ```python3
 class InvalidMosaicMethod(
+    /,
+    *args,
+    **kwargs
+)
+```
+
+#### Ancestors (in MRO)
+
+* rio_tiler.errors.RioTilerError
+* builtins.Exception
+* builtins.BaseException
+
+#### Class variables
+
+```python3
+args
+```
+
+#### Methods
+
+    
+#### with_traceback
+
+```python3
+def with_traceback(
+    ...
+)
+```
+
+    
+Exception.with_traceback(tb) --
+
+set self.__traceback__ to tb and return self.
+
+### InvalidPointDataError
+
+```python3
+class InvalidPointDataError(
     /,
     *args,
     **kwargs
@@ -637,17 +751,20 @@ class RioTilerError(
 
 * rio_tiler.errors.InvalidFormat
 * rio_tiler.errors.TileOutsideBounds
-* rio_tiler.errors.IncorrectTileBuffer
+* rio_tiler.errors.InvalidBufferSize
 * rio_tiler.errors.PointOutsideBounds
 * rio_tiler.errors.InvalidBandName
 * rio_tiler.errors.InvalidColorMapName
 * rio_tiler.errors.InvalidAssetName
+* rio_tiler.errors.InvalidExpression
 * rio_tiler.errors.MissingAssets
 * rio_tiler.errors.MissingBands
 * rio_tiler.errors.InvalidMosaicMethod
 * rio_tiler.errors.ColorMapAlreadyRegistered
 * rio_tiler.errors.EmptyMosaicError
 * rio_tiler.errors.InvalidColorFormat
+* rio_tiler.errors.AssetAsBandError
+* rio_tiler.errors.InvalidPointDataError
 
 #### Class variables
 

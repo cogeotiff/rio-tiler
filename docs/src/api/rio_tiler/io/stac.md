@@ -10,7 +10,26 @@ None
 DEFAULT_VALID_TYPE
 ```
 
+```python3
+WGS84_CRS
+```
+
 ## Functions
+
+    
+### aws_get_object
+
+```python3
+def aws_get_object(
+    bucket: str,
+    key: str,
+    request_pays: bool = False,
+    client: 'boto3_session.client' = None
+) -> bytes
+```
+
+    
+AWS s3 get object content.
 
     
 ### fetch
@@ -48,17 +67,18 @@ A LRU cache is set on top of this function.
 class STACReader(
     input: str,
     item: Union[NoneType, Dict, pystac.item.Item] = None,
-    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' identifier='WebMercatorQuad'>,
-    minzoom: int = None,
-    maxzoom: int = None,
+    tms: morecantile.models.TileMatrixSet = <TileMatrixSet title='Google Maps Compatible for the World' id='WebMercatorQuad' crs='http://www.opengis.net/def/crs/EPSG/0/3857>,
+    minzoom: int = NOTHING,
+    maxzoom: int = NOTHING,
     geographic_crs: rasterio.crs.CRS = CRS.from_epsg(4326),
-    include_assets: Union[Set[str], NoneType] = None,
-    exclude_assets: Union[Set[str], NoneType] = None,
-    include_asset_types: Set[str] = {'image/x.geotiff', 'image/tiff; profile=cloud-optimized; application=geotiff', 'image/jp2', 'application/x-hdf', 'image/tiff', 'image/tiff; application=geotiff; profile=cloud-optimized', 'application/x-hdf5', 'image/vnd.stac.geotiff; cloud-optimized=true', 'image/tiff; application=geotiff'},
-    exclude_asset_types: Union[Set[str], NoneType] = None,
-    reader: Type[rio_tiler.io.base.BaseReader] = <class 'rio_tiler.io.cogeo.COGReader'>,
+    include_assets: Optional[Set[str]] = None,
+    exclude_assets: Optional[Set[str]] = None,
+    include_asset_types: Set[str] = {'image/tiff; profile=cloud-optimized; application=geotiff', 'image/tiff; application=geotiff', 'image/x.geotiff', 'image/tiff; application=geotiff; profile=cloud-optimized', 'image/vnd.stac.geotiff; cloud-optimized=true', 'application/x-hdf', 'image/jp2', 'application/x-hdf5', 'image/tiff'},
+    exclude_asset_types: Optional[Set[str]] = None,
+    reader: Type[rio_tiler.io.base.BaseReader] = <class 'rio_tiler.io.rasterio.Reader'>,
     reader_options: Dict = NOTHING,
-    fetch_options: Dict = NOTHING
+    fetch_options: Dict = NOTHING,
+    ctx: Any = <class 'rasterio.env.Env'>
 )
 ```
 
@@ -68,14 +88,15 @@ class STACReader(
 |---|---|---|---|
 | input | str | STAC Item path, URL or S3 URL. | None |
 | item | dict or pystac.Item, STAC | Stac Item. | None |
+| tms | morecantile.TileMatrixSet | TileMatrixSet grid definition. Defaults to `WebMercatorQuad`. | `WebMercatorQuad` |
 | minzoom | int | Set minzoom for the tiles. | None |
 | maxzoom | int | Set maxzoom for the tiles. | None |
 | geographic_crs | rasterio.crs.CRS | CRS to use as geographic coordinate system. Defaults to WGS84. | WGS84 |
-| include | set of string | Only Include specific assets. | None |
-| exclude | set of string | Exclude specific assets. | None |
+| include_assets | set of string | Only Include specific assets. | None |
+| exclude_assets | set of string | Exclude specific assets. | None |
 | include_asset_types | set of string | Only include some assets base on their type. | None |
 | exclude_asset_types | set of string | Exclude some assets base on their type. | None |
-| reader | rio_tiler.io.BaseReader | rio-tiler Reader. Defaults to `rio_tiler.io.COGReader`. | `rio_tiler.io.COGReader` |
+| reader | rio_tiler.io.BaseReader | rio-tiler Reader. Defaults to `rio_tiler.io.Reader`. | `rio_tiler.io.Reader` |
 | reader_options | dict | Additional option to forward to the Reader. Defaults to `{}`. | `{}` |
 | fetch_options | dict | Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`. | `{}` |
 
@@ -90,7 +111,7 @@ class STACReader(
 geographic_bounds
 ```
 
-return bounds in WGS84.
+Return dataset bounds in geographic_crs.
 
 #### Methods
 
@@ -102,9 +123,9 @@ def feature(
     self,
     shape: Dict,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -120,7 +141,6 @@ Read and merge parts defined by geojson feature from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.feature` method. | None |
 
 **Returns:**
@@ -162,13 +182,12 @@ Return metadata from multiple assets.
 def merged_statistics(
     self,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
     categorical: bool = False,
-    categories: Union[List[float], NoneType] = None,
-    percentiles: List[int] = [2, 98],
-    hist_options: Union[Dict, NoneType] = None,
+    categories: Optional[List[float]] = None,
+    percentiles: Optional[List[int]] = None,
+    hist_options: Optional[Dict] = None,
     max_size: int = 1024,
     **kwargs: Any
 ) -> Dict[str, rio_tiler.models.BandStatistics]
@@ -184,7 +203,6 @@ Return array statistics for multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | categorical | bool | treat input data as categorical data. Defaults to False. | False |
 | categories | list of numbers | list of categories to return value for. | None |
 | percentiles | list of numbers | list of percentile values to calculate. Defaults to `[2, 98]`. | `[2, 98]` |
@@ -204,7 +222,8 @@ Return array statistics for multiple assets.
 ```python3
 def parse_expression(
     self,
-    expression: str
+    expression: str,
+    asset_as_band: bool = False
 ) -> Tuple
 ```
 
@@ -219,9 +238,9 @@ def part(
     self,
     bbox: Tuple[float, float, float, float],
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -237,7 +256,6 @@ Read and merge parts from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.part` method. | None |
 
 **Returns:**
@@ -255,11 +273,11 @@ def point(
     lon: float,
     lat: float,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
-) -> List
+) -> rio_tiler.models.PointData
 ```
 
     
@@ -274,14 +292,13 @@ Read pixel value from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.point` method. | None |
 
 **Returns:**
 
 | Type | Description |
 |---|---|
-| list | Pixel values per assets. |
+| None | PointData |
 
     
 #### preview
@@ -290,9 +307,9 @@ Read pixel value from multiple assets.
 def preview(
     self,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -307,7 +324,6 @@ Read and merge previews from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.preview` method. | None |
 
 **Returns:**
@@ -323,8 +339,8 @@ Read and merge previews from multiple assets.
 def statistics(
     self,
     assets: Union[Sequence[str], str] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_expression: Optional[Dict[str, str]] = None,
     **kwargs: Any
 ) -> Dict[str, Dict[str, rio_tiler.models.BandStatistics]]
 ```
@@ -357,9 +373,9 @@ def tile(
     tile_y: int,
     tile_z: int,
     assets: Union[Sequence[str], str] = None,
-    expression: Union[str, NoneType] = None,
-    asset_indexes: Union[Dict[str, Union[Sequence[int], int]], NoneType] = None,
-    asset_expression: Union[Dict[str, str], NoneType] = None,
+    expression: Optional[str] = None,
+    asset_indexes: Optional[Dict[str, Union[Sequence[int], int]]] = None,
+    asset_as_band: bool = False,
     **kwargs: Any
 ) -> rio_tiler.models.ImageData
 ```
@@ -377,7 +393,6 @@ Read and merge Wep Map tiles from multiple assets.
 | assets | sequence of str or str | assets to fetch info from. | None |
 | expression | str | rio-tiler expression for the asset list (e.g. asset1/asset2+asset3). | None |
 | asset_indexes | dict | Band indexes for each asset (e.g {"asset1": 1, "asset2": (1, 2,)}). | None |
-| asset_expression | dict | rio-tiler expression for each asset (e.g. {"asset1": "b1/b2+b3", "asset2": ...}). | None |
 | kwargs | optional | Options to forward to the `self.reader.tile` method. | None |
 
 **Returns:**

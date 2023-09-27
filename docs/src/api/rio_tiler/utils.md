@@ -4,22 +4,13 @@ rio_tiler.utils: utility functions.
 
 None
 
-## Functions
-
-    
-### aws_get_object
+## Variables
 
 ```python3
-def aws_get_object(
-    bucket: str,
-    key: str,
-    request_pays: bool = False,
-    client: <function Session.client at 0x15074af70> = None
-) -> bytes
+WEB_MERCATOR_CRS
 ```
 
-    
-AWS s3 get object content.
+## Functions
 
     
 ### create_cutline
@@ -58,8 +49,9 @@ Ref: https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOption
 def get_array_statistics(
     data: numpy.ma.core.MaskedArray,
     categorical: bool = False,
-    categories: Union[List[float], NoneType] = None,
-    percentiles: List[int] = [2, 98],
+    categories: Optional[List[float]] = None,
+    percentiles: Optional[List[int]] = None,
+    coverage: Optional[numpy.ndarray[Any, numpy.dtype[numpy.floating]]] = None,
     **kwargs: Any
 ) -> List[Dict[Any, Any]]
 ```
@@ -72,30 +64,17 @@ Calculate per band array statistics.
 | Name | Type | Description | Default |
 |---|---|---|---|
 | data | numpy.ma.MaskedArray | input masked array data to get the statistics from. | None |
-| categorical | bool | treat input data as categorical data. Defaults to False. | False |
+| categorical | bool | treat input data as categorical data. Defaults to `False`. | `False` |
 | categories | list of numbers | list of categories to return value for. | None |
 | percentiles | list of numbers | list of percentile values to calculate. Defaults to `[2, 98]`. | `[2, 98]` |
+| coverage | numpy.array | Data coverage fraction. | None |
 | kwargs | optional | options to forward to `numpy.histogram` function (only applies for non-categorical data). | None |
 
 **Returns:**
 
 | Type | Description |
 |---|---|
-| None | list of dict |
-
-    
-### get_bands_names
-
-```python3
-def get_bands_names(
-    indexes: Union[Sequence[int], NoneType] = None,
-    expression: Union[str, NoneType] = None,
-    count: Union[int, NoneType] = None
-) -> List[str]
-```
-
-    
-Define bands names based on expression, indexes or band count.
+| list | list of array statistics (dict) |
 
     
 ### get_overview_level
@@ -138,8 +117,8 @@ Freely adapted from https://github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e9447
 def get_vrt_transform(
     src_dst: Union[rasterio.io.DatasetReader, rasterio.io.DatasetWriter, rasterio.vrt.WarpedVRT],
     bounds: Tuple[float, float, float, float],
-    height: Union[int, NoneType] = None,
-    width: Union[int, NoneType] = None,
+    height: Optional[int] = None,
+    width: Optional[int] = None,
     dst_crs: rasterio.crs.CRS = CRS.from_epsg(3857),
     window_precision: int = 6
 ) -> Tuple[affine.Affine, int, int]
@@ -249,6 +228,18 @@ def non_alpha_indexes(
 Return indexes of non-alpha bands.
 
     
+### normalize_bounds
+
+```python3
+def normalize_bounds(
+    bounds: Tuple[float, float, float, float]
+) -> Tuple[float, float, float, float]
+```
+
+    
+Return BBox in correct minx, miny, maxx, maxy order.
+
+    
 ### pansharpening_brovey
 
 ```python3
@@ -276,7 +267,7 @@ Original code from https://github.com/mapbox/rio-pansharpen
 ```python3
 def render(
     data: numpy.ndarray,
-    mask: Union[numpy.ndarray, NoneType] = None,
+    mask: Optional[numpy.ndarray] = None,
     img_format: str = 'PNG',
     colormap: Union[Dict[int, Tuple[int, int, int, int]], Sequence[Tuple[Tuple[Union[float, int], Union[float, int]], Tuple[int, int, int, int]]], NoneType] = None,
     **creation_options: Any
@@ -306,7 +297,7 @@ def resize_array(
     data: numpy.ndarray,
     height: int,
     width: int,
-    resampling_method: rasterio.enums.Resampling = 'nearest'
+    resampling_method: Literal['nearest', 'bilinear', 'cubic', 'cubic_spline', 'lanczos', 'average', 'mode', 'gauss', 'rms'] = 'nearest'
 ) -> numpy.ndarray
 ```
 

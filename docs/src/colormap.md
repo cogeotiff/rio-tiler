@@ -133,6 +133,7 @@ data, mask = apply_cmap(data, cmap)
 ![](img/cyclic.png)
 ![](img/qualitative.png)
 ![](img/miscellaneous.png)
+![](img/colormaps_for_oceanography.png)
 
 ### References
 

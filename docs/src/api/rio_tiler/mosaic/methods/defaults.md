@@ -19,19 +19,33 @@ class FirstMethod(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return data.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -41,12 +55,12 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile
+    array: Optional[numpy.ma.core.MaskedArray]
 )
 ```
 
     
-Add data to tile.
+Add data to the mosaic array.
 
 ### HighestMethod
 
@@ -61,19 +75,33 @@ class HighestMethod(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return data.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -83,17 +111,17 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile
+    array: Optional[numpy.ma.core.MaskedArray]
 )
 ```
 
     
-Add data to tile.
+Add data to the mosaic array.
 
-### LastBandHigh
+### LastBandHighMethod
 
 ```python3
-class LastBandHigh(
+class LastBandHighMethod(
     
 )
 ```
@@ -103,19 +131,33 @@ class LastBandHigh(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return data.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -125,17 +167,17 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile: numpy.ma.core.MaskedArray
+    array: Optional[numpy.ma.core.MaskedArray]
 )
 ```
 
     
-Add data to tile.
+Add data to the mosaic array.
 
-### LastBandLow
+### LastBandLowMethod
 
 ```python3
-class LastBandLow(
+class LastBandLowMethod(
     
 )
 ```
@@ -145,19 +187,33 @@ class LastBandLow(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return data.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -167,12 +223,12 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile: numpy.ma.core.MaskedArray
+    array: Optional[numpy.ma.core.MaskedArray]
 )
 ```
 
     
-Add data to tile.
+Add data to the mosaic array.
 
 ### LowestMethod
 
@@ -187,19 +243,33 @@ class LowestMethod(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return data.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -209,18 +279,18 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile
+    array: Optional[numpy.ma.core.MaskedArray]
 )
 ```
 
     
-Add data to tile.
+Add data to the mosaic array.
 
 ### MeanMethod
 
 ```python3
 class MeanMethod(
-    enforce_data_type=True
+    enforce_data_type: bool = True
 )
 ```
 
@@ -229,19 +299,37 @@ class MeanMethod(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+enforce_data_type
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return Mean of the data stack.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -251,18 +339,18 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile
+    array: numpy.ma.core.MaskedArray
 )
 ```
 
     
-Add data to tile.
+Add array to the stack.
 
 ### MedianMethod
 
 ```python3
 class MedianMethod(
-    enforce_data_type=True
+    enforce_data_type: bool = True
 )
 ```
 
@@ -271,19 +359,37 @@ class MedianMethod(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+enforce_data_type
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return Median of the data stack.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -293,18 +399,18 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile
+    array: Optional[numpy.ma.core.MaskedArray]
 )
 ```
 
     
-Create a stack of tile.
+Add array to the stack.
 
 ### StdevMethod
 
 ```python3
 class StdevMethod(
-    enforce_data_type=True
+    
 )
 ```
 
@@ -313,19 +419,33 @@ class StdevMethod(
 * rio_tiler.mosaic.methods.base.MosaicMethodBase
 * abc.ABC
 
+#### Class variables
+
+```python3
+cutline_mask
+```
+
+```python3
+exit_when_filled
+```
+
+```python3
+mosaic
+```
+
 #### Instance variables
 
 ```python3
 data
 ```
 
-Return data and mask.
+Return STDDEV of the data stack.
 
 ```python3
 is_done
 ```
 
-Check if the tile filling is done.
+Check if the mosaic filling is done.
 
 #### Methods
 
@@ -335,9 +455,9 @@ Check if the tile filling is done.
 ```python3
 def feed(
     self,
-    tile
+    array: Optional[numpy.ma.core.MaskedArray]
 )
 ```
 
     
-Add data to tile.
+Add array to the stack.

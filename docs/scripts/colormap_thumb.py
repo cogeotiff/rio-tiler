@@ -21,7 +21,6 @@ cmaps = [
     (
         "Sequential",
         [
-            "Greys",
             "Purples",
             "Blues",
             "Greens",
@@ -118,6 +117,32 @@ cmaps = [
             "gist_ncar",
         ],
     ),
+    (
+        "Colormaps for oceanography",
+        [
+            "thermal",
+            "haline",
+            "solar",
+            "ice",
+            "oxy",
+            "deep",
+            "dense",
+            "algae",
+            "matter",
+            "turbid",
+            "speed",
+            "amp",
+            "tempo",
+            "rain",
+            "phase",
+            "topo",
+            "balance",
+            "delta",
+            "curl",
+            "diff",
+            "tarn",
+        ],
+    ),
 ]
 
 
@@ -170,6 +195,7 @@ def main():
         out_path = (
             Path(__file__).parents[0]
             / ".."
+            / "src"
             / "img"
             / (cmap_category.replace(" ", "_").lower() + ".png")
         )
