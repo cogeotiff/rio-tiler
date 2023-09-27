@@ -7,6 +7,7 @@ from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
 import numpy
 import rasterio
 from affine import Affine
+from numpy.typing import NDArray
 from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.dtypes import _gdal_typename
@@ -36,6 +37,7 @@ def get_array_statistics(
     categorical: bool = False,
     categories: Optional[List[float]] = None,
     percentiles: Optional[List[int]] = None,
+    coverage: Optional[NDArray[numpy.floating]] = None,
     **kwargs: Any,
 ) -> List[Dict[Any, Any]]:
     """Calculate per band array statistics.
@@ -45,6 +47,7 @@ def get_array_statistics(
         categorical (bool): treat input data as categorical data. Defaults to `False`.
         categories (list of numbers, optional): list of categories to return value for.
         percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+        coverage (numpy.array, optional): Data coverage fraction.
         kwargs (optional): options to forward to `numpy.histogram` function (only applies for non-categorical data).
 
     Returns:
@@ -121,21 +124,36 @@ def get_array_statistics(
         else:
             percentiles_values = (numpy.nan,) * len(percentiles_names)
 
+        if coverage is not None:
+            assert coverage.shape == (
+                data.shape[1],
+                data.shape[2],
+            ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
+
+            array = data[b] * coverage
+
+        else:
+            array = data[b]
+
+        count = array.count() if coverage is None else coverage.sum()
+        if valid_pixels:
+            majority = float(keys[counts.tolist().index(counts.max())].tolist())
+            minority = float(keys[counts.tolist().index(counts.min())].tolist())
+        else:
+            majority = numpy.nan
+            minority = numpy.nan
+
         output.append(
             {
                 "min": float(data[b].min()),
                 "max": float(data[b].max()),
-                "mean": float(data[b].mean()),
-                "count": float(data[b].count()),
-                "sum": float(data[b].sum()),
-                "std": float(data[b].std()),
-                "median": float(numpy.ma.median(data[b])),
-                "majority": float(keys[counts.tolist().index(counts.max())].tolist())
-                if valid_pixels
-                else numpy.nan,
-                "minority": float(keys[counts.tolist().index(counts.min())].tolist())
-                if valid_pixels
-                else numpy.nan,
+                "mean": float(array.mean()),
+                "count": float(count),
+                "sum": float(array.sum()),
+                "std": float(array.std()),
+                "median": float(numpy.ma.median(array)),
+                "majority": majority,
+                "minority": minority,
                 "unique": float(counts.size),
                 **dict(zip(percentiles_names, percentiles_values)),
                 "histogram": histogram,

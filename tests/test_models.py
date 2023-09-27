@@ -439,3 +439,20 @@ def test_apply_color_formula():
     assert img.count == 3
     assert img.width == 256
     assert img.height == 256
+
+
+def test_imagedata_coverage():
+    """test coverage array."""
+    im = ImageData(
+        numpy.ma.array((1, 2, 3, 4)).reshape((1, 2, 2)),
+        crs="epsg:4326",
+        bounds=(-180, -90, 180, 90),
+    )
+    poly = {
+        "type": "Polygon",
+        "coordinates": [
+            [[-90.0, -45.0], [90.0, -45.0], [90.0, 45.0], [-90.0, 45.0], [-90.0, -45.0]]
+        ],
+    }
+    coverage = im.get_coverage_array(poly)
+    assert numpy.unique(coverage).tolist() == [0.25]
