@@ -1,4 +1,8 @@
 
+# 6.2.1 (2023-09-28)
+
+* allow GeoJSON `Feature` in `ImageData.get_coverage_array` method
+
 # 6.2.0 (2023-09-27)
 
 * allow area-weighted statistics by adding `coverage` option in `rio_tiler.utils.get_array_statistics`

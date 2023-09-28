@@ -456,3 +456,6 @@ def test_imagedata_coverage():
     }
     coverage = im.get_coverage_array(poly)
     assert numpy.unique(coverage).tolist() == [0.25]
+
+    coverage = im.get_coverage_array({"type": "Feature", "geometry": poly})
+    assert numpy.unique(coverage).tolist() == [0.25]
