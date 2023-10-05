@@ -267,7 +267,9 @@ class STACReader(MultiBaseReader):
             )
         )
         if not self.assets:
-            raise MissingAssets("No valid asset found")
+            raise MissingAssets(
+                "No valid asset found. Asset's media types not supported"
+            )
 
     @minzoom.default
     def _minzoom(self):
@@ -288,7 +290,9 @@ class STACReader(MultiBaseReader):
 
         """
         if asset not in self.assets:
-            raise InvalidAssetName(f"{asset} is not valid")
+            raise InvalidAssetName(
+                f"'{asset}' is not valid, should be one of {self.assets}"
+            )
 
         asset_info = self.item.assets[asset]
         extras = asset_info.extra_fields

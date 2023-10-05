@@ -282,9 +282,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets = tuple(set(re.findall(_re, expression)))
         if not assets:
             raise InvalidExpression(
-                f"Could not find any valid assets in '{expression}' expression."
+                f"Could not find any valid assets in '{expression}' expression. Assets are: {self.assets}"
                 if asset_as_band
-                else f"Could not find any valid assets in '{expression}' expression, maybe try with `asset_as_band=True`."
+                else f"Could not find any valid assets in '{expression}' expression, maybe try with `asset_as_band=True`. Assets are: {self.assets}"
             )
 
         return assets
@@ -484,7 +484,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via expression or assets options."
+                "assets must be passed either via `expression` or `assets` options."
             )
 
         asset_indexes = asset_indexes or {}
@@ -512,7 +512,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
-                                "Can't use asset_as_band for multibands asset"
+                                "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
                     else:
@@ -562,7 +562,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via expression or assets options."
+                "assets must be passed either via `expression` or `assets` options."
             )
 
         asset_indexes = asset_indexes or {}
@@ -590,7 +590,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
-                                "Can't use asset_as_band for multibands asset"
+                                "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
                     else:
@@ -638,7 +638,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via expression or assets options."
+                "assets must be passed either via `expression` or `assets` options."
             )
 
         asset_indexes = asset_indexes or {}
@@ -666,7 +666,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
-                                "Can't use asset_as_band for multibands asset"
+                                "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
                     else:
@@ -718,7 +718,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via expression or assets options."
+                "assets must be passed either via `expression` or `assets` options."
             )
 
         asset_indexes = asset_indexes or {}
@@ -740,7 +740,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
-                                "Can't use asset_as_band for multibands asset"
+                                "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
                     else:
@@ -790,7 +790,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via expression or assets options."
+                "assets must be passed either via `expression` or `assets` options."
             )
 
         asset_indexes = asset_indexes or {}
@@ -818,7 +818,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     if asset_as_band:
                         if len(data.band_names) > 1:
                             raise AssetAsBandError(
-                                "Can't use asset_as_band for multibands asset"
+                                "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
                     else:
@@ -1027,7 +1027,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not bands:
             raise MissingBands(
-                "bands must be passed either via expression or bands options."
+                "bands must be passed either via `expression` or `bands` options."
             )
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
@@ -1079,7 +1079,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not bands:
             raise MissingBands(
-                "bands must be passed either via expression or bands options."
+                "bands must be passed either via `expression` or `bands` options."
             )
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
@@ -1129,7 +1129,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not bands:
             raise MissingBands(
-                "bands must be passed either via expression or bands options."
+                "bands must be passed either via `expression` or `bands` options."
             )
 
         def _reader(band: str, **kwargs: Any) -> ImageData:
@@ -1183,7 +1183,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not bands:
             raise MissingBands(
-                "bands must be passed either via expression or bands options."
+                "bands must be passed either via `expression` or `bands` options."
             )
 
         def _reader(band: str, *args, **kwargs: Any) -> PointData:
@@ -1234,7 +1234,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if not bands:
             raise MissingBands(
-                "bands must be passed either via expression or bands options."
+                "bands must be passed either via `expression` or `bands` options."
             )
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:

@@ -1,4 +1,8 @@
 
+# 6.2.2 (2023-10-05)
+
+* add list of assets in `InvalidAssetName` message in `STACReader`
+
 # 6.2.1 (2023-09-28)
 
 * allow GeoJSON `Feature` in `ImageData.get_coverage_array` method
