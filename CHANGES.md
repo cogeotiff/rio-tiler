@@ -1,4 +1,8 @@
 
+# 6.2.3 (2023-10-11)
+
+* in `STACReader` use `href` if `get_absolute_href()` returns `None`
+
 # 6.2.2 (2023-10-05)
 
 * add list of assets in `InvalidAssetName` message in `STACReader`

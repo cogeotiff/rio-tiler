@@ -298,7 +298,7 @@ class STACReader(MultiBaseReader):
         extras = asset_info.extra_fields
 
         info = AssetInfo(
-            url=asset_info.get_absolute_href(),
+            url=asset_info.get_absolute_href() or asset_info.href,
             metadata=extras,
         )
 
