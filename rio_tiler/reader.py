@@ -360,8 +360,8 @@ def part(
         vrt_transform, vrt_width, vrt_height = get_vrt_transform(
             src_dst,
             bounds,
-            height=height,
-            width=width,
+            # height=height,
+            # width=width,
             dst_crs=dst_crs,
         )
 
@@ -373,9 +373,14 @@ def part(
 
         if buffer:
             bounds, height, width = _apply_buffer(buffer, bounds, height, width)
+
             # re-calculate the transform given the new bounds, height and width
             vrt_transform, vrt_width, vrt_height = get_vrt_transform(
-                src_dst, bounds, height, width, dst_crs=dst_crs
+                src_dst,
+                bounds,
+                # height=height,
+                # width=width,
+                dst_crs=dst_crs,
             )
 
         if padding > 0 and not is_aligned(src_dst, bounds, bounds_crs=dst_crs):
