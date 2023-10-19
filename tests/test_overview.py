@@ -138,3 +138,71 @@ def test_gcps_cog():
             max_size=256, dst_crs="epsg:3857"
         )  # should fetch the last overview (value==3)
         assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [3]
+
+
+def test_simple_cog_tile_read():
+    """Test Overview fetching with simple cog."""
+    # Using WarpedVRT
+    with Reader(COG) as src:
+        # Full tile
+        im = src.tile(173, 97, 9)  # should fetch the raw resolution (value==1)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [1]
+
+        im = src.tile(87, 49, 8)  # should fetch the first overview (value==2)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [2]
+
+        im = src.tile(43, 24, 7)  # should fetch the second overview (value==3)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [3]
+
+        im = src.tile(21, 12, 6)  # should fetch the thrid overview (value==4)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [4]
+
+        im = src.tile(10, 6, 5)  # should fetch the last overview (value==5)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [5]
+
+        # Tile on border
+        im = src.tile(169, 102, 9)  # should fetch the raw resolution (value==1)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [1]
+
+        im = src.tile(84, 48, 8)  # should fetch the first overview (value==2)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [2]
+
+        im = src.tile(42, 24, 7)  # should fetch the second overview (value==3)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [3]
+
+    # Using WarpedVRT with buffer
+    with Reader(COG) as src:
+        # Full tile
+        im = src.tile(
+            173, 97, 9, buffer=4
+        )  # should fetch the raw resolution (value==1)
+        assert im.array.shape == (1, 264, 264)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [1]
+
+        im = src.tile(87, 49, 8, buffer=4)  # should fetch the first overview (value==2)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [2]
+
+        im = src.tile(
+            43, 24, 7, buffer=4
+        )  # should fetch the second overview (value==3)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [3]
+
+        im = src.tile(21, 12, 6, buffer=4)  # should fetch the thrid overview (value==4)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [4]
+
+        im = src.tile(10, 6, 5, buffer=4)  # should fetch the last overview (value==5)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [5]
+
+        # Tile on border
+        im = src.tile(
+            169, 102, 9, buffer=4
+        )  # should fetch the raw resolution (value==1)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [1]
+
+        im = src.tile(84, 48, 8, buffer=4)  # should fetch the first overview (value==2)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [2]
+
+        im = src.tile(
+            42, 24, 7, buffer=4
+        )  # should fetch the second overview (value==3)
+        assert numpy.unique(im.data[0, im.mask == 255]).tolist() == [3]

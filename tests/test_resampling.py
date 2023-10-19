@@ -1,6 +1,7 @@
 """test IO and Warp resampling."""
 import os
 
+import numpy
 import pytest
 
 from rio_tiler.io import Reader
@@ -51,3 +52,42 @@ def test_warp_resampling(resampling):
     with Reader(COGEO) as src:
         im = src.preview(max_size=64, reproject_method=resampling, dst_crs="epsg:4326")
         assert im.data.any()
+
+
+def test_resampling_diff():
+    """Test that both `reproject` and `resampling` has influence."""
+    # check diff results when using different `reproject_method`
+    with Reader(COGEO) as src:
+        tile_cubic = src.tile(
+            43,
+            24,
+            7,
+            resampling_method="nearest",
+            reproject_method="cubic",
+        )
+        tile_nearest = src.tile(
+            43,
+            24,
+            7,
+            resampling_method="nearest",
+            reproject_method="nearest",
+        )
+    assert not numpy.array_equal(tile_cubic.array, tile_nearest.array)
+
+    # check diff results when using different `resampling_method`
+    with Reader(COGEO) as src:
+        tile_cubic = src.tile(
+            43,
+            24,
+            7,
+            resampling_method="cubic",
+            reproject_method="nearest",
+        )
+        tile_nearest = src.tile(
+            43,
+            24,
+            7,
+            resampling_method="nearest",
+            reproject_method="nearest",
+        )
+    assert not numpy.array_equal(tile_cubic.array, tile_nearest.array)
