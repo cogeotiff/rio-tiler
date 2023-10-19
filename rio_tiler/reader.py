@@ -360,8 +360,6 @@ def part(
         vrt_transform, vrt_width, vrt_height = get_vrt_transform(
             src_dst,
             bounds,
-            # height=height,
-            # width=width,
             dst_crs=dst_crs,
         )
 
@@ -378,8 +376,6 @@ def part(
             vrt_transform, vrt_width, vrt_height = get_vrt_transform(
                 src_dst,
                 bounds,
-                # height=height,
-                # width=width,
                 dst_crs=dst_crs,
             )
 
