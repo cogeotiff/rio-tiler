@@ -5,15 +5,22 @@ Issues and pull requests are more than welcome.
 ### dev install
 
 ```bash
-$ git clone https://github.com/cogeotiff/rio-tiler.git
-$ cd rio-tiler
-$ pip install -e .["dev"]
+git clone https://github.com/cogeotiff/rio-tiler.git
+cd rio-tiler
+python -m pip install -e ".[test,dev]"
 ```
 
 You can then run the tests with the following command:
 
 ```sh
-python -m pytest --cov rio_tiler --cov-report term-missing --benchmark-skip
+python -m pytest --cov rio_tiler --cov-report term-missing
+```
+
+##### Performance tests
+
+```sh
+python -m pip install -e ".[benchmark]"
+python -m pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min'
 ```
 
 ### pre-commit
@@ -27,15 +34,15 @@ $ pre-commit install
 ### Docs
 
 ```bash
-$ git clone https://github.com/cogeotiff/rio-tiler.git
-$ cd rio-tiler
-$ pip install -e .["docs"]
+git clone https://github.com/cogeotiff/rio-tiler.git
+cd rio-tiler
+python -m pip install -e .["docs"]
 ```
 
 Hot-reloading docs:
 
 ```bash
-$ mkdocs serve
+$ mkdocs serve -f docs/mkdocs.yml
 ```
 
 To manually deploy docs (note you should never need to do this because Github

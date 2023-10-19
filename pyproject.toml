@@ -36,8 +36,6 @@ dependencies = [
 [project.optional-dependencies]
 test = [
     "pytest",
-    "pytest-asyncio",
-    "pytest-benchmark",
     "pytest-cov",
 
     # XarrayReader
@@ -46,6 +44,17 @@ test = [
     # S3
     "boto3",
 ]
+
+benchmark = [
+    "pytest",
+    "pytest-benchmark",
+]
+
+tilebench = [
+    "pytest",
+    "tilebench",
+]
+
 dev = [
     "pre-commit",
 ]

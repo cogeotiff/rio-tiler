@@ -32,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .["test"]
+          python -m pip install -e ".[test]"
 
       - name: Run pre-commit
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
@@ -41,7 +41,7 @@ jobs:
           pre-commit run --all-files
 
       - name: Run tests
-        run: python -m pytest --cov rio_tiler --cov-report xml --cov-report term-missing --benchmark-skip -s -vv
+        run: python -m pytest --cov rio_tiler --cov-report xml --cov-report term-missing -s -vv
 
       - name: Upload Results
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
@@ -65,10 +65,10 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install -e .["test"]
+          python -m pip install -e ".[benchmark]"
 
       - name: Run Benchmark
-        run: python -m pytest --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
+        run: python -m pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
 
       - name: Store and Compare benchmark result
         uses: benchmark-action/github-action-benchmark@v1
@@ -85,6 +85,24 @@ jobs:
           # Make a commit on `gh-pages` only if main
           auto-push: ${{ github.ref == 'refs/heads/main' }}
           benchmark-data-dir-path: dev/benchmarks
+
+  benchmark-requests:
+    needs: [tests]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install -e ".[tilebench]"
+
+      - name: Run Benchmark
+        run: python -m pytest tests/benchmarks/requests.py -s -vv
 
   publish:
     needs: [tests]
