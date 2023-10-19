@@ -1,4 +1,12 @@
 
+# 6.2.4 (2023-10-19)
+
+* fix issue with `WarpedVRT` when doing re-projection (ref: https://github.com/cogeotiff/rio-tiler/pull/648)
+
+* move benchmark outside pytest suite
+
+* add GET/HEAD request tests using tilebench (outside pytest suite) (ref: https://github.com/cogeotiff/rio-tiler/pull/649)
+
 # 6.2.3 (2023-10-11)
 
 * in `STACReader` use `href` if `get_absolute_href()` returns `None`
