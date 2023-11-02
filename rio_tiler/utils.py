@@ -2,7 +2,7 @@
 
 import warnings
 from io import BytesIO
-from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union, Iterable
 
 import numpy
 import rasterio
@@ -24,12 +24,13 @@ from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS
 from rio_tiler.errors import RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
+import itertools
 
 
-def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
+def _chunks(my_list: Iterable, chuck_size: int) -> Generator[Sequence, None, None]:
     """Yield successive n-sized chunks from l."""
-    for i in range(0, len(my_list), chuck_size):
-        yield my_list[i : i + chuck_size]
+    while chunk:= tuple(itertools.islice(my_list, chuck_size)):
+        yield chunk
 
 
 def get_array_statistics(
