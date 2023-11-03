@@ -1,8 +1,20 @@
 """rio_tiler.utils: utility functions."""
 
+import itertools
 import warnings
 from io import BytesIO
-from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union, Iterable
+from typing import (
+    Any,
+    Dict,
+    Generator,
+    Iterable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy
 import rasterio
@@ -24,12 +36,14 @@ from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS
 from rio_tiler.errors import RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
-import itertools
 
 
 def _chunks(my_list: Iterable, chuck_size: int) -> Generator[Sequence, None, None]:
     """Yield successive n-sized chunks from l."""
-    while chunk:= tuple(itertools.islice(my_list, chuck_size)):
+    if not isinstance(my_list, Iterator):
+        my_list = iter(my_list)
+
+    while chunk := tuple(itertools.islice(my_list, chuck_size)):
         yield chunk
 
 
