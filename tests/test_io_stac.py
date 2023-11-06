@@ -199,6 +199,22 @@ def test_tile_valid(rio):
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["green_b1", "green_b1", "red_b1", "red_b1"]
 
+        # check that indexes and asset_indexes are not conflicting
+        img = stac.tile(
+            71,
+            102,
+            8,
+            assets=("green", "red"),
+            indexes=None,
+            asset_indexes={
+                "green": (1,),
+                "red": 1,
+            },
+        )
+        assert img.data.shape == (2, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_b1", "red_b1"]
+
         img = stac.tile(71, 102, 8, expression="green_b1*2;green_b1;red_b1*2")
         assert img.data.shape == (3, 256, 256)
         assert img.mask.shape == (256, 256)

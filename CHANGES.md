@@ -1,4 +1,8 @@
 
+# 6.2.5 (2023-11-06)
+
+* avoid `indexes` collision in `MultiBaseReader`
+
 # 6.2.4 (2023-10-19)
 
 * fix issue with `WarpedVRT` when doing re-projection (ref: https://github.com/cogeotiff/rio-tiler/pull/648)
