@@ -35,6 +35,7 @@ from rio_tiler.types import (
     RIOResampling,
 )
 from rio_tiler.utils import (
+    _validate_shape_input,
     get_array_statistics,
     linear_rescale,
     non_alpha_indexes,
@@ -822,10 +823,11 @@ class ImageData:
         Note: code adapted from https://github.com/perrygeo/python-rasterstats/pull/136 by @sgoodm
 
         """
+        shape = _validate_shape_input(shape)
+
         if self.crs != shape_crs:
             shape = transform_geom(shape_crs, self.crs, shape)
 
-        shape = shape.get("geometry", shape)
         cover_array = rasterize(
             [(shape, 1)],
             out_shape=(self.height * cover_scale, self.width * cover_scale),
