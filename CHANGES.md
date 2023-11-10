@@ -1,4 +1,8 @@
 
+# 6.2.6 (2023-11-10)
+
+* validate `shape` in `ImageData.get_coverage_array` to avoid rasterio error when re-projecting the geometry
+
 # 6.2.5 (2023-11-06)
 
 * avoid `indexes` collision in `MultiBaseReader`
