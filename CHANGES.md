@@ -15,6 +15,13 @@
 
 * add GET/HEAD request tests using tilebench (outside pytest suite) (ref: https://github.com/cogeotiff/rio-tiler/pull/649)
 
+# 6.2.3.post1 (2023-11-16)
+
+* validate `shape` in `ImageData.get_coverage_array` to avoid rasterio error when re-projecting the geometry [Backported from 6.2.6]
+* avoid `indexes` collision in `MultiBaseReader` [Backported from 6.2.5]
+
+This release was made while we waited on a fix for https://github.com/cogeotiff/rio-tiler/issues/654
+
 # 6.2.3 (2023-10-11)
 
 * in `STACReader` use `href` if `get_absolute_href()` returns `None`
