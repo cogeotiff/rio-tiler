@@ -459,3 +459,24 @@ def test_imagedata_coverage():
 
     coverage = im.get_coverage_array({"type": "Feature", "geometry": poly})
     assert numpy.unique(coverage).tolist() == [0.25]
+
+    poly = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                (-10018754.171394622, -5621521.486192066),
+                (10018754.171394622, -5621521.486192066),
+                (10018754.171394622, 5621521.486192066),
+                (-10018754.171394622, 5621521.486192066),
+                (-10018754.171394622, -5621521.486192066),
+            ]
+        ],
+    }
+
+    coverage = im.get_coverage_array(poly, shape_crs="epsg:3857")
+    assert numpy.unique(coverage).tolist() == [0.25]
+
+    coverage = im.get_coverage_array(
+        {"type": "Feature", "geometry": poly}, shape_crs="epsg:3857"
+    )
+    assert numpy.unique(coverage).tolist() == [0.25]
