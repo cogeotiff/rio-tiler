@@ -489,8 +489,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         asset_indexes = asset_indexes or {}
 
+        # We fall back to `indexes` if provided
+        indexes = kwargs.pop("indexes", None)
+
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
+            idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
             url = asset_info["url"]
@@ -567,8 +570,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         asset_indexes = asset_indexes or {}
 
+        # We fall back to `indexes` if provided
+        indexes = kwargs.pop("indexes", None)
+
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
+            idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
             url = asset_info["url"]
@@ -643,8 +649,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         asset_indexes = asset_indexes or {}
 
+        # We fall back to `indexes` if provided
+        indexes = kwargs.pop("indexes", None)
+
         def _reader(asset: str, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
+            idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
             url = asset_info["url"]
@@ -723,8 +732,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         asset_indexes = asset_indexes or {}
 
+        # We fall back to `indexes` if provided
+        indexes = kwargs.pop("indexes", None)
+
         def _reader(asset: str, *args, **kwargs: Any) -> PointData:
-            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
+            idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
             url = asset_info["url"]
@@ -795,8 +807,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         asset_indexes = asset_indexes or {}
 
+        # We fall back to `indexes` if provided
+        indexes = kwargs.pop("indexes", None)
+
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or kwargs.pop("indexes", None)  # type: ignore
+            idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
             url = asset_info["url"]
