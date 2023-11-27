@@ -4,7 +4,7 @@ import contextlib
 import math
 import warnings
 from enum import IntEnum
-from typing import Callable, Dict, Optional, Tuple, TypedDict, Union
+from typing import Callable, Dict, Optional, Sequence, Tuple, TypedDict, Union
 
 import numpy
 from affine import Affine
@@ -12,24 +12,35 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
+from rasterio.transform import array_bounds, from_bounds
 from rasterio.vrt import WarpedVRT
+from rasterio.warp import aligned_target, calculate_default_transform, reproject
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
 
 from rio_tiler.constants import WGS84_CRS
-from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
+from rio_tiler.errors import (
+    InvalidBufferSize,
+    PointOutsideBounds,
+    RioTilerError,
+    TileOutsideBounds,
+)
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
-from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
+from rio_tiler.utils import (
+    get_vrt_transform,
+    has_alpha_band,
+    has_mask_band,
+    non_alpha_indexes,
+)
 
 
 class Options(TypedDict, total=False):
     """Reader Options."""
 
-    force_binary_mask: Optional[bool]
     nodata: Optional[NoData]
-    vrt_options: Optional[Dict]
+    reproject_options: Optional[Dict]
     resampling_method: Optional[RIOResampling]
     reproject_method: Optional[WarpResampling]
     unscale: Optional[bool]
@@ -77,17 +88,45 @@ def _apply_buffer(
     return bounds, height, width
 
 
+def _read(
+    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    indexes: Sequence[int],
+    height: Optional[int] = None,
+    width: Optional[int] = None,
+    window: Optional[windows.Window] = None,
+    nodata: Optional[NoData] = None,
+    resampling_method: Resampling = Resampling.nearest,
+) -> numpy.ma.MaskedArray:
+    data = src_dst.read(
+        indexes=indexes,
+        window=window,
+        out_shape=(len(indexes), height, width) if height and width else None,
+        resampling=resampling_method,
+        boundless=True,
+        masked=True,
+    )
+
+    # if data has Nodata then we simply make sure the mask == the nodata
+    nodata = nodata if nodata is not None else src_dst.nodata
+    if nodata is not None:
+        data.mask |= data == nodata
+
+    return data
+
+
 def read(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     dst_crs: Optional[CRS] = None,
+    dst_bounds: Optional[BBox] = None,
     height: Optional[int] = None,
     width: Optional[int] = None,
     max_size: Optional[int] = None,
     indexes: Optional[Indexes] = None,
     window: Optional[windows.Window] = None,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
-    vrt_options: Optional[Dict] = None,
+    buffer: Optional[float] = None,
+    padding: Optional[int] = None,
+    reproject_options: Optional[Dict] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
@@ -106,17 +145,28 @@ def read(
         indexes (sequence of int or int, optional): Band indexes.
         window (rasterio.windows.Window, optional): Window to read.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
-        vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
-        force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
+        reproject_options (dict, optional): Options to be passed to the rasterio.warp.reproject function.
 
     Returns:
         ImageData
 
     """
+    reproject_options = reproject_options or {}
+    padding = padding or 0
+    buffer = buffer or 0
+
+    if dst_bounds and window:
+        raise RioTilerError("Can't use `bounds` and `window` together.")
+
+    if buffer % 0.5:
+        raise InvalidBufferSize(
+            "`buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
+        )
+
     if isinstance(indexes, int):
         indexes = (indexes,)
 
@@ -129,146 +179,223 @@ def read(
     io_resampling = Resampling[resampling_method]
     warp_resampling = Resampling[reproject_method]
 
+    if indexes is None:
+        indexes = non_alpha_indexes(src_dst)
+
+    if window and isinstance(window, tuple):
+        window = windows.Window.from_slices(
+            *window, height=src_dst.height, width=src_dst.width, boundless=True
+        )
+
     dst_crs = dst_crs or src_dst.crs
-    with contextlib.ExitStack() as ctx:
-        # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
-        if (dst_crs != src_dst.crs) or nodata is not None or vrt_options:
-            vrt_params = {
-                "crs": dst_crs,
-                "add_alpha": True,
-                "resampling": warp_resampling,
-            }
 
-            nodata = nodata if nodata is not None else src_dst.nodata
-            if nodata is not None:
-                vrt_params.update(
-                    {"nodata": nodata, "add_alpha": False, "src_nodata": nodata}
+    src_transform = src_dst.transform
+    src_width = src_dst.width
+    src_height = src_dst.height
+    src_bounds = src_dst.bounds
+    if dst_bounds:
+        src_bounds = dst_bounds
+        if dst_crs != src_dst.crs:
+            src_bounds = transform_bounds(
+                dst_crs, src_dst.crs, *dst_bounds, densify_pts=21
+            )
+        window = windows.from_bounds(*src_bounds, transform=src_dst.transform)
+        src_width = max(1, window.width)
+        src_height = max(1, window.height)
+        src_transform = windows.transform(window, src_dst.transform)
+
+    elif window:
+        src_width = max(1, window.width)
+        src_height = max(1, window.height)
+        src_bounds = windows.bounds(window, src_dst.transform)
+        src_transform = windows.transform(window, src_dst.transform)
+
+    dst_crs = dst_crs or src_dst.crs
+    # Case 1: Input projection != Output projection
+    if dst_crs != src_dst.crs:
+        # 1. get output transform from input bounds
+        dst_transform, dst_width, dst_height = calculate_default_transform(
+            src_dst.crs,
+            dst_crs,
+            src_width,
+            src_height,
+            *src_bounds,
+        )
+
+        dst_bounds = dst_bounds or array_bounds(dst_height, dst_width, dst_transform)
+
+        # adjust dataset virtual output shape/transform
+        w, s, e, n = dst_bounds
+        dst_width = max(1, round((e - w) / dst_transform.a))
+        dst_height = max(1, round((s - n) / dst_transform.e))
+        dst_transform = from_bounds(w, s, e, n, dst_width, dst_height)
+
+        # 2. adjust output size based on max_size if
+        # - not input width/height
+        # - max_size < dst_width and dst_height
+        if (
+            max_size
+            and not (width and height)
+            and max_size < max(dst_width, dst_height)
+        ):
+            height, width = _get_width_height(max_size, dst_height, dst_width)
+
+        if buffer:
+            w = width or dst_width
+            h = height or dst_height
+
+            # 2.1 new output bounds and shape
+            dst_bounds, height, width = _apply_buffer(buffer, dst_bounds, h, w)
+
+            # 2.2 update window / bounds
+            src_bounds = dst_bounds
+            if dst_crs != src_dst.crs:
+                src_bounds = transform_bounds(
+                    dst_crs, src_dst.crs, *dst_bounds, densify_pts=21
                 )
+            window = windows.from_bounds(*src_bounds, transform=src_dst.transform)
 
-            if has_alpha_band(src_dst):
-                vrt_params.update({"add_alpha": False})
+        # TODO: Padding
 
-            if vrt_options:
-                vrt_params.update(**vrt_options)
-
-            # TODO: Check if we fetch the Overviews when not using transform
-            dataset = ctx.enter_context(WarpedVRT(src_dst, **vrt_params))
-
-        else:
-            dataset = src_dst
-
-        if max_size and not (width and height):
-            height, width = _get_width_height(max_size, dataset.height, dataset.width)
-
-        if indexes is None:
-            indexes = non_alpha_indexes(dataset)
-
-        boundless = False
-        if window:
-            if isinstance(window, tuple):
-                window = windows.Window.from_slices(
-                    *window, height=dataset.height, width=dataset.width, boundless=True
-                )
-
-            (row_start, row_stop), (col_start, col_stop) = window.toranges()
-            if (
-                min(col_start, row_start) < 0
-                or col_stop >= dataset.width
-                or row_stop >= dataset.height
-            ):
-                boundless = True
-
-        if ColorInterp.alpha in dataset.colorinterp:
-            # If dataset has an alpha band we need to get the mask using the alpha band index
-            # and then split the data and mask values
-            alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
-
-            # Read Data and Mask separately
-            # Special case (see https://github.com/rasterio/rasterio/issues/2798)
-            if dataset.dtypes[alpha_idx - 1] != dataset.dtypes[indexes[0] - 1]:
-                values = dataset.read(
-                    indexes=indexes,
-                    window=window,
-                    out_shape=(len(indexes), height, width)
-                    if height and width
-                    else None,
-                    resampling=io_resampling,
-                    boundless=boundless,
-                )
-                mask = dataset.read(
-                    indexes=(alpha_idx,),
-                    window=window,
-                    out_shape=(1, height, width) if height and width else None,
-                    resampling=io_resampling,
-                    boundless=boundless,
-                )
-                data = numpy.ma.MaskedArray(values)
-                data.mask = ~mask.astype("bool")
-
-            else:
-                idx = tuple(indexes) + (alpha_idx,)
-                values = dataset.read(
-                    indexes=idx,
-                    window=window,
-                    out_shape=(len(idx), height, width) if height and width else None,
-                    resampling=io_resampling,
-                    boundless=boundless,
-                )
-                mask = ~values[-1].astype("bool")
-                data = numpy.ma.MaskedArray(values[0:-1])
-                data.mask = mask
-
-        else:
-            data = dataset.read(
-                indexes=indexes,
-                window=window,
-                out_shape=(len(indexes), height, width) if height and width else None,
-                resampling=io_resampling,
-                boundless=boundless,
-                masked=True,
+        # 3. if fixed output width/height, we need to
+        # calculate input read size corresponding to the output size
+        if height and width:
+            src_transform, _, _ = calculate_default_transform(
+                dst_crs,
+                src_dst.crs,
+                width,
+                height,
+                *dst_bounds,
             )
 
-            # if data has Nodata then we simply make sure the mask == the nodata
-            if dataset.nodata is not None:
-                data.mask |= data == dataset.nodata
+            w, s, e, n = src_bounds
+            src_width = max(1, round((e - w) / src_transform.a))
+            src_height = max(1, round((s - n) / src_transform.e))
+            src_transform = from_bounds(w, s, e, n, src_width, src_height)
 
-        stats = []
-        for ix in indexes:
-            tags = dataset.tags(ix)
-            if all(
-                stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
-            ):
-                stat_min = float(tags.get("STATISTICS_MINIMUM"))
-                stat_max = float(tags.get("STATISTICS_MAXIMUM"))
-                stats.append((stat_min, stat_max))
-
-        # We only add dataset statistics if we have them for all the indexes
-        dataset_statistics = stats if len(stats) == len(indexes) else None
-
-        # TODO: DEPRECATED, masked array are already using bool
-        if force_binary_mask:
-            pass
-
-        if unscale:
-            data = data.astype("float32", casting="unsafe")
-            numpy.multiply(data, dataset.scales[0], out=data, casting="unsafe")
-            numpy.add(data, dataset.offsets[0], out=data, casting="unsafe")
-
-        if post_process:
-            data = post_process(data)
-
-        out_bounds = (
-            windows.bounds(window, dataset.transform) if window else dataset.bounds
+        # 4. read input data from dataset
+        values = _read(
+            src_dst,
+            indexes=indexes,
+            height=round(src_height),
+            width=round(src_width),
+            window=window,
+            nodata=nodata,
+            resampling_method=io_resampling,
         )
 
-        return ImageData(
-            data,
-            bounds=out_bounds,
-            crs=dataset.crs,
-            band_names=[f"b{idx}" for idx in indexes],
-            dataset_statistics=dataset_statistics,
-            metadata=dataset.tags(),
+        height = height or dst_height
+        width = width or dst_width
+
+        # 5. adjust output transform
+        dst_transform = from_bounds(*dst_bounds, width, height)
+
+        # 6. re-project input array to output projection/shape
+        count, _, _ = values.shape
+        output_data = numpy.empty((count, height, width), dtype=values.dtype)
+        reproject(
+            values,
+            output_data,
+            src_transform=src_transform,
+            dst_transform=dst_transform,
+            src_crs=src_dst.crs,
+            dst_crs=dst_crs,
+            src_nodata=nodata,
+            dst_nodata=nodata,
+            resampling=warp_resampling,
+            **reproject_options,
         )
+        mask = values.mask
+        if not mask.shape:
+            mask = numpy.zeros(values.shape, dtype="uint8") != 0
+
+        # 7. re-project input mask to output projection/shape
+        output_mask = numpy.empty(output_data.shape, dtype=numpy.uint8)
+        reproject(
+            mask * 255,
+            output_mask,
+            src_transform=src_transform,
+            dst_transform=dst_transform,
+            src_crs=src_dst.crs,
+            dst_crs=dst_crs,
+            resampling=Resampling.nearest,
+            src_nodata=255,
+            dst_nodata=255,
+            **reproject_options,
+        )
+
+        # 8. construct output masked Array
+        data = numpy.ma.MaskedArray(output_data, mask=output_mask != 0)
+
+    # Case 2: No re-projection
+    else:
+        if max_size and not (width and height):
+            height, width = _get_width_height(max_size, src_height, src_width)
+
+        height = height or src_height
+        width = width or src_width
+
+        dst_bounds = src_bounds
+        if buffer:
+            dst_bounds, height, width = _apply_buffer(buffer, src_bounds, height, width)
+            window = windows.from_bounds(*dst_bounds, transform=src_dst.transform)
+
+        if padding > 0 and not is_aligned(src_dst, src_bounds, bounds_crs=src_dst.crs):
+            # For Padding we also use the buffer approach for non-VRT dataset
+            pad_bounds, height, width = _apply_buffer(
+                padding, src_bounds, height, width
+            )
+            window_pad = windows.from_bounds(*pad_bounds, transform=src_dst.transform)
+
+            data = _read(
+                src_dst,
+                indexes=indexes,
+                height=round(height),
+                width=round(width),
+                window=window_pad,
+                nodata=nodata,
+                resampling_method=io_resampling,
+            )
+            data = data[:, padding:-padding, padding:-padding]
+
+        else:
+            data = _read(
+                src_dst,
+                indexes=indexes,
+                height=round(height),
+                width=round(width),
+                window=window,
+                nodata=nodata,
+                resampling_method=io_resampling,
+            )
+
+    stats = []
+    for ix in indexes:
+        tags = src_dst.tags(ix)
+        if all(stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]):
+            stat_min = float(tags.get("STATISTICS_MINIMUM"))
+            stat_max = float(tags.get("STATISTICS_MAXIMUM"))
+            stats.append((stat_min, stat_max))
+
+    # We only add dataset statistics if we have them for all the indexes
+    dataset_statistics = stats if len(stats) == len(indexes) else None
+
+    if unscale:
+        data = data.astype("float32", casting="unsafe")
+        numpy.multiply(data, src_dst.scales[0], out=data, casting="unsafe")
+        numpy.add(data, src_dst.offsets[0], out=data, casting="unsafe")
+
+    if post_process:
+        data = post_process(data)
+
+    return ImageData(
+        data,
+        bounds=dst_bounds,
+        crs=dst_crs,
+        band_names=[f"b{idx}" for idx in indexes],
+        dataset_statistics=dataset_statistics,
+        metadata=src_dst.tags(),
+    )
 
 
 # flake8: noqa: C901
@@ -281,12 +408,11 @@ def part(
     dst_crs: Optional[CRS] = None,
     bounds_crs: Optional[CRS] = None,
     indexes: Optional[Indexes] = None,
-    minimum_overlap: Optional[float] = None,
-    padding: Optional[int] = None,
-    buffer: Optional[float] = None,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
-    vrt_options: Optional[Dict] = None,
+    minimum_overlap: Optional[float] = None,
+    buffer: Optional[float] = None,
+    padding: Optional[int] = None,
+    reproject_options: Optional[Dict] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
@@ -298,7 +424,7 @@ def part(
 
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
-        bounds (tuple): Output bounds (left, bottom, right, top). By default the coordinates are considered to be in either the dataset CRS or in the `dst_crs` if set. Use `bounds_crs` to set a specific CRS.
+        bounds (tuple): Output bounds (left, bottom, right, top). By default the coordinates are considered to be in `bounds_crs` or `dst_crs` or `src_dst.crs`.
         height (int, optional): Output height of the image.
         width (int, optional): Output width of the image.
         max_size (int, optional): Limit output size image if not width and height.
@@ -325,142 +451,54 @@ def part(
             UserWarning,
         )
 
-    if buffer and buffer % 0.5:
-        raise InvalidBufferSize(
-            "`buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
+    # Bounds CRS default to:
+    # 1. user input
+    # 2. dst_crs
+    # 3. dataset crs
+    bounds_crs = bounds_crs or dst_crs or src_dst.crs
+    dst_crs = dst_crs or src_dst.crs
+
+    src_bounds = bounds
+    if bounds_crs and bounds_crs != src_dst.crs:
+        src_bounds = transform_bounds(
+            bounds_crs, src_dst.crs, *src_bounds, densify_pts=21
         )
 
-    padding = padding or 0
-    dst_crs = dst_crs or src_dst.crs
-    if bounds_crs:
-        bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
+    dst_bounds = bounds
+    if bounds_crs and bounds_crs != dst_crs:
+        dst_bounds = transform_bounds(bounds_crs, dst_crs, *dst_bounds, densify_pts=21)
 
     if minimum_overlap:
-        src_bounds = transform_bounds(
-            src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21
-        )
+        w, s, e, n = src_bounds
         x_overlap = max(
-            0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
+            0,
+            min(src_dst.bounds[2], e) - max(src_dst.bounds[0], w),
         )
         y_overlap = max(
-            0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1])
+            0,
+            min(src_dst.bounds[3], n) - max(src_dst.bounds[1], s),
         )
-        cover_ratio = (x_overlap * y_overlap) / (
-            (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
-        )
+        cover_ratio = (x_overlap * y_overlap) / ((w - e) * (n - s))
 
         if cover_ratio < minimum_overlap:
             raise TileOutsideBounds(
                 "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
             )
 
-    # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
-    if (dst_crs != src_dst.crs) or nodata is not None or vrt_options:
-        window = None
-        vrt_transform, vrt_width, vrt_height = get_vrt_transform(
-            src_dst,
-            bounds,
-            dst_crs=dst_crs,
-        )
-
-        if max_size and not (width and height):
-            height, width = _get_width_height(max_size, vrt_height, vrt_width)
-
-        height = height or vrt_height
-        width = width or vrt_width
-
-        if buffer:
-            bounds, height, width = _apply_buffer(buffer, bounds, height, width)
-
-            # re-calculate the transform given the new bounds, height and width
-            vrt_transform, vrt_width, vrt_height = get_vrt_transform(
-                src_dst,
-                bounds,
-                dst_crs=dst_crs,
-            )
-
-        if padding > 0 and not is_aligned(src_dst, bounds, bounds_crs=dst_crs):
-            vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
-            window = windows.Window(
-                col_off=padding, row_off=padding, width=vrt_width, height=vrt_height
-            )
-            vrt_height = vrt_height + 2 * padding
-            vrt_width = vrt_width + 2 * padding
-
-        vrt_params = {
-            "crs": dst_crs,
-            "transform": vrt_transform,
-            "width": vrt_width,
-            "height": vrt_height,
-        }
-        if vrt_options:
-            vrt_params.update(**vrt_options)
-
-        return read(
-            src_dst,
-            indexes=indexes,
-            width=width,
-            height=height,
-            window=window,
-            nodata=nodata,
-            vrt_options=vrt_params,
-            resampling_method=resampling_method,
-            reproject_method=reproject_method,
-            force_binary_mask=force_binary_mask,
-            unscale=unscale,
-            post_process=post_process,
-        )
-
-    # else no re-projection needed
-    window = windows.from_bounds(*bounds, transform=src_dst.transform)
-    if max_size and not (width and height):
-        height, width = _get_width_height(
-            max_size, round(window.height), round(window.width)
-        )
-
-    height = height or max(1, round(window.height))
-    width = width or max(1, round(window.width))
-
-    if buffer:
-        bounds, height, width = _apply_buffer(buffer, bounds, height, width)
-        window = windows.from_bounds(*bounds, transform=src_dst.transform)
-
-    if padding > 0 and not is_aligned(src_dst, bounds, bounds_crs=dst_crs):
-        # For Padding we also use the buffer approach for non-VRT dataset
-        pad_bounds, height, width = _apply_buffer(padding, bounds, height, width)
-        window = windows.from_bounds(*pad_bounds, transform=src_dst.transform)
-
-        img = read(
-            src_dst,
-            indexes=indexes,
-            width=width,
-            height=height,
-            window=window,
-            resampling_method=resampling_method,
-            reproject_method=reproject_method,
-            force_binary_mask=force_binary_mask,
-            unscale=unscale,
-            post_process=post_process,
-        )
-
-        return ImageData(
-            img.array[:, padding:-padding, padding:-padding],
-            bounds=bounds,
-            crs=img.crs,
-            band_names=img.band_names,
-            dataset_statistics=img.dataset_statistics,
-            metadata=img.metadata,
-        )
-
     return read(
         src_dst,
+        dst_crs=dst_crs,
+        dst_bounds=dst_bounds,
         indexes=indexes,
         width=width,
         height=height,
-        window=window,
+        max_size=max_size,
+        nodata=nodata,
+        buffer=buffer,
+        padding=padding,
+        reproject_options=reproject_options,
         resampling_method=resampling_method,
         reproject_method=reproject_method,
-        force_binary_mask=force_binary_mask,
         unscale=unscale,
         post_process=post_process,
     )
@@ -471,7 +509,6 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Indexes] = None,
     coord_crs: CRS = WGS84_CRS,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     resampling_method: RIOResampling = "nearest",
@@ -502,56 +539,32 @@ def point(
     if isinstance(indexes, int):
         indexes = (indexes,)
 
-    with contextlib.ExitStack() as ctx:
-        # Use WarpedVRT when User provided Nodata or VRT Option (cutline)
-        if nodata is not None or vrt_options:
-            vrt_params = {
-                "add_alpha": True,
-                "resampling": Resampling[reproject_method],
-            }
-            nodata = nodata if nodata is not None else src_dst.nodata
-            if nodata is not None:
-                vrt_params.update(
-                    {"nodata": nodata, "add_alpha": False, "src_nodata": nodata}
-                )
+    lon, lat = coordinates
+    if coord_crs != src_dst.crs:
+        xs, ys = transform_coords(coord_crs, src_dst.crs, [lon], [lat])
+        lon, lat = xs[0], ys[0]
 
-            if has_alpha_band(src_dst):
-                vrt_params.update({"add_alpha": False})
+    if not (
+        (src_dst.bounds[0] < lon < src_dst.bounds[2])
+        and (src_dst.bounds[1] < lat < src_dst.bounds[3])
+    ):
+        raise PointOutsideBounds("Point is outside dataset bounds")
 
-            if vrt_options:
-                vrt_params.update(**vrt_options)
+    row, col = src_dst.index(lon, lat)
+    img = read(
+        src_dst,
+        indexes=indexes,
+        window=windows.Window(row_off=row, col_off=col, width=1, height=1),
+        resampling_method=resampling_method,
+        nodata=nodata,
+        unscale=unscale,
+        post_process=post_process,
+    )
 
-            dataset = ctx.enter_context(WarpedVRT(src_dst, **vrt_params))
-
-        else:
-            dataset = src_dst
-
-        lon, lat = coordinates
-        if coord_crs != dataset.crs:
-            xs, ys = transform_coords(coord_crs, dataset.crs, [lon], [lat])
-            lon, lat = xs[0], ys[0]
-
-        if not (
-            (dataset.bounds[0] < lon < dataset.bounds[2])
-            and (dataset.bounds[1] < lat < dataset.bounds[3])
-        ):
-            raise PointOutsideBounds("Point is outside dataset bounds")
-
-        row, col = dataset.index(lon, lat)
-        img = read(
-            dataset,
-            indexes=indexes,
-            window=windows.Window(row_off=row, col_off=col, width=1, height=1),
-            resampling_method=resampling_method,
-            force_binary_mask=force_binary_mask,
-            unscale=unscale,
-            post_process=post_process,
-        )
-
-        return PointData(
-            img.array[:, 0, 0],
-            coordinates=coordinates,
-            crs=coord_crs,
-            band_names=img.band_names,
-            metadata=dataset.tags(),
-        )
+    return PointData(
+        img.array[:, 0, 0],
+        coordinates=coordinates,
+        crs=coord_crs,
+        band_names=img.band_names,
+        metadata=src_dst.tags(),
+    )

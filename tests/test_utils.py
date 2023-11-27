@@ -288,13 +288,13 @@ def test_cutline():
 
     with Reader(COGEO) as src:
         cutline = utils.create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
-        data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
+        data, mask = src.part(feature_bounds, reproject_options={"cutline": cutline})
         assert not mask.all()
 
         cutline = utils.create_cutline(
             src.dataset, feat["geometry"], geometry_crs="epsg:4326"
         )
-        data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
+        data, mask = src.part(feature_bounds, reproject_options={"cutline": cutline})
         assert not mask.all()
 
     feat_line = {
@@ -381,7 +381,7 @@ def test_cutline():
         cutline = utils.create_cutline(
             src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326"
         )
-        data, mask = src.part(triangle_bounds, vrt_options={"cutline": cutline})
+        data, mask = src.part(triangle_bounds, reproject_options={"cutline": cutline})
         assert sum(mask[:, 0]) == 0  # first column
         assert sum(mask[0, :]) == 0  # first line
         assert sum(mask[-1, :]) == 0  # last line

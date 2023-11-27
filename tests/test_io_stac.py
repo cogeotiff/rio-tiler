@@ -589,17 +589,17 @@ def test_feature_valid(rio):
             stac.feature(feat)
 
         img = stac.feature(feat, assets="green")
-        assert img.data.shape == (1, 118, 96)
-        assert img.mask.shape == (118, 96)
+        assert img.data.shape == (1, 122, 99)
+        assert img.mask.shape == (122, 99)
         assert img.band_names == ["green_b1"]
 
         img = stac.feature(feat, assets=("green",))
-        assert img.data.shape == (1, 118, 96)
-        assert img.mask.shape == (118, 96)
+        assert img.data.shape == (1, 122, 99)
+        assert img.mask.shape == (122, 99)
 
         img = stac.feature(feat, expression="green_b1/red_b1")
-        assert img.data.shape == (1, 118, 96)
-        assert img.mask.shape == (118, 96)
+        assert img.data.shape == (1, 122, 99)
+        assert img.mask.shape == (122, 99)
         assert img.band_names == ["green_b1/red_b1"]
 
         img = stac.feature(feat, assets="green", max_size=30)
@@ -610,24 +610,24 @@ def test_feature_valid(rio):
             img = stac.feature(
                 feat, assets=("green", "red"), expression="green_b1/red_b1"
             )
-            assert img.data.shape == (1, 118, 96)
+            assert img.data.shape == (1, 122, 99)
             assert img.band_names == ["green_b1/red_b1"]
 
         img = stac.feature(
             feat, assets=("green", "red"), asset_indexes={"green": (1, 1), "red": 1}
         )
-        assert img.data.shape == (3, 118, 96)
-        assert img.mask.shape == (118, 96)
+        assert img.data.shape == (3, 122, 99)
+        assert img.mask.shape == (122, 99)
         assert img.band_names == ["green_b1", "green_b1", "red_b1"]
 
         img = stac.feature(feat, assets=("green", "red"), indexes=1)
-        assert img.data.shape == (2, 118, 96)
-        assert img.mask.shape == (118, 96)
+        assert img.data.shape == (2, 122, 99)
+        assert img.mask.shape == (122, 99)
         assert img.band_names == ["green_b1", "red_b1"]
 
         img = stac.feature(feat, expression="green_b1*2;green_b1;red_b1*2")
-        assert img.data.shape == (3, 118, 96)
-        assert img.mask.shape == (118, 96)
+        assert img.data.shape == (3, 122, 99)
+        assert img.mask.shape == (122, 99)
         assert img.band_names == ["green_b1*2", "green_b1", "red_b1*2"]
 
         # NOTE: This tests fails every odd time. There is something weird happening with catch_warnings
@@ -636,8 +636,8 @@ def test_feature_valid(rio):
         #     match="Cannot concatenate images with different size. Will resize using max width/heigh",
         # ):
         img = stac.feature(feat, assets=("blue", "lowres"))
-        assert img.data.shape == (2, 118, 96)
-        assert img.mask.shape == (118, 96)
+        assert img.data.shape == (2, 122, 99)
+        assert img.mask.shape == (122, 99)
         assert img.band_names == ["blue_b1", "lowres_b1"]
 
 
