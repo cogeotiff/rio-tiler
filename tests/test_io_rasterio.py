@@ -445,7 +445,7 @@ def test_Reader_Options():
         assert p.data[0] == 8917
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
-    with Reader(COGEO, options={"vrt_options": {"cutline": cutline}}) as src:
+    with Reader(COGEO, options={"reproject_options": {"cutline": cutline}}) as src:
         _, mask = src.preview()
         assert not mask.all()
 
@@ -604,7 +604,7 @@ def test_imageData_output():
         assert meta["crs"] == WGS84_CRS
         assert img.bounds == bbox
 
-        img = src.part(bbox, dst_crs=src.dataset.crs)
+        img = src.part(bbox, dst_crs=src.dataset.crs, bounds_crs="epsg:4326")
         assert img.data.shape == (1, 28, 30)
         meta = parse_img(img.render(img_format="GTiff"))
         assert meta["crs"] == src.dataset.crs
@@ -648,7 +648,7 @@ def test_feature_valid():
 
     with Reader(COG_NODATA) as src:
         img = src.feature(feature, max_size=1024)
-        assert img.data.shape == (1, 348, 1024)
+        assert img.data.shape == (1, 349, 1024)
         assert img.band_names == ["b1"]
 
         img = src.feature(feature, dst_crs=src.dataset.crs, max_size=1024)
@@ -658,18 +658,18 @@ def test_feature_valid():
         assert img.data.shape == (1, 11, 30)
 
         img = src.feature(feature, expression="b1*2;b1-100", max_size=1024)
-        assert img.data.shape == (2, 348, 1024)
+        assert img.data.shape == (2, 349, 1024)
         assert img.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.feature(
                 feature, indexes=(1, 2, 3), expression="b1*2", max_size=1024
             )
-            assert img.data.shape == (1, 348, 1024)
+            assert img.data.shape == (1, 349, 1024)
             assert img.band_names == ["b1*2"]
 
         img = src.feature(feature, indexes=1, max_size=1024)
-        assert img.data.shape == (1, 348, 1024)
+        assert img.data.shape == (1, 349, 1024)
 
         img = src.feature(
             feature,
@@ -679,7 +679,7 @@ def test_feature_valid():
             ),
             max_size=1024,
         )
-        assert img.data.shape == (2, 348, 1024)
+        assert img.data.shape == (2, 349, 1024)
         assert img.band_names == ["b1", "b1"]
 
         # feature overlaping on mask area
@@ -750,7 +750,7 @@ def test_equality_part_feature():
 
         cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
         bbox = featureBounds(feat)
-        img_part = src.part(bbox, vrt_options={"cutline": cutline})
+        img_part = src.part(bbox, reproject_options={"cutline": cutline})
 
         assert img_feat.mask[0, 0] == img_part.mask[0, 0]
         assert img_feat.mask[200, 200] == img_part.mask[200, 200]
@@ -765,7 +765,9 @@ def test_equality_part_feature():
 
         cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
         bbox = featureBounds(feat)
-        img_part = src.part(bbox, vrt_options={"cutline": cutline}, dst_crs="epsg:3857")
+        img_part = src.part(
+            bbox, reproject_options={"cutline": cutline}, dst_crs="epsg:3857"
+        )
 
         assert img_feat.mask[0, 0] == img_part.mask[0, 0]
         assert img_feat.mask[200, 200] == img_part.mask[200, 200]

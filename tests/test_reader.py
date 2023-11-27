@@ -64,8 +64,8 @@ def test_tile_read_valid():
     # Read bounds at full resolution
     with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(src_dst, bounds, dst_crs=constants.WEB_MERCATOR_CRS)
-    assert arr.shape == (1, 893, 893)
-    assert mask.shape == (893, 893)
+    assert arr.shape == (1, 885, 885)
+    assert mask.shape == (885, 885)
 
     # set max_size for the returned array
     with rasterio.open(COG) as src_dst:
@@ -80,8 +80,8 @@ def test_tile_read_valid():
         arr, mask = reader.part(
             src_dst, bounds, max_size=1000, dst_crs=constants.WEB_MERCATOR_CRS
         )
-    assert arr.shape == (1, 893, 893)
-    assert mask.shape == (893, 893)
+    assert arr.shape == (1, 885, 885)
+    assert mask.shape == (885, 885)
 
     # Incompatible max_size with height and width
     with pytest.warns(UserWarning):
@@ -375,7 +375,7 @@ def test_tile_read_vrt_option():
             bounds,
             tilesize,
             tilesize,
-            vrt_options={"source_extra": 10, "num_threads": 10},
+            reproject_options={"source_extra": 10, "num_threads": 10},
         )
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)

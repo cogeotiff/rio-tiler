@@ -545,7 +545,7 @@ class Reader(BaseReader):
         # Get BBOX of the polygon
         bbox = featureBounds(shape)
 
-        vrt_options = kwargs.pop("vrt_options", {})
+        reproject_options = kwargs.pop("reproject_options", {})
 
         img = self.part(
             bbox,
@@ -556,7 +556,7 @@ class Reader(BaseReader):
             max_size=max_size,
             width=width,
             height=height,
-            vrt_options=vrt_options,
+            reproject_options=reproject_options,
             buffer=buffer,
             **kwargs,
         )
@@ -705,7 +705,6 @@ class ImageReader(Reader):
         tilesize: int = 256,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
-        force_binary_mask: bool = True,
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
@@ -721,7 +720,6 @@ class ImageReader(Reader):
             tilesize (int, optional): Output image size. Defaults to `256`.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
             resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
@@ -744,7 +742,6 @@ class ImageReader(Reader):
             max_size=None,
             indexes=indexes,
             expression=expression,
-            force_binary_mask=force_binary_mask,
             resampling_method=resampling_method,
             unscale=unscale,
             post_process=post_process,
@@ -758,7 +755,6 @@ class ImageReader(Reader):
         max_size: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
-        force_binary_mask: bool = True,
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
@@ -774,7 +770,6 @@ class ImageReader(Reader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
             resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
@@ -800,7 +795,6 @@ class ImageReader(Reader):
             width=width,
             height=height,
             indexes=indexes,
-            force_binary_mask=force_binary_mask,
             resampling_method=resampling_method,
             unscale=unscale,
             post_process=post_process,
@@ -864,7 +858,6 @@ class ImageReader(Reader):
         max_size: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
-        force_binary_mask: bool = True,
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
@@ -883,7 +876,6 @@ class ImageReader(Reader):
             max_size=max_size,
             height=height,
             width=width,
-            force_binary_mask=force_binary_mask,
             resampling_method=resampling_method,
             unscale=unscale,
             post_process=post_process,
