@@ -1,4 +1,8 @@
 
+# 6.2.7 (2023-11-29)
+
+* Adjusting dataset latitude for WarpedVRT parameters calculation when EPSG:4326 dataset latitudes overflows EPSG:3857 min/max latitude (https://github.com/cogeotiff/rio-tiler/pull/660)
+
 # 6.2.6 (2023-11-10)
 
 * validate `shape` in `ImageData.get_coverage_array` to avoid rasterio error when re-projecting the geometry
