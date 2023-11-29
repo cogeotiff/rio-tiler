@@ -21,7 +21,7 @@ from rasterio.vrt import WarpedVRT
 from rasterio.warp import calculate_default_transform, transform_geom
 
 from rio_tiler.colormap import apply_cmap
-from rio_tiler.constants import WEB_MERCATOR_CRS
+from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
 from rio_tiler.errors import RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
@@ -244,9 +244,38 @@ def get_vrt_transform(
 
     """
     if src_dst.crs != dst_crs:
+        src_width = src_dst.width
+        src_height = src_dst.height
+        src_bounds = list(src_dst.bounds)
+
+        # Fix for https://github.com/cogeotiff/rio-tiler/issues/654
+        #
+        # When using `calculate_default_transform` with dataset
+        # which span at high/low latitude outside the area_of_use
+        # of the WebMercator projection, we `crop` the dataset
+        # to get the transform (resolution).
+        #
+        # Note: Should be handled in gdal 3.8 directly
+        # https://github.com/OSGeo/gdal/pull/8775
+        if (
+            src_dst.crs == WGS84_CRS
+            and dst_crs == WEB_MERCATOR_CRS
+            and (src_bounds[1] < -85.06 or src_bounds[3] > 85.06)
+        ):
+            warnings.warn(
+                "Adjusting dataset latitudes to avoid re-projection overflow",
+                UserWarning,
+            )
+            src_bounds[1] = max(src_bounds[1], -85.06)
+            src_bounds[3] = min(src_bounds[3], 85.06)
+            w = windows.from_bounds(*src_bounds, transform=src_dst.transform)
+            src_height = round(w.height)
+            src_width = round(w.width)
+
         dst_transform, _, _ = calculate_default_transform(
-            src_dst.crs, dst_crs, src_dst.width, src_dst.height, *src_dst.bounds
+            src_dst.crs, dst_crs, src_width, src_height, *src_bounds
         )
+
     else:
         dst_transform = src_dst.transform
 

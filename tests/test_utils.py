@@ -8,6 +8,7 @@ from io import BytesIO
 import numpy as np
 import pytest
 import rasterio
+from rasterio.crs import CRS
 from rasterio.enums import ColorInterp
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
@@ -588,3 +589,36 @@ def test_get_array_statistics_coverage():
     assert stats[0]["max"] == 4
     assert stats[0]["mean"] == 2.5
     assert stats[0]["count"] == 4
+
+
+def test_get_vrt_transform_world_file(dataset_fixture):
+    """Should return correct transform and size."""
+    bounds = (
+        -17811118.526923772,
+        -6446275.841017159,
+        17811118.526923772,
+        6446275.841017159,
+    )
+    with MemoryFile(
+        dataset_fixture(
+            crs=CRS.from_epsg(4326),
+            bounds=(-180.0, -90, 180.0, 90.0),
+            dtype="uint8",
+            nodata_type="nodata",
+            width=720,
+            height=360,
+        )
+    ) as memfile:
+        with memfile.open() as src_dst:
+            # adjusting latitudes
+            # with pytest.warns(UserWarning):
+            vrt_transform, vrt_width, vrt_height = utils.get_vrt_transform(
+                src_dst,
+                bounds,
+                dst_crs="epsg:3857",
+            )
+
+    assert vrt_transform[2] == -17811118.526923772
+    assert vrt_transform[5] == 6446275.841017159
+    assert vrt_width == 501  # 59 without the latitude adjust patch
+    assert vrt_height == 181  # 21 without the latitude adjust patch

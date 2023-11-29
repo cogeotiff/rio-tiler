@@ -109,3 +109,4 @@ tests/fixtures/mask*
 .vscode/settings.json
 
 docs/src/api/*
+dev_notebooks/*
