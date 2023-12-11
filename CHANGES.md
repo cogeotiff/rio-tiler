@@ -1,4 +1,8 @@
 
+# 6.2.8 (2023-12-11)
+
+* apply `discrete` colormap when the provided colormap does not have 256 values
+
 # 6.2.7 (2023-11-29)
 
 * Adjusting dataset latitude for WarpedVRT parameters calculation when EPSG:4326 dataset latitudes overflows EPSG:3857 min/max latitude (https://github.com/cogeotiff/rio-tiler/pull/660)
