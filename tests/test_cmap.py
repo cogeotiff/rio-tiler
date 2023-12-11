@@ -254,3 +254,31 @@ def test_parse_color_bad():
 
     with pytest.raises(InvalidColorFormat):
         colormap.parse_color([0, 0, 0, 0, 0])
+
+
+def test_discrete_float():
+    """test for titiler issue 738."""
+    cm = {
+        0: (0, 255, 255, 255),
+        1: (83, 151, 145, 255),
+        2: (87, 194, 23, 255),
+        3: (93, 69, 255, 255),
+        4: (98, 217, 137, 255),
+        5: (140, 255, 41, 255),
+        6: (150, 110, 255, 255),
+        7: (179, 207, 100, 255),
+        8: (214, 130, 156, 255),
+        9: (232, 170, 108, 255),
+        10: (255, 225, 128, 255),
+        11: (255, 184, 180, 255),
+        12: (255, 255, 140, 255),
+        13: (255, 180, 196, 255),
+        14: (255, 0, 0, 255),
+        15: (255, 218, 218, 255),
+    }
+
+    data = numpy.round(numpy.random.random_sample((1, 256, 256)) * 15)
+    d, m = colormap.apply_cmap(data.copy(), cm)
+    dd, mm = colormap.apply_discrete_cmap(data.copy(), cm)
+    assert d.dtype == numpy.uint8
+    assert m.dtype == numpy.uint8
