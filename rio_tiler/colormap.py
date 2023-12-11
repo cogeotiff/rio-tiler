@@ -103,11 +103,11 @@ def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     if isinstance(colormap, Sequence):
         return apply_intervals_cmap(data, colormap)
 
-    # if colormap has more than 256 values OR its `max` key >= 256 we can't use
+    # if colormap has less or more than 256 values OR its `max` key >= 256 we can't use
     # rio_tiler.colormap.make_lut, because we don't want to create a `lookup table`
     # with more than 256 entries (256 x 4) array. In this case we use `apply_discrete_cmap`
     # which can work with arbitrary colormap dict.
-    if len(colormap) > 256 or max(colormap) >= 256 or min(colormap) < 0:
+    if len(colormap) != 256 or max(colormap) >= 256 or min(colormap) < 0:
         return apply_discrete_cmap(data, colormap)
 
     lookup_table = make_lut(colormap)

@@ -151,6 +151,9 @@ def test_apply_discrete_cmap():
     mask[2:5, 2:5] = 255
     mask[5:, 5:] = 255
     numpy.testing.assert_array_equal(m, mask)
+    dd, mm = colormap.apply_cmap(data, cm)
+    numpy.testing.assert_array_equal(dd, d)
+    numpy.testing.assert_array_equal(mm, m)
 
     data = data.astype("uint16")
     d, m = colormap.apply_discrete_cmap(data, cm)
