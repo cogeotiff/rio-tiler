@@ -1,4 +1,8 @@
 
+# 6.2.9 (2023-12-21)
+
+* fix AWS endpoint credential for STAC `fetch` function, using same defaults as GDAL vsis3 configuration
+
 # 6.2.8 (2023-12-11)
 
 * apply `discrete` colormap when the provided colormap does not have 256 values
