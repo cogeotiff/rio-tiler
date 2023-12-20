@@ -4,6 +4,7 @@ import abc
 import contextlib
 import re
 import warnings
+from functools import cached_property
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
@@ -43,7 +44,7 @@ class SpatialMixin:
 
     geographic_crs: CRS = attr.ib(init=False, default=WGS84_CRS)
 
-    @property
+    @cached_property
     def geographic_bounds(self) -> BBox:
         """Return dataset bounds in geographic_crs."""
         if self.crs == self.geographic_crs:

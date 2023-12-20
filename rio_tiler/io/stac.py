@@ -73,7 +73,7 @@ def aws_get_object(
 
         # AWS_S3_ENDPOINT and AWS_HTTPS are GDAL config options of vsis3 driver
         # https://gdal.org/user/virtual_file_systems.html#vsis3-aws-s3-files
-        endpoint_url = os.environ.get("AWS_S3_ENDPOINT", None)
+        endpoint_url = os.environ.get("AWS_S3_ENDPOINT", "s3.amazonaws.com")
         if endpoint_url:
             use_https = os.environ.get("AWS_HTTPS", "YES")
             if use_https.upper() in ["YES", "TRUE", "ON"]:
@@ -82,10 +82,7 @@ def aws_get_object(
             else:
                 endpoint_url = "http://" + endpoint_url
 
-        client = session.client(
-            "s3",
-            endpoint_url=endpoint_url or "s3.amazonaws.com",
-        )
+        client = session.client("s3", endpoint_url=endpoint_url)
 
     params = {"Bucket": bucket, "Key": key}
     if request_pays or os.environ.get("AWS_REQUEST_PAYER", "").lower() == "requester":
