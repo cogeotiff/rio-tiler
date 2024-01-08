@@ -1,4 +1,8 @@
 
+# 6.2.10 (2024-01-08)
+
+* remove default Endpoint URL in AWS S3 Client for STAC Reader
+
 # 6.2.9 (2023-12-21)
 
 * fix AWS endpoint credential for STAC `fetch` function, using same defaults as GDAL vsis3 configuration
