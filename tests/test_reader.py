@@ -304,6 +304,7 @@ def test_tile_read_not_covering_the_whole_tile():
 # See https://github.com/cogeotiff/rio-tiler/issues/105#issuecomment-492268836
 def test_tile_read_validMask():
     """Dataset mask should be the same as the actual mask."""
+    # bounds fully outside dataset
     bounds = [
         -6887893.4928338025,
         12210356.646387195,
@@ -313,6 +314,33 @@ def test_tile_read_validMask():
     tilesize = 128
     with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=1)
+
+    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
+    numpy.testing.assert_array_equal(mask, masknodata)
+
+
+def test_read_nodata():
+    """Dataset mask should be the same as the actual mask."""
+    bounds = [
+        316470,
+        8094354,
+        415375,
+        8148789,
+    ]
+    with rasterio.open(COG) as src_dst:
+        arr, mask = reader.part(src_dst, bounds, nodata=1)
+
+    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
+    numpy.testing.assert_array_equal(mask, masknodata)
+
+    with rasterio.open(COG) as src_dst:
+        arr, mask = reader.read(src_dst, nodata=1)
+
+    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
+    numpy.testing.assert_array_equal(mask, masknodata)
+
+    with rasterio.open(COG) as src_dst:
+        arr, mask = reader.read(src_dst, dst_crs="epsg:3857", nodata=1)
 
     masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
     numpy.testing.assert_array_equal(mask, masknodata)
