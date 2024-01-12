@@ -1059,7 +1059,7 @@ EPSG:4326
 - **tile()**: Read map tile from a raster
 
 ```python
-from rio_tiler.contants import WEB_MERCATOR_CRS
+from rio_tiler.constants import WEB_MERCATOR_CRS
 from rio_tiler.io import XarrayReader
 from rio_tiler.models import ImageData
 
