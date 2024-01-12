@@ -129,17 +129,18 @@ def read(
     io_resampling = Resampling[resampling_method]
     warp_resampling = Resampling[reproject_method]
 
+    nodata = nodata if nodata is not None else src_dst.nodata
+
     dst_crs = dst_crs or src_dst.crs
     with contextlib.ExitStack() as ctx:
-        # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
-        if (dst_crs != src_dst.crs) or nodata is not None or vrt_options:
+        # Use WarpedVRT when Re-projection or User VRT Option (cutline)
+        if (dst_crs != src_dst.crs) or vrt_options:
             vrt_params = {
                 "crs": dst_crs,
                 "add_alpha": True,
                 "resampling": warp_resampling,
             }
 
-            nodata = nodata if nodata is not None else src_dst.nodata
             if nodata is not None:
                 vrt_params.update(
                     {"nodata": nodata, "add_alpha": False, "src_nodata": nodata}
@@ -178,7 +179,7 @@ def read(
             ):
                 boundless = True
 
-        if ColorInterp.alpha in dataset.colorinterp:
+        if ColorInterp.alpha in dataset.colorinterp and nodata is None:
             # If dataset has an alpha band we need to get the mask using the alpha band index
             # and then split the data and mask values
             alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
@@ -226,11 +227,12 @@ def read(
                 resampling=io_resampling,
                 boundless=boundless,
                 masked=True,
+                fill_value=nodata,
             )
 
             # if data has Nodata then we simply make sure the mask == the nodata
-            if dataset.nodata is not None:
-                data.mask |= data == dataset.nodata
+            if nodata is not None:
+                data.mask |= data == nodata
 
         stats = []
         for ix in indexes:
@@ -332,7 +334,7 @@ def part(
 
     padding = padding or 0
     dst_crs = dst_crs or src_dst.crs
-    if bounds_crs:
+    if bounds_crs and bounds_crs != dst_crs:
         bounds = transform_bounds(bounds_crs, dst_crs, *bounds, densify_pts=21)
 
     if minimum_overlap:
@@ -354,8 +356,8 @@ def part(
                 "Dataset covers less than {:.0f}% of tile".format(cover_ratio * 100)
             )
 
-    # Use WarpedVRT when Re-projection or Nodata or User VRT Option (cutline)
-    if (dst_crs != src_dst.crs) or nodata is not None or vrt_options:
+    # Use WarpedVRT when Re-projection or User VRT Option (cutline)
+    if (dst_crs != src_dst.crs) or vrt_options:
         window = None
         vrt_transform, vrt_width, vrt_height = get_vrt_transform(
             src_dst,
@@ -436,6 +438,7 @@ def part(
             width=width,
             height=height,
             window=window,
+            nodata=nodata,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
@@ -458,6 +461,7 @@ def part(
         width=width,
         height=height,
         window=window,
+        nodata=nodata,
         resampling_method=resampling_method,
         reproject_method=reproject_method,
         force_binary_mask=force_binary_mask,
