@@ -1,4 +1,8 @@
 
+# unreleased
+
+* do not use `warpedVRT` when overwriting the dataset nodata value
+
 # 6.2.10 (2024-01-08)
 
 * remove default Endpoint URL in AWS S3 Client for STAC Reader
