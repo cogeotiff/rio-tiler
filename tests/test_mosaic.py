@@ -286,6 +286,20 @@ def test_mosaic_tiler():
     assert m.dtype == "uint8"
 
 
+def test_mosaic_tiler_iter():
+    """Test mosaic tiler with iterator input."""
+    assets_iter = iter(assets)
+
+    (t, m), assets_used = mosaic.mosaic_reader(assets_iter, _read_tile, x, y, z)
+    assert t.shape == (3, 256, 256)
+    assert m.shape == (256, 256)
+    assert m.all()
+    # Should only have value of 1
+    assert numpy.unique(t[0, m == 255]).tolist() == [1]
+    assert t.dtype == "uint16"
+    assert m.dtype == "uint8"
+
+
 def mock_rasterio_open(asset):
     """Mock rasterio Open."""
     assert asset.startswith("http://somewhere-over-the-rainbow.io")

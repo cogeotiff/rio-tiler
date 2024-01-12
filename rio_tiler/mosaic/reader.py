@@ -2,7 +2,18 @@
 
 import warnings
 from inspect import isclass
-from typing import Any, Callable, List, Optional, Sequence, Tuple, Type, Union, cast
+from typing import (
+    Any,
+    Callable,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Type,
+    Union,
+    cast,
+)
 
 import numpy
 from rasterio.crs import CRS
@@ -23,7 +34,7 @@ from rio_tiler.utils import _chunks, resize_array
 
 
 def mosaic_reader(  # noqa: C901
-    mosaic_assets: Sequence,
+    mosaic_assets: Union[Iterator, Sequence],
     reader: Callable[..., ImageData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
@@ -36,7 +47,7 @@ def mosaic_reader(  # noqa: C901
 
     Args:
 
-        mosaic_assets (sequence): List of assets.
+        mosaic_assets (Sequence or Iterator): List of assets.
         reader (callable): Reader function. The function MUST take `(asset, *args, **kwargs)` as arguments, and MUST return an ImageData.
         args (Any): Argument to forward to the reader function.
         pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. Defaults to `rio_tiler.mosaic.methods.defaults.FirstMethod`.
@@ -76,8 +87,10 @@ def mosaic_reader(  # noqa: C901
             "'rio_tiler.mosaic.methods.base.MosaicMethodBase'"
         )
 
-    if not chunk_size:
+    if not isinstance(mosaic_assets, Iterator) and not chunk_size:
         chunk_size = threads if threads > 1 else len(mosaic_assets)
+
+    chunk_size = chunk_size or threads
 
     assets_used: List = []
     crs: Optional[CRS]
