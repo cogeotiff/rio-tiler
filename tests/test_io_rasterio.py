@@ -1013,3 +1013,101 @@ def test_metadata_img():
         img = src.preview()
         assert img.dataset_statistics
         assert img.metadata
+
+
+def test_feature_statistics():
+    """Test feature statistics method implemented in titiler."""
+    # square
+    square = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "coordinates": [
+                [
+                    [-56.85853679288809, 73.6870721652219],
+                    [-56.85853679288809, 73.18595963998644],
+                    [-54.97274279983506, 73.18595963998644],
+                    [-54.97274279983506, 73.6870721652219],
+                    [-56.85853679288809, 73.6870721652219],
+                ]
+            ],
+            "type": "Polygon",
+        },
+    }
+
+    square_crs = {
+        "type": "Polygon",
+        "coordinates": [
+            [
+                [442337.0, 8175239.0],
+                [517915.0, 8175239.0],
+                [517915.0, 8134628.0],
+                [442337.0, 8134628.0],
+                [442337.0, 8175239.0],
+            ]
+        ],
+    }
+
+    # Case 1 - image should be aligned with the bounds
+    # because we reproject to the shape crs
+    with Reader(COGEO) as src:
+        image = src.feature(
+            square,
+            dst_crs=WGS84_CRS,
+            shape_crs=WGS84_CRS,
+        )
+        coverage_array = image.get_coverage_array(
+            square,
+            shape_crs=WGS84_CRS,
+        )
+        stats = image.statistics(coverage=coverage_array)
+        assert numpy.unique(coverage_array).tolist() == [1.0]
+
+    # Case 2 - image not aligned with bounds because we align the
+    # bounds to the reprojected dataset
+    with Reader(COGEO) as src:
+        image = src.feature(
+            square,
+            dst_crs=WGS84_CRS,
+            shape_crs=WGS84_CRS,
+            align_bounds_with_dataset=True,
+        )
+        coverage_array = image.get_coverage_array(
+            square,
+            shape_crs=WGS84_CRS,
+        )
+        stats_align = image.statistics(coverage=coverage_array)
+        assert not numpy.unique(coverage_array).tolist() == [1.0]
+
+        assert stats["b1"].mean != stats_align["b1"].mean
+
+    # Case 3 - square geometry in dataset CRS
+    with Reader(COGEO) as src:
+        image = src.feature(
+            square_crs,
+            dst_crs=src.crs,
+            shape_crs=src.crs,
+        )
+        coverage_array = image.get_coverage_array(
+            square_crs,
+            shape_crs=src.crs,
+        )
+        stats = image.statistics(coverage=coverage_array)
+        assert numpy.unique(coverage_array).tolist() == [1.0]
+
+    # Case 4 - square geometry in dataset CRS but aligned with dataset
+    with Reader(COGEO) as src:
+        image = src.feature(
+            square_crs,
+            dst_crs=src.crs,
+            shape_crs=src.crs,
+            align_bounds_with_dataset=True,
+        )
+        coverage_array = image.get_coverage_array(
+            square_crs,
+            shape_crs=src.crs,
+        )
+        stats_align = image.statistics(coverage=coverage_array)
+        assert not numpy.unique(coverage_array).tolist() == [1.0]
+
+        assert stats["b1"].mean != stats_align["b1"].mean

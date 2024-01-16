@@ -12,6 +12,7 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
+from rasterio.transform import array_bounds
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
@@ -289,6 +290,7 @@ def part(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
+    align_bounds_with_dataset: bool = False,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
@@ -312,6 +314,7 @@ def part(
         buffer (float, optional): Buffer to apply to each bbox edge. Defaults to `0.`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
+        align_bounds_with_dataset (bool): Align input bounds with dataset transform. Defaults to `False`.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
@@ -363,7 +366,9 @@ def part(
             src_dst,
             bounds,
             dst_crs=dst_crs,
+            align_bounds_with_dataset=align_bounds_with_dataset,
         )
+        bounds = array_bounds(vrt_height, vrt_width, vrt_transform)
 
         if max_size and not (width and height):
             height, width = _get_width_height(max_size, vrt_height, vrt_width)
@@ -379,7 +384,9 @@ def part(
                 src_dst,
                 bounds,
                 dst_crs=dst_crs,
+                align_bounds_with_dataset=align_bounds_with_dataset,
             )
+            bounds = array_bounds(vrt_height, vrt_width, vrt_transform)
 
         if padding > 0 and not is_aligned(src_dst, bounds, bounds_crs=dst_crs):
             vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
@@ -415,6 +422,18 @@ def part(
 
     # else no re-projection needed
     window = windows.from_bounds(*bounds, transform=src_dst.transform)
+    if align_bounds_with_dataset:
+        (row_start, row_stop), (col_start, col_stop) = window.toranges()
+        row_start, row_stop = int(math.floor(row_start)), int(math.ceil(row_stop))
+        col_start, col_stop = int(math.floor(col_start)), int(math.ceil(col_stop))
+        window = windows.Window(
+            col_off=col_start,
+            row_off=row_start,
+            width=max(col_stop - col_start, 0.0),
+            height=max(row_stop - row_start, 0.0),
+        )
+        bounds = windows.bounds(window, src_dst.transform)
+
     if max_size and not (width and height):
         height, width = _get_width_height(
             max_size, round(window.height), round(window.width)

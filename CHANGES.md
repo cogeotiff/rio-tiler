@@ -1,7 +1,11 @@
 
-# unreleased
+# 6.3.0 (unreleased)
 
 * do not use `warpedVRT` when overwriting the dataset nodata value
+
+* add `align_bounds_with_dataset` option in `rio_tiler.reader.part` to align input bounds with the dataset resolution
+
+    <img src="https://github.com/cogeotiff/rio-tiler/assets/10407788/0e340d3d-e5d9-4558-93f7-3f307c017510" style="max-width: 500px;">
 
 # 6.2.10 (2024-01-08)
 
@@ -88,7 +92,7 @@ This release was made while we waited on a fix for https://github.com/cogeotiff/
 
 * add `cmocean` colormaps
 
-    <img src="https://raw.githubusercontent.com/cogeotiff/rio-tiler/main/docs/src/img/colormaps_for_oceanography.png" style="max-width: 500px;"></a>
+    <img src="https://raw.githubusercontent.com/cogeotiff/rio-tiler/main/docs/src/img/colormaps_for_oceanography.png" style="max-width: 500px;">
 
 * allow uppercase in `cmap.get` method
 

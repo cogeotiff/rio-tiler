@@ -1,5 +1,6 @@
 """rio_tiler.utils: utility functions."""
 
+import math
 import warnings
 from io import BytesIO
 from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
@@ -229,6 +230,7 @@ def get_vrt_transform(
     width: Optional[int] = None,
     dst_crs: CRS = WEB_MERCATOR_CRS,
     window_precision: int = 6,
+    align_bounds_with_dataset: bool = False,
 ) -> Tuple[Affine, int, int]:
     """Calculate VRT transform.
 
@@ -238,6 +240,7 @@ def get_vrt_transform(
         height (int, optional): Desired output height of the array for the input bounds.
         width (int, optional): Desired output width of the array for the input bounds.
         dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to `epsg:3857`.
+        align_bounds_with_dataset (bool): Align input bounds with dataset transform. Defaults to `False`.
 
     Returns:
         tuple: VRT transform (affine.Affine), width (int) and height (int)
@@ -298,6 +301,19 @@ def get_vrt_transform(
 
         # Get Bounds for the rounded window
         bounds = src_dst.window_bounds(w)
+
+    elif align_bounds_with_dataset:
+        window = windows.from_bounds(*bounds, transform=dst_transform)
+        (row_start, row_stop), (col_start, col_stop) = window.toranges()
+        row_start, row_stop = int(math.floor(row_start)), int(math.ceil(row_stop))
+        col_start, col_stop = int(math.floor(col_start)), int(math.ceil(col_stop))
+        window = windows.Window(
+            col_off=col_start,
+            row_off=row_start,
+            width=max(col_stop - col_start, 0.0),
+            height=max(row_stop - row_start, 0.0),
+        )
+        bounds = windows.bounds(window, dst_transform)
 
     w, s, e, n = bounds
 
