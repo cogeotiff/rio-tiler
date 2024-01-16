@@ -1,6 +1,6 @@
 """rio-tiler."""
 
-__version__ = "6.2.10"
+__version__ = "6.3.0"
 
 from . import (  # noqa
     colormap,
