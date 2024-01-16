@@ -22,7 +22,12 @@ from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideB
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
-from rio_tiler.utils import get_vrt_transform, has_alpha_band, non_alpha_indexes
+from rio_tiler.utils import (
+    _round_window,
+    get_vrt_transform,
+    has_alpha_band,
+    non_alpha_indexes,
+)
 
 
 class Options(TypedDict, total=False):
@@ -423,15 +428,7 @@ def part(
     # else no re-projection needed
     window = windows.from_bounds(*bounds, transform=src_dst.transform)
     if align_bounds_with_dataset:
-        (row_start, row_stop), (col_start, col_stop) = window.toranges()
-        row_start, row_stop = int(math.floor(row_start)), int(math.ceil(row_stop))
-        col_start, col_stop = int(math.floor(col_start)), int(math.ceil(col_stop))
-        window = windows.Window(
-            col_off=col_start,
-            row_off=row_start,
-            width=max(col_stop - col_start, 0.0),
-            height=max(row_stop - row_start, 0.0),
-        )
+        window = _round_window(window)
         bounds = windows.bounds(window, src_dst.transform)
 
     if max_size and not (width and height):

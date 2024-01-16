@@ -89,10 +89,9 @@ with Reader("cog.tif") as src:
     stats = data.statistics(coverage=coverage_array)
 ```
 
-When passing `align_bounds_with_dataset=True` to the  `reader.part()` method (forwared from `.feature` or `.part` reader's method), rio-tiler will adjust the input geometry bounds to math the input dataset resolution/transform and avoid unnecessary resampling.
+When passing `align_bounds_with_dataset=True` to the `reader.part()` method (forwarded from `.feature` or `.part` reader methods), rio-tiler will adjust the input geometry bounds to match the input dataset resolution/transform and avoid unnecessary resampling.
 
 <img src="https://github.com/cogeotiff/rio-tiler/assets/10407788/0e340d3d-e5d9-4558-93f7-3f307c017510" style="max-width: 800px;">
-
 
 ### Zonal Statistics method
 

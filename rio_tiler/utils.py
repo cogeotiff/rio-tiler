@@ -170,6 +170,18 @@ def _div_round_up(a: int, b: int) -> int:
     return (a // b) if (a % b) == 0 else (a // b) + 1
 
 
+def _round_window(window: windows.Window) -> windows.Window:
+    (row_start, row_stop), (col_start, col_stop) = window.toranges()
+    row_start, row_stop = int(math.floor(row_start)), int(math.ceil(row_stop))
+    col_start, col_stop = int(math.floor(col_start)), int(math.ceil(col_stop))
+    return windows.Window(
+        col_off=col_start,
+        row_off=row_start,
+        width=max(col_stop - col_start, 0.0),
+        height=max(row_stop - row_start, 0.0),
+    )
+
+
 def get_overview_level(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     bounds: BBox,
@@ -303,16 +315,7 @@ def get_vrt_transform(
         bounds = src_dst.window_bounds(w)
 
     elif align_bounds_with_dataset:
-        window = windows.from_bounds(*bounds, transform=dst_transform)
-        (row_start, row_stop), (col_start, col_stop) = window.toranges()
-        row_start, row_stop = int(math.floor(row_start)), int(math.ceil(row_stop))
-        col_start, col_stop = int(math.floor(col_start)), int(math.ceil(col_stop))
-        window = windows.Window(
-            col_off=col_start,
-            row_off=row_start,
-            width=max(col_stop - col_start, 0.0),
-            height=max(row_stop - row_start, 0.0),
-        )
+        window = _round_window(windows.from_bounds(*bounds, transform=dst_transform))
         bounds = windows.bounds(window, dst_transform)
 
     w, s, e, n = bounds

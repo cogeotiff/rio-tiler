@@ -1,5 +1,5 @@
 
-# 6.3.0 (unreleased)
+# 6.3.0 (2024-01-16)
 
 * do not use `warpedVRT` when overwriting the dataset nodata value
 
