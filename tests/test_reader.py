@@ -9,6 +9,7 @@ from numpy.testing import assert_array_almost_equal
 from rasterio.warp import transform_bounds
 
 from rio_tiler import constants, reader
+from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import PointOutsideBounds, TileOutsideBounds
 
 S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
@@ -669,3 +670,169 @@ def test_part_no_VRT():
         assert img_small.height == 1
         assert img_small.width == 1
         assert_array_almost_equal(img_small.bounds, bounds_small_dst_crs)
+
+
+@pytest.mark.parametrize(
+    "bounds,crs",
+    [
+        (
+            (
+                -56.624124590533825,
+                73.50183615350426,
+                -56.530950796449005,
+                73.52687881825946,
+            ),
+            "epsg:32621",
+        ),  # Case 1 - square bounds within dataset
+        (
+            (
+                -62.841631140841685,
+                73.15163488990189,
+                -60.36648908847309,
+                73.97773652099218,
+            ),
+            "epsg:32621",
+        ),  # Case 2 - boundless (left)
+        (
+            (
+                -52.927554190740736,
+                73.3960640725901,
+                -51.96837664926392,
+                73.77350422465656,
+            ),
+            "epsg:32621",
+        ),  # Case 3 - boundless (right)
+        (
+            (
+                -57.15027188947926,
+                74.56177365126999,
+                -56.37556339673152,
+                74.75029925196495,
+            ),
+            "epsg:32621",
+        ),  # Case 4 - boundless (top)
+        (
+            (
+                -55.86202533996874,
+                71.8988448629112,
+                -54.6335972683694,
+                72.28789003457715,
+            ),
+            "epsg:32621",
+        ),  # Case 5 - boundless (bottom)
+        (
+            (
+                -62.968685159182414,
+                71.95907543637196,
+                -51.60091205568341,
+                74.78461407516858,
+            ),
+            "epsg:32621",
+        ),  # Case 6 - boundless whole raster
+        (
+            (
+                -66.79529480522785,
+                74.22513769476188,
+                -65.89488418613195,
+                74.48258818252089,
+            ),
+            "epsg:32621",
+        ),  # Case 7 - outside bounds
+        # With Reprojection
+        (
+            (
+                -56.624124590533825,
+                73.50183615350426,
+                -56.530950796449005,
+                73.52687881825946,
+            ),
+            "epsg:4326",
+        ),  # Case 1 - square bounds within dataset
+        (
+            (
+                -62.841631140841685,
+                73.15163488990189,
+                -60.36648908847309,
+                73.97773652099218,
+            ),
+            "epsg:4326",
+        ),  # Case 2 - boundless (left)
+        (
+            (
+                -52.927554190740736,
+                73.3960640725901,
+                -51.96837664926392,
+                73.77350422465656,
+            ),
+            "epsg:4326",
+        ),  # Case 3 - boundless (right)
+        (
+            (
+                -57.15027188947926,
+                74.56177365126999,
+                -56.37556339673152,
+                74.75029925196495,
+            ),
+            "epsg:4326",
+        ),  # Case 4 - boundless (top)
+        (
+            (
+                -55.86202533996874,
+                71.8988448629112,
+                -54.6335972683694,
+                72.28789003457715,
+            ),
+            "epsg:4326",
+        ),  # Case 5 - boundless (bottom)
+        (
+            (
+                -62.968685159182414,
+                71.95907543637196,
+                -51.60091205568341,
+                74.78461407516858,
+            ),
+            "epsg:4326",
+        ),  # Case 6 - boundless whole raster
+        (
+            (
+                -66.79529480522785,
+                74.22513769476188,
+                -65.89488418613195,
+                74.48258818252089,
+            ),
+            "epsg:4326",
+        ),  # Case 7 - outside bounds
+    ],
+)
+def test_part_align_transform(bounds, crs):
+    """test `align_bounds_with_dataset` option."""
+    with rasterio.open(COG) as src_dst:
+        img = reader.part(
+            src_dst,
+            bounds,
+            dst_crs=crs,
+            bounds_crs="epsg:4326",
+            align_bounds_with_dataset=True,
+        )
+        img_default = reader.part(
+            src_dst,
+            bounds,
+            dst_crs=crs,
+            bounds_crs="epsg:4326",
+            align_bounds_with_dataset=False,
+        )
+        assert not img.array.shape == img_default.array.shape
+        assert not img.bounds == img_default.bounds
+
+        # output image aligned with bounds should have the origin
+        # with the bounds UL
+        if crs != WGS84_CRS:
+            bounds = transform_bounds(WGS84_CRS, crs, *bounds, densify_pts=21)
+
+        assert round(img_default.transform.c, 5) == round(bounds[0], 5)
+        assert round(img_default.transform.f, 5) == round(bounds[3], 5)
+
+        # output image bounds aligned to the dataset transform should have the origin
+        # with the bounds greater than UL
+        assert img.transform.c < bounds[0]
+        assert img.transform.f > bounds[3]
