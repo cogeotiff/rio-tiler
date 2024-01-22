@@ -33,6 +33,7 @@ PIX4D_PATH = os.path.join(S3_LOCAL, KEY_PIX4D)
 COG = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
+COG_NODATA = os.path.join(os.path.dirname(__file__), "fixtures", "cog_nodata.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -836,3 +837,14 @@ def test_part_align_transform(bounds, crs):
         # with the bounds greater than UL
         assert img.transform.c < bounds[0]
         assert img.transform.f > bounds[3]
+
+
+def test_nodata_orverride():
+    """Make sure notata override."""
+    with rasterio.open(COG_NODATA) as src_dst:
+        prev = reader.read(src_dst, max_size=100)
+        assert prev.mask[0, 0] == 0
+
+        prev = reader.read(src_dst, max_size=100, nodata=2720)
+        assert prev.mask[0, 0] == 255
+        assert not numpy.all(prev.mask)

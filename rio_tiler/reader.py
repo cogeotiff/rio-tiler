@@ -238,7 +238,7 @@ def read(
 
             # if data has Nodata then we simply make sure the mask == the nodata
             if nodata is not None:
-                data.mask |= data == nodata
+                data.mask = data.data == nodata
 
         stats = []
         for ix in indexes:
