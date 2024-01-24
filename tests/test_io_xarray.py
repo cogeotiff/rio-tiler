@@ -46,7 +46,7 @@ def test_xarray_reader():
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         # Tests for auto_expand
-        ## Test that a high-zoom tile will error with auto_expand=False
+        # Test that a high-zoom tile will error with auto_expand=False
         tms = morecantile.tms.get("WebMercatorQuad")
         zoom = 10
         x, y = tms.xy(-170, -80)
@@ -58,8 +58,8 @@ def test_xarray_reader():
             str(error.value)
             == "At least one of the clipped raster x,y coordinates has only one point."
         )
-        ##
-        ## Test that a high-zoom tile will succeed with auto_expand=True (and that is the default)
+
+        # Test that a high-zoom tile will succeed with auto_expand=True (and that is the default)
         img = dst.tile(tile.x, tile.y, zoom)
         assert img.count == 1
         assert img.width == 256
@@ -262,3 +262,65 @@ def test_xarray_reader_internal_nodata():
         assert not img.mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
+
+
+def test_xarray_reader_resampling():
+    """test XarrayReader."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": list(range(-170, 180, 10)),
+            "y": list(range(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    with XarrayReader(data) as dst:
+        # TILE
+        # default nearest
+        img = dst.tile(0, 0, 1)
+        img_cubic = dst.tile(0, 0, 1, reproject_method="cubic")
+        assert not numpy.array_equal(img.array, img_cubic.array)
+
+        with pytest.warns(DeprecationWarning):
+            _ = dst.tile(0, 0, 1, resampling_method="nearest")
+
+        # PART
+        img = dst.part((-160, -80, 160, 80), dst_crs="epsg:3857")
+        img_cubic = dst.part(
+            (-160, -80, 160, 80), dst_crs="epsg:3857", reproject_method="cubic"
+        )
+        assert not numpy.array_equal(img.array, img_cubic.array)
+
+        with pytest.warns(DeprecationWarning):
+            _ = dst.part((-160, -80, 160, 80), resampling_method="nearest")
+
+        feat = {
+            "type": "Feature",
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-180.0, 0],
+                        [-180.0, 85.0511287798066],
+                        [0, 85.0511287798066],
+                        [0, 6.023673383202919e-13],
+                        [-180.0, 0],
+                    ]
+                ],
+            },
+            "properties": {"title": "XYZ tile (0, 0, 1)"},
+        }
+
+        # FEATURE
+        img = dst.feature(feat, dst_crs="epsg:3857")
+        img_cubic = dst.feature(feat, dst_crs="epsg:3857", reproject_method="cubic")
+        assert not numpy.array_equal(img.array, img_cubic.array)
+
+        with pytest.warns(DeprecationWarning):
+            _ = dst.feature(feat, resampling_method="nearest")

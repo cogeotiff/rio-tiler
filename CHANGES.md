@@ -1,3 +1,16 @@
+# 6.4.0 (2024-01-24)
+
+* deprecate `resampling_method` in `rio_tiler.io.xarray.XarrayReader` method and add `reproject_method` (to match the `rio_tiler.io.Reader` options)
+
+    ```python
+    # before
+    with XarrayReader(data) as dst:
+        img = dst.tile(0, 0, 1, resampling_method="cubic")
+
+    # now
+    with XarrayReader(data) as dst:
+        img_cubic = dst.tile(0, 0, 1, reproject_method="cubic")
+    ```
 
 # 6.3.1 (2024-01-22)
 

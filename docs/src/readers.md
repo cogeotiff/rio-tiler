@@ -1064,7 +1064,7 @@ from rio_tiler.io import XarrayReader
 from rio_tiler.models import ImageData
 
 with XarrayReader(data) as src:
-    # src.tile(tile_x, tile_y, tile_z, tilesize, resampling_method)
+    # src.tile(tile_x, tile_y, tile_z, tilesize, reproject_method)
     img = src.tile(1, 2, 3)
     assert isinstance(img, ImageData)
     assert img.crs == WEB_MERCATOR_CRS
@@ -1077,7 +1077,7 @@ from rio_tiler.io import XarrayReader
 from rio_tiler.models import ImageData
 
 with XarrayReader(data) as src:
-    # src.part((minx, miny, maxx, maxy), dst_crs, bounds_crs, resampling_method)
+    # src.part((minx, miny, maxx, maxy), dst_crs, bounds_crs, reproject_method)
     img = src.part((10, 10, 20, 20))
     assert isinstance(img, ImageData)
     assert img.crs == WGS84_CRS

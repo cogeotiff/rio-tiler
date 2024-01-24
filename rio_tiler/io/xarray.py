@@ -202,7 +202,8 @@ class XarrayReader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
-        resampling_method: WarpResampling = "nearest",
+        resampling_method: Optional[WarpResampling] = None,
+        reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
     ) -> ImageData:
@@ -213,13 +214,22 @@ class XarrayReader(BaseReader):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output image size. Defaults to `256`.
-            resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            resampling_method (WarpResampling, optional): **DEPRECATED**, WarpKernel resampling algorithm. Defaults to `nearest`.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
             auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
+        if resampling_method:
+            warnings.warn(
+                "`resampling_method` is deprecated and will be removed in rio-tiler 7.0, please use `reproject_method`",
+                DeprecationWarning,
+            )
+            reproject_method = resampling_method
+
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside bounds"
@@ -242,7 +252,7 @@ class XarrayReader(BaseReader):
             dst_crs,
             shape=(tilesize, tilesize),
             transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
-            resampling=Resampling[resampling_method],
+            resampling=Resampling[reproject_method],
             nodata=nodata,
         )
 
@@ -268,7 +278,8 @@ class XarrayReader(BaseReader):
         bbox: BBox,
         dst_crs: Optional[CRS] = None,
         bounds_crs: CRS = WGS84_CRS,
-        resampling_method: WarpResampling = "nearest",
+        resampling_method: Optional[WarpResampling] = None,
+        reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
     ) -> ImageData:
@@ -278,13 +289,22 @@ class XarrayReader(BaseReader):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs ("dst_crs").
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             bounds_crs (rasterio.crs.CRS, optional): Bounds Coordinate Reference System. Defaults to `epsg:4326`.
-            resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            resampling_method (WarpResampling, optional): **DEPRECATED**, WarpKernel resampling algorithm. Defaults to `nearest`.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
             auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
+        if resampling_method:
+            warnings.warn(
+                "`resampling_method` is deprecated and will be removed in rio-tiler 7.0, please use `reproject_method`",
+                DeprecationWarning,
+            )
+            reproject_method = resampling_method
+
         dst_crs = dst_crs or bounds_crs
 
         ds = self.input
@@ -309,7 +329,7 @@ class XarrayReader(BaseReader):
                 dst_crs,
                 shape=(h, w),
                 transform=dst_transform,
-                resampling=Resampling[resampling_method],
+                resampling=Resampling[reproject_method],
                 nodata=nodata,
             )
 
@@ -362,6 +382,7 @@ class XarrayReader(BaseReader):
             lon (float): Longitude.
             lat (float): Latitude.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
             PointData
@@ -396,7 +417,8 @@ class XarrayReader(BaseReader):
         shape: Dict,
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
-        resampling_method: WarpResampling = "nearest",
+        resampling_method: Optional[WarpResampling] = None,
+        reproject_method: WarpResampling = "nearest",
         nodata: Optional[NoData] = None,
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature.
@@ -405,12 +427,21 @@ class XarrayReader(BaseReader):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            resampling_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            resampling_method (WarpResampling, optional): **DEPRECATED**, WarpKernel resampling algorithm. Defaults to `nearest`.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
+        if resampling_method:
+            warnings.warn(
+                "`resampling_method` is deprecated and will be removed in rio-tiler 7.0, please use `reproject_method`",
+                DeprecationWarning,
+            )
+            reproject_method = resampling_method
+
         if not dst_crs:
             dst_crs = shape_crs
 
@@ -434,7 +465,7 @@ class XarrayReader(BaseReader):
                 dst_crs,
                 shape=(h, w),
                 transform=dst_transform,
-                resampling=Resampling[resampling_method],
+                resampling=Resampling[reproject_method],
                 nodata=nodata,
             )
 
