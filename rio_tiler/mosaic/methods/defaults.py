@@ -201,7 +201,7 @@ class CountMethod(MosaicMethodBase):
         """Return valid data count of the data stack."""
         if self.stack:
             data = numpy.ma.count(numpy.ma.stack(self.stack, axis=0), axis=0)
-            
+
             # only need unint8 for small mosaic stacks
             if len(self.stack) < 256:
                 data = data.astype(numpy.uint8)
