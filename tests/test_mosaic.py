@@ -292,7 +292,7 @@ def test_mosaic_tiler():
     assert t.shape == (1, 256, 256)
     assert m.shape == (256, 256)
     assert m.all()
-    assert t.dtype == "uint16"
+    assert t.dtype == "uint8"
     assert m.dtype == "uint8"
 
 

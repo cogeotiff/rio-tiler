@@ -200,8 +200,12 @@ class CountMethod(MosaicMethodBase):
     def data(self) -> Optional[numpy.ma.MaskedArray]:
         """Return valid data count of the data stack."""
         if self.stack:
-            data = numpy.ma.count(numpy.ma.stack(self.stack, axis=0), axis=0).astype(numpy.uint16)
+            data = numpy.ma.count(numpy.ma.stack(self.stack, axis=0), axis=0)
             
+            # only need unint8 for small mosaic stacks
+            if len(self.stack) < 256:
+                data = data.astype(numpy.uint8)
+
             # only need the counts from one band
             if len(data.shape) > 2:
                 data = data[0]
