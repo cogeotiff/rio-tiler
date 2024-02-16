@@ -285,6 +285,16 @@ def test_mosaic_tiler():
     assert t.dtype == "uint16"
     assert m.dtype == "uint8"
 
+    # Test count pixel selection
+    (t, m), _ = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, pixel_selection=defaults.CountMethod()
+    )
+    assert t.shape == (1, 256, 256)
+    assert m.shape == (256, 256)
+    assert m.all()
+    assert t.dtype == "uint16"
+    assert m.dtype == "uint8"
+
 
 def mock_rasterio_open(asset):
     """Mock rasterio Open."""
