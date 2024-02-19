@@ -188,3 +188,36 @@ class LastBandLowMethod(MosaicMethodBase):
             mask = numpy.where(pidex, array.mask, self.mosaic.mask)
             self.mosaic = numpy.ma.where(pidex, array, self.mosaic)
             self.mosaic.mask = mask
+
+
+@dataclass
+class CountMethod(MosaicMethodBase):
+    """Stack the arrays and return the valid pixel count."""
+
+    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+
+    @property
+    def data(self) -> Optional[numpy.ma.MaskedArray]:
+        """Return valid data count of the data stack."""
+        if self.stack:
+            data = numpy.ma.count(numpy.ma.stack(self.stack, axis=0), axis=0)
+
+            # only need unint8 for small mosaic stacks
+            if len(self.stack) < 256:
+                data = data.astype(numpy.uint8)
+
+            # only need the counts from one band
+            if len(data.shape) > 2:
+                data = data[0]
+
+            # mask is always empty
+            mask = numpy.zeros(data.shape, dtype=bool)
+            array = numpy.ma.MaskedArray(data, mask)
+
+            return array
+
+        return None
+
+    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+        """Add array to the stack."""
+        self.stack.append(array)
