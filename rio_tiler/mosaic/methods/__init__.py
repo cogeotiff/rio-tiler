@@ -3,6 +3,7 @@
 from enum import Enum
 
 from .defaults import (
+    CountMethod,
     FirstMethod,
     HighestMethod,
     LastBandHighMethod,
@@ -25,3 +26,4 @@ class PixelSelectionMethod(Enum):
     stdev = StdevMethod
     lastbandlow = LastBandLowMethod
     lastbandhight = LastBandHighMethod
+    count = CountMethod

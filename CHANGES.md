@@ -1,3 +1,8 @@
+
+# 6.4.1 (2024-02-19)
+
+* add `CountMethod` mosaic method (author @mccarthyryanc, https://github.com/cogeotiff/rio-tiler/pull/676)
+
 # 6.4.0 (2024-01-24)
 
 * deprecate `resampling_method` in `rio_tiler.io.xarray.XarrayReader` method and add `reproject_method` (to match the `rio_tiler.io.Reader` options)
