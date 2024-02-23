@@ -460,6 +460,7 @@ def test_imagedata_coverage():
     coverage = im.get_coverage_array({"type": "Feature", "geometry": poly})
     assert numpy.unique(coverage).tolist() == [0.25]
 
+    # non-default CRS
     poly = {
         "type": "Polygon",
         "coordinates": [
@@ -480,3 +481,19 @@ def test_imagedata_coverage():
         {"type": "Feature", "geometry": poly}, shape_crs="epsg:3857"
     )
     assert numpy.unique(coverage).tolist() == [0.25]
+
+    # polygon with diagonal cut - requires higher cover_scale
+    im = ImageData(
+        numpy.ma.array((1, 2, 3, 4)).reshape((1, 2, 2)),
+        crs="epsg:4326",
+        bounds=(-180, -90, 180, 90),
+    )
+    poly = {
+        "type": "Polygon",
+        "coordinates": [
+            [[-90.0, -45.0], [90.0, -45.0], [-90.0, 45.0], [-90.0, -45.0]]
+        ],
+    }
+    
+    coverage = im.get_coverage_array(poly, cover_scale=100)
+    assert numpy.allclose(numpy.unique(coverage), [0, 0.125, 0.25], rtol=1e3)
