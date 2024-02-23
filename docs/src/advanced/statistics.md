@@ -104,6 +104,7 @@ from typing import Any, Union, Optional, List, Dict
 
 from rio_tiler import io
 from rio_tiler.models import BandStatistics
+from rio_tiler.constants import WGS84_CRS
 
 from geojson_pydantic.features import Feature, FeatureCollection
 from geojson_pydantic.geometries import Polygon
