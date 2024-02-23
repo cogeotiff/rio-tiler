@@ -496,4 +496,4 @@ def test_imagedata_coverage():
     }
     
     coverage = im.get_coverage_array(poly, cover_scale=100)
-    assert numpy.allclose(numpy.unique(coverage), [0, 0.125, 0.25], rtol=1e3)
+    assert numpy.round(numpy.unique(coverage), decimals=3).tolist() == [0, 0.125, 0.25]
