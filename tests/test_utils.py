@@ -567,21 +567,17 @@ def test_render_colorinterp():
 def test_get_array_statistics_coverage():
     """Test statistics with coverage array."""
     # Data Array
-    # 1, 2
-    # 3, 4
     data = np.ma.array((1, 2, 3, 4)).reshape((1, 2, 2))
 
     # Coverage Array
-    # 0.5, 0
-    # 1, 0.25
-    coverage = np.array((0.5, 0, 1, 0.25)).reshape((2, 2))
+    coverage = np.array((0, 0.25, 1, 0)).reshape((2, 2))
 
     stats = utils.get_array_statistics(data, coverage=coverage)
     assert len(stats) == 1
-    assert stats[0]["min"] == 1
-    assert stats[0]["max"] == 4
-    assert stats[0]["mean"] == 1.125  # (1 * 0.5 + 2 * 0.0 + 3 * 1.0 + 4 * 0.25) / 4
-    assert stats[0]["count"] == 1.75
+    assert stats[0]["min"] == 2
+    assert stats[0]["max"] == 3
+    assert stats[0]["mean"] == (1 * 0 + 2 * 0.25 + 3 * 1.0 + 4 * 0) / 1.25
+    assert stats[0]["count"] == 1.25
 
     stats = utils.get_array_statistics(data)
     assert len(stats) == 1
