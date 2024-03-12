@@ -586,7 +586,7 @@ def test_get_array_statistics_coverage():
     )  # sum of weighted array / sum of weights | 4.5 / 1.75 = 2.57
     assert stats[0]["count"] == 1.75
     assert stats[0]["median"] == 3  # 2 in exactextract
-    assert stats[0]["std"] == 1.05
+    assert round(stats[0]["std"], 2) == 1.05
 
     stats = utils.get_array_statistics(data)
     assert len(stats) == 1
