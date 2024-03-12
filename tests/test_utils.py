@@ -566,6 +566,7 @@ def test_render_colorinterp():
 
 def test_get_array_statistics_coverage():
     """Test statistics with coverage array."""
+    # same test as https://github.com/isciences/exactextract?tab=readme-ov-file#supported-statistics
     # Data Array
     # 1, 2
     # 3, 4
@@ -580,8 +581,12 @@ def test_get_array_statistics_coverage():
     assert len(stats) == 1
     assert stats[0]["min"] == 1
     assert stats[0]["max"] == 4
-    assert stats[0]["mean"] == 1.125  # (1 * 0.5 + 2 * 0.0 + 3 * 1.0 + 4 * 0.25) / 4
+    assert (
+        round(stats[0]["mean"], 4) == 2.5714
+    )  # sum of weighted array / sum of weights | 4.5 / 1.75 = 2.57
     assert stats[0]["count"] == 1.75
+    assert stats[0]["median"] == 3  # 2 in exactextract
+    assert stats[0]["std"] == 1.05
 
     stats = utils.get_array_statistics(data)
     assert len(stats) == 1
@@ -589,6 +594,23 @@ def test_get_array_statistics_coverage():
     assert stats[0]["max"] == 4
     assert stats[0]["mean"] == 2.5
     assert stats[0]["count"] == 4
+
+    # same test as https://github.com/isciences/exactextract/blob/0883cd585d9c7b6b4e936aeca4aa84a15adf82d2/python/tests/test_exact_extract.py#L48-L110
+    data = np.ma.arange(1, 10, dtype=np.int32).reshape(3, 3)
+    coverage = np.array([0.25, 0.5, 0.25, 0.5, 1.0, 0.5, 0.25, 0.5, 0.25]).reshape(3, 3)
+    stats = utils.get_array_statistics(data, coverage=coverage, percentiles=[25, 75])
+    assert len(stats) == 1
+    assert stats[0]["count"] == 4
+    assert stats[0]["mean"] == 5
+    assert stats[0]["median"] == 5
+    assert stats[0]["min"] == 1
+    assert stats[0]["max"] == 9
+    # exactextract takes coverage into account, we don't
+    assert stats[0]["minority"] == 1  # 1 in exactextract
+    assert stats[0]["majority"] == 1  # 5 in exactextract
+    assert stats[0]["percentile_25"] == 3
+    assert stats[0]["percentile_75"] == 6
+    assert stats[0]["std"] == math.sqrt(5)
 
 
 def test_get_vrt_transform_world_file(dataset_fixture):
