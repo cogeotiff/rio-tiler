@@ -41,7 +41,7 @@ def _weighted_quantiles(
 ) -> float:
     i = numpy.argsort(values)
     c = numpy.cumsum(weights[i])
-    return values[i[numpy.searchsorted(c, numpy.array(quantiles) * c[-1])]]
+    return float(values[i[numpy.searchsorted(c, numpy.array(quantiles) * c[-1])]])
 
 
 # Ref: https://stackoverflow.com/questions/2413522

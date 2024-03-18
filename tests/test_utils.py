@@ -1,5 +1,6 @@
 """tests rio_tiler.utils"""
 
+import json
 import math
 import os
 import warnings
@@ -460,6 +461,8 @@ def test_get_array_statistics():
         "masked_pixels",
         "valid_percent",
     ]
+    # Make sure the statistics object are JSON serializable
+    assert json.dumps(stats[0])
 
     stats = utils.get_array_statistics(arr, percentiles=[2, 3, 4])
     assert "percentile_2" in stats[0]
