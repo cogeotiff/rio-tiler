@@ -33,6 +33,27 @@ def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, Non
         yield my_list[i : i + chuck_size]
 
 
+# Ref: https://stackoverflow.com/posts/73905572
+def _weighted_quantiles(
+    values: NDArray[numpy.floating],
+    weights: NDArray[numpy.floating],
+    quantiles: float = 0.5,
+) -> float:
+    i = numpy.argsort(values)
+    c = numpy.cumsum(weights[i])
+    return float(values[i[numpy.searchsorted(c, numpy.array(quantiles) * c[-1])]])
+
+
+# Ref: https://stackoverflow.com/questions/2413522
+def _weighted_stdev(
+    values: NDArray[numpy.floating],
+    weights: NDArray[numpy.floating],
+) -> float:
+    average = numpy.average(values, weights=weights)
+    variance = numpy.average((values - average) ** 2, weights=weights)
+    return float(math.sqrt(variance))
+
+
 def get_array_statistics(
     data: numpy.ma.MaskedArray,
     categorical: bool = False,
@@ -85,25 +106,31 @@ def get_array_statistics(
     percentiles = percentiles or [2, 98]
 
     if len(data.shape) < 3:
-        data = numpy.expand_dims(data, axis=0)
+        data = numpy.ma.expand_dims(data, axis=0)
 
     output: List[Dict[Any, Any]] = []
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
+
+    if coverage is not None:
+        assert coverage.shape == (
+            data.shape[1],
+            data.shape[2],
+        ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
+
+    else:
+        coverage = numpy.ones((data.shape[1], data.shape[2]))
 
     # Avoid non masked nan/inf values
     numpy.ma.fix_invalid(data, copy=False)
 
     for b in range(data.shape[0]):
-        keys, counts = numpy.unique(data[b].compressed(), return_counts=True)
+        data_comp = data[b].compressed()
+
+        keys, counts = numpy.unique(data_comp, return_counts=True)
 
         valid_pixels = float(numpy.ma.count(data[b]))
         masked_pixels = float(numpy.ma.count_masked(data[b]))
         valid_percent = round((valid_pixels / data[b].size) * 100, 2)
-        info_px = {
-            "valid_pixels": valid_pixels,
-            "masked_pixels": masked_pixels,
-            "valid_percent": valid_percent,
-        }
 
         if categorical:
             out_dict = dict(zip(keys.tolist(), counts.tolist()))
@@ -115,28 +142,26 @@ def get_array_statistics(
                 h_keys,
             ]
         else:
-            h_counts, h_keys = numpy.histogram(data[b].compressed(), **kwargs)
+            h_counts, h_keys = numpy.histogram(data_comp, **kwargs)
             histogram = [h_counts.tolist(), h_keys.tolist()]
 
+        # Data coverage fractions
+        data_cov = data[b] * coverage
+        # Coverage Array + data mask
+        masked_coverage = numpy.ma.MaskedArray(coverage, mask=data_cov.mask)
+
         if valid_pixels:
-            percentiles_values = numpy.percentile(
-                data[b].compressed(), percentiles
-            ).tolist()
+            # TODO: when switching to numpy~=2.0
+            # percentiles_values = numpy.percentile(
+            #     data_comp, percentiles, weights=coverage.flatten()
+            # ).tolist()
+            percentiles_values = [
+                _weighted_quantiles(data_comp, masked_coverage.compressed(), pp / 100.0)
+                for pp in percentiles
+            ]
         else:
-            percentiles_values = (numpy.nan,) * len(percentiles_names)
+            percentiles_values = [numpy.nan] * len(percentiles_names)
 
-        if coverage is not None:
-            assert coverage.shape == (
-                data.shape[1],
-                data.shape[2],
-            ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
-
-            array = data[b] * coverage
-
-        else:
-            array = data[b]
-
-        count = array.count() if coverage is None else coverage.sum()
         if valid_pixels:
             majority = float(keys[counts.tolist().index(counts.max())].tolist())
             minority = float(keys[counts.tolist().index(counts.min())].tolist())
@@ -144,21 +169,40 @@ def get_array_statistics(
             majority = numpy.nan
             minority = numpy.nan
 
+        _count = masked_coverage.sum()
+        _sum = data_cov.sum()
+
         output.append(
             {
+                # Minimum value, not taking coverage fractions into account.
                 "min": float(data[b].min()),
+                # Maximum value, not taking coverage fractions into account.
                 "max": float(data[b].max()),
-                "mean": float(array.mean()),
-                "count": float(count),
-                "sum": float(array.sum()),
-                "std": float(array.std()),
-                "median": float(numpy.ma.median(array)),
+                # Mean value, weighted by the percent of each cell that is covered.
+                "mean": float(_sum / _count),
+                # Sum of all non-masked cell coverage fractions.
+                "count": float(_count),
+                # Sum of values, weighted by their coverage fractions.
+                "sum": float(_sum),
+                # Population standard deviation of cell values, taking into account coverage fraction.
+                "std": _weighted_stdev(data_comp, masked_coverage.compressed()),
+                # Median value of cells, weighted by the percent of each cell that is covered.
+                "median": _weighted_quantiles(data_comp, masked_coverage.compressed()),
+                # The value occupying the greatest number of cells.
                 "majority": majority,
+                # The value occupying the least number of cells.
                 "minority": minority,
+                # Unique values.
                 "unique": float(counts.size),
+                # quantiles
                 **dict(zip(percentiles_names, percentiles_values)),
                 "histogram": histogram,
-                **info_px,
+                # Number of non-masked cells, not taking coverage fractions into account.
+                "valid_pixels": valid_pixels,
+                # Number of masked cells, not taking coverage fractions into account.
+                "masked_pixels": masked_pixels,
+                # Percent of valid cells
+                "valid_percent": valid_percent,
             }
         )
 
