@@ -283,7 +283,7 @@ def read(
             band_names=[f"b{idx}" for idx in indexes],
             dataset_statistics=dataset_statistics,
             metadata=dataset.tags(),
-            profile=dataset.profile
+            profile=dataset_profile
         )
 
 
