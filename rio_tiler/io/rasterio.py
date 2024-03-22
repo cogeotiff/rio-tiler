@@ -266,7 +266,7 @@ class Reader(BaseReader):
             "height": self.dataset.height,
             "overviews": self.dataset.overviews(1),
         }
-        if self.dataset.scales[0] and self.dataset.offsets[0]:
+        if self.dataset.scales[0] != 1.0 or self.dataset.offsets[0] != 0.0:
             meta.update(
                 {"scale": self.dataset.scales[0], "offset": self.dataset.offsets[0]}
             )
