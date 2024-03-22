@@ -1,4 +1,8 @@
 
+# 6.4.3 (2024-03-22)
+
+* make sure `scale` and `offset` are set in `Info` even when `offset=0.` or `scale=1.0` (https://github.com/cogeotiff/rio-tiler/pull/687)
+
 # 6.4.2 (2024-03-22)
 
 * better account for coverage in statistics (https://github.com/cogeotiff/rio-tiler/pull/684)
