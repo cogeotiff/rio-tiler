@@ -256,11 +256,18 @@ def read(
         # TODO: DEPRECATED, masked array are already using bool
         if force_binary_mask:
             pass
-
+        # profile is added  only if unscaling was requested. This would ensure/signalized
+        # an advanced usage specifically applied to COGS
+        dataset_profile = None
         if unscale:
             data = data.astype("float32", casting="unsafe")
             numpy.multiply(data, dataset.scales[0], out=data, casting="unsafe")
             numpy.add(data, dataset.offsets[0], out=data, casting="unsafe")
+            dataset_profile = dataset.profile
+            if not 'scales' in dataset_profile:
+                dataset_profile['scales'] = dataset.scales
+            if not 'offsets' in dataset_profile:
+                dataset_profile['offsets'] = dataset.offsets
 
         if post_process:
             data = post_process(data)
@@ -276,6 +283,7 @@ def read(
             band_names=[f"b{idx}" for idx in indexes],
             dataset_statistics=dataset_statistics,
             metadata=dataset.tags(),
+            profile=dataset.profile
         )
 
 
