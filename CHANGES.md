@@ -1,4 +1,8 @@
 
+# 6.4.2 (2024-03-22)
+
+* better account for coverage in statistics (https://github.com/cogeotiff/rio-tiler/pull/684)
+
 # 6.4.1 (2024-02-19)
 
 * add `CountMethod` mosaic method (author @mccarthyryanc, https://github.com/cogeotiff/rio-tiler/pull/676)
