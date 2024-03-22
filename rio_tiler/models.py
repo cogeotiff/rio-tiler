@@ -321,6 +321,7 @@ class ImageData:
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
         band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
         dataset_statistics (list, optional): dataset statistics `[(min, max), (min, max)]`
+        profile (dict, optional): dataset profile
 
     Note: `mask` should be considered as `PER_BAND` so shape should be similar as the data
 
@@ -337,8 +338,8 @@ class ImageData:
     dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
         default=None, kw_only=True
     )
-    cutline_mask: Optional[numpy.ndarray] = attr.ib(default=None)
-
+    cutline_mask: Optional[numpy.ndarray] = attr.ib(default=None),
+    profile: Optional[Dict] = attr.field(factory=dict, kw_only=True)
     @band_names.default
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
