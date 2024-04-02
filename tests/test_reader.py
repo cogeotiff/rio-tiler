@@ -34,7 +34,9 @@ COG = os.path.join(os.path.dirname(__file__), "fixtures", "cog.tif")
 COG_SCALE = os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
 COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
 COG_NODATA = os.path.join(os.path.dirname(__file__), "fixtures", "cog_nodata.tif")
-COG_NODATA_FLOAT_NAN = os.path.join(os.path.dirname(__file__), "fixtures", "cog_nodata_float_nan.tif")
+COG_NODATA_FLOAT_NAN = os.path.join(
+    os.path.dirname(__file__), "fixtures", "cog_nodata_float_nan.tif"
+)
 
 
 @pytest.fixture(autouse=True)
@@ -849,6 +851,7 @@ def test_nodata_orverride():
         prev = reader.read(src_dst, max_size=100, nodata=2720)
         assert prev.mask[0, 0] == 255
         assert not numpy.all(prev.mask)
+
 
 def test_tile_read_nodata_float():
     """Should work as expected when using NaN as nodata value."""
