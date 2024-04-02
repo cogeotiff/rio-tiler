@@ -1,4 +1,8 @@
 
+# 6.4.4 (2024-04-02)
+
+* better handler `NaN` nodata values for masking (author @cerolinx, https://github.com/cogeotiff/rio-tiler/pull/691)
+
 # 6.4.3 (2024-03-22)
 
 * make sure `scale` and `offset` are set in `Info` even when `offset=0.` or `scale=1.0` (https://github.com/cogeotiff/rio-tiler/pull/687)

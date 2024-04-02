@@ -238,7 +238,10 @@ def read(
 
             # if data has Nodata then we simply make sure the mask == the nodata
             if nodata is not None:
-                data.mask = data.data == nodata
+                if numpy.isnan(nodata):
+                    data.mask = numpy.isnan(data.data)
+                else:
+                    data.mask = data.data == nodata
 
         stats = []
         for ix in indexes:
