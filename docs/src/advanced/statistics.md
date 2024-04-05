@@ -49,24 +49,27 @@ with Reader("cog.tif") as src:
 When getting statistics from a `feature`, you may want to calculate values from the pixels which intersect with the geometry but also take the pixel intersection percentage into account. Starting with rio-tiler `6.2.0`, we've added a `coverage` option to the `statistics` utility which enable the user to pass an array representing the coverage percentage such as:
 
 ```python
-import numpy
+import numpy as np
 from rio_tiler.utils import get_array_statistics
+
 # Data Array
 # 1, 2
 # 3, 4
-data = numpy.ma.array((1, 2, 3, 4)).reshape((1, 2, 2))
+data = np.ma.array((1, 2, 3, 4)).reshape((1, 2, 2))
 
 # Coverage Array
 # 0.5, 0
 # 1, 0.25
-coverage = numpy.array((0.5, 0, 1, 0.25)).reshape((2, 2))
+coverage = np.array((0.5, 0, 1, 0.25)).reshape((2, 2))
 
 stats = get_array_statistics(data, coverage=coverage)
 assert len(stats) == 1
 assert stats[0]["min"] == 1
 assert stats[0]["max"] == 4
-assert stats[0]["mean"] == 1.125  # (1 * 0.5 + 2 * 0.0 + 3 * 1.0 + 4 * 0.25) / 4
-assert stats[0]["count"] == 1.75  # (0.5 + 0 + 1 + 0.25) sum of the coverage array
+assert (
+    round(stats[0]["mean"], 4) == 2.5714
+)  # sum of weighted array / sum of weights | 4.5 / 1.75 = 2.57
+assert stats[0]["count"] == 1.75
 ```
 
 #### Adjusting geometry `align_bounds_with_dataset=True`
