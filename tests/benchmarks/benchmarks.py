@@ -1,6 +1,5 @@
 """Benchmark."""
 
-
 import morecantile
 import pytest
 import rasterio
@@ -36,9 +35,7 @@ benchmark_tiles = {
 
 # LC08_L1TP_212004_20190816_20190902_01_T1
 north = {
-    "bounds": BoundingBox(
-        left=433192.5, bottom=8534992.5, right=707407.5, top=8809207.5
-    ),
+    "bounds": BoundingBox(left=433192.5, bottom=8534992.5, right=707407.5, top=8809207.5),
     "crs": CRS.from_epsg(32633),
 }
 
@@ -52,9 +49,7 @@ south = {
 
 # LC08_L1TP_085024_20170816_20170825_01_T1
 dateline = {
-    "bounds": BoundingBox(
-        left=570292.5, bottom=5612092.5, right=803107.5, top=5847607.5
-    ),
+    "bounds": BoundingBox(left=570292.5, bottom=5612092.5, right=803107.5, top=5847607.5),
     "crs": CRS.from_epsg(32660),
 }
 

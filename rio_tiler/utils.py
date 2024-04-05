@@ -112,9 +112,12 @@ def get_array_statistics(
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
 
     if coverage is not None:
-        assert coverage.shape == (
-            data.shape[1],
-            data.shape[2],
+        assert (
+            coverage.shape
+            == (
+                data.shape[1],
+                data.shape[2],
+            )
         ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
 
     else:
@@ -395,7 +398,7 @@ def get_vrt_transform(
 def has_alpha_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> bool:
     """Check for alpha band or mask in source."""
     if (
-        any([MaskFlags.alpha in flags for flags in src_dst.mask_flag_enums])
+        any(MaskFlags.alpha in flags for flags in src_dst.mask_flag_enums)
         or ColorInterp.alpha in src_dst.colorinterp
     ):
         return True
@@ -405,10 +408,8 @@ def has_alpha_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> b
 def has_mask_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> bool:
     """Check for mask band in source."""
     if any(
-        [
-            (MaskFlags.per_dataset in flags and MaskFlags.alpha not in flags)
-            for flags in src_dst.mask_flag_enums
-        ]
+        (MaskFlags.per_dataset in flags and MaskFlags.alpha not in flags)
+        for flags in src_dst.mask_flag_enums
     ):
         return True
     return False

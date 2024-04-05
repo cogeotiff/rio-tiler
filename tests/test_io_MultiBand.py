@@ -40,10 +40,7 @@ class BandFileReader(MultiBandReader):
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
         self.bands = sorted(
-            [
-                p.stem.split("_")[1]
-                for p in pathlib.Path(self.input).glob("*scene_*.tif")
-            ]
+            [p.stem.split("_")[1] for p in pathlib.Path(self.input).glob("*scene_*.tif")]
         )
         with self.reader(self._get_band_url(self.bands[0])) as src:
             self.bounds = src.bounds

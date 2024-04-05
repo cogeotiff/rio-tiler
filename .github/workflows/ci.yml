@@ -9,7 +9,7 @@ on:
     - '*'
   pull_request:
 env:
-  LATEST_PY_VERSION: '3.10'
+  LATEST_PY_VERSION: '3.11'
 
 jobs:
   tests:
@@ -21,6 +21,7 @@ jobs:
         - '3.9'
         - '3.10'
         - '3.11'
+        - '3.12'
 
     steps:
       - uses: actions/checkout@v3

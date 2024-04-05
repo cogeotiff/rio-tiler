@@ -4,6 +4,7 @@ colormap_thumb.py: Create colormap thumbnails for documentation
 This file is derived from the matplotlib documentation.
 https://matplotlib.org/tutorials/colors/colormaps.html
 """
+
 from pathlib import Path
 
 import matplotlib.pyplot as plt

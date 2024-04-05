@@ -28,7 +28,7 @@ def filter_tasks(
     if allowed_exceptions is None:
         allowed_exceptions = ()
 
-    for (future, asset) in tasks:
+    for future, asset in tasks:
         try:
             if isinstance(future, futures.Future):
                 yield future.result(), asset
@@ -52,9 +52,7 @@ def create_tasks(
             ]
     else:
         logger.debug(f"Running tasks outside ThreadsPool (max_workers={threads})")
-        return [
-            (partial(reader, asset, *args, **kwargs), asset) for asset in asset_list
-        ]
+        return [(partial(reader, asset, *args, **kwargs), asset) for asset in asset_list]
 
 
 def multi_arrays(

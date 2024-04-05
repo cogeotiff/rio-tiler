@@ -3,14 +3,13 @@
 import contextlib
 import math
 import warnings
-from enum import IntEnum
 from typing import Callable, Dict, Optional, Tuple, TypedDict, Union
 
 import numpy
 from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
-from rasterio.enums import ColorInterp, MaskFlags, Resampling
+from rasterio.enums import ColorInterp, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.transform import array_bounds
 from rasterio.vrt import WarpedVRT
@@ -97,9 +96,7 @@ def read(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[
-        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
-    ] = None,
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> ImageData:
     """Low level read function.
 
@@ -196,9 +193,7 @@ def read(
                 values = dataset.read(
                     indexes=indexes,
                     window=window,
-                    out_shape=(len(indexes), height, width)
-                    if height and width
-                    else None,
+                    out_shape=(len(indexes), height, width) if height and width else None,
                     resampling=io_resampling,
                     boundless=boundless,
                 )
@@ -246,9 +241,7 @@ def read(
         stats = []
         for ix in indexes:
             tags = dataset.tags(ix)
-            if all(
-                stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
-            ):
+            if all(stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]):
                 stat_min = float(tags.get("STATISTICS_MINIMUM"))
                 stat_max = float(tags.get("STATISTICS_MAXIMUM"))
                 stats.append((stat_min, stat_max))
@@ -302,9 +295,7 @@ def part(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[
-        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
-    ] = None,
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> ImageData:
     """Read part of a dataset.
 
@@ -352,12 +343,8 @@ def part(
         src_bounds = transform_bounds(
             src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21
         )
-        x_overlap = max(
-            0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
-        )
-        y_overlap = max(
-            0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1])
-        )
+        x_overlap = max(0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0]))
+        y_overlap = max(0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1]))
         cover_ratio = (x_overlap * y_overlap) / (
             (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
         )
@@ -500,9 +487,7 @@ def point(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[
-        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
-    ] = None,
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> PointData:
     """Read a pixel value for a point.
 

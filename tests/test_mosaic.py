@@ -442,13 +442,9 @@ def test_threads():
     )
     numpy.testing.assert_array_equal(tnothread, tmulti_threads)
 
-    (t, _), _ = mosaic.mosaic_reader(
-        assets, _read_tile, x, y, z, threads=0, chunk_size=2
-    )
+    (t, _), _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=0, chunk_size=2)
     assert t.shape == (3, 256, 256)
-    (t, _), _ = mosaic.mosaic_reader(
-        assets, _read_tile, x, y, z, threads=2, chunk_size=4
-    )
+    (t, _), _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, threads=2, chunk_size=4)
     assert t.shape == (3, 256, 256)
 
 
@@ -693,9 +689,7 @@ def test_mosaic_feature():
     assert dat.assets == [asset1]
     assert dat.crs == crs
 
-    dat, _ = mosaic.mosaic_reader(
-        assets_order, _read_feature, shape=cog2, shape_crs=crs
-    )
+    dat, _ = mosaic.mosaic_reader(assets_order, _read_feature, shape=cog2, shape_crs=crs)
     assert dat.data.shape == (3, 33, 42)
     assert list(numpy.unique(dat.array.mask)) == [False, True]
     assert dat.assets == [asset2]
