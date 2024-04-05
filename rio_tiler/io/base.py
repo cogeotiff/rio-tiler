@@ -901,9 +901,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         return bands
 
-    def info(
-        self, bands: Union[Sequence[str], str] = None, *args, **kwargs: Any
-    ) -> Info:
+    def info(self, bands: Union[Sequence[str], str] = None, *args, **kwargs: Any) -> Info:
         """Return metadata from multiple bands.
 
         Args:

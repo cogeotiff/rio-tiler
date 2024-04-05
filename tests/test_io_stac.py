@@ -478,9 +478,7 @@ def test_merged_statistics_valid(rio):
         stats = stac.merged_statistics(assets="green")
         assert isinstance(stats["green_b1"], BandStatistics)
 
-        stats = stac.merged_statistics(
-            assets=("green", "red"), hist_options={"bins": 20}
-        )
+        stats = stac.merged_statistics(assets=("green", "red"), hist_options={"bins": 20})
         assert len(stats) == 2
         assert len(stats["green_b1"]["histogram"][0]) == 20
         assert len(stats["red_b1"]["histogram"][0]) == 20
@@ -644,7 +642,7 @@ def test_feature_valid(rio):
 def test_relative_assets():
     """Should return absolute href for assets"""
     with STACReader(STAC_REL_PATH) as stac:
-        for (_key, asset) in stac.item.assets.items():
+        for _key, asset in stac.item.assets.items():
             assert asset.get_absolute_href().startswith(PREFIX)
         assert len(stac.assets) == 5
 
@@ -656,6 +654,7 @@ def test_relative_assets():
 @patch("rio_tiler.io.stac.httpx")
 def test_fetch_stac_client_options(httpx, s3_get):
     """test options forwarding."""
+
     # HTTP
     class MockResponse:
         def __init__(self, data):

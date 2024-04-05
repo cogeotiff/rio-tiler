@@ -229,7 +229,7 @@ class PointData:
             raise InvalidPointDataError("Empty PointData list.")
 
         # validate coordinates
-        if all([pt.coordinates or pt.crs or None for pt in data]):
+        if all(pt.coordinates or pt.crs or None for pt in data):
             lon, lat, crs = zip(*[(*(pt.coordinates or []), pt.crs) for pt in data])
             if len(set(lon)) > 1 or len(set(lat)) > 1 or len(set(crs)) > 1:
                 raise InvalidPointDataError(
@@ -245,9 +245,7 @@ class PointData:
         )
 
         band_names = list(
-            itertools.chain.from_iterable(
-                [pt.band_names for pt in data if pt.band_names]
-            )
+            itertools.chain.from_iterable([pt.band_names for pt in data if pt.band_names])
         )
 
         metadata = dict(
@@ -439,9 +437,7 @@ class ImageData:
         # Get cutline mask at highest resolution.
         max_h, max_w = max(h), max(w)
         cutline_mask = next(
-            img.cutline_mask
-            for img in data
-            if img.height == max_h and img.width == max_w
+            img.cutline_mask for img in data if img.height == max_h and img.width == max_w
         )
 
         if len(set(h)) > 1 or len(set(w)) > 1:
@@ -462,9 +458,7 @@ class ImageData:
 
         assets = list(
             dict.fromkeys(
-                itertools.chain.from_iterable(
-                    [img.assets for img in data if img.assets]
-                )
+                itertools.chain.from_iterable([img.assets for img in data if img.assets])
             )
         )
 
@@ -627,9 +621,9 @@ class ImageData:
     ) -> "ImageData":
         """Resize data and mask."""
         data = resize_array(self.array.data, height, width, resampling_method)
-        mask = resize_array(
-            self.array.mask * 1, height, width, resampling_method
-        ).astype("bool")
+        mask = resize_array(self.array.mask * 1, height, width, resampling_method).astype(
+            "bool"
+        )
 
         return ImageData(
             numpy.ma.MaskedArray(data, mask=mask),

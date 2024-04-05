@@ -1,4 +1,5 @@
 """rio_tiler.io.xarray: Xarray Reader."""
+
 from __future__ import annotations
 
 import warnings
@@ -231,9 +232,7 @@ class XarrayReader(BaseReader):
             reproject_method = resampling_method
 
         if not self.tile_exists(tile_x, tile_y, tile_z):
-            raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside bounds"
-            )
+            raise TileOutsideBounds(f"Tile {tile_z}/{tile_x}/{tile_y} is outside bounds")
 
         ds = self.input
         if nodata is not None:

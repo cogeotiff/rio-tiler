@@ -275,9 +275,7 @@ class Reader(BaseReader):
             meta.update({"colormap": self.colormap})
 
         if nodata_type == "Nodata":
-            meta.update(
-                {"nodata_value": self.options.get("nodata", self.dataset.nodata)}
-            )
+            meta.update({"nodata_value": self.options.get("nodata", self.dataset.nodata)})
 
         return Info(**meta)
 

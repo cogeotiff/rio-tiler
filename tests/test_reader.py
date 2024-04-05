@@ -16,9 +16,7 @@ S3_KEY = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1.tif"
 S3_KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 S3_KEY_NODATA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_nodata.tif"
 S3_KEY_MASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_mask.tif"
-S3_KEY_EXTMASK = (
-    "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_extmask.tif"
-)
+S3_KEY_EXTMASK = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_extmask.tif"
 
 S3_LOCAL = PREFIX = os.path.join(os.path.dirname(__file__), "fixtures", "my-bucket")
 S3_PATH = os.path.join(S3_LOCAL, S3_KEY)
@@ -112,9 +110,7 @@ def test_resampling_returns_different_results():
         12523442.714243278,
     ]
     with rasterio.open(COG) as src_dst:
-        arr, _ = reader.part(
-            src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS
-        )
+        arr, _ = reader.part(src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS)
         arr2, _ = reader.part(
             src_dst,
             bounds,
@@ -125,9 +121,7 @@ def test_resampling_returns_different_results():
         )
         assert not numpy.array_equal(arr, arr2)
 
-        arr, _ = reader.part(
-            src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS
-        )
+        arr, _ = reader.part(src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS)
         arr2, _ = reader.part(
             src_dst,
             bounds,
@@ -444,9 +438,7 @@ def test_point():
     with rasterio.open(S3_ALPHA_PATH) as src_dst:
         # Test with COG + Alpha Band
         assert reader.point(src_dst, [-104.77519499, 38.95367054]).data[0]
-        assert (
-            reader.point(src_dst, [-104.77519499, 38.95367054]).mask[0] == 0
-        )  # Masked
+        assert reader.point(src_dst, [-104.77519499, 38.95367054]).mask[0] == 0  # Masked
 
 
 def test_part_with_buffer():
@@ -489,9 +481,7 @@ def test_part_with_buffer():
         assert img.height == ny
 
     with rasterio.open(COG) as src_dst:
-        imgb = reader.part(
-            src_dst, bounds, buffer=2, dst_crs=constants.WEB_MERCATOR_CRS
-        )
+        imgb = reader.part(src_dst, bounds, buffer=2, dst_crs=constants.WEB_MERCATOR_CRS)
         assert imgb.width == nx
         assert imgb.height == ny
 
@@ -606,7 +596,6 @@ def test_part_no_VRT():
     ]  # boundless part
     # Read part at full resolution
     with rasterio.open(COG) as src_dst:
-
         bounds_dst_crs = transform_bounds(
             "epsg:4326", src_dst.crs, *bounds, densify_pts=21
         )

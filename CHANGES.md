@@ -1,4 +1,9 @@
 
+# 6.4.5 (2024-04-05)
+
+* add python 3.12 official support
+* change code formatter to `ruff-format`
+
 # 6.4.4 (2024-04-02)
 
 * better handler `NaN` nodata values for masking (author @cerolinx, https://github.com/cogeotiff/rio-tiler/pull/691)

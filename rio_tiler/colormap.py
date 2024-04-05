@@ -31,7 +31,8 @@ except ImportError:
 EMPTY_COLORMAP: GDALColorMapType = {i: (0, 0, 0, 0) for i in range(256)}
 
 DEFAULT_CMAPS_FILES = {
-    f.stem: str(f) for f in (resources_files(__package__) / "cmap_data").glob("*.npy")  # type: ignore
+    f.stem: str(f)
+    for f in (resources_files(__package__) / "cmap_data").glob("*.npy")  # type: ignore
 }
 
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
@@ -123,9 +124,7 @@ def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     return data[:-1], data[-1]
 
 
-def apply_discrete_cmap(
-    data: numpy.ndarray, colormap: GDALColorMapType
-) -> DataMaskType:
+def apply_discrete_cmap(data: numpy.ndarray, colormap: GDALColorMapType) -> DataMaskType:
     """Apply discrete colormap.
 
     Args:
@@ -189,7 +188,7 @@ def apply_intervals_cmap(
     """
     res = numpy.zeros((data.shape[1], data.shape[2], 4), dtype=numpy.uint8)
 
-    for (k, v) in colormap:
+    for k, v in colormap:
         res[(data[0] >= k[0]) & (data[0] < k[1])] = numpy.array(v)
 
     data = numpy.transpose(res, [2, 0, 1])
@@ -251,7 +250,9 @@ def parse_color(rgba: Union[Sequence[int], str]) -> Tuple[int, int, int, int]:
 
         match = re.match(hex_pattern, rgba)
         rgba = [
-            int(n * factor, 16) for n in match.groupdict().values() if n is not None  # type: ignore
+            int(n * factor, 16)
+            for n in match.groupdict().values()
+            if n is not None  # type: ignore
         ]
 
     if len(rgba) > 4 or len(rgba) < 3:
