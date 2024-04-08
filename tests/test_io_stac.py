@@ -850,19 +850,19 @@ def test_metadata_from_stac(rio):
         assert img.metadata["red"]["raster:bands"]
         assert img.metadata["green"]
 
+
 # @patch("rio_tiler.io.rasterio.rasterio")
 def test_expression_with_unicode_dtype():
     """Should raise or return tiles."""
     # rio.open = mock_rasterio_open
 
     with STACReader(STAC_UNDERSCORE_PATH) as stac:
-
         img = stac.tile(451, 76, 9, assets="red")
         assert img.data.shape == (1, 256, 256)
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["red_b1"]
-        
-        img = stac.tile(451, 76, 9, expression='where((red>0.5),1,0)', asset_as_band=True)
+
+        img = stac.tile(451, 76, 9, expression="where((red>0.5),1,0)", asset_as_band=True)
         assert img.data.shape == (1, 256, 256)
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["where((red>0.5),1,0)"]
@@ -871,16 +871,18 @@ def test_expression_with_unicode_dtype():
         assert img.data.shape == (1, 256, 256)
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["s2cloudless_b1"]
-        
+
         asset_info = stac._get_asset_info("s2cloudless")
         url = asset_info["url"]
         with stac.reader(url, tms=stac.tms, **stac.reader_options) as src:
-            img = src.tile(451, 76, 9, expression='where((b1>0.5),1,0)')
+            img = src.tile(451, 76, 9, expression="where((b1>0.5),1,0)")
             assert img.data.shape == (1, 256, 256)
             assert img.mask.shape == (256, 256)
             assert img.band_names == ["where((b1>0.5),1,0)"]
-        
-        img = stac.tile(451, 76, 9, expression='where((s2cloudless>0.5),1,0)', asset_as_band=True)
+
+        img = stac.tile(
+            451, 76, 9, expression="where((s2cloudless>0.5),1,0)", asset_as_band=True
+        )
         assert img.data.shape == (1, 256, 256)
         assert img.mask.shape == (256, 256)
         assert img.band_names == ["where((s2cloudless>0.5),1,0)"]
