@@ -26,6 +26,7 @@ STAC_PATH = os.path.join(PREFIX, "stac.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
 STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
+STAC_UNDERSCORE_PATH = os.path.join(PREFIX, "stac_dtype_error.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -848,3 +849,38 @@ def test_metadata_from_stac(rio):
         assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
         assert img.metadata["red"]["raster:bands"]
         assert img.metadata["green"]
+
+# @patch("rio_tiler.io.rasterio.rasterio")
+def test_expression_with_unicode_dtype():
+    """Should raise or return tiles."""
+    # rio.open = mock_rasterio_open
+
+    with STACReader(STAC_UNDERSCORE_PATH) as stac:
+
+        img = stac.tile(451, 76, 9, assets="red")
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["red_b1"]
+        
+        img = stac.tile(451, 76, 9, expression='where((red>0.5),1,0)', asset_as_band=True)
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["where((red>0.5),1,0)"]
+
+        img = stac.tile(451, 76, 9, assets=("s2cloudless",))
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["s2cloudless_b1"]
+        
+        asset_info = stac._get_asset_info("s2cloudless")
+        url = asset_info["url"]
+        with stac.reader(url, tms=stac.tms, **stac.reader_options) as src:
+            img = src.tile(451, 76, 9, expression='where((b1>0.5),1,0)')
+            assert img.data.shape == (1, 256, 256)
+            assert img.mask.shape == (256, 256)
+            assert img.band_names == ["where((b1>0.5),1,0)"]
+        
+        img = stac.tile(451, 76, 9, expression='where((s2cloudless>0.5),1,0)', asset_as_band=True)
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["where((s2cloudless>0.5),1,0)"]
