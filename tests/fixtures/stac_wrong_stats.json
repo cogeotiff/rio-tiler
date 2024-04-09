@@ -155,14 +155,14 @@
     77.69356453626628
   ],
   "assets": {
-    "red": {
+    "goodstat": {
       "type": "image/tiff; application=geotiff; profile=cloud-optimized",
       "roles": [
         "data",
         "reflectance",
         "visual"
       ],
-      "href": "https://store.terradue.com/api/emathot/test6/r-red.tif",
+      "href": "http://somewhere-over-the-rainbow.io/clp.tif",
       "eo:bands": [
         {
           "name": "red",
@@ -450,14 +450,14 @@
       "key": "red",
       "file:size": 10458621
     },
-    "s2cloudless": {
+    "wrongstat": {
       "type": "image/tiff; application=geotiff; profile=cloud-optimized",
       "roles": [
         "data",
         "visual"
       ],
       "title": "s2cloudless L2A cloud probabilities",
-      "href": "https://store.terradue.com/api/emathot/test6/cog_clip.tif",
+      "href": "http://somewhere-over-the-rainbow.io/clp.tif",
       "raster:bands": [
         {
           "spatial_resolution": 10.0,
