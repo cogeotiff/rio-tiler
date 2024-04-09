@@ -2,6 +2,7 @@
 
 import json
 import os
+import warnings
 from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
@@ -306,7 +307,16 @@ class STACReader(MultiBaseReader):
                 for b in bands
                 if {"minimum", "maximum"}.issubset(b.get("statistics", {}))
             ]
-            if len(stats) == len(bands):
+            # check that stats data are all double and make warning if not
+            if (
+                stats
+                and all(isinstance(v, (int, float)) for stat in stats for v in stat)
+                and len(stats) == len(bands)
+            ):
                 info["dataset_statistics"] = stats
+            else:
+                warnings.warn(
+                    "Some statistics data in STAC are invalid, they will be ignored."
+                )
 
         return info

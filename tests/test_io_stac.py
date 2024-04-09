@@ -26,6 +26,7 @@ STAC_PATH = os.path.join(PREFIX, "stac.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
 STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
+STAC_WRONGSTATS_PATH = os.path.join(PREFIX, "stac_wrong_stats.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -848,3 +849,44 @@ def test_metadata_from_stac(rio):
         assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
         assert img.metadata["red"]["raster:bands"]
         assert img.metadata["green"]
+
+
+@patch("rio_tiler.io.rasterio.rasterio")
+def test_expression_with_wrong_stac_stats(rio):
+    """Should raise or return tiles."""
+    rio.open = mock_rasterio_open
+
+    with STACReader(STAC_WRONGSTATS_PATH) as stac:
+        img = stac.tile(451, 76, 9, assets="goodstat")
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["goodstat_b1"]
+
+        img = stac.tile(
+            451, 76, 9, expression="where((goodstat>0.5),1,0)", asset_as_band=True
+        )
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["where((goodstat>0.5),1,0)"]
+
+        img = stac.tile(451, 76, 9, assets=("wrongstat",))
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["wrongstat_b1"]
+
+        asset_info = stac._get_asset_info("wrongstat")
+        url = asset_info["url"]
+        with stac.reader(url, tms=stac.tms, **stac.reader_options) as src:
+            img = src.tile(451, 76, 9, expression="where((b1>0.5),1,0)")
+            assert img.data.shape == (1, 256, 256)
+            assert img.mask.shape == (256, 256)
+            assert img.band_names == ["where((b1>0.5),1,0)"]
+
+        with pytest.warns(UserWarning):
+            img = stac.tile(
+                451,
+                76,
+                9,
+                expression="where((wrongstat>0.5),1,0)",
+                asset_as_band=True,
+            )
