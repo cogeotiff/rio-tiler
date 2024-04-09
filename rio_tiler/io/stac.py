@@ -308,14 +308,15 @@ class STACReader(MultiBaseReader):
                 if {"minimum", "maximum"}.issubset(b.get("statistics", {}))
             ]
             # check that stats data are all double and make warning if not
-            if stats and not all(
-                isinstance(v, (int, float)) for stat in stats for v in stat
+            if (
+                stats
+                and all(isinstance(v, (int, float)) for stat in stats for v in stat)
+                and len(stats) == len(bands)
             ):
-                warnings.warn(
-                    "Some statistics data are not double, this may cause issues in data processing."
-                )
-
-            if len(stats) == len(bands):
                 info["dataset_statistics"] = stats
+            else:
+                warnings.warn(
+                    "Some statistics data in STAC are invalid, they will be ignored."
+                )
 
         return info

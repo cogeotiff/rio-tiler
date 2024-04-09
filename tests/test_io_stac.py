@@ -883,11 +883,10 @@ def test_expression_with_wrong_stac_stats(rio):
             assert img.band_names == ["where((b1>0.5),1,0)"]
 
         with pytest.warns(UserWarning):
-            with pytest.raises(ValueError):
-                img = stac.tile(
-                    451,
-                    76,
-                    9,
-                    expression="where((wrongstat>0.5),1,0)",
-                    asset_as_band=True,
-                )
+            img = stac.tile(
+                451,
+                76,
+                9,
+                expression="where((wrongstat>0.5),1,0)",
+                asset_as_band=True,
+            )
