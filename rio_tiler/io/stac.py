@@ -2,6 +2,7 @@
 
 import json
 import os
+import warnings
 from typing import Any, Dict, Iterator, Optional, Set, Type, Union
 from urllib.parse import urlparse
 
@@ -9,7 +10,6 @@ import attr
 import httpx
 import pystac
 import rasterio
-import warnings
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
@@ -314,7 +314,7 @@ class STACReader(MultiBaseReader):
                 warnings.warn(
                     "Some statistics data are not double, this may cause issues in data processing."
                 )
-            
+
             if len(stats) == len(bands):
                 info["dataset_statistics"] = stats
 
