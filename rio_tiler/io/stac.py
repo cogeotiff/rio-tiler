@@ -9,6 +9,7 @@ import attr
 import httpx
 import pystac
 import rasterio
+import warnings
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
@@ -306,6 +307,14 @@ class STACReader(MultiBaseReader):
                 for b in bands
                 if {"minimum", "maximum"}.issubset(b.get("statistics", {}))
             ]
+            # check that stats data are all double and make warning if not
+            if stats and not all(
+                isinstance(v, (int, float)) for stat in stats for v in stat
+            ):
+                warnings.warn(
+                    "Some statistics data are not double, this may cause issues in data processing."
+                )
+            
             if len(stats) == len(bands):
                 info["dataset_statistics"] = stats
 
