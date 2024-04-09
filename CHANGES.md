@@ -1,4 +1,8 @@
 
+# 6.4.6 (2024-04-09)
+
+* Ignore STAC statistics object when they contain invalid type (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/pull/695)
+
 # 6.4.5 (2024-04-05)
 
 * add python 3.12 official support
