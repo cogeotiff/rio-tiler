@@ -334,6 +334,23 @@ def get_vrt_transform(
             src_height = round(w.height)
             src_width = round(w.width)
 
+        # Specific FIX when bounds and transform are inverted
+        # See: https://github.com/US-GHG-Center/veda-config-ghg/pull/333
+        elif (
+            src_dst.crs == WGS84_CRS
+            and dst_crs == WEB_MERCATOR_CRS
+            and (src_bounds[1] > 85.06 or src_bounds[3] < -85.06)
+        ):
+            warnings.warn(
+                "Adjusting dataset latitudes to avoid re-projection overflow",
+                UserWarning,
+            )
+            src_bounds[1] = min(src_bounds[1], 85.06)
+            src_bounds[3] = max(src_bounds[3], -85.06)
+            w = windows.from_bounds(*src_bounds, transform=src_dst.transform)
+            src_height = round(w.height)
+            src_width = round(w.width)
+
         dst_transform, _, _ = calculate_default_transform(
             src_dst.crs, dst_crs, src_width, src_height, *src_bounds
         )

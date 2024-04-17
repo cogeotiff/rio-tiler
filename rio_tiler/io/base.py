@@ -48,6 +48,18 @@ class SpatialMixin:
     def geographic_bounds(self) -> BBox:
         """Return dataset bounds in geographic_crs."""
         if self.crs == self.geographic_crs:
+            if self.bounds[1] > self.bounds[3]:
+                warnings.warn(
+                    "BoundingBox of the dataset is inverted (minLat > maxLat).",
+                    UserWarning,
+                )
+                return (
+                    self.bounds[0],
+                    self.bounds[3],
+                    self.bounds[2],
+                    self.bounds[1],
+                )
+
             return self.bounds
 
         try:
