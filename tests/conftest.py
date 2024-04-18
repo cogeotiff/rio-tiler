@@ -38,7 +38,11 @@ def dataset_fixture():
         arr[:, 0:128, 0:128] = 0
 
         # Mask/Alpha
-        mask = numpy.zeros((1, height, width), dtype=dtype) + 255
+        if dtype == "int8":
+            mask = numpy.zeros((1, height, width), dtype=dtype) + 127
+        else:
+            mask = numpy.zeros((1, height, width), dtype=dtype) + 255
+
         mask[:, 0:128, 0:128] = 0
 
         # Input Profile

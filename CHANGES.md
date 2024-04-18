@@ -1,4 +1,9 @@
 
+# 6.4.7 (2024-04-17)
+
+* Better handle dataset with inverted origin
+* make sure datatype is forwarded to the WarpedVRT
+
 # 6.4.6 (2024-04-09)
 
 * Ignore STAC statistics object when they contain invalid type (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/pull/695)

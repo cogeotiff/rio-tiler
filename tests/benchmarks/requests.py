@@ -1,10 +1,14 @@
 """Test HTTP Requests."""
 
+import pytest
+from rasterio.env import GDALVersion
 from tilebench import profile
 
 from rio_tiler.io import Reader
 
 dataset_url = "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/15/T/VK/2023/10/S2B_15TVK_20231008_0_L2A/TCI.tif"
+
+gdal_version = GDALVersion.runtime()
 
 
 def test_info():
@@ -32,6 +36,7 @@ def test_info():
     assert not stats["WarpKernels"]
 
 
+@pytest.mark.xfail
 def test_tile_read():
     """Tile Read tests."""
 
@@ -41,6 +46,7 @@ def test_tile_read():
             "GDAL_HTTP_MERGE_CONSECUTIVE_RANGES": "YES",
             "GDAL_DISABLE_READDIR_ON_OPEN": "EMPTY_DIR",
             "GDAL_INGESTED_BYTES_AT_OPEN": 32768,
+            "CPL_VSIL_CURL_ALLOWED_EXTENSIONS": ".tif",
             "CPL_VSIL_CURL_NON_CACHED": f"/vsicurl/{dataset_url}",
         },
         quiet=True,

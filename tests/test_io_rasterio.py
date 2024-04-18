@@ -44,6 +44,7 @@ COG_EARTH = os.path.join(PREFIX, "cog_fullearth.tif")
 GEOTIFF = os.path.join(PREFIX, "nocog.tif")
 COG_EUROPA = os.path.join(PREFIX, "cog_nonearth.tif")
 COG_MARS = os.path.join(PREFIX, "cog_hirise_mars.tif")
+COG_INVERTED = os.path.join(PREFIX, "inverted_lat.tif")
 
 KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
@@ -1111,3 +1112,14 @@ def test_feature_statistics():
         assert not numpy.unique(coverage_array).tolist() == [1.0]
 
         assert stats["b1"].mean != stats_align["b1"].mean
+
+
+def test_inverted_latitude():
+    """Test working with inverted Latitude."""
+    with pytest.warns(UserWarning):
+        with Reader(COG_INVERTED) as src:
+            assert src.geographic_bounds[1] < src.geographic_bounds[3]
+
+    with pytest.warns(UserWarning):
+        with Reader(COG_INVERTED) as src:
+            _ = src.tile(0, 0, 0)
