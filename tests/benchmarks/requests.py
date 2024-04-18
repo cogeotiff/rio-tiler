@@ -36,10 +36,7 @@ def test_info():
     assert not stats["WarpKernels"]
 
 
-@pytest.mark.xfail(
-    gdal_version == GDALVersion(3, 7),
-    reason="For some reason this test fails with GDAL 3.7",
-)
+@pytest.mark.xfail
 def test_tile_read():
     """Tile Read tests."""
 
