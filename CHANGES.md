@@ -2,6 +2,7 @@
 # 6.4.7 (2024-04-17)
 
 * Better handle dataset with inverted origin
+* make sure datatype is forwarded to the WarpedVRT
 
 # 6.4.6 (2024-04-09)
 

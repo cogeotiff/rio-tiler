@@ -142,11 +142,17 @@ def read(
                 "crs": dst_crs,
                 "add_alpha": True,
                 "resampling": warp_resampling,
+                "dtype": src_dst.dtypes[0],
             }
 
             if nodata is not None:
                 vrt_params.update(
-                    {"nodata": nodata, "add_alpha": False, "src_nodata": nodata}
+                    {
+                        "nodata": nodata,
+                        "add_alpha": False,
+                        "src_nodata": nodata,
+                        "dtype": src_dst.dtypes[0],
+                    }
                 )
 
             if has_alpha_band(src_dst):
@@ -396,6 +402,7 @@ def part(
             "transform": vrt_transform,
             "width": vrt_width,
             "height": vrt_height,
+            "dtype": src_dst.dtypes[0],
         }
         if vrt_options:
             vrt_params.update(**vrt_options)
