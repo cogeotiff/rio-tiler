@@ -296,8 +296,8 @@ def get_vrt_transform(
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
         bounds (tuple): Bounding box coordinates in target crs (**dst_crs**).
-        height (int, optional): Desired output height of the array for the input bounds.
-        width (int, optional): Desired output width of the array for the input bounds.
+        height (int, optional): Output height of the array for the input bounds.
+        width (int, optional): Output width of the array for the input bounds.
         dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to `epsg:3857`.
         align_bounds_with_dataset (bool): Align input bounds with dataset transform. Defaults to `False`.
 
@@ -383,6 +383,13 @@ def get_vrt_transform(
         bounds = windows.bounds(window, dst_transform)
 
     w, s, e, n = bounds
+
+    if height and width:
+        out_transform = from_bounds(w, s, e, n, width, height)
+        # when not overzooming we don't want to set width/height output
+        if (out_transform.a > dst_transform.a) and (out_transform.e < dst_transform.e):
+            width = None
+            height = None
 
     # TODO: Explain
     if not height or not width:

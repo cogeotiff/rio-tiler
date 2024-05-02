@@ -1,4 +1,8 @@
 
+# 6.4.8 (2024-05-02)
+
+* Better handle over-zooming a dataset
+
 # 6.4.7 (2024-04-17)
 
 * Better handle dataset with inverted origin
