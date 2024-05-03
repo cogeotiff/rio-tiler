@@ -1,7 +1,7 @@
 
-# 6.4.8 (2024-05-02)
+# 6.5.0 (2024-05-03)
 
-* Better handle over-zooming a dataset
+* Revert [#648](https://github.com/cogeotiff/rio-tiler/pull/648) and refactor `get_vrt_transform` method to better handle over-zooming a dataset
 
 # 6.4.7 (2024-04-17)
 
