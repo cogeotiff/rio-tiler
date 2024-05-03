@@ -296,8 +296,8 @@ def get_vrt_transform(
     Args:
         src_dst (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT): Rasterio dataset.
         bounds (tuple): Bounding box coordinates in target crs (**dst_crs**).
-        height (int, optional): Desired output height of the array for the input bounds.
-        width (int, optional): Desired output width of the array for the input bounds.
+        height (int, optional): Output height of the array for the input bounds.
+        width (int, optional): Output width of the array for the input bounds.
         dst_crs (rasterio.crs.CRS, optional): Target Coordinate Reference System. Defaults to `epsg:3857`.
         align_bounds_with_dataset (bool): Align input bounds with dataset transform. Defaults to `False`.
 
@@ -384,31 +384,35 @@ def get_vrt_transform(
 
     w, s, e, n = bounds
 
-    # TODO: Explain
-    if not height or not width:
-        vrt_width = max(1, round((e - w) / dst_transform.a))
-        vrt_height = max(1, round((s - n) / dst_transform.e))
-        vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
-        return vrt_transform, vrt_width, vrt_height
+    # When no output size (resolution) - Use Dataset Resolution
+    # NOTE: When we don't `fix` the output width/height, we're using the reprojected dataset resolution
+    # to calculate what is the size/transform of the VRT
+    w_res = dst_transform.a
+    h_res = dst_transform.e
 
-    # TODO: Explain
-    tile_transform = from_bounds(w, s, e, n, width, height)
-    w_res = (
-        tile_transform.a
-        if abs(tile_transform.a) < abs(dst_transform.a)
-        else dst_transform.a
-    )
-    h_res = (
-        tile_transform.e
-        if abs(tile_transform.e) < abs(dst_transform.e)
-        else dst_transform.e
-    )
+    # NOTE: When we have desired output height/width, we can use them to
+    # calculate the output size/transform. The VRT resolution will be aligned with the desired
+    # output resolution (if not bigger)
+    if height and width:
+        output_transform = from_bounds(w, s, e, n, width, height)
 
-    # TODO: Explain
+        # NOTE: Here we check if the Output Resolution is higher thant the dataset resolution (OverZoom)
+        # When not overzooming we don't want to use the output Width/Height to calculate the transform
+        # See issues https://github.com/cogeotiff/rio-tiler/pull/648
+        w_res = (
+            output_transform.a
+            if abs(output_transform.a) < abs(dst_transform.a)
+            else dst_transform.a
+        )
+        h_res = (
+            output_transform.e
+            if abs(output_transform.e) < abs(dst_transform.e)
+            else dst_transform.e
+        )
+
     vrt_width = max(1, round((e - w) / w_res))
     vrt_height = max(1, round((s - n) / h_res))
     vrt_transform = from_bounds(w, s, e, n, vrt_width, vrt_height)
-
     return vrt_transform, vrt_width, vrt_height
 
 
