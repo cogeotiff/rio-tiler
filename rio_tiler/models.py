@@ -331,7 +331,7 @@ class ImageData:
     )
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
-    band_names: List[str] = attr.ib(kw_only=True)
+    band_names: Optional[List[str]] = attr.ib(kw_only=True)
     dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
         default=None, kw_only=True
     )
