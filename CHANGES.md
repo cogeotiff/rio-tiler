@@ -1,4 +1,8 @@
 
+# Unreleased
+
+* fix type hint for `ImageData.band_names` (author @n8sty, https://github.com/cogeotiff/rio-tiler/pull/704)
+
 # 6.5.0 (2024-05-03)
 
 * Revert [#648](https://github.com/cogeotiff/rio-tiler/pull/648) and refactor `get_vrt_transform` method to better handle over-zooming a dataset
