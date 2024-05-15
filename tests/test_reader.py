@@ -429,8 +429,8 @@ def test_point():
         assert pt.band_names == ["b1"]
 
         pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
-        assert pt.data == numpy.array([8917])
-        assert pt.band_names == ["b1"]
+        numpy.testing.assert_equal(pt.data, [8917, 1001])
+        assert pt.band_names == ["b1", "b2"]
 
         with pytest.raises(PointOutsideBounds):
             reader.point(src_dst, [810000, 4100000], coord_crs=src_dst.crs)

@@ -261,8 +261,13 @@ def read(
 
         if unscale:
             data = data.astype("float32", casting="unsafe")
-            numpy.multiply(data, dataset.scales[0], out=data, casting="unsafe")
-            numpy.add(data, dataset.offsets[0], out=data, casting="unsafe")
+
+            # reshaped to match data
+            scales = numpy.array(dataset.scales).reshape((-1,) + (1,) * len(dataset.scales))
+            offsets = numpy.array(dataset.offsets).reshape((-1,) + (1,) * len(dataset.offsets))
+
+            numpy.multiply(data, scales, out=data, casting="unsafe")
+            numpy.add(data, offsets, out=data, casting="unsafe")
 
         if post_process:
             data = post_process(data)

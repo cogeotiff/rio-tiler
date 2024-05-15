@@ -439,11 +439,11 @@ def test_Reader_Options():
 
     with Reader(COG_SCALE, options={"unscale": True}) as src:
         p = src.point(310000, 4100000, coord_crs=src.dataset.crs)
-        assert round(float(p.data[0]), 3) == 1000.892
+        numpy.testing.assert_allclose(p.data, [1000.892, 1001], atol=1e-03)
 
         # passing unscale in method should overwrite the defaults
         p = src.point(310000, 4100000, coord_crs=src.dataset.crs, unscale=False)
-        assert p.data[0] == 8917
+        numpy.testing.assert_equal(p.data, [8917, 1001])
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
     with Reader(COGEO, options={"vrt_options": {"cutline": cutline}}) as src:
