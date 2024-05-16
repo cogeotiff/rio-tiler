@@ -1,6 +1,4 @@
-
-# Unreleased
-
+# 6.6.0 (2024-05-16)
 
 * fix type hint for `ImageData.band_names` (author @n8sty, https://github.com/cogeotiff/rio-tiler/pull/704)
 * enable `per-band` scale/offset rescaling (co-author @jddeal, https://github.com/cogeotiff/rio-tiler/pull/707)
