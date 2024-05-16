@@ -1,7 +1,24 @@
 
 # Unreleased
 
+
 * fix type hint for `ImageData.band_names` (author @n8sty, https://github.com/cogeotiff/rio-tiler/pull/704)
+* enable `per-band` scale/offset rescaling (co-author @jddeal, https://github.com/cogeotiff/rio-tiler/pull/707)
+* replace `scale` and `offset` by `scales` and `offsets` in `rio_tiler.models.Info` model
+
+    ```python
+    # before
+    with Reader("tests/fixtures/cog_scale.tif") as src:
+        info = src.info()
+        print(info.scale, info.offset)
+    >> 0.0001 1000.0
+
+    # now
+    with Reader("tests/fixtures/cog_scale.tif") as src:
+        info = src.info()
+        print(info.scales, info.offsets)
+    >> [0.0001, 0.001] [1000.0, 2000.0]
+    ```
 
 # 6.5.0 (2024-05-03)
 

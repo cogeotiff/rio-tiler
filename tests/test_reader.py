@@ -429,8 +429,8 @@ def test_point():
         assert pt.band_names == ["b1"]
 
         pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
-        assert pt.data == numpy.array([8917])
-        assert pt.band_names == ["b1"]
+        numpy.testing.assert_equal(pt.data, [8917, 8917])
+        assert pt.band_names == ["b1", "b2"]
 
         with pytest.raises(PointOutsideBounds):
             reader.point(src_dst, [810000, 4100000], coord_crs=src_dst.crs)
@@ -577,6 +577,8 @@ def test_read():
     # Unscale Dataset
     with rasterio.open(COG_SCALE) as src:
         assert not src.dtypes[0] == numpy.float32
+        assert src.scales == (0.0001, 0.001)
+        assert src.offsets == (1000, 2000)
         img = reader.read(src, unscale=True)
         assert img.data.dtype == numpy.float32
 
