@@ -82,9 +82,8 @@ def test_info_valid():
     """Should work as expected (get file info)"""
     with Reader(COG_SCALE) as src:
         meta = src.info()
-        assert meta["scale"]
-        assert meta.scale
-        assert meta.offset
+        assert meta.scales
+        assert meta.offsets
         assert not meta.colormap
         assert meta.width
         assert meta.height
@@ -113,8 +112,8 @@ def test_info_valid():
         assert meta.dtype == "int16"
         assert meta.colorinterp == ["gray"]
         assert meta.nodata_type == "Nodata"
-        assert meta.scale
-        assert meta.offset
+        assert meta.scales
+        assert meta.offsets
         assert meta.band_metadata
         band_meta = meta.band_metadata[0]
         assert band_meta[0] == "b1"
@@ -439,11 +438,11 @@ def test_Reader_Options():
 
     with Reader(COG_SCALE, options={"unscale": True}) as src:
         p = src.point(310000, 4100000, coord_crs=src.dataset.crs)
-        numpy.testing.assert_allclose(p.data, [1000.892, 1001], atol=1e-03)
+        numpy.testing.assert_allclose(p.data, [1000.892, 2008.917], atol=1e-03)
 
         # passing unscale in method should overwrite the defaults
         p = src.point(310000, 4100000, coord_crs=src.dataset.crs, unscale=False)
-        numpy.testing.assert_equal(p.data, [8917, 1001])
+        numpy.testing.assert_equal(p.data, [8917, 8917])
 
     cutline = "POLYGON ((13 1685, 1010 6, 2650 967, 1630 2655, 13 1685))"
     with Reader(COGEO, options={"vrt_options": {"cutline": cutline}}) as src:

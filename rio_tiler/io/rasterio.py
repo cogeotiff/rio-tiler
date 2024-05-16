@@ -265,11 +265,9 @@ class Reader(BaseReader):
             "width": self.dataset.width,
             "height": self.dataset.height,
             "overviews": self.dataset.overviews(1),
+            "scales": self.dataset.scales,
+            "offsets": self.dataset.offsets,
         }
-        if self.dataset.scales[0] != 1.0 or self.dataset.offsets[0] != 0.0:
-            meta.update(
-                {"scale": self.dataset.scales[0], "offset": self.dataset.offsets[0]}
-            )
 
         if self.colormap:
             meta.update({"colormap": self.colormap})

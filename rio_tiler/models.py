@@ -77,8 +77,8 @@ class Info(SpatialInfo):
     dtype: str
     nodata_type: Literal["Alpha", "Mask", "Internal", "Nodata", "None"]
     colorinterp: Optional[List[str]] = None
-    scale: Optional[float] = None
-    offset: Optional[float] = None
+    scales: Optional[List[float]] = None
+    offsets: Optional[List[float]] = None
     colormap: Optional[GDALColorMapType] = None
 
     model_config = {"extra": "allow"}
