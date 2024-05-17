@@ -440,6 +440,10 @@ def test_Reader_Options():
         p = src.point(310000, 4100000, coord_crs=src.dataset.crs)
         numpy.testing.assert_allclose(p.data, [1000.892, 2008.917], atol=1e-03)
 
+        # applies correctly when passing indexes=[...]
+        p = src.point(310000, 4100000, coord_crs=src.dataset.crs, indexes=[2])
+        numpy.testing.assert_allclose(p.data, [2008.917], atol=1e-03)
+
         # passing unscale in method should overwrite the defaults
         p = src.point(310000, 4100000, coord_crs=src.dataset.crs, unscale=False)
         numpy.testing.assert_equal(p.data, [8917, 8917])
