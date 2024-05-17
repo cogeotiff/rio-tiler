@@ -263,8 +263,12 @@ def read(
             data = data.astype("float32", casting="unsafe")
 
             # reshaped to match data
-            scales = numpy.array(dataset.scales)[numpy.array(indexes)-1].reshape((-1, 1, 1))
-            offsets = numpy.array(dataset.offsets)[numpy.array(indexes)-1].reshape((-1, 1, 1))
+            scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1].reshape(
+                (-1, 1, 1)
+            )
+            offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1].reshape(
+                (-1, 1, 1)
+            )
 
             numpy.multiply(data, scales, out=data, casting="unsafe")
             numpy.add(data, offsets, out=data, casting="unsafe")
