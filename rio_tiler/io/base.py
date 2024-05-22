@@ -283,6 +283,10 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Validate asset name and construct url."""
         ...
 
+    def _get_reader(self, asset_info: AssetInfo) -> Type[BaseReader]:
+        """Get Asset Reader."""
+        return self.reader
+
     def parse_expression(self, expression: str, asset_as_band: bool = False) -> Tuple:
         """Parse rio-tiler band math expression."""
         input_assets = "|".join(self.assets)
@@ -346,9 +350,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
             asset_info = self._get_asset_info(asset)
-            url = asset_info["url"]
+            reader = self._get_reader(asset_info)
+
             with self.ctx(**asset_info.get("env", {})):
-                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                with reader(
+                    asset_info["url"], tms=self.tms, **self.reader_options
+                ) as src:
                     return src.info()
 
         return multi_values(assets, _reader, **kwargs)
@@ -388,9 +395,14 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args, **kwargs) -> Dict:
             asset_info = self._get_asset_info(asset)
-            url = asset_info["url"]
+            reader = self._get_reader(asset_info)
+
             with self.ctx(**asset_info.get("env", {})):
-                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                with reader(
+                    asset_info["url"],
+                    tms=self.tms,
+                    **self.reader_options,
+                ) as src:
                     return src.statistics(
                         *args,
                         indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
@@ -509,9 +521,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
-            url = asset_info["url"]
+            reader = self._get_reader(asset_info)
+
             with self.ctx(**asset_info.get("env", {})):
-                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                with reader(
+                    asset_info["url"], tms=self.tms, **self.reader_options
+                ) as src:
                     data = src.tile(*args, indexes=idx, **kwargs)
 
                     self._update_statistics(
@@ -590,9 +605,14 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
-            url = asset_info["url"]
+            reader = self._get_reader(asset_info)
+
             with self.ctx(**asset_info.get("env", {})):
-                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                with reader(
+                    asset_info["url"],
+                    tms=self.tms,
+                    **self.reader_options,
+                ) as src:
                     data = src.part(*args, indexes=idx, **kwargs)
 
                     self._update_statistics(
@@ -669,9 +689,14 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
-            url = asset_info["url"]
+            reader = self._get_reader(asset_info)
+
             with self.ctx(**asset_info.get("env", {})):
-                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                with reader(
+                    asset_info["url"],
+                    tms=self.tms,
+                    **self.reader_options,
+                ) as src:
                     data = src.preview(indexes=idx, **kwargs)
 
                     self._update_statistics(
@@ -752,9 +777,14 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
-            url = asset_info["url"]
+            reader = self._get_reader(asset_info)
+
             with self.ctx(**asset_info.get("env", {})):
-                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                with reader(
+                    asset_info["url"],
+                    tms=self.tms,
+                    **self.reader_options,
+                ) as src:  # type: ignore
                     data = src.point(*args, indexes=idx, **kwargs)
 
                     metadata = data.metadata or {}
@@ -827,9 +857,14 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes  # type: ignore
 
             asset_info = self._get_asset_info(asset)
-            url = asset_info["url"]
+            reader = self._get_reader(asset_info)
+
             with self.ctx(**asset_info.get("env", {})):
-                with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+                with reader(
+                    asset_info["url"],
+                    tms=self.tms,
+                    **self.reader_options,
+                ) as src:  # type: ignore
                     data = src.feature(*args, indexes=idx, **kwargs)
 
                     self._update_statistics(

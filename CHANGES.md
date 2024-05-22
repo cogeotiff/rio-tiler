@@ -1,3 +1,8 @@
+
+# Unreleased
+
+* Enable dynamic definition of Asset reader in MultiBaseReader
+
 # 6.6.1 (2024-05-17)
 
 * fix/support `scale/offset` indexes selection (author @jddeal, https://github.com/cogeotiff/rio-tiler/pull/709)
