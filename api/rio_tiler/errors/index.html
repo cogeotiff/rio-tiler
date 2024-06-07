@@ -1,0 +1,4339 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="User friendly Rasterio plugin to read raster datasets.">
+      
+      
+      
+        <link rel="canonical" href="https://cogeotiff.github.io/rio-tiler/api/rio_tiler/errors/">
+      
+      
+        <link rel="prev" href="../constants/">
+      
+      
+        <link rel="next" href="../expression/">
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.0, mkdocs-material-9.5.26">
+    
+    
+      
+        <title>rio_tiler.errors - rio-tiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.6543a935.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.06af60db.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Nunito Sans";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="light-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#module-rio_tilererrors" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="rio-tiler" class="md-header__button md-logo" aria-label="rio-tiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            rio-tiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              rio_tiler.errors
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/cogeotiff/rio-tiler" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cogeotiff/rio-tiler
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="rio-tiler" class="md-nav__button md-logo" aria-label="rio-tiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8h5Z"/></svg>
+
+    </a>
+    rio-tiler
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/cogeotiff/rio-tiler" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cogeotiff/rio-tiler
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    User Guide
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            User Guide
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../intro/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../readers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Readers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mosaic/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Mosaic
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../colormap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Colormaps
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../supported_format/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Supported file formats
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Advanced Topics
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            Advanced Topics
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/custom_readers/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Base classes and custom readers
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/feature/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Read Polygon-shaped regions
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/statistics/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Statistics
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/dynamic_tiler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Create a Dynamic Tiler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/tms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    TileMatrixSet
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Examples
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            Examples
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to rio-tiler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler-mosaic/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio-tiler.mosaic
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-tms/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to TileMatrixSets
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler-STACReader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Introduction to rio-tiler + STAC
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-nonEarth-dataset/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Using Non Earth dataset
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler-XarrayReader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Xarray + rio-tiler
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    Migration Guides
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            Migration Guides
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v2_migration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    v1.0 -> v2.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v3_migration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    v2.0 -> v3.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v4_migration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    v3.0 -> v4.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v5_migration/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    v4.0 -> v5.0
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    API
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            API
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../colormap/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.colormap
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../constants/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.constants
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  <span class="md-ellipsis">
+    rio_tiler.errors
+  </span>
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.errors
+  </span>
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Classes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alphabandwarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      AlphaBandWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AlphaBandWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assetasbanderror" class="md-nav__link">
+    <span class="md-ellipsis">
+      AssetAsBandError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AssetAsBandError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colormapalreadyregistered" class="md-nav__link">
+    <span class="md-ellipsis">
+      ColorMapAlreadyRegistered
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ColorMapAlreadyRegistered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emptymosaicerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      EmptyMosaicError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EmptyMosaicError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expressionmixingwarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      ExpressionMixingWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ExpressionMixingWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidassetname" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidAssetName
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidAssetName">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidbandname" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidBandName
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidBandName">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidbuffersize" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidBufferSize
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidBufferSize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidcolorformat" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidColorFormat
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidColorFormat">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidcolormapname" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidColorMapName
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidColorMapName">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invaliddatatypewarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidDatatypeWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidDatatypeWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidexpression" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidExpression
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidExpression">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidformat" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidFormat
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidFormat">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidmosaicmethod" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidMosaicMethod
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidMosaicMethod">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidpointdataerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidPointDataError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidPointDataError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#missingassets" class="md-nav__link">
+    <span class="md-ellipsis">
+      MissingAssets
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MissingAssets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#missingbands" class="md-nav__link">
+    <span class="md-ellipsis">
+      MissingBands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MissingBands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nooverviewwarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      NoOverviewWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NoOverviewWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pointoutsidebounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      PointOutsideBounds
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PointOutsideBounds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#riotilererror" class="md-nav__link">
+    <span class="md-ellipsis">
+      RioTilerError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RioTilerError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#descendants" class="md-nav__link">
+    <span class="md-ellipsis">
+      Descendants
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tileoutsidebounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      TileOutsideBounds
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TileOutsideBounds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expression/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.expression
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.models
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6" id="__nav_6_6_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    rio_tiler.io
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6">
+            <span class="md-nav__icon md-icon"></span>
+            rio_tiler.io
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.io.base
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/rasterio/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.io.rasterio
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/stac/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.io.stac
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/xarray/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.io.xarray
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    rio_tiler.mosaic
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            rio_tiler.mosaic
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mosaic/reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.mosaic.reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7_2" id="__nav_6_7_2_label" tabindex="0">
+            
+  
+  <span class="md-ellipsis">
+    rio_tiler.mosaic.methods
+  </span>
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            rio_tiler.mosaic.methods
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mosaic/methods/base/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.mosaic.methods.base
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mosaic/methods/defaults/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.mosaic.methods.defaults
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiles/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.profiles
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reader/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.reader
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tasks/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.tasks
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../utils/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    rio_tiler.utils
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/benchmark.html" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Benchmarking
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Development - Contributing
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../release-notes/" class="md-nav__link">
+        
+  
+  <span class="md-ellipsis">
+    Release Notes
+  </span>
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#classes" class="md-nav__link">
+    <span class="md-ellipsis">
+      Classes
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Classes">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#alphabandwarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      AlphaBandWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AlphaBandWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#assetasbanderror" class="md-nav__link">
+    <span class="md-ellipsis">
+      AssetAsBandError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="AssetAsBandError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_1" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#colormapalreadyregistered" class="md-nav__link">
+    <span class="md-ellipsis">
+      ColorMapAlreadyRegistered
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ColorMapAlreadyRegistered">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_2" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#emptymosaicerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      EmptyMosaicError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="EmptyMosaicError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_3" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#expressionmixingwarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      ExpressionMixingWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="ExpressionMixingWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_4" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidassetname" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidAssetName
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidAssetName">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_5" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidbandname" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidBandName
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidBandName">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_6" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidbuffersize" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidBufferSize
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidBufferSize">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_7" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidcolorformat" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidColorFormat
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidColorFormat">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_8" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidcolormapname" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidColorMapName
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidColorMapName">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_9" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invaliddatatypewarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidDatatypeWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidDatatypeWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_10" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidexpression" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidExpression
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidExpression">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_11" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidformat" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidFormat
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidFormat">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_12" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidmosaicmethod" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidMosaicMethod
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidMosaicMethod">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_13" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#invalidpointdataerror" class="md-nav__link">
+    <span class="md-ellipsis">
+      InvalidPointDataError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="InvalidPointDataError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_14" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#missingassets" class="md-nav__link">
+    <span class="md-ellipsis">
+      MissingAssets
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MissingAssets">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_15" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#missingbands" class="md-nav__link">
+    <span class="md-ellipsis">
+      MissingBands
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="MissingBands">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_16" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nooverviewwarning" class="md-nav__link">
+    <span class="md-ellipsis">
+      NoOverviewWarning
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="NoOverviewWarning">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_17" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#pointoutsidebounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      PointOutsideBounds
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="PointOutsideBounds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_18" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#riotilererror" class="md-nav__link">
+    <span class="md-ellipsis">
+      RioTilerError
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="RioTilerError">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#descendants" class="md-nav__link">
+    <span class="md-ellipsis">
+      Descendants
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_19" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#tileoutsidebounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      TileOutsideBounds
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="TileOutsideBounds">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#ancestors-in-mro_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      Ancestors (in MRO)
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#class-variables_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      Class variables
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#methods_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      Methods
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#with_traceback_20" class="md-nav__link">
+    <span class="md-ellipsis">
+      with_traceback
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+  
+  
+
+
+<h1 id="module-rio_tilererrors">Module rio_tiler.errors<a class="headerlink" href="#module-rio_tilererrors" title="Permanent link">&para;</a></h1>
+<p>Errors and warnings.</p>
+<h2 id="classes">Classes<a class="headerlink" href="#classes" title="Permanent link">&para;</a></h2>
+<h3 id="alphabandwarning">AlphaBandWarning<a class="headerlink" href="#alphabandwarning" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">AlphaBandWarning</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Automatically removed Alpha band from output array.</p>
+<h4 id="ancestors-in-mro">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro" title="Permanent link">&para;</a></h4>
+<ul>
+<li>builtins.UserWarning</li>
+<li>builtins.Warning</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables">Class variables<a class="headerlink" href="#class-variables" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods">Methods<a class="headerlink" href="#methods" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback">with_traceback<a class="headerlink" href="#with_traceback" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="assetasbanderror">AssetAsBandError<a class="headerlink" href="#assetasbanderror" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">AssetAsBandError</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Can't use asset_as_band with multiple bands.</p>
+<h4 id="ancestors-in-mro_1">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_1" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_1">Class variables<a class="headerlink" href="#class-variables_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_1">Methods<a class="headerlink" href="#methods_1" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_1">with_traceback<a class="headerlink" href="#with_traceback_1" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="colormapalreadyregistered">ColorMapAlreadyRegistered<a class="headerlink" href="#colormapalreadyregistered" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ColorMapAlreadyRegistered</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>ColorMap is already registered.</p>
+<h4 id="ancestors-in-mro_2">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_2" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_2">Class variables<a class="headerlink" href="#class-variables_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_2">Methods<a class="headerlink" href="#methods_2" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_2">with_traceback<a class="headerlink" href="#with_traceback_2" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="emptymosaicerror">EmptyMosaicError<a class="headerlink" href="#emptymosaicerror" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">EmptyMosaicError</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Mosaic method returned empty array.</p>
+<h4 id="ancestors-in-mro_3">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_3" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_3">Class variables<a class="headerlink" href="#class-variables_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_3">Methods<a class="headerlink" href="#methods_3" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_3">with_traceback<a class="headerlink" href="#with_traceback_3" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="expressionmixingwarning">ExpressionMixingWarning<a class="headerlink" href="#expressionmixingwarning" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">ExpressionMixingWarning</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Expression and assets/indexes mixing.</p>
+<h4 id="ancestors-in-mro_4">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_4" title="Permanent link">&para;</a></h4>
+<ul>
+<li>builtins.UserWarning</li>
+<li>builtins.Warning</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_4">Class variables<a class="headerlink" href="#class-variables_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_4">Methods<a class="headerlink" href="#methods_4" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_4">with_traceback<a class="headerlink" href="#with_traceback_4" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidassetname">InvalidAssetName<a class="headerlink" href="#invalidassetname" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidAssetName</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid Asset name.</p>
+<h4 id="ancestors-in-mro_5">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_5" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_5">Class variables<a class="headerlink" href="#class-variables_5" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_5">Methods<a class="headerlink" href="#methods_5" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_5">with_traceback<a class="headerlink" href="#with_traceback_5" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidbandname">InvalidBandName<a class="headerlink" href="#invalidbandname" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidBandName</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid band name.</p>
+<h4 id="ancestors-in-mro_6">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_6" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_6">Class variables<a class="headerlink" href="#class-variables_6" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_6">Methods<a class="headerlink" href="#methods_6" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_6">with_traceback<a class="headerlink" href="#with_traceback_6" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidbuffersize">InvalidBufferSize<a class="headerlink" href="#invalidbuffersize" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidBufferSize</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p><code>buffer</code> must be a multiple of <code>0.5</code> (e.g: 0.5, 1, 1.5, ...).</p>
+<h4 id="ancestors-in-mro_7">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_7" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_7">Class variables<a class="headerlink" href="#class-variables_7" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_7">Methods<a class="headerlink" href="#methods_7" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_7">with_traceback<a class="headerlink" href="#with_traceback_7" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidcolorformat">InvalidColorFormat<a class="headerlink" href="#invalidcolorformat" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidColorFormat</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid color format.</p>
+<h4 id="ancestors-in-mro_8">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_8" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_8">Class variables<a class="headerlink" href="#class-variables_8" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_8">Methods<a class="headerlink" href="#methods_8" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_8">with_traceback<a class="headerlink" href="#with_traceback_8" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidcolormapname">InvalidColorMapName<a class="headerlink" href="#invalidcolormapname" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidColorMapName</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid colormap name.</p>
+<h4 id="ancestors-in-mro_9">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_9" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_9">Class variables<a class="headerlink" href="#class-variables_9" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_9">Methods<a class="headerlink" href="#methods_9" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_9">with_traceback<a class="headerlink" href="#with_traceback_9" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invaliddatatypewarning">InvalidDatatypeWarning<a class="headerlink" href="#invaliddatatypewarning" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidDatatypeWarning</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid Output Datatype.</p>
+<h4 id="ancestors-in-mro_10">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_10" title="Permanent link">&para;</a></h4>
+<ul>
+<li>builtins.UserWarning</li>
+<li>builtins.Warning</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_10">Class variables<a class="headerlink" href="#class-variables_10" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_10">Methods<a class="headerlink" href="#methods_10" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_10">with_traceback<a class="headerlink" href="#with_traceback_10" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidexpression">InvalidExpression<a class="headerlink" href="#invalidexpression" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidExpression</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid Expression.</p>
+<h4 id="ancestors-in-mro_11">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_11" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_11">Class variables<a class="headerlink" href="#class-variables_11" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_11">Methods<a class="headerlink" href="#methods_11" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_11">with_traceback<a class="headerlink" href="#with_traceback_11" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidformat">InvalidFormat<a class="headerlink" href="#invalidformat" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidFormat</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid image format.</p>
+<h4 id="ancestors-in-mro_12">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_12" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_12">Class variables<a class="headerlink" href="#class-variables_12" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_12">Methods<a class="headerlink" href="#methods_12" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_12">with_traceback<a class="headerlink" href="#with_traceback_12" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidmosaicmethod">InvalidMosaicMethod<a class="headerlink" href="#invalidmosaicmethod" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidMosaicMethod</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid Pixel Selection method for mosaic.</p>
+<h4 id="ancestors-in-mro_13">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_13" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_13">Class variables<a class="headerlink" href="#class-variables_13" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_13">Methods<a class="headerlink" href="#methods_13" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_13">with_traceback<a class="headerlink" href="#with_traceback_13" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="invalidpointdataerror">InvalidPointDataError<a class="headerlink" href="#invalidpointdataerror" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">InvalidPointDataError</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Invalid PointData.</p>
+<h4 id="ancestors-in-mro_14">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_14" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_14">Class variables<a class="headerlink" href="#class-variables_14" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_14">Methods<a class="headerlink" href="#methods_14" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_14">with_traceback<a class="headerlink" href="#with_traceback_14" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="missingassets">MissingAssets<a class="headerlink" href="#missingassets" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">MissingAssets</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Missing Assets.</p>
+<h4 id="ancestors-in-mro_15">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_15" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_15">Class variables<a class="headerlink" href="#class-variables_15" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_15">Methods<a class="headerlink" href="#methods_15" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_15">with_traceback<a class="headerlink" href="#with_traceback_15" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="missingbands">MissingBands<a class="headerlink" href="#missingbands" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">MissingBands</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Missing bands.</p>
+<h4 id="ancestors-in-mro_16">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_16" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_16">Class variables<a class="headerlink" href="#class-variables_16" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_16">Methods<a class="headerlink" href="#methods_16" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_16">with_traceback<a class="headerlink" href="#with_traceback_16" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="nooverviewwarning">NoOverviewWarning<a class="headerlink" href="#nooverviewwarning" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">NoOverviewWarning</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Dataset has no overviews.</p>
+<h4 id="ancestors-in-mro_17">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_17" title="Permanent link">&para;</a></h4>
+<ul>
+<li>builtins.UserWarning</li>
+<li>builtins.Warning</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_17">Class variables<a class="headerlink" href="#class-variables_17" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_17">Methods<a class="headerlink" href="#methods_17" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_17">with_traceback<a class="headerlink" href="#with_traceback_17" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="pointoutsidebounds">PointOutsideBounds<a class="headerlink" href="#pointoutsidebounds" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">PointOutsideBounds</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Point is outside image bounds.</p>
+<h4 id="ancestors-in-mro_18">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_18" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_18">Class variables<a class="headerlink" href="#class-variables_18" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_18">Methods<a class="headerlink" href="#methods_18" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_18">with_traceback<a class="headerlink" href="#with_traceback_18" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="riotilererror">RioTilerError<a class="headerlink" href="#riotilererror" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">RioTilerError</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Base exception class.</p>
+<h4 id="ancestors-in-mro_19">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_19" title="Permanent link">&para;</a></h4>
+<ul>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="descendants">Descendants<a class="headerlink" href="#descendants" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.InvalidFormat</li>
+<li>rio_tiler.errors.TileOutsideBounds</li>
+<li>rio_tiler.errors.InvalidBufferSize</li>
+<li>rio_tiler.errors.PointOutsideBounds</li>
+<li>rio_tiler.errors.InvalidBandName</li>
+<li>rio_tiler.errors.InvalidColorMapName</li>
+<li>rio_tiler.errors.InvalidAssetName</li>
+<li>rio_tiler.errors.InvalidExpression</li>
+<li>rio_tiler.errors.MissingAssets</li>
+<li>rio_tiler.errors.MissingBands</li>
+<li>rio_tiler.errors.InvalidMosaicMethod</li>
+<li>rio_tiler.errors.ColorMapAlreadyRegistered</li>
+<li>rio_tiler.errors.EmptyMosaicError</li>
+<li>rio_tiler.errors.InvalidColorFormat</li>
+<li>rio_tiler.errors.AssetAsBandError</li>
+<li>rio_tiler.errors.InvalidPointDataError</li>
+</ul>
+<h4 id="class-variables_19">Class variables<a class="headerlink" href="#class-variables_19" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_19">Methods<a class="headerlink" href="#methods_19" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_19">with_traceback<a class="headerlink" href="#with_traceback_19" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+<h3 id="tileoutsidebounds">TileOutsideBounds<a class="headerlink" href="#tileoutsidebounds" title="Permanent link">&para;</a></h3>
+<div class="highlight"><pre><span></span><code><span class="k">class</span> <span class="nc">TileOutsideBounds</span><span class="p">(</span>
+    <span class="o">/</span><span class="p">,</span>
+    <span class="o">*</span><span class="n">args</span><span class="p">,</span>
+    <span class="o">**</span><span class="n">kwargs</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Z-X-Y Tile is outside image bounds.</p>
+<h4 id="ancestors-in-mro_20">Ancestors (in MRO)<a class="headerlink" href="#ancestors-in-mro_20" title="Permanent link">&para;</a></h4>
+<ul>
+<li>rio_tiler.errors.RioTilerError</li>
+<li>builtins.Exception</li>
+<li>builtins.BaseException</li>
+</ul>
+<h4 id="class-variables_20">Class variables<a class="headerlink" href="#class-variables_20" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="n">args</span>
+</code></pre></div>
+<h4 id="methods_20">Methods<a class="headerlink" href="#methods_20" title="Permanent link">&para;</a></h4>
+<h4 id="with_traceback_20">with_traceback<a class="headerlink" href="#with_traceback_20" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="k">def</span> <span class="nf">with_traceback</span><span class="p">(</span>
+    <span class="o">...</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>Exception.with_traceback(tb) --</p>
+<p>set self.<strong>traceback</strong> to tb and return self.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        <div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/cogeotiff" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 496 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M165.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6zm-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3zm44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9zM244.8 8C106.1 8 0 113.3 0 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C428.2 457.8 496 362.9 496 252 496 113.3 383.5 8 244.8 8zM97.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1zm-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7zm32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1zm-11.4-14.7c-1.6 1-1.6 3.6 0 5.9 1.6 2.3 4.3 3.3 5.6 2.3 1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/cogeotiff" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M459.37 151.716c.325 4.548.325 9.097.325 13.645 0 138.72-105.583 298.558-298.558 298.558-59.452 0-114.68-17.219-161.137-47.106 8.447.974 16.568 1.299 25.34 1.299 49.055 0 94.213-16.568 130.274-44.832-46.132-.975-84.792-31.188-98.112-72.772 6.498.974 12.995 1.624 19.818 1.624 9.421 0 18.843-1.3 27.614-3.573-48.081-9.747-84.143-51.98-84.143-102.985v-1.299c13.969 7.797 30.214 12.67 47.431 13.319-28.264-18.843-46.781-51.005-46.781-87.391 0-19.492 5.197-37.36 14.294-52.954 51.655 63.675 129.3 105.258 216.365 109.807-1.624-7.797-2.599-15.918-2.599-24.04 0-57.828 46.782-104.934 104.934-104.934 30.213 0 57.502 12.67 76.67 33.137 23.715-4.548 46.456-13.32 66.599-25.34-7.798 24.366-24.366 44.833-46.132 57.827 21.117-2.273 41.584-8.122 60.426-16.243-14.292 20.791-32.161 39.308-52.628 54.253z"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.cogeo.org/" target="_blank" rel="noopener" title="www.cogeo.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 6.5.2 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2024 Fonticons, Inc.--><path d="M352 256c0 22.2-1.2 43.6-3.3 64H163.3c-2.2-20.4-3.3-41.8-3.3-64s1.2-43.6 3.3-64h185.4c2.2 20.4 3.3 41.8 3.3 64zm28.8-64h123.1c5.3 20.5 8.1 41.9 8.1 64s-2.8 43.5-8.1 64H380.8c2.1-20.6 3.2-42 3.2-64s-1.1-43.4-3.2-64zm112.6-32H376.7c-10-63.9-29.8-117.4-55.3-151.6 78.3 20.7 142 77.5 171.9 151.6zm-149.1 0H167.7c6.1-36.4 15.5-68.6 27-94.7 10.5-23.6 22.2-40.7 33.5-51.5C239.4 3.2 248.7 0 256 0s16.6 3.2 27.8 13.8c11.3 10.8 23 27.9 33.5 51.5 11.6 26 20.9 58.2 27 94.7zm-209 0H18.6c30-74.1 93.6-130.9 172-151.6-25.5 34.2-45.3 87.7-55.3 151.6zM8.1 192h123.1c-2.1 20.6-3.2 42-3.2 64s1.1 43.4 3.2 64H8.1C2.8 299.5 0 278.1 0 256s2.8-43.5 8.1-64zm186.6 254.6c-11.6-26-20.9-58.2-27-94.6h176.6c-6.1 36.4-15.5 68.6-27 94.6-10.5 23.6-22.2 40.7-33.5 51.5-11.2 10.7-20.5 13.9-27.8 13.9s-16.6-3.2-27.8-13.8c-11.3-10.8-23-27.9-33.5-51.5zM135.3 352c10 63.9 29.8 117.4 55.3 151.6-78.4-20.7-142-77.5-172-151.6h116.7zm358.1 0c-30 74.1-93.6 130.9-171.9 151.6 25.5-34.2 45.2-87.7 55.3-151.6h116.6z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    <script id="__config" type="application/json">{"base": "../../..", "features": [], "search": "../../../assets/javascripts/workers/search.b8dbb3d2.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.ad660dcc.min.js"></script>
+      
+    
+  </body>
+</html>
