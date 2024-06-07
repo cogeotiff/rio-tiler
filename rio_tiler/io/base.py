@@ -480,7 +480,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
         if isinstance(assets, str):
@@ -1036,7 +1036,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         """
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside image bounds"
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
         if isinstance(bands, str):

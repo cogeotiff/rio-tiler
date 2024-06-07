@@ -343,7 +343,7 @@ class Reader(BaseReader):
         """
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
-                f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
