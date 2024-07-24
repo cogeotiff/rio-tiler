@@ -178,6 +178,7 @@ def test_apply_discrete_cmap():
     assert colormap.apply_cmap(data, cm)
 
     # Test with negative value
+    data = data.astype("int16")
     cm = {-100: (255, 255, 255, 255), 1: (0, 0, 0, 255), 256: (255, 255, 255, 255)}
     data[0, 5:, 5:] = -100
     d, m = colormap.apply_cmap(data, cm)
