@@ -2,6 +2,7 @@
 # Unreleased
 
 * Enable dynamic definition of Asset reader in MultiBaseReader
+* better error message for `TileOutsideBounds` errors (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/712)
 
 # 6.6.1 (2024-05-17)
 
