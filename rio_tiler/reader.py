@@ -565,6 +565,12 @@ def point(
             dataset.bounds
         )
         # check if latitude is inverted
+        if dataset_min_lat > dataset_max_lat:
+            warnings.warn(
+                "BoundingBox of the dataset is inverted (minLat > maxLat).",
+                UserWarning,
+            )
+
         dataset_min_lat, dataset_max_lat = (
             min(dataset_min_lat, dataset_max_lat),
             max(dataset_min_lat, dataset_max_lat),
