@@ -35,7 +35,7 @@ COG_NODATA = os.path.join(os.path.dirname(__file__), "fixtures", "cog_nodata.tif
 COG_NODATA_FLOAT_NAN = os.path.join(
     os.path.dirname(__file__), "fixtures", "cog_nodata_float_nan.tif"
 )
-COG_INVERTED = os.path.join(PREFIX, "inverted_lat.tif")
+COG_INVERTED = os.path.join(os.path.dirname(__file__), "fixtures", "inverted_lat.tif")
 
 
 @pytest.fixture(autouse=True)
