@@ -96,9 +96,7 @@ def read(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[
-        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
-    ] = None,
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> ImageData:
     """Low level read function.
 
@@ -251,9 +249,7 @@ def read(
         stats = []
         for ix in indexes:
             tags = dataset.tags(ix)
-            if all(
-                stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]
-            ):
+            if all(stat in tags for stat in ["STATISTICS_MINIMUM", "STATISTICS_MAXIMUM"]):
                 stat_min = float(tags.get("STATISTICS_MINIMUM"))
                 stat_max = float(tags.get("STATISTICS_MAXIMUM"))
                 stats.append((stat_min, stat_max))
@@ -316,9 +312,7 @@ def part(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[
-        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
-    ] = None,
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> ImageData:
     """Read part of a dataset.
 
@@ -366,12 +360,8 @@ def part(
         src_bounds = transform_bounds(
             src_dst.crs, dst_crs, *src_dst.bounds, densify_pts=21
         )
-        x_overlap = max(
-            0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0])
-        )
-        y_overlap = max(
-            0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1])
-        )
+        x_overlap = max(0, min(src_bounds[2], bounds[2]) - max(src_bounds[0], bounds[0]))
+        y_overlap = max(0, min(src_bounds[3], bounds[3]) - max(src_bounds[1], bounds[1]))
         cover_ratio = (x_overlap * y_overlap) / (
             (bounds[2] - bounds[0]) * (bounds[3] - bounds[1])
         )
@@ -519,9 +509,7 @@ def point(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[
-        Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
-    ] = None,
+    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> PointData:
     """Read a pixel value for a point.
 
@@ -577,8 +565,9 @@ def point(
             dataset.bounds
         )
         # check if latitude is inverted
-        dataset_min_lat, dataset_max_lat = min(dataset_min_lat, dataset_max_lat), max(
-            dataset_min_lat, dataset_max_lat
+        dataset_min_lat, dataset_max_lat = (
+            min(dataset_min_lat, dataset_max_lat),
+            max(dataset_min_lat, dataset_max_lat),
         )
         if not (
             (dataset_min_lon < lon < dataset_max_lon)
