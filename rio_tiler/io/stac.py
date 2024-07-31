@@ -276,13 +276,13 @@ class STACReader(MultiBaseReader):
         return self.tms.maxzoom
 
     def _get_asset_info(self, asset: str) -> AssetInfo:
-        """Validate asset names and return asset's url.
+        """Validate asset names and return asset's info.
 
         Args:
             asset (str): STAC asset name.
 
         Returns:
-            str: STAC asset href.
+            AssetInfo: STAC asset info.
 
         """
         if asset not in self.assets:
@@ -297,6 +297,8 @@ class STACReader(MultiBaseReader):
             url=asset_info.get_absolute_href() or asset_info.href,
             metadata=extras,
         )
+        if asset_info.media_type:
+            info["type"] = asset_info.media_type
 
         if head := extras.get("file:header_size"):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}

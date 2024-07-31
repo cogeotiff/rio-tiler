@@ -783,3 +783,11 @@ def _validate_shape_input(shape: Dict) -> Dict:
         raise RioTilerError("Invalid geometry")
 
     return shape
+
+
+def cast_to_sequence(val: Optional[Any] = None) -> Sequence:
+    """Cast input to sequence if not Tuple of List."""
+    if val is not None and not isinstance(val, (list, tuple)):
+        val = (val,)
+
+    return val
