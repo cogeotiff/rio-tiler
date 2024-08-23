@@ -75,6 +75,7 @@ class STACReader(
     exclude_assets: Optional[Set[str]] = None,
     include_asset_types: Set[str] = {'image/tiff; profile=cloud-optimized; application=geotiff', 'image/tiff; application=geotiff', 'image/x.geotiff', 'image/tiff; application=geotiff; profile=cloud-optimized', 'image/vnd.stac.geotiff; cloud-optimized=true', 'application/x-hdf', 'image/jp2', 'application/x-hdf5', 'image/tiff'},
     exclude_asset_types: Optional[Set[str]] = None,
+    default_assets: Optional[Sequence[str]] = attr.ib(default=None),
     reader: Type[rio_tiler.io.base.BaseReader] = <class 'rio_tiler.io.rasterio.Reader'>,
     reader_options: Dict = NOTHING,
     fetch_options: Dict = NOTHING,
@@ -96,6 +97,7 @@ class STACReader(
 | exclude_assets | set of string | Exclude specific assets. | None |
 | include_asset_types | set of string | Only include some assets base on their type. | None |
 | exclude_asset_types | set of string | Exclude some assets base on their type. | None |
+| default_assets | Sequence of string | Default assets to use if none are defined. | None |
 | reader | rio_tiler.io.BaseReader | rio-tiler Reader. Defaults to `rio_tiler.io.Reader`. | `rio_tiler.io.Reader` |
 | reader_options | dict | Additional option to forward to the Reader. Defaults to `{}`. | `{}` |
 | fetch_options | dict | Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`. | `{}` |
