@@ -3,7 +3,7 @@
 import json
 import os
 import warnings
-from typing import Any, Dict, Iterator, Optional, Set, Type, Union
+from typing import Any, Dict, Iterator, Optional, Sequence, Set, Type, Union
 from urllib.parse import urlparse
 
 import attr
@@ -200,6 +200,7 @@ class STACReader(MultiBaseReader):
         exclude_assets (set of string, optional): Exclude specific assets.
         include_asset_types (set of string, optional): Only include some assets base on their type.
         exclude_asset_types (set of string, optional): Exclude some assets base on their type.
+        default_assets (set of string, optional): Default assets to use if none are defined.
         reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.Reader`.
         reader_options (dict, optional): Additional option to forward to the Reader. Defaults to `{}`.
         fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`.
@@ -237,6 +238,8 @@ class STACReader(MultiBaseReader):
 
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
+
+    default_assets: Optional[Sequence[str]] = attr.ib(default=None)
 
     reader: Type[BaseReader] = attr.ib(default=Reader)
     reader_options: Dict = attr.ib(factory=dict)

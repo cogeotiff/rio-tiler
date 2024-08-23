@@ -890,3 +890,58 @@ def test_expression_with_wrong_stac_stats(rio):
                 expression="where((wrongstat>0.5),1,0)",
                 asset_as_band=True,
             )
+
+
+@patch("rio_tiler.io.rasterio.rasterio")
+def test_default_assets(rio):
+    """Should raise or return tiles."""
+    rio.open = mock_rasterio_open
+
+    bbox = (-80.477, 32.7988, -79.737, 33.4453)
+
+    feat = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-80.013427734375, 33.03169299978312],
+                    [-80.3045654296875, 32.588477769459146],
+                    [-80.05462646484375, 32.42865847084369],
+                    [-79.45037841796875, 32.6093028087336],
+                    [-79.47235107421875, 33.43602551072033],
+                    [-79.89532470703125, 33.47956309444182],
+                    [-80.1068115234375, 33.37870592138779],
+                    [-80.30181884765625, 33.27084277265288],
+                    [-80.0628662109375, 33.146750228776455],
+                    [-80.013427734375, 33.03169299978312],
+                ]
+            ],
+        },
+    }
+
+    with STACReader(STAC_PATH, default_assets=["green"]) as stac:
+        img = stac.tile(71, 102, 8)
+        assert img.data.shape == (1, 256, 256)
+        assert img.mask.shape == (256, 256)
+        assert img.band_names == ["green_b1"]
+
+        pt = stac.point(-80.477, 33.4453)
+        assert len(pt.data) == 1
+        assert pt.band_names == ["green_b1"]
+
+        img = stac.preview()
+        assert img.data.shape == (1, 259, 255)
+        assert img.mask.shape == (259, 255)
+        assert img.band_names == ["green_b1"]
+
+        img = stac.part(bbox)
+        assert img.data.shape == (1, 73, 83)
+        assert img.mask.shape == (73, 83)
+        assert img.band_names == ["green_b1"]
+
+        img = stac.feature(feat)
+        assert img.data.shape == (1, 118, 96)
+        assert img.mask.shape == (118, 96)
+        assert img.band_names == ["green_b1"]
