@@ -1,5 +1,6 @@
 # unreleased
 
+* add `RIO_TILER_XARRAY_DEFAULT_WGS84=TRUE/FALSE` environment variable to enable setting WGS84 CRS by default when no CRS is provided in Xarray dataset
 * better error message for `TileOutsideBounds` errors (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/712)
 * handle of inverted latitude in `reader.point` (author @georgespill, https://github.com/cogeotiff/rio-tiler/pull/716)
 

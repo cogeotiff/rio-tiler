@@ -1,6 +1,7 @@
 """tests rio_tiler.io.xarray.XarrayReader"""
 
 from datetime import datetime
+from unittest.mock import patch
 
 import morecantile
 import numpy
@@ -8,6 +9,7 @@ import pytest
 import rioxarray
 import xarray
 
+from rio_tiler.errors import MissingCRSWarning, OverwritingCRSWarning
 from rio_tiler.io import XarrayReader
 
 
@@ -321,3 +323,51 @@ def test_xarray_reader_resampling():
 
         with pytest.warns(DeprecationWarning):
             _ = dst.feature(feat, resampling_method="nearest")
+
+
+@patch("rio_tiler.io.xarray.default_to_wgs84_crs", new=True)
+def test_xarray_reader_default_crs():
+    """Should raise OverwritingCRSWarning warning."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": list(range(-170, 180, 10)),
+            "y": list(range(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    with pytest.warns(OverwritingCRSWarning):
+        with XarrayReader(data) as dst:
+            info = dst.info()
+            assert info.minzoom == 0
+            assert info.maxzoom == 0
+            assert info.band_metadata == [("b1", {})]
+            assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000000")]
+            assert info.height == 33
+            assert info.width == 35
+            assert info.count == 1
+            assert info.attrs
+
+
+@patch("rio_tiler.io.xarray.default_to_wgs84_crs", new=False)
+def test_xarray_reader_no_default_crs():
+    """Should raise MissingCRSWarning warning."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": list(range(-170, 180, 10)),
+            "y": list(range(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    with pytest.warns(MissingCRSWarning):
+        with XarrayReader(data) as dst:
+            assert dst.info()

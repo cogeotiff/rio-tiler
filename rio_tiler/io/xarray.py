@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import os
 import warnings
 from typing import Any, Dict, List, Optional
 
@@ -15,7 +16,12 @@ from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import PointOutsideBounds, TileOutsideBounds
+from rio_tiler.errors import (
+    MissingCRSWarning,
+    OverwritingCRSWarning,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, NoData, WarpResampling
@@ -30,6 +36,11 @@ try:
     import rioxarray
 except ImportError:  # pragma: nocover
     rioxarray = None  # type: ignore
+
+
+default_to_wgs84_crs = os.environ.get(
+    "RIO_TILER_XARRAY_DEFAULT_WGS84", "FALSE"
+).upper() in ["TRUE", "YES"]
 
 
 @attr.s
@@ -71,7 +82,20 @@ class XarrayReader(BaseReader):
         assert rioxarray is not None, "rioxarray must be installed to use XarrayReader"
 
         self.bounds = tuple(self.input.rio.bounds())
+
+        if not self.input.rio.crs and default_to_wgs84_crs:
+            warnings.warn(
+                "Dataset doesn't have a valid CRS set. Automatically setting CRS to WGS84",
+                OverwritingCRSWarning,
+            )
+            self.input.rio.write_crs("epsg:4326", inplace=True)
+
         self.crs = self.input.rio.crs
+        if not self.crs:
+            warnings.warn(
+                "Dataset doesn't have a valid CRS set. rio-tiler might not work properly",
+                MissingCRSWarning,
+            )
 
         self._dims = [
             d

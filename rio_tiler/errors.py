@@ -83,3 +83,11 @@ class AssetAsBandError(RioTilerError):
 
 class InvalidPointDataError(RioTilerError):
     """Invalid PointData."""
+
+
+class MissingCRSWarning(UserWarning):
+    """Missing CRS information."""
+
+
+class OverwritingCRSWarning(UserWarning):
+    """Overwriting CRS information."""
