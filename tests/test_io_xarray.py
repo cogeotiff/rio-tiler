@@ -8,6 +8,7 @@ import pytest
 import rioxarray
 import xarray
 
+from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
 from rio_tiler.io import XarrayReader
 
 
@@ -321,3 +322,53 @@ def test_xarray_reader_resampling():
 
         with pytest.warns(DeprecationWarning):
             _ = dst.feature(feat, resampling_method="nearest")
+
+
+def test_xarray_reader_no_crs():
+    """Should raise MissingCRS."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": list(range(-170, 180, 10)),
+            "y": list(range(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    with pytest.raises(MissingCRS):
+        with XarrayReader(data):
+            pass
+
+
+def test_xarray_reader_invalid_bounds_crs():
+    """Should raise InvalidGeographicBounds."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": list(range(10, 360, 10)),
+            "y": list(range(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with pytest.raises(InvalidGeographicBounds):
+        with XarrayReader(data):
+            pass
+
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": list(range(-170, 180, 10)),
+            "y": list(range(15, 180, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with pytest.raises(InvalidGeographicBounds):
+        with XarrayReader(data):
+            pass

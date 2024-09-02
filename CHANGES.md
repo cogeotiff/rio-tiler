@@ -1,5 +1,6 @@
 # unreleased
 
+* raise `MissingCRS` or `InvalidGeographicBounds` errors when Xarray datasets have wrong geographic metadata
 * better error message for `TileOutsideBounds` errors (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/712)
 * handle of inverted latitude in `reader.point` (author @georgespill, https://github.com/cogeotiff/rio-tiler/pull/716)
 
