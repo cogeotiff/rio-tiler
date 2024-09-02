@@ -1179,4 +1179,8 @@ print(info.json(exclude_none=True))
 !!! Important
 
     Not Implemented
-```
+
+
+#### Settings
+
+`RIO_TILER_XARRAY_DEFAULT_WGS84=TRUE/FALSE` environment variable can be used to enable setting `WGS84` CRS by default when the CRS information is not defined in the Xarray dataset. Defaults to `False`.
