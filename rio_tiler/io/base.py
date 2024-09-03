@@ -497,7 +497,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
-        assets = assets or self.default_assets
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
 
         if not assets:
             raise MissingAssets(
