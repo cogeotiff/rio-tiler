@@ -84,9 +84,9 @@ class XarrayReader(BaseReader):
 
         if self.crs == WGS84_CRS and (
             self.bounds[0] < -180
-            or self.bounds[1] < -90
+            or min(self.bounds[1], self.bounds[3]) < -90
             or self.bounds[2] > 180
-            or self.bounds[3] > 90
+            or max(self.bounds[1], self.bounds[3]) > 90
         ):
             raise InvalidGeographicBounds(f"Invalid geographic bounds: {self.bounds}")
 
