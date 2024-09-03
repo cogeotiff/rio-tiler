@@ -75,6 +75,7 @@ class XarrayReader(BaseReader):
         assert xarray is not None, "xarray must be installed to use XarrayReader"
         assert rioxarray is not None, "rioxarray must be installed to use XarrayReader"
 
+        # NOTE: rioxarray returns **ordered** bounds in form of (minx, miny, maxx, maxx)
         self.bounds = tuple(self.input.rio.bounds())
         self.crs = self.input.rio.crs
         if not self.crs:
@@ -84,9 +85,9 @@ class XarrayReader(BaseReader):
 
         if self.crs == WGS84_CRS and (
             self.bounds[0] < -180
-            or min(self.bounds[1], self.bounds[3]) < -90
+            or self.bounds[1] < -90
             or self.bounds[2] > 180
-            or max(self.bounds[1], self.bounds[3]) > 90
+            or self.bounds[3] > 90
         ):
             raise InvalidGeographicBounds(f"Invalid geographic bounds: {self.bounds}")
 

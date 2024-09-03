@@ -19,8 +19,8 @@ def test_xarray_reader():
         arr,
         dims=("time", "y", "x"),
         coords={
-            "x": list(range(-170, 180, 10)),
-            "y": list(range(-80, 85, 5)),
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
             "time": [datetime(2022, 1, 1)],
         },
     )
@@ -269,8 +269,8 @@ def test_xarray_reader_resampling():
         arr,
         dims=("time", "y", "x"),
         coords={
-            "x": list(range(-170, 180, 10)),
-            "y": list(range(-80, 85, 5)),
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
             "time": [datetime(2022, 1, 1)],
         },
     )
@@ -349,8 +349,8 @@ def test_xarray_reader_invalid_bounds_crs():
         arr,
         dims=("time", "y", "x"),
         coords={
-            "x": list(range(10, 360, 10)),
-            "y": list(range(-80, 85, 5)),
+            "x": numpy.arange(10, 360, 10),
+            "y": numpy.arange(-80, 85, 5),
             "time": [datetime(2022, 1, 1)],
         },
     )
@@ -363,8 +363,8 @@ def test_xarray_reader_invalid_bounds_crs():
         arr,
         dims=("time", "y", "x"),
         coords={
-            "x": list(range(-170, 180, 10)),
-            "y": list(range(15, 180, 5)),
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(15, 180, 5),
             "time": [datetime(2022, 1, 1)],
         },
     )
@@ -372,3 +372,31 @@ def test_xarray_reader_invalid_bounds_crs():
     with pytest.raises(InvalidGeographicBounds):
         with XarrayReader(data):
             pass
+
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(15, 180, 5),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with pytest.raises(InvalidGeographicBounds):
+        with XarrayReader(data):
+            pass
+
+    # Inverted bounds are still ok because rioxarray reorder the bounds
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.flip(numpy.arange(-170, 180, 10)),
+            "y": numpy.flip(numpy.arange(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data):
+        pass
