@@ -331,8 +331,8 @@ def test_xarray_reader_no_crs():
         arr,
         dims=("time", "y", "x"),
         coords={
-            "x": list(range(-170, 180, 10)),
-            "y": list(range(-80, 85, 5)),
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
             "time": [datetime(2022, 1, 1)],
         },
     )
