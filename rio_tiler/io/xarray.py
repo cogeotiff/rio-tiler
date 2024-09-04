@@ -15,7 +15,12 @@ from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import PointOutsideBounds, TileOutsideBounds
+from rio_tiler.errors import (
+    InvalidGeographicBounds,
+    MissingCRS,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, NoData, WarpResampling
@@ -70,8 +75,23 @@ class XarrayReader(BaseReader):
         assert xarray is not None, "xarray must be installed to use XarrayReader"
         assert rioxarray is not None, "rioxarray must be installed to use XarrayReader"
 
+        # NOTE: rioxarray returns **ordered** bounds in form of (minx, miny, maxx, maxx)
         self.bounds = tuple(self.input.rio.bounds())
         self.crs = self.input.rio.crs
+        if not self.crs:
+            raise MissingCRS(
+                "Dataset doesn't have CRS information, please add it before using rio-tiler (e.g. `ds.rio.write_crs('epsg:4326', inplace=True)`)"
+            )
+
+        if self.crs == WGS84_CRS and (
+            self.bounds[0] < -180
+            or self.bounds[1] < -90
+            or self.bounds[2] > 180
+            or self.bounds[3] > 90
+        ):
+            raise InvalidGeographicBounds(
+                f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
+            )
 
         self._dims = [
             d

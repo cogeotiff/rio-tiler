@@ -83,3 +83,11 @@ class AssetAsBandError(RioTilerError):
 
 class InvalidPointDataError(RioTilerError):
     """Invalid PointData."""
+
+
+class MissingCRS(RioTilerError):
+    """Dataset doesn't have CRS information."""
+
+
+class InvalidGeographicBounds(RioTilerError):
+    """Invalid Geographic bounds."""
