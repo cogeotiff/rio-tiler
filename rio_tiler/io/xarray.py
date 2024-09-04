@@ -89,7 +89,9 @@ class XarrayReader(BaseReader):
             or self.bounds[2] > 180
             or self.bounds[3] > 90
         ):
-            raise InvalidGeographicBounds(f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90).")
+            raise InvalidGeographicBounds(
+                f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
+            )
 
         self._dims = [
             d
