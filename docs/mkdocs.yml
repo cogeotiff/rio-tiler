@@ -77,6 +77,8 @@ plugins:
   - search
   - mkdocs-jupyter:
       include_source: True
+  - mkdocstrings:
+      enable_inventory: true
 
 # Theme
 theme:
