@@ -76,9 +76,33 @@ nav:
 plugins:
   - search
   - mkdocs-jupyter:
-      include_source: True
+      include_source: true
+      ignore: ["**/.ipynb_checkpoints/*.ipynb"]
   - mkdocstrings:
       enable_inventory: true
+      handlers:
+        python:
+          paths: [src]
+          options:
+            filters:
+            - "!^__post_init__"
+            docstring_section_style: list
+            docstring_style: google
+            line_length: 100
+            separate_signature: true
+            show_root_heading: true
+            show_signature_annotations: true
+            show_source: false
+            show_symbol_type_toc: true
+            signature_crossrefs: true
+            extensions:
+              - griffe_inherited_docstrings
+          import:
+            - https://docs.python.org/3/objects.inv
+            - https://numpy.org/doc/stable/objects.inv
+            - https://rasterio.readthedocs.io/en/stable/objects.inv
+            - https://docs.pydantic.dev/latest/objects.inv
+            - https://developmentseed.org/morecantile/objects.inv
 
 # Theme
 theme:
@@ -94,6 +118,14 @@ theme:
     text: 'Nunito Sans'
     code: 'Fira Code'
   custom_dir: 'src/overrides'
+  features:
+    - content.code.annotate
+    - content.code.copy
+    - navigation.indexes
+    - navigation.instant
+    - navigation.tracking
+    - search.suggest
+    - search.share
 
 # These extensions are chosen to be a superset of Pandoc's Markdown.
 # This way, I can write in Pandoc's Markdown and have it be supported here.

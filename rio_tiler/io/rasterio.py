@@ -822,8 +822,8 @@ class ImageReader(Reader):
         """Read a pixel value from an Image.
 
         Args:
-            lon (float): X coordinate.
-            lat (float): Y coordinate.
+            x (float): X coordinate.
+            y (float): Y coordinate.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.

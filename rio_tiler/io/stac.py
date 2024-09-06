@@ -173,7 +173,7 @@ def _to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.
     """Attr converter to convert to Dict to pystac.Item
 
     Args:
-        stac_item (Union[Dict, pystac.Item]): STAC Item.
+        item (Union[Dict, pystac.Item]): STAC Item.
 
     Returns
         pystac.Item: pystac STAC item object.

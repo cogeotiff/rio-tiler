@@ -129,7 +129,7 @@ def apply_discrete_cmap(data: numpy.ndarray, colormap: GDALColorMapType) -> Data
 
     Args:
         data (numpy.ndarray): 1D image array to translate to RGB.
-        color_map (dict): Discrete ColorMap dictionary.
+        colormap (GDALColorMapType): Discrete ColorMap dictionary.
 
     Returns:
         tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).
@@ -168,7 +168,7 @@ def apply_intervals_cmap(
 
     Args:
         data (numpy.ndarray): 1D image array to translate to RGB.
-        color_map (Sequence): Sequence of intervals and color in form of [([min, max], [r, g, b, a]), ...].
+        colormap (IntervalColorMapType): Sequence of intervals and color in form of [([min, max], [r, g, b, a]), ...].
 
     Returns:
         tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).
