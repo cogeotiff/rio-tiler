@@ -283,9 +283,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Validate asset name and construct url."""
         ...
 
-    def _get_reader(self, asset_info: AssetInfo) -> Type[BaseReader]:
-        """Get Asset Reader."""
-        return self.reader
+    def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
+        """Get Asset Reader and options."""
+        return self.reader, {}
 
     def parse_expression(self, expression: str, asset_as_band: bool = False) -> Tuple:
         """Parse rio-tiler band math expression."""
@@ -347,13 +347,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, **kwargs: Any) -> Dict:
             asset_info = self._get_asset_info(asset)
-            reader = self._get_reader(asset_info)
+            reader, options = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
                     asset_info["url"],
                     tms=self.tms,
-                    **self.reader_options,
+                    **{**self.reader_options, **options},
                 ) as src:
                     return src.info()
 
@@ -390,13 +390,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> Dict:
             asset_info = self._get_asset_info(asset)
-            reader = self._get_reader(asset_info)
+            reader, options = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
                     asset_info["url"],
                     tms=self.tms,
-                    **self.reader_options,
+                    **{**self.reader_options, **options},
                 ) as src:
                     return src.statistics(
                         *args,
@@ -514,13 +514,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
-            reader = self._get_reader(asset_info)
+            reader, options = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
                     asset_info["url"],
                     tms=self.tms,
-                    **self.reader_options,
+                    **{**self.reader_options, **options},
                 ) as src:
                     data = src.tile(*args, indexes=idx, **kwargs)
 
@@ -598,13 +598,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
-            reader = self._get_reader(asset_info)
+            reader, options = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
                     asset_info["url"],
                     tms=self.tms,
-                    **self.reader_options,
+                    **{**self.reader_options, **options},
                 ) as src:
                     data = src.part(*args, indexes=idx, **kwargs)
 
@@ -680,13 +680,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
-            reader = self._get_reader(asset_info)
+            reader, options = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
                     asset_info["url"],
                     tms=self.tms,
-                    **self.reader_options,
+                    **{**self.reader_options, **options},
                 ) as src:
                     data = src.preview(indexes=idx, **kwargs)
 
@@ -766,13 +766,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
-            reader = self._get_reader(asset_info)
+            reader, options = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
                     asset_info["url"],
                     tms=self.tms,
-                    **self.reader_options,
+                    **{**self.reader_options, **options},
                 ) as src:
                     data = src.point(*args, indexes=idx, **kwargs)
 
@@ -844,13 +844,13 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
-            reader = self._get_reader(asset_info)
+            reader, options = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
                     asset_info["url"],
                     tms=self.tms,
-                    **self.reader_options,
+                    **{**self.reader_options, **options},
                 ) as src:
                     data = src.feature(*args, indexes=idx, **kwargs)
 

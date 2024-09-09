@@ -2,7 +2,7 @@
 
 import json
 import os
-from typing import Set, Type
+from typing import Dict, Set, Tuple, Type
 from unittest.mock import patch
 
 import attr
@@ -905,22 +905,22 @@ def test_get_reader():
     class CustomSTACReader(STACReader):
         include_asset_types: Set[str] = attr.ib(default=valid_types)
 
-        def _get_reader(self, asset_info: AssetInfo) -> Type[BaseReader]:
+        def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
             """Get Asset Reader."""
             asset_type = asset_info.get("media_type", None)
             if asset_type and asset_type in [
                 "application/x-netcdf",
             ]:
-                return XarrayReader
+                return XarrayReader, {}
 
-            return Reader
+            return Reader, {}
 
     with CustomSTACReader(STAC_RASTER_PATH) as stac:
         assert stac.assets == ["red", "green", "blue", "netcdf"]
         info = stac._get_asset_info("netcdf")
         assert info["media_type"] == "application/x-netcdf"
-        assert stac._get_reader(info) == XarrayReader
+        assert stac._get_reader(info) == (XarrayReader, {})
 
         info = stac._get_asset_info("red")
         assert info["media_type"] == "image/tiff; application=geotiff"
-        assert stac._get_reader(info) == Reader
+        assert stac._get_reader(info) == (Reader, {})
