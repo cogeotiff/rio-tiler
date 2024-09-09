@@ -59,7 +59,7 @@ class AssetInfo(TypedDict, total=False):
     """Asset Reader Options."""
 
     url: str
-    type: str
+    media_type: str
     env: Optional[Dict]
     metadata: Optional[Dict]
     dataset_statistics: Optional[Sequence[Tuple[float, float]]]

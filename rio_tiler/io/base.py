@@ -325,7 +325,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             img.dataset_statistics = [statistics[bidx - 1] for bidx in indexes]
 
     def info(
-        self, assets: Union[Sequence[str], str] = None, **kwargs: Any
+        self,
+        assets: Optional[Union[Sequence[str], str]] = None,
+        **kwargs: Any,
     ) -> Dict[str, Info]:
         """Return metadata from multiple assets.
 
@@ -349,7 +351,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"], tms=self.tms, **self.reader_options
+                    asset_info["url"],
+                    tms=self.tms,
+                    **self.reader_options,
                 ) as src:
                     return src.info()
 
@@ -357,9 +361,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def statistics(
         self,
-        assets: Union[Sequence[str], str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
-        asset_expression: Optional[Dict[str, str]] = None,  # Expression for each asset
+        assets: Optional[Union[Sequence[str], str]] = None,
+        asset_indexes: Optional[Dict[str, Indexes]] = None,
+        asset_expression: Optional[Dict[str, str]] = None,
         **kwargs: Any,
     ) -> Dict[str, Dict[str, BandStatistics]]:
         """Return array statistics for multiple assets.
@@ -384,7 +388,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes = asset_indexes or {}
         asset_expression = asset_expression or {}
 
-        def _reader(asset: str, *args, **kwargs) -> Dict:
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> Dict:
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
 
@@ -396,8 +400,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 ) as src:
                     return src.statistics(
                         *args,
-                        indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),  # type: ignore
-                        expression=asset_expression.get(asset),  # type: ignore
+                        indexes=asset_indexes.get(asset, kwargs.pop("indexes", None)),
+                        expression=asset_expression.get(asset),
                         **kwargs,
                     )
 
@@ -405,9 +409,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def merged_statistics(
         self,
-        assets: Union[Sequence[str], str] = None,
+        assets: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_indexes: Optional[Dict[str, Indexes]] = None,
         categorical: bool = False,
         categories: Optional[List[float]] = None,
         percentiles: Optional[List[int]] = None,
@@ -460,9 +464,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        assets: Union[Sequence[str], str] = None,
+        assets: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_indexes: Optional[Dict[str, Indexes]] = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -507,14 +511,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         indexes = kwargs.pop("indexes", None)
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or indexes  # type: ignore
+            idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"], tms=self.tms, **self.reader_options
+                    asset_info["url"],
+                    tms=self.tms,
+                    **self.reader_options,
                 ) as src:
                     data = src.tile(*args, indexes=idx, **kwargs)
 
@@ -549,9 +555,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     def part(
         self,
         bbox: BBox,
-        assets: Union[Sequence[str], str] = None,
+        assets: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_indexes: Optional[Dict[str, Indexes]] = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -589,7 +595,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         indexes = kwargs.pop("indexes", None)
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or indexes  # type: ignore
+            idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
@@ -632,9 +638,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def preview(
         self,
-        assets: Union[Sequence[str], str] = None,
+        assets: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_indexes: Optional[Dict[str, Indexes]] = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -671,7 +677,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         indexes = kwargs.pop("indexes", None)
 
         def _reader(asset: str, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or indexes  # type: ignore
+            idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
@@ -716,9 +722,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         self,
         lon: float,
         lat: float,
-        assets: Union[Sequence[str], str] = None,
+        assets: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_indexes: Optional[Dict[str, Indexes]] = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> PointData:
@@ -756,8 +762,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         # We fall back to `indexes` if provided
         indexes = kwargs.pop("indexes", None)
 
-        def _reader(asset: str, *args, **kwargs: Any) -> PointData:
-            idx = asset_indexes.get(asset) or indexes  # type: ignore
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> PointData:
+            idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
@@ -767,7 +773,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     asset_info["url"],
                     tms=self.tms,
                     **self.reader_options,
-                ) as src:  # type: ignore
+                ) as src:
                     data = src.point(*args, indexes=idx, **kwargs)
 
                     metadata = data.metadata or {}
@@ -795,9 +801,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     def feature(
         self,
         shape: Dict,
-        assets: Union[Sequence[str], str] = None,
+        assets: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,  # Indexes for each asset
+        asset_indexes: Optional[Dict[str, Indexes]] = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -835,7 +841,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         indexes = kwargs.pop("indexes", None)
 
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
-            idx = asset_indexes.get(asset) or indexes  # type: ignore
+            idx = asset_indexes.get(asset) or indexes
 
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
@@ -845,7 +851,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     asset_info["url"],
                     tms=self.tms,
                     **self.reader_options,
-                ) as src:  # type: ignore
+                ) as src:
                     data = src.feature(*args, indexes=idx, **kwargs)
 
                     self._update_statistics(
@@ -929,7 +935,11 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         return bands
 
-    def info(self, bands: Union[Sequence[str], str] = None, *args, **kwargs: Any) -> Info:
+    def info(
+        self,
+        bands: Optional[Union[Sequence[str], str]] = None,
+        **kwargs: Any,
+    ) -> Info:
         """Return metadata from multiple bands.
 
         Args:
@@ -949,10 +959,14 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> Info:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+            with self.reader(
+                url,
+                tms=self.tms,
+                **self.reader_options,
+            ) as src:
                 return src.info()
 
-        bands_metadata = multi_values(bands, _reader, *args, **kwargs)
+        bands_metadata = multi_values(bands, _reader, **kwargs)
 
         meta = {
             "bounds": self.geographic_bounds,
@@ -978,7 +992,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def statistics(
         self,
-        bands: Union[Sequence[str], str] = None,
+        bands: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         categorical: bool = False,
         categories: Optional[List[float]] = None,
@@ -1029,7 +1043,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        bands: Union[Sequence[str], str] = None,
+        bands: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -1069,11 +1083,19 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+            with self.reader(
+                url,
+                tms=self.tms,
+                **self.reader_options,
+            ) as src:
                 data = src.tile(*args, **kwargs)
+
                 if data.metadata:
                     data.metadata = {band: data.metadata}
-                data.band_names = [band]  # use `band` as name instead of band index
+
+                # use `band` as name instead of band index
+                data.band_names = [band]
+
                 return data
 
         img = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
@@ -1086,7 +1108,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     def part(
         self,
         bbox: BBox,
-        bands: Union[Sequence[str], str] = None,
+        bands: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -1119,11 +1141,19 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+            with self.reader(
+                url,
+                tms=self.tms,
+                **self.reader_options,
+            ) as src:
                 data = src.part(*args, **kwargs)
+
                 if data.metadata:
                     data.metadata = {band: data.metadata}
-                data.band_names = [band]  # use `band` as name instead of band index
+
+                # use `band` as name instead of band index
+                data.band_names = [band]
+
                 return data
 
         img = multi_arrays(bands, _reader, bbox, **kwargs)
@@ -1135,7 +1165,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def preview(
         self,
-        bands: Union[Sequence[str], str] = None,
+        bands: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -1167,11 +1197,19 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+            with self.reader(
+                url,
+                tms=self.tms,
+                **self.reader_options,
+            ) as src:
                 data = src.preview(**kwargs)
+
                 if data.metadata:
                     data.metadata = {band: data.metadata}
-                data.band_names = [band]  # use `band` as name instead of band index
+
+                # use `band` as name instead of band index
+                data.band_names = [band]
+
                 return data
 
         img = multi_arrays(bands, _reader, **kwargs)
@@ -1185,7 +1223,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         self,
         lon: float,
         lat: float,
-        bands: Union[Sequence[str], str] = None,
+        bands: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> PointData:
@@ -1217,13 +1255,21 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via `expression` or `bands` options."
             )
 
-        def _reader(band: str, *args, **kwargs: Any) -> PointData:
+        def _reader(band: str, *args: Any, **kwargs: Any) -> PointData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+            with self.reader(
+                url,
+                tms=self.tms,
+                **self.reader_options,
+            ) as src:
                 data = src.point(*args, **kwargs)
+
                 if data.metadata:
                     data.metadata = {band: data.metadata}
-                data.band_names = [band]  # use `band` as name instead of band index
+
+                # use `band` as name instead of band index
+                data.band_names = [band]
+
                 return data
 
         data = multi_points(bands, _reader, lon, lat, **kwargs)
@@ -1235,7 +1281,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     def feature(
         self,
         shape: Dict,
-        bands: Union[Sequence[str], str] = None,
+        bands: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
     ) -> ImageData:
@@ -1268,11 +1314,19 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(url, tms=self.tms, **self.reader_options) as src:  # type: ignore
+            with self.reader(
+                url,
+                tms=self.tms,
+                **self.reader_options,
+            ) as src:
                 data = src.feature(*args, **kwargs)
+
                 if data.metadata:
                     data.metadata = {band: data.metadata}
-                data.band_names = [band]  # use `band` as name instead of band index
+
+                # use `band` as name instead of band index
+                data.band_names = [band]
+
                 return data
 
         img = multi_arrays(bands, _reader, shape, **kwargs)

@@ -298,7 +298,7 @@ class STACReader(MultiBaseReader):
             metadata=extras,
         )
         if asset_info.media_type:
-            info["type"] = asset_info.media_type
+            info["media_type"] = asset_info.media_type
 
         if head := extras.get("file:header_size"):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
