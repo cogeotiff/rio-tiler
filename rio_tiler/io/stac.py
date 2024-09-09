@@ -3,7 +3,7 @@
 import json
 import os
 import warnings
-from typing import Any, Dict, Iterator, Optional, Sequence, Set, Type, Union
+from typing import Any, Dict, Iterator, Optional, Sequence, Set, Tuple, Type, Union
 from urllib.parse import urlparse
 
 import attr
@@ -173,7 +173,7 @@ def _to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.
     """Attr converter to convert to Dict to pystac.Item
 
     Args:
-        stac_item (Union[Dict, pystac.Item]): STAC Item.
+        item (Union[Dict, pystac.Item]): STAC Item.
 
     Returns
         pystac.Item: pystac STAC item object.
@@ -278,14 +278,18 @@ class STACReader(MultiBaseReader):
     def _maxzoom(self):
         return self.tms.maxzoom
 
+    def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
+        """Get Asset Reader."""
+        return self.reader, {}
+
     def _get_asset_info(self, asset: str) -> AssetInfo:
-        """Validate asset names and return asset's url.
+        """Validate asset names and return asset's info.
 
         Args:
             asset (str): STAC asset name.
 
         Returns:
-            str: STAC asset href.
+            AssetInfo: STAC asset info.
 
         """
         if asset not in self.assets:
@@ -300,10 +304,14 @@ class STACReader(MultiBaseReader):
             url=asset_info.get_absolute_href() or asset_info.href,
             metadata=extras,
         )
+        if asset_info.media_type:
+            info["media_type"] = asset_info.media_type
 
+        # https://github.com/stac-extensions/file
         if head := extras.get("file:header_size"):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
 
+        # https://github.com/stac-extensions/raster
         if bands := extras.get("raster:bands"):
             stats = [
                 (b["statistics"]["minimum"], b["statistics"]["maximum"])

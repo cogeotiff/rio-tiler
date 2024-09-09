@@ -23,6 +23,7 @@ from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import (
     _round_window,
+    cast_to_sequence,
     get_vrt_transform,
     has_alpha_band,
     non_alpha_indexes,
@@ -120,8 +121,7 @@ def read(
         ImageData
 
     """
-    if isinstance(indexes, int):
-        indexes = (indexes,)
+    indexes = cast_to_sequence(indexes)
 
     if max_size and width and height:
         warnings.warn(
@@ -529,8 +529,7 @@ def point(
         PointData
 
     """
-    if isinstance(indexes, int):
-        indexes = (indexes,)
+    indexes = cast_to_sequence(indexes)
 
     with contextlib.ExitStack() as ctx:
         # Use WarpedVRT when User provided Nodata or VRT Option (cutline)
