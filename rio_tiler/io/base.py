@@ -268,6 +268,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     assets: Sequence[str] = attr.ib(init=False)
 
+    default_assets: Optional[Sequence[str]] = attr.ib(init=False, default=None)
+
     ctx: Any = attr.ib(init=False, default=contextlib.nullcontext)
 
     def __enter__(self):
@@ -500,9 +502,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via `expression` or `assets` options."
+                "assets must be passed via `expression` or `assets` options, or via class-level `default_assets`."
             )
 
         asset_indexes = asset_indexes or {}
@@ -584,9 +593,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via `expression` or `assets` options."
+                "assets must be passed via `expression` or `assets` options, or via class-level `default_assets`."
             )
 
         asset_indexes = asset_indexes or {}
@@ -666,9 +682,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via `expression` or `assets` options."
+                "assets must be passed via `expression` or `assets` options, or via class-level `default_assets`."
             )
 
         asset_indexes = asset_indexes or {}
@@ -752,9 +775,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via `expression` or `assets` options."
+                "assets must be passed via `expression` or `assets` options, or via class-level `default_assets`."
             )
 
         asset_indexes = asset_indexes or {}
@@ -830,9 +860,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             assets = self.parse_expression(expression, asset_as_band=asset_as_band)
 
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
         if not assets:
             raise MissingAssets(
-                "assets must be passed either via `expression` or `assets` options."
+                "assets must be passed via `expression` or `assets` options, or via class-level `default_assets`."
             )
 
         asset_indexes = asset_indexes or {}
@@ -908,6 +945,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     reader_options: Dict = attr.ib(factory=dict)
 
     bands: Sequence[str] = attr.ib(init=False)
+
+    default_bands: Optional[Sequence[str]] = attr.ib(init=False, default=None)
 
     def __enter__(self):
         """Support using with Context Managers."""
@@ -1076,6 +1115,13 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             bands = self.parse_expression(expression)
 
+        if not bands and self.default_bands:
+            warnings.warn(
+                f"No bands/expression passed, defaults to {self.default_bands}",
+                UserWarning,
+            )
+            bands = self.default_bands
+
         if not bands:
             raise MissingBands(
                 "bands must be passed either via `expression` or `bands` options."
@@ -1134,6 +1180,13 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             bands = self.parse_expression(expression)
 
+        if not bands and self.default_bands:
+            warnings.warn(
+                f"No bands/expression passed, defaults to {self.default_bands}",
+                UserWarning,
+            )
+            bands = self.default_bands
+
         if not bands:
             raise MissingBands(
                 "bands must be passed either via `expression` or `bands` options."
@@ -1189,6 +1242,13 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if expression:
             bands = self.parse_expression(expression)
+
+        if not bands and self.default_bands:
+            warnings.warn(
+                f"No bands/expression passed, defaults to {self.default_bands}",
+                UserWarning,
+            )
+            bands = self.default_bands
 
         if not bands:
             raise MissingBands(
@@ -1250,6 +1310,13 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         if expression:
             bands = self.parse_expression(expression)
 
+        if not bands and self.default_bands:
+            warnings.warn(
+                f"No bands/expression passed, defaults to {self.default_bands}",
+                UserWarning,
+            )
+            bands = self.default_bands
+
         if not bands:
             raise MissingBands(
                 "bands must be passed either via `expression` or `bands` options."
@@ -1306,6 +1373,13 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         if expression:
             bands = self.parse_expression(expression)
+
+        if not bands and self.default_bands:
+            warnings.warn(
+                f"No bands/expression passed, defaults to {self.default_bands}",
+                UserWarning,
+            )
+            bands = self.default_bands
 
         if not bands:
             raise MissingBands(

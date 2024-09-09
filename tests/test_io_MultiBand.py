@@ -2,7 +2,7 @@
 
 import os
 import pathlib
-from typing import Dict, Type
+from typing import Dict, Optional, Sequence, Type
 
 import attr
 import morecantile
@@ -25,6 +25,8 @@ class BandFileReader(MultiBandReader):
 
     reader: Type[BaseReader] = attr.ib(init=False, default=Reader)
     reader_options: Dict = attr.ib(factory=dict)
+
+    default_bands: Optional[Sequence[str]] = attr.ib(default=None)
 
     minzoom: int = attr.ib()
     maxzoom: int = attr.ib()
@@ -189,3 +191,50 @@ def test_MultiBandReader():
         assert img.metadata
         assert img.metadata["band1"]
         assert img.metadata["band2"]
+
+
+def test_MultiBandReader_default_bands():
+    """Should work as expected."""
+    with BandFileReader(PREFIX, default_bands=["band1"]) as src:
+        assert src.bands == ["band1", "band2"]
+
+        with pytest.warns(UserWarning):
+            img = src.tile(238, 218, 9)
+            assert img.data.shape == (1, 256, 256)
+            assert img.band_names == ["band1"]
+
+        with pytest.warns(UserWarning):
+            img = src.part((-11.5, 24.5, -11.0, 25.0))
+            assert img.band_names == ["band1"]
+
+        with pytest.warns(UserWarning):
+            img = src.preview()
+            assert img.band_names == ["band1"]
+
+        with pytest.warns(UserWarning):
+            pt = src.point(-11.5, 24.5)
+            assert len(pt.data) == 1
+            assert pt.band_names == ["band1"]
+
+        feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-12.03826904296875, 24.87646991083154],
+                        [-12.14263916015625, 24.831610355586918],
+                        [-12.1563720703125, 24.709410369765177],
+                        [-12.1673583984375, 24.484648999654034],
+                        [-11.898193359375, 24.472150437226865],
+                        [-11.6729736328125, 24.542126388899305],
+                        [-11.47247314453125, 24.79920167537382],
+                        [-12.03826904296875, 24.87646991083154],
+                    ]
+                ],
+            },
+        }
+        with pytest.warns(UserWarning):
+            img = src.feature(feat)
+            assert img.band_names == ["band1"]
