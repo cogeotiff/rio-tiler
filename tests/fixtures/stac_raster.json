@@ -144,6 +144,13 @@
                     }
                 }
             ]
+        },
+        "netcdf": {
+            "href": "http://somewhere-over-the-rainbow.io/some_netcdf.nc",
+            "type": "application/x-netcdf",
+            "roles": [
+              "data"
+            ]
         }
     },
     "bbox": [
