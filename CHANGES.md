@@ -2,6 +2,8 @@
 # Unreleased
 
 * Enable dynamic definition of Asset **reader** in `MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/711/, https://github.com/cogeotiff/rio-tiler/pull/728)
+* Adding `default_assets` for MultiBaseReader and STACReader (author @mccarthyryanc, https://github.com/cogeotiff/rio-tiler/pull/722)
+* Adding `default_bands` for MultiBandReader (https://github.com/cogeotiff/rio-tiler/pull/722)
 
 # 6.7.0 (2024-09-05)
 
