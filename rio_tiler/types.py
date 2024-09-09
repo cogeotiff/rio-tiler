@@ -1,6 +1,6 @@
 """rio-tiler types."""
 
-from typing import Dict, Literal, Optional, Sequence, Tuple, TypedDict, Union
+from typing import Any, Dict, Literal, Optional, Sequence, Tuple, TypedDict, Union
 
 import numpy
 
@@ -58,7 +58,7 @@ WarpResampling = Literal[
 class AssetInfo(TypedDict, total=False):
     """Asset Reader Options."""
 
-    url: str
+    url: Any
     media_type: str
     env: Optional[Dict]
     metadata: Optional[Dict]

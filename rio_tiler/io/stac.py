@@ -3,7 +3,7 @@
 import json
 import os
 import warnings
-from typing import Any, Dict, Iterator, Optional, Set, Type, Union
+from typing import Any, Dict, Iterator, Optional, Set, Tuple, Type, Union
 from urllib.parse import urlparse
 
 import attr
@@ -275,6 +275,10 @@ class STACReader(MultiBaseReader):
     def _maxzoom(self):
         return self.tms.maxzoom
 
+    def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
+        """Get Asset Reader."""
+        return self.reader, {}
+
     def _get_asset_info(self, asset: str) -> AssetInfo:
         """Validate asset names and return asset's info.
 
@@ -300,9 +304,11 @@ class STACReader(MultiBaseReader):
         if asset_info.media_type:
             info["media_type"] = asset_info.media_type
 
+        # https://github.com/stac-extensions/file
         if head := extras.get("file:header_size"):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
 
+        # https://github.com/stac-extensions/raster
         if bands := extras.get("raster:bands"):
             stats = [
                 (b["statistics"]["minimum"], b["statistics"]["maximum"])
