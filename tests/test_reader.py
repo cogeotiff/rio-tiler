@@ -35,6 +35,7 @@ COG_NODATA = os.path.join(os.path.dirname(__file__), "fixtures", "cog_nodata.tif
 COG_NODATA_FLOAT_NAN = os.path.join(
     os.path.dirname(__file__), "fixtures", "cog_nodata_float_nan.tif"
 )
+COG_INVERTED = os.path.join(os.path.dirname(__file__), "fixtures", "inverted_lat.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -850,3 +851,10 @@ def test_tile_read_nodata_float():
         prev = reader.read(src_dst, max_size=100)
         assert prev.mask[0, 0] == 0
         assert not numpy.all(prev.mask)
+
+
+def test_inverted_latitude_point():
+    """Make sure we can read a point from a file with inverted latitude."""
+    with rasterio.open(COG_INVERTED) as src_dst:
+        pt = reader.point(src_dst, [-104.77519499, 38.95367054])
+        assert pt.data[0] == -9999.0

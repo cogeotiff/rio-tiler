@@ -18,42 +18,17 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout main
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4
 
-      - name: Set up Python 3.8
-        uses: actions/setup-python@v2
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
         with:
-          python-version: 3.8
+          python-version: 3.12
 
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          python -m pip install numpy
           python -m pip install -e .["docs"]
-          python -m pip install git+https://github.com/timothycrosley/pdocs
-
-      - name: update API docs
-        run: |
-          pdocs as_markdown \
-            --output_dir docs/src/api/ \
-            --exclude_source \
-            --overwrite \
-            rio_tiler.colormap \
-            rio_tiler.constants \
-            rio_tiler.errors \
-            rio_tiler.expression \
-            rio_tiler.models \
-            rio_tiler.io.base \
-            rio_tiler.io.rasterio \
-            rio_tiler.io.stac \
-            rio_tiler.io.xarray \
-            rio_tiler.mosaic.methods.base \
-            rio_tiler.mosaic.methods.defaults \
-            rio_tiler.mosaic.reader \
-            rio_tiler.profiles \
-            rio_tiler.reader \
-            rio_tiler.tasks \
-            rio_tiler.utils
 
       - name: Deploy docs
         run: mkdocs gh-deploy -f docs/mkdocs.yml --force

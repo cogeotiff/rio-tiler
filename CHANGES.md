@@ -1,8 +1,13 @@
 
 # Unreleased
 
-* Enable dynamic definition of Asset reader in MultiBaseReader
+* Enable dynamic definition of Asset **reader** in `MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/711/)
+
+# 6.7.0 (2024-09-05)
+
+* raise `MissingCRS` or `InvalidGeographicBounds` errors when Xarray datasets have wrong geographic metadata
 * better error message for `TileOutsideBounds` errors (author @abarciauskas-bgse, https://github.com/cogeotiff/rio-tiler/pull/712)
+* handle of inverted latitude in `reader.point` (author @georgespill, https://github.com/cogeotiff/rio-tiler/pull/716)
 
 # 6.6.1 (2024-05-17)
 

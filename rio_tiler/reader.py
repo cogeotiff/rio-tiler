@@ -199,7 +199,9 @@ def read(
                 values = dataset.read(
                     indexes=indexes,
                     window=window,
-                    out_shape=(len(indexes), height, width) if height and width else None,
+                    out_shape=(
+                        (len(indexes), height, width) if height and width else None
+                    ),
                     resampling=io_resampling,
                     boundless=boundless,
                 )
@@ -558,9 +560,23 @@ def point(
             xs, ys = transform_coords(coord_crs, dataset.crs, [lon], [lat])
             lon, lat = xs[0], ys[0]
 
+        dataset_min_lon, dataset_min_lat, dataset_max_lon, dataset_max_lat = (
+            dataset.bounds
+        )
+        # check if latitude is inverted
+        if dataset_min_lat > dataset_max_lat:
+            warnings.warn(
+                "BoundingBox of the dataset is inverted (minLat > maxLat).",
+                UserWarning,
+            )
+
+        dataset_min_lat, dataset_max_lat = (
+            min(dataset_min_lat, dataset_max_lat),
+            max(dataset_min_lat, dataset_max_lat),
+        )
         if not (
-            (dataset.bounds[0] < lon < dataset.bounds[2])
-            and (dataset.bounds[1] < lat < dataset.bounds[3])
+            (dataset_min_lon < lon < dataset_max_lon)
+            and (dataset_min_lat < lat < dataset_max_lat)
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 

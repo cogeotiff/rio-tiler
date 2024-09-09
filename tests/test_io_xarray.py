@@ -8,6 +8,7 @@ import pytest
 import rioxarray
 import xarray
 
+from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
 from rio_tiler.io import XarrayReader
 
 
@@ -18,8 +19,8 @@ def test_xarray_reader():
         arr,
         dims=("time", "y", "x"),
         coords={
-            "x": list(range(-170, 180, 10)),
-            "y": list(range(-80, 85, 5)),
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
             "time": [datetime(2022, 1, 1)],
         },
     )
@@ -128,6 +129,8 @@ def test_xarray_reader_external_nodata():
     data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
 
     data.rio.write_crs("epsg:4326", inplace=True)
+    assert data.rio.nodata is None
+
     with XarrayReader(data) as dst:
         info = dst.info()
         assert info.height == 180
@@ -140,18 +143,21 @@ def test_xarray_reader_external_nodata():
         assert img.mask.all()
         assert img.data[0, 0, 0] == 0
         assert img.data[0, 100, 100]
+        assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         img = dst.tile(0, 0, 1, nodata=0)
         assert not img.mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+        assert dst.input.rio.nodata is None
 
         # PART
         img = dst.part((-160, -80, 160, 80))
         assert img.mask.all()
         assert img.data[0, 0, 0] == 0
         assert img.data[0, 100, 100]
+        assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         img = dst.part((-160, -80, 160, 80), nodata=0)
@@ -162,11 +168,13 @@ def test_xarray_reader_external_nodata():
         # POINT
         pt = dst.point(-179, 89)
         assert pt.mask[0] == 255
+        assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         pt = dst.point(-179, 89, nodata=0)
         assert pt.count == 1
         assert pt.mask[0] == 0
+        assert dst.input.rio.nodata is None
 
         feat = {
             "type": "Feature",
@@ -190,12 +198,14 @@ def test_xarray_reader_external_nodata():
         assert img.mask.all()
         assert img.data[0, 0, 0] == 0
         assert img.data[0, 50, 100]
+        assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         img = dst.feature(feat, nodata=0)
         assert not img.mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
+        assert dst.input.rio.nodata is None
 
 
 def test_xarray_reader_internal_nodata():
@@ -218,6 +228,7 @@ def test_xarray_reader_internal_nodata():
     )
 
     data.rio.write_crs("epsg:4326", inplace=True)
+    assert data.rio.nodata is not None
 
     with XarrayReader(data) as dst:
         # TILE
@@ -268,8 +279,8 @@ def test_xarray_reader_resampling():
         arr,
         dims=("time", "y", "x"),
         coords={
-            "x": list(range(-170, 180, 10)),
-            "y": list(range(-80, 85, 5)),
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
             "time": [datetime(2022, 1, 1)],
         },
     )
@@ -321,3 +332,81 @@ def test_xarray_reader_resampling():
 
         with pytest.warns(DeprecationWarning):
             _ = dst.feature(feat, resampling_method="nearest")
+
+
+def test_xarray_reader_no_crs():
+    """Should raise MissingCRS."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    with pytest.raises(MissingCRS):
+        with XarrayReader(data):
+            pass
+
+
+def test_xarray_reader_invalid_bounds_crs():
+    """Should raise InvalidGeographicBounds."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(10, 360, 10),
+            "y": numpy.arange(-80, 85, 5),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with pytest.raises(InvalidGeographicBounds):
+        with XarrayReader(data):
+            pass
+
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(15, 180, 5),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with pytest.raises(InvalidGeographicBounds):
+        with XarrayReader(data):
+            pass
+
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(15, 180, 5),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with pytest.raises(InvalidGeographicBounds):
+        with XarrayReader(data):
+            pass
+
+    # Inverted bounds are still ok because rioxarray reorder the bounds
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.flip(numpy.arange(-170, 180, 10)),
+            "y": numpy.flip(numpy.arange(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data):
+        pass
