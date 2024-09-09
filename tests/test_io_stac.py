@@ -2,6 +2,7 @@
 
 import json
 import os
+from typing import Set, Type
 from unittest.mock import patch
 
 import attr
@@ -18,8 +19,9 @@ from rio_tiler.errors import (
     MissingAssets,
     TileOutsideBounds,
 )
-from rio_tiler.io import Reader, STACReader
+from rio_tiler.io import BaseReader, Reader, STACReader, XarrayReader
 from rio_tiler.models import BandStatistics
+from rio_tiler.types import AssetInfo
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
@@ -890,3 +892,35 @@ def test_expression_with_wrong_stac_stats(rio):
                 expression="where((wrongstat>0.5),1,0)",
                 asset_as_band=True,
             )
+
+
+def test_get_reader():
+    """Should use the correct reader depending on the media type."""
+    valid_types = {
+        "image/tiff; application=geotiff",
+        "application/x-netcdf",
+    }
+
+    @attr.s
+    class CustomSTACReader(STACReader):
+        include_asset_types: Set[str] = attr.ib(default=valid_types)
+
+        def _get_reader(self, asset_info: AssetInfo) -> Type[BaseReader]:
+            """Get Asset Reader."""
+            asset_type = asset_info.get("media_type", None)
+            if asset_type and asset_type in [
+                "application/x-netcdf",
+            ]:
+                return XarrayReader
+
+            return Reader
+
+    with CustomSTACReader(STAC_RASTER_PATH) as stac:
+        assert stac.assets == ["red", "green", "blue", "netcdf"]
+        info = stac._get_asset_info("netcdf")
+        assert info["media_type"] == "application/x-netcdf"
+        assert stac._get_reader(info) == XarrayReader
+
+        info = stac._get_asset_info("red")
+        assert info["media_type"] == "image/tiff; application=geotiff"
+        assert stac._get_reader(info) == Reader
