@@ -855,6 +855,7 @@ def test_tile_read_nodata_float():
 
 def test_inverted_latitude_point():
     """Make sure we can read a point from a file with inverted latitude."""
-    with rasterio.open(COG_INVERTED) as src_dst:
-        pt = reader.point(src_dst, [-104.77519499, 38.95367054])
-        assert pt.data[0] == -9999.0
+    with pytest.warns(UserWarning):
+        with rasterio.open(COG_INVERTED) as src_dst:
+            pt = reader.point(src_dst, [-104.77519499, 38.95367054])
+            assert pt.data[0] == -9999.0

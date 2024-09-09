@@ -924,29 +924,34 @@ def test_default_assets(rio):
     }
 
     with STACReader(STAC_PATH, default_assets=["green"]) as stac:
-        img = stac.tile(71, 102, 8)
-        assert img.data.shape == (1, 256, 256)
-        assert img.mask.shape == (256, 256)
-        assert img.band_names == ["green_b1"]
+        with pytest.warns(UserWarning):
+            img = stac.tile(71, 102, 8)
+            assert img.data.shape == (1, 256, 256)
+            assert img.mask.shape == (256, 256)
+            assert img.band_names == ["green_b1"]
 
-        pt = stac.point(-80.477, 33.4453)
-        assert len(pt.data) == 1
-        assert pt.band_names == ["green_b1"]
+        with pytest.warns(UserWarning):
+            pt = stac.point(-80.477, 33.4453)
+            assert len(pt.data) == 1
+            assert pt.band_names == ["green_b1"]
 
-        img = stac.preview()
-        assert img.data.shape == (1, 259, 255)
-        assert img.mask.shape == (259, 255)
-        assert img.band_names == ["green_b1"]
+        with pytest.warns(UserWarning):
+            img = stac.preview()
+            assert img.data.shape == (1, 259, 255)
+            assert img.mask.shape == (259, 255)
+            assert img.band_names == ["green_b1"]
 
-        img = stac.part(bbox)
-        assert img.data.shape == (1, 73, 83)
-        assert img.mask.shape == (73, 83)
-        assert img.band_names == ["green_b1"]
+        with pytest.warns(UserWarning):
+            img = stac.part(bbox)
+            assert img.data.shape == (1, 73, 83)
+            assert img.mask.shape == (73, 83)
+            assert img.band_names == ["green_b1"]
 
-        img = stac.feature(feat)
-        assert img.data.shape == (1, 118, 96)
-        assert img.mask.shape == (118, 96)
-        assert img.band_names == ["green_b1"]
+        with pytest.warns(UserWarning):
+            img = stac.feature(feat)
+            assert img.data.shape == (1, 118, 96)
+            assert img.mask.shape == (118, 96)
+            assert img.band_names == ["green_b1"]
 
 
 def test_get_reader():
