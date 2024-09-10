@@ -4,6 +4,10 @@
 * Enable dynamic definition of Asset **reader** in `MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/711/, https://github.com/cogeotiff/rio-tiler/pull/728)
 * Adding `default_assets` for MultiBaseReader and STACReader (author @mccarthyryanc, https://github.com/cogeotiff/rio-tiler/pull/722)
 * Adding `default_bands` for MultiBandReader (https://github.com/cogeotiff/rio-tiler/pull/722)
+* Adding support for the STAC `Projection` extension to derive the `bounds`, `crs`, `minzoom` and `maxzoom` properties  **breaking change**
+* Refactor internal function and base classes for the `minzoom/maxzoom` calculation **breaking change**
+* Adding `transform`, `height` and `width` attributes (outside init) for `SpatialMixin` class
+* Moved `_dst_geom_in_tms_crs` from Reader to `SpatialMixin` class **breaking change**
 
 # 6.7.0 (2024-09-05)
 

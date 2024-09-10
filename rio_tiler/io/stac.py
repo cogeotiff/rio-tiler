@@ -14,6 +14,7 @@ from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
 from rasterio.crs import CRS
+from rasterio.transform import array_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import InvalidAssetName, MissingAssets
@@ -228,8 +229,8 @@ class STACReader(MultiBaseReader):
     item: pystac.Item = attr.ib(default=None, converter=_to_pystac_item)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib()
-    maxzoom: int = attr.ib()
+    minzoom: int = attr.ib(default=None)
+    maxzoom: int = attr.ib(default=None)
 
     geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
@@ -239,6 +240,7 @@ class STACReader(MultiBaseReader):
     include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
 
+    assets: Sequence[str] = attr.ib(init=False)
     default_assets: Optional[Sequence[str]] = attr.ib(default=None)
 
     reader: Type[BaseReader] = attr.ib(default=Reader)
@@ -254,9 +256,24 @@ class STACReader(MultiBaseReader):
             fetch(self.input, **self.fetch_options), self.input
         )
 
-        # TODO: get bounds/crs using PROJ extension if available
         self.bounds = self.item.bbox
         self.crs = WGS84_CRS
+
+        if self.item.ext.has("proj"):
+            if all(
+                [
+                    self.item.ext.proj.transform,
+                    self.item.ext.proj.shape,
+                    self.item.ext.proj.crs_string,
+                ]
+            ):
+                self.height, self.width = self.item.ext.proj.shape
+                self.transform = self.item.ext.proj.transform
+                self.bounds = array_bounds(self.height, self.width, self.transform)
+                self.crs = rasterio.crs.CRS.from_string(self.item.ext.proj.crs_string)
+
+        self.minzoom = self.minzoom if self.minzoom is not None else self._minzoom
+        self.maxzoom = self.maxzoom if self.maxzoom is not None else self._maxzoom
 
         self.assets = list(
             _get_assets(
@@ -269,14 +286,6 @@ class STACReader(MultiBaseReader):
         )
         if not self.assets:
             raise MissingAssets("No valid asset found. Asset's media types not supported")
-
-    @minzoom.default
-    def _minzoom(self):
-        return self.tms.minzoom
-
-    @maxzoom.default
-    def _maxzoom(self):
-        return self.tms.maxzoom
 
     def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
         """Get Asset Reader."""

@@ -109,6 +109,24 @@ def test_xarray_reader():
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
         assert img.crs.to_epsg() == 3857
 
+    arr = numpy.zeros((1, 1000, 2000))
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(50, 80, 0.015),
+            "y": numpy.arange(10, 20, 0.01),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data) as dst:
+        info = dst.info()
+        assert info.minzoom == 5
+        assert info.maxzoom == 7
+
 
 def test_xarray_reader_external_nodata():
     """test XarrayReader."""
