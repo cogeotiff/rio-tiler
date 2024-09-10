@@ -9,9 +9,11 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
 import numpy
+from affine import Affine
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
-from rasterio.warp import transform_bounds
+from rasterio.rio.overview import get_maximum_overview_level
+from rasterio.warp import calculate_default_transform, transform_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -41,6 +43,10 @@ class SpatialMixin:
 
     bounds: BBox = attr.ib(init=False)
     crs: CRS = attr.ib(init=False)
+
+    transform: Optional[Affine] = attr.ib(default=None, init=False)
+    height: Optional[int] = attr.ib(default=None, init=False)
+    width: Optional[int] = attr.ib(default=None, init=False)
 
     geographic_crs: CRS = attr.ib(init=False, default=WGS84_CRS)
 
@@ -84,6 +90,77 @@ class SpatialMixin:
             bounds = (-180.0, -90, 180.0, 90)
 
         return bounds
+
+    @cached_property
+    def _dst_geom_in_tms_crs(self):
+        """Return dataset geom info in TMS projection."""
+        tms_crs = self.tms.rasterio_crs
+        if self.crs != tms_crs:
+            dst_affine, w, h = calculate_default_transform(
+                self.crs,
+                tms_crs,
+                self.width,
+                self.height,
+                *self.bounds,
+            )
+        else:
+            dst_affine = list(self.transform)
+            w = self.width
+            h = self.height
+
+        return dst_affine, w, h
+
+    @cached_property
+    def _minzoom(self) -> int:
+        """Calculate dataset minimum zoom level."""
+        # We assume the TMS tilesize to be constant over all matrices
+        # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
+        tilesize = self.tms.tileMatrices[0].tileWidth
+
+        if all([self.transform, self.height, self.width]):
+            try:
+                dst_affine, w, h = self._dst_geom_in_tms_crs
+
+                # The minzoom is defined by the resolution of the maximum theoretical overview level
+                # We assume `tilesize`` is the smallest overview size
+                overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
+
+                # Get the resolution of the overview
+                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+                ovr_resolution = resolution * (2**overview_level)
+
+                # Find what TMS matrix match the overview resolution
+                return self.tms.zoom_for_res(ovr_resolution)
+
+            except:  # noqa
+                # if we can't get max zoom from the dataset we default to TMS maxzoom
+                warnings.warn(
+                    "Cannot determine minzoom based on dataset information, will default to TMS minzoom.",
+                    UserWarning,
+                )
+
+        return self.tms.minzoom
+
+    @cached_property
+    def _maxzoom(self) -> int:
+        """Calculate dataset maximum zoom level."""
+        if all([self.transform, self.height, self.width]):
+            try:
+                dst_affine, _, _ = self._dst_geom_in_tms_crs
+
+                # The maxzoom is defined by finding the minimum difference between
+                # the raster resolution and the zoom level resolution
+                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+                return self.tms.zoom_for_res(resolution)
+
+            except:  # noqa
+                # if we can't get min/max zoom from the dataset we default to TMS maxzoom
+                warnings.warn(
+                    "Cannot determine maxzoom based on dataset information, will default to TMS maxzoom.",
+                    UserWarning,
+                )
+
+        return self.tms.maxzoom
 
     def tile_exists(self, tile_x: int, tile_y: int, tile_z: int) -> bool:
         """Check if a tile intersects the dataset bounds.
@@ -267,7 +344,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     reader_options: Dict = attr.ib(factory=dict)
 
     assets: Sequence[str] = attr.ib(init=False)
-
     default_assets: Optional[Sequence[str]] = attr.ib(init=False, default=None)
 
     ctx: Any = attr.ib(init=False, default=contextlib.nullcontext)
@@ -945,7 +1021,6 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     reader_options: Dict = attr.ib(factory=dict)
 
     bands: Sequence[str] = attr.ib(init=False)
-
     default_bands: Optional[Sequence[str]] = attr.ib(init=False, default=None)
 
     def __enter__(self):

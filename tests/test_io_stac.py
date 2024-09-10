@@ -2,14 +2,17 @@
 
 import json
 import os
+import sys
 from typing import Dict, Set, Tuple, Type
 from unittest.mock import patch
 
 import attr
+import morecantile
 import numpy
 import pytest
 import rasterio
 from rasterio._env import get_gdal_config
+from rasterio.crs import CRS
 
 from rio_tiler.errors import (
     AssetAsBandError,
@@ -25,6 +28,7 @@ from rio_tiler.types import AssetInfo
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
+STAC_PATH_PROJ = os.path.join(PREFIX, "stac_proj.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
 STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
@@ -54,6 +58,16 @@ def test_fetch_stac(httpx, s3_get):
         assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.assert_not_called()
     s3_get.assert_not_called()
+
+    with STACReader(STAC_PATH, tms=morecantile.tms.get("GNOSISGlobalGrid")) as stac:
+        assert stac.minzoom == 0
+        assert stac.maxzoom == 28
+        assert stac.bounds
+
+    with STACReader(STAC_PATH, minzoom=4, maxzoom=8) as stac:
+        assert stac.minzoom == 4
+        assert stac.maxzoom == 8
+        assert stac.bounds
 
     # Load from dict
     with STACReader(None, item=item) as stac:
@@ -128,6 +142,22 @@ def test_fetch_stac(httpx, s3_get):
     httpx.assert_not_called()
     s3_get.assert_called_once()
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
+
+
+@pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
+def test_projection_extension():
+    """Test STAC with the projection extension."""
+    with STACReader(STAC_PATH_PROJ) as stac:
+        assert stac.minzoom == 6
+        assert stac.maxzoom == 7
+        assert stac.bounds
+        assert stac.crs == CRS.from_epsg(32617)
+
+    with STACReader(STAC_PATH_PROJ, minzoom=4, maxzoom=8) as stac:
+        assert stac.minzoom == 4
+        assert stac.maxzoom == 8
+        assert stac.bounds
+        assert stac.crs == CRS.from_epsg(32617)
 
 
 @patch("rio_tiler.io.rasterio.rasterio")
