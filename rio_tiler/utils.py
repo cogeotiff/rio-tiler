@@ -477,7 +477,7 @@ def _requested_tile_aligned_with_internal_tile(
     bounds_crs: CRS = WEB_MERCATOR_CRS,
 ) -> bool:
     """Check if tile is aligned with internal tiles."""
-    if not src_dst.is_tiled:
+    if src_dst.block_shapes and src_dst.block_shapes[0][1] == src_dst.width:
         return False
 
     if src_dst.crs != bounds_crs:

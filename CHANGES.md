@@ -8,6 +8,7 @@
 * Refactor internal function and base classes for the `minzoom/maxzoom` calculation **breaking change**
 * Adding `transform`, `height` and `width` attributes (outside init) for `SpatialMixin` class
 * Moved `_dst_geom_in_tms_crs` from Reader to `SpatialMixin` class **breaking change**
+* Removed use of rasterio's `is_tiled` method
 
 # 6.7.0 (2024-09-05)
 
