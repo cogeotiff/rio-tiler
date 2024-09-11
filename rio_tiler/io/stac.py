@@ -42,6 +42,8 @@ DEFAULT_VALID_TYPE = {
     "application/x-hdf",
 }
 
+STAC_ALTERNATE_KEY = os.environ.get("RIO_TILER_STAC_ALTERNATE_KEY", None)
+
 
 def aws_get_object(
     bucket: str,
@@ -313,6 +315,11 @@ class STACReader(MultiBaseReader):
             url=asset_info.get_absolute_href() or asset_info.href,
             metadata=extras,
         )
+
+        if STAC_ALTERNATE_KEY and extras.get("alternate"):
+            if alternate := extras["alternate"].get(STAC_ALTERNATE_KEY):
+                info["url"] = alternate["href"]
+
         if asset_info.media_type:
             info["media_type"] = asset_info.media_type
 

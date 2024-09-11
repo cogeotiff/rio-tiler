@@ -33,6 +33,7 @@ STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
 STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
 STAC_WRONGSTATS_PATH = os.path.join(PREFIX, "stac_wrong_stats.json")
+STAC_ALTERNATE_PATH = os.path.join(PREFIX, "stac_alternate.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -1014,3 +1015,12 @@ def test_get_reader():
         info = stac._get_asset_info("red")
         assert info["media_type"] == "image/tiff; application=geotiff"
         assert stac._get_reader(info) == (Reader, {})
+
+
+@patch("rio_tiler.io.stac.STAC_ALTERNATE_KEY", "s3")
+def test_alternate_assets():
+    """Should return the alternate key"""
+    with STACReader(STAC_ALTERNATE_PATH) as stac:
+        assert stac._get_asset_info("red")["url"].startswith("s3://")
+        # fall back to href when alternate doesn't exist
+        assert stac._get_asset_info("blue")["url"].startswith("http://")
