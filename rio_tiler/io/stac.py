@@ -293,6 +293,23 @@ class STACReader(MultiBaseReader):
         """Get Asset Reader."""
         return self.reader, {}
 
+    def _parse_vrt_asset(self, asset: str) -> Tuple[str, Optional[str]]:
+        if asset.startswith("vrt://") and asset not in self.assets:
+            parsed = urlparse(asset)
+            if not parsed.netloc:
+                raise InvalidAssetName(
+                    f"'{asset}' is not valid, couldn't find valid asset"
+                )
+
+            if parsed.netloc not in self.assets:
+                raise InvalidAssetName(
+                    f"'{parsed.netloc}' is not valid, should be one of {self.assets}"
+                )
+
+            return parsed.netloc, parsed.query
+
+        return asset, None
+
     def _get_asset_info(self, asset: str) -> AssetInfo:
         """Validate asset names and return asset's info.
 
@@ -303,6 +320,7 @@ class STACReader(MultiBaseReader):
             AssetInfo: STAC asset info.
 
         """
+        asset, vrt_options = self._parse_vrt_asset(asset)
         if asset not in self.assets:
             raise InvalidAssetName(
                 f"'{asset}' is not valid, should be one of {self.assets}"
@@ -313,7 +331,7 @@ class STACReader(MultiBaseReader):
 
         info = AssetInfo(
             url=asset_info.get_absolute_href() or asset_info.href,
-            metadata=extras,
+            metadata=extras if not vrt_options else None,
         )
 
         if STAC_ALTERNATE_KEY and extras.get("alternate"):
@@ -328,7 +346,8 @@ class STACReader(MultiBaseReader):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
 
         # https://github.com/stac-extensions/raster
-        if bands := extras.get("raster:bands"):
+        if extras.get("raster:bands") and not vrt_options:
+            bands = extras.get("raster:bands")
             stats = [
                 (b["statistics"]["minimum"], b["statistics"]["maximum"])
                 for b in bands
@@ -345,5 +364,8 @@ class STACReader(MultiBaseReader):
                 warnings.warn(
                     "Some statistics data in STAC are invalid, they will be ignored."
                 )
+
+        if vrt_options:
+            info["url"] = f"vrt://{info['url']}?{vrt_options}"
 
         return info
