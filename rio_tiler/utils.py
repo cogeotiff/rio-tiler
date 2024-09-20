@@ -397,7 +397,7 @@ def get_vrt_transform(
         output_transform = from_bounds(w, s, e, n, width, height)
 
         # NOTE: Here we check if the Output Resolution is higher thant the dataset resolution (OverZoom)
-        # When not overzooming we don't want to use the output Width/Height to calculate the transform
+        # When not over-zooming we don't want to use the output Width/Height to calculate the transform
         # See issues https://github.com/cogeotiff/rio-tiler/pull/648
         w_res = (
             output_transform.a

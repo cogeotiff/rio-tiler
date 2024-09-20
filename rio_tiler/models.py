@@ -21,6 +21,7 @@ from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
 from rasterio.warp import transform_geom
+from typing_extensions import Self
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WGS84_CRS
@@ -218,7 +219,7 @@ class PointData:
         return self.array.shape[0]
 
     @classmethod
-    def create_from_list(cls, data: Sequence["PointData"]):
+    def create_from_list(cls, data: Sequence["PointData"]) -> Self:
         """Create PointData from a sequence of PointsData objects.
 
         Args:
@@ -361,7 +362,7 @@ class ImageData:
             yield i
 
     @classmethod
-    def from_array(cls, arr: numpy.ndarray) -> "ImageData":
+    def from_array(cls, arr: numpy.ndarray) -> Self:
         """Create ImageData from a numpy array.
 
         Args:
@@ -376,7 +377,7 @@ class ImageData:
         return cls(arr)
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> "ImageData":
+    def from_bytes(cls, data: bytes) -> Self:
         """Create ImageData from bytes.
 
         Args:
@@ -425,7 +426,7 @@ class ImageData:
                     )
 
     @classmethod
-    def create_from_list(cls, data: Sequence["ImageData"]) -> "ImageData":
+    def create_from_list(cls, data: Sequence["ImageData"]) -> Self:
         """Create ImageData from a sequence of ImageData objects.
 
         Args:
@@ -531,7 +532,7 @@ class ImageData:
         return self.array.shape[0]
 
     @property
-    def transform(self):
+    def transform(self) -> Affine:
         """Returns the affine transform."""
         return (
             from_bounds(*self.bounds, self.width, self.height)
@@ -544,7 +545,7 @@ class ImageData:
         in_range: Sequence[IntervalTuple],
         out_range: Sequence[IntervalTuple] = ((0, 255),),
         out_dtype: Union[str, numpy.number] = "uint8",
-    ):
+    ) -> Self:
         """Rescale data in place."""
         self.array = rescale_image(
             self.array.copy(),
@@ -552,6 +553,7 @@ class ImageData:
             out_range=out_range,
             out_dtype=out_dtype,
         )
+        return self
 
     def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
         """Apply colormap to the image data."""
@@ -581,6 +583,7 @@ class ImageData:
         data = numpy.ma.MaskedArray(out)
         data.mask = self.array.mask
         self.array = data
+        return self
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
