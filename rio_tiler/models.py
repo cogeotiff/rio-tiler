@@ -572,7 +572,7 @@ class ImageData:
             metadata=self.metadata,
         )
 
-    def apply_color_formula(self, color_formula: Optional[str]):
+    def apply_color_formula(self, color_formula: Optional[str]) -> Self:
         """Apply color-operations formula in place."""
         out = self.array.data.copy()
         out[out < 0] = 0
