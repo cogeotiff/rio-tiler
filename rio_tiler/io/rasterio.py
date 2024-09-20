@@ -82,7 +82,7 @@ class Reader(BaseReader):
     options: reader.Options = attr.ib()
 
     # Context Manager to handle rasterio open/close
-    _ctx_stack = attr.ib(init=False, factory=contextlib.ExitStack)
+    _ctx_stack: contextlib.ExitStack = attr.ib(init=False, factory=contextlib.ExitStack)
 
     @options.default
     def _options_default(self):

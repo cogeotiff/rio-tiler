@@ -10,6 +10,8 @@
 * Moved `_dst_geom_in_tms_crs` from Reader to `SpatialMixin` class **breaking change**
 * Removed use of rasterio's `is_tiled` method
 * Enable **Alternate** asset's HREF for STAC by using `RIO_TILER_STAC_ALTERNATE_KEY` environment variable
+* Improve type hint definition
+* make `ImageData.rescale` and `ImageData.apply_color_formula` to return `self`
 
 # 6.7.0 (2024-09-05)
 
