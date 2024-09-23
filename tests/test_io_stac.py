@@ -1066,4 +1066,3 @@ def test_vrt_string_assets():
 
         img = stac.preview(assets="vrt://asset?bands=1")
         assert img.count == 1
-        print(img)
