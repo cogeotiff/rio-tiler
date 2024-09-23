@@ -250,7 +250,7 @@ class STACReader(MultiBaseReader):
 
     fetch_options: Dict = attr.ib(factory=dict)
 
-    ctx: Any = attr.ib(default=rasterio.Env)
+    ctx: rasterio.Env = attr.ib(default=rasterio.Env)
 
     def __attrs_post_init__(self):
         """Fetch STAC Item and get list of valid assets."""

@@ -346,7 +346,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     assets: Sequence[str] = attr.ib(init=False)
     default_assets: Optional[Sequence[str]] = attr.ib(init=False, default=None)
 
-    ctx: Any = attr.ib(init=False, default=contextlib.nullcontext)
+    ctx: Type[contextlib.AbstractContextManager] = attr.ib(
+        init=False, default=contextlib.nullcontext
+    )
 
     def __enter__(self):
         """Support using with Context Managers."""
