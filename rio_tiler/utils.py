@@ -305,6 +305,7 @@ def get_vrt_transform(
         tuple: VRT transform (affine.Affine), width (int) and height (int)
 
     """
+    # 1. Get the Dataset Resolution in the output crs
     if src_dst.crs != dst_crs:
         src_width = src_dst.width
         src_height = src_dst.height
@@ -358,6 +359,7 @@ def get_vrt_transform(
     else:
         dst_transform = src_dst.transform
 
+    # 2. adjust output bounds if needed
     # If bounds window is aligned with the dataset internal tile we align the bounds with the pixels.
     # This is to limit the number of internal block fetched.
     if _requested_tile_aligned_with_internal_tile(src_dst, bounds, bounds_crs=dst_crs):
@@ -384,6 +386,7 @@ def get_vrt_transform(
 
     w, s, e, n = bounds
 
+    # 3. Calculate the VRT Height/Width
     # When no output size (resolution) - Use Dataset Resolution
     # NOTE: When we don't `fix` the output width/height, we're using the reprojected dataset resolution
     # to calculate what is the size/transform of the VRT
@@ -399,16 +402,11 @@ def get_vrt_transform(
         # NOTE: Here we check if the Output Resolution is higher thant the dataset resolution (OverZoom)
         # When not over-zooming we don't want to use the output Width/Height to calculate the transform
         # See issues https://github.com/cogeotiff/rio-tiler/pull/648
-        w_res = (
-            output_transform.a
-            if abs(output_transform.a) < abs(dst_transform.a)
-            else dst_transform.a
-        )
-        h_res = (
-            output_transform.e
-            if abs(output_transform.e) < abs(dst_transform.e)
-            else dst_transform.e
-        )
+        if abs(dst_transform.a) > abs(output_transform.a):
+            w_res = output_transform.a
+
+        if abs(dst_transform.e) > abs(output_transform.e):
+            h_res = output_transform.e
 
     vrt_width = max(1, round((e - w) / w_res))
     vrt_height = max(1, round((s - n) / h_res))
