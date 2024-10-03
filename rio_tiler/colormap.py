@@ -296,7 +296,7 @@ class ColorMaps:
             dict: colormap dictionary.
 
         """
-        cmap = self.data.get(name.lower(), None)
+        cmap = self.data.get(name, None)
         if cmap is None:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
 
@@ -308,7 +308,7 @@ class ColorMaps:
                 colormap = numpy.load(cmap)
                 assert colormap.shape == (256, 4)
                 assert colormap.dtype == numpy.uint8
-                return {idx: tuple(value) for idx, value in enumerate(colormap)}
+                cmap_data = {idx: tuple(value) for idx, value in enumerate(colormap)}
 
             elif cmap.suffix == ".json":
                 with cmap.open() as f:
@@ -326,9 +326,13 @@ class ColorMaps:
                         for (inter, v) in cmap_data
                     ]
 
-                return cmap_data
+            else:
+                raise ValueError(f"Not supported {cmap.suffix} extension for ColorMap")
 
-            raise ValueError(f"Not supported {cmap.suffix} extension for ColorMap")
+            # save the numpy array / dict / sequence in the data dict
+            # avoiding the need to re-load the data
+            self.data[name] = cmap_data
+            return cmap_data
 
         return cmap
 
