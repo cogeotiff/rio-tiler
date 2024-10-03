@@ -1,5 +1,6 @@
 """rio-tiler colormap functions and classes."""
 
+import json
 import os
 import pathlib
 import re
@@ -22,23 +23,30 @@ from rio_tiler.types import (
 )
 
 try:
-    from importlib.resources import files as resources_files  # type: ignore
+    from importlib.resources import as_file
+    from importlib.resources import files as resources_files
 except ImportError:
     # Try backported to PY<39 `importlib_resources`.
+    from importlib_resources import as_file  # type: ignore
     from importlib_resources import files as resources_files  # type: ignore
 
 
 EMPTY_COLORMAP: GDALColorMapType = {i: (0, 0, 0, 0) for i in range(256)}
 
-DEFAULT_CMAPS_FILES = {
-    f.stem: str(f)
-    for f in (resources_files(__package__) / "cmap_data").glob("*.npy")  # type: ignore
-}
+_RIO_CMAP_DIR = resources_files(__package__) / "cmap_data"
+with as_file(_RIO_CMAP_DIR) as p:
+    DEFAULT_CMAPS_FILES = {
+        f.stem: f for f in p.glob("**/*") if f.suffix in {".npy", ".json"}
+    }
 
 USER_CMAPS_DIR = os.environ.get("COLORMAP_DIRECTORY", None)
 if USER_CMAPS_DIR:
     DEFAULT_CMAPS_FILES.update(
-        {f.stem: str(f) for f in pathlib.Path(USER_CMAPS_DIR).glob("*.npy")}
+        {
+            f.stem: f
+            for f in pathlib.Path(USER_CMAPS_DIR).glob("**/*")
+            if f.suffix in {".npy", ".json"}
+        }
     )
 
 
@@ -274,7 +282,7 @@ class ColorMaps:
 
     """
 
-    data: Dict[str, Union[str, ColorMapType]] = attr.ib(
+    data: Dict[str, Union[str, pathlib.Path, ColorMapType]] = attr.ib(
         default=attr.Factory(lambda: DEFAULT_CMAPS_FILES)
     )
 
@@ -292,13 +300,37 @@ class ColorMaps:
         if cmap is None:
             raise InvalidColorMapName(f"Invalid colormap name: {name}")
 
-        if isinstance(cmap, str):
-            colormap = numpy.load(cmap)
-            assert colormap.shape == (256, 4)
-            assert colormap.dtype == numpy.uint8
-            return {idx: tuple(value) for idx, value in enumerate(colormap)}  # type: ignore
-        else:
-            return cmap
+        if isinstance(cmap, (pathlib.Path, str)):
+            if isinstance(cmap, str):
+                cmap = pathlib.Path(cmap)
+
+            if cmap.suffix == ".npy":
+                colormap = numpy.load(cmap)
+                assert colormap.shape == (256, 4)
+                assert colormap.dtype == numpy.uint8
+                return {idx: tuple(value) for idx, value in enumerate(colormap)}
+
+            elif cmap.suffix == ".json":
+                with cmap.open() as f:
+                    cmap_data = json.load(
+                        f,
+                        object_hook=lambda x: {
+                            int(k): parse_color(v) for k, v in x.items()
+                        },
+                    )
+
+                # Make sure to match colormap type
+                if isinstance(cmap_data, Sequence):
+                    cmap_data = [
+                        (tuple(inter), parse_color(v))  # type: ignore
+                        for (inter, v) in cmap_data
+                    ]
+
+                return cmap_data
+
+            raise ValueError(f"Not supported {cmap.suffix} extension for ColorMap")
+
+        return cmap
 
     def list(self) -> List[str]:
         """List registered Colormaps.
@@ -311,7 +343,7 @@ class ColorMaps:
 
     def register(
         self,
-        custom_cmap: Dict[str, Union[str, ColorMapType]],
+        custom_cmap: Dict[str, Union[str, pathlib.Path, ColorMapType]],
         overwrite: bool = False,
     ) -> "ColorMaps":
         """Register a custom colormap.

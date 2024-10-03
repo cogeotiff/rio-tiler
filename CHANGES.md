@@ -13,6 +13,7 @@
 * Adding support for GDAL VRT Connection string for STAC Assets
 * Improve type hint definition
 * make `ImageData.rescale` and `ImageData.apply_color_formula` to return `self`
+* add support for `.json` colormap files
 
 # 6.7.0 (2024-09-05)
 
