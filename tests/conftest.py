@@ -35,15 +35,18 @@ def dataset_fixture():
         nband: int = 3,
         width: int = 256,
         height: int = 256,
+        filled: bool = False,
     ):
         max_value = 127 if dtype == "int8" else 255
 
         # Data
         arr = numpy.zeros((nband, height, width), dtype=dtype) + 1
-        arr[:, range(height), range(width)] = max_value
-        arr[:, range(height - 1, 0, -1), range(width - 1)] = max_value
-        arr[:, :, width // 2] = max_value
-        arr[:, height // 2, :] = max_value
+        if filled:
+            arr[:, range(height), range(width)] = max_value
+            arr[:, range(height - 1, 0, -1), range(width - 1)] = max_value
+            arr[:, :, width // 2] = max_value
+            arr[:, height // 2, :] = max_value
+
         arr[:, 0:128, 0:128] = 0
 
         # Mask/Alpha

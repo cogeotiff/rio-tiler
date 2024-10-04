@@ -101,6 +101,7 @@ def test_tile(
                 nodata_type=nodata_type,
                 width=4000,
                 height=4000,
+                filled=True,
             )
         ) as memfile:
             with memfile.open() as dst:
