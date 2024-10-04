@@ -2,18 +2,44 @@
 # Unreleased
 
 * Enable dynamic definition of Asset **reader** in `MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/711/, https://github.com/cogeotiff/rio-tiler/pull/728)
+
 * Adding `default_assets` for MultiBaseReader and STACReader (author @mccarthyryanc, https://github.com/cogeotiff/rio-tiler/pull/722)
+
 * Adding `default_bands` for MultiBandReader (https://github.com/cogeotiff/rio-tiler/pull/722)
+
 * Adding support for the STAC `Projection` extension to derive the `bounds`, `crs`, `minzoom` and `maxzoom` properties  **breaking change**
+
 * Refactor internal function and base classes for the `minzoom/maxzoom` calculation **breaking change**
+
 * Adding `transform`, `height` and `width` attributes (outside init) for `SpatialMixin` class
+
 * Moved `_dst_geom_in_tms_crs` from Reader to `SpatialMixin` class **breaking change**
+
 * Removed use of rasterio's `is_tiled` method
+
 * Enable **Alternate** asset's HREF for STAC by using `RIO_TILER_STAC_ALTERNATE_KEY` environment variable
+
 * Adding support for GDAL VRT Connection string for STAC Assets
+
 * Improve type hint definition
+
 * make `ImageData.rescale` and `ImageData.apply_color_formula` to return `self`
+
 * add support for `.json` colormap files
+
+* do no `lowercase` colormap name in `ColorMaps.get` method **breaking change**
+
+    ```python
+    from rio_tiler.colormap import cmap
+
+    # before
+    assert cmap.get("Viridis")
+
+    # now
+    assert cmap.get("Viridis")
+    >> InvalidColorMapName: Invalid colormap name: Viridis
+    ```
+
 
 # 6.7.0 (2024-09-05)
 
