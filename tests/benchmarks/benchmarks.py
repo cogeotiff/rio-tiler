@@ -71,38 +71,33 @@ datasets = {
 def read_tile(dst, tile):
     """Benchmark rio-tiler.utils._tile_read."""
     # We make sure to not store things in cache.
-    with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
-        with Reader(None, dataset=dst) as src:
-            return src.tile(*tile)
+    with Reader(None, dataset=dst) as src:
+        return src.tile(*tile)
 
 
-data_types = list(dtype_ranges.keys())
-nodata_type = ["nodata", "alpha", "mask", "none"]
-
-
-@pytest.mark.parametrize("tile_name", ["full"])
 @pytest.mark.parametrize("dataset_name", ["equator", "dateline"])
 @pytest.mark.parametrize("data_type", list(dtype_ranges.keys()))
 @pytest.mark.parametrize("nodata_type", ["nodata", "alpha", "mask", "none"])
-def test_tile(
-    nodata_type, data_type, dataset_name, tile_name, dataset_fixture, benchmark
-):
+def test_tile(nodata_type, data_type, dataset_name, dataset_fixture, benchmark):
     """Test tile read for multiple combination of datatype/mask/tile extent."""
-    benchmark.name = f"{data_type}-{nodata_type}"
-    benchmark.group = f"{dataset_name} - {tile_name} tile "
-    tile = benchmark_tiles[dataset_name][tile_name]
+    benchmark.name = f"{dataset_name}-{data_type}-{nodata_type}"
+    benchmark.fullname = f"{dataset_name}-{data_type}-{nodata_type}"
+    benchmark.group = dataset_name
 
+    tile = benchmark_tiles[dataset_name]["full"]
     dst_info = datasets[dataset_name]
-    with MemoryFile(
-        dataset_fixture(
-            crs=dst_info["crs"],
-            bounds=list(dst_info["bounds"]),
-            dtype=data_type,
-            nodata_type=nodata_type,
-            width=256,
-            height=256,
-        )
-    ) as memfile:
-        with memfile.open() as dst:
-            img = benchmark(read_tile, dst, tile)
-            assert img.data.dtype == data_type
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", NUM_THREADS="all"):
+        with MemoryFile(
+            dataset_fixture(
+                crs=dst_info["crs"],
+                bounds=list(dst_info["bounds"]),
+                dtype=data_type,
+                nodata_type=nodata_type,
+                width=4000,
+                height=4000,
+                filled=True,
+            )
+        ) as memfile:
+            with memfile.open() as dst:
+                img = benchmark(read_tile, dst, tile)
+                assert img.data.dtype == data_type
