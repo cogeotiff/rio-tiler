@@ -71,9 +71,8 @@ datasets = {
 def read_tile(dst, tile):
     """Benchmark rio-tiler.utils._tile_read."""
     # We make sure to not store things in cache.
-    with rasterio.Env(GDAL_CACHEMAX=0, NUM_THREADS="all"):
-        with Reader(None, dataset=dst) as src:
-            return src.tile(*tile)
+    with Reader(None, dataset=dst) as src:
+        return src.tile(*tile)
 
 
 data_types = list(dtype_ranges.keys())
@@ -93,16 +92,17 @@ def test_tile(
     tile = benchmark_tiles[dataset_name][tile_name]
 
     dst_info = datasets[dataset_name]
-    with MemoryFile(
-        dataset_fixture(
-            crs=dst_info["crs"],
-            bounds=list(dst_info["bounds"]),
-            dtype=data_type,
-            nodata_type=nodata_type,
-            width=256,
-            height=256,
-        )
-    ) as memfile:
-        with memfile.open() as dst:
-            img = benchmark(read_tile, dst, tile)
-            assert img.data.dtype == data_type
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", NUM_THREADS="all"):
+        with MemoryFile(
+            dataset_fixture(
+                crs=dst_info["crs"],
+                bounds=list(dst_info["bounds"]),
+                dtype=data_type,
+                nodata_type=nodata_type,
+                width=4000,
+                height=4000,
+            )
+        ) as memfile:
+            with memfile.open() as dst:
+                img = benchmark(read_tile, dst, tile)
+                assert img.data.dtype == data_type

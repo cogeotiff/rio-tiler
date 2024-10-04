@@ -8,7 +8,10 @@ import pytest
 import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp
+from rasterio.enums import Resampling as ResamplingEnums
 from rasterio.io import MemoryFile
+from rasterio.rio.overview import get_maximum_overview_level
+from rasterio.shutil import copy
 from rasterio.transform import from_bounds
 
 with rasterio.Env() as env:
@@ -33,16 +36,18 @@ def dataset_fixture():
         width: int = 256,
         height: int = 256,
     ):
+        max_value = 127 if dtype == "int8" else 255
+
         # Data
         arr = numpy.zeros((nband, height, width), dtype=dtype) + 1
+        arr[:, range(height), range(width)] = max_value
+        arr[:, range(height - 1, 0, -1), range(width - 1)] = max_value
+        arr[:, :, width // 2] = max_value
+        arr[:, height // 2, :] = max_value
         arr[:, 0:128, 0:128] = 0
 
         # Mask/Alpha
-        if dtype == "int8":
-            mask = numpy.zeros((1, height, width), dtype=dtype) + 127
-        else:
-            mask = numpy.zeros((1, height, width), dtype=dtype) + 255
-
+        mask = numpy.zeros((1, height, width), dtype=dtype) + max_value
         mask[:, 0:128, 0:128] = 0
 
         # Input Profile
@@ -89,6 +94,22 @@ def dataset_fixture():
                     if nodata_type == "mask":
                         mem.write_mask(mask[0])
 
-                return BytesIO(memfile.read())
+                    overview_level = get_maximum_overview_level(
+                        mem.width, mem.height, minsize=512
+                    )
+                    overviews = [2**j for j in range(1, overview_level + 1)]
+                    mem.build_overviews(overviews, ResamplingEnums.bilinear)
+
+                    cog_profile = {
+                        "interleave": "pixel",
+                        "compress": "DEFLATE",
+                        "tiled": True,
+                        "blockxsize": 512,
+                        "blockysize": 512,
+                    }
+
+                    with MemoryFile() as cogfile:
+                        copy(mem, cogfile.name, copy_src_overviews=True, **cog_profile)
+                        return BytesIO(cogfile.read())
 
     return _dataset
