@@ -19,8 +19,9 @@ def test_non_geo_image():
     """Test ImageReader usage with Non-Geo Images."""
     with pytest.warns((NotGeoreferencedWarning)):
         with ImageReader(NO_GEO) as src:
-            assert src.minzoom == 0
-            assert src.maxzoom == 3
+            minzoom, maxzoom = src.get_zooms()
+            assert minzoom == 0
+            assert maxzoom == 3
 
     with pytest.warns((NotGeoreferencedWarning)):
         with ImageReader(NO_GEO) as src:
@@ -98,8 +99,9 @@ def test_non_geo_image():
 def test_with_geo_image():
     """Test ImageReader usage with Geo Images."""
     with ImageReader(GEO) as src:
-        assert src.minzoom == 0
-        assert src.maxzoom == 2
+        minzoom, maxzoom = src.get_zooms()
+        assert minzoom == 0
+        assert maxzoom == 2
 
         assert list(src.tms.xy_bounds(0, 0, 2)) == [0, 256, 256, 0]
         assert list(src.tms.xy_bounds(0, 0, 1)) == [0, 512, 512, 0]

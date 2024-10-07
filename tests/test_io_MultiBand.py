@@ -5,10 +5,9 @@ import pathlib
 from typing import Dict, Optional, Sequence, Type
 
 import attr
-import morecantile
 import pytest
 
-from rio_tiler.constants import WEB_MERCATOR_TMS
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import ExpressionMixingWarning, InvalidExpression, MissingBands
 from rio_tiler.io import BaseReader, MultiBandReader, Reader
 from rio_tiler.models import BandStatistics
@@ -21,23 +20,11 @@ class BandFileReader(MultiBandReader):
     """Test MultiBand"""
 
     input: str = attr.ib()
-    tms: morecantile.TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     reader: Type[BaseReader] = attr.ib(init=False, default=Reader)
     reader_options: Dict = attr.ib(factory=dict)
 
     default_bands: Optional[Sequence[str]] = attr.ib(default=None)
-
-    minzoom: int = attr.ib()
-    maxzoom: int = attr.ib()
-
-    @minzoom.default
-    def _minzoom(self):
-        return self.tms.minzoom
-
-    @maxzoom.default
-    def _maxzoom(self):
-        return self.tms.maxzoom
 
     def __attrs_post_init__(self):
         """Parse Sceneid and get grid bounds."""
@@ -47,8 +34,9 @@ class BandFileReader(MultiBandReader):
         with self.reader(self._get_band_url(self.bands[0])) as src:
             self.bounds = src.bounds
             self.crs = src.crs
-            self.minzoom = src.minzoom
-            self.maxzoom = src.maxzoom
+            self.transform = src.transform
+            self.height = src.height
+            self.width = src.width
 
     def _get_band_url(self, band: str) -> str:
         """Validate band's name and return band's url."""
@@ -59,11 +47,12 @@ def test_MultiBandReader():
     """Should work as expected."""
     with BandFileReader(PREFIX) as src:
         assert src.bands == ["band1", "band2"]
-        assert src.minzoom is not None
-        assert src.maxzoom is not None
-        assert src.bounds
+        minzoom, maxzoom = src.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 7
+        assert maxzoom == 9
         assert src.bounds
         assert src.crs
+        assert src.geographic_bounds(WGS84_CRS)
 
         assert sorted(src.parse_expression("band1/band2")) == ["band1", "band2"]
 

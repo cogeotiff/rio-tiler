@@ -14,6 +14,7 @@ import rasterio
 from rasterio._env import get_gdal_config
 from rasterio.crs import CRS
 
+from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import (
     AssetAsBandError,
     ExpressionMixingWarning,
@@ -54,28 +55,25 @@ def test_fetch_stac(httpx, s3_get):
     """Test STACReader."""
     # Local path
     with STACReader(STAC_PATH) as stac:
-        assert stac.minzoom == 0
-        assert stac.maxzoom == 24
+        minzoom, maxzoom = stac.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 0
+        assert maxzoom == 24
         assert stac.bounds
         assert stac.input == STAC_PATH
         assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.assert_not_called()
     s3_get.assert_not_called()
 
-    with STACReader(STAC_PATH, tms=morecantile.tms.get("GNOSISGlobalGrid")) as stac:
-        assert stac.minzoom == 0
-        assert stac.maxzoom == 28
-        assert stac.bounds
-
-    with STACReader(STAC_PATH, minzoom=4, maxzoom=8) as stac:
-        assert stac.minzoom == 4
-        assert stac.maxzoom == 8
-        assert stac.bounds
+    with STACReader(STAC_PATH) as stac:
+        minzoom, maxzoom = stac.get_zooms(morecantile.tms.get("GNOSISGlobalGrid"))
+        assert minzoom == 0
+        assert maxzoom == 28
 
     # Load from dict
     with STACReader(None, item=item) as stac:
-        assert stac.minzoom == 0
-        assert stac.maxzoom == 24
+        minzoom, maxzoom = stac.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 0
+        assert maxzoom == 24
         assert not stac.input
         assert stac.assets == ["red", "green", "blue", "lowres"]
     httpx.assert_not_called()
@@ -151,14 +149,9 @@ def test_fetch_stac(httpx, s3_get):
 def test_projection_extension():
     """Test STAC with the projection extension."""
     with STACReader(STAC_PATH_PROJ) as stac:
-        assert stac.minzoom == 6
-        assert stac.maxzoom == 7
-        assert stac.bounds
-        assert stac.crs == CRS.from_epsg(32617)
-
-    with STACReader(STAC_PATH_PROJ, minzoom=4, maxzoom=8) as stac:
-        assert stac.minzoom == 4
-        assert stac.maxzoom == 8
+        minzoom, maxzoom = stac.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 6
+        assert maxzoom == 7
         assert stac.bounds
         assert stac.crs == CRS.from_epsg(32617)
 
@@ -911,7 +904,7 @@ def test_expression_with_wrong_stac_stats(rio):
 
         asset_info = stac._get_asset_info("wrongstat")
         url = asset_info["url"]
-        with stac.reader(url, tms=stac.tms, **stac.reader_options) as src:
+        with stac.reader(url, **stac.reader_options) as src:
             img = src.tile(451, 76, 9, expression="where((b1>0.5),1,0)")
             assert img.data.shape == (1, 256, 256)
             assert img.mask.shape == (256, 256)

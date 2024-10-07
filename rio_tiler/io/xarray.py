@@ -41,9 +41,7 @@ class XarrayReader(BaseReader):
     """Xarray Reader.
 
     Attributes:
-        dataset (xarray.DataArray): Xarray DataArray dataset.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
+        input (xarray.DataArray): Xarray DataArray dataset.
 
     Examples:
         >>> ds = xarray.open_dataset(
@@ -60,9 +58,6 @@ class XarrayReader(BaseReader):
     """
 
     input: xarray.DataArray = attr.ib()
-
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     _dims: List = attr.ib(init=False, factory=list)
 
@@ -100,16 +95,6 @@ class XarrayReader(BaseReader):
         ]
 
     @property
-    def minzoom(self):
-        """Return dataset minzoom."""
-        return self._minzoom
-
-    @property
-    def maxzoom(self):
-        """Return dataset maxzoom."""
-        return self._maxzoom
-
-    @property
     def band_names(self) -> List[str]:
         """Return list of `band names` in DataArray."""
         return [str(band) for d in self._dims for band in self.input[d].values]
@@ -118,11 +103,13 @@ class XarrayReader(BaseReader):
         """Return xarray.DataArray info."""
         bands = [str(band) for d in self._dims for band in self.input[d].values]
         metadata = [band.attrs for d in self._dims for band in self.input[d]]
+        crs_string = (
+            f"EPSG:{self.crs.to_epsg()}" if self.crs.to_epsg() else self.crs.to_wkt()
+        )
 
         meta = {
-            "bounds": self.geographic_bounds,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
+            "bounds": self.bounds,
+            "crs": crs_string,
             "band_metadata": [(f"b{ix}", v) for ix, v in enumerate(metadata, 1)],
             "band_descriptions": [(f"b{ix}", v) for ix, v in enumerate(bands, 1)],
             "dtype": str(self.input.dtype),
@@ -153,6 +140,7 @@ class XarrayReader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
+        tms: TileMatrixSet = WEB_MERCATOR_TMS,
         resampling_method: Optional[WarpResampling] = None,
         reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
@@ -181,7 +169,7 @@ class XarrayReader(BaseReader):
             )
             reproject_method = resampling_method
 
-        if not self.tile_exists(tile_x, tile_y, tile_z):
+        if not self.tile_exists(tile_x, tile_y, tile_z, tms):
             raise TileOutsideBounds(
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
@@ -190,8 +178,8 @@ class XarrayReader(BaseReader):
         if nodata is not None:
             ds = ds.rio.write_nodata(nodata)
 
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
-        dst_crs = self.tms.rasterio_crs
+        tile_bounds = tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        dst_crs = tms.rasterio_crs
 
         # Create source array by clipping the xarray dataset to extent of the tile.
         ds = ds.rio.clip_box(

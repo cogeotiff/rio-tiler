@@ -1,11 +1,9 @@
 """tests rio_tiler.io.rasterio.Reader"""
 
 import os
-import warnings
 from io import BytesIO
 from typing import Any, Dict
 
-import attr
 import morecantile
 import numpy
 import pytest
@@ -62,8 +60,9 @@ def test_spatial_info_valid():
         assert not src.dataset.closed
         assert src.bounds
         assert src.crs
-        assert src.minzoom == 5
-        assert src.maxzoom == 9
+        minzoom, maxzoom = src.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 5
+        assert maxzoom == 9
     assert src.dataset.closed
 
     src = Reader(COG_NODATA)
@@ -106,8 +105,7 @@ def test_info_valid():
     with Reader(COG_TAGS) as src:
         meta = src.info()
         assert meta.bounds
-        assert meta.minzoom
-        assert meta.maxzoom
+        assert meta.crs
         assert meta.band_descriptions
         assert meta.dtype == "int16"
         assert meta.colorinterp == ["gray"]
@@ -479,8 +477,9 @@ def test_cog_with_internal_gcps():
     with Reader(COG_GCPS) as src:
         assert isinstance(src.dataset, WarpedVRT)
         assert src.bounds
-        assert src.minzoom == 7
-        assert src.maxzoom == 10
+        minzoom, maxzoom = src.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 7
+        assert maxzoom == 10
 
         metadata = src.info()
         assert metadata.nodata_type == "Alpha"
@@ -511,8 +510,9 @@ def test_cog_with_internal_gcps():
             with Reader(None, dataset=vrt) as src:
                 assert src.bounds
                 assert isinstance(src.dataset, WarpedVRT)
-                assert src.minzoom == 7
-                assert src.maxzoom == 10
+                minzoom, maxzoom = src.get_zooms(WEB_MERCATOR_TMS)
+                assert minzoom == 7
+                assert maxzoom == 10
 
                 metadata = src.info()
                 assert metadata.nodata_type == "None"
@@ -847,8 +847,10 @@ def test_fullEarth():
         img = src.tile(127, 42, 7, tilesize=64)
         assert img.data.shape == (1, 64, 64)
 
-    with Reader(COG_EARTH, tms=morecantile.tms.get("EuropeanETRS89_LAEAQuad")) as src:
-        img = src.tile(0, 0, 1, tilesize=64)
+    with Reader(COG_EARTH) as src:
+        img = src.tile(
+            0, 0, 1, tilesize=64, tms=morecantile.tms.get("EuropeanETRS89_LAEAQuad")
+        )
         assert img.data.shape == (1, 64, 64)
 
 
@@ -888,50 +890,50 @@ def test_nonearthbody():
     """Reader should work with non-earth dataset."""
     EUROPA_SPHERE = CRS.from_proj4("+proj=longlat +R=1560800 +no_defs")
 
-    with pytest.warns(UserWarning):
-        with Reader(COG_EUROPA) as src:
-            assert src.minzoom == 0
-            assert src.maxzoom == 24
+    with Reader(COG_EUROPA) as src:
+        minzoom, maxzoom = src.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 0
+        assert maxzoom == 24
 
-    # Warns because of zoom level in WebMercator can't be defined
-    with pytest.warns(UserWarning) as w:
-        with Reader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as src:
-            assert src.info()
-            assert len(w) == 2
-
-            img = src.read()
-            assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
-            assert img.width == src.dataset.width
-            assert img.height == src.dataset.height
-            assert img.count == src.dataset.count
-
-            img = src.preview()
-            assert img.bounds == src.bounds
-
-            part = src.part(src.bounds, bounds_crs=src.crs)
-            assert part.bounds == src.bounds
-
-            lon = (src.bounds[0] + src.bounds[2]) / 2
-            lat = (src.bounds[1] + src.bounds[3]) / 2
-            assert src.point(lon, lat, coord_crs=src.crs).data[0] is not None
-
-    with pytest.warns(UserWarning):
-        europa_crs = CRS.from_authority("ESRI", 104915)
-        tms = TileMatrixSet.custom(
-            crs=europa_crs,
-            extent=europa_crs.area_of_use.bounds,
-            matrix_scale=[2, 1],
-        )
-
-    with Reader(COG_EUROPA, tms=tms, geographic_crs=EUROPA_SPHERE) as src:
+    with Reader(COG_EUROPA) as src:
         assert src.info()
-        assert src.minzoom == 4
-        assert src.maxzoom == 6
+
+        img = src.read()
+        assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
+        assert img.width == src.dataset.width
+        assert img.height == src.dataset.height
+        assert img.count == src.dataset.count
+
+        img = src.preview()
+        assert img.bounds == src.bounds
+
+        part = src.part(src.bounds, bounds_crs=src.crs)
+        assert part.bounds == src.bounds
+
+        lon = (src.bounds[0] + src.bounds[2]) / 2
+        lat = (src.bounds[1] + src.bounds[3]) / 2
+        assert src.point(lon, lat, coord_crs=src.crs).data[0] is not None
+
+    europa_crs = CRS.from_authority("ESRI", 104915)
+    tms = TileMatrixSet.custom(
+        crs=europa_crs,
+        extent=europa_crs.area_of_use.bounds,
+        matrix_scale=[2, 1],
+    )
+
+    with Reader(COG_EUROPA) as src:
+        assert src.info()
+        minzoom, maxzoom = src.get_zooms(tms)
+        assert minzoom == 4
+        assert maxzoom == 6
+
+        bounds = src.geographic_bounds(EUROPA_SPHERE)
+        assert bounds
 
         # Get Tile covering the UL corner
         bounds = transform_bounds(src.crs, tms.rasterio_crs, *src.bounds)
-        t = tms._tile(bounds[0], bounds[1], src.minzoom)
-        img = src.tile(t.x, t.y, t.z)
+        t = tms._tile(bounds[0], bounds[1], minzoom)
+        img = src.tile(t.x, t.y, t.z, tms=tms)
 
         assert img.height == 256
         assert img.width == 256
@@ -958,35 +960,22 @@ def test_nonearth_custom():
         geographic_crs=MARS2000_SPHERE,
     )
 
-    @attr.s
-    class MarsReader(Reader):
-        """Use custom geographic CRS."""
+    with Reader(COG_MARS) as src:
+        bounds = src.geographic_bounds(mars_tms.rasterio_geographic_crs)
+        assert bounds[0] > -180
 
-        geographic_crs: rasterio.crs.CRS = attr.ib(
-            init=False,
-            default=rasterio.crs.CRS.from_proj4("+proj=longlat +R=3396190 +no_defs"),
-        )
-
-    with warnings.catch_warnings():
-        with MarsReader(COG_MARS, tms=mars_tms) as src:
-            assert src.geographic_bounds[0] > -180
-
-    with warnings.catch_warnings():
-        with Reader(
-            COG_MARS,
-            tms=mars_tms,
-            geographic_crs=rasterio.crs.CRS.from_proj4(
-                "+proj=longlat +R=3396190 +no_defs"
-            ),
-        ) as src:
-            assert src.geographic_bounds[0] > -180
+        minzoom, maxzoom = src.get_zooms(mars_tms)
+        x, y, z = mars_tms.tile(bounds[0], bounds[1], minzoom)
+        img = src.tile(x, y, z, tms=mars_tms)
+        assert img.crs == MARS_MERCATOR
 
 
 def test_tms_tilesize_and_zoom():
     """Test the influence of tms tilesize on COG zoom levels."""
     with Reader(COG_NODATA) as src:
-        assert src.minzoom == 5
-        assert src.maxzoom == 9
+        minzoom, maxzoom = src.get_zooms(WEB_MERCATOR_TMS)
+        assert minzoom == 5
+        assert maxzoom == 9
 
     tms_128 = TileMatrixSet.custom(
         WEB_MERCATOR_TMS.xy_bbox,
@@ -995,9 +984,10 @@ def test_tms_tilesize_and_zoom():
         tile_width=64,
         tile_height=64,
     )
-    with Reader(COG_NODATA, tms=tms_128) as src:
-        assert src.minzoom == 5
-        assert src.maxzoom == 11
+    with Reader(COG_NODATA) as src:
+        minzoom, maxzoom = src.get_zooms(tms_128)
+        assert minzoom == 5
+        assert maxzoom == 11
 
     tms_2048 = TileMatrixSet.custom(
         WEB_MERCATOR_TMS.xy_bbox,
@@ -1006,9 +996,10 @@ def test_tms_tilesize_and_zoom():
         tile_width=2048,
         tile_height=2048,
     )
-    with Reader(COG_NODATA, tms=tms_2048) as src:
-        assert src.minzoom == 5
-        assert src.maxzoom == 6
+    with Reader(COG_NODATA) as src:
+        minzoom, maxzoom = src.get_zooms(tms_2048)
+        assert minzoom == 5
+        assert maxzoom == 6
 
 
 def test_metadata_img():
@@ -1121,8 +1112,9 @@ def test_inverted_latitude():
     """Test working with inverted Latitude."""
     with pytest.warns(UserWarning):
         with Reader(COG_INVERTED) as src:
-            assert src.geographic_bounds[1] < src.geographic_bounds[3]
+            bounds = src.geographic_bounds(WGS84_CRS)
+            assert bounds[1] < bounds[3]
 
     with pytest.warns(UserWarning):
         with Reader(COG_INVERTED) as src:
-            _ = src.tile(0, 0, 0)
+            _ = src.tile(0, 0, 0, tms=WEB_MERCATOR_TMS)

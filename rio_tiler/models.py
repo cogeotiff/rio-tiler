@@ -57,22 +57,11 @@ class RioTilerBaseModel(BaseModel):
         return {**self.__dict__, **self.__pydantic_extra__}[item]
 
 
-class Bounds(RioTilerBaseModel):
-    """Dataset Bounding box"""
-
-    bounds: BoundingBox
-
-
-class SpatialInfo(Bounds):
-    """Dataset SpatialInfo"""
-
-    minzoom: int
-    maxzoom: int
-
-
-class Info(SpatialInfo):
+class Info(RioTilerBaseModel):
     """Dataset Info."""
 
+    bounds: BoundingBox
+    crs: str
     band_metadata: List[Tuple[str, Dict]]
     band_descriptions: List[Tuple[str, str]]
     dtype: str

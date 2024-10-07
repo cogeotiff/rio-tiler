@@ -12,11 +12,9 @@ import pystac
 import rasterio
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
-from morecantile import TileMatrixSet
-from rasterio.crs import CRS
 from rasterio.transform import array_bounds
 
-from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import InvalidAssetName, MissingAssets
 from rio_tiler.io.base import BaseReader, MultiBaseReader
 from rio_tiler.io.rasterio import Reader
@@ -195,10 +193,6 @@ class STACReader(MultiBaseReader):
     Attributes:
         input (str): STAC Item path, URL or S3 URL.
         item (dict or pystac.Item, STAC): Stac Item.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        minzoom (int, optional): Set minzoom for the tiles.
-        maxzoom (int, optional): Set maxzoom for the tiles.
-        geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
         include_assets (set of string, optional): Only Include specific assets.
         exclude_assets (set of string, optional): Exclude specific assets.
         include_asset_types (set of string, optional): Only include some assets base on their type.
@@ -229,12 +223,6 @@ class STACReader(MultiBaseReader):
 
     input: str = attr.ib()
     item: pystac.Item = attr.ib(default=None, converter=_to_pystac_item)
-
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
-
-    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     include_assets: Optional[Set[str]] = attr.ib(default=None)
     exclude_assets: Optional[Set[str]] = attr.ib(default=None)
@@ -273,9 +261,6 @@ class STACReader(MultiBaseReader):
                 self.transform = self.item.ext.proj.transform
                 self.bounds = array_bounds(self.height, self.width, self.transform)
                 self.crs = rasterio.crs.CRS.from_string(self.item.ext.proj.crs_string)
-
-        self.minzoom = self.minzoom if self.minzoom is not None else self._minzoom
-        self.maxzoom = self.maxzoom if self.maxzoom is not None else self._maxzoom
 
         self.assets = list(
             _get_assets(

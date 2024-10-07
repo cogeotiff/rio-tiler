@@ -2,7 +2,7 @@
 
 import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
@@ -34,7 +34,7 @@ from rio_tiler.errors import (
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, Indexes, NumType, RIOResampling
+from rio_tiler.types import BBox, Indexes, NoData, NumType, RIOResampling
 from rio_tiler.utils import _validate_shape_input, has_alpha_band, has_mask_band
 
 
@@ -45,8 +45,6 @@ class Reader(BaseReader):
     Attributes:
         input (str): dataset path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
-        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
         colormap (dict, optional): Overwrite internal colormap.
         options (dict, optional): Options to forward to low-level reader methods.
 
@@ -73,9 +71,6 @@ class Reader(BaseReader):
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
-
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     colormap: Dict = attr.ib(default=None)
 
@@ -142,16 +137,6 @@ class Reader(BaseReader):
         """Support using with Context Managers."""
         self.close()
 
-    @property
-    def minzoom(self):
-        """Return dataset minzoom."""
-        return self._minzoom
-
-    @property
-    def maxzoom(self):
-        """Return dataset maxzoom."""
-        return self._maxzoom
-
     def _get_colormap(self):
         """Retrieve the internal colormap."""
         try:
@@ -176,10 +161,13 @@ class Reader(BaseReader):
         else:
             nodata_type = "None"
 
+        crs_string = (
+            f"EPSG:{self.crs.to_epsg()}" if self.crs.to_epsg() else self.crs.to_wkt()
+        )
+
         meta = {
-            "bounds": self.geographic_bounds,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
+            "bounds": self.bounds,
+            "crs": crs_string,
             "band_metadata": [
                 (f"b{ix}", self.dataset.tags(ix)) for ix in self.dataset.indexes
             ],
@@ -252,6 +240,7 @@ class Reader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
+        tms: TileMatrixSet = WEB_MERCATOR_TMS,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         buffer: Optional[float] = None,
@@ -273,18 +262,17 @@ class Reader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_x, tile_y, tile_z):
+        if not self.tile_exists(tile_x, tile_y, tile_z, tms):
             raise TileOutsideBounds(
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
-        dst_crs = self.tms.rasterio_crs
+        tile_bounds = tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
         return self.part(
             tile_bounds,
-            dst_crs=dst_crs,
-            bounds_crs=dst_crs,
+            dst_crs=tms.rasterio_crs,
+            bounds_crs=tms.rasterio_crs,
             height=tilesize,
             width=tilesize,
             max_size=None,
@@ -594,10 +582,7 @@ class ImageReader(Reader):
     """Non Geo Image Reader"""
 
     tms: TileMatrixSet = attr.ib(init=False)
-
     crs: CRS = attr.ib(init=False, default=None)
-    geographic_crs: CRS = attr.ib(init=False, default=None)
-
     transform: Affine = attr.ib(init=False)
 
     def __attrs_post_init__(self):
@@ -622,15 +607,9 @@ class ImageReader(Reader):
                 NoOverviewWarning,
             )
 
-    @property
-    def minzoom(self):
-        """Return dataset minzoom."""
-        return self.tms.minzoom
-
-    @property
-    def maxzoom(self):
-        """Return dataset maxzoom."""
-        return self.tms.maxzoom
+    def get_zooms(self) -> Tuple[int, int]:  # type: ignore
+        """Return min/max zooms."""
+        return self.tms.minzoom, self.tms.maxzoom
 
     def tile(  # type: ignore
         self,
@@ -642,6 +621,7 @@ class ImageReader(Reader):
         expression: Optional[str] = None,
         force_binary_mask: bool = True,
         resampling_method: RIOResampling = "nearest",
+        nodata: Optional[NoData] = None,
         unscale: bool = False,
         post_process: Optional[
             Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
@@ -665,7 +645,7 @@ class ImageReader(Reader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_x, tile_y, tile_z):
+        if not self.tile_exists(tile_x, tile_y, tile_z, self.tms):
             raise TileOutsideBounds(
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
             )
@@ -680,6 +660,7 @@ class ImageReader(Reader):
             indexes=indexes,
             expression=expression,
             force_binary_mask=force_binary_mask,
+            nodata=nodata,
             resampling_method=resampling_method,
             unscale=unscale,
             post_process=post_process,
@@ -694,6 +675,7 @@ class ImageReader(Reader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         force_binary_mask: bool = True,
+        nodata: Optional[NoData] = None,
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
@@ -736,6 +718,7 @@ class ImageReader(Reader):
             height=height,
             indexes=indexes,
             force_binary_mask=force_binary_mask,
+            nodata=nodata,
             resampling_method=resampling_method,
             unscale=unscale,
             post_process=post_process,
@@ -753,6 +736,7 @@ class ImageReader(Reader):
         y: float,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
+        nodata: Optional[NoData] = None,
         unscale: bool = False,
         post_process: Optional[
             Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
@@ -778,6 +762,7 @@ class ImageReader(Reader):
         img = self.read(
             indexes=indexes,
             expression=expression,
+            nodata=nodata,
             unscale=unscale,
             post_process=post_process,
             window=Window(col_off=x, row_off=y, width=1, height=1),
@@ -800,6 +785,7 @@ class ImageReader(Reader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         force_binary_mask: bool = True,
+        nodata: Optional[NoData] = None,
         resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
@@ -819,6 +805,7 @@ class ImageReader(Reader):
             height=height,
             width=width,
             force_binary_mask=force_binary_mask,
+            nodata=nodata,
             resampling_method=resampling_method,
             unscale=unscale,
             post_process=post_process,

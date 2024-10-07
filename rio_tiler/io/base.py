@@ -4,7 +4,6 @@ import abc
 import contextlib
 import re
 import warnings
-from functools import cached_property
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
 
 import attr
@@ -39,8 +38,6 @@ class SpatialMixin:
 
     """
 
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
     bounds: BBox = attr.ib(init=False)
     crs: CRS = attr.ib(init=False)
 
@@ -48,12 +45,9 @@ class SpatialMixin:
     height: Optional[int] = attr.ib(default=None, init=False)
     width: Optional[int] = attr.ib(default=None, init=False)
 
-    geographic_crs: CRS = attr.ib(init=False, default=WGS84_CRS)
-
-    @cached_property
-    def geographic_bounds(self) -> BBox:
+    def geographic_bounds(self, crs: CRS = WGS84_CRS) -> BBox:
         """Return dataset bounds in geographic_crs."""
-        if self.crs == self.geographic_crs:
+        if self.crs == crs:
             if self.bounds[1] > self.bounds[3]:
                 warnings.warn(
                     "BoundingBox of the dataset is inverted (minLat > maxLat).",
@@ -71,7 +65,7 @@ class SpatialMixin:
         try:
             bounds = transform_bounds(
                 self.crs,
-                self.geographic_crs,
+                crs,
                 *self.bounds,
                 densify_pts=21,
             )
@@ -91,98 +85,77 @@ class SpatialMixin:
 
         return bounds
 
-    @cached_property
-    def _dst_geom_in_tms_crs(self):
-        """Return dataset geom info in TMS projection."""
-        tms_crs = self.tms.rasterio_crs
-        if self.crs != tms_crs:
-            dst_affine, w, h = calculate_default_transform(
-                self.crs,
-                tms_crs,
-                self.width,
-                self.height,
-                *self.bounds,
-            )
-        else:
-            dst_affine = list(self.transform)
-            w = self.width
-            h = self.height
-
-        return dst_affine, w, h
-
-    @cached_property
-    def _minzoom(self) -> int:
-        """Calculate dataset minimum zoom level."""
-        # We assume the TMS tilesize to be constant over all matrices
-        # ref: https://github.com/OSGeo/gdal/blob/dc38aa64d779ecc45e3cd15b1817b83216cf96b8/gdal/frmts/gtiff/cogdriver.cpp#L274
-        tilesize = self.tms.tileMatrices[0].tileWidth
-
+    def get_zooms(self, tms: TileMatrixSet) -> Tuple[int, int]:
+        """Get Min/Max zooms for a dataset."""
+        minzoom, maxzoom = tms.minzoom, tms.maxzoom
         if all([self.transform, self.height, self.width]):
-            try:
-                dst_affine, w, h = self._dst_geom_in_tms_crs
+            tms_crs = tms.rasterio_crs
+            dataset_crs = self.crs
 
+            try:
+                dst_affine = list(self.transform)
+                w = self.width
+                h = self.height
+                if tms_crs != dataset_crs:
+                    dst_affine, w, h = calculate_default_transform(
+                        self.crs,
+                        tms_crs,
+                        self.width,
+                        self.height,
+                        *self.bounds,
+                    )
+
+                # --- MinZoom (based on lowest virtual overview resolution) ---
                 # The minzoom is defined by the resolution of the maximum theoretical overview level
                 # We assume `tilesize`` is the smallest overview size
+                tilesize = tms.tileMatrices[0].tileWidth
                 overview_level = get_maximum_overview_level(w, h, minsize=tilesize)
 
                 # Get the resolution of the overview
                 resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
                 ovr_resolution = resolution * (2**overview_level)
-
                 # Find what TMS matrix match the overview resolution
-                return self.tms.zoom_for_res(ovr_resolution)
+                minzoom = tms.zoom_for_res(ovr_resolution)
+
+                # --- MaxZoom (based on raw resolution) ---
+                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+                maxzoom = tms.zoom_for_res(resolution)
 
             except:  # noqa
                 # if we can't get max zoom from the dataset we default to TMS maxzoom
                 warnings.warn(
-                    "Cannot determine minzoom based on dataset information, will default to TMS minzoom.",
+                    "Cannot determine minzoom/maxzoom based on dataset information, will default to TMS minzoom/maxzoom.",
                     UserWarning,
                 )
 
-        return self.tms.minzoom
+        return minzoom, maxzoom
 
-    @cached_property
-    def _maxzoom(self) -> int:
-        """Calculate dataset maximum zoom level."""
-        if all([self.transform, self.height, self.width]):
-            try:
-                dst_affine, _, _ = self._dst_geom_in_tms_crs
-
-                # The maxzoom is defined by finding the minimum difference between
-                # the raster resolution and the zoom level resolution
-                resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
-                return self.tms.zoom_for_res(resolution)
-
-            except:  # noqa
-                # if we can't get min/max zoom from the dataset we default to TMS maxzoom
-                warnings.warn(
-                    "Cannot determine maxzoom based on dataset information, will default to TMS maxzoom.",
-                    UserWarning,
-                )
-
-        return self.tms.maxzoom
-
-    def tile_exists(self, tile_x: int, tile_y: int, tile_z: int) -> bool:
+    def tile_exists(
+        self, tile_x: int, tile_y: int, tile_z: int, tms: TileMatrixSet
+    ) -> bool:
         """Check if a tile intersects the dataset bounds.
 
         Args:
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
+            tms (TileMatrixSet): TileMatrixSet.
 
         Returns:
             bool: True if the tile intersects the dataset bounds.
 
         """
         # bounds in TileMatrixSet's CRS
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        tile_bounds = tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
-        if not self.tms.rasterio_crs == self.crs:
+        tms_crs = tms.rasterio_crs
+        dataset_crs = self.crs
+        if not tms_crs == dataset_crs:
             # Transform the bounds to the dataset's CRS
             try:
                 tile_bounds = transform_bounds(
-                    self.tms.rasterio_crs,
-                    self.crs,
+                    tms_crs,
+                    dataset_crs,
                     *tile_bounds,
                     densify_pts=21,
                 )
@@ -191,8 +164,8 @@ class SpatialMixin:
                 # but if retried it will then pass.
                 # Note: It might return `+/-inf` values
                 tile_bounds = transform_bounds(
-                    self.tms.rasterio_crs,
-                    self.crs,
+                    tms_crs,
+                    dataset_crs,
                     *tile_bounds,
                     densify_pts=21,
                 )
@@ -223,7 +196,6 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """
 
     input: Any = attr.ib()
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     def __enter__(self):
         """Support using with Context Managers."""
@@ -335,10 +307,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """
 
     input: Any = attr.ib()
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
 
     reader: Type[BaseReader] = attr.ib(init=False)
     reader_options: Dict = attr.ib(factory=dict)
@@ -431,9 +399,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"],
-                    tms=self.tms,
-                    **{**self.reader_options, **options},
+                    asset_info["url"], **{**self.reader_options, **options}
                 ) as src:
                     return src.info()
 
@@ -474,9 +440,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"],
-                    tms=self.tms,
-                    **{**self.reader_options, **options},
+                    asset_info["url"], **{**self.reader_options, **options}
                 ) as src:
                     return src.statistics(
                         *args,
@@ -544,6 +508,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         tile_x: int,
         tile_y: int,
         tile_z: int,
+        tms: TileMatrixSet = WEB_MERCATOR_TMS,
         assets: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         asset_indexes: Optional[Dict[str, Indexes]] = None,
@@ -565,7 +530,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_x, tile_y, tile_z):
+        if not self.tile_exists(tile_x, tile_y, tile_z, tms):
             raise TileOutsideBounds(
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
@@ -605,9 +570,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"],
-                    tms=self.tms,
-                    **{**self.reader_options, **options},
+                    asset_info["url"], **{**self.reader_options, **options}
                 ) as src:
                     data = src.tile(*args, indexes=idx, **kwargs)
 
@@ -633,7 +596,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     return data
 
-        img = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs)
+        img = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, tms=tms, **kwargs)
         if expression:
             return img.apply_expression(expression)
 
@@ -696,9 +659,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"],
-                    tms=self.tms,
-                    **{**self.reader_options, **options},
+                    asset_info["url"], **{**self.reader_options, **options}
                 ) as src:
                     data = src.part(*args, indexes=idx, **kwargs)
 
@@ -785,9 +746,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"],
-                    tms=self.tms,
-                    **{**self.reader_options, **options},
+                    asset_info["url"], **{**self.reader_options, **options}
                 ) as src:
                     data = src.preview(indexes=idx, **kwargs)
 
@@ -878,9 +837,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"],
-                    tms=self.tms,
-                    **{**self.reader_options, **options},
+                    asset_info["url"], **{**self.reader_options, **options}
                 ) as src:
                     data = src.point(*args, indexes=idx, **kwargs)
 
@@ -963,9 +920,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             with self.ctx(**asset_info.get("env", {})):
                 with reader(
-                    asset_info["url"],
-                    tms=self.tms,
-                    **{**self.reader_options, **options},
+                    asset_info["url"], **{**self.reader_options, **options}
                 ) as src:
                     data = src.feature(*args, indexes=idx, **kwargs)
 
@@ -1014,10 +969,6 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     """
 
     input: Any = attr.ib()
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
 
     reader: Type[BaseReader] = attr.ib(init=False)
     reader_options: Dict = attr.ib(factory=dict)
@@ -1075,19 +1026,16 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> Info:
             url = self._get_band_url(band)
-            with self.reader(
-                url,
-                tms=self.tms,
-                **self.reader_options,
-            ) as src:
+            with self.reader(url, **self.reader_options) as src:
                 return src.info()
 
         bands_metadata = multi_values(bands, _reader, **kwargs)
 
         meta = {
-            "bounds": self.geographic_bounds,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
+            "bounds": self.bounds,
+            "crs": f"EPSG:{self.crs.to_epsg()}"
+            if self.crs.to_epsg()
+            else self.crs.to_wkt(),
         }
 
         # We only keep the value for the first band.
@@ -1159,6 +1107,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         tile_x: int,
         tile_y: int,
         tile_z: int,
+        tms: TileMatrixSet = WEB_MERCATOR_TMS,
         bands: Optional[Union[Sequence[str], str]] = None,
         expression: Optional[str] = None,
         **kwargs: Any,
@@ -1177,7 +1126,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        if not self.tile_exists(tile_x, tile_y, tile_z):
+        if not self.tile_exists(tile_x, tile_y, tile_z, tms):
             raise TileOutsideBounds(
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
@@ -1206,11 +1155,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(
-                url,
-                tms=self.tms,
-                **self.reader_options,
-            ) as src:
+            with self.reader(url, **self.reader_options) as src:
                 data = src.tile(*args, **kwargs)
 
                 if data.metadata:
@@ -1221,7 +1166,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                 return data
 
-        img = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
+        img = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, tms=tms, **kwargs)
 
         if expression:
             return img.apply_expression(expression)
@@ -1271,11 +1216,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(
-                url,
-                tms=self.tms,
-                **self.reader_options,
-            ) as src:
+            with self.reader(url, **self.reader_options) as src:
                 data = src.part(*args, **kwargs)
 
                 if data.metadata:
@@ -1334,11 +1275,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(
-                url,
-                tms=self.tms,
-                **self.reader_options,
-            ) as src:
+            with self.reader(url, **self.reader_options) as src:
                 data = src.preview(**kwargs)
 
                 if data.metadata:
@@ -1401,11 +1338,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> PointData:
             url = self._get_band_url(band)
-            with self.reader(
-                url,
-                tms=self.tms,
-                **self.reader_options,
-            ) as src:
+            with self.reader(url, **self.reader_options) as src:
                 data = src.point(*args, **kwargs)
 
                 if data.metadata:
@@ -1465,11 +1398,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
-            with self.reader(
-                url,
-                tms=self.tms,
-                **self.reader_options,
-            ) as src:
+            with self.reader(url, **self.reader_options) as src:
                 data = src.feature(*args, **kwargs)
 
                 if data.metadata:
