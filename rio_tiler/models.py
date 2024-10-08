@@ -61,16 +61,10 @@ class Bounds(RioTilerBaseModel):
     """Dataset Bounding box"""
 
     bounds: BoundingBox
+    crs: str
 
 
-class SpatialInfo(Bounds):
-    """Dataset SpatialInfo"""
-
-    minzoom: int
-    maxzoom: int
-
-
-class Info(SpatialInfo):
+class Info(Bounds):
     """Dataset Info."""
 
     band_metadata: List[Tuple[str, Dict]]

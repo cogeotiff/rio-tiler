@@ -789,3 +789,21 @@ def cast_to_sequence(val: Optional[Any] = None) -> Sequence:
         val = (val,)
 
     return val
+
+
+def CRS_to_uri(crs: CRS) -> Optional[str]:
+    """Convert CRS to URI.
+
+    Code adapted from https://github.com/developmentseed/morecantile/blob/1829fe12408e4a1feee7493308f3f02257ef4caf/morecantile/models.py#L148-L161
+    """
+    # attempt to grab the authority, version, and code from the CRS
+    if authority_code := crs.to_authority(confidence_threshold=70):
+        version = "0"
+        authority, code = authority_code
+        # if we have a version number in the authority, split it out
+        if "_" in authority:
+            authority, version = authority.split("_")
+
+        return f"http://www.opengis.net/def/crs/{authority}/{version}/{code}"
+
+    return None

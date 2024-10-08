@@ -1,11 +1,9 @@
 """tests rio_tiler.io.rasterio.Reader"""
 
 import os
-import warnings
 from io import BytesIO
 from typing import Any, Dict
 
-import attr
 import morecantile
 import numpy
 import pytest
@@ -13,6 +11,7 @@ import rasterio
 from morecantile import TileMatrixSet
 from pyproj import CRS
 from rasterio import transform
+from rasterio.crs import CRS as rioCRS
 from rasterio.features import bounds as featureBounds
 from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
@@ -82,6 +81,10 @@ def test_info_valid():
     """Should work as expected (get file info)"""
     with Reader(COG_SCALE) as src:
         meta = src.info()
+        assert meta.bounds == src.bounds == src.dataset.bounds
+        crs = meta.crs
+        assert rioCRS.from_user_input(crs) == src.crs
+
         assert meta.scales
         assert meta.offsets
         assert not meta.colormap
@@ -92,6 +95,11 @@ def test_info_valid():
         assert meta.driver
 
     with Reader(COG_CMAP) as src:
+        meta = src.info()
+        assert meta.bounds == src.bounds == src.dataset.bounds
+        crs = meta.crs
+        assert rioCRS.from_user_input(crs) == src.crs
+
         assert src.colormap
         meta = src.info()
         assert meta["colormap"]
@@ -106,8 +114,7 @@ def test_info_valid():
     with Reader(COG_TAGS) as src:
         meta = src.info()
         assert meta.bounds
-        assert meta.minzoom
-        assert meta.maxzoom
+        assert meta.crs
         assert meta.band_descriptions
         assert meta.dtype == "int16"
         assert meta.colorinterp == ["gray"]
@@ -894,26 +901,30 @@ def test_nonearthbody():
             assert src.maxzoom == 24
 
     # Warns because of zoom level in WebMercator can't be defined
-    with pytest.warns(UserWarning) as w:
-        with Reader(COG_EUROPA, geographic_crs=EUROPA_SPHERE) as src:
-            assert src.info()
-            assert len(w) == 2
+    with Reader(COG_EUROPA) as src:
+        assert src.info()
+        meta = src.info()
+        assert meta.bounds == src.bounds == src.dataset.bounds
+        crs = meta.crs
+        assert rioCRS.from_user_input(crs) == src.crs
 
-            img = src.read()
-            assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
-            assert img.width == src.dataset.width
-            assert img.height == src.dataset.height
-            assert img.count == src.dataset.count
+        assert src.get_geographic_bounds(EUROPA_SPHERE)
 
-            img = src.preview()
-            assert img.bounds == src.bounds
+        img = src.read()
+        assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
+        assert img.width == src.dataset.width
+        assert img.height == src.dataset.height
+        assert img.count == src.dataset.count
 
-            part = src.part(src.bounds, bounds_crs=src.crs)
-            assert part.bounds == src.bounds
+        img = src.preview()
+        assert img.bounds == src.bounds
 
-            lon = (src.bounds[0] + src.bounds[2]) / 2
-            lat = (src.bounds[1] + src.bounds[3]) / 2
-            assert src.point(lon, lat, coord_crs=src.crs).data[0] is not None
+        part = src.part(src.bounds, bounds_crs=src.crs)
+        assert part.bounds == src.bounds
+
+        lon = (src.bounds[0] + src.bounds[2]) / 2
+        lat = (src.bounds[1] + src.bounds[3]) / 2
+        assert src.point(lon, lat, coord_crs=src.crs).data[0] is not None
 
     with pytest.warns(UserWarning):
         europa_crs = CRS.from_authority("ESRI", 104915)
@@ -923,7 +934,7 @@ def test_nonearthbody():
             matrix_scale=[2, 1],
         )
 
-    with Reader(COG_EUROPA, tms=tms, geographic_crs=EUROPA_SPHERE) as src:
+    with Reader(COG_EUROPA, tms=tms) as src:
         assert src.info()
         assert src.minzoom == 4
         assert src.maxzoom == 6
@@ -958,28 +969,8 @@ def test_nonearth_custom():
         geographic_crs=MARS2000_SPHERE,
     )
 
-    @attr.s
-    class MarsReader(Reader):
-        """Use custom geographic CRS."""
-
-        geographic_crs: rasterio.crs.CRS = attr.ib(
-            init=False,
-            default=rasterio.crs.CRS.from_proj4("+proj=longlat +R=3396190 +no_defs"),
-        )
-
-    with warnings.catch_warnings():
-        with MarsReader(COG_MARS, tms=mars_tms) as src:
-            assert src.geographic_bounds[0] > -180
-
-    with warnings.catch_warnings():
-        with Reader(
-            COG_MARS,
-            tms=mars_tms,
-            geographic_crs=rasterio.crs.CRS.from_proj4(
-                "+proj=longlat +R=3396190 +no_defs"
-            ),
-        ) as src:
-            assert src.geographic_bounds[0] > -180
+    with Reader(COG_MARS, tms=mars_tms) as src:
+        assert src.get_geographic_bounds(MARS2000_SPHERE)[0] > -180
 
 
 def test_tms_tilesize_and_zoom():
@@ -1121,7 +1112,10 @@ def test_inverted_latitude():
     """Test working with inverted Latitude."""
     with pytest.warns(UserWarning):
         with Reader(COG_INVERTED) as src:
-            assert src.geographic_bounds[1] < src.geographic_bounds[3]
+            assert (
+                src.get_geographic_bounds(WGS84_CRS)[1]
+                < src.get_geographic_bounds(WGS84_CRS)[3]
+            )
 
     with pytest.warns(UserWarning):
         with Reader(COG_INVERTED) as src:
