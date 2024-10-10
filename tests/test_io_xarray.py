@@ -7,6 +7,7 @@ import numpy
 import pytest
 import rioxarray
 import xarray
+from rasterio.crs import CRS as rioCRS
 
 from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
 from rio_tiler.io import XarrayReader
@@ -28,9 +29,11 @@ def test_xarray_reader():
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
+        assert dst.minzoom == dst.maxzoom == 0
         info = dst.info()
-        assert info.minzoom == 0
-        assert info.maxzoom == 0
+        assert info.bounds == dst.bounds
+        crs = info.crs
+        assert rioCRS.from_user_input(crs) == dst.crs
         assert info.band_metadata == [("b1", {})]
         assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000000")]
         assert info.height == 33
@@ -123,9 +126,8 @@ def test_xarray_reader():
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
-        info = dst.info()
-        assert info.minzoom == 5
-        assert info.maxzoom == 7
+        assert dst.minzoom == 5
+        assert dst.maxzoom == 7
 
 
 def test_xarray_reader_external_nodata():

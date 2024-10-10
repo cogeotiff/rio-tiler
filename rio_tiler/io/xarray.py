@@ -23,7 +23,7 @@ from rio_tiler.errors import (
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, NoData, WarpResampling
-from rio_tiler.utils import _validate_shape_input
+from rio_tiler.utils import CRS_to_uri, _validate_shape_input
 
 try:
     import xarray
@@ -43,7 +43,6 @@ class XarrayReader(BaseReader):
     Attributes:
         dataset (xarray.DataArray): Xarray DataArray dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
 
     Examples:
         >>> ds = xarray.open_dataset(
@@ -62,7 +61,6 @@ class XarrayReader(BaseReader):
     input: xarray.DataArray = attr.ib()
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     _dims: List = attr.ib(init=False, factory=list)
 
@@ -120,9 +118,8 @@ class XarrayReader(BaseReader):
         metadata = [band.attrs for d in self._dims for band in self.input[d]]
 
         meta = {
-            "bounds": self.geographic_bounds,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
+            "bounds": self.bounds,
+            "crs": CRS_to_uri(self.crs),
             "band_metadata": [(f"b{ix}", v) for ix, v in enumerate(metadata, 1)],
             "band_descriptions": [(f"b{ix}", v) for ix, v in enumerate(bands, 1)],
             "dtype": str(self.input.dtype),

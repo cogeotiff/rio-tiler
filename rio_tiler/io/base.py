@@ -15,7 +15,7 @@ from rasterio.crs import CRS
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.warp import calculate_default_transform, transform_bounds
 
-from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import (
     AssetAsBandError,
     ExpressionMixingWarning,
@@ -27,7 +27,7 @@ from rio_tiler.errors import (
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.tasks import multi_arrays, multi_points, multi_values
 from rio_tiler.types import AssetInfo, BBox, Indexes
-from rio_tiler.utils import cast_to_sequence, normalize_bounds
+from rio_tiler.utils import CRS_to_uri, cast_to_sequence, normalize_bounds
 
 
 @attr.s
@@ -48,12 +48,9 @@ class SpatialMixin:
     height: Optional[int] = attr.ib(default=None, init=False)
     width: Optional[int] = attr.ib(default=None, init=False)
 
-    geographic_crs: CRS = attr.ib(init=False, default=WGS84_CRS)
-
-    @cached_property
-    def geographic_bounds(self) -> BBox:
-        """Return dataset bounds in geographic_crs."""
-        if self.crs == self.geographic_crs:
+    def get_geographic_bounds(self, crs: CRS) -> BBox:
+        """Return Geographic Bounds for a Geographic CRS."""
+        if self.crs == crs:
             if self.bounds[1] > self.bounds[3]:
                 warnings.warn(
                     "BoundingBox of the dataset is inverted (minLat > maxLat).",
@@ -69,12 +66,7 @@ class SpatialMixin:
             return self.bounds
 
         try:
-            bounds = transform_bounds(
-                self.crs,
-                self.geographic_crs,
-                *self.bounds,
-                densify_pts=21,
-            )
+            bounds = transform_bounds(self.crs, crs, *self.bounds, densify_pts=21)
         except:  # noqa
             warnings.warn(
                 "Cannot determine bounds in geographic CRS, will default to (-180.0, -90.0, 180.0, 90.0).",
@@ -1085,9 +1077,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         bands_metadata = multi_values(bands, _reader, **kwargs)
 
         meta = {
-            "bounds": self.geographic_bounds,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
+            "bounds": self.bounds,
+            "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
         }
 
         # We only keep the value for the first band.

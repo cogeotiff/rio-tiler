@@ -40,6 +40,42 @@
     >> InvalidColorMapName: Invalid colormap name: Viridis
     ```
 
+* removed `geographic_crs` attribute in `SpatialMixin` class **breaking change**
+
+* removed `geographic_bounds` property in `SpatialMixin` class **breaking change**
+
+* add `get_geographic_bounds(crs: CRS)` method in `SpatialMixin` class
+
+    ```python
+    from rasterio.crs import CRS
+    from rio_tiler.io import Reader
+
+    # before
+    with Reader("cog.tif", geographic_crs=CRS.from_epsg(4326)) as src:
+        bounds = src.geographic_bounds
+
+    # now
+    with Reader("cog.tif") as src:
+        bounds = src.get_geographic_bounds(CRS.from_epsg(4326))
+    ```
+
+* replace `geographic bounds` with dataset bounds in `Reader.info()` method's response **breaking change**
+
+    ```python
+    from rio_tiler.io import Reader
+
+    # before
+    with Reader("cog.tif") as src:
+        assert src.geographic_bounds == src.info().bounds
+
+    # now
+    with Reader("cog.tif") as src:
+        assert src.bounds == src.info().bounds
+    ```
+
+* add `crs: str` property in `Info` model
+
+* remove `minzoom` and `maxzoom` properties in `Info` model **breaking change**
 
 # 6.7.0 (2024-09-05)
 

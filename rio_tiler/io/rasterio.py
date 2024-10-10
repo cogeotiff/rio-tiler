@@ -35,7 +35,12 @@ from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, NumType, RIOResampling
-from rio_tiler.utils import _validate_shape_input, has_alpha_band, has_mask_band
+from rio_tiler.utils import (
+    CRS_to_uri,
+    _validate_shape_input,
+    has_alpha_band,
+    has_mask_band,
+)
 
 
 @attr.s
@@ -46,7 +51,6 @@ class Reader(BaseReader):
         input (str): dataset path.
         dataset (rasterio.io.DatasetReader or rasterio.io.DatasetWriter or rasterio.vrt.WarpedVRT, optional): Rasterio dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        geographic_crs (rasterio.crs.CRS, optional): CRS to use as geographic coordinate system. Defaults to WGS84.
         colormap (dict, optional): Overwrite internal colormap.
         options (dict, optional): Options to forward to low-level reader methods.
 
@@ -75,7 +79,6 @@ class Reader(BaseReader):
     )
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    geographic_crs: CRS = attr.ib(default=WGS84_CRS)
 
     colormap: Dict = attr.ib(default=None)
 
@@ -177,9 +180,8 @@ class Reader(BaseReader):
             nodata_type = "None"
 
         meta = {
-            "bounds": self.geographic_bounds,
-            "minzoom": self.minzoom,
-            "maxzoom": self.maxzoom,
+            "bounds": self.bounds,
+            "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             "band_metadata": [
                 (f"b{ix}", self.dataset.tags(ix)) for ix in self.dataset.indexes
             ],
@@ -596,8 +598,6 @@ class ImageReader(Reader):
     tms: TileMatrixSet = attr.ib(init=False)
 
     crs: CRS = attr.ib(init=False, default=None)
-    geographic_crs: CRS = attr.ib(init=False, default=None)
-
     transform: Affine = attr.ib(init=False)
 
     def __attrs_post_init__(self):
