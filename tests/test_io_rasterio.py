@@ -895,9 +895,17 @@ def test_nonearthbody():
     """Reader should work with non-earth dataset."""
     EUROPA_SPHERE = CRS.from_proj4("+proj=longlat +R=1560800 +no_defs")
 
-    with pytest.warns(UserWarning):
-        with Reader(COG_EUROPA) as src:
+    with Reader(COG_EUROPA) as src:
+        with pytest.warns(
+            UserWarning,
+            match="Cannot determine minzoom based on dataset information, will default to TMS minzoom.",
+        ):
             assert src.minzoom == 0
+
+        with pytest.warns(
+            UserWarning,
+            match="Cannot determine maxzoom based on dataset information, will default to TMS maxzoom.",
+        ):
             assert src.maxzoom == 24
 
     # Warns because of zoom level in WebMercator can't be defined
@@ -926,13 +934,12 @@ def test_nonearthbody():
         lat = (src.bounds[1] + src.bounds[3]) / 2
         assert src.point(lon, lat, coord_crs=src.crs).data[0] is not None
 
-    with pytest.warns(UserWarning):
-        europa_crs = CRS.from_authority("ESRI", 104915)
-        tms = TileMatrixSet.custom(
-            crs=europa_crs,
-            extent=europa_crs.area_of_use.bounds,
-            matrix_scale=[2, 1],
-        )
+    europa_crs = CRS.from_authority("ESRI", 104915)
+    tms = TileMatrixSet.custom(
+        crs=europa_crs,
+        extent=europa_crs.area_of_use.bounds,
+        matrix_scale=[2, 1],
+    )
 
     with Reader(COG_EUROPA, tms=tms) as src:
         assert src.info()
@@ -966,11 +973,11 @@ def test_nonearth_custom():
         MARS_MERCATOR,
         extent_crs=MARS2000_SPHERE,
         title="Web Mercator Mars",
-        geographic_crs=MARS2000_SPHERE,
     )
 
     with Reader(COG_MARS, tms=mars_tms) as src:
         assert src.get_geographic_bounds(MARS2000_SPHERE)[0] > -180
+        assert src.get_geographic_bounds(mars_tms.rasterio_geographic_crs)[0] > -180
 
 
 def test_tms_tilesize_and_zoom():

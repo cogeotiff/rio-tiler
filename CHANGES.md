@@ -77,6 +77,8 @@
 
 * remove `minzoom` and `maxzoom` properties in `Info` model **breaking change**
 
+* update `morecantile` dependency to allow `6.x` version
+
 # 6.7.0 (2024-09-05)
 
 * raise `MissingCRS` or `InvalidGeographicBounds` errors when Xarray datasets have wrong geographic metadata
