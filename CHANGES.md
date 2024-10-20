@@ -1,5 +1,5 @@
 
-# Unreleased
+# 7.0.0 (2024-10-21)
 
 * Enable dynamic definition of Asset **reader** in `MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/711/, https://github.com/cogeotiff/rio-tiler/pull/728)
 
