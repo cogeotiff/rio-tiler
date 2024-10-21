@@ -18,18 +18,18 @@ Main `rio_tiler.io` Abstract Base Class.
 
 - **bounds**: Dataset's bounding box. Not in the `__init__` method.
 - **crs**: dataset's crs. Not in the `__init__` method.
-- **geographic_crs**: CRS to use as geographic coordinate system. Defaults to WGS84. Not in the `__init__` method.
+- **transform**: dataset's Affine transform. Not in the `__init__` method.
+- **height**: dataset's height. Not in the `__init__` method.
+- **width**: dataset's width. Not in the `__init__` method.
+
 
 !!! important
     BaseClass Arguments outside the `__init__` method and without default value **HAVE TO** be set in the `__attrs_post_init__` step.
 
 #### Methods
 
-- **tile_exists**: Check if a given tile (for the input TMS) intersect the dataset bounds.
-
-##### Properties
-
-- **geographic_bounds**: dataset's bounds in WGS84 crs (calculated from `self.bounds` and `self.crs`).
+- **tile_exists(tile_x: int, tile_y: int, tile_z: int)**: Check if a given tile (for the input TMS) intersect the dataset bounds.
+- **get_geographic_bounds(crs: rasterio.crs.CRS)**: dataset's bounds in Geographic CRS (calculated from `self.bounds` and `self.crs`).
 
 ##### Abstract Methods
 
@@ -64,6 +64,8 @@ from rio_tiler.io.base import MultiBaseReader
 from rio_tiler.io import Reader, BaseReader
 from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.models import Info
+from rio_tiler.types import AssetInfo
+from rio_tiler.errors import InvalidAssetName
 
 @attr.s
 class AssetFileReader(MultiBaseReader):
@@ -86,19 +88,26 @@ class AssetFileReader(MultiBaseReader):
         self.assets = sorted(
             [p.stem.split("_")[1] for p in pathlib.Path(self.input).glob(f"*{self.prefix}*.tif")]
         )
-        with self.reader(self._get_asset_url(self.assets[0])) as cog:
+        with self.reader(self._get_asset_info(self.assets[0])["url"]) as cog:
             self.bounds = cog.bounds
             self.crs = cog.crs
-
+            self.transform = cog.transform
+            self.height = cog.height
+            self.width = cog.width
             if self.minzoom is None:
                 self.minzoom = cog.minzoom
 
             if self.maxzoom is None:
                 self.maxzoom = cog.maxzoom
 
-    def _get_asset_url(self, band: str) -> str:
+    def _get_asset_info(self, asset: str) -> AssetInfo:
         """Validate band's name and return band's url."""
-        return os.path.join(self.input, f"{self.prefix}{band}.tif")
+        if asset not in self.assets:
+            raise InvalidAssetName(
+                f"'{asset}' is not valid, should be one of {self.assets}"
+            )
+
+        return AssetInfo(url=os.path.join(self.input, f"{self.prefix}{asset}.tif"))
 
 # we have a directoty with "scene_b1.tif", "scene_b2.tif"
 with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
@@ -114,14 +123,44 @@ with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
     assert isinstance(info["band1"], Info)
     print(info["band1"].model_dump_json(exclude_none=True))
     >>> {
-        'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
-        'minzoom': 7,
-        'maxzoom': 9,
-        'band_metadata': [('b1', {})],
-        'band_descriptions': [('b1', '')],
-        'dtype': 'uint16',
-        'nodata_type': 'Nodata',
-        'colorinterp': ['gray']
+        "bounds": [
+            199980,
+            2690220,
+            309780,
+            2800020
+        ],
+        "crs": "http://www.opengis.net/def/crs/EPSG/0/32629",
+        "band_metadata": [
+            [
+                "b1",
+                {}
+            ]
+        ],
+        "band_descriptions": [
+            [
+                "b1",
+                ""
+            ]
+        ],
+        "dtype": "uint16",
+        "nodata_type": "Nodata",
+        "colorinterp": [
+            "gray"
+        ],
+        "scales": [
+            1
+        ],
+        "offsets": [
+            0
+        ],
+        "driver": "GTiff",
+        "count": 1,
+        "width": 549,
+        "height": 549,
+        "overviews": [
+            2
+        ],
+        "nodata_value": 0
     }
     img = cr.tile(238, 218, 9, assets=("band1", "band2"))
 
@@ -176,7 +215,9 @@ class BandFileReader(MultiBandReader):
         with self.reader(self._get_band_url(self.bands[0])) as cog:
             self.bounds = cog.bounds
             self.crs = cog.crs
-
+            self.transform = cog.transform
+            self.height = cog.height
+            self.width = cog.width
             if self.minzoom is None:
                 self.minzoom = cog.minzoom
 
@@ -195,14 +236,39 @@ with BandFileReader(input="my_dir/", prefix="scene_") as cr:
 
     print(cr.info(bands=("band1", "band2")).model_dump_json(exclude_none=True))
     >>> {
-        'bounds': [-11.979244865430259, 24.296321392464325, -10.874546803397614, 25.304623891542263],
-        'minzoom': 7,
-        'maxzoom': 9,
-        'band_metadata': [('band1', {}), ('band2', {})],
-        'band_descriptions': [('band1', ''), ('band2', '')],
-        'dtype': 'uint16',
-        'nodata_type': 'Nodata',
-        'colorinterp': ['gray', 'gray']
+        "bounds": [
+            199980,
+            2690220,
+            309780,
+            2800020
+        ],
+        "crs": "http://www.opengis.net/def/crs/EPSG/0/32629",
+        "band_metadata": [
+            [
+                "band1",
+                {}
+            ],
+            [
+                "band2",
+                {}
+            ]
+        ],
+        "band_descriptions": [
+            [
+                "band1",
+                ""
+            ],
+            [
+                "band2",
+                ""
+            ]
+        ],
+        "dtype": "uint16",
+        "nodata_type": "Nodata",
+        "colorinterp": [
+            "gray",
+            "gray"
+        ]
     }
 
     img = cr.tile(238, 218, 9, bands=("band1", "band2"))
@@ -278,7 +344,7 @@ In this `CustomSTACReader`, we are using a custom path `schema` in form of `{ite
 
 
 ```python
-from typing import Any, Dict
+from typing import Any, Dict, List
 
 import attr
 import rasterio
@@ -297,14 +363,23 @@ class SimpleReader(BaseReader):
     # We force tms to be outside the class __init__
     tms: TileMatrixSet = attr.ib(init=False, default=WEB_MERCATOR_TMS)
 
-    # We overwrite the abstract base class attribute definition and set default
-    minzoom: int = attr.ib(init=False, default=WEB_MERCATOR_TMS.minzoom)
-    maxzoom: int = attr.ib(init=False, default=WEB_MERCATOR_TMS.maxzoom)
-
     def __attrs_post_init__(self):
         # Set bounds and crs variable
         self.bounds = self.input.bounds
         self.crs = self.input.crs
+        self.transform = self.input.transform
+        self.height = self.input.height
+        self.width = self.input.width
+
+    @property
+    def minzoom(self):
+        """Return dataset minzoom."""
+        return self._minzoom
+
+    @property
+    def maxzoom(self):
+        """Return dataset maxzoom."""
+        return self._maxzoom
 
     # implement all mandatory methods
     def info(self) -> Info:
@@ -333,7 +408,7 @@ class SimpleReader(BaseReader):
 
         tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
 
-        data, mask = reader.part(
+        return reader.part(
             self.input,
             tile_bounds,
             width=256,
@@ -342,9 +417,7 @@ class SimpleReader(BaseReader):
             dst_crs=tms.rasterio_crs,
             **kwargs,
         )
-        return ImageData(
-            data, mask, bounds=tile_bounds, crs=tms.rasterio_crs
-        )
+
 
 with rasterio.open("file.tif") as src:
     with SimpleReader(src) as cog:

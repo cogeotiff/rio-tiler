@@ -79,6 +79,10 @@
 
 * update `morecantile` dependency to allow `6.x` version
 
+* remove deprecated method and attributes
+
+* `round` xarray dataset's bounds to avoid precision errors when checking for valid geographic bounding box
+
 # 6.7.0 (2024-09-05)
 
 * raise `MissingCRS` or `InvalidGeographicBounds` errors when Xarray datasets have wrong geographic metadata

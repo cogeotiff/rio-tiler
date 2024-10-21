@@ -27,3 +27,8 @@ repos:
         additional_dependencies:
         - types-attrs
         - types-cachetools
+
+  - repo: https://github.com/nbQA-dev/nbQA
+    rev: 1.8.7
+    hooks:
+      - id: nbqa-black
