@@ -315,18 +315,12 @@ def test_xarray_reader_resampling():
         img_cubic = dst.tile(0, 0, 1, reproject_method="cubic")
         assert not numpy.array_equal(img.array, img_cubic.array)
 
-        with pytest.warns(DeprecationWarning):
-            _ = dst.tile(0, 0, 1, resampling_method="nearest")
-
         # PART
         img = dst.part((-160, -80, 160, 80), dst_crs="epsg:3857")
         img_cubic = dst.part(
             (-160, -80, 160, 80), dst_crs="epsg:3857", reproject_method="cubic"
         )
         assert not numpy.array_equal(img.array, img_cubic.array)
-
-        with pytest.warns(DeprecationWarning):
-            _ = dst.part((-160, -80, 160, 80), resampling_method="nearest")
 
         feat = {
             "type": "Feature",
@@ -349,9 +343,6 @@ def test_xarray_reader_resampling():
         img = dst.feature(feat, dst_crs="epsg:3857")
         img_cubic = dst.feature(feat, dst_crs="epsg:3857", reproject_method="cubic")
         assert not numpy.array_equal(img.array, img_cubic.array)
-
-        with pytest.warns(DeprecationWarning):
-            _ = dst.feature(feat, resampling_method="nearest")
 
 
 def test_xarray_reader_no_crs():

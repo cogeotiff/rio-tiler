@@ -45,22 +45,10 @@ from rio_tiler.utils import (
 )
 
 
-class RioTilerBaseModel(BaseModel):
-    """Provides dictionary access for pydantic models, for backwards compatability."""
-
-    def __getitem__(self, item):
-        """Access item like in Dict."""
-        warnings.warn(
-            "'key' access will has been deprecated and will be removed in rio-tiler 7.0.",
-            DeprecationWarning,
-        )
-        return {**self.__dict__, **self.__pydantic_extra__}[item]
-
-
-class Bounds(RioTilerBaseModel):
+class Bounds(BaseModel):
     """Dataset Bounding box"""
 
-    bounds: BoundingBox
+    bounds: BBox
     crs: str
 
 
@@ -79,7 +67,7 @@ class Info(Bounds):
     model_config = {"extra": "allow"}
 
 
-class BandStatistics(RioTilerBaseModel):
+class BandStatistics(BaseModel):
     """Band statistics"""
 
     min: float
@@ -258,15 +246,6 @@ class PointData:
             metadata=metadata,
         )
 
-    def as_masked(self) -> numpy.ma.MaskedArray:
-        """return a numpy masked array."""
-        warnings.warn(
-            "'PointData.as_masked' has been deprecated and will be removed"
-            "in rio-tiler 7.0. You can get the masked array directly with `PointData.array` attribute.",
-            DeprecationWarning,
-        )
-        return self.array
-
     def apply_expression(self, expression: str) -> "PointData":
         """Apply expression to the image data."""
         blocks = get_expression_blocks(expression)
@@ -354,21 +333,6 @@ class ImageData:
         """Allow for variable expansion (``arr, mask = ImageData``)"""
         for i in (self.array.data, self.mask):
             yield i
-
-    @classmethod
-    def from_array(cls, arr: numpy.ndarray) -> Self:
-        """Create ImageData from a numpy array.
-
-        Args:
-            arr (numpy.ndarray): Numpy array or Numpy masked array.
-
-        """
-        warnings.warn(
-            "'ImageData.from_array()' has been deprecated and will be removed"
-            "in rio-tiler 7.0.",
-            DeprecationWarning,
-        )
-        return cls(arr)
 
     @classmethod
     def from_bytes(cls, data: bytes) -> Self:
@@ -492,15 +456,6 @@ class ImageData:
             cutline_mask=cutline_mask,
             metadata=metadata,
         )
-
-    def as_masked(self) -> numpy.ma.MaskedArray:
-        """return a numpy masked array."""
-        warnings.warn(
-            "'ImageData.as_masked' has been deprecated and will be removed"
-            "in rio-tiler 7.0. You can get the masked array directly with `ImageData.array` attribute.",
-            DeprecationWarning,
-        )
-        return self.array
 
     def data_as_image(self) -> numpy.ndarray:
         """Return the data array reshaped into an image processing/visualization software friendly order.

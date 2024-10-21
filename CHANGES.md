@@ -1,5 +1,5 @@
 
-# Unreleased
+# 7.0.0 (2024-10-21)
 
 * Enable dynamic definition of Asset **reader** in `MultiBaseReader` (https://github.com/cogeotiff/rio-tiler/pull/711/, https://github.com/cogeotiff/rio-tiler/pull/728)
 
@@ -78,6 +78,12 @@
 * remove `minzoom` and `maxzoom` properties in `Info` model **breaking change**
 
 * update `morecantile` dependency to allow `6.x` version
+
+* remove deprecated method and attributes
+
+* `round` xarray dataset's bounds to avoid precision errors when checking for valid geographic bounding box
+
+* fix `bounds` type information
 
 # 6.7.0 (2024-09-05)
 

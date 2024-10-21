@@ -70,6 +70,7 @@ def tile(
     """Handle tile requests."""
     with Reader(url) as cog:
         img = cog.tile(x, y, z)
+
     content = img.render(img_format="PNG", **img_profiles.get("png"))
     return Response(content, media_type="image/png")
 
@@ -85,7 +86,7 @@ def tilejson(
 
     with Reader(url) as cog:
         return {
-            "bounds": cog.geographic_bounds,
+            "bounds": cog.get_geographic_bounds(cog.tms.rasterio_geographic_crs),
             "minzoom": cog.minzoom,
             "maxzoom": cog.maxzoom,
             "name": os.path.basename(url),

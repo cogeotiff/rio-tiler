@@ -135,6 +135,10 @@ data, mask = apply_cmap(data, cmap)
 ![](img/miscellaneous.png)
 ![](img/colormaps_for_oceanography.png)
 
+### Automatically load custom colormap
+
+User can set `COLORMAP_DIRECTORY` env variable to tell rio-tiler to search for `.npy` or `.json` files holding custom colormaps.
+
 ### References
 
 - Matplotlib colormaps: <https://matplotlib.org/3.1.0/tutorials/colors/colormaps.html>

@@ -469,7 +469,7 @@ def test_statistics_valid(rio):
 
         stats = stac.statistics(assets=("green", "red"), hist_options={"bins": 20})
         assert len(stats) == 2
-        assert len(stats["green"]["b1"]["histogram"][0]) == 20
+        assert len(stats["green"]["b1"].histogram[0]) == 20
 
         # Check that asset_expression is passed
         stats = stac.statistics(
@@ -516,8 +516,8 @@ def test_merged_statistics_valid(rio):
 
         stats = stac.merged_statistics(assets=("green", "red"), hist_options={"bins": 20})
         assert len(stats) == 2
-        assert len(stats["green_b1"]["histogram"][0]) == 20
-        assert len(stats["red_b1"]["histogram"][0]) == 20
+        assert len(stats["green_b1"].histogram[0]) == 20
+        assert len(stats["red_b1"].histogram[0]) == 20
 
         stats = stac.merged_statistics(expression="green_b1*2;green_b1;red_b1+100")
         assert isinstance(stats["green_b1*2"], BandStatistics)

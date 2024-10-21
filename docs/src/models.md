@@ -349,18 +349,6 @@ print(PointData(data))
 
 #### Methods
 
-- **as_masked()**: Return the data array as a `numpy.ma.MaskedArray`  **deprecated**
-
-```python
-import numpy
-from rio_tiler.models import PointData
-
-data = numpy.zeros((3))
-masked = PointData(data).as_masked()
-print(type(masked))
->>> numpy.ma.core.MaskedArray
-```
-
 - **apply_expression()**: Apply band math expression
 
 ```python
@@ -396,14 +384,11 @@ from rio_tiler.models import Info
 # Schema
 print(Info.schema())
 >>> {
-    "title": "Info",
-    "description": "Dataset Info.",
-    "type": "object",
-    "properties": {
-        "bounds": {
-            "title": "Bounds",
-            "type": "array",
-            "items": [
+    "$defs": {
+        "BoundingBox": {
+            "maxItems": 4,
+            "minItems": 4,
+            "prefixItems": [
                 {
                     "title": "Left"
                 },
@@ -416,103 +401,59 @@ print(Info.schema())
                 {
                     "title": "Top"
                 }
-            ]
+            ],
+            "type": "array"
+        }
+    },
+    "additionalProperties": true,
+    "description": "Dataset Info.",
+    "properties": {
+        "bounds": {
+            "$ref": "#/$defs/BoundingBox"
         },
-        "minzoom": {
-            "title": "Minzoom",
-            "type": "integer"
-        },
-        "maxzoom": {
-            "title": "Maxzoom",
-            "type": "integer"
+        "crs": {
+            "title": "Crs",
+            "type": "string"
         },
         "band_metadata": {
-            "title": "Band Metadata",
-            "type": "array",
             "items": {
-                "type": "array",
-                "items": [
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
                     {
                         "type": "string"
                     },
                     {
                         "type": "object"
                     }
-                ]
-            }
+                ],
+                "type": "array"
+            },
+            "title": "Band Metadata",
+            "type": "array"
         },
         "band_descriptions": {
-            "title": "Band Descriptions",
-            "type": "array",
             "items": {
-                "type": "array",
-                "items": [
+                "maxItems": 2,
+                "minItems": 2,
+                "prefixItems": [
                     {
                         "type": "string"
                     },
                     {
                         "type": "string"
                     }
-                ]
-            }
+                ],
+                "type": "array"
+            },
+            "title": "Band Descriptions",
+            "type": "array"
         },
         "dtype": {
             "title": "Dtype",
             "type": "string"
         },
         "nodata_type": {
-            "$ref": "#/definitions/NodataTypes"
-        },
-        "colorinterp": {
-            "title": "Colorinterp",
-            "type": "array",
-            "items": {
-                "type": "string"
-            }
-        },
-        "scale": {
-            "title": "Scale",
-            "type": "number"
-        },
-        "offset": {
-            "title": "Offset",
-            "type": "number"
-        },
-        "colormap": {
-            "title": "Colormap",
-            "type": "object",
-            "additionalProperties": {
-                "type": "array",
-                "items": [
-                    {
-                        "type": "integer"
-                    },
-                    {
-                        "type": "integer"
-                    },
-                    {
-                        "type": "integer"
-                    },
-                    {
-                        "type": "integer"
-                    }
-                ]
-            }
-        }
-    },
-    "required": [
-        "bounds",
-        "minzoom",
-        "maxzoom",
-        "band_metadata",
-        "band_descriptions",
-        "dtype",
-        "nodata_type"
-    ],
-    "definitions": {
-        "NodataTypes": {
-            "title": "NodataTypes",
-            "description": "rio-tiler Nodata types.",
             "enum": [
                 "Alpha",
                 "Mask",
@@ -520,9 +461,96 @@ print(Info.schema())
                 "Nodata",
                 "None"
             ],
+            "title": "Nodata Type",
             "type": "string"
+        },
+        "colorinterp": {
+            "anyOf": [
+                {
+                    "items": {
+                        "type": "string"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Colorinterp"
+        },
+        "scales": {
+            "anyOf": [
+                {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Scales"
+        },
+        "offsets": {
+            "anyOf": [
+                {
+                    "items": {
+                        "type": "number"
+                    },
+                    "type": "array"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Offsets"
+        },
+        "colormap": {
+            "anyOf": [
+                {
+                    "additionalProperties": {
+                        "maxItems": 4,
+                        "minItems": 4,
+                        "prefixItems": [
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "integer"
+                            },
+                            {
+                                "type": "integer"
+                            }
+                        ],
+                        "type": "array"
+                    },
+                    "type": "object"
+                },
+                {
+                    "type": "null"
+                }
+            ],
+            "default": null,
+            "title": "Colormap"
         }
-    }
+    },
+    "required": [
+        "bounds",
+        "crs",
+        "band_metadata",
+        "band_descriptions",
+        "dtype",
+        "nodata_type"
+    ],
+    "title": "Info",
+    "type": "object"
 }
 
 # Example
@@ -531,27 +559,75 @@ with Reader(
 ) as src:
     info = src.info()
 
-print(info["nodata_type"])
->>> "None"
-
 print(info.nodata_type)
 >>> "None"
 
-print(info.json(exclude_none=True))
+print(info.model_dump_json(exclude_none=True))
 >>> {
-    'bounds': [-61.287001876638215, 15.537756794450583, -61.27877967704677, 15.542486503997608],
-    'minzoom': 16,
-    'maxzoom': 22,
-    'band_metadata': [('b1', {}), ('b2', {}), ('b3', {})],
-    'band_descriptions': [('b1', ''), ('b2', ''), ('b3', '')],
-    'dtype': 'uint8',
-    'nodata_type': 'None',
-    'colorinterp': ['red', 'green', 'blue'],
-    'count': 3,
-    'driver': 'GTiff',
-    'height': 11666,
-    'overviews': [2, 4, 8, 16, 32, 64],
-    'width': 19836
+    "bounds": [
+        683715.3266400001,
+        1718548.5702,
+        684593.2680000002,
+        1719064.90736
+    ],
+    "crs": "http://www.opengis.net/def/crs/EPSG/0/32620",
+    "band_metadata": [
+        [
+            "b1",
+            {}
+        ],
+        [
+            "b2",
+            {}
+        ],
+        [
+            "b3",
+            {}
+        ]
+    ],
+    "band_descriptions": [
+        [
+            "b1",
+            ""
+        ],
+        [
+            "b2",
+            ""
+        ],
+        [
+            "b3",
+            ""
+        ]
+    ],
+    "dtype": "uint8",
+    "nodata_type": "Mask",
+    "colorinterp": [
+        "red",
+        "green",
+        "blue"
+    ],
+    "scales": [
+        1,
+        1,
+        1
+    ],
+    "offsets": [
+        0,
+        0,
+        0
+    ],
+    "driver": "GTiff",
+    "count": 3,
+    "width": 19836,
+    "height": 11666,
+    "overviews": [
+        2,
+        4,
+        8,
+        16,
+        32,
+        64
+    ]
 }
 ```
 
@@ -665,13 +741,10 @@ with Reader(
     stats = src.statistics()
     assert isinstance(stats["b1"], BandStatistics)
 
-print(stats["b1"]["min"])
->>> 0.0
-
 print(stats["b1"].min)
 >>> 0.0
 
-print(stats["b1"].json(exclude_none=True))
+print(stats["b1"].model_dump_json(exclude_none=True))
 >>> {
     "min": 0,
     "max": 255,

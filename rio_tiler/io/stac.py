@@ -254,7 +254,7 @@ class STACReader(MultiBaseReader):
             fetch(self.input, **self.fetch_options), self.input
         )
 
-        self.bounds = self.item.bbox
+        self.bounds = tuple(self.item.bbox)
         self.crs = WGS84_CRS
 
         if hasattr(self.item, "ext") and self.item.ext.has("proj"):

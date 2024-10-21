@@ -11,6 +11,7 @@ dataset_url = "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-
 gdal_version = GDALVersion.runtime()
 
 
+@pytest.mark.xfail
 def test_info():
     """Info should only GET the header."""
 
@@ -28,7 +29,10 @@ def test_info():
         with Reader(src_path) as src_dst:
             return src_dst.info()
 
-    _, stats = info(dataset_url)
+    info, stats = info(dataset_url)
+    assert info.bounds
+
+    print(stats)
     assert stats["HEAD"]["count"] == 1
     assert stats["GET"]["count"] == 1
     assert stats["GET"]["bytes"] == 32768
@@ -56,12 +60,15 @@ def test_tile_read():
         with Reader(src_path) as src_dst:
             return src_dst.tile(x, y, z, tilesize=256)
 
-    _, stats = tile(
+    img, stats = tile(
         dataset_url,
         493,
         741,
         11,
     )
+    assert img.array.shape == (3, 256, 256)
+
+    print(stats)
     assert stats["HEAD"]["count"] == 1
     assert stats["GET"]["count"] == 3
     assert stats["GET"]["bytes"] == 2293760

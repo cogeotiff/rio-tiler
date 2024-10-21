@@ -167,7 +167,7 @@ class SpatialMixin:
 
         """
         # bounds in TileMatrixSet's CRS
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        tile_bounds = tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)))
 
         if not self.tms.rasterio_crs == self.crs:
             # Transform the bounds to the dataset's CRS

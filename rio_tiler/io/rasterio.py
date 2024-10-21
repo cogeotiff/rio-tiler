@@ -280,13 +280,10 @@ class Reader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
-        dst_crs = self.tms.rasterio_crs
-
         return self.part(
-            tile_bounds,
-            dst_crs=dst_crs,
-            bounds_crs=dst_crs,
+            tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
+            dst_crs=self.tms.rasterio_crs,
+            bounds_crs=self.tms.rasterio_crs,
             height=tilesize,
             width=tilesize,
             max_size=None,
@@ -670,10 +667,8 @@ class ImageReader(Reader):
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
             )
 
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
-
         return self.part(
-            tile_bounds,
+            tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
             height=tilesize,
             width=tilesize,
             max_size=None,
