@@ -177,7 +177,7 @@ class XarrayReader(BaseReader):
         if nodata is not None:
             ds = ds.rio.write_nodata(nodata)
 
-        tile_bounds = self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))
+        tile_bounds = tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)))
         dst_crs = self.tms.rasterio_crs
 
         # Create source array by clipping the xarray dataset to extent of the tile.

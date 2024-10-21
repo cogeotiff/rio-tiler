@@ -83,6 +83,8 @@
 
 * `round` xarray dataset's bounds to avoid precision errors when checking for valid geographic bounding box
 
+* fix `bounds` type information
+
 # 6.7.0 (2024-09-05)
 
 * raise `MissingCRS` or `InvalidGeographicBounds` errors when Xarray datasets have wrong geographic metadata

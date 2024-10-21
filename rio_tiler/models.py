@@ -48,7 +48,7 @@ from rio_tiler.utils import (
 class Bounds(BaseModel):
     """Dataset Bounding box"""
 
-    bounds: BoundingBox
+    bounds: BBox
     crs: str
 
 
