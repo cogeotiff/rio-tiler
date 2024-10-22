@@ -811,17 +811,21 @@ def CRS_to_info(crs: CRS) -> Optional[Tuple[str, str, str]]:
 
 def CRS_to_uri(crs: CRS) -> Optional[str]:
     """Convert CRS to URI."""
-    if authority_version_code := CRS_to_info(crs):
-        authority, version, code = authority_version_code
+    if crs_info := CRS_to_info(crs):
+        authority, version, code = crs_info
+
         return f"http://www.opengis.net/def/crs/{authority}/{version}/{code}"
+
     return None
 
 
 def CRS_to_urn(crs: CRS) -> Optional[str]:
     """Convert CRS to URN."""
-    if authority_version_code := CRS_to_info(crs):
-        authority, version, code = authority_version_code
+    if crs_info := CRS_to_info(crs):
+        authority, version, code = crs_info
         if version == "0":
             version = ""
+
         return f"urn:ogc:def:crs:{authority}:{version}:{code}"
+
     return None
