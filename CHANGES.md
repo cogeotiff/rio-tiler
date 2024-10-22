@@ -1,3 +1,6 @@
+# 7.0.1 (2024-10-22)
+
+* Add `CRS_to_urn` method and update internals for `CRS_to_uri` (author @AndrewAnnex, https://github.com/cogeotiff/rio-tiler/pull/752)
 
 # 7.0.0 (2024-10-21)
 
