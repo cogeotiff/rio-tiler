@@ -791,7 +791,7 @@ def cast_to_sequence(val: Optional[Any] = None) -> Sequence:
     return val
 
 
-def CRS_to_info(crs: CRS) -> Optional[tuple[str, str, str]]:
+def CRS_to_info(crs: CRS) -> Optional[Tuple[str, str, str]]:
     """Convert CRS to URI.
 
     Code adapted from https://github.com/developmentseed/morecantile/blob/1829fe12408e4a1feee7493308f3f02257ef4caf/morecantile/models.py#L148-L161
