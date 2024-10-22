@@ -791,7 +791,7 @@ def cast_to_sequence(val: Optional[Any] = None) -> Sequence:
     return val
 
 
-def CRS_to_uri(crs: CRS) -> Optional[str]:
+def CRS_to_info(crs: pyproj.CRS) -> Optional[tuple[str, str, str]]:
     """Convert CRS to URI.
 
     Code adapted from https://github.com/developmentseed/morecantile/blob/1829fe12408e4a1feee7493308f3f02257ef4caf/morecantile/models.py#L148-L161
@@ -804,6 +804,24 @@ def CRS_to_uri(crs: CRS) -> Optional[str]:
         if "_" in authority:
             authority, version = authority.split("_")
 
-        return f"http://www.opengis.net/def/crs/{authority}/{version}/{code}"
+        return authority, version, code
 
+    return None
+
+
+def CRS_to_uri(crs: pyproj.CRS) -> Optional[str]:
+    """Convert CRS to URI."""
+    if authority_version_code := CRS_to_info(crs):
+        authority, version, code = authority_version_code
+        return f"http://www.opengis.net/def/crs/{authority}/{version}/{code}"
+    return None
+
+
+def CRS_to_urn(crs: pyproj.CRS) -> Optional[str]:
+    """Convert CRS to URN."""
+    if authority_version_code := CRS_to_info(crs):
+        authority, version, code = authority_version_code
+        if version == "0":
+            version = ""
+        return f"urn:ogc:def:crs:{authority}:{version}:{code}"
     return None
