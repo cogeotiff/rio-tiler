@@ -1,5 +1,11 @@
 # unreleased
 
+# 6.8.0 (2024-10-23)
+
+* Enable **Alternate** asset's HREF for STAC by using `RIO_TILER_STAC_ALTERNATE_KEY` environment variable [Backported from `7.0`]
+
+* Adding support for GDAL VRT Connection string for STAC Assets [Backported from `7.0`]
+
 # 6.7.0 (2024-09-05)
 
 * raise `MissingCRS` or `InvalidGeographicBounds` errors when Xarray datasets have wrong geographic metadata

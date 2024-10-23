@@ -3,7 +3,7 @@
 import json
 import os
 import warnings
-from typing import Any, Dict, Iterator, Optional, Set, Type, Union
+from typing import Any, Dict, Iterator, Optional, Set, Tuple, Type, Union
 from urllib.parse import urlparse
 
 import attr
@@ -40,6 +40,8 @@ DEFAULT_VALID_TYPE = {
     "application/x-hdf5",
     "application/x-hdf",
 }
+
+STAC_ALTERNATE_KEY = os.environ.get("RIO_TILER_STAC_ALTERNATE_KEY", None)
 
 
 def aws_get_object(
@@ -275,16 +277,34 @@ class STACReader(MultiBaseReader):
     def _maxzoom(self):
         return self.tms.maxzoom
 
+    def _parse_vrt_asset(self, asset: str) -> Tuple[str, Optional[str]]:
+        if asset.startswith("vrt://") and asset not in self.assets:
+            parsed = urlparse(asset)
+            if not parsed.netloc:
+                raise InvalidAssetName(
+                    f"'{asset}' is not valid, couldn't find valid asset"
+                )
+
+            if parsed.netloc not in self.assets:
+                raise InvalidAssetName(
+                    f"'{parsed.netloc}' is not valid, should be one of {self.assets}"
+                )
+
+            return parsed.netloc, parsed.query
+
+        return asset, None
+
     def _get_asset_info(self, asset: str) -> AssetInfo:
-        """Validate asset names and return asset's url.
+        """Validate asset names and return asset's info.
 
         Args:
             asset (str): STAC asset name.
 
         Returns:
-            str: STAC asset href.
+            AssetInfo: STAC asset info.
 
         """
+        asset, vrt_options = self._parse_vrt_asset(asset)
         if asset not in self.assets:
             raise InvalidAssetName(
                 f"'{asset}' is not valid, should be one of {self.assets}"
@@ -295,13 +315,19 @@ class STACReader(MultiBaseReader):
 
         info = AssetInfo(
             url=asset_info.get_absolute_href() or asset_info.href,
-            metadata=extras,
+            metadata=extras if not vrt_options else None,
         )
 
+        if STAC_ALTERNATE_KEY and extras.get("alternate"):
+            if alternate := extras["alternate"].get(STAC_ALTERNATE_KEY):
+                info["url"] = alternate["href"]
+
+        # https://github.com/stac-extensions/file
         if head := extras.get("file:header_size"):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
 
-        if bands := extras.get("raster:bands"):
+        # https://github.com/stac-extensions/raster
+        if (bands := extras.get("raster:bands")) and not vrt_options:
             stats = [
                 (b["statistics"]["minimum"], b["statistics"]["maximum"])
                 for b in bands
@@ -318,5 +344,8 @@ class STACReader(MultiBaseReader):
                 warnings.warn(
                     "Some statistics data in STAC are invalid, they will be ignored."
                 )
+
+        if vrt_options:
+            info["url"] = f"vrt://{info['url']}?{vrt_options}"
 
         return info
