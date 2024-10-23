@@ -1,0 +1,304 @@
+{
+  "type": "Feature",
+  "stac_version": "1.0.0",
+  "id": "gribfile",
+  "properties": {
+    "proj:geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -180.125,
+            -89.875
+          ],
+          [
+            179.875,
+            -89.875
+          ],
+          [
+            179.875,
+            90.125
+          ],
+          [
+            -180.125,
+            90.125
+          ],
+          [
+            -180.125,
+            -89.875
+          ]
+        ]
+      ]
+    },
+    "proj:bbox": [
+      -180.125,
+      -89.875,
+      179.875,
+      90.125
+    ],
+    "proj:shape": [
+      18,
+      36
+    ],
+    "proj:transform": [
+      10.0,
+      0.0,
+      -180.125,
+      0.0,
+      -10.0,
+      90.125,
+      0.0,
+      0.0,
+      1.0
+    ],
+    "proj:wkt2": "GEOGCS[\"Coordinate System imported from GRIB file\",DATUM[\"unnamed\",SPHEROID[\"Sphere\",6371229,0]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST]]",
+    "datetime": "2024-09-13T11:08:36.893626Z"
+  },
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -180.125,
+          -89.875
+        ],
+        [
+          179.875,
+          -89.875
+        ],
+        [
+          179.875,
+          90.125
+        ],
+        [
+          -180.125,
+          90.125
+        ],
+        [
+          -180.125,
+          -89.875
+        ]
+      ]
+    ]
+  },
+  "links": [],
+  "assets": {
+    "asset": {
+      "href": "gfs.t06z.pgrb2.10p0.f010.grib2",
+      "raster:bands": [
+        {
+          "data_type": "float64",
+          "scale": 1.0,
+          "offset": 0.0,
+          "statistics": {
+            "mean": -12.643815520808767,
+            "minimum": -20.000003814697266,
+            "maximum": 32.659996032714844,
+            "stddev": 12.448285782027321,
+            "valid_percent": 0.15432098765432098
+          },
+          "histogram": {
+            "count": 11,
+            "min": -20.000003814697266,
+            "max": 32.659996032714844,
+            "buckets": [
+              449,
+              27,
+              29,
+              31,
+              35,
+              29,
+              15,
+              21,
+              9,
+              3
+            ]
+          }
+        },
+        {
+          "data_type": "float64",
+          "scale": 1.0,
+          "offset": 0.0,
+          "statistics": {
+            "mean": -12.609587132580073,
+            "minimum": -20.000003814697266,
+            "maximum": 32.66999435424805,
+            "stddev": 12.450450829609293,
+            "valid_percent": 0.15432098765432098
+          },
+          "histogram": {
+            "count": 11,
+            "min": -20.000003814697266,
+            "max": 32.66999435424805,
+            "buckets": [
+              447,
+              27,
+              31,
+              29,
+              39,
+              28,
+              14,
+              21,
+              9,
+              3
+            ]
+          }
+        },
+        {
+          "data_type": "float64",
+          "scale": 1.0,
+          "offset": 0.0,
+          "statistics": {
+            "mean": -10.566084066483503,
+            "minimum": -20.000003814697266,
+            "maximum": 32.76999282836914,
+            "stddev": 13.981093035778388,
+            "valid_percent": 0.15432098765432098
+          },
+          "histogram": {
+            "count": 11,
+            "min": -20.000003814697266,
+            "max": 32.76999282836914,
+            "buckets": [
+              412,
+              25,
+              31,
+              27,
+              34,
+              49,
+              32,
+              20,
+              11,
+              7
+            ]
+          }
+        },
+        {
+          "data_type": "float64",
+          "scale": 1.0,
+          "offset": 0.0,
+          "statistics": {
+            "mean": 20302.916205571022,
+            "minimum": 24.859272003173828,
+            "maximum": 24134.859375,
+            "stddev": 7731.471190491879,
+            "valid_percent": 0.15432098765432098
+          },
+          "histogram": {
+            "count": 11,
+            "min": 24.859272003173828,
+            "max": 24134.859375,
+            "buckets": [
+              49,
+              24,
+              17,
+              11,
+              8,
+              6,
+              11,
+              11,
+              11,
+              500
+            ]
+          }
+        },
+        {
+          "data_type": "float64",
+          "scale": 1.0,
+          "offset": 0.0,
+          "statistics": {
+            "mean": -0.13451403068101184,
+            "minimum": -18.402570724487305,
+            "maximum": 29.097431182861328,
+            "stddev": 7.346453975073525,
+            "valid_percent": 0.15432098765432098
+          },
+          "histogram": {
+            "count": 11,
+            "min": -18.402570724487305,
+            "max": 29.097431182861328,
+            "buckets": [
+              16,
+              47,
+              120,
+              191,
+              153,
+              64,
+              32,
+              15,
+              8,
+              2
+            ]
+          }
+        },
+        {
+          "data_type": "float64",
+          "scale": 1.0,
+          "offset": 0.0,
+          "statistics": {
+            "mean": 0.3850667698676755,
+            "minimum": -27.066476821899414,
+            "maximum": 20.933523178100586,
+            "stddev": 6.63843088754233,
+            "valid_percent": 0.15432098765432098
+          },
+          "histogram": {
+            "count": 11,
+            "min": -27.066476821899414,
+            "max": 20.933523178100586,
+            "buckets": [
+              2,
+              7,
+              15,
+              34,
+              106,
+              212,
+              175,
+              64,
+              25,
+              8
+            ]
+          }
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "1[-] HYBL=\"Hybrid level\""
+        },
+        {
+          "name": "b2",
+          "description": "2[-] HYBL=\"Hybrid level\""
+        },
+        {
+          "name": "b3",
+          "description": "0[-] EATM=\"Entire Atmosphere\""
+        },
+        {
+          "name": "b4",
+          "description": "0[-] SFC=\"Ground or water surface\""
+        },
+        {
+          "name": "b5",
+          "description": "0[-] RESERVED(220) (Reserved for local use)"
+        },
+        {
+          "name": "b6",
+          "description": "0[-] RESERVED(220) (Reserved for local use)"
+        }
+      ],
+      "roles": []
+    }
+  },
+  "bbox": [
+    -180.125,
+    -89.875,
+    179.875,
+    90.125
+  ],
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
+  ]
+}

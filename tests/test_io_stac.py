@@ -19,6 +19,7 @@ from rio_tiler.errors import (
     TileOutsideBounds,
 )
 from rio_tiler.io import Reader, STACReader
+from rio_tiler.io.stac import DEFAULT_VALID_TYPE
 from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -27,6 +28,8 @@ STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
 STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
 STAC_WRONGSTATS_PATH = os.path.join(PREFIX, "stac_wrong_stats.json")
+STAC_ALTERNATE_PATH = os.path.join(PREFIX, "stac_alternate.json")
+STAC_GRIB_PATH = os.path.join(PREFIX, "stac_grib.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -890,3 +893,52 @@ def test_expression_with_wrong_stac_stats(rio):
                 expression="where((wrongstat>0.5),1,0)",
                 asset_as_band=True,
             )
+
+
+@patch("rio_tiler.io.stac.STAC_ALTERNATE_KEY", "s3")
+def test_alternate_assets():
+    """Should return the alternate key"""
+    with STACReader(STAC_ALTERNATE_PATH) as stac:
+        assert stac._get_asset_info("red")["url"].startswith("s3://")
+        # fall back to href when alternate doesn't exist
+        assert stac._get_asset_info("blue")["url"].startswith("http://")
+
+
+def test_vrt_string_assets():
+    """Should work with VRT connection string"""
+    VALID_TYPE = {
+        *DEFAULT_VALID_TYPE,
+        "application/wmo-GRIB2",
+    }
+
+    with STACReader(STAC_GRIB_PATH, include_asset_types=VALID_TYPE) as stac:
+        assert stac.assets == ["asset"]
+        info = stac._get_asset_info("asset")
+        assert info["url"]
+
+        info_vrt = stac._get_asset_info("vrt://asset")
+        # without any option there is no need to use the vrt prefix
+        assert info["url"] == info_vrt["url"]
+
+        info_vrt = stac._get_asset_info("vrt://asset?bands=1")
+        assert not info["url"] == info_vrt["url"]
+        assert info_vrt["url"].startswith("vrt://") and info_vrt["url"].endswith(
+            "?bands=1"
+        )
+
+        with pytest.raises(InvalidAssetName):
+            stac._get_asset_info("vrt://somthing?bands=1")
+
+        with pytest.raises(InvalidAssetName):
+            stac._get_asset_info("vrt://?bands=1")
+
+        info = stac.info(assets="vrt://asset?bands=1")
+        assert info["vrt://asset?bands=1"]
+        assert len(info["vrt://asset?bands=1"].band_metadata) == 1
+
+        info = stac.info(assets="vrt://asset?bands=1,2")
+        assert info["vrt://asset?bands=1,2"]
+        assert len(info["vrt://asset?bands=1,2"].band_metadata) == 2
+
+        img = stac.preview(assets="vrt://asset?bands=1")
+        assert img.count == 1
