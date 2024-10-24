@@ -6,6 +6,7 @@ import warnings
 from typing import Dict, List, Optional
 
 import attr
+import numpy
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
@@ -129,8 +130,12 @@ class XarrayReader(BaseReader):
             "count": self.input.rio.count,
             "width": self.input.rio.width,
             "height": self.input.rio.height,
-            "attrs": self.input.attrs,
+            "attrs": {
+                k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
+                for k, v in self.input.attrs.items()
+            },
         }
+
         return Info(**meta)
 
     def statistics(

@@ -175,12 +175,23 @@ def test_xarray_reader():
             "time": [datetime(2022, 1, 1)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update(
+        {
+            "valid_min": numpy.int16(0),
+            "valid_max": numpy.int8(10),
+            "valid_range": numpy.array([arr.min(), arr.max()]),
+        }
+    )
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
         assert dst.minzoom == 5
         assert dst.maxzoom == 7
+        info = dst.info()
+        assert info
+        assert info.model_dump()
+        assert info.model_dump(mode="json")
+        assert info.model_dump_json()
 
 
 def test_xarray_reader_external_nodata():
