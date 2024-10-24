@@ -151,16 +151,16 @@ def test_xarray_reader():
         img = dst.feature(feat)
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
-        assert img.array.shape == (1, 25, 30)
+        assert img.array.shape == (1, 25, 32)
 
         img = dst.feature(feat, dst_crs="epsg:3857")
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
         assert img.crs == "epsg:3857"
-        assert img.array.shape == (1, 20, 33)
+        assert img.array.shape == (1, 20, 35)
 
         img = dst.feature(feat, max_size=15)
-        assert img.array.shape == (1, 13, 15)
+        assert img.array.shape == (1, 12, 15)
 
         img = dst.feature(feat, width=50, height=45)
         assert img.array.shape == (1, 45, 50)

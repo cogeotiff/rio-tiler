@@ -10,9 +10,13 @@ import numpy
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
+from rasterio.errors import NotGeoreferencedWarning
+from rasterio.features import bounds as featureBounds
+from rasterio.features import rasterize
 from rasterio.transform import from_bounds, rowcol
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
+from rasterio.warp import transform_geom
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -463,6 +467,7 @@ class XarrayReader(BaseReader):
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
         reproject_method: WarpResampling = "nearest",
+        auto_expand: bool = True,
         nodata: Optional[NoData] = None,
         max_size: Optional[int] = None,
         height: Optional[int] = None,
@@ -476,6 +481,7 @@ class XarrayReader(BaseReader):
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
@@ -486,66 +492,46 @@ class XarrayReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        if max_size and width and height:
-            warnings.warn(
-                "'max_size' will be ignored with with 'height' and 'width' set.",
-                UserWarning,
-            )
+        shape = _validate_shape_input(shape)
 
         if not dst_crs:
             dst_crs = shape_crs
 
-        shape = _validate_shape_input(shape)
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
 
-        ds = self.input
-        if nodata is not None:
-            ds = ds.rio.write_nodata(nodata)
-
-        ds = ds.rio.clip([shape], crs=shape_crs)
-
-        if dst_crs != self.crs:
-            dst_transform, w, h = calculate_default_transform(
-                self.crs,
-                dst_crs,
-                ds.rio.width,
-                ds.rio.height,
-                *ds.rio.bounds(),
-            )
-            ds = ds.rio.reproject(
-                dst_crs,
-                shape=(h, w),
-                transform=dst_transform,
-                resampling=Resampling[reproject_method],
-                nodata=nodata,
-            )
-
-        # Forward valid_min/valid_max to the ImageData object
-        minv, maxv = ds.attrs.get("valid_min"), ds.attrs.get("valid_max")
-        stats = None
-        if minv is not None and maxv is not None:
-            stats = ((minv, maxv),) * ds.rio.count
-
-        arr = ds.to_masked_array()
-        arr.mask |= arr.data == ds.rio.nodata
-
-        img = ImageData(
-            arr,
-            bounds=ds.rio.bounds(),
-            crs=ds.rio.crs,
-            dataset_statistics=stats,
-            band_names=self.band_names,
+        img = self.part(
+            bbox,
+            dst_crs=dst_crs,
+            bounds_crs=shape_crs,
+            nodata=nodata,
+            max_size=max_size,
+            width=width,
+            height=height,
+            reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
 
-        output_height = height or img.height
-        output_width = width or img.width
-        if max_size and not (width and height):
-            output_height, output_width = _get_width_height(
-                max_size, img.height, img.width
-            )
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
 
-        if output_height != img.height or output_width != img.width:
-            img = img.resize(
-                output_height, output_width, resampling_method=resampling_method
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
             )
+            cutline_mask = rasterize(
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            ).astype("bool")
+
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
 
         return img
