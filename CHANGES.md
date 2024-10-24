@@ -1,3 +1,9 @@
+# 7.1.0 (TBD)
+
+* Add `preview()` and `statistics()` methods to XarrayReader (https://github.com/cogeotiff/rio-tiler/pull/755)
+
+* Add output size (`max_size` | `width`, `height`) options for `preview`, `part` and `feature` methods (https://github.com/cogeotiff/rio-tiler/pull/755)
+
 # 7.0.1 (2024-10-22)
 
 * Add `CRS_to_urn` method and update internals for `CRS_to_uri` (author @AndrewAnnex, https://github.com/cogeotiff/rio-tiler/pull/752)
