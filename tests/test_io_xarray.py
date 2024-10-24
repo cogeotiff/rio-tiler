@@ -42,6 +42,10 @@ def test_xarray_reader():
         assert info.attrs
 
     with XarrayReader(data) as dst:
+        stats = dst.statistics()
+        assert stats["2022-01-01T00:00:00.000000000"]
+        assert stats["2022-01-01T00:00:00.000000000"].min == 0.0
+
         img = dst.tile(0, 0, 0)
         assert img.count == 1
         assert img.width == 256
@@ -69,8 +73,49 @@ def test_xarray_reader():
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         img = dst.part((-160, -80, 160, 80))
+        assert img.crs == "epsg:4326"
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 33, 33)
+
+        img = dst.part((-160, -80, 160, 80), dst_crs="epsg:3857")
+        assert img.crs == "epsg:3857"
+        assert img.count == 1
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 32, 34)
+
+        img = dst.part((-160, -80, 160, 80), max_size=15)
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.part((-160, -80, 160, 80), width=40, height=35)
+        assert img.array.shape == (1, 35, 40)
+
+        img = dst.part((-160, -80, 160, 80), max_size=15, resampling_method="bilinear")
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.preview()
+        assert img.crs == "epsg:4326"
+        assert img.count == 1
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 33, 35)
+
+        img = dst.preview(dst_crs="epsg:3857")
+        assert img.crs == "epsg:3857"
+        assert img.count == 1
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 32, 36)
+
+        img = dst.preview(max_size=None)
+        assert img.array.shape == (1, 33, 35)
+
+        img = dst.preview(max_size=15)
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.preview(max_size=15, resampling_method="bilinear")
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.preview(height=25, width=25, max_size=None)
+        assert img.array.shape == (1, 25, 25)
 
         pt = dst.point(0, 0)
         assert pt.count == 1
@@ -106,11 +151,19 @@ def test_xarray_reader():
         img = dst.feature(feat)
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 25, 30)
 
         img = dst.feature(feat, dst_crs="epsg:3857")
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
-        assert img.crs.to_epsg() == 3857
+        assert img.crs == "epsg:3857"
+        assert img.array.shape == (1, 20, 33)
+
+        img = dst.feature(feat, max_size=15)
+        assert img.array.shape == (1, 13, 15)
+
+        img = dst.feature(feat, width=50, height=45)
+        assert img.array.shape == (1, 45, 50)
 
     arr = numpy.zeros((1, 1000, 2000))
     data = xarray.DataArray(
