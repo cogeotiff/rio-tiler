@@ -752,7 +752,9 @@ def test_equality_part_feature():
         }
         img_feat = src.feature(feat)
 
-        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326", op=math.floor)
+        cutline = create_cutline(
+            src.dataset, feat, geometry_crs="epsg:4326", op=math.floor
+        )
         bbox = featureBounds(feat)
         img_part = src.part(bbox, vrt_options={"cutline": cutline})
 
@@ -763,11 +765,14 @@ def test_equality_part_feature():
         # I would assume this is due to rounding issue or reprojection of the cutline by GDAL
         # After some debugging locally I found out the rasterized mask is more precise
         # numpy.testing.assert_array_equal(img_part.mask, img_feat.mask)
+        # NOTE reply: can this rounding be fixed with a different operator passed to rasterio rowcol?
 
         # Re-Projection
         img_feat = src.feature(feat, dst_crs="epsg:3857")
 
-        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326", op=math.floor)
+        cutline = create_cutline(
+            src.dataset, feat, geometry_crs="epsg:4326", op=math.floor
+        )
         bbox = featureBounds(feat)
         img_part = src.part(bbox, vrt_options={"cutline": cutline}, dst_crs="epsg:3857")
 

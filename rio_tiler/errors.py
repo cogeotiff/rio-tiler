@@ -91,3 +91,7 @@ class MissingCRS(RioTilerError):
 
 class InvalidGeographicBounds(RioTilerError):
     """Invalid Geographic bounds."""
+
+
+class InvalidRowColOperator(RioTilerError):
+    """The rasterio rowcol 'op' parameter must be one of: math.floor, math.ceil, or round."""

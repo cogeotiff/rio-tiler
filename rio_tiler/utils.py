@@ -33,7 +33,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
-from rio_tiler.errors import RioTilerError
+from rio_tiler.errors import InvalidRowColOperator, RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
 
@@ -122,9 +122,12 @@ def get_array_statistics(
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
 
     if coverage is not None:
-        assert coverage.shape == (
-            data.shape[1],
-            data.shape[2],
+        assert (
+            coverage.shape
+            == (
+                data.shape[1],
+                data.shape[2],
+            )
         ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
 
     else:
@@ -649,7 +652,7 @@ def pansharpening_brovey(
 def _convert_to_raster_space(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     poly_coordinates: List,
-    op: Callable[[float], int]
+    op: Callable[[float], int],
 ) -> List[str]:
     polygons = []
     for point in poly_coordinates:
@@ -683,7 +686,9 @@ def create_cutline(
 
     # Validate that the function provided is one of the allowed methods
     if op not in {math.floor, math.ceil, round}:
-        raise RioTilerError("The 'op' parameter must be one of: math.floor, math.ceil, or round.")
+        raise InvalidRowColOperator(
+            "The rasterio rowcol 'op' parameter must be one of: math.floor, math.ceil, or round."
+        )
 
     geometry = _validate_shape_input(geometry)
     geom_type = geometry["type"]

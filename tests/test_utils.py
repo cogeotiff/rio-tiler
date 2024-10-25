@@ -17,7 +17,7 @@ from rasterio.io import MemoryFile
 
 from rio_tiler import colormap, utils
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import RioTilerError
+from rio_tiler.errors import InvalidRowColOperator, RioTilerError
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import Reader
 
@@ -289,7 +289,9 @@ def test_cutline():
     feature_bounds = featureBounds(feat)
 
     with Reader(COGEO) as src:
-        cutline = utils.create_cutline(src.dataset, feat, geometry_crs="epsg:4326", op=math.floor)
+        cutline = utils.create_cutline(
+            src.dataset, feat, geometry_crs="epsg:4326", op=math.floor
+        )
         data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
 
@@ -315,7 +317,9 @@ def test_cutline():
 
     with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(src.dataset, feat_line, geometry_crs="epsg:4326", op=math.floor)
+            utils.create_cutline(
+                src.dataset, feat_line, geometry_crs="epsg:4326", op=math.floor
+            )
 
     feat_mp = {
         "type": "MultiPolygon",
@@ -342,7 +346,9 @@ def test_cutline():
     }
 
     with Reader(COGEO) as src:
-        c = utils.create_cutline(src.dataset, feat_mp, geometry_crs="epsg:4326", op=math.floor)
+        c = utils.create_cutline(
+            src.dataset, feat_mp, geometry_crs="epsg:4326", op=math.floor
+        )
         assert "MULTIPOLYGON" in c
 
     bad_poly = {
@@ -362,7 +368,9 @@ def test_cutline():
 
     with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(src.dataset, bad_poly, geometry_crs="epsg:4326", op=math.floor)
+            utils.create_cutline(
+                src.dataset, bad_poly, geometry_crs="epsg:4326", op=math.floor
+            )
 
     triangle_over_image_edge = {
         "type": "Polygon",
@@ -387,6 +395,14 @@ def test_cutline():
         assert sum(mask[:, 0]) == 0  # first column
         assert sum(mask[0, :]) == 0  # first line
         assert sum(mask[-1, :]) == 0  # last line
+
+    # Check create_cutline operator callable is one of rasterio rowcol accepted method
+    with Reader(COGEO) as src:
+        invalid_op = abs
+        with pytest.raises(InvalidRowColOperator):
+            utils.create_cutline(
+                src.dataset, bad_poly, geometry_crs="epsg:4326", op=invalid_op
+            )
 
 
 def test_parse_expression():
