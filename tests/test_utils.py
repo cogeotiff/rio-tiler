@@ -289,12 +289,12 @@ def test_cutline():
     feature_bounds = featureBounds(feat)
 
     with Reader(COGEO) as src:
-        cutline = utils.create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        cutline = utils.create_cutline(src.dataset, feat, geometry_crs="epsg:4326", op=math.floor)
         data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
 
         cutline = utils.create_cutline(
-            src.dataset, feat["geometry"], geometry_crs="epsg:4326"
+            src.dataset, feat["geometry"], geometry_crs="epsg:4326", op=math.floor
         )
         data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
@@ -315,7 +315,7 @@ def test_cutline():
 
     with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(src.dataset, feat_line, geometry_crs="epsg:4326")
+            utils.create_cutline(src.dataset, feat_line, geometry_crs="epsg:4326", op=math.floor)
 
     feat_mp = {
         "type": "MultiPolygon",
@@ -342,7 +342,7 @@ def test_cutline():
     }
 
     with Reader(COGEO) as src:
-        c = utils.create_cutline(src.dataset, feat_mp, geometry_crs="epsg:4326")
+        c = utils.create_cutline(src.dataset, feat_mp, geometry_crs="epsg:4326", op=math.floor)
         assert "MULTIPOLYGON" in c
 
     bad_poly = {
@@ -362,7 +362,7 @@ def test_cutline():
 
     with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(src.dataset, bad_poly, geometry_crs="epsg:4326")
+            utils.create_cutline(src.dataset, bad_poly, geometry_crs="epsg:4326", op=math.floor)
 
     triangle_over_image_edge = {
         "type": "Polygon",
@@ -381,7 +381,7 @@ def test_cutline():
     triangle_bounds = featureBounds(triangle_over_image_edge)
     with Reader(COG_RGB) as src:
         cutline = utils.create_cutline(
-            src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326"
+            src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326", op=math.floor
         )
         data, mask = src.part(triangle_bounds, vrt_options={"cutline": cutline})
         assert sum(mask[:, 0]) == 0  # first column

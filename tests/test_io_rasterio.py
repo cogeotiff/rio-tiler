@@ -1,5 +1,6 @@
 """tests rio_tiler.io.rasterio.Reader"""
 
+import math
 import os
 from io import BytesIO
 from typing import Any, Dict
@@ -751,7 +752,7 @@ def test_equality_part_feature():
         }
         img_feat = src.feature(feat)
 
-        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326", op=math.floor)
         bbox = featureBounds(feat)
         img_part = src.part(bbox, vrt_options={"cutline": cutline})
 
@@ -766,7 +767,7 @@ def test_equality_part_feature():
         # Re-Projection
         img_feat = src.feature(feat, dst_crs="epsg:3857")
 
-        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
+        cutline = create_cutline(src.dataset, feat, geometry_crs="epsg:4326", op=math.floor)
         bbox = featureBounds(feat)
         img_part = src.part(bbox, vrt_options={"cutline": cutline}, dst_crs="epsg:3857")
 
