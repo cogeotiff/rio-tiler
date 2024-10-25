@@ -239,6 +239,11 @@ class XarrayReader(BaseReader):
         arr = ds.to_masked_array()
         arr.mask |= arr.data == ds.rio.nodata
 
+        output_bounds = ds.rio._unordered_bounds()
+        if output_bounds[1] > output_bounds[3] and ds.rio.transform().e > 0:
+            yaxis = self.input.dims.index(self.input.rio.y_dim)
+            arr = numpy.flip(arr, axis=yaxis)
+
         return ImageData(
             arr,
             bounds=tile_bounds,
@@ -321,6 +326,11 @@ class XarrayReader(BaseReader):
         arr = ds.to_masked_array()
         arr.mask |= arr.data == ds.rio.nodata
 
+        output_bounds = ds.rio._unordered_bounds()
+        if output_bounds[1] > output_bounds[3] and ds.rio.transform().e > 0:
+            yaxis = self.input.dims.index(self.input.rio.y_dim)
+            arr = numpy.flip(arr, axis=yaxis)
+
         img = ImageData(
             arr,
             bounds=ds.rio.bounds(),
@@ -402,6 +412,11 @@ class XarrayReader(BaseReader):
 
         arr = ds.to_masked_array()
         arr.mask |= arr.data == ds.rio.nodata
+
+        output_bounds = ds.rio._unordered_bounds()
+        if output_bounds[1] > output_bounds[3] and ds.rio.transform().e > 0:
+            yaxis = self.input.dims.index(self.input.rio.y_dim)
+            arr = numpy.flip(arr, axis=yaxis)
 
         img = ImageData(
             arr,

@@ -525,3 +525,77 @@ def test_xarray_reader_no_dims():
         assert img.height == 256
         assert img.band_names == ["value"]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
+
+        img = dst.part((-160, -80, 160, 80))
+        assert img.count == 1
+        assert img.width == 33
+        assert img.height == 33
+        assert img.band_names == ["value"]
+        assert img.dataset_statistics == ((arr.min(), arr.max()),)
+
+
+def test_xarray_reader_Y_axis():
+    """test XarrayReader with 2D dataset."""
+    # Create a DataArray where the y coordinates are in increasing order
+    # (this is the opposite of typical raster data)
+    # This array will have a positive y resolution in the affine transform
+    # and the data values increase with the y coordinates
+    arr = numpy.arange(0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    # make sure the data is inverted
+    # y resolution is Positive and origin is bottom left
+    left, bottom, right, top = data.rio._unordered_bounds()
+    assert bottom > top
+    assert data.rio.transform().e > 0
+
+    with XarrayReader(data) as dst:
+        assert dst.bounds == (left, top, right, bottom)
+        img = dst.preview()
+        assert img.bounds == dst.bounds
+        assert img.array[0, 0, 0] > img.array[0, -1, -1]
+
+        img = dst.tile(1, 1, 2)
+        assert img.array[0, 0, 0] > img.array[0, -1, -1]
+
+    # Create a DataArray where the y coordinates are in decreasing order
+    # (this is typical for raster data)
+    # This array will have a negative y resolution in the affine transform
+    # and the data values decrease with the y coordinates
+    arr = numpy.arange(0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.flip(numpy.arange(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    # make sure the data is NOT inverted
+    # y resolution is Negative and origin is top left
+    left, bottom, right, top = data.rio._unordered_bounds()
+    assert bottom < top
+    assert data.rio.transform().e < 0
+
+    with XarrayReader(data) as dst:
+        assert dst.bounds == (left, bottom, right, top)
+        img = dst.preview()
+        assert img.bounds == dst.bounds
+        assert img.array[0, 0, 0] < img.array[0, -1, -1]
+
+        img = dst.tile(1, 1, 2)
+        assert img.array[0, 0, 0] < img.array[0, -1, -1]
