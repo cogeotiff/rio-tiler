@@ -112,12 +112,9 @@ def get_array_statistics(
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
 
     if coverage is not None:
-        assert (
-            coverage.shape
-            == (
-                data.shape[1],
-                data.shape[2],
-            )
+        assert coverage.shape == (
+            data.shape[1],
+            data.shape[2],
         ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
 
     else:
@@ -642,11 +639,12 @@ def pansharpening_brovey(
 def _convert_to_raster_space(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     poly_coordinates: List,
+    op: Union[math.floor, math.ceil, round],
 ) -> List[str]:
     polygons = []
     for point in poly_coordinates:
         xs, ys = zip(*coords(point))
-        src_y, src_x = rowcol(src_dst.transform, xs, ys)
+        src_y, src_x = rowcol(src_dst.transform, xs, ys, op=op)
         polygon = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
         polygons.append(f"({polygon})")
 
@@ -657,6 +655,7 @@ def create_cutline(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     geometry: Dict,
     geometry_crs: CRS = None,
+    op: Union[math.floor, math.ceil, round] = math.floor,
 ) -> str:
     """
     Create WKT Polygon Cutline for GDALWarpOptions.
@@ -678,13 +677,13 @@ def create_cutline(
         geometry = transform_geom(geometry_crs, src_dst.crs, geometry)
 
     if geom_type == "Polygon":
-        polys = ",".join(_convert_to_raster_space(src_dst, geometry["coordinates"]))
+        polys = ",".join(_convert_to_raster_space(src_dst, geometry["coordinates"], op))
         wkt = f"POLYGON ({polys})"
 
     elif geom_type == "MultiPolygon":
         multi_polys = []
         for poly in geometry["coordinates"]:
-            polys = ",".join(_convert_to_raster_space(src_dst, poly))
+            polys = ",".join(_convert_to_raster_space(src_dst, poly, op))
             multi_polys.append(f"({polys})")
         str_multipoly = ",".join(multi_polys)
         wkt = f"MULTIPOLYGON ({str_multipoly})"
