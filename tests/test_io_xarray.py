@@ -568,6 +568,10 @@ def test_xarray_reader_Y_axis():
         img = dst.tile(1, 1, 2)
         assert img.array[0, 0, 0] > img.array[0, -1, -1]
 
+    # Create a DataArray where the y coordinates are in decreasing order
+    # (this is typical for raster data)
+    # This array will have a negative y resolution in the affine transform
+    # and the data values decrease with the y coordinates
     arr = numpy.arange(0, 33 * 35).reshape(1, 33, 35)
     data = xarray.DataArray(
         arr,
