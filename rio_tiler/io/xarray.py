@@ -83,11 +83,14 @@ class XarrayReader(BaseReader):
                 "Dataset doesn't have CRS information, please add it before using rio-tiler (e.g. `ds.rio.write_crs('epsg:4326', inplace=True)`)"
             )
 
+        # adds half x/y resolution on each values
+        # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634
+        xres, yres = map(abs, self.input.rio.resolution())
         if self.crs == WGS84_CRS and (
-            round(self.bounds[0]) < -180
-            or round(self.bounds[1]) < -90
-            or round(self.bounds[2]) > 180
-            or round(self.bounds[3]) > 90
+            self.bounds[0] + xres / 2 < -180
+            or self.bounds[1] + yres / 2 < -90
+            or self.bounds[2] - xres / 2 > 180
+            or self.bounds[3] - yres / 2 > 90
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
@@ -116,12 +119,16 @@ class XarrayReader(BaseReader):
     @property
     def band_names(self) -> List[str]:
         """Return list of `band names` in DataArray."""
-        return [str(band) for d in self._dims for band in self.input[d].values]
+        return [str(band) for d in self._dims for band in self.input[d].values] or [
+            "value"
+        ]
 
     def info(self) -> Info:
         """Return xarray.DataArray info."""
-        bands = [str(band) for d in self._dims for band in self.input[d].values]
-        metadata = [band.attrs for d in self._dims for band in self.input[d]]
+        bands = [str(band) for d in self._dims for band in self.input[d].values] or [
+            "value"
+        ]
+        metadata = [band.attrs for d in self._dims for band in self.input[d]] or [{}]
 
         meta = {
             "bounds": self.bounds,

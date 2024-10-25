@@ -485,3 +485,43 @@ def test_xarray_reader_invalid_bounds_crs():
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data):
         pass
+
+
+def test_xarray_reader_no_dims():
+    """test XarrayReader with 2D dataset."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data) as dst:
+        assert dst.minzoom == dst.maxzoom == 0
+        info = dst.info()
+        assert info.bounds == dst.bounds
+        crs = info.crs
+        assert rioCRS.from_user_input(crs) == dst.crs
+        assert info.band_metadata == [("b1", {})]
+        assert info.band_descriptions == [("b1", "value")]
+        assert info.height == 33
+        assert info.width == 35
+        assert info.count == 1
+        assert info.attrs
+
+    with XarrayReader(data) as dst:
+        stats = dst.statistics()
+        assert stats["value"]
+        assert stats["value"].min == 0.0
+
+        img = dst.tile(0, 0, 0)
+        assert img.count == 1
+        assert img.width == 256
+        assert img.height == 256
+        assert img.band_names == ["value"]
+        assert img.dataset_statistics == ((arr.min(), arr.max()),)
