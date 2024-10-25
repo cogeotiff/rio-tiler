@@ -536,6 +536,10 @@ def test_xarray_reader_no_dims():
 
 def test_xarray_reader_Y_axis():
     """test XarrayReader with 2D dataset."""
+    # Create a DataArray where the y coordinates are in increasing order
+    # (this is the opposite of typical raster data)
+    # This array will have a positive y resolution in the affine transform
+    # and the data values increase with the y coordinates
     arr = numpy.arange(0, 33 * 35).reshape(1, 33, 35)
     data = xarray.DataArray(
         arr,
