@@ -3,7 +3,17 @@
 import math
 import warnings
 from io import BytesIO
-from typing import Any, Dict, Generator, List, Optional, Sequence, Tuple, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Generator,
+    List,
+    Optional,
+    Sequence,
+    Tuple,
+    Union,
+)
 
 import numpy
 import rasterio
@@ -639,7 +649,7 @@ def pansharpening_brovey(
 def _convert_to_raster_space(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     poly_coordinates: List,
-    op: Union[math.floor, math.ceil, round],
+    op: Callable[[float], int]
 ) -> List[str]:
     polygons = []
     for point in poly_coordinates:
@@ -655,7 +665,7 @@ def create_cutline(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     geometry: Dict,
     geometry_crs: CRS = None,
-    op: Union[math.floor, math.ceil, round] = math.floor,
+    op: Callable[[float], int] = math.floor,
 ) -> str:
     """
     Create WKT Polygon Cutline for GDALWarpOptions.
@@ -670,6 +680,11 @@ def create_cutline(
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 
     """
+
+    # Validate that the function provided is one of the allowed methods
+    if op not in {math.floor, math.ceil, round}:
+        raise RioTilerError("The 'op' parameter must be one of: math.floor, math.ceil, or round.")
+
     geometry = _validate_shape_input(geometry)
     geom_type = geometry["type"]
 
