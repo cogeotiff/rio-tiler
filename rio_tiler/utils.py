@@ -652,7 +652,7 @@ def pansharpening_brovey(
 def _convert_to_raster_space(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     poly_coordinates: List,
-    op: Optional[Callable[[float], Union[int, float]]] = None,
+    op: Optional[Callable[[float], Any]] = None,
 ) -> List[str]:
     # NOTE: we could remove this once we have rasterio >= 1.4.2
     op = op or numpy.floor
@@ -670,7 +670,7 @@ def create_cutline(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     geometry: Dict,
     geometry_crs: CRS = None,
-    op: Optional[Callable[[float], Union[int, float]]] = None,
+    op: Optional[Callable[[float], Any]] = None,
 ) -> str:
     """
     Create WKT Polygon Cutline for GDALWarpOptions.
