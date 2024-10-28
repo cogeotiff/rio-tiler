@@ -17,7 +17,7 @@ from rasterio.io import MemoryFile
 
 from rio_tiler import colormap, utils
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import InvalidRowColOperator, RioTilerError
+from rio_tiler.errors import RioTilerError
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import Reader
 
@@ -289,14 +289,12 @@ def test_cutline():
     feature_bounds = featureBounds(feat)
 
     with Reader(COGEO) as src:
-        cutline = utils.create_cutline(
-            src.dataset, feat, geometry_crs="epsg:4326", op=math.floor
-        )
+        cutline = utils.create_cutline(src.dataset, feat, geometry_crs="epsg:4326")
         data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
 
         cutline = utils.create_cutline(
-            src.dataset, feat["geometry"], geometry_crs="epsg:4326", op=math.floor
+            src.dataset, feat["geometry"], geometry_crs="epsg:4326"
         )
         data, mask = src.part(feature_bounds, vrt_options={"cutline": cutline})
         assert not mask.all()
@@ -317,9 +315,7 @@ def test_cutline():
 
     with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(
-                src.dataset, feat_line, geometry_crs="epsg:4326", op=math.floor
-            )
+            utils.create_cutline(src.dataset, feat_line, geometry_crs="epsg:4326")
 
     feat_mp = {
         "type": "MultiPolygon",
@@ -346,9 +342,7 @@ def test_cutline():
     }
 
     with Reader(COGEO) as src:
-        c = utils.create_cutline(
-            src.dataset, feat_mp, geometry_crs="epsg:4326", op=math.floor
-        )
+        c = utils.create_cutline(src.dataset, feat_mp, geometry_crs="epsg:4326")
         assert "MULTIPOLYGON" in c
 
     bad_poly = {
@@ -368,9 +362,7 @@ def test_cutline():
 
     with Reader(COGEO) as src:
         with pytest.raises(RioTilerError):
-            utils.create_cutline(
-                src.dataset, bad_poly, geometry_crs="epsg:4326", op=math.floor
-            )
+            utils.create_cutline(src.dataset, bad_poly, geometry_crs="epsg:4326")
 
     triangle_over_image_edge = {
         "type": "Polygon",
@@ -389,20 +381,67 @@ def test_cutline():
     triangle_bounds = featureBounds(triangle_over_image_edge)
     with Reader(COG_RGB) as src:
         cutline = utils.create_cutline(
-            src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326", op=math.floor
+            src.dataset, triangle_over_image_edge, geometry_crs="epsg:4326"
         )
         data, mask = src.part(triangle_bounds, vrt_options={"cutline": cutline})
         assert sum(mask[:, 0]) == 0  # first column
         assert sum(mask[0, :]) == 0  # first line
         assert sum(mask[-1, :]) == 0  # last line
 
-    # Check create_cutline operator callable is one of rasterio rowcol accepted method
-    with Reader(COGEO) as src:
-        invalid_op = abs
-        with pytest.raises(InvalidRowColOperator):
-            utils.create_cutline(
-                src.dataset, bad_poly, geometry_crs="epsg:4326", op=invalid_op
+
+def test_cutline_operator(dataset_fixture):
+    """Test rio_tiler.utils.create_cutline with operators."""
+    with MemoryFile(
+        dataset_fixture(
+            crs=CRS.from_epsg(4326),
+            bounds=(-175.0, -85, 175.0, 85.0),
+            dtype="uint8",
+            nodata_type="nodata",
+            width=720,
+            height=360,
+        )
+    ) as memfile:
+        with memfile.open() as src_dst:
+            feat = {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-163.0, -83.0],
+                        [163.0, -83.0],
+                        [163.0, 83.0],
+                        [-163.0, 83.0],
+                        [-163.0, -83.0],
+                    ]
+                ],
+            }
+            cutline = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
             )
+            cutline_mathfloor = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
+                op=math.floor,
+            )
+            assert cutline == cutline_mathfloor
+
+            cutline_npfloor = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
+                op=np.floor,
+            )
+            assert cutline_npfloor == cutline_mathfloor
+
+            cutline_npceil = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
+                op=np.ceil,
+            )
+            assert cutline_npceil != cutline_npfloor
 
 
 def test_parse_expression():

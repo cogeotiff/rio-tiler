@@ -33,7 +33,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
-from rio_tiler.errors import InvalidRowColOperator, RioTilerError
+from rio_tiler.errors import RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
 
@@ -652,13 +652,15 @@ def pansharpening_brovey(
 def _convert_to_raster_space(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     poly_coordinates: List,
-    op: Callable[[float], int],
+    op: Optional[Callable[[float], Union[int, float]]] = None,
 ) -> List[str]:
+    # NOTE: we could remove this once we have rasterio >= 1.4.2
+    op = op or numpy.floor
     polygons = []
     for point in poly_coordinates:
         xs, ys = zip(*coords(point))
         src_y, src_x = rowcol(src_dst.transform, xs, ys, op=op)
-        polygon = ", ".join([f"{x} {y}" for x, y in list(zip(src_x, src_y))])
+        polygon = ", ".join([f"{int(x)} {int(y)}" for x, y in list(zip(src_x, src_y))])
         polygons.append(f"({polygon})")
 
     return polygons
@@ -668,7 +670,7 @@ def create_cutline(
     src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
     geometry: Dict,
     geometry_crs: CRS = None,
-    op: Callable[[float], int] = math.floor,
+    op: Optional[Callable[[float], Union[int, float]]] = None,
 ) -> str:
     """
     Create WKT Polygon Cutline for GDALWarpOptions.
@@ -683,13 +685,6 @@ def create_cutline(
         str: WKT geometry in form of `POLYGON ((x y, x y, ...)))
 
     """
-
-    # Validate that the function provided is one of the allowed methods
-    if op not in {math.floor, math.ceil, round}:
-        raise InvalidRowColOperator(
-            "The rasterio rowcol 'op' parameter must be one of: math.floor, math.ceil, or round."
-        )
-
     geometry = _validate_shape_input(geometry)
     geom_type = geometry["type"]
 
