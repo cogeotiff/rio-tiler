@@ -998,7 +998,7 @@ For ImageReader we are using a custom `LocalTileMatrixSet` constructed from the 
 
 ## rio_tiler.io.xarray.XarrayReader
 
-The `Reader` is designed to work with xarray.DataReader with full geo-reference metadata (CRS) and variables (X,Y)
+The `Reader` is designed to work with `xarray.DataReader` with full geo-reference metadata (CRS) and variables (X,Y)
 
 The class is derived from the `rio_tiler.io.base.BaseReader` class.
 ```python
@@ -1025,6 +1025,7 @@ XarrayReader.__mro__
 - **transform**: dataset's Affine transform
 - **height**: dataset's height
 - **width**: dataset's width
+- **band_names**: list of dataArray dims
 
 ```python
 import numpy
@@ -1071,7 +1072,7 @@ EPSG:4326
     from rio_tiler.models import ImageData
 
     with XarrayReader(data) as src:
-        # src.tile(tile_x, tile_y, tile_z, tilesize, reproject_method)
+        # src.tile(tile_x, tile_y, tile_z, tilesize, reproject_method, auto_expand, nodata)
         img = src.tile(1, 2, 3)
         assert isinstance(img, ImageData)
         assert img.crs == WEB_MERCATOR_CRS
@@ -1084,7 +1085,7 @@ EPSG:4326
     from rio_tiler.models import ImageData
 
     with XarrayReader(data) as src:
-        # src.part((minx, miny, maxx, maxy), dst_crs, bounds_crs, reproject_method)
+        # src.part((minx, miny, maxx, maxy), dst_crs, bounds_crs, reproject_method, auto_expand, nodata, max_size, height, width, resampling_method)
         img = src.part((10, 10, 20, 20))
         assert isinstance(img, ImageData)
         assert img.crs == WGS84_CRS
@@ -1121,7 +1122,7 @@ EPSG:4326
     }
 
     with XarrayReader(data) as src:
-        # src.part(geojson_feature, **kwargs)
+        # src.part(geojson_feature, dst_crs, shape_crs, auto_expand, nodata, max_size, height, width, resampling_method)
         img = src.feature(feat)
         assert isinstance(img, ImageData)
         assert img.crs == WGS84_CRS
@@ -1173,16 +1174,68 @@ EPSG:4326
     }
     ```
 
-- **preview()**:
+- **preview()**: Return low-resolution representation of the DataArray
 
-!!! Important
+    ```python
+    from rio_tiler.io import XarrayReader
+    from rio_tiler.models import ImageData
 
-    Not Implemented
+    with XarrayReader(data) as src:
+        # src.preview(dst_crs, reproject_method, nodata, max_size, height, width, resampling_method)
+        img = src.preview()
+        assert isinstance(img, ImageData)
+        assert img.crs == data.rio.crs
+        assert img.bounds == data.rio.bounds()
 
+    with XarrayReader(data) as src:
+        img = src.preview(WGS84_CRS, max_size=100)
+        assert img.crs == WGS84_CRS
+    ```
 
-- **statistics()**:
+    !!! warnings
 
-!!! Important
+        This method will read the whole DataArray into memory
 
-    Not Implemented
+- **statistics()**: Return DataArray statistics (Min/Max/Stdev)
 
+    ```python
+    from rio_tiler.io import XarrayReader
+    from rio_tiler.models import ImageData
+
+    with XarrayReader(data) as src:
+        stats = src.statistics()
+        assert isinstance(stats, dict)
+
+    # stats will be in form or {"band": BandStatistics(), ...}
+    print(stats)
+    >>> {
+        '2022-01-01T00:00:00.000000000': BandStatistics(...),
+    }
+
+    print(stats["2022-01-01T00:00:00.000000000"].model_dump())
+    >>> {
+        "min": 1,
+        "max": 7872,
+        "mean": 2107.524612053134,
+        "count": 1045504,
+        "sum": 2203425412,
+        "std": 2271.0065537857326,
+        "median": 2800,
+        "majority": 1,
+        "minority": 7072,
+        "unique": 15,
+        "histogram": [
+            [...],
+            [...]
+        ],
+        "valid_percent": 100,
+        "masked_pixels": 0,
+        "valid_pixels": 1045504,
+        "percentile_98": 6896,
+        "percentile_2": 1
+    }
+    ```
+
+    !!! warnings
+
+        This method will read the whole DataArray into memory

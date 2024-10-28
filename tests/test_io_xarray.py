@@ -42,6 +42,10 @@ def test_xarray_reader():
         assert info.attrs
 
     with XarrayReader(data) as dst:
+        stats = dst.statistics()
+        assert stats["2022-01-01T00:00:00.000000000"]
+        assert stats["2022-01-01T00:00:00.000000000"].min == 0.0
+
         img = dst.tile(0, 0, 0)
         assert img.count == 1
         assert img.width == 256
@@ -69,8 +73,49 @@ def test_xarray_reader():
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         img = dst.part((-160, -80, 160, 80))
+        assert img.crs == "epsg:4326"
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 33, 33)
+
+        img = dst.part((-160, -80, 160, 80), dst_crs="epsg:3857")
+        assert img.crs == "epsg:3857"
+        assert img.count == 1
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 32, 34)
+
+        img = dst.part((-160, -80, 160, 80), max_size=15)
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.part((-160, -80, 160, 80), width=40, height=35)
+        assert img.array.shape == (1, 35, 40)
+
+        img = dst.part((-160, -80, 160, 80), max_size=15, resampling_method="bilinear")
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.preview()
+        assert img.crs == "epsg:4326"
+        assert img.count == 1
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 33, 35)
+
+        img = dst.preview(dst_crs="epsg:3857")
+        assert img.crs == "epsg:3857"
+        assert img.count == 1
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 32, 36)
+
+        img = dst.preview(max_size=None)
+        assert img.array.shape == (1, 33, 35)
+
+        img = dst.preview(max_size=15)
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.preview(max_size=15, resampling_method="bilinear")
+        assert img.array.shape == (1, 15, 15)
+
+        img = dst.preview(height=25, width=25, max_size=None)
+        assert img.array.shape == (1, 25, 25)
 
         pt = dst.point(0, 0)
         assert pt.count == 1
@@ -106,11 +151,19 @@ def test_xarray_reader():
         img = dst.feature(feat)
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.array.shape == (1, 25, 32)
 
         img = dst.feature(feat, dst_crs="epsg:3857")
         assert img.count == 1
         assert img.band_names == ["2022-01-01T00:00:00.000000000"]
-        assert img.crs.to_epsg() == 3857
+        assert img.crs == "epsg:3857"
+        assert img.array.shape == (1, 20, 35)
+
+        img = dst.feature(feat, max_size=15)
+        assert img.array.shape == (1, 12, 15)
+
+        img = dst.feature(feat, width=50, height=45)
+        assert img.array.shape == (1, 45, 50)
 
     arr = numpy.zeros((1, 1000, 2000))
     data = xarray.DataArray(
@@ -122,12 +175,23 @@ def test_xarray_reader():
             "time": [datetime(2022, 1, 1)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update(
+        {
+            "valid_min": numpy.int16(0),
+            "valid_max": numpy.int8(10),
+            "valid_range": numpy.array([arr.min(), arr.max()]),
+        }
+    )
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
         assert dst.minzoom == 5
         assert dst.maxzoom == 7
+        info = dst.info()
+        assert info
+        assert info.model_dump()
+        assert info.model_dump(mode="json")
+        assert info.model_dump_json()
 
 
 def test_xarray_reader_external_nodata():
@@ -421,3 +485,117 @@ def test_xarray_reader_invalid_bounds_crs():
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data):
         pass
+
+
+def test_xarray_reader_no_dims():
+    """test XarrayReader with 2D dataset."""
+    arr = numpy.arange(0.0, 33 * 35).reshape(33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data) as dst:
+        assert dst.minzoom == dst.maxzoom == 0
+        info = dst.info()
+        assert info.bounds == dst.bounds
+        crs = info.crs
+        assert rioCRS.from_user_input(crs) == dst.crs
+        assert info.band_metadata == [("b1", {})]
+        assert info.band_descriptions == [("b1", "value")]
+        assert info.height == 33
+        assert info.width == 35
+        assert info.count == 1
+        assert info.attrs
+
+    with XarrayReader(data) as dst:
+        stats = dst.statistics()
+        assert stats["value"]
+        assert stats["value"].min == 0.0
+
+        img = dst.tile(0, 0, 0)
+        assert img.count == 1
+        assert img.width == 256
+        assert img.height == 256
+        assert img.band_names == ["value"]
+        assert img.dataset_statistics == ((arr.min(), arr.max()),)
+
+        img = dst.part((-160, -80, 160, 80))
+        assert img.count == 1
+        assert img.width == 33
+        assert img.height == 33
+        assert img.band_names == ["value"]
+        assert img.dataset_statistics == ((arr.min(), arr.max()),)
+
+
+def test_xarray_reader_Y_axis():
+    """test XarrayReader with 2D dataset."""
+    # Create a DataArray where the y coordinates are in increasing order
+    # (this is the opposite of typical raster data)
+    # This array will have a positive y resolution in the affine transform
+    # and the data values increase with the y coordinates
+    arr = numpy.arange(0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    # make sure the data is inverted
+    # y resolution is Positive and origin is bottom left
+    left, bottom, right, top = data.rio._unordered_bounds()
+    assert bottom > top
+    assert data.rio.transform().e > 0
+
+    with XarrayReader(data) as dst:
+        assert dst.bounds == (left, top, right, bottom)
+        img = dst.preview()
+        assert img.bounds == dst.bounds
+        assert img.array[0, 0, 0] > img.array[0, -1, -1]
+
+        img = dst.tile(1, 1, 2)
+        assert img.array[0, 0, 0] > img.array[0, -1, -1]
+
+    # Create a DataArray where the y coordinates are in decreasing order
+    # (this is typical for raster data)
+    # This array will have a negative y resolution in the affine transform
+    # and the data values decrease with the y coordinates
+    arr = numpy.arange(0, 33 * 35).reshape(1, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.flip(numpy.arange(-80, 85, 5)),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    # make sure the data is NOT inverted
+    # y resolution is Negative and origin is top left
+    left, bottom, right, top = data.rio._unordered_bounds()
+    assert bottom < top
+    assert data.rio.transform().e < 0
+
+    with XarrayReader(data) as dst:
+        assert dst.bounds == (left, bottom, right, top)
+        img = dst.preview()
+        assert img.bounds == dst.bounds
+        assert img.array[0, 0, 0] < img.array[0, -1, -1]
+
+        img = dst.tile(1, 1, 2)
+        assert img.array[0, 0, 0] < img.array[0, -1, -1]
