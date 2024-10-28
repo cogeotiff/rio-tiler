@@ -2,15 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any, Dict, List, Optional
+import warnings
+from typing import Dict, List, Optional
 
 import attr
+import numpy
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
+from rasterio.errors import NotGeoreferencedWarning
+from rasterio.features import bounds as featureBounds
+from rasterio.features import rasterize
 from rasterio.transform import from_bounds, rowcol
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
+from rasterio.warp import transform_geom
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -21,8 +27,9 @@ from rio_tiler.errors import (
 )
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, NoData, WarpResampling
-from rio_tiler.utils import CRS_to_uri, _validate_shape_input
+from rio_tiler.reader import _get_width_height
+from rio_tiler.types import BBox, NoData, RIOResampling, WarpResampling
+from rio_tiler.utils import CRS_to_uri, _validate_shape_input, get_array_statistics
 
 try:
     import xarray
@@ -76,11 +83,14 @@ class XarrayReader(BaseReader):
                 "Dataset doesn't have CRS information, please add it before using rio-tiler (e.g. `ds.rio.write_crs('epsg:4326', inplace=True)`)"
             )
 
+        # adds half x/y resolution on each values
+        # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634
+        xres, yres = map(abs, self.input.rio.resolution())
         if self.crs == WGS84_CRS and (
-            round(self.bounds[0]) < -180
-            or round(self.bounds[1]) < -90
-            or round(self.bounds[2]) > 180
-            or round(self.bounds[3]) > 90
+            self.bounds[0] + xres / 2 < -180
+            or self.bounds[1] + yres / 2 < -90
+            or self.bounds[2] - xres / 2 > 180
+            or self.bounds[3] - yres / 2 > 90
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
@@ -109,16 +119,20 @@ class XarrayReader(BaseReader):
     @property
     def band_names(self) -> List[str]:
         """Return list of `band names` in DataArray."""
-        return [str(band) for d in self._dims for band in self.input[d].values]
+        return [str(band) for d in self._dims for band in self.input[d].values] or [
+            "value"
+        ]
 
     def info(self) -> Info:
         """Return xarray.DataArray info."""
-        bands = [str(band) for d in self._dims for band in self.input[d].values]
-        metadata = [band.attrs for d in self._dims for band in self.input[d]]
+        bands = [str(band) for d in self._dims for band in self.input[d].values] or [
+            "value"
+        ]
+        metadata = [band.attrs for d in self._dims for band in self.input[d]] or [{}]
 
         meta = {
             "bounds": self.bounds,
-            "crs": CRS_to_uri(self.crs),
+            "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             "band_metadata": [(f"b{ix}", v) for ix, v in enumerate(metadata, 1)],
             "band_descriptions": [(f"b{ix}", v) for ix, v in enumerate(bands, 1)],
             "dtype": str(self.input.dtype),
@@ -127,8 +141,12 @@ class XarrayReader(BaseReader):
             "count": self.input.rio.count,
             "width": self.input.rio.width,
             "height": self.input.rio.height,
-            "attrs": self.input.attrs,
+            "attrs": {
+                k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
+                for k, v in self.input.attrs.items()
+            },
         }
+
         return Info(**meta)
 
     def statistics(
@@ -137,11 +155,29 @@ class XarrayReader(BaseReader):
         categories: Optional[List[float]] = None,
         percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
-        max_size: int = 1024,
-        **kwargs: Any,
+        nodata: Optional[NoData] = None,
     ) -> Dict[str, BandStatistics]:
-        """Return bands statistics from a dataset."""
-        raise NotImplementedError
+        """Return statistics from a dataset."""
+        hist_options = hist_options or {}
+
+        ds = self.input
+        if nodata is not None:
+            ds = ds.rio.write_nodata(nodata)
+
+        data = ds.to_masked_array()
+        data.mask |= data.data == ds.rio.nodata
+
+        stats = get_array_statistics(
+            data,
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            **hist_options,
+        )
+
+        return {
+            self.band_names[ix]: BandStatistics(**val) for ix, val in enumerate(stats)
+        }
 
     def tile(
         self,
@@ -203,6 +239,11 @@ class XarrayReader(BaseReader):
         arr = ds.to_masked_array()
         arr.mask |= arr.data == ds.rio.nodata
 
+        output_bounds = ds.rio._unordered_bounds()
+        if output_bounds[1] > output_bounds[3] and ds.rio.transform().e > 0:
+            yaxis = self.input.dims.index(self.input.rio.y_dim)
+            arr = numpy.flip(arr, axis=yaxis)
+
         return ImageData(
             arr,
             bounds=tile_bounds,
@@ -219,6 +260,10 @@ class XarrayReader(BaseReader):
         reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        resampling_method: RIOResampling = "nearest",
     ) -> ImageData:
         """Read part of a dataset.
 
@@ -229,11 +274,21 @@ class XarrayReader(BaseReader):
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
             auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
+        if max_size and width and height:
+            warnings.warn(
+                "'max_size' will be ignored with with 'height' and 'width' set.",
+                UserWarning,
+            )
+
         dst_crs = dst_crs or bounds_crs
 
         ds = self.input
@@ -271,7 +326,12 @@ class XarrayReader(BaseReader):
         arr = ds.to_masked_array()
         arr.mask |= arr.data == ds.rio.nodata
 
-        return ImageData(
+        output_bounds = ds.rio._unordered_bounds()
+        if output_bounds[1] > output_bounds[3] and ds.rio.transform().e > 0:
+            yaxis = self.input.dims.index(self.input.rio.y_dim)
+            arr = numpy.flip(arr, axis=yaxis)
+
+        img = ImageData(
             arr,
             bounds=ds.rio.bounds(),
             crs=ds.rio.crs,
@@ -279,11 +339,29 @@ class XarrayReader(BaseReader):
             band_names=self.band_names,
         )
 
+        output_height = height or img.height
+        output_width = width or img.width
+        if max_size and not (width and height):
+            output_height, output_width = _get_width_height(
+                max_size, img.height, img.width
+            )
+
+        if output_height != img.height or output_width != img.width:
+            img = img.resize(
+                output_height, output_width, resampling_method=resampling_method
+            )
+
+        return img
+
     def preview(
         self,
         max_size: int = 1024,
         height: Optional[int] = None,
         width: Optional[int] = None,
+        nodata: Optional[NoData] = None,
+        dst_crs: Optional[CRS] = None,
+        reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
     ) -> ImageData:
         """Return a preview of a dataset.
 
@@ -291,12 +369,76 @@ class XarrayReader(BaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            dst_crs (rasterio.crs.CRS, optional): target coordinate reference system.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        if max_size and width and height:
+            warnings.warn(
+                "'max_size' will be ignored with with 'height' and 'width' set.",
+                UserWarning,
+            )
+
+        ds = self.input
+        if nodata is not None:
+            ds = ds.rio.write_nodata(nodata)
+
+        if dst_crs and dst_crs != self.crs:
+            dst_transform, w, h = calculate_default_transform(
+                self.crs,
+                dst_crs,
+                ds.rio.width,
+                ds.rio.height,
+                *ds.rio.bounds(),
+            )
+            ds = ds.rio.reproject(
+                dst_crs,
+                shape=(h, w),
+                transform=dst_transform,
+                resampling=Resampling[reproject_method],
+                nodata=nodata,
+            )
+
+        # Forward valid_min/valid_max to the ImageData object
+        minv, maxv = ds.attrs.get("valid_min"), ds.attrs.get("valid_max")
+        stats = None
+        if minv is not None and maxv is not None:
+            stats = ((minv, maxv),) * ds.rio.count
+
+        arr = ds.to_masked_array()
+        arr.mask |= arr.data == ds.rio.nodata
+
+        output_bounds = ds.rio._unordered_bounds()
+        if output_bounds[1] > output_bounds[3] and ds.rio.transform().e > 0:
+            yaxis = self.input.dims.index(self.input.rio.y_dim)
+            arr = numpy.flip(arr, axis=yaxis)
+
+        img = ImageData(
+            arr,
+            bounds=ds.rio.bounds(),
+            crs=ds.rio.crs,
+            dataset_statistics=stats,
+            band_names=self.band_names,
+        )
+
+        output_height = height or img.height
+        output_width = width or img.width
+        if max_size and not (width and height):
+            output_height, output_width = _get_width_height(
+                max_size, img.height, img.width
+            )
+
+        if output_height != img.height or output_width != img.width:
+            img = img.resize(
+                output_height, output_width, resampling_method=resampling_method
+            )
+
+        return img
 
     def point(
         self,
@@ -347,7 +489,12 @@ class XarrayReader(BaseReader):
         dst_crs: Optional[CRS] = None,
         shape_crs: CRS = WGS84_CRS,
         reproject_method: WarpResampling = "nearest",
+        auto_expand: bool = True,
         nodata: Optional[NoData] = None,
+        max_size: Optional[int] = None,
+        height: Optional[int] = None,
+        width: Optional[int] = None,
+        resampling_method: RIOResampling = "nearest",
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature.
 
@@ -356,52 +503,57 @@ class XarrayReader(BaseReader):
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            auto_expand (boolean, optional): When True, rioxarray's clip_box will expand clip search if only 1D raster found with clip. When False, will throw `OneDimensionalRaster` error if only 1 x or y data point is found. Defaults to True.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
+        shape = _validate_shape_input(shape)
+
         if not dst_crs:
             dst_crs = shape_crs
 
-        shape = _validate_shape_input(shape)
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
 
-        ds = self.input
-        if nodata is not None:
-            ds = ds.rio.write_nodata(nodata)
-
-        ds = ds.rio.clip([shape], crs=shape_crs)
-
-        if dst_crs != self.crs:
-            dst_transform, w, h = calculate_default_transform(
-                self.crs,
-                dst_crs,
-                ds.rio.width,
-                ds.rio.height,
-                *ds.rio.bounds(),
-            )
-            ds = ds.rio.reproject(
-                dst_crs,
-                shape=(h, w),
-                transform=dst_transform,
-                resampling=Resampling[reproject_method],
-                nodata=nodata,
-            )
-
-        # Forward valid_min/valid_max to the ImageData object
-        minv, maxv = ds.attrs.get("valid_min"), ds.attrs.get("valid_max")
-        stats = None
-        if minv is not None and maxv is not None:
-            stats = ((minv, maxv),) * ds.rio.count
-
-        arr = ds.to_masked_array()
-        arr.mask |= arr.data == ds.rio.nodata
-
-        return ImageData(
-            arr,
-            bounds=ds.rio.bounds(),
-            crs=ds.rio.crs,
-            dataset_statistics=stats,
-            band_names=self.band_names,
+        img = self.part(
+            bbox,
+            dst_crs=dst_crs,
+            bounds_crs=shape_crs,
+            nodata=nodata,
+            max_size=max_size,
+            width=width,
+            height=height,
+            reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            cutline_mask = rasterize(
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            ).astype("bool")
+
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
