@@ -2,7 +2,17 @@
 
 * Add `preview()` and `statistics()` methods to XarrayReader (https://github.com/cogeotiff/rio-tiler/pull/755)
 
-* Add output size (`max_size` | `width`, `height`) options for `preview`, `part` and `feature` methods (https://github.com/cogeotiff/rio-tiler/pull/755)
+* Add output size (`max_size` | `width`, `height`) options for XarrayReader's `preview()`, `part()` and `feature()` methods (https://github.com/cogeotiff/rio-tiler/pull/755)
+
+* Add half X/Y resolution on bounds before checking the geographic bounds in XarrayReader (https://github.com/cogeotiff/rio-tiler/pull/755)
+
+* Check if the Y bounds are inverted and flip the image on the Y axis in XarrayReader (https://github.com/cogeotiff/rio-tiler/pull/756)
+
+* Add support for 2D arrays in XarrayReader (https://github.com/cogeotiff/rio-tiler/pull/755)
+
+* Cast Xarray `attrs` values in XarrayReader's `info()` response to avoid JSON encoding issues (https://github.com/cogeotiff/rio-tiler/pull/755)
+
+* refactor XarrayReader's `feature()` method to use the `part` method (https://github.com/cogeotiff/rio-tiler/pull/755)
 
 # 7.0.1 (2024-10-22)
 
