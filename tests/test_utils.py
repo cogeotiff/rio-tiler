@@ -389,6 +389,61 @@ def test_cutline():
         assert sum(mask[-1, :]) == 0  # last line
 
 
+def test_cutline_operator(dataset_fixture):
+    """Test rio_tiler.utils.create_cutline with operators."""
+    with MemoryFile(
+        dataset_fixture(
+            crs=CRS.from_epsg(4326),
+            bounds=(-175.0, -85, 175.0, 85.0),
+            dtype="uint8",
+            nodata_type="nodata",
+            width=720,
+            height=360,
+        )
+    ) as memfile:
+        with memfile.open() as src_dst:
+            feat = {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-163.0, -83.0],
+                        [163.0, -83.0],
+                        [163.0, 83.0],
+                        [-163.0, 83.0],
+                        [-163.0, -83.0],
+                    ]
+                ],
+            }
+            cutline = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
+            )
+            cutline_mathfloor = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
+                op=math.floor,
+            )
+            assert cutline == cutline_mathfloor
+
+            cutline_npfloor = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
+                op=np.floor,
+            )
+            assert cutline_npfloor == cutline_mathfloor
+
+            cutline_npceil = utils.create_cutline(
+                src_dst,
+                feat,
+                geometry_crs="epsg:4326",
+                op=np.ceil,
+            )
+            assert cutline_npceil != cutline_npfloor
+
+
 def test_parse_expression():
     """test parsing rio-tiler expression."""
     assert sorted(parse_expression("b1*b11+b3,b1*b2+B4")) == [1, 2, 3, 4, 11]

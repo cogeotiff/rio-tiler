@@ -12,7 +12,9 @@
 
 * Cast Xarray `attrs` values in XarrayReader's `info()` response to avoid JSON encoding issues (https://github.com/cogeotiff/rio-tiler/pull/755)
 
-* refactor XarrayReader's `feature()` method to use the `part` method (https://github.com/cogeotiff/rio-tiler/pull/755)
+* Refactor XarrayReader's `feature()` method to use the `part` method (https://github.com/cogeotiff/rio-tiler/pull/755)
+
+* Allow `op` parameter for `create_cutline` and `_convert_to_raster_space` functions to better control rasterio's `rowcol` behaviour (author @Martenz, https://github.com/cogeotiff/rio-tiler/pull/759)
 
 # 7.0.1 (2024-10-22)
 
