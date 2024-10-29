@@ -576,6 +576,16 @@ def test_xarray_reader_Y_axis():
         img = dst.tile(1, 1, 2)
         assert img.array[0, 0, 0] > img.array[0, -1, -1]
 
+        pt = dst.point(0, 0)
+        assert pt.count == 1
+        assert pt.coordinates
+        xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
+        for xy in xys:
+            x = xy[0]
+            y = xy[1]
+            pt = dst.point(x, y)
+            assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
+
     # Create a DataArray where the y coordinates are in decreasing order
     # (this is typical for raster data)
     # This array will have a negative y resolution in the affine transform
@@ -607,3 +617,13 @@ def test_xarray_reader_Y_axis():
 
         img = dst.tile(1, 1, 2)
         assert img.array[0, 0, 0] < img.array[0, -1, -1]
+
+        pt = dst.point(0, 0)
+        assert pt.count == 1
+        assert pt.coordinates
+        xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
+        for xy in xys:
+            x = xy[0]
+            y = xy[1]
+            pt = dst.point(x, y)
+            assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
