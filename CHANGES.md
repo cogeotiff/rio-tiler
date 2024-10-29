@@ -1,4 +1,4 @@
-# 7.1.0 (TBD)
+# 7.1.0 (2024-10-29)
 
 * Add `preview()` and `statistics()` methods to XarrayReader (https://github.com/cogeotiff/rio-tiler/pull/755)
 
