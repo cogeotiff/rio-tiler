@@ -41,7 +41,6 @@ def test_xarray_reader():
         assert info.count == 1
         assert info.attrs
 
-    with XarrayReader(data) as dst:
         stats = dst.statistics()
         assert stats["2022-01-01T00:00:00.000000000"]
         assert stats["2022-01-01T00:00:00.000000000"].min == 0.0
@@ -221,7 +220,6 @@ def test_xarray_reader_external_nodata():
         assert info.width == 360
         assert info.count == 1
 
-    with XarrayReader(data) as dst:
         # TILE
         img = dst.tile(0, 0, 1)
         assert img.mask.all()
@@ -514,7 +512,6 @@ def test_xarray_reader_no_dims():
         assert info.count == 1
         assert info.attrs
 
-    with XarrayReader(data) as dst:
         stats = dst.statistics()
         assert stats["value"]
         assert stats["value"].min == 0.0
@@ -532,6 +529,17 @@ def test_xarray_reader_no_dims():
         assert img.height == 33
         assert img.band_names == ["value"]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
+
+        pt = dst.point(0, 0)
+        assert pt.count == 1
+        assert pt.band_names == ["value"]
+        assert pt.coordinates
+        xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
+        for xy in xys:
+            x = xy[0]
+            y = xy[1]
+            pt = dst.point(x, y)
+            assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
 
 
 def test_xarray_reader_Y_axis():
@@ -568,6 +576,16 @@ def test_xarray_reader_Y_axis():
         img = dst.tile(1, 1, 2)
         assert img.array[0, 0, 0] > img.array[0, -1, -1]
 
+        pt = dst.point(0, 0)
+        assert pt.count == 1
+        assert pt.coordinates
+        xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
+        for xy in xys:
+            x = xy[0]
+            y = xy[1]
+            pt = dst.point(x, y)
+            assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
+
     # Create a DataArray where the y coordinates are in decreasing order
     # (this is typical for raster data)
     # This array will have a negative y resolution in the affine transform
@@ -599,3 +617,13 @@ def test_xarray_reader_Y_axis():
 
         img = dst.tile(1, 1, 2)
         assert img.array[0, 0, 0] < img.array[0, -1, -1]
+
+        pt = dst.point(0, 0)
+        assert pt.count == 1
+        assert pt.coordinates
+        xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
+        for xy in xys:
+            x = xy[0]
+            y = xy[1]
+            pt = dst.point(x, y)
+            assert pt.data[0] == data.sel(x=x, y=y, method="nearest")

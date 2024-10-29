@@ -473,7 +473,11 @@ class XarrayReader(BaseReader):
 
         y, x = rowcol(ds.rio.transform(), ds_lon, ds_lat)
 
-        arr = ds[:, int(y[0]), int(x[0])].to_masked_array()
+        if ds.ndim == 2:
+            arr = numpy.expand_dims(ds[int(y[0]), int(x[0])].to_masked_array(), axis=0)
+        else:
+            arr = ds[:, int(y[0]), int(x[0])].to_masked_array()
+
         arr.mask |= arr.data == ds.rio.nodata
 
         return PointData(
