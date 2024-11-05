@@ -1,6 +1,8 @@
 # 7.2.0 (2024-11-05)
 
-* Ensure compatibility between XarrayReader and other Readers by adding `**kwargs` on class methods
+* Ensure compatibility between XarrayReader and other Readers by adding `**kwargs` on class methods (https://github.com/cogeotiff/rio-tiler/pull/762)
+
+* add `STACReader.get_asset_list()` method to enable easier customization of the asset listing/validation (https://github.com/cogeotiff/rio-tiler/pull/762)
 
 # 7.1.0 (2024-10-29)
 

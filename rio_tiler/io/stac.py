@@ -3,7 +3,18 @@
 import json
 import os
 import warnings
-from typing import Any, Dict, Iterator, Optional, Sequence, Set, Tuple, Type, Union
+from typing import (
+    Any,
+    Dict,
+    Iterator,
+    List,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Type,
+    Union,
+)
 from urllib.parse import urlparse
 
 import attr
@@ -273,7 +284,13 @@ class STACReader(MultiBaseReader):
         self.minzoom = self.minzoom if self.minzoom is not None else self._minzoom
         self.maxzoom = self.maxzoom if self.maxzoom is not None else self._maxzoom
 
-        self.assets = list(
+        self.assets = self.get_asset_list()
+        if not self.assets:
+            raise MissingAssets("No valid asset found. Asset's media types not supported")
+
+    def get_asset_list(self) -> List[str]:
+        """Get valid asset list"""
+        return list(
             _get_assets(
                 self.item,
                 include=self.include_assets,
@@ -282,8 +299,6 @@ class STACReader(MultiBaseReader):
                 exclude_asset_types=self.exclude_asset_types,
             )
         )
-        if not self.assets:
-            raise MissingAssets("No valid asset found. Asset's media types not supported")
 
     def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
         """Get Asset Reader."""
