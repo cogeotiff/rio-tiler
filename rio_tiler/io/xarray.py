@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Dict, List, Optional
+from typing import Any, Dict, List, Optional
 
 import attr
 import numpy
@@ -156,6 +156,7 @@ class XarrayReader(BaseReader):
         percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
         nodata: Optional[NoData] = None,
+        **kwargs: Any,
     ) -> Dict[str, BandStatistics]:
         """Return statistics from a dataset."""
         hist_options = hist_options or {}
@@ -188,6 +189,7 @@ class XarrayReader(BaseReader):
         reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
+        **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
 
@@ -264,6 +266,7 @@ class XarrayReader(BaseReader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         resampling_method: RIOResampling = "nearest",
+        **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset.
 
@@ -362,6 +365,7 @@ class XarrayReader(BaseReader):
         dst_crs: Optional[CRS] = None,
         reproject_method: WarpResampling = "nearest",
         resampling_method: RIOResampling = "nearest",
+        **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a dataset.
 
@@ -446,6 +450,7 @@ class XarrayReader(BaseReader):
         lat: float,
         coord_crs: CRS = WGS84_CRS,
         nodata: Optional[NoData] = None,
+        **kwargs: Any,
     ) -> PointData:
         """Read a pixel value from a dataset.
 
@@ -499,6 +504,7 @@ class XarrayReader(BaseReader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         resampling_method: RIOResampling = "nearest",
+        **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature.
 

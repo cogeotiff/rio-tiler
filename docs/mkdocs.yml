@@ -44,6 +44,7 @@ nav:
     - rio-tiler + STAC: 'examples/Using-rio-tiler-STACReader.ipynb'
     - Non-Earth dataset: 'examples/Using-nonEarth-dataset.ipynb'
     - Xarray + rio-tiler: 'examples/Using-rio-tiler-XarrayReader.ipynb'
+    - STAC + Xarray: 'examples/STAC_datacube_support.ipynb'
   - Migration Guides:
     - v1.0 -> v2.0: 'migrations/v2_migration.md'
     - v2.0 -> v3.0: 'migrations/v3_migration.md'
