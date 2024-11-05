@@ -3,7 +3,7 @@
 import json
 import os
 import sys
-from typing import Dict, Set, Tuple, Type
+from typing import Dict, List, Set, Tuple, Type
 from unittest.mock import patch
 
 import attr
@@ -11,9 +11,12 @@ import morecantile
 import numpy
 import pytest
 import rasterio
+import xarray
+from morecantile import TileMatrixSet
 from rasterio._env import get_gdal_config
 from rasterio.crs import CRS
 
+from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import (
     AssetAsBandError,
     ExpressionMixingWarning,
@@ -36,6 +39,7 @@ STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
 STAC_WRONGSTATS_PATH = os.path.join(PREFIX, "stac_wrong_stats.json")
 STAC_ALTERNATE_PATH = os.path.join(PREFIX, "stac_alternate.json")
 STAC_GRIB_PATH = os.path.join(PREFIX, "stac_grib.json")
+STAC_NETCDF_PATH = os.path.join(PREFIX, "stac_netcdf.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -987,8 +991,39 @@ def test_default_assets(rio):
             assert img.band_names == ["green_b1"]
 
 
-def test_get_reader():
+def test_netcdf_reader():
     """Should use the correct reader depending on the media type."""
+
+    @attr.s
+    class NetCDFReader(XarrayReader):
+        """Reader: Open NetCDF file and access DataArray."""
+
+        src_path: str = attr.ib()
+        variable: str = attr.ib()
+
+        tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+        ds: xarray.Dataset = attr.ib(init=False)
+        input: xarray.DataArray = attr.ib(init=False)
+
+        _dims: List = attr.ib(init=False, factory=list)
+
+        def __attrs_post_init__(self):
+            """Set bounds and CRS."""
+            self.ds = xarray.open_dataset(self.src_path, decode_coords="all")
+            da = self.ds[self.variable]
+
+            # Make sure we have a valid CRS
+            crs = da.rio.crs or "epsg:4326"
+            da = da.rio.write_crs(crs)
+
+            if "time" in da.dims:
+                da = da.isel(time=0)
+
+            self.input = da
+
+            super().__attrs_post_init__()
+
     valid_types = {
         "image/tiff; application=geotiff",
         "application/x-netcdf",
@@ -1004,19 +1039,28 @@ def test_get_reader():
             if asset_type and asset_type in [
                 "application/x-netcdf",
             ]:
-                return XarrayReader, {}
+                return NetCDFReader, {}
 
             return Reader, {}
 
-    with CustomSTACReader(STAC_RASTER_PATH) as stac:
-        assert stac.assets == ["red", "green", "blue", "netcdf"]
+    with CustomSTACReader(STAC_NETCDF_PATH) as stac:
+        assert stac.assets == ["geotiff", "netcdf"]
         info = stac._get_asset_info("netcdf")
         assert info["media_type"] == "application/x-netcdf"
-        assert stac._get_reader(info) == (XarrayReader, {})
+        assert stac._get_reader(info) == (NetCDFReader, {})
 
-        info = stac._get_asset_info("red")
+        info = stac._get_asset_info("geotiff")
         assert info["media_type"] == "image/tiff; application=geotiff"
         assert stac._get_reader(info) == (Reader, {})
+
+    with CustomSTACReader(
+        STAC_NETCDF_PATH, reader_options={"variable": "dataset"}
+    ) as stac:
+        info = stac.info(assets=["netcdf"])
+        assert info["netcdf"].crs
+
+        img = stac.preview(assets=["netcdf"])
+        assert img.band_names == ["netcdf_value"]
 
 
 @patch("rio_tiler.io.stac.STAC_ALTERNATE_KEY", "s3")
