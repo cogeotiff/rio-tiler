@@ -43,6 +43,7 @@ test = [
     # XarrayReader
     "xarray",
     "rioxarray",
+    "h5netcdf",
     # S3
     "boto3",
     # Some tests will fail with 5.0
