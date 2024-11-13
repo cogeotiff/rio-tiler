@@ -1,3 +1,73 @@
+# 7.3.0 (TBD)
+
+* add `indexes` parameter for `XarrayReader` methods. As for Rasterio, the indexes values start at `1`.
+
+    ```python
+    data = ... # DataArray of shape (2, x, y)
+
+    # before
+    with XarrayReader(data) as dst:
+        img = dst.tile(0, 0, 0)
+        assert img.count == 2
+
+    # now
+    with XarrayReader(data) as dst:
+        # Select the first `band` within the data array
+        img = dst.tile(0, 0, 0, indexes=1)
+        assert img.count == 1
+    ```
+
+* better define `band names` for `XarrayReader` objects
+
+    * band_name for `2D` dataset is extracted form the first `non-geo` coordinates value
+
+        ```python
+        data = xarray.DataArray(
+            numpy.arange(0.0, 33 * 35 * 2).reshape(2, 33, 35),
+            dims=("time", "y", "x"),
+            coords={
+                "x": numpy.arange(-170, 180, 10),
+                "y": numpy.arange(-80, 85, 5),
+                "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+            },
+        )
+        da = data[0]
+
+        print(da.coords["time"].data)
+        >> array('2022-01-01T00:00:00.000000000', dtype='datetime64[ns]'))
+
+        # before
+        with XarrayReader(data) as dst:
+            img = dst.info()
+            print(img.band_descriptions)[0]
+            >> ("b1", "value")
+
+        # now
+        with XarrayReader(data) as dst:
+            img = dst.info()
+            print(img.band_descriptions)[0]
+            >> ("b1", "2022-01-01T00:00:00.000000000")
+        ```
+
+    * default `band_names` is changed to DataArray's name or `array` (when no available coordinates value)
+
+        ```python
+        data = ... # DataArray of shape (x, y)
+
+        # before
+        with XarrayReader(data) as dst:
+            img = dst.info()
+            print(img.band_descriptions)[0]
+            >> ("b1", "value")
+
+        # now
+        with XarrayReader(data) as dst:
+            img = dst.info()
+            print(img.band_descriptions)[0]
+            >> ("b1", "array")
+        ```
+
+
 # 7.2.0 (2024-11-05)
 
 * Ensure compatibility between XarrayReader and other Readers by adding `**kwargs` on class methods (https://github.com/cogeotiff/rio-tiler/pull/762)
