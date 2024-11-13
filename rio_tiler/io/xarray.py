@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import warnings
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Tuple
 
 import attr
 import numpy
@@ -28,8 +28,13 @@ from rio_tiler.errors import (
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.reader import _get_width_height
-from rio_tiler.types import BBox, NoData, RIOResampling, WarpResampling
-from rio_tiler.utils import CRS_to_uri, _validate_shape_input, get_array_statistics
+from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
+from rio_tiler.utils import (
+    CRS_to_uri,
+    _validate_shape_input,
+    cast_to_sequence,
+    get_array_statistics,
+)
 
 try:
     import xarray
@@ -105,6 +110,7 @@ class XarrayReader(BaseReader):
             for d in self.input.dims
             if d not in [self.input.rio.x_dim, self.input.rio.y_dim]
         ]
+        assert len(self._dims) in [0, 1], "Can't handle >=4D DataArray"
 
     @property
     def minzoom(self):
@@ -118,29 +124,34 @@ class XarrayReader(BaseReader):
 
     @property
     def band_names(self) -> List[str]:
-        """Return list of `band names` in DataArray."""
-        return [str(band) for d in self._dims for band in self.input[d].values] or [
-            "value"
-        ]
+        """Return list of `band descriptions` in DataArray."""
+        if not self._dims:
+            coords_name = list(self.input.coords)
+            if len(coords_name) > 3 and (coord := coords_name[2]):
+                return [str(self.input.coords[coord].data)]
+
+            return [self.input.name or "array"]
+
+        return [str(band) for d in self._dims for band in self.input[d].values]
 
     def info(self) -> Info:
         """Return xarray.DataArray info."""
-        bands = [str(band) for d in self._dims for band in self.input[d].values] or [
-            "value"
-        ]
         metadata = [band.attrs for d in self._dims for band in self.input[d]] or [{}]
 
         meta = {
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             "band_metadata": [(f"b{ix}", v) for ix, v in enumerate(metadata, 1)],
-            "band_descriptions": [(f"b{ix}", v) for ix, v in enumerate(bands, 1)],
+            "band_descriptions": [
+                (f"b{ix}", v) for ix, v in enumerate(self.band_names, 1)
+            ],
             "dtype": str(self.input.dtype),
             "nodata_type": "Nodata" if self.input.rio.nodata is not None else "None",
             "name": self.input.name,
             "count": self.input.rio.count,
             "width": self.input.rio.width,
             "height": self.input.rio.height,
+            "dimensions": self.input.dims,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
                 for k, v in self.input.attrs.items()
@@ -149,6 +160,28 @@ class XarrayReader(BaseReader):
 
         return Info(**meta)
 
+    def _sel_indexes(
+        self, indexes: Optional[Indexes] = None
+    ) -> Tuple[xarray.DataArray, List[str]]:
+        """Select `band` indexes in DataArray."""
+        ds = self.input
+        band_names = self.band_names
+        if indexes := cast_to_sequence(indexes):
+            assert all(v > 0 for v in indexes), "Indexes value must be >= 1"
+            if ds.ndim == 2:
+                if indexes != (1,):
+                    raise ValueError(
+                        f"Invalid indexes {indexes} for array of shape {ds.shape}"
+                    )
+
+                return ds, band_names
+
+            indexes = [idx - 1 for idx in indexes]
+            ds = ds[indexes]
+            band_names = [self.band_names[idx] for idx in indexes]
+
+        return ds, band_names
+
     def statistics(
         self,
         categorical: bool = False,
@@ -156,12 +189,14 @@ class XarrayReader(BaseReader):
         percentiles: Optional[List[int]] = None,
         hist_options: Optional[Dict] = None,
         nodata: Optional[NoData] = None,
+        indexes: Optional[Indexes] = None,
         **kwargs: Any,
     ) -> Dict[str, BandStatistics]:
         """Return statistics from a dataset."""
         hist_options = hist_options or {}
 
-        ds = self.input
+        ds, band_names = self._sel_indexes(indexes)
+
         if nodata is not None:
             ds = ds.rio.write_nodata(nodata)
 
@@ -176,9 +211,7 @@ class XarrayReader(BaseReader):
             **hist_options,
         )
 
-        return {
-            self.band_names[ix]: BandStatistics(**val) for ix, val in enumerate(stats)
-        }
+        return {band_names[ix]: BandStatistics(**val) for ix, val in enumerate(stats)}
 
     def tile(
         self,
@@ -189,6 +222,7 @@ class XarrayReader(BaseReader):
         reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
+        indexes: Optional[Indexes] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
@@ -211,7 +245,8 @@ class XarrayReader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
-        ds = self.input
+        ds, band_names = self._sel_indexes(indexes)
+
         if nodata is not None:
             ds = ds.rio.write_nodata(nodata)
 
@@ -251,7 +286,7 @@ class XarrayReader(BaseReader):
             bounds=tile_bounds,
             crs=dst_crs,
             dataset_statistics=stats,
-            band_names=self.band_names,
+            band_names=band_names,
         )
 
     def part(
@@ -262,6 +297,7 @@ class XarrayReader(BaseReader):
         reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
+        indexes: Optional[Indexes] = None,
         max_size: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
@@ -294,7 +330,8 @@ class XarrayReader(BaseReader):
 
         dst_crs = dst_crs or bounds_crs
 
-        ds = self.input
+        ds, band_names = self._sel_indexes(indexes)
+
         if nodata is not None:
             ds = ds.rio.write_nodata(nodata)
 
@@ -339,7 +376,7 @@ class XarrayReader(BaseReader):
             bounds=ds.rio.bounds(),
             crs=ds.rio.crs,
             dataset_statistics=stats,
-            band_names=self.band_names,
+            band_names=band_names,
         )
 
         output_height = height or img.height
@@ -362,6 +399,7 @@ class XarrayReader(BaseReader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         nodata: Optional[NoData] = None,
+        indexes: Optional[Indexes] = None,
         dst_crs: Optional[CRS] = None,
         reproject_method: WarpResampling = "nearest",
         resampling_method: RIOResampling = "nearest",
@@ -388,7 +426,8 @@ class XarrayReader(BaseReader):
                 UserWarning,
             )
 
-        ds = self.input
+        ds, band_names = self._sel_indexes(indexes)
+
         if nodata is not None:
             ds = ds.rio.write_nodata(nodata)
 
@@ -427,7 +466,7 @@ class XarrayReader(BaseReader):
             bounds=ds.rio.bounds(),
             crs=ds.rio.crs,
             dataset_statistics=stats,
-            band_names=self.band_names,
+            band_names=band_names,
         )
 
         output_height = height or img.height
@@ -450,6 +489,7 @@ class XarrayReader(BaseReader):
         lat: float,
         coord_crs: CRS = WGS84_CRS,
         nodata: Optional[NoData] = None,
+        indexes: Optional[Indexes] = None,
         **kwargs: Any,
     ) -> PointData:
         """Read a pixel value from a dataset.
@@ -472,7 +512,8 @@ class XarrayReader(BaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        ds = self.input
+        ds, band_names = self._sel_indexes(indexes)
+
         if nodata is not None:
             ds = ds.rio.write_nodata(nodata)
 
@@ -489,7 +530,7 @@ class XarrayReader(BaseReader):
             arr,
             coordinates=(lon, lat),
             crs=coord_crs,
-            band_names=self.band_names,
+            band_names=band_names,
         )
 
     def feature(
@@ -500,6 +541,7 @@ class XarrayReader(BaseReader):
         reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
+        indexes: Optional[Indexes] = None,
         max_size: Optional[int] = None,
         height: Optional[int] = None,
         width: Optional[int] = None,
@@ -537,6 +579,7 @@ class XarrayReader(BaseReader):
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
             nodata=nodata,
+            indexes=indexes,
             max_size=max_size,
             width=width,
             height=height,
