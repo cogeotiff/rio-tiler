@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 import re
+import warnings
 from typing import Dict, List, Sequence, Tuple, Union
 
 import attr
@@ -125,16 +126,18 @@ def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     ):
         return apply_discrete_cmap(data, colormap)
 
-    cm = {int(k): v for k, v in colormap.items()}
-    lookup_table = make_lut(cm)  # type: ignore
+    # For now we assume ColorMap are in uint8
+    if data.dtype != numpy.uint8:
+        warnings.warn(
+            f"Input array is of type {data.dtype} and `will be converted to Int in order to apply the ColorMap.",
+            UserWarning,
+        )
+        data = data.astype(numpy.uint8)
+
+    lookup_table = make_lut(colormap)  # type: ignore
     data = lookup_table[data[0], :]
 
     data = numpy.transpose(data, [2, 0, 1])
-
-    # If the colormap has values between 0-255
-    # we cast the output array to Uint8.
-    if data.min() >= 0 and data.max() <= 255:
-        data = data.astype("uint8")
 
     return data[:-1], data[-1]
 
