@@ -1,3 +1,7 @@
+# 7.2.1 (2024-11-14)
+
+* add official support for floating point values in ColorMap
+
 # 7.2.0 (2024-11-05)
 
 * Ensure compatibility between XarrayReader and other Readers by adding `**kwargs` on class methods (https://github.com/cogeotiff/rio-tiler/pull/762)
