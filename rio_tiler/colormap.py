@@ -18,6 +18,7 @@ from rio_tiler.errors import (
 from rio_tiler.types import (
     ColorMapType,
     DataMaskType,
+    DiscreteColorMapType,
     GDALColorMapType,
     IntervalColorMapType,
 )
@@ -116,10 +117,16 @@ def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     # rio_tiler.colormap.make_lut, because we don't want to create a `lookup table`
     # with more than 256 entries (256 x 4) array. In this case we use `apply_discrete_cmap`
     # which can work with arbitrary colormap dict.
-    if len(colormap) != 256 or max(colormap) >= 256 or min(colormap) < 0:
+    if (
+        len(colormap) != 256
+        or max(colormap) >= 256
+        or min(colormap) < 0
+        or any(isinstance(k, float) for k in colormap)
+    ):
         return apply_discrete_cmap(data, colormap)
 
-    lookup_table = make_lut(colormap)
+    cm = {int(k): v for k, v in colormap.items()}
+    lookup_table = make_lut(cm)  # type: ignore
     data = lookup_table[data[0], :]
 
     data = numpy.transpose(data, [2, 0, 1])
@@ -132,12 +139,14 @@ def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     return data[:-1], data[-1]
 
 
-def apply_discrete_cmap(data: numpy.ndarray, colormap: GDALColorMapType) -> DataMaskType:
+def apply_discrete_cmap(
+    data: numpy.ndarray, colormap: Union[GDALColorMapType, DiscreteColorMapType]
+) -> DataMaskType:
     """Apply discrete colormap.
 
     Args:
         data (numpy.ndarray): 1D image array to translate to RGB.
-        colormap (GDALColorMapType): Discrete ColorMap dictionary.
+        colormap (GDALColorMapType or DiscreteColorMapType): Discrete ColorMap dictionary.
 
     Returns:
         tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).

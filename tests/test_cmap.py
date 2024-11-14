@@ -301,6 +301,8 @@ def test_parse_color_bad():
 
 def test_discrete_float():
     """test for titiler issue 738."""
+
+    # make sure we apply discrete colormap when we have less than 256 cmap entries
     cm = {
         0: (0, 255, 255, 255),
         1: (83, 151, 145, 255),
@@ -325,3 +327,20 @@ def test_discrete_float():
     dd, mm = colormap.apply_discrete_cmap(data.copy(), cm)
     assert d.dtype == numpy.uint8
     assert m.dtype == numpy.uint8
+    numpy.testing.assert_array_equal(d, dd)
+    numpy.testing.assert_array_equal(m, mm)
+
+    # make we allow float keys in discrete colormap
+    cm = {
+        0.5: (0, 255, 255, 255),
+        1.5: (83, 151, 145, 255),
+        2.5: (87, 194, 23, 255),
+    }
+
+    data = numpy.random.choice([0.5, 2.5], 256 * 256).reshape(1, 256, 256)
+    d, m = colormap.apply_cmap(data.copy(), cm)
+    dd, mm = colormap.apply_discrete_cmap(data.copy(), cm)
+    assert d.dtype == numpy.uint8
+    assert m.dtype == numpy.uint8
+    numpy.testing.assert_array_equal(d, dd)
+    numpy.testing.assert_array_equal(m, mm)

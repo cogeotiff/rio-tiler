@@ -18,11 +18,15 @@ IntervalTuple = Tuple[NumType, NumType]  # (0, 100)
 # ColorMap Dict: {1: (0, 0, 0, 255), ...}
 GDALColorMapType = Dict[int, ColorTuple]
 
+# Discrete Colormap, like GDALColorMapType but accept Float: {0.1: (0, 0, 0, 255), ...}
+DiscreteColorMapType = Dict[NumType, ColorTuple]
+
 # Intervals ColorMap: [((0, 1), (0, 0, 0, 0)), ...]
 IntervalColorMapType = Sequence[Tuple[IntervalTuple, ColorTuple]]
 
 ColorMapType = Union[
     GDALColorMapType,
+    DiscreteColorMapType,
     IntervalColorMapType,
 ]
 
