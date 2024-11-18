@@ -1,3 +1,7 @@
+# 7.2.2 (2024-11-17)
+
+* Catch and expand error message when GDAL cannot encode data using specified image driver
+
 # 7.2.1 (2024-11-14)
 
 * add official support for floating point values in ColorMap

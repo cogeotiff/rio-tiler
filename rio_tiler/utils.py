@@ -33,7 +33,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
-from rio_tiler.errors import RioTilerError
+from rio_tiler.errors import InvalidFormat, RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
 
@@ -588,24 +588,30 @@ def render(
     }
     output_profile.update(creation_options)
 
-    with warnings.catch_warnings():
-        warnings.filterwarnings(
-            "ignore",
-            category=NotGeoreferencedWarning,
-            module="rasterio",
-        )
-        with MemoryFile() as memfile:
-            with memfile.open(**output_profile) as dst:
-                dst.write(data, indexes=list(range(1, count + 1)))
+    try:
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            with MemoryFile() as memfile:
+                with memfile.open(**output_profile) as dst:
+                    dst.write(data, indexes=list(range(1, count + 1)))
 
-                # Use Mask as an alpha band
-                if mask is not None:
-                    if ColorInterp.alpha not in dst.colorinterp:
-                        dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
+                    # Use Mask as an alpha band
+                    if mask is not None:
+                        if ColorInterp.alpha not in dst.colorinterp:
+                            dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
 
-                    dst.write(mask.astype(data.dtype), indexes=count + 1)
+                        dst.write(mask.astype(data.dtype), indexes=count + 1)
 
-            return memfile.read()
+                return memfile.read()
+
+    except Exception as e:
+        raise InvalidFormat(
+            f"Could not encode array of shape ({count},{height},{width}) and of datatype `{data.dtype}` using {img_format} driver"
+        ) from e
 
 
 def mapzen_elevation_rgb(data: numpy.ndarray) -> numpy.ndarray:
