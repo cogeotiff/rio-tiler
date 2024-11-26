@@ -124,7 +124,11 @@ class XarrayReader(BaseReader):
 
     @property
     def band_names(self) -> List[str]:
-        """Return list of `band descriptions` in DataArray."""
+        """
+        Return list of `band descriptions` in DataArray.
+        
+        `Bands` are all dimensions not defined as spatial dims by rioxarray. 
+        """
         if not self._dims:
             coords_name = list(self.input.coords)
             if len(coords_name) > 3 and (coord := coords_name[2]):
