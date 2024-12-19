@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 import re
+import warnings
 from typing import Dict, List, Sequence, Tuple, Union
 
 import attr
@@ -18,6 +19,7 @@ from rio_tiler.errors import (
 from rio_tiler.types import (
     ColorMapType,
     DataMaskType,
+    DiscreteColorMapType,
     GDALColorMapType,
     IntervalColorMapType,
 )
@@ -116,28 +118,38 @@ def apply_cmap(data: numpy.ndarray, colormap: ColorMapType) -> DataMaskType:
     # rio_tiler.colormap.make_lut, because we don't want to create a `lookup table`
     # with more than 256 entries (256 x 4) array. In this case we use `apply_discrete_cmap`
     # which can work with arbitrary colormap dict.
-    if len(colormap) != 256 or max(colormap) >= 256 or min(colormap) < 0:
+    if (
+        len(colormap) != 256
+        or max(colormap) >= 256
+        or min(colormap) < 0
+        or any(isinstance(k, float) for k in colormap)
+    ):
         return apply_discrete_cmap(data, colormap)
 
-    lookup_table = make_lut(colormap)
+    # For now we assume ColorMap are in uint8
+    if data.dtype != numpy.uint8:
+        warnings.warn(
+            f"Input array is of type {data.dtype} and `will be converted to Int in order to apply the ColorMap.",
+            UserWarning,
+        )
+        data = data.astype(numpy.uint8)
+
+    lookup_table = make_lut(colormap)  # type: ignore
     data = lookup_table[data[0], :]
 
     data = numpy.transpose(data, [2, 0, 1])
 
-    # If the colormap has values between 0-255
-    # we cast the output array to Uint8.
-    if data.min() >= 0 and data.max() <= 255:
-        data = data.astype("uint8")
-
     return data[:-1], data[-1]
 
 
-def apply_discrete_cmap(data: numpy.ndarray, colormap: GDALColorMapType) -> DataMaskType:
+def apply_discrete_cmap(
+    data: numpy.ndarray, colormap: Union[GDALColorMapType, DiscreteColorMapType]
+) -> DataMaskType:
     """Apply discrete colormap.
 
     Args:
         data (numpy.ndarray): 1D image array to translate to RGB.
-        colormap (GDALColorMapType): Discrete ColorMap dictionary.
+        colormap (GDALColorMapType or DiscreteColorMapType): Discrete ColorMap dictionary.
 
     Returns:
         tuple: Data (numpy.ndarray) and Alpha band (numpy.ndarray).

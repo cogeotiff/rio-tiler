@@ -10,7 +10,11 @@ from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.io import MemoryFile
 
-from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
+from rio_tiler.errors import (
+    InvalidDatatypeWarning,
+    InvalidFormat,
+    InvalidPointDataError,
+)
 from rio_tiler.models import ImageData, PointData
 
 
@@ -456,3 +460,9 @@ def test_imagedata_coverage():
 
     coverage = im.get_coverage_array(poly, cover_scale=1000)
     assert numpy.round(numpy.unique(coverage), decimals=3).tolist() == [0, 0.125, 0.25]
+
+
+def test_image_encoding_error():
+    """Test ImageData error when using bad data array shape."""
+    with pytest.raises(InvalidFormat):
+        ImageData(numpy.zeros((5, 256, 256), dtype="uint8")).render(img_format="PNG")

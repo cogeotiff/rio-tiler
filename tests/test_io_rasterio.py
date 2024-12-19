@@ -17,6 +17,7 @@ from rasterio.io import MemoryFile
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 
+from rio_tiler.colormap import cmap
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
@@ -1120,3 +1121,27 @@ def test_inverted_latitude():
     with pytest.warns(UserWarning):
         with Reader(COG_INVERTED) as src:
             _ = src.tile(0, 0, 0)
+
+
+def test_int16_colormap():
+    """Should raise a warning about invalid data type for applying colormap.
+
+    ref: https://github.com/developmentseed/titiler/issues/1023
+    """
+    data = os.path.join(PREFIX, "cog_int16.tif")
+    color_map = cmap.get("viridis")
+
+    with Reader(data) as src:
+        info = src.info()
+        assert info.dtype == "int16"
+        assert info.nodata_type == "Nodata"
+        assert info.nodata_value == -32768
+
+        img = src.preview()
+        assert img.mask.any()
+
+        with pytest.warns(UserWarning):
+            im = img.apply_colormap(color_map)
+
+            # make sure we keep the nodata part masked
+            assert not im.mask.all()

@@ -67,6 +67,14 @@
             >> ("b1", "array")
         ```
 
+# 7.2.2 (2024-11-18)
+
+* Catch and expand error message when GDAL cannot encode data using specified image driver (https://github.com/cogeotiff/rio-tiler/pull/767)
+
+# 7.2.1 (2024-11-14)
+
+* add official support for floating point values in ColorMap
+* cast data to `uint8` datatype when applying linear colormap
 
 # 7.2.0 (2024-11-05)
 
