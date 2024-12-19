@@ -1060,7 +1060,7 @@ def test_netcdf_reader():
         assert info["netcdf"].crs
 
         img = stac.preview(assets=["netcdf"])
-        assert img.band_names == ["netcdf_value"]
+        assert img.band_names == ["netcdf_dataset"]
 
 
 @patch("rio_tiler.io.stac.STAC_ALTERNATE_KEY", "s3")
