@@ -1,3 +1,8 @@
+# Unreleased
+
+* drop python 3.8 support
+* add python 3.13 support
+
 # 7.2.2 (2024-11-18)
 
 * Catch and expand error message when GDAL cannot encode data using specified image driver (https://github.com/cogeotiff/rio-tiler/pull/767)
