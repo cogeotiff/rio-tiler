@@ -645,6 +645,7 @@ def test_get_array_statistics_coverage():
     assert stats[0]["count"] == 1.75
     assert stats[0]["median"] == 3  # 2 in exactextract
     assert round(stats[0]["std"], 2) == 1.05
+    assert stats[0]["valid_percent"] == 100
 
     stats = utils.get_array_statistics(data)
     assert len(stats) == 1
@@ -652,6 +653,7 @@ def test_get_array_statistics_coverage():
     assert stats[0]["max"] == 4
     assert stats[0]["mean"] == 2.5
     assert stats[0]["count"] == 4
+    assert stats[0]["valid_percent"] == 100
 
     # same test as https://github.com/isciences/exactextract/blob/0883cd585d9c7b6b4e936aeca4aa84a15adf82d2/python/tests/test_exact_extract.py#L48-L110
     data = np.ma.arange(1, 10, dtype=np.int32).reshape(3, 3)
@@ -669,6 +671,14 @@ def test_get_array_statistics_coverage():
     assert stats[0]["percentile_25"] == 3
     assert stats[0]["percentile_75"] == 6
     assert stats[0]["std"] == math.sqrt(5)
+
+    # test correct calculation of valid percent with masked array and coverage array
+    data = np.ma.array(
+        [[[0, 1], [0, 5]]], mask=[[[True, False], [True, False]]], fill_value=0
+    )
+    coverage = np.array([[0, 0.5], [0.75, 1]])
+    stats = utils.get_array_statistics(data, coverage=coverage)
+    assert stats[0]["valid_percent"] == 66.67
 
 
 def test_get_vrt_transform_world_file(dataset_fixture):
