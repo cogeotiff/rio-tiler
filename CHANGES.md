@@ -2,6 +2,7 @@
 
 * drop python 3.8 support
 * add python 3.13 support
+* fix: use coverage array for calculation of valid_percent (author @MarcelCode, https://github.com/cogeotiff/rio-tiler/pull/775)
 
 # 7.2.2 (2024-11-18)
 
