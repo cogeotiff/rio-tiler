@@ -1,4 +1,4 @@
-# Unreleased
+# 7.3.0 (2025-01-07)
 
 * drop python 3.8 support
 * add python 3.13 support
