@@ -133,6 +133,8 @@ def get_array_statistics(
     else:
         coverage = numpy.ones((data.shape[1], data.shape[2]))
 
+    coverage_pixels = numpy.count_nonzero(coverage)
+
     # Avoid non masked nan/inf values
     numpy.ma.fix_invalid(data, copy=False)
 
@@ -143,7 +145,7 @@ def get_array_statistics(
 
         valid_pixels = float(numpy.ma.count(data[b]))
         masked_pixels = float(numpy.ma.count_masked(data[b]))
-        valid_percent = round((valid_pixels / data[b].size) * 100, 2)
+        valid_percent = round(min(valid_pixels / coverage_pixels, 1) * 100, 2)
 
         if categorical:
             out_dict = dict(zip(keys.tolist(), counts.tolist()))
