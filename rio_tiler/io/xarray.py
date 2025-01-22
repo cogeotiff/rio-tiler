@@ -39,8 +39,10 @@ from rio_tiler.utils import (
 
 try:
     import xarray
+    from xarray import open_dataset
 except ImportError:  # pragma: nocover
     xarray = None  # type: ignore
+    open_dataset = None  # type: ignore
 
 try:
     import rioxarray
@@ -644,7 +646,7 @@ class DatasetReader(BaseReader):
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    opener: Callable[..., xarray.Dataset] = attr.ib(default=xarray.open_dataset)
+    opener: Callable[..., xarray.Dataset] = attr.ib(default=open_dataset)
     opener_options: Dict = attr.ib(factory=dict)
 
     _ctx_stack: contextlib.ExitStack = attr.ib(init=False, factory=contextlib.ExitStack)
