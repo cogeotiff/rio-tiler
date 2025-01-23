@@ -21,6 +21,7 @@ import attr
 import httpx
 import pystac
 import rasterio
+from affine import Affine
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
@@ -277,7 +278,7 @@ class STACReader(MultiBaseReader):
                 ]
             ):
                 self.height, self.width = self.item.ext.proj.shape
-                self.transform = self.item.ext.proj.transform
+                self.transform = Affine(*self.item.ext.proj.transform)
                 self.bounds = array_bounds(self.height, self.width, self.transform)
                 self.crs = rasterio.crs.CRS.from_string(self.item.ext.proj.crs_string)
 
