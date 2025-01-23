@@ -40,6 +40,7 @@ STAC_WRONGSTATS_PATH = os.path.join(PREFIX, "stac_wrong_stats.json")
 STAC_ALTERNATE_PATH = os.path.join(PREFIX, "stac_alternate.json")
 STAC_GRIB_PATH = os.path.join(PREFIX, "stac_grib.json")
 STAC_NETCDF_PATH = os.path.join(PREFIX, "stac_netcdf.json")
+STAC_ROTATED_AFFINE = os.path.join(PREFIX, "stac-proj-titiler-issue1074.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -1110,3 +1111,11 @@ def test_vrt_string_assets():
 
         img = stac.preview(assets="vrt://asset?bands=1")
         assert img.count == 1
+
+
+def test_stac_with_rotate_affine():
+    """Make sure we can handle rotated transform in proj"""
+    with STACReader(STAC_ROTATED_AFFINE) as stac:
+        assert stac.transform
+        assert stac.bounds
+        assert stac.get_geographic_bounds("epsg:4326")

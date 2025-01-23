@@ -1,0 +1,177 @@
+{
+  "type": "Feature",
+  "stac_version": "1.0.0",
+  "stac_extensions": [
+    "https://stac-extensions.github.io/projection/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/raster/v1.1.0/schema.json",
+    "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
+  ],
+  "id": "2024-02-15-03-30-26_UMBRA-06_GEC.tif",
+  "geometry": {
+    "type": "Polygon",
+    "coordinates": [
+      [
+        [
+          -79.61350819116612,
+          8.941726366625119
+        ],
+        [
+          -79.54925740032105,
+          8.941726366625119
+        ],
+        [
+          -79.54925740032105,
+          9.005608046514665
+        ],
+        [
+          -79.61350819116612,
+          9.005608046514665
+        ],
+        [
+          -79.61350819116612,
+          8.941726366625119
+        ]
+      ]
+    ]
+  },
+  "bbox": [
+    -79.61350819116612,
+    8.941726366625119,
+    -79.54925740032105,
+    9.005608046514665
+  ],
+  "properties": {
+    "proj:epsg": 4326,
+    "proj:geometry": {
+      "type": "Polygon",
+      "coordinates": [
+        [
+          [
+            -79.61350819116612,
+            8.941726366625119
+          ],
+          [
+            -79.54925740032105,
+            8.941726366625119
+          ],
+          [
+            -79.54925740032105,
+            9.005608046514665
+          ],
+          [
+            -79.61350819116612,
+            9.005608046514665
+          ],
+          [
+            -79.61350819116612,
+            8.941726366625119
+          ]
+        ]
+      ]
+    },
+    "proj:bbox": [
+      -79.61350819116612,
+      8.941726366625119,
+      -79.54925740032105,
+      9.005608046514665
+    ],
+    "proj:shape": [
+      16001,
+      16001
+    ],
+    "proj:transform": [
+      0.0000019242821881153906,
+      -0.0000020911412757346902,
+      -79.58004783961309,
+      -0.0000020791279755538317,
+      -0.0000019132274953258257,
+      9.005608046514665,
+      0,
+      0,
+      1
+    ],
+    "proj:projjson": {
+      "$schema": "https://proj.org/schemas/v0.7/projjson.schema.json",
+      "type": "GeographicCRS",
+      "name": "WGS 84",
+      "datum": {
+        "type": "GeodeticReferenceFrame",
+        "name": "World Geodetic System 1984",
+        "ellipsoid": {
+          "name": "WGS 84",
+          "semi_major_axis": 6378137,
+          "inverse_flattening": 298.257223563
+        }
+      },
+      "coordinate_system": {
+        "subtype": "ellipsoidal",
+        "axis": [
+          {
+            "name": "Geodetic latitude",
+            "abbreviation": "Lat",
+            "direction": "north",
+            "unit": "degree"
+          },
+          {
+            "name": "Geodetic longitude",
+            "abbreviation": "Lon",
+            "direction": "east",
+            "unit": "degree"
+          }
+        ]
+      },
+      "id": {
+        "authority": "EPSG",
+        "code": 4326
+      }
+    },
+    "datetime": "2025-01-22T14:44:29.445234Z"
+  },
+  "links": [],
+  "assets": {
+    "data": {
+      "href": "https://umbra-open-data-catalog.s3.amazonaws.com/sar-data/tasks/Panama+Canal,+Panama/bb17c467-a6a8-41f0-80d8-2da88af9475b/2024-02-15-03-30-26_UMBRA-06/2024-02-15-03-30-26_UMBRA-06_GEC.tif",
+      "type": "image/tiff; application=geotiff",
+      "raster:bands": [
+        {
+          "data_type": "uint8",
+          "scale": 1,
+          "offset": 0,
+          "sampling": "area",
+          "nodata": 0,
+          "statistics": {
+            "mean": 21.673484802246094,
+            "minimum": 1,
+            "maximum": 254,
+            "stddev": 21.97018807823054,
+            "valid_percent": 100
+          },
+          "histogram": {
+            "count": 11,
+            "min": 1,
+            "max": 254,
+            "buckets": [
+              701120,
+              249619,
+              69896,
+              19634,
+              5819,
+              1773,
+              536,
+              125,
+              45,
+              9
+            ]
+          }
+        }
+      ],
+      "eo:bands": [
+        {
+          "name": "b1",
+          "description": "gray"
+        }
+      ],
+      "roles": []
+    }
+  }
+}
