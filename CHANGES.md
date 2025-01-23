@@ -1,3 +1,7 @@
+# 7.3.1 (2025-01-23)
+
+* make sure `STACReader.transform` is an Affine object
+
 # 7.3.0 (2025-01-07)
 
 * drop python 3.8 support
