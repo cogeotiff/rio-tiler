@@ -11,7 +11,6 @@ from color_operations import parse_operations, scale_dtype, to_math_type
 from numpy.typing import NDArray
 from pydantic import BaseModel
 from rasterio import windows
-import rasterio
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges

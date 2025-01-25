@@ -524,8 +524,6 @@ def test_reproject_with_data():
         metadata={"test": "value"},
         band_names=["band1"],
     )
-    with open("img.png", "wb") as f:
-        f.write(img.render())
     
     assert numpy.any(img.array.data > 0)
 
@@ -534,8 +532,6 @@ def test_reproject_with_data():
     
     reprojected = img.reproject(dst_crs)
     
-    with open("reprojected.png", "wb") as f:
-        f.write(reprojected.render())
     
     # Check metadata preservation
     assert reprojected.metadata == img.metadata
