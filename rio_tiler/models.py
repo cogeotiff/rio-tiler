@@ -11,16 +11,17 @@ from color_operations import parse_operations, scale_dtype, to_math_type
 from numpy.typing import NDArray
 from pydantic import BaseModel
 from rasterio import windows
+import rasterio
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
-from rasterio.enums import ColorInterp
+from rasterio.enums import ColorInterp, Resampling
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
-from rasterio.warp import transform_geom
+from rasterio.warp import transform_geom, reproject, calculate_default_transform, transform_bounds
 from typing_extensions import Self
 
 from rio_tiler.colormap import apply_cmap
@@ -786,3 +787,46 @@ class ImageData:
         ).astype("float32")
 
         return cover_array.sum(-1).sum(1) / (cover_scale**2)
+
+    def reproject(
+        self,
+        dst_crs: CRS,
+        resolution: Optional[Tuple[float, float]] = None,
+        resampling_method: Resampling = Resampling.nearest,
+    ) -> "ImageData":
+        """Reproject data and mask."""
+        dst_transform, w, h = calculate_default_transform(
+            self.crs,
+            dst_crs,
+            self.width,
+            self.height,
+            *self.bounds,
+            resolution=resolution
+        )
+
+        destination = numpy.ma.MaskedArray(
+            numpy.zeros((self.count, h, w), dtype=self.array.dtype),
+            mask=numpy.zeros((self.count, h, w), dtype=bool),
+        )
+        reprojection, _ = reproject(
+            self.array,
+            destination=destination.data,
+            src_transform=self.transform,
+            src_crs=self.crs,
+            dst_transform=dst_transform,
+            dst_crs=dst_crs,
+            resampling=resampling_method,
+            masked=True,
+        )
+
+        new_bounds = transform_bounds(self.crs, dst_crs, *self.bounds)
+
+        return ImageData(
+            reprojection,
+            assets=self.assets,
+            crs=dst_crs,
+            bounds=new_bounds,
+            band_names=self.band_names,
+            metadata=self.metadata,
+            dataset_statistics=self.dataset_statistics,
+        )

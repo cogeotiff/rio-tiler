@@ -3,12 +3,14 @@
 import warnings
 from io import BytesIO
 
+from affine import Affine
 import numpy
 import pytest
 import rasterio
 from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.io import MemoryFile
+from rasterio.warp import Resampling
 
 from rio_tiler.errors import (
     InvalidDatatypeWarning,
@@ -466,3 +468,116 @@ def test_image_encoding_error():
     """Test ImageData error when using bad data array shape."""
     with pytest.raises(InvalidFormat):
         ImageData(numpy.zeros((5, 256, 256), dtype="uint8")).render(img_format="PNG")
+        
+def test_reproject_basic():
+    """Test basic reproject functionality."""
+    data = numpy.zeros((1, 256, 256), dtype="uint8")
+    data[0:256, 0:256] = 1
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0:256, 0:256] = False
+    
+    # Create test image with WGS84 CRS
+    src_crs = CRS.from_epsg(4326)
+    img = ImageData(
+        numpy.ma.MaskedArray(data=data, mask=mask),
+        crs=src_crs,
+        bounds=(-180, -85, 180, 85),
+    )
+
+    # Test reprojection to Web Mercator
+    dst_crs = CRS.from_epsg(3857)
+    
+    reprojected = img.reproject(dst_crs)
+    
+    assert reprojected.crs == dst_crs
+    assert reprojected.array.shape == (1, 256, 256)
+    assert reprojected.array.mask.shape == (1, 256, 256)
+
+    # Test no reprojection when CRS is the same
+    same_crs = img.reproject(src_crs)
+    assert same_crs.crs == src_crs
+    assert same_crs.transform == img.transform
+    numpy.testing.assert_array_equal(same_crs.array.data, img.array.data)
+    numpy.testing.assert_array_equal(same_crs.array.mask, img.array.mask)
+
+    # Test with different resampling method
+    reprojected_bilinear = img.reproject(dst_crs, resampling_method=Resampling.bilinear)
+    assert reprojected_bilinear.crs == dst_crs
+    assert reprojected_bilinear.width == 256
+    assert reprojected_bilinear.height == 256
+    assert isinstance(reprojected_bilinear.transform, Affine)
+
+
+def test_reproject_with_data():
+    """Test reproject with actual data values."""
+    # Create a test pattern
+    data = numpy.zeros((1, 256, 256), dtype="uint8")
+    data[0, 40:170, 40:170] = 255  # Add a square of 255 values
+    mask = numpy.zeros((1, 256, 256), dtype=bool)
+    mask[0, 50:100, 50:100] = True  # Add a masked point
+    
+    src_crs = CRS.from_epsg(4326)
+    img = ImageData(
+        numpy.ma.MaskedArray(data=data, mask=mask),
+        crs=src_crs,
+        bounds=(-180, -85, 180, 85),
+        metadata={"test": "value"},
+        band_names=["band1"],
+    )
+    with open("img.png", "wb") as f:
+        f.write(img.render())
+    
+    assert numpy.any(img.array.data > 0)
+
+    # Test reprojection to Web Mercator
+    dst_crs = CRS.from_epsg(3857)
+    
+    reprojected = img.reproject(dst_crs)
+    
+    with open("reprojected.png", "wb") as f:
+        f.write(reprojected.render())
+    
+    # Check metadata preservation
+    assert reprojected.metadata == img.metadata
+    assert reprojected.band_names == img.band_names
+    
+    # Check data and mask shapes
+    assert reprojected.array.data.shape == (1, 256, 256)
+    assert reprojected.array.mask.shape == (1, 256, 256)
+    
+    # Verify some data is preserved (exact values may change due to resampling)
+    assert numpy.any(reprojected.array.data > 0)
+    # QUESTION: rasterio does not seemd to supprt masked arrays.
+    #           Should we reproject the mask as well?
+    # assert numpy.any(reprojected.array.mask)
+
+
+def test_reproject_multiband():
+    """Test reproject with multiple bands."""
+    data = numpy.zeros((3, 10, 10))
+    data[0, 4:7, 4:7] = 1  # Red band
+    data[1, 3:8, 3:8] = 0.5  # Green band
+    data[2, 2:9, 2:9] = 0.25  # Blue band
+    
+    mask = numpy.zeros((3, 10, 10), dtype=bool)
+    mask[0, 5, 5] = True
+    
+    src_crs = CRS.from_epsg(4326)
+    img = ImageData(
+        numpy.ma.MaskedArray(data=data, mask=mask),
+        crs=src_crs,
+        bounds=(-180, -85, 180, 85),
+        band_names=["red", "green", "blue"],
+    )
+
+    dst_crs = CRS.from_epsg(3857)
+    
+    reprojected = img.reproject(dst_crs)
+    
+    assert reprojected.count == 3
+    assert reprojected.band_names == ["red", "green", "blue"]
+    
+    # Check each band has unique values
+    assert not numpy.array_equal(reprojected.array.data[0], reprojected.array.data[1])
+    assert not numpy.array_equal(reprojected.array.data[1], reprojected.array.data[2])
+
