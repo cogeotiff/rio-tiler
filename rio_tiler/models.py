@@ -19,13 +19,8 @@ from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
-from rasterio.transform import from_bounds
-from rasterio.warp import (
-    calculate_default_transform,
-    reproject,
-    transform_bounds,
-    transform_geom,
-)
+from rasterio.transform import array_bounds, from_bounds
+from rasterio.warp import calculate_default_transform, reproject, transform_geom
 from typing_extensions import Self
 
 from rio_tiler.colormap import apply_cmap
@@ -39,6 +34,7 @@ from rio_tiler.types import (
     IntervalTuple,
     NumType,
     RIOResampling,
+    WarpResampling,
 )
 from rio_tiler.utils import (
     _validate_shape_input,
@@ -796,7 +792,7 @@ class ImageData:
         self,
         dst_crs: CRS,
         resolution: Optional[Tuple[float, float]] = None,
-        resampling_method: Resampling = Resampling.nearest,
+        reproject_method: WarpResampling = "nearest",
     ) -> "ImageData":
         """Reproject data and mask."""
         dst_transform, w, h = calculate_default_transform(
@@ -808,28 +804,26 @@ class ImageData:
             resolution=resolution,
         )
 
-        destination = numpy.ma.MaskedArray(
+        destination = numpy.ma.masked_array(
             numpy.zeros((self.count, h, w), dtype=self.array.dtype),
-            mask=numpy.zeros((self.count, h, w), dtype=bool),
         )
-        reprojection, _ = reproject(
+        destination, _ = reproject(
             self.array,
-            destination=destination.data,
+            destination,
             src_transform=self.transform,
             src_crs=self.crs,
             dst_transform=dst_transform,
             dst_crs=dst_crs,
-            resampling=resampling_method,
-            masked=True,
+            resampling=Resampling[reproject_method],
         )
 
-        new_bounds = transform_bounds(self.crs, dst_crs, *self.bounds)
+        bounds = array_bounds(h, w, dst_transform)
 
         return ImageData(
-            reprojection,
+            destination,
             assets=self.assets,
             crs=dst_crs,
-            bounds=new_bounds,
+            bounds=bounds,
             band_names=self.band_names,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,

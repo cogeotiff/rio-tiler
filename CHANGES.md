@@ -6,7 +6,7 @@
     from rio_tiler.models import ImageData
 
     img = ImageData(numpy.zeros((3, 256, 256), crs=CRS.from_epsg(4326), dtype="uint8"))
-    img.reproject("epsg:3857")
+    img_3857 = img.reproject("epsg:3857")
     ```
 
 * add `indexes` parameter for `XarrayReader` methods. As for Rasterio, the indexes values start at `1`.
