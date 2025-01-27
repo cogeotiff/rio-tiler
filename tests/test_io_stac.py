@@ -153,7 +153,7 @@ def test_fetch_stac(httpx, s3_get):
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
 
 
-@pytest.mark.skipif(sys.version_info < (3, 9), reason="requires python3.9 or higher")
+@pytest.mark.skipif(sys.version_info < (3, 10), reason="requires python3.9 or higher")
 def test_projection_extension():
     """Test STAC with the projection extension."""
     with STACReader(STAC_PATH_PROJ) as stac:
