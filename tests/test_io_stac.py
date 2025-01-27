@@ -33,6 +33,7 @@ from rio_tiler.types import AssetInfo
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
 STAC_PATH_PROJ = os.path.join(PREFIX, "stac_proj.json")
+STAC_PATH_PROJ_2_0 = os.path.join(PREFIX, "stac_proj_2_0.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
 STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
@@ -156,6 +157,12 @@ def test_fetch_stac(httpx, s3_get):
 def test_projection_extension():
     """Test STAC with the projection extension."""
     with STACReader(STAC_PATH_PROJ) as stac:
+        assert stac.minzoom == 6
+        assert stac.maxzoom == 7
+        assert stac.bounds
+        assert stac.crs == CRS.from_epsg(32617)
+
+    with STACReader(STAC_PATH_PROJ_2_0) as stac:
         assert stac.minzoom == 6
         assert stac.maxzoom == 7
         assert stac.bounds
