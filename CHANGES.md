@@ -1,6 +1,8 @@
 # Unreleased (TBD)
 
-* add `reproject` method for `ImageData` objects
+* update rasterio dependency to `>=1.4.0`
+
+* add `reproject` method for `ImageData` objects (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/pull/782)
 
     ```python
     from rio_tiler.models import ImageData
