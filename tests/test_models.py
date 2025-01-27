@@ -3,10 +3,10 @@
 import warnings
 from io import BytesIO
 
-from affine import Affine
 import numpy
 import pytest
 import rasterio
+from affine import Affine
 from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.io import MemoryFile
@@ -468,14 +468,15 @@ def test_image_encoding_error():
     """Test ImageData error when using bad data array shape."""
     with pytest.raises(InvalidFormat):
         ImageData(numpy.zeros((5, 256, 256), dtype="uint8")).render(img_format="PNG")
-        
+
+
 def test_reproject_basic():
     """Test basic reproject functionality."""
     data = numpy.zeros((1, 256, 256), dtype="uint8")
     data[0:256, 0:256] = 1
     mask = numpy.zeros((1, 256, 256), dtype="bool")
     mask[0:256, 0:256] = False
-    
+
     # Create test image with WGS84 CRS
     src_crs = CRS.from_epsg(4326)
     img = ImageData(
@@ -486,9 +487,9 @@ def test_reproject_basic():
 
     # Test reprojection to Web Mercator
     dst_crs = CRS.from_epsg(3857)
-    
+
     reprojected = img.reproject(dst_crs)
-    
+
     assert reprojected.crs == dst_crs
     assert reprojected.array.shape == (1, 256, 256)
     assert reprojected.array.mask.shape == (1, 256, 256)
@@ -515,7 +516,7 @@ def test_reproject_with_data():
     data[0, 40:170, 40:170] = 255  # Add a square of 255 values
     mask = numpy.zeros((1, 256, 256), dtype=bool)
     mask[0, 50:100, 50:100] = True  # Add a masked point
-    
+
     src_crs = CRS.from_epsg(4326)
     img = ImageData(
         numpy.ma.MaskedArray(data=data, mask=mask),
@@ -524,23 +525,22 @@ def test_reproject_with_data():
         metadata={"test": "value"},
         band_names=["band1"],
     )
-    
+
     assert numpy.any(img.array.data > 0)
 
     # Test reprojection to Web Mercator
     dst_crs = CRS.from_epsg(3857)
-    
+
     reprojected = img.reproject(dst_crs)
-    
-    
+
     # Check metadata preservation
     assert reprojected.metadata == img.metadata
     assert reprojected.band_names == img.band_names
-    
+
     # Check data and mask shapes
     assert reprojected.array.data.shape == (1, 256, 256)
     assert reprojected.array.mask.shape == (1, 256, 256)
-    
+
     # Verify some data is preserved (exact values may change due to resampling)
     assert numpy.any(reprojected.array.data > 0)
     # QUESTION: rasterio does not seemd to supprt masked arrays.
@@ -554,10 +554,10 @@ def test_reproject_multiband():
     data[0, 4:7, 4:7] = 1  # Red band
     data[1, 3:8, 3:8] = 0.5  # Green band
     data[2, 2:9, 2:9] = 0.25  # Blue band
-    
+
     mask = numpy.zeros((3, 10, 10), dtype=bool)
     mask[0, 5, 5] = True
-    
+
     src_crs = CRS.from_epsg(4326)
     img = ImageData(
         numpy.ma.MaskedArray(data=data, mask=mask),
@@ -567,13 +567,12 @@ def test_reproject_multiband():
     )
 
     dst_crs = CRS.from_epsg(3857)
-    
+
     reprojected = img.reproject(dst_crs)
-    
+
     assert reprojected.count == 3
     assert reprojected.band_names == ["red", "green", "blue"]
-    
+
     # Check each band has unique values
     assert not numpy.array_equal(reprojected.array.data[0], reprojected.array.data[1])
     assert not numpy.array_equal(reprojected.array.data[1], reprojected.array.data[2])
-

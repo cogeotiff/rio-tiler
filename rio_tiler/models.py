@@ -20,7 +20,12 @@ from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio.transform import from_bounds
-from rasterio.warp import transform_geom, reproject, calculate_default_transform, transform_bounds
+from rasterio.warp import (
+    calculate_default_transform,
+    reproject,
+    transform_bounds,
+    transform_geom,
+)
 from typing_extensions import Self
 
 from rio_tiler.colormap import apply_cmap
@@ -800,7 +805,7 @@ class ImageData:
             self.width,
             self.height,
             *self.bounds,
-            resolution=resolution
+            resolution=resolution,
         )
 
         destination = numpy.ma.MaskedArray(
