@@ -5,6 +5,8 @@ import os
 import pathlib
 import re
 import warnings
+from importlib.resources import as_file
+from importlib.resources import files as resources_files
 from typing import Dict, List, Sequence, Tuple, Union
 
 import attr
@@ -23,15 +25,6 @@ from rio_tiler.types import (
     GDALColorMapType,
     IntervalColorMapType,
 )
-
-try:
-    from importlib.resources import as_file
-    from importlib.resources import files as resources_files
-except ImportError:
-    # Try backported to PY<39 `importlib_resources`.
-    from importlib_resources import as_file  # type: ignore
-    from importlib_resources import files as resources_files  # type: ignore
-
 
 EMPTY_COLORMAP: GDALColorMapType = {i: (0, 0, 0, 0) for i in range(256)}
 

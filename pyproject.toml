@@ -32,7 +32,6 @@ dependencies = [
     "rasterio>=1.4.0",
     "color-operations",
     "typing-extensions",
-    "importlib_resources>=1.1.0; python_version < '3.9'",
 ]
 
 [project.optional-dependencies]
