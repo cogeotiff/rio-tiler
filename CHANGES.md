@@ -1,4 +1,5 @@
-# Unreleased (TBD)
+
+# 7.4.0 (2025-01-28)
 
 * update rasterio dependency to `>=1.4.0`
 
