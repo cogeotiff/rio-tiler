@@ -14,13 +14,13 @@ from rasterio import windows
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
-from rasterio.enums import ColorInterp
+from rasterio.enums import ColorInterp, Resampling
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
-from rasterio.transform import from_bounds
-from rasterio.warp import transform_geom
+from rasterio.transform import array_bounds, from_bounds
+from rasterio.warp import calculate_default_transform, reproject, transform_geom
 from typing_extensions import Self
 
 from rio_tiler.colormap import apply_cmap
@@ -34,6 +34,7 @@ from rio_tiler.types import (
     IntervalTuple,
     NumType,
     RIOResampling,
+    WarpResampling,
 )
 from rio_tiler.utils import (
     _validate_shape_input,
@@ -786,3 +787,44 @@ class ImageData:
         ).astype("float32")
 
         return cover_array.sum(-1).sum(1) / (cover_scale**2)
+
+    def reproject(
+        self,
+        dst_crs: CRS,
+        resolution: Optional[Tuple[float, float]] = None,
+        reproject_method: WarpResampling = "nearest",
+    ) -> "ImageData":
+        """Reproject data and mask."""
+        dst_transform, w, h = calculate_default_transform(
+            self.crs,
+            dst_crs,
+            self.width,
+            self.height,
+            *self.bounds,
+            resolution=resolution,
+        )
+
+        destination = numpy.ma.masked_array(
+            numpy.zeros((self.count, h, w), dtype=self.array.dtype),
+        )
+        destination, _ = reproject(
+            self.array,
+            destination,
+            src_transform=self.transform,
+            src_crs=self.crs,
+            dst_transform=dst_transform,
+            dst_crs=dst_crs,
+            resampling=Resampling[reproject_method],
+        )
+
+        bounds = array_bounds(h, w, dst_transform)
+
+        return ImageData(
+            destination,
+            assets=self.assets,
+            crs=dst_crs,
+            bounds=bounds,
+            band_names=self.band_names,
+            metadata=self.metadata,
+            dataset_statistics=self.dataset_statistics,
+        )

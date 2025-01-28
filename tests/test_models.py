@@ -466,3 +466,71 @@ def test_image_encoding_error():
     """Test ImageData error when using bad data array shape."""
     with pytest.raises(InvalidFormat):
         ImageData(numpy.zeros((5, 256, 256), dtype="uint8")).render(img_format="PNG")
+
+
+def test_image_reproject():
+    """Test basic reproject functionality."""
+    data = numpy.zeros((1, 256, 256), dtype="uint8")
+    data[0:256, 0:256] = 1
+    mask = numpy.zeros((1, 256, 256), dtype="bool")
+    mask[0:100, 0:100] = True
+
+    # Create test image with WGS84 CRS
+    src_crs = CRS.from_epsg(4326)
+    img = ImageData(
+        numpy.ma.MaskedArray(data=data, mask=mask),
+        crs=src_crs,
+        bounds=(-95, 43, -92, 45),
+        metadata={"test": "value"},
+        band_names=["band1"],
+    )
+
+    # Test re-projection to Web Mercator
+    dst_crs = CRS.from_epsg(3857)
+
+    reprojected = img.reproject(dst_crs)
+    assert reprojected.crs == dst_crs
+    assert reprojected.count == 1
+    assert reprojected.width != 256
+    assert reprojected.height != 256
+    assert reprojected.array[0, 0, 0].data == 0
+    assert reprojected.array.data[0, -10, -10] == 1
+    assert reprojected.array.mask.shape[0] == 1
+    assert reprojected.array.mask[0, 0, 0]
+    assert not reprojected.array.mask[0, -10, -10]
+    assert reprojected.metadata == img.metadata
+    assert reprojected.band_names == img.band_names
+
+    # Test no re-projection when CRS is the same
+    same_crs = img.reproject(src_crs)
+    assert same_crs.crs == src_crs
+    assert same_crs.transform == img.transform
+    numpy.testing.assert_array_equal(same_crs.array, img.array)
+
+    # Test with different resampling method
+    reprojected_bilinear = img.reproject(dst_crs, reproject_method="bilinear")
+    with numpy.testing.assert_raises(AssertionError):
+        numpy.testing.assert_array_equal(reprojected_bilinear.array, img.array)
+
+    # With MultiBands
+    data = numpy.zeros((3, 256, 256), dtype="uint8")
+    data[:, 0:256, 0:256] = 1
+    mask = numpy.zeros((3, 256, 256), dtype="bool")
+    mask[:, 0:100, 0:100] = True
+
+    img = ImageData(
+        numpy.ma.MaskedArray(data=data, mask=mask),
+        crs=src_crs,
+        bounds=(-95, 43, -92, 45),
+    )
+
+    reprojected = img.reproject(dst_crs)
+    assert reprojected.crs == dst_crs
+    assert reprojected.count == 3
+    assert reprojected.width != 256
+    assert reprojected.height != 256
+    assert reprojected.array.data[:, 0, 0].tolist() == [0, 0, 0]
+    assert reprojected.array.data[:, -10, -10].tolist() == [1, 1, 1]
+    assert reprojected.array.mask.shape[0] == 3
+    assert reprojected.array.mask[:, 0, 0].tolist() == [True, True, True]
+    assert reprojected.array.mask[:, -10, -10].tolist() == [False, False, False]

@@ -1,5 +1,16 @@
 # Unreleased (TBD)
 
+* update rasterio dependency to `>=1.4.0`
+
+* add `reproject` method for `ImageData` objects (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/pull/782)
+
+    ```python
+    from rio_tiler.models import ImageData
+
+    img = ImageData(numpy.zeros((3, 256, 256), crs=CRS.from_epsg(4326), dtype="uint8"))
+    img_3857 = img.reproject("epsg:3857")
+    ```
+
 * add `indexes` parameter for `XarrayReader` methods. As for Rasterio, the indexes values start at `1`.
 
     ```python
