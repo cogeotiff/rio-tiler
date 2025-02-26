@@ -38,7 +38,6 @@ dependencies = [
 test = [
     "pytest",
     "pytest-cov",
-
     # XarrayReader
     "xarray",
     "rioxarray",
@@ -47,6 +46,8 @@ test = [
     "boto3",
     # Some tests will fail with 5.0
     "morecantile>=6.0,<7.0",
+    # Experimental
+    "vsifile>=0.2",
 ]
 
 benchmark = [
