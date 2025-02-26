@@ -1,4 +1,9 @@
 
+# 7.5.0 (2025-02-26)
+
+* add `rio_tiler.experimental` submodule
+* add `rio_tiler.experimental.vsifile.VSIReader` VSIFile based experimental reader
+
 # 7.4.0 (2025-01-28)
 
 * update rasterio dependency to `>=1.4.0`
