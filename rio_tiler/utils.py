@@ -773,14 +773,15 @@ def resize_array(
             category=NotGeoreferencedWarning,
             module="rasterio",
         )
-        with rasterio.open(datasetname, "r+") as src:
-            # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
-            indexes = 1 if len(data.shape) == 2 else None
-            return src.read(
-                out_shape=out_shape,
-                indexes=indexes,
-                resampling=Resampling[resampling_method],
-            )
+        with rasterio.Env(GDAL_MEM_ENABLE_OPEN=True):
+            with rasterio.open(datasetname, "r+") as src:
+                # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
+                indexes = 1 if len(data.shape) == 2 else None
+                return src.read(
+                    out_shape=out_shape,
+                    indexes=indexes,
+                    resampling=Resampling[resampling_method],
+                )
 
 
 def normalize_bounds(bounds: BBox) -> BBox:
