@@ -1,4 +1,8 @@
 
+# Unreleased
+
+* use `GDAL_MEM_ENABLE_OPEN=TRUE` when opening a numpy array with rasterio
+
 # 7.5.0 (2025-02-26)
 
 * add `rio_tiler.experimental` submodule
