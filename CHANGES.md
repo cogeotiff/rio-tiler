@@ -1,6 +1,8 @@
 
 # Unreleased
 
+# 7.5.1 (2025-03-19)
+
 * fix `utils.get_array_statistics` method to avoid `ZeroDivisionError` when there is no valid pixel
 * use `GDAL_MEM_ENABLE_OPEN=TRUE` when opening a numpy array with rasterio
 
