@@ -5,6 +5,7 @@
 
 * fix `utils.get_array_statistics` method to avoid `ZeroDivisionError` when there is no valid pixel
 * use `GDAL_MEM_ENABLE_OPEN=TRUE` when opening a numpy array with rasterio
+* add `interpolate=True/False` to `.point()` methods to allow interpolation of surrounding pixels
 
 # 7.5.0 (2025-02-26)
 
