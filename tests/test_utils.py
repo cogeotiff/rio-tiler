@@ -559,6 +559,39 @@ def test_get_array_statistics():
     assert not math.isnan(stats[0]["max"])
     assert not math.isnan(stats[0]["max"])
 
+    # Totally Masked Array
+    arr = np.ma.MaskedArray(data=np.zeros((1, 256, 256), dtype="uint8"), mask=True)
+    stats = utils.get_array_statistics(arr)
+    assert len(stats) == 1
+    assert list(stats[0]) == [
+        "min",
+        "max",
+        "mean",
+        "count",
+        "sum",
+        "std",
+        "median",
+        "majority",
+        "minority",
+        "unique",
+        "percentile_2",
+        "percentile_98",
+        "histogram",
+        "valid_pixels",
+        "masked_pixels",
+        "valid_percent",
+    ]
+    # Make sure the statistics object are JSON serializable
+    assert json.dumps(stats[0])
+    assert math.isnan(stats[0]["min"])
+    assert math.isnan(stats[0]["max"])
+    assert math.isnan(stats[0]["max"])
+    assert math.isnan(stats[0]["mean"])
+    assert stats[0]["count"] == 0
+    assert stats[0]["sum"] == 0
+    assert math.isnan(stats[0]["std"])
+    assert math.isnan(stats[0]["median"])
+
 
 def test_resize_array():
     """make sure we resize well."""
