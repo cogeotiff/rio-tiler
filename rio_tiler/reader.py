@@ -11,7 +11,7 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
-from rasterio.transform import array_bounds
+from rasterio.transform import array_bounds, rowcol
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
@@ -508,6 +508,7 @@ def point(
     vrt_options: Optional[Dict] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
+    interpolate: bool = False,
     unscale: bool = False,
     post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> PointData:
@@ -522,6 +523,7 @@ def point(
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+        interpolate (bool, optional): Interpolate pixels around the coordinates. Defaults to `False`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -580,7 +582,15 @@ def point(
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        row, col = dataset.index(lon, lat)
+        if interpolate:
+            # Ref: https://github.com/cogeotiff/rio-tiler/issues/793
+            # https://github.com/OSGeo/gdal/blob/a3d68b069e6b3676ba437faca5dca6ae2076ce24/swig/python/gdal-utils/osgeo_utils/samples/gdallocationinfo.py#L185-L197
+            rows, cols = rowcol(dataset.transform, xs=[lon], ys=[lat], op=lambda x: x)
+            row = rows[0] - 0.5
+            col = cols[0] - 0.5
+        else:
+            row, col = dataset.index(lon, lat)
+
         img = read(
             dataset,
             indexes=indexes,

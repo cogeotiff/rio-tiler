@@ -423,6 +423,33 @@ def test_point():
         assert pt.mask == numpy.array([0])
         assert pt.band_names == ["b1"]
 
+        # Interpolate=True but with Nearest, so no influence
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2800])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
+        # Interpolate=True + resampling=Cubic
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            resampling_method="cubic",
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2812])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
     with rasterio.open(COG_SCALE) as src_dst:
         pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs, indexes=1)
         assert pt.data == numpy.array([8917])
