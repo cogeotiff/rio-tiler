@@ -509,6 +509,7 @@ def point(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     interpolate: bool = False,
+    buffer: Optional[float] = None,
     unscale: bool = False,
     post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> PointData:
@@ -521,9 +522,10 @@ def point(
         coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Only used when `interpolate=True`. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         interpolate (bool, optional): Interpolate pixels around the coordinates. Defaults to `False`.
+        buffer (float, optional): Buffer to apply to each axis (x and y) around the pixel coordinate. Only used when `interpolate=True`. Defaults to `0.5`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -532,6 +534,11 @@ def point(
 
     """
     indexes = cast_to_sequence(indexes)
+
+    if buffer and buffer % 0.5:
+        raise InvalidBufferSize(
+            "`buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
+        )
 
     with contextlib.ExitStack() as ctx:
         # Use WarpedVRT when User provided Nodata or VRT Option (cutline)
@@ -586,15 +593,33 @@ def point(
             # Ref: https://github.com/cogeotiff/rio-tiler/issues/793
             # https://github.com/OSGeo/gdal/blob/a3d68b069e6b3676ba437faca5dca6ae2076ce24/swig/python/gdal-utils/osgeo_utils/samples/gdallocationinfo.py#L185-L197
             rows, cols = rowcol(dataset.transform, xs=[lon], ys=[lat], op=lambda x: x)
-            row = rows[0] - 0.5
-            col = cols[0] - 0.5
+
+            buffer = buffer or 0.5
+            row = rows[0] - buffer
+            col = cols[0] - buffer
+            window = windows.Window(
+                row_off=row, col_off=col, width=buffer * 2, height=buffer * 2
+            )
+
         else:
+            if buffer:
+                warnings.warn(
+                    "'buffer' will be ignored when `interpolate=False`.", UserWarning
+                )
+
+            if resampling_method != "nearest":
+                warnings.warn(
+                    f"{resampling_method} resampling will be ignored when `interpolate=False`.",
+                    UserWarning,
+                )
+
             row, col = dataset.index(lon, lat)
+            window = windows.Window(row_off=row, col_off=col, width=1, height=1)
 
         img = read(
             dataset,
             indexes=indexes,
-            window=windows.Window(row_off=row, col_off=col, width=1, height=1),
+            window=window,
             resampling_method=resampling_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,
