@@ -158,6 +158,9 @@ class PointData:
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     assets: Optional[List] = attr.ib(default=None, kw_only=True)
     metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
+    pixel_location: Optional[Tuple[NumType, NumType]] = attr.ib(
+        default=None, kw_only=True
+    )
 
     @array.validator
     def _validate_data(self, attribute, value):
@@ -241,9 +244,9 @@ class PointData:
         return cls(
             arr,
             assets=assets,
-            crs=data[0].crs,
-            coordinates=data[0].coordinates,
             band_names=band_names,
+            coordinates=data[0].coordinates,
+            crs=data[0].crs,
             metadata=metadata,
         )
 
@@ -262,6 +265,7 @@ class PointData:
             coordinates=self.coordinates,
             band_names=blocks,
             metadata=self.metadata,
+            pixel_location=self.pixel_location,
         )
 
 

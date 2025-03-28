@@ -535,6 +535,7 @@ class XarrayReader(BaseReader):
             coordinates=(lon, lat),
             crs=coord_crs,
             band_names=band_names,
+            pixel_location=(x, y),
         )
 
     def feature(

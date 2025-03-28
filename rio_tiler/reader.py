@@ -509,7 +509,6 @@ def point(
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     interpolate: bool = False,
-    buffer: Optional[float] = None,
     unscale: bool = False,
     post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> PointData:
@@ -587,9 +586,8 @@ def point(
             # Ref: https://github.com/cogeotiff/rio-tiler/issues/793
             # https://github.com/OSGeo/gdal/blob/a3d68b069e6b3676ba437faca5dca6ae2076ce24/swig/python/gdal-utils/osgeo_utils/samples/gdallocationinfo.py#L185-L197
             rows, cols = rowcol(dataset.transform, xs=[lon], ys=[lat], op=lambda x: x)
-
-            row = rows[0] - 0.5
-            col = cols[0] - 0.5
+            row, col = float(rows[0]), float(cols[0])
+            row_off, col_off = row - 0.5, col - 0.5
 
         else:
             if resampling_method != "nearest":
@@ -599,8 +597,9 @@ def point(
                 )
 
             row, col = dataset.index(lon, lat)
+            row_off, col_off = row, col
 
-        window = windows.Window(row_off=row, col_off=col, width=1, height=1)
+        window = windows.Window(row_off=row_off, col_off=col_off, width=1, height=1)
 
         img = read(
             dataset,
@@ -614,8 +613,9 @@ def point(
 
         return PointData(
             img.array[:, 0, 0],
+            band_names=img.band_names,
             coordinates=coordinates,
             crs=coord_crs,
-            band_names=img.band_names,
             metadata=dataset.tags(),
+            pixel_location=(col, row),
         )

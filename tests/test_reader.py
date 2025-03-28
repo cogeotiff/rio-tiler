@@ -422,6 +422,8 @@ def test_point():
         assert pt.data == numpy.array([1])
         assert pt.mask == numpy.array([0])
         assert pt.band_names == ["b1"]
+        assert pt.pixel_location
+        assert isinstance(pt.pixel_location[0], int)
 
         # Interpolate=False
         pt = reader.point(
@@ -446,7 +448,7 @@ def test_point():
                 resampling_method="bilinear",
             )
 
-        # Interpolate=True but with Nearest, so no influence
+        # Interpolate=True with Nearest
         pt = reader.point(
             src_dst,
             [-57.566, 73.6885],
@@ -458,6 +460,8 @@ def test_point():
         assert pt.data == numpy.array([2800])
         assert pt.mask == numpy.array([255])
         assert pt.band_names == ["b1"]
+        assert pt.pixel_location
+        assert isinstance(pt.pixel_location[0], float)
 
         # Interpolate=True + resampling=bilinear, default buffer
         pt = reader.point(

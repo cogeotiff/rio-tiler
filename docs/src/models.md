@@ -319,6 +319,7 @@ Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for 
 - **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/master/rasterio/crs.py#L21), optional)
 - **metadata**: additional metadata (dict, optional)
 - **band_names**: values band's names
+- **pixel_location**: X, Y coordinates in raster space (Tuple[float, float], optional)
 
 ```python
 import numpy
