@@ -423,16 +423,17 @@ def test_point():
         assert pt.mask == numpy.array([0])
         assert pt.band_names == ["b1"]
 
-        # buffer is useless with interpolate=False
-        with pytest.warns(UserWarning):
-            pt = reader.point(
-                src_dst,
-                [-57.566, 73.6885],
-                coord_crs="epsg:4326",
-                indexes=1,
-                nodata=1,
-                buffer=0.5,
-            )
+        # Interpolate=False
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+        )
+        assert pt.data == numpy.array([2800])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
 
         # resampling_method is useless with interpolate=False
         with pytest.warns(UserWarning):
@@ -472,7 +473,7 @@ def test_point():
         assert pt.mask == numpy.array([255])
         assert pt.band_names == ["b1"]
 
-        # Interpolate=True + resampling=sum
+        # Interpolate=True + resampling=average
         pt = reader.point(
             src_dst,
             [-57.566, 73.6885],
@@ -486,21 +487,6 @@ def test_point():
         assert pt.mask == numpy.array([255])
         assert pt.band_names == ["b1"]
 
-        # Interpolate=True + resampling=sum + buffer 2.5 (5pixels)
-        pt = reader.point(
-            src_dst,
-            [-57.566, 73.6885],
-            coord_crs="epsg:4326",
-            indexes=1,
-            nodata=1,
-            resampling_method="average",
-            interpolate=True,
-            buffer=2.5,
-        )
-        assert pt.data == numpy.array([2800])
-        assert pt.mask == numpy.array([255])
-        assert pt.band_names == ["b1"]
-
         # Interpolate=True + resampling=Cubic
         pt = reader.point(
             src_dst,
@@ -510,24 +496,8 @@ def test_point():
             nodata=1,
             resampling_method="cubic",
             interpolate=True,
-            buffer=0.5,
         )
         assert pt.data == numpy.array([2812])
-        assert pt.mask == numpy.array([255])
-        assert pt.band_names == ["b1"]
-
-        # Interpolate=True + resampling=Cubic + buffer 1.5 (3pixels)
-        pt = reader.point(
-            src_dst,
-            [-57.566, 73.6885],
-            coord_crs="epsg:4326",
-            indexes=1,
-            nodata=1,
-            resampling_method="cubic",
-            interpolate=True,
-            buffer=1.5,
-        )
-        assert pt.data == numpy.array([2799])
         assert pt.mask == numpy.array([255])
         assert pt.band_names == ["b1"]
 
