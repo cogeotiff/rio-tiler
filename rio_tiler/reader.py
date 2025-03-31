@@ -11,7 +11,7 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
-from rasterio.transform import array_bounds
+from rasterio.transform import array_bounds, rowcol
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
@@ -508,6 +508,7 @@ def point(
     vrt_options: Optional[Dict] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
+    interpolate: bool = False,
     unscale: bool = False,
     post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> PointData:
@@ -520,8 +521,9 @@ def point(
         coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Only used when `interpolate=True`. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+        interpolate (bool, optional): Interpolate pixels around the coordinates. Defaults to `False`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -580,11 +582,29 @@ def point(
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        row, col = dataset.index(lon, lat)
+        if interpolate:
+            # Ref: https://github.com/cogeotiff/rio-tiler/issues/793
+            # https://github.com/OSGeo/gdal/blob/a3d68b069e6b3676ba437faca5dca6ae2076ce24/swig/python/gdal-utils/osgeo_utils/samples/gdallocationinfo.py#L185-L197
+            rows, cols = rowcol(dataset.transform, xs=[lon], ys=[lat], op=lambda x: x)
+            row, col = float(rows[0]), float(cols[0])
+            row_off, col_off = row - 0.5, col - 0.5
+
+        else:
+            if resampling_method != "nearest":
+                warnings.warn(
+                    f"{resampling_method} resampling will be ignored when `interpolate=False`.",
+                    UserWarning,
+                )
+
+            row, col = dataset.index(lon, lat)
+            row_off, col_off = row, col
+
+        window = windows.Window(row_off=row_off, col_off=col_off, width=1, height=1)
+
         img = read(
             dataset,
             indexes=indexes,
-            window=windows.Window(row_off=row, col_off=col, width=1, height=1),
+            window=window,
             resampling_method=resampling_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,
@@ -593,8 +613,9 @@ def point(
 
         return PointData(
             img.array[:, 0, 0],
+            band_names=img.band_names,
             coordinates=coordinates,
             crs=coord_crs,
-            band_names=img.band_names,
             metadata=dataset.tags(),
+            pixel_location=(col, row),
         )

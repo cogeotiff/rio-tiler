@@ -422,6 +422,88 @@ def test_point():
         assert pt.data == numpy.array([1])
         assert pt.mask == numpy.array([0])
         assert pt.band_names == ["b1"]
+        assert pt.pixel_location
+        assert isinstance(pt.pixel_location[0], int)
+
+        # Interpolate=False
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+        )
+        assert pt.data == numpy.array([2800])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
+        # resampling_method is useless with interpolate=False
+        with pytest.warns(UserWarning):
+            pt = reader.point(
+                src_dst,
+                [-57.566, 73.6885],
+                coord_crs="epsg:4326",
+                indexes=1,
+                nodata=1,
+                resampling_method="bilinear",
+            )
+
+        # Interpolate=True with Nearest
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2800])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+        assert pt.pixel_location
+        assert isinstance(pt.pixel_location[0], float)
+
+        # Interpolate=True + resampling=bilinear, default buffer
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            resampling_method="bilinear",
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2819])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
+        # Interpolate=True + resampling=average
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            resampling_method="average",
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2904])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
+        # Interpolate=True + resampling=Cubic
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            resampling_method="cubic",
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2812])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
 
     with rasterio.open(COG_SCALE) as src_dst:
         pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs, indexes=1)

@@ -161,6 +161,8 @@ def test_xarray_reader():
             "2022-01-02T00:00:00.000000000",
         ]
         assert pt.coordinates
+        assert pt.pixel_location
+
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
         for xy in xys:
             x = xy[0]

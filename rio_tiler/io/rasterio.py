@@ -748,6 +748,7 @@ class ImageReader(Reader):
         y: float,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
+        resampling_method: RIOResampling = "nearest",
         unscale: bool = False,
         post_process: Optional[
             Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]
@@ -760,6 +761,8 @@ class ImageReader(Reader):
             y (float): Y coordinate.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+            interpolate (bool, optional): Interpolate pixels around the coordinates. Defaults to `False`.
             unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -775,6 +778,7 @@ class ImageReader(Reader):
             expression=expression,
             unscale=unscale,
             post_process=post_process,
+            resampling_method=resampling_method,
             window=Window(col_off=x, row_off=y, width=1, height=1),
         )
 
@@ -784,6 +788,7 @@ class ImageReader(Reader):
             coordinates=self.dataset.xy(x, y),
             crs=self.dataset.crs,
             band_names=img.band_names,
+            pixel_location=(x, y),
         )
 
     def feature(  # type: ignore
