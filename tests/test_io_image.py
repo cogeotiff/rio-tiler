@@ -30,7 +30,11 @@ def test_non_geo_image():
             assert list(src.tms.xy_bounds(0, 0, 0)) == [0, 2048, 2048, 0]
 
             img = src.tile(0, 0, 3)
+            assert img.array.dtype == numpy.uint8
             assert img.mask.all()
+
+            img = src.tile(0, 0, 3, out_dtype="float32")
+            assert img.array.dtype == numpy.float32
 
             # Make sure no resampling was done at full resolution
             data = src.dataset.read(window=((0, 256), (0, 256)))
@@ -54,11 +58,15 @@ def test_non_geo_image():
             assert img.height == 1024
 
             pt = src.point(0, 0)
+            assert pt.array.dtype == numpy.uint8
             assert list(pt.data) == [31, 34, 17]
             assert len(pt.mask) == 1
             assert pt.mask[0] == 255
             data = list(src.dataset.sample([(0, 0)]))[0]
             numpy.testing.assert_array_equal(pt.data, data)
+
+            pt = src.point(0, 0, out_dtype="float32")
+            assert pt.array.dtype == numpy.float32
 
             pt = src.point(50, 100)
             assert list(pt.data) == [48, 55, 14]
@@ -88,6 +96,10 @@ def test_non_geo_image():
             }
             im = src.feature(poly)
             assert im.data.shape == (3, 1100, 1100)
+            assert im.array.dtype == numpy.uint8
+
+            im = src.feature(poly, out_dtype="float32")
+            assert im.array.dtype == numpy.float32
 
     with pytest.warns((NotGeoreferencedWarning)):
         with ImageReader(NO_GEO_PORTRAIT) as src:

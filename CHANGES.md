@@ -2,7 +2,46 @@
 # Unreleased
 
 * add `interpolate=True/False` to `.point()` methods to allow interpolation of surrounding pixels
+
+    ```python
+    with Reader("tests/fixtures/cog.tif") as src:
+        pt = src.point(-57.566, 73.68856)
+        print(pt.data[0])
+        >> 2800
+
+        pt = src.point(-57.566, 73.68856, interpolate=True, resampling_method="bilinear")
+        print(pt.data[0])
+        >> 2819
+    ```
+
 * add `pixel_location` property to `PointData` model
+
+    ```python
+    with Reader("tests/fixtures/cog.tif") as src:
+        pt = src.point(-57.566, 73.68856)
+        print(pt.pixel_location)
+        >> (1090, 1086)
+
+    with Reader("tests/fixtures/cog.tif") as src:
+        pt = src.point(-57.566, 73.68856, interpolate=True)
+        print(pt.pixel_location)
+        >> (1090.5924744641266, 1086.2541429827688)
+    ```
+
+* add `out_dtype` to reader's methods to allow user setting the output data type
+
+    ```python
+    from rio_tiler.io import Reader
+
+    with Reader("tests/fixtures/cog.tif") as src:
+        img = src.preview()
+        print(img.array.dtype)
+        >> uint16
+
+        img = src.preview(out_dtype="float32")
+        print(img.array.dtype)
+        >> float32
+    ```
 
 # 7.5.1 (2025-03-19)
 
