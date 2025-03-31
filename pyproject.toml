@@ -28,7 +28,7 @@ dependencies = [
     "numpy",
     "morecantile>=5.0,<7.0",
     "pydantic~=2.0",
-    "pystac>=0.5.4",
+    "pystac>=1.9,<2.0",
     "rasterio>=1.4.0",
     "color-operations",
     "typing-extensions",
