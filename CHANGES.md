@@ -1,6 +1,8 @@
 
 # Unreleased
 
+# 7.6.0 (2025-03-31)
+
 * add `interpolate=True/False` to `.point()` methods to allow interpolation of surrounding pixels
 
     ```python
