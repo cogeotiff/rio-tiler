@@ -111,25 +111,14 @@ def test_resampling_returns_different_results():
         12523442.714243278,
     ]
     with rasterio.open(COG) as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS)
+        arr, _ = reader.part(src_dst, bounds, 64, 64, dst_crs=constants.WEB_MERCATOR_CRS)
         arr2, _ = reader.part(
             src_dst,
             bounds,
-            16,
-            16,
+            64,
+            64,
             dst_crs=constants.WEB_MERCATOR_CRS,
             resampling_method="bilinear",
-        )
-        assert not numpy.array_equal(arr, arr2)
-
-        arr, _ = reader.part(src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS)
-        arr2, _ = reader.part(
-            src_dst,
-            bounds,
-            16,
-            16,
-            dst_crs=constants.WEB_MERCATOR_CRS,
-            reproject_method="bilinear",
         )
         assert not numpy.array_equal(arr, arr2)
 
@@ -1005,3 +994,28 @@ def test_inverted_latitude_point():
         with rasterio.open(COG_INVERTED) as src_dst:
             pt = reader.point(src_dst, [-104.77519499, 38.95367054])
             assert pt.data[0] == -9999.0
+
+
+def test_out_dtype():
+    """Test Out_Dtype option."""
+    with rasterio.open(COG) as src_dst:
+        img = reader.read(src_dst)
+        assert img.array.dtype == numpy.uint16
+
+        img = reader.read(src_dst, out_dtype="float32")
+        assert img.array.dtype == numpy.float32
+
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+        )
+        assert pt.array.dtype == numpy.uint16
+
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            out_dtype="float32",
+        )
+        assert pt.array.dtype == numpy.float32

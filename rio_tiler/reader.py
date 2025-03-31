@@ -94,6 +94,7 @@ def read(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
+    out_dtype: Optional[Union[str, numpy.dtype]] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
@@ -151,7 +152,6 @@ def read(
                         "nodata": nodata,
                         "add_alpha": False,
                         "src_nodata": nodata,
-                        "dtype": src_dst.dtypes[0],
                     }
                 )
 
@@ -204,6 +204,7 @@ def read(
                     ),
                     resampling=io_resampling,
                     boundless=boundless,
+                    out_dtype=out_dtype,
                 )
                 mask = dataset.read(
                     indexes=(alpha_idx,),
@@ -211,6 +212,7 @@ def read(
                     out_shape=(1, height, width) if height and width else None,
                     resampling=io_resampling,
                     boundless=boundless,
+                    out_dtype=out_dtype,
                 )
                 data = numpy.ma.MaskedArray(values)
                 data.mask = ~mask.astype("bool")
@@ -223,6 +225,7 @@ def read(
                     out_shape=(len(idx), height, width) if height and width else None,
                     resampling=io_resampling,
                     boundless=boundless,
+                    out_dtype=out_dtype,
                 )
                 mask = ~values[-1].astype("bool")
                 data = numpy.ma.MaskedArray(values[0:-1])
@@ -237,6 +240,7 @@ def read(
                 boundless=boundless,
                 masked=True,
                 fill_value=nodata,
+                out_dtype=out_dtype,
             )
 
             # if data has Nodata then we simply make sure the mask == the nodata
@@ -308,6 +312,7 @@ def part(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
+    out_dtype: Optional[Union[str, numpy.dtype]] = None,
     align_bounds_with_dataset: bool = False,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
@@ -430,6 +435,7 @@ def part(
             window=window,
             nodata=nodata,
             vrt_options=vrt_params,
+            out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
@@ -467,6 +473,7 @@ def part(
             height=height,
             window=window,
             nodata=nodata,
+            out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
@@ -490,6 +497,7 @@ def part(
         height=height,
         window=window,
         nodata=nodata,
+        out_dtype=out_dtype,
         resampling_method=resampling_method,
         reproject_method=reproject_method,
         force_binary_mask=force_binary_mask,
@@ -506,6 +514,7 @@ def point(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
+    out_dtype: Optional[Union[str, numpy.dtype]] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     interpolate: bool = False,
@@ -539,6 +548,7 @@ def point(
             vrt_params = {
                 "add_alpha": True,
                 "resampling": Resampling[reproject_method],
+                "dtype": src_dst.dtypes[0],
             }
             nodata = nodata if nodata is not None else src_dst.nodata
             if nodata is not None:
@@ -605,6 +615,7 @@ def point(
             dataset,
             indexes=indexes,
             window=window,
+            out_dtype=out_dtype,
             resampling_method=resampling_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,

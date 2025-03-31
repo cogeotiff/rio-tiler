@@ -227,6 +227,7 @@ class XarrayReader(BaseReader):
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
         indexes: Optional[Indexes] = None,
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
@@ -278,6 +279,8 @@ class XarrayReader(BaseReader):
             stats = ((minv, maxv),) * da.rio.count
 
         arr = da.to_masked_array()
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
@@ -306,6 +309,7 @@ class XarrayReader(BaseReader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         resampling_method: RIOResampling = "nearest",
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset.
@@ -368,6 +372,8 @@ class XarrayReader(BaseReader):
             stats = ((minv, maxv),) * da.rio.count
 
         arr = da.to_masked_array()
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
@@ -407,6 +413,7 @@ class XarrayReader(BaseReader):
         dst_crs: Optional[CRS] = None,
         reproject_method: WarpResampling = "nearest",
         resampling_method: RIOResampling = "nearest",
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a dataset.
@@ -458,6 +465,8 @@ class XarrayReader(BaseReader):
             stats = ((minv, maxv),) * da.rio.count
 
         arr = da.to_masked_array()
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
@@ -494,6 +503,7 @@ class XarrayReader(BaseReader):
         coord_crs: CRS = WGS84_CRS,
         nodata: Optional[NoData] = None,
         indexes: Optional[Indexes] = None,
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> PointData:
         """Read a pixel value from a dataset.
@@ -528,6 +538,8 @@ class XarrayReader(BaseReader):
         else:
             arr = da[:, int(y[0]), int(x[0])].to_masked_array()
 
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         return PointData(
@@ -551,6 +563,7 @@ class XarrayReader(BaseReader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         resampling_method: RIOResampling = "nearest",
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature.
@@ -590,6 +603,7 @@ class XarrayReader(BaseReader):
             height=height,
             reproject_method=reproject_method,
             resampling_method=resampling_method,
+            out_dtype=out_dtype,
         )
 
         if dst_crs != shape_crs:
