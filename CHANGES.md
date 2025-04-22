@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 7.6.1 (2025-04-22)
+
+* fix Xarray indexes check when passing a list
+
 # 7.6.0 (2025-03-31)
 
 * add `interpolate=True/False` to `.point()` methods to allow interpolation of surrounding pixels

@@ -628,6 +628,9 @@ def test_xarray_reader_no_dims():
         stats = dst.statistics(indexes=(1,))
         assert stats["array"]
 
+        stats = dst.statistics(indexes=[1])
+        assert stats["array"]
+
         with pytest.raises(ValueError):
             stats = dst.statistics(indexes=2)
 
