@@ -173,7 +173,7 @@ class XarrayReader(BaseReader):
         if indexes := cast_to_sequence(indexes):
             assert all(v > 0 for v in indexes), "Indexes value must be >= 1"
             if da.ndim == 2:
-                if indexes != (1,):
+                if set(indexes) != set({1}):
                     raise ValueError(
                         f"Invalid indexes {indexes} for array of shape {da.shape}"
                     )
