@@ -417,7 +417,17 @@ def get_vrt_transform(
     # NOTE: When we have desired output height/width, we can use them to
     # calculate the output size/transform. The VRT resolution will be aligned with the desired
     # output resolution (if not bigger)
-    if height and width:
+    if height or width:
+        if not height or not width:
+            # get the size's ratio of the reprojected dataset
+            _w = max(1, round((e - w) / w_res))
+            _h = max(1, round((s - n) / h_res))
+            ratio = _h / _w
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
+
         output_transform = from_bounds(w, s, e, n, width, height)
 
         # NOTE: Here we check if the Output Resolution is higher thant the dataset resolution (OverZoom)

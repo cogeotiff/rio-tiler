@@ -36,6 +36,7 @@ COG_NODATA_FLOAT_NAN = os.path.join(
     os.path.dirname(__file__), "fixtures", "cog_nodata_float_nan.tif"
 )
 COG_INVERTED = os.path.join(os.path.dirname(__file__), "fixtures", "inverted_lat.tif")
+COG_WORLD = os.path.join(os.path.dirname(__file__), "fixtures", "cog_world.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -100,6 +101,111 @@ def test_tile_read_valid():
             )
     assert arr.shape == (1, 25, 25)
     assert mask.shape == (25, 25)
+
+
+def test_sizes_with_read():
+    """test automatic width/height calc for reader.read."""
+    # Dataset is almost square with a ratio ~1.0
+    with rasterio.open(COG) as src_dst:
+        img = reader.read(src_dst, max_size=50)
+        assert img.height == 50
+        assert img.width == 50
+
+        img = reader.read(src_dst, width=50)
+        assert img.height == 51
+        assert img.width == 50
+
+        img = reader.read(src_dst, height=50)
+        assert img.height == 50
+        assert img.width == 50
+
+        # in EPSG:3857 the dataset has a ratio of 0.95
+        img = reader.read(src_dst, max_size=50, dst_crs="epsg:3857")
+        assert img.height == 48
+        assert img.width == 50
+
+        img = reader.read(src_dst, width=50, dst_crs="epsg:3857")
+        assert img.height == 48
+        assert img.width == 50
+
+        img = reader.read(src_dst, height=50, dst_crs="epsg:3857")
+        assert img.height == 50
+        assert img.width == 53
+
+        img = reader.read(src_dst, window=((0, 100), (0, 100)))
+        assert img.width == 100
+        assert img.height == 100
+
+        img = reader.read(src_dst, window=((0, 100), (0, 100)), max_size=200)
+        assert img.width == 100
+        assert img.height == 100
+
+        img = reader.read(src_dst, window=((0, 100), (0, 100)), max_size=50)
+        assert img.width == 50
+        assert img.height == 50
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), height=200)
+        assert img.width == 100
+        assert img.height == 200
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), height=50)
+        assert img.width == 25
+        assert img.height == 50
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), width=200)
+        assert img.width == 200
+        assert img.height == 400
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), width=50)
+        assert img.width == 50
+        assert img.height == 100
+
+    # Dataset is almost a rectangle with a ratio ~0.5
+    with rasterio.open(COG_WORLD) as src_dst:
+        # Dataset is almost square with a ratio ~1.0
+        arr, _ = reader.read(src_dst, max_size=50)
+        assert arr.shape == (1, 25, 50)
+
+        arr, _ = reader.read(src_dst, width=50)
+        assert arr.shape == (1, 25, 50)
+
+        arr, _ = reader.read(src_dst, height=50)
+        assert arr.shape == (1, 50, 100)
+
+
+def test_sizes_with_part():
+    """test automatic width/height calc for reader.part."""
+    # rectangular shape
+    bounds = [467258, 8141872, 566702, 8207016]
+    with rasterio.open(COG) as src_dst:
+        # full res
+        img = reader.part(src_dst, bounds)
+        assert img.height == 651
+        assert img.width == 994
+
+        img = reader.part(src_dst, bounds, max_size=100)
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, width=100)
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, height=66)
+        assert img.height == 66
+        assert img.width == 101
+
+        img = reader.part(src_dst, bounds, max_size=100, dst_crs="epsg:4326")
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, width=100, dst_crs="epsg:4326")
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, height=66, dst_crs="epsg:4326")
+        assert img.height == 66
+        assert img.width == 101
 
 
 def test_resampling_returns_different_results():

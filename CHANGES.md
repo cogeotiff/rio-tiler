@@ -1,6 +1,11 @@
 
 # Unreleased
 
+# 7.7.0 (TBD)
+
+* fix size estimation when using `window` an `reader.read` method
+* add `width` or `height` estimation when passing only one size
+
 # 7.6.1 (2025-04-22)
 
 * fix Xarray indexes check when passing a list
