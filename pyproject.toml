@@ -161,7 +161,7 @@ exclude = [
 max-complexity = 14
 
 [tool.bumpversion]
-current_version = "7.6.1"
+current_version = "7.7.0"
 search = "{current_version}"
 replace = "{new_version}"
 regex = false
