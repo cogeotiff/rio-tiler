@@ -58,6 +58,12 @@ def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int
     return height, width
 
 
+def _missing_size(w: Optional[int] = None, h: Optional[int] = None):
+    """Check if one and only one size (width, height) is valid."""
+    iterator = iter([w, h])
+    return any(iterator) and not any(iterator)
+
+
 def _apply_buffer(
     buffer: float,
     bounds: BBox,
@@ -124,11 +130,12 @@ def read(
     """
     indexes = cast_to_sequence(indexes)
 
-    if max_size and width and height:
+    if max_size and (width or height):
         warnings.warn(
-            "'max_size' will be ignored with with 'height' and 'width' set.",
+            "'max_size' will be ignored with with 'height' or 'width' set.",
             UserWarning,
         )
+        max_size = None
 
     io_resampling = Resampling[resampling_method]
     warp_resampling = Resampling[reproject_method]
@@ -167,11 +174,10 @@ def read(
         else:
             dataset = src_dst
 
-        if max_size and not (width and height):
-            height, width = _get_width_height(max_size, dataset.height, dataset.width)
-
         if indexes is None:
             indexes = non_alpha_indexes(dataset)
+
+        max_height, max_width = dataset.height, dataset.width
 
         boundless = False
         if window:
@@ -187,6 +193,18 @@ def read(
                 or row_stop >= dataset.height
             ):
                 boundless = True
+
+            max_height, max_width = window.height, window.width
+
+        if max_size:
+            height, width = _get_width_height(max_size, max_height, max_width)
+
+        elif _missing_size(width, height):
+            ratio = max_height / max_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
 
         if ColorInterp.alpha in dataset.colorinterp and nodata is None:
             # If dataset has an alpha band we need to get the mask using the alpha band index
@@ -345,11 +363,12 @@ def part(
         ImageData
 
     """
-    if max_size and width and height:
+    if max_size and (width or height):
         warnings.warn(
-            "'max_size' will be ignored with with 'height' and 'width' set.",
+            "'max_size' will be ignored with with 'height' or 'width' set.",
             UserWarning,
         )
+        max_size = None
 
     if buffer and buffer % 0.5:
         raise InvalidBufferSize(
@@ -389,8 +408,15 @@ def part(
         )
         bounds = array_bounds(vrt_height, vrt_width, vrt_transform)
 
-        if max_size and not (width and height):
+        if max_size:
             height, width = _get_width_height(max_size, vrt_height, vrt_width)
+
+        elif _missing_size(width, height):
+            ratio = vrt_height / vrt_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
 
         height = height or vrt_height
         width = width or vrt_width
@@ -449,10 +475,17 @@ def part(
         window = _round_window(window)
         bounds = windows.bounds(window, src_dst.transform)
 
-    if max_size and not (width and height):
+    if max_size:
         height, width = _get_width_height(
             max_size, round(window.height), round(window.width)
         )
+
+    elif _missing_size(width, height):
+        ratio = window.height / window.width
+        if width:
+            height = math.ceil(width * ratio)
+        else:
+            width = math.ceil(height / ratio)
 
     height = height or max(1, round(window.height))
     width = width or max(1, round(window.width))
