@@ -1,7 +1,7 @@
 
 # Unreleased
 
-# 7.7.0 (TBD)
+# 7.7.0 (2025-05-05)
 
 * fix size estimation when using `window` an `reader.read` method
 * add `width` or `height` estimation when passing only one size
