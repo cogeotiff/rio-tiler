@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 7.7.1 (2025-05-13)
+
+* add `max`, `min`, `med`, `q1` and `q3` resampling methods to `WarpResampling` literal
+
 # 7.7.0 (2025-05-05)
 
 * fix size estimation when using `window` an `reader.read` method
