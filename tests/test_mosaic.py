@@ -479,6 +479,10 @@ def test_mosaic_tiler_with_imageDataClass():
     assert assets_used == img.assets == assets
     assert img.crs
     assert img.bounds
+    meta = img.metadata
+    assert meta["mosaic_method"] == "LowestMethod"
+    assert meta["mosaic_assets_count"] == 2
+    assert meta["mosaic_assets_used"] == 2
 
     bbox = [-75.98703377413767, 44.93504283293786, -71.337604723999, 47.09685599202324]
     with Reader(assets[0]) as src:
@@ -545,6 +549,10 @@ def test_mosaic_point():
     assert pt.assets == [asset1, asset2]
     assert pt.crs == WGS84_CRS
     assert pt.coordinates == both
+    meta = pt.metadata
+    assert meta["mosaic_method"] == "HighestMethod"
+    assert meta["mosaic_assets_count"] == 2
+    assert meta["mosaic_assets_used"] == 2
 
     with pytest.raises(EmptyMosaicError):
         mosaic.mosaic_point_reader(assets, _read_point, -78, 43)

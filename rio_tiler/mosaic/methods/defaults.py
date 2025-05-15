@@ -14,6 +14,10 @@ class FirstMethod(MosaicMethodBase):
 
     exit_when_filled: bool = field(default=True, init=False)
 
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: FirstMethod>"
+
     def feed(self, array: Optional[numpy.ma.MaskedArray]):
         """Add data to the mosaic array."""
         if self.mosaic is None:
@@ -30,6 +34,10 @@ class FirstMethod(MosaicMethodBase):
 @dataclass
 class HighestMethod(MosaicMethodBase):
     """Feed the mosaic array with the highest pixel values."""
+
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: HighestMethod>"
 
     def feed(self, array: Optional[numpy.ma.MaskedArray]):
         """Add data to the mosaic array."""
@@ -50,6 +58,10 @@ class HighestMethod(MosaicMethodBase):
 @dataclass
 class LowestMethod(MosaicMethodBase):
     """Feed the mosaic array with the lowest pixel values."""
+
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: LowestMethod>"
 
     def feed(self, array: Optional[numpy.ma.MaskedArray]):
         """Add data to the mosaic array."""
@@ -73,6 +85,10 @@ class MeanMethod(MosaicMethodBase):
 
     enforce_data_type: bool = True
     stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: MeanMethod>"
 
     @property
     def data(self) -> Optional[numpy.ma.MaskedArray]:
@@ -98,6 +114,10 @@ class MedianMethod(MosaicMethodBase):
     enforce_data_type: bool = True
     stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: MedianMethod>"
+
     @property
     def data(self) -> Optional[numpy.ma.MaskedArray]:
         """Return Median of the data stack."""
@@ -121,6 +141,10 @@ class StdevMethod(MosaicMethodBase):
 
     stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: StdevMethod>"
+
     @property
     def data(self) -> Optional[numpy.ma.MaskedArray]:
         """Return STDDEV of the data stack."""
@@ -137,6 +161,10 @@ class StdevMethod(MosaicMethodBase):
 @dataclass
 class LastBandHighMethod(MosaicMethodBase):
     """Feed the mosaic array using the last band as decision factor (highest value)."""
+
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: LastBandHighMethod>"
 
     @property
     def data(self) -> Optional[numpy.ma.MaskedArray]:
@@ -165,6 +193,10 @@ class LastBandHighMethod(MosaicMethodBase):
 @dataclass
 class LastBandLowMethod(MosaicMethodBase):
     """Feed the mosaic array using the last band as decision factor (lowest value)."""
+
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: LastBandLowMethod>"
 
     @property
     def data(self) -> Optional[numpy.ma.MaskedArray]:
@@ -195,6 +227,10 @@ class CountMethod(MosaicMethodBase):
     """Stack the arrays and return the valid pixel count."""
 
     stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: CountMethod>"
 
     @property
     def data(self) -> Optional[numpy.ma.MaskedArray]:

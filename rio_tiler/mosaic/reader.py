@@ -135,6 +135,11 @@ def mosaic_reader(  # noqa: C901
                         crs=crs,
                         bounds=bounds,
                         band_names=band_names,
+                        metadata={
+                            "mosaic_method": pixel_selection.__class__.__name__,
+                            "mosaic_assets_count": len(mosaic_assets),
+                            "mosaic_assets_used": len(assets_used),
+                        },
                     ),
                     assets_used,
                 )
@@ -149,6 +154,11 @@ def mosaic_reader(  # noqa: C901
             crs=crs,
             bounds=bounds,
             band_names=band_names,
+            metadata={
+                "mosaic_method": pixel_selection.__class__.__name__,
+                "mosaic_assets_count": len(mosaic_assets),
+                "mosaic_assets_used": len(assets_used),
+            },
         ),
         assets_used,
     )
@@ -238,6 +248,11 @@ def mosaic_point_reader(
                         crs=crs,
                         coordinates=coordinates,
                         band_names=band_names,
+                        metadata={
+                            "mosaic_method": pixel_selection.__class__.__name__,
+                            "mosaic_assets_count": len(mosaic_assets),
+                            "mosaic_assets_used": len(assets_used),
+                        },
                     ),
                     assets_used,
                 )
@@ -252,6 +267,11 @@ def mosaic_point_reader(
             crs=crs,
             coordinates=coordinates,
             band_names=band_names,
+            metadata={
+                "mosaic_method": pixel_selection.__class__.__name__,
+                "mosaic_assets_count": len(mosaic_assets),
+                "mosaic_assets_used": len(assets_used),
+            },
         ),
         assets_used,
     )

@@ -1,6 +1,31 @@
 
 # Unreleased
 
+
+# 7.7.2 (2025-05-15)
+
+* add `repr` method to Mosaic Method classes
+* add metadata (pixel selection method, assets count, asset used count) on Image/Point object returned by `mosaic_reader`
+
+    ```python
+    from rio_tiler.io import Reader
+    from rio_tiler.mosaic import mosaic_reader
+
+    def tiler(src_path: str, *args, **kwargs):
+        with Reader(src_path) as src:
+            return src.tile(*args, **kwargs)
+
+    mosaic_assets = ["tests/fixtures/mosaic_value_1.tif", "tests/fixtures/mosaic_value_1.tif", "tests/fixtures/mosaic_value_2.tif"]
+    x = 150
+    y = 182
+    z = 9
+
+    # Use Default First value method
+    img, _ = mosaic_reader(mosaic_assets, tiler, x, y, z)
+    print(img.metadata)
+    >> {'mosaic_method': 'FirstMethod', 'mosaic_assets_count': 3, 'mosaic_assets_used': 1}
+    ```
+
 # 7.7.1 (2025-05-13)
 
 * add `max`, `min`, `med`, `q1` and `q3` resampling methods to `WarpResampling` literal
