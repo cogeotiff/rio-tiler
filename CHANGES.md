@@ -1,6 +1,56 @@
 
 # Unreleased
 
+# 8.0.0
+
+* use **description** as band name (instead of `b{ix}`) in `Reader`'s outputs **breaking change**
+
+```python
+# before
+with Reader("tests/fixtures/cog_tags.tif") as src:
+    info = src.info()
+    img = src.preview()
+    stats = src.statistics()
+
+    print(info.band_descriptions)
+    >> [('b1', 'Green')]
+
+    print(img.band_names)
+    >> ['b1']
+
+    print(list(stats))
+    >> ['b1']
+
+# now
+with Reader("tests/fixtures/cog_tags.tif") as src:
+    info = src.info()
+    img = src.preview()
+    stats = src.statistics()
+
+    print(info.band_descriptions)
+    >> [('b1', 'Green')]
+
+    print(img.band_names)
+    >> ['Green']
+
+    print(list(stats))
+    >> ['Green']
+
+    # Band without description
+    with Reader("tests/fixtures/cog.tif") as src:
+        info = src.info()
+        stats = src.statistics()
+        img = src.preview()
+
+    print(info.band_descriptions)
+    >> [('b1', '')]
+
+    print(list(stats))
+    >> ['b1']
+
+    print(list(stats))
+    >> ['b1']
+```
 
 # 7.7.2 (2025-05-15)
 
