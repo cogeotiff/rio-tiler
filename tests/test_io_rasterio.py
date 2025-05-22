@@ -1145,3 +1145,17 @@ def test_int16_colormap():
 
             # make sure we keep the nodata part masked
             assert not im.mask.all()
+
+
+def test_titiler_issue_1163_warpedVrt():
+    """When using GCPs we are creating a WarpedVRT we should still be able
+    to perform `boundless` part read.
+    """
+    with Reader(COG_GCPS) as src:
+        assert isinstance(src.dataset, WarpedVRT)
+        assert src.dataset.crs == "epsg:4326"
+
+        img = src.part(
+            (75.0, 9.0, 77.0, 10.0), bounds_crs="epsg:4326", width=500, height=500
+        )
+        assert img.statistics()["b1"].valid_percent
