@@ -1,6 +1,9 @@
 
 # Unreleased
 
+# 7.7.3 (2025-05-22)
+
+* fix Boundless `part` read when using GCPs dataset
 
 # 7.7.2 (2025-05-15)
 

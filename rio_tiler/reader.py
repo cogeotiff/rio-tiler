@@ -308,7 +308,7 @@ def read(
             data,
             bounds=out_bounds,
             crs=dataset.crs,
-            band_names=[f"b{idx}" for idx in indexes],
+            band_names=[dataset.descriptions[ix - 1] or f"b{idx}" for idx in indexes],
             dataset_statistics=dataset_statistics,
             metadata=dataset.tags(),
         )
@@ -396,7 +396,7 @@ def part(
             )
 
     # Use WarpedVRT when Re-projection or User VRT Option (cutline)
-    if (dst_crs != src_dst.crs) or vrt_options:
+    if (dst_crs != src_dst.crs) or vrt_options or isinstance(src_dst, WarpedVRT):
         window = None
         vrt_transform, vrt_width, vrt_height = get_vrt_transform(
             src_dst,
