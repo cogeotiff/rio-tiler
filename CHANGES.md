@@ -1,7 +1,11 @@
 
 # Unreleased
 
-# 7.7.3 (2025-05-22)
+# 7.7.3.post1
+
+* remove unwanted breaking change
+
+# 7.7.3 (2025-05-22) **YANKED**
 
 * fix Boundless `part` read when using GCPs dataset
 

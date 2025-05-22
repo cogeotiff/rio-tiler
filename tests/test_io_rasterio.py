@@ -1009,6 +1009,10 @@ def test_metadata_img():
         img = src.preview()
         assert img.dataset_statistics
         assert img.metadata
+        assert img.band_names == ["b1"]
+
+        stats = src.statistics()
+        assert "b1" in stats
 
 
 def test_feature_statistics():
