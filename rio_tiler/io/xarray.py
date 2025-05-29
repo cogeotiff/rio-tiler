@@ -108,7 +108,14 @@ class XarrayReader(BaseReader):
         self._dims = [
             d
             for d in self.input.dims
-            if d not in [self.input.rio.x_dim, self.input.rio.y_dim]
+            if d
+            not in [
+                self.input.rio.x_dim,
+                self.input.rio.y_dim,
+                "spatial_ref",
+                "crs_wkt",
+                "grid_mapping",
+            ]
         ]
         assert len(self._dims) in [0, 1], "Can't handle >=4D DataArray"
 
@@ -130,9 +137,20 @@ class XarrayReader(BaseReader):
         `Bands` are all dimensions not defined as spatial dims by rioxarray.
         """
         if not self._dims:
-            coords_name = list(self.input.coords)
-            if len(coords_name) > 3 and (coord := coords_name[2]):
-                return [str(self.input.coords[coord].data)]
+            coords_name = [
+                d
+                for d in self.input.coords
+                if d
+                not in [
+                    self.input.rio.x_dim,
+                    self.input.rio.y_dim,
+                    "spatial_ref",
+                    "crs_wkt",
+                    "grid_mapping",
+                ]
+            ]
+            if coords_name:
+                return [str(self.input.coords[coords_name[0]].data)]
 
             return [self.input.name or "array"]
 

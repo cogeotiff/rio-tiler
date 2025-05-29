@@ -1,7 +1,11 @@
 
 # Unreleased
 
-# 7.7.3.post1
+# 7.7.4 (2025-05-29)
+
+* fix band names for Xarray DataArray
+
+# 7.7.3.post1 (2025-05-22)
 
 * remove unwanted breaking change
 

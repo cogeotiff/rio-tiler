@@ -663,6 +663,31 @@ def test_xarray_reader_no_dims():
             assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
 
 
+def test_xarray_reader_dims_order():
+    """Make sure band names works with different coordinates order."""
+    arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(33, 35, 2)
+    data = xarray.DataArray(
+        arr,
+        dims=("y", "x", "time"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+    data = data.transpose("time", "y", "x")
+
+    data = data.sel(time="2022-01-01")
+
+    with XarrayReader(data) as dst:
+        info = dst.info()
+        assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000000")]
+        pt = dst.point(0, 0)
+        assert pt.band_names == ["2022-01-01T00:00:00.000000000"]
+
+
 def test_xarray_reader_Y_axis():
     """test XarrayReader with 2D dataset."""
     # Create a DataArray where the y coordinates are in increasing order
