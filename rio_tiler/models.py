@@ -677,6 +677,8 @@ class ImageData:
                 kwargs.update({"transform": self.transform})
             if "crs" not in kwargs and self.crs:
                 kwargs.update({"crs": self.crs})
+            if "compress" not in kwargs:
+                kwargs.update({"compress": "DEFLATE"})
 
         array = self.array.copy()
 

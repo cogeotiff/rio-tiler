@@ -1,7 +1,10 @@
 """rio_tiler.utils: utility functions."""
 
 import math
+import os
+import tempfile
 import warnings
+from contextlib import contextmanager
 from io import BytesIO
 from typing import (
     Any,
@@ -35,6 +38,18 @@ from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
 from rio_tiler.errors import InvalidFormat, RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
+
+
+@contextmanager
+def TemporaryRasterFile(suffix: str):
+    """Create temporary file."""
+    tmpdir = os.environ.get("RIO_TILER_TMPDIR")
+    fileobj = tempfile.NamedTemporaryFile(dir=tmpdir, suffix=suffix, delete=False)
+    fileobj.close()
+    try:
+        yield fileobj
+    finally:
+        os.remove(fileobj.name)
 
 
 def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
@@ -528,11 +543,12 @@ def _requested_tile_aligned_with_internal_tile(
     return True
 
 
-def render(
+def render(  # noqa: C901
     data: numpy.ndarray,
     mask: Optional[numpy.ndarray] = None,
     img_format: str = "PNG",
     colormap: Optional[ColorMapType] = None,
+    in_memory: bool = True,
     **creation_options: Any,
 ) -> bytes:
     """Translate numpy.ndarray to image bytes.
@@ -616,18 +632,29 @@ def render(
                 category=NotGeoreferencedWarning,
                 module="rasterio",
             )
-            with MemoryFile() as memfile:
-                with memfile.open(**output_profile) as dst:
-                    dst.write(data, indexes=list(range(1, count + 1)))
+            suffix = ".tif" if img_format.upper() == "GTIFF" else f".{img_format.lower()}"
+            if in_memory:
+                with MemoryFile(ext=suffix) as memfile:
+                    with memfile.open(**output_profile) as dst:
+                        dst.write(data, indexes=list(range(1, count + 1)))
+                        # Use Mask as an alpha band
+                        if mask is not None:
+                            if ColorInterp.alpha not in dst.colorinterp:
+                                dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
+                            dst.write(mask.astype(data.dtype), indexes=count + 1)
+                    return memfile.read()
 
-                    # Use Mask as an alpha band
-                    if mask is not None:
-                        if ColorInterp.alpha not in dst.colorinterp:
-                            dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
-
-                        dst.write(mask.astype(data.dtype), indexes=count + 1)
-
-                return memfile.read()
+            else:
+                with TemporaryRasterFile(suffix=suffix) as memfile:
+                    with rasterio.open(memfile.name, "w+", **output_profile) as dst:
+                        dst.write(data, indexes=list(range(1, count + 1)))
+                        # Use Mask as an alpha band
+                        if mask is not None:
+                            if ColorInterp.alpha not in dst.colorinterp:
+                                dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
+                            dst.write(mask.astype(data.dtype), indexes=count + 1)
+                    with open(memfile.name, "rb") as f:
+                        return f.read()
 
     except Exception as e:
         raise InvalidFormat(

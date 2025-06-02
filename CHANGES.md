@@ -1,6 +1,9 @@
 
 # Unreleased
 
+* add `COMPRESS=DEFLATE` for GTiff `ImageData` rendering when `compress` is not set
+* add `in_memory=True|False` for `utils.render()` function to save temporary image in memory or on disk (default: in memory)
+
 # 7.7.4 (2025-05-29)
 
 * fix band names for Xarray DataArray

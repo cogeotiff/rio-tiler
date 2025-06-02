@@ -45,6 +45,19 @@ COG_CMAP = os.path.join(os.path.dirname(__file__), "fixtures", "cog_cmap.tif")
 COG_NAN = os.path.join(os.path.dirname(__file__), "fixtures", "cog_nodata_nan.tif")
 
 
+def parse_img(content):
+    """Parse Image body."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
+        with MemoryFile(content) as mem:
+            with mem.open() as dst:
+                return dst.profile, dst.colorinterp
+
+
 @pytest.fixture(autouse=True)
 def testing_env_var(monkeypatch):
     """Set fake env to make sure we don't hit AWS services."""
@@ -608,37 +621,25 @@ def test_resize_array():
 
 def test_render_colorinterp():
     """Save data to numpy binary."""
-
-    def parse(content):
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            with MemoryFile(content) as mem:
-                with mem.open() as dst:
-                    return dst.profile, dst.colorinterp
-
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
     mask = np.zeros((512, 512), dtype=np.uint8)
 
-    profile, color = parse(utils.render(arr, mask=mask, img_format="PNG"))
+    profile, color = parse_img(utils.render(arr, mask=mask, img_format="PNG"))
     assert profile["driver"] == "PNG"
     assert profile["count"] == 4
     assert ColorInterp.alpha in color
 
-    profile, color = parse(utils.render(arr, mask=mask, img_format="JPEG"))
+    profile, color = parse_img(utils.render(arr, mask=mask, img_format="JPEG"))
     assert profile["driver"] == "JPEG"
     assert profile["count"] == 3
     assert ColorInterp.alpha not in color
 
-    profile, color = parse(utils.render(arr, mask=mask, img_format="WEBP"))
+    profile, color = parse_img(utils.render(arr, mask=mask, img_format="WEBP"))
     assert profile["driver"] == "WEBP"
     assert profile["count"] == 4
     assert ColorInterp.alpha in color
 
-    profile, color = parse(utils.render(arr, mask=mask, img_format="GTiff"))
+    profile, color = parse_img(utils.render(arr, mask=mask, img_format="GTiff"))
     assert profile["driver"] == "GTiff"
     assert profile["count"] == 4
     # by default GDAL will assign red,green,blue,alpha for uint8+4bands dataset
@@ -647,7 +648,7 @@ def test_render_colorinterp():
 
     arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint16)
     mask = np.zeros((512, 512), dtype=np.uint8)
-    profile, color = parse(utils.render(arr, mask=mask, img_format="GTiff"))
+    profile, color = parse_img(utils.render(arr, mask=mask, img_format="GTiff"))
     assert profile["driver"] == "GTiff"
     assert profile["count"] == 4
     assert ColorInterp.alpha in color
@@ -745,3 +746,26 @@ def test_get_vrt_transform_world_file(dataset_fixture):
     assert vrt_transform[5] == 6446275.841017159
     assert vrt_width == 501  # 59 without the latitude adjust patch
     assert vrt_height == 181  # 21 without the latitude adjust patch
+
+
+def test_render_memory():
+    """render in/no_in memory."""
+    arr = np.random.randint(0, 255, size=(3, 512, 512), dtype=np.uint8)
+    mask = np.zeros((512, 512), dtype=np.uint8)
+
+    profile, color = parse_img(utils.render(arr, mask=mask, img_format="PNG"))
+    assert profile["driver"] == "PNG"
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+
+    body = utils.render(arr, mask=mask, img_format="PNG", in_memory=False)
+    profile, color = parse_img(body)
+    assert profile["driver"] == "PNG"
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+
+    body = utils.render(arr, mask=mask, img_format="GTiff", in_memory=False)
+    profile, color = parse_img(body)
+    assert profile["driver"] == "GTiff"
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
