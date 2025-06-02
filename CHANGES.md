@@ -52,6 +52,18 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
     >> ['b1']
 ```
 
+# 7.7.4 (2025-05-29)
+
+* fix band names for Xarray DataArray
+
+# 7.7.3.post1 (2025-05-22)
+
+* remove unwanted breaking change
+
+# 7.7.3 (2025-05-22) **YANKED**
+
+* fix Boundless `part` read when using GCPs dataset
+
 # 7.7.2 (2025-05-15)
 
 * add `repr` method to Mosaic Method classes

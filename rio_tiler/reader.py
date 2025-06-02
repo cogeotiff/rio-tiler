@@ -396,7 +396,7 @@ def part(
             )
 
     # Use WarpedVRT when Re-projection or User VRT Option (cutline)
-    if (dst_crs != src_dst.crs) or vrt_options:
+    if (dst_crs != src_dst.crs) or vrt_options or isinstance(src_dst, WarpedVRT):
         window = None
         vrt_transform, vrt_width, vrt_height = get_vrt_transform(
             src_dst,
