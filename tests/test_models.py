@@ -538,8 +538,21 @@ def test_image_reproject():
 
 def test_imageData_to_raster(tmp_path):
     """Test ImageData to raster"""
+    ImageData(numpy.zeros((1, 256, 256), dtype="float32")).to_raster(tmp_path / "img.tif")
+    with rasterio.open(tmp_path / "img.tif") as src:
+        assert src.count == 2
+        assert src.profile["driver"] == "GTiff"
+
     ImageData(numpy.zeros((1, 256, 256), dtype="float32")).to_raster(
         tmp_path / "img.tif", driver="GTiff"
+    )
+    with rasterio.open(tmp_path / "img.tif") as src:
+        assert src.count == 2
+        assert src.profile["driver"] == "GTiff"
+
+    # case insensitive GTiff
+    ImageData(numpy.zeros((1, 256, 256), dtype="float32")).to_raster(
+        tmp_path / "img.tif", driver="gtiff"
     )
     with rasterio.open(tmp_path / "img.tif") as src:
         assert src.count == 2

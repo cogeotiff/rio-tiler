@@ -720,8 +720,8 @@ class ImageData:
 
         return render(array.data, img_format=img_format, colormap=colormap, **kwargs)
 
-    def to_raster(self, dst_path: str, *, driver, **kwargs) -> None:
-        """Save ImageData array to File."""
+    def to_raster(self, dst_path: str, *, driver: str = "GTIFF", **kwargs: Any) -> None:
+        """Save ImageData array to file."""
         if driver.upper() == "GTIFF":
             if "transform" not in kwargs:
                 kwargs.update({"transform": self.transform})
@@ -787,7 +787,7 @@ class ImageData:
         shape_crs: CRS = WGS84_CRS,
         cover_scale: int = 10,
     ) -> NDArray[numpy.floating]:
-        """Post-process image data.
+        """Get Coverage array for a Geometry.
 
         Args:
             shape (Dict): GeoJSON geometry or Feature.
