@@ -534,3 +534,47 @@ def test_image_reproject():
     assert reprojected.array.mask.shape[0] == 3
     assert reprojected.array.mask[:, 0, 0].tolist() == [True, True, True]
     assert reprojected.array.mask[:, -10, -10].tolist() == [False, False, False]
+
+
+def test_imageData_to_raster(tmp_path):
+    """Test ImageData to raster"""
+    ImageData(numpy.zeros((1, 256, 256), dtype="float32")).to_raster(tmp_path / "img.tif")
+    with rasterio.open(tmp_path / "img.tif") as src:
+        assert src.count == 2
+        assert src.profile["driver"] == "GTiff"
+
+    ImageData(numpy.zeros((1, 256, 256), dtype="float32")).to_raster(
+        tmp_path / "img.tif", driver="GTiff"
+    )
+    with rasterio.open(tmp_path / "img.tif") as src:
+        assert src.count == 2
+        assert src.profile["driver"] == "GTiff"
+
+    # case insensitive GTiff
+    ImageData(numpy.zeros((1, 256, 256), dtype="float32")).to_raster(
+        tmp_path / "img.tif", driver="gtiff"
+    )
+    with rasterio.open(tmp_path / "img.tif") as src:
+        assert src.count == 2
+        assert src.profile["driver"] == "GTiff"
+
+    ImageData(numpy.zeros((1, 256, 256), dtype="float32")).to_raster(
+        tmp_path / "img.tif", driver="GTiff", nodata=0
+    )
+    with rasterio.open(tmp_path / "img.tif") as src:
+        assert src.count == 1
+        assert src.profile["driver"] == "GTiff"
+        assert src.profile["nodata"] == 0
+
+    ImageData(numpy.zeros((3, 256, 256), dtype="uint8")).to_raster(
+        tmp_path / "img.tif", driver="PNG"
+    )
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
+        with rasterio.open(tmp_path / "img.tif") as src:
+            assert src.count == 4
+            assert src.profile["driver"] == "PNG"
