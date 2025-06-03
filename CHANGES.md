@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 7.7.5 (2025-06-03)
+
+* add `COMPRESS=DEFLATE` for GTiff rendering when `compress` is not set
+
 # 7.7.4 (2025-05-29)
 
 * fix band names for Xarray DataArray

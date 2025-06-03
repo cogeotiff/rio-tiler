@@ -528,7 +528,7 @@ def _requested_tile_aligned_with_internal_tile(
     return True
 
 
-def render(
+def render(  # noqa: C901
     data: numpy.ndarray,
     mask: Optional[numpy.ndarray] = None,
     img_format: str = "PNG",
@@ -608,6 +608,9 @@ def render(
         "width": width,
     }
     output_profile.update(creation_options)
+
+    if output_profile.get("driver") == "GTIFF" and "compress" not in output_profile:
+        output_profile["compress"] = "DEFLATE"
 
     try:
         with warnings.catch_warnings():
