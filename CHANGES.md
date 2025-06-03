@@ -1,7 +1,7 @@
 
 # Unreleased
 
-# 7.8.0
+# 7.8.0 (2025-06-03)
 
 * add `to_raster()` method to `ImageData` class
 
