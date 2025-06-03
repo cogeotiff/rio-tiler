@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
+import rasterio
 from affine import Affine
 from color_operations import parse_operations, scale_dtype, to_math_type
 from numpy.typing import NDArray
@@ -718,6 +719,42 @@ class ImageData:
             )
 
         return render(array.data, img_format=img_format, colormap=colormap, **kwargs)
+
+    def to_raster(self, dst_path: str, *, driver, **kwargs) -> None:
+        """Save ImageData array to File."""
+        if driver.upper() == "GTIFF":
+            if "transform" not in kwargs:
+                kwargs.update({"transform": self.transform})
+            if "crs" not in kwargs and self.crs:
+                kwargs.update({"crs": self.crs})
+
+        write_nodata = "nodata" in kwargs
+        count, height, width = self.array.shape
+
+        output_profile = {
+            "dtype": self.array.dtype,
+            "count": count if write_nodata else count + 1,
+            "height": height,
+            "width": width,
+        }
+        output_profile.update(kwargs)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            with rasterio.open(dst_path, "w", driver=driver, **output_profile) as dst:
+                dst.write(self.data, indexes=list(range(1, count + 1)))
+
+                # Use Mask as an alpha band
+                if not write_nodata:
+                    if ColorInterp.alpha not in dst.colorinterp:
+                        dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
+                    dst.write(self.mask.astype(self.array.dtype), indexes=count + 1)
+
+        return
 
     def statistics(
         self,

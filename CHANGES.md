@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 7.8.0
+
+* add `to_raster()` method to `ImageData` class
+
 # 7.7.4 (2025-05-29)
 
 * fix band names for Xarray DataArray
