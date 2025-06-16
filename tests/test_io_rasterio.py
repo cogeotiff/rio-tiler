@@ -38,6 +38,7 @@ COG_CMAP = os.path.join(PREFIX, "cog_cmap.tif")
 COG_TAGS = os.path.join(PREFIX, "cog_tags.tif")
 COG_NODATA = os.path.join(PREFIX, "cog_nodata.tif")
 COG_SCALE = os.path.join(PREFIX, "cog_scale.tif")
+COG_SCALE_STATS = os.path.join(PREFIX, "cog_scale_stats.tif")
 COG_GCPS = os.path.join(PREFIX, "cog_gcps.tif")
 COG_DLINE = os.path.join(PREFIX, "cog_dateline.tif")
 COG_EARTH = os.path.join(PREFIX, "cog_fullearth.tif")
@@ -1163,3 +1164,21 @@ def test_titiler_issue_1163_warpedVrt():
             (75.0, 9.0, 77.0, 10.0), bounds_crs="epsg:4326", width=500, height=500
         )
         assert img.statistics()["b1"].valid_percent
+
+
+def test_unscale_stats():
+    """check if scale/offset were applied on stats."""
+    with Reader(COG_SCALE_STATS) as src:
+        img = src.read(unscale=True)
+        stats = img.statistics()
+        minb1, maxb1 = stats["b1"].min, stats["b1"].max
+
+        assert pytest.approx(img.dataset_statistics[0][0]) == pytest.approx(minb1)
+        assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
+
+        img = src.read()
+        stats = img.statistics()
+        minb1, maxb1 = stats["b1"].min, stats["b1"].max
+
+        assert pytest.approx(img.dataset_statistics[0][0]) == pytest.approx(minb1)
+        assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
