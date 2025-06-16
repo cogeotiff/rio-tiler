@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 7.8.1 (2025-06-16)
+
+* apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)
+
 # 7.8.0 (2025-06-03)
 
 * add `to_raster()` method to `ImageData` class
