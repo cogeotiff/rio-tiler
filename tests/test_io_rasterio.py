@@ -22,6 +22,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
     InvalidBufferSize,
+    InvalidDatasetDriver,
     InvalidExpression,
     NoOverviewWarning,
     TileOutsideBounds,
@@ -46,6 +47,7 @@ GEOTIFF = os.path.join(PREFIX, "nocog.tif")
 COG_EUROPA = os.path.join(PREFIX, "cog_nonearth.tif")
 COG_MARS = os.path.join(PREFIX, "cog_hirise_mars.tif")
 COG_INVERTED = os.path.join(PREFIX, "inverted_lat.tif")
+GRIB2 = os.path.join(PREFIX, "gfs.t06z.pgrb2.10p0.f010.grib2")
 
 KEY_ALPHA = "hro_sources/colorado/201404_13SED190110_201404_0x1500m_CL_1_alpha.tif"
 COG_ALPHA = os.path.join(PREFIX, "my-bucket", KEY_ALPHA)
@@ -1182,3 +1184,37 @@ def test_unscale_stats():
 
         assert pytest.approx(img.dataset_statistics[0][0]) == pytest.approx(minb1)
         assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
+
+
+def test_include_exclude_drivers(monkeypatch):
+    """test Include/Exclude drivers."""
+    monkeypatch.delenv("RIO_TILER_INCLUDE_DRIVERS", raising=False)
+    monkeypatch.delenv("RIO_TILER_EXCLUDE_DRIVERS", raising=False)
+
+    with Reader(COGEO) as src:
+        assert src.info()
+
+    with Reader(GRIB2) as src:
+        pass
+
+    with pytest.raises(InvalidDatasetDriver):
+        with Reader(GRIB2, exclude_drivers="GRIB") as src:
+            pass
+
+    with Reader(COGEO, include_drivers="GTiff") as src:
+        pass
+
+    with pytest.raises(InvalidDatasetDriver):
+        with Reader(GRIB2, include_drivers="GTiff") as src:
+            pass
+
+    monkeypatch.setenv("RIO_TILER_INCLUDE_DRIVERS", "GTiff")
+    with pytest.raises(InvalidDatasetDriver):
+        with Reader(GRIB2, include_drivers="GTiff") as src:
+            pass
+
+    monkeypatch.delenv("RIO_TILER_INCLUDE_DRIVERS", raising=False)
+    monkeypatch.setenv("RIO_TILER_EXCLUDE_DRIVERS", "GRIB")
+    with pytest.raises(InvalidDatasetDriver):
+        with Reader(GRIB2, include_drivers="GTiff") as src:
+            pass

@@ -1,8 +1,9 @@
 """rio_tiler.io.rasterio: rio-tiler reader built on top Rasterio"""
 
 import contextlib
+import os
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Set, Union
 
 import attr
 import numpy
@@ -27,6 +28,7 @@ from rio_tiler import reader
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
+    InvalidDatasetDriver,
     NoOverviewWarning,
     PointOutsideBounds,
     TileOutsideBounds,
@@ -84,6 +86,17 @@ class Reader(BaseReader):
 
     options: reader.Options = attr.ib()
 
+    include_drivers: Set[str] = attr.ib(
+        factory=lambda: {
+            g for g in os.environ.get("RIO_TILER_INCLUDE_DRIVERS", "").split(",") if g
+        }
+    )
+    exclude_drivers: Set[str] = attr.ib(
+        factory=lambda: {
+            g for g in os.environ.get("RIO_TILER_EXCLUDE_DRIVERS", "").split(",") if g
+        }
+    )
+
     # Context Manager to handle rasterio open/close
     _ctx_stack: contextlib.ExitStack = attr.ib(init=False, factory=contextlib.ExitStack)
 
@@ -95,6 +108,12 @@ class Reader(BaseReader):
         """Define _kwargs, open dataset and get info."""
         if not self.dataset:
             self.dataset = self._ctx_stack.enter_context(rasterio.open(self.input))
+
+        driver = self.dataset.driver
+        if self.include_drivers and driver not in self.include_drivers:
+            raise InvalidDatasetDriver(f"Cannot read dataset of type: {driver}")
+        if self.exclude_drivers and driver in self.exclude_drivers:
+            raise InvalidDatasetDriver(f"Cannot read dataset of type: {driver}")
 
         if self.dataset.gcps[0]:
             vrt_options = {

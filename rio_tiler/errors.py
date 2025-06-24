@@ -95,3 +95,7 @@ class InvalidGeographicBounds(RioTilerError):
 
 class RioTilerExperimentalWarning(UserWarning):
     """A rio-tiler specific experimental functionality warning."""
+
+
+class InvalidDatasetDriver(RioTilerError):
+    """Invalid Raster Dataset Driver."""
