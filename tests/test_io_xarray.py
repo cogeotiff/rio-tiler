@@ -1,5 +1,6 @@
-"""tests rio_tiler.io.xarray.XarrayReader"""
+"""tests rio_tiler.io.xarray readers"""
 
+import os
 from datetime import datetime
 
 import morecantile
@@ -10,11 +11,17 @@ import xarray
 from rasterio.crs import CRS as rioCRS
 
 from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
-from rio_tiler.io import XarrayReader
+from rio_tiler.io import DataArrayReader, DatasetReader
+
+PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
+NETCDF_2D = os.path.join(PREFIX, "dataset_2d.nc")
+NETCDF_3D = os.path.join(PREFIX, "dataset_3d.nc")
+NETCDF_4D = os.path.join(PREFIX, "dataset_4d.nc")
+ZARR_3D = os.path.join(PREFIX, "dataset_3d.zarr")
 
 
 def test_xarray_reader():
-    """test XarrayReader."""
+    """test DataArrayReader."""
     arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(2, 33, 35)
     data = xarray.DataArray(
         arr,
@@ -28,7 +35,7 @@ def test_xarray_reader():
     data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
 
     data.rio.write_crs("epsg:4326", inplace=True)
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         assert dst.minzoom == dst.maxzoom == 0
         info = dst.info()
         assert info.bounds == dst.bounds
@@ -254,7 +261,7 @@ def test_xarray_reader():
     # Select the first value
     da = data[0]
     assert da.ndim == 2
-    with XarrayReader(da) as dst:
+    with DataArrayReader(da) as dst:
         assert dst.band_names == ["2022-01-01T00:00:00.000000000"]
         info = dst.info()
         assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000000")]
@@ -289,7 +296,7 @@ def test_xarray_reader():
     )
 
     data.rio.write_crs("epsg:4326", inplace=True)
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         assert dst.minzoom == 5
         assert dst.maxzoom == 7
         info = dst.info()
@@ -300,7 +307,7 @@ def test_xarray_reader():
 
 
 def test_xarray_reader_external_nodata():
-    """test XarrayReader."""
+    """test DataArrayReader."""
     # Create a 360/180 dataset that covers the whole world
     arr = numpy.arange(0.0, 360 * 180).reshape(1, 180, 360)
     arr[:, 0:50, 0:50] = 0  # we set the top-left corner to 0
@@ -320,7 +327,7 @@ def test_xarray_reader_external_nodata():
     data.rio.write_crs("epsg:4326", inplace=True)
     assert data.rio.nodata is None
 
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         info = dst.info()
         assert info.height == 180
         assert info.width == 360
@@ -397,7 +404,7 @@ def test_xarray_reader_external_nodata():
 
 
 def test_xarray_reader_internal_nodata():
-    """test XarrayReader."""
+    """test DataArrayReader."""
     # Create a 360/180 dataset that covers the whole world
     arr = numpy.arange(0.0, 360 * 180).reshape(1, 180, 360)
     arr[:, 0:50, 0:50] = 0  # we set the top-left corner to 0
@@ -418,7 +425,7 @@ def test_xarray_reader_internal_nodata():
     data.rio.write_crs("epsg:4326", inplace=True)
     assert data.rio.nodata is not None
 
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         # TILE
         img = dst.tile(0, 0, 1)
         assert not img.mask.all()  # not all the mask value are set to 255
@@ -461,7 +468,7 @@ def test_xarray_reader_internal_nodata():
 
 
 def test_xarray_reader_resampling():
-    """test XarrayReader."""
+    """test DataArrayReader."""
     arr = numpy.arange(0.0, 33 * 35).reshape(1, 33, 35)
     data = xarray.DataArray(
         arr,
@@ -476,7 +483,7 @@ def test_xarray_reader_resampling():
 
     data.rio.write_crs("epsg:4326", inplace=True)
 
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         # TILE
         # default nearest
         img = dst.tile(0, 0, 1)
@@ -527,7 +534,7 @@ def test_xarray_reader_no_crs():
     )
     data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
     with pytest.raises(MissingCRS):
-        with XarrayReader(data):
+        with DataArrayReader(data):
             pass
 
 
@@ -545,7 +552,7 @@ def test_xarray_reader_invalid_bounds_crs():
     )
     data.rio.write_crs("epsg:4326", inplace=True)
     with pytest.raises(InvalidGeographicBounds):
-        with XarrayReader(data):
+        with DataArrayReader(data):
             pass
 
     data = xarray.DataArray(
@@ -559,7 +566,7 @@ def test_xarray_reader_invalid_bounds_crs():
     )
     data.rio.write_crs("epsg:4326", inplace=True)
     with pytest.raises(InvalidGeographicBounds):
-        with XarrayReader(data):
+        with DataArrayReader(data):
             pass
 
     data = xarray.DataArray(
@@ -573,7 +580,7 @@ def test_xarray_reader_invalid_bounds_crs():
     )
     data.rio.write_crs("epsg:4326", inplace=True)
     with pytest.raises(InvalidGeographicBounds):
-        with XarrayReader(data):
+        with DataArrayReader(data):
             pass
 
     # Inverted bounds are still ok because rioxarray reorder the bounds
@@ -587,12 +594,12 @@ def test_xarray_reader_invalid_bounds_crs():
         },
     )
     data.rio.write_crs("epsg:4326", inplace=True)
-    with XarrayReader(data):
+    with DataArrayReader(data):
         pass
 
 
 def test_xarray_reader_no_dims():
-    """test XarrayReader with 2D dataset."""
+    """test DataArrayReader with 2D dataset."""
     arr = numpy.arange(0.0, 33 * 35).reshape(33, 35)
     data = xarray.DataArray(
         arr,
@@ -605,7 +612,7 @@ def test_xarray_reader_no_dims():
     data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
 
     data.rio.write_crs("epsg:4326", inplace=True)
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         assert dst.minzoom == dst.maxzoom == 0
         info = dst.info()
         assert info.bounds == dst.bounds
@@ -681,7 +688,7 @@ def test_xarray_reader_dims_order():
 
     data = data.sel(time="2022-01-01")
 
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         info = dst.info()
         assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000000")]
         pt = dst.point(0, 0)
@@ -689,7 +696,7 @@ def test_xarray_reader_dims_order():
 
 
 def test_xarray_reader_Y_axis():
-    """test XarrayReader with 2D dataset."""
+    """test DataArrayReader with 2D dataset."""
     # Create a DataArray where the y coordinates are in increasing order
     # (this is the opposite of typical raster data)
     # This array will have a positive y resolution in the affine transform
@@ -713,7 +720,7 @@ def test_xarray_reader_Y_axis():
     assert bottom > top
     assert data.rio.transform().e > 0
 
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         assert dst.bounds == (left, top, right, bottom)
         img = dst.preview()
         assert img.bounds == dst.bounds
@@ -755,7 +762,7 @@ def test_xarray_reader_Y_axis():
     assert bottom < top
     assert data.rio.transform().e < 0
 
-    with XarrayReader(data) as dst:
+    with DataArrayReader(data) as dst:
         assert dst.bounds == (left, bottom, right, top)
         img = dst.preview()
         assert img.bounds == dst.bounds
@@ -773,3 +780,104 @@ def test_xarray_reader_Y_axis():
             y = xy[1]
             pt = dst.point(x, y)
             assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
+
+
+@pytest.mark.parametrize(
+    "filename",
+    [
+        NETCDF_2D,
+        NETCDF_3D,
+        NETCDF_4D,
+        ZARR_3D,
+    ],
+)
+def test_dataset_reader(filename):
+    """test reader."""
+    with DatasetReader(filename) as ds:
+        assert ds.variables
+        assert ds.crs
+        assert ds.transform
+        assert ds.bounds
+
+
+def test_dataset_reader_variable():
+    """test reader."""
+    with DatasetReader(NETCDF_2D) as ds:
+        info = ds.info(variable="dataset")
+        assert info.band_descriptions == [("b1", "dataset")]
+
+    with DatasetReader(NETCDF_3D) as ds:
+        info = ds.info(variable="dataset")
+        assert info.band_descriptions == [
+            ("b1", "2022-01-01T00:00:00.000000000"),
+            ("b2", "2023-01-01T00:00:00.000000000"),
+        ]
+
+        info = ds.info(variable="dataset", sel=["time=2022-01-01T00:00:00.000000000"])
+        assert info.band_descriptions == [
+            ("b1", "2022-01-01T00:00:00.000000000"),
+        ]
+
+    with DatasetReader(NETCDF_4D) as ds:
+        with pytest.raises(AssertionError):
+            ds.info(variable="dataset")
+
+        info = ds.info(variable="dataset", sel=["z=0"])
+        assert info.band_descriptions == [
+            ("b1", "2022-01-01T00:00:00.000000000"),
+            ("b2", "2023-01-01T00:00:00.000000000"),
+        ]
+
+    with DatasetReader(NETCDF_3D) as ds:
+        stats = ds.statistics(variable="dataset")
+        assert stats["2022-01-01T00:00:00.000000000"]
+
+        img = ds.tile(0, 0, 0, variable="dataset")
+        assert img.band_names == [
+            "2022-01-01T00:00:00.000000000",
+            "2023-01-01T00:00:00.000000000",
+        ]
+
+        img = ds.tile(0, 0, 0, variable="dataset", indexes=1)
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+
+        img = ds.tile(
+            0, 0, 0, variable="dataset", sel=["time=2022-01-01T00:00:00.000000000"]
+        )
+        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+
+        img = ds.part((-160, -80, 160, 80), variable="dataset")
+        assert img.band_names == [
+            "2022-01-01T00:00:00.000000000",
+            "2023-01-01T00:00:00.000000000",
+        ]
+
+        img = ds.preview(variable="dataset")
+        assert img.band_names == [
+            "2022-01-01T00:00:00.000000000",
+            "2023-01-01T00:00:00.000000000",
+        ]
+
+        pts = ds.point(0, 0, variable="dataset")
+        assert pts.band_names == [
+            "2022-01-01T00:00:00.000000000",
+            "2023-01-01T00:00:00.000000000",
+        ]
+
+        feat = {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    (-160.0, -80.0),
+                    (160.0, -80.0),
+                    (160.0, 80.0),
+                    (-160.0, 80.0),
+                    (-160.0, -80.0),
+                ]
+            ],
+        }
+        img = ds.feature(feat, variable="dataset")
+        assert img.band_names == [
+            "2022-01-01T00:00:00.000000000",
+            "2023-01-01T00:00:00.000000000",
+        ]

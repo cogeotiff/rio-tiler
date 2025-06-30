@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Tuple
+from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
 
 import attr
 import numpy
@@ -652,6 +652,9 @@ class DataArrayReader(BaseReader):
         return img
 
 
+sel_methods = Literal["nearest", "pad", "ffill", "backfill", "bfill"]
+
+
 @attr.s
 class DatasetReader(BaseReader):
     """Xarray Reader.
@@ -694,8 +697,26 @@ class DatasetReader(BaseReader):
                 self.opener(self.input, **self.opener_options)
             )
 
-        self.bounds = None
-        self.crs = None
+        # NOTE: rioxarray returns **ordered** bounds in form of (minx, miny, maxx, maxx)
+        self.bounds = tuple(self.dataset.rio.bounds())
+        self.crs = self.dataset.rio.crs or "epsg:4326"
+
+        # adds half x/y resolution on each values
+        # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634
+        xres, yres = map(abs, self.dataset.rio.resolution())
+        if self.crs == WGS84_CRS and (
+            self.bounds[0] + xres / 2 < -180
+            or self.bounds[1] + yres / 2 < -90
+            or self.bounds[2] - xres / 2 > 180
+            or self.bounds[3] - yres / 2 > 90
+        ):
+            raise InvalidGeographicBounds(
+                f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
+            )
+
+        self.transform = self.dataset.rio.transform()
+        self.height = self.dataset.rio.height
+        self.width = self.dataset.rio.width
 
     def close(self):
         """Close xarray dataset."""
@@ -752,15 +773,32 @@ class DatasetReader(BaseReader):
 
         return da
 
-    def get_variable(
-        self, variable: str, drop_dim: Optional[str] = None
+    def _get_variable(
+        self,
+        variable: str,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
     ) -> xarray.DataArray:
         """Get DataArray from xarray Dataset."""
         da = self.dataset[variable]
 
-        if drop_dim:
-            dim_to_drop, dim_val = drop_dim.split("=")
-            da = da.sel({dim_to_drop: dim_val}).drop_vars(dim_to_drop)
+        if sel:
+            _idx: Dict[str, List] = {}
+            for s in sel:
+                val: Union[str, slice]
+                dim, val = s.split("=")
+
+                # cast string to dtype of the dimension
+                if da[dim].dtype != "O":
+                    val = da[dim].dtype.type(val)
+
+                if dim in _idx:
+                    _idx[dim].append(val)
+                else:
+                    _idx[dim] = [val]
+
+            sel_idx = {k: v[0] if len(v) < 2 else v for k, v in _idx.items()}
+            da = da.sel(sel_idx, method=method)
 
         da = self._arrange_dims(da)
 
@@ -782,104 +820,135 @@ class DatasetReader(BaseReader):
 
         return da
 
-    def spatial_info(self, variable: str, drop_dim: Optional[str] = None):
+    def spatial_info(  # type: ignore
+        self,
+        *,
+        variable: str,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
+    ):
         """Return xarray.DataArray info."""
-        da = DataArrayReader(
-            self.get_variable(variable, drop_dim=drop_dim),
-        )
-        return {
-            "crs": da.crs,
-            "bounds": da.bounds,
-            "minzoom": da.minzoom,
-            "maxzoom": da.maxzoom,
-        }
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return {
+                "crs": da.crs,
+                "bounds": da.bounds,
+                "minzoom": da.minzoom,
+                "maxzoom": da.maxzoom,
+            }
 
     def get_geographic_bounds(  # type: ignore
-        self, crs: CRS, variable: str, drop_dim: Optional[str] = None
+        self,
+        crs: CRS,
+        *,
+        variable: str,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
     ) -> BBox:
         """Return Geographic Bounds for a Geographic CRS."""
-        return DataArrayReader(
-            self.get_variable(variable, drop_dim=drop_dim),
-        ).get_geographic_bounds(crs)
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return da.get_geographic_bounds(crs)
 
-    def info(self, variable: str, drop_dim: Optional[str] = None) -> Info:  # type: ignore
+    def info(  # type: ignore
+        self,
+        *,
+        variable: str,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
+    ) -> Info:
         """Return xarray.DataArray info."""
-        return DataArrayReader(
-            self.get_variable(variable, drop_dim=drop_dim),
-        ).info()
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return da.info()
 
     def statistics(  # type: ignore
         self,
         *args: Any,
         variable: str,
-        drop_dim: Optional[str] = None,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
         **kwargs: Any,
     ) -> Dict[str, BandStatistics]:
         """Return statistics from a dataset."""
-        return DataArrayReader(
-            self.get_variable(variable, drop_dim=drop_dim),
-        ).statistics(*args, **kwargs)
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return da.statistics(*args, **kwargs)
 
     def tile(  # type: ignore
         self,
         *args: Any,
         variable: str,
-        drop_dim: Optional[str] = None,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a dataset."""
-        return DataArrayReader(
-            self.get_variable(variable, drop_dim=drop_dim),
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
             tms=self.tms,
-        ).tile(*args, **kwargs)
+        ) as da:
+            return da.tile(*args, **kwargs)
 
     def part(  # type: ignore
         self,
         *args: Any,
         variable: str,
-        drop_dim: Optional[str] = None,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset."""
-        return DataArrayReader(self.get_variable(variable, drop_dim=drop_dim)).part(
-            *args, **kwargs
-        )
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return da.part(*args, **kwargs)
 
     def preview(  # type: ignore
         self,
         *args: Any,
         variable: str,
-        drop_dim: Optional[str] = None,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a dataset."""
-        return DataArrayReader(self.get_variable(variable, drop_dim=drop_dim)).preview(
-            *args, **kwargs
-        )
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return da.preview(*args, **kwargs)
 
     def point(  # type: ignore
         self,
         *args: Any,
         variable: str,
-        drop_dim: Optional[str] = None,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
         **kwargs: Any,
     ) -> PointData:
         """Read a pixel value from a dataset."""
-        return DataArrayReader(self.get_variable(variable, drop_dim=drop_dim)).point(
-            *args, **kwargs
-        )
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return da.point(*args, **kwargs)
 
     def feature(  # type: ignore
         self,
         *args: Any,
         variable: str,
-        drop_dim: Optional[str] = None,
+        sel: Optional[List[str]] = None,
+        method: Optional[sel_methods] = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature."""
-        return DataArrayReader(self.get_variable(variable, drop_dim=drop_dim)).feature(
-            *args, **kwargs
-        )
+        with DataArrayReader(
+            self._get_variable(variable, sel=sel, method=method),
+        ) as da:
+            return da.feature(*args, **kwargs)
 
 
 # Compat

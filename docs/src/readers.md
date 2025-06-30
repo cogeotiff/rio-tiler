@@ -996,16 +996,16 @@ For ImageReader we are using a custom `LocalTileMatrixSet` constructed from the 
     }
     ```
 
-## rio_tiler.io.xarray.XarrayReader
+## rio_tiler.io.xarray.DataArrayReader
 
 The `Reader` is designed to work with `xarray.DataReader` with full geo-reference metadata (CRS) and variables (X,Y)
 
 The class is derived from the `rio_tiler.io.base.BaseReader` class.
 ```python
-from rio_tiler.io.xarray import XarrayReader
+from rio_tiler.io import DataArrayReader
 
-XarrayReader.__mro__
->>> (rio_tiler.io.xarray.XarrayReader,
+DataArrayReader.__mro__
+>>> (rio_tiler.io.xarray.DataArrayReader,
  rio_tiler.io.base.BaseReader,
  rio_tiler.io.base.SpatialMixin,
  object)
@@ -1031,7 +1031,7 @@ XarrayReader.__mro__
 import numpy
 import xarray
 from datetime import datetime
-from rio_tiler.io.xarray import XarrayReader
+from rio_tiler.io import DataArrayReader
 
 arr = numpy.random.randn(1, 33, 35)
 data = xarray.DataArray(
@@ -1046,7 +1046,7 @@ data = xarray.DataArray(
 data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
 data.rio.write_crs("epsg:4326", inplace=True)
 
-with XarrayReader(data) as src:
+with DataArrayReader(data) as src:
     print(src.input)
     print(src.tms.identifier)
     print(src.minzoom)
@@ -1068,10 +1068,10 @@ EPSG:4326
 
     ```python
     from rio_tiler.constants import WEB_MERCATOR_CRS
-    from rio_tiler.io import XarrayReader
+    from rio_tiler.io import DataArrayReader
     from rio_tiler.models import ImageData
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         # src.tile(tile_x, tile_y, tile_z, tilesize, reproject_method, auto_expand, nodata)
         img = src.tile(1, 2, 3)
         assert isinstance(img, ImageData)
@@ -1081,10 +1081,10 @@ EPSG:4326
 - **part()**: Read a DataArray for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
 
     ```python
-    from rio_tiler.io import XarrayReader
+    from rio_tiler.io import DataArrayReader
     from rio_tiler.models import ImageData
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         # src.part((minx, miny, maxx, maxy), dst_crs, bounds_crs, reproject_method, auto_expand, nodata, max_size, height, width, resampling_method)
         img = src.part((10, 10, 20, 20))
         assert isinstance(img, ImageData)
@@ -1092,7 +1092,7 @@ EPSG:4326
         assert img.bounds == (10, 10, 20, 20)
 
     # Pass bbox in WGS84 (default) but return data in the input dataset CRS
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         img = src.part((10, 10, 20, 20), dst_crs=src.dataset.crs)
         assert img.crs == src.dataset.crs
     ```
@@ -1101,7 +1101,7 @@ EPSG:4326
 
     ```python
     from rio_tiler.constants import WGS84_CRS
-    from rio_tiler.io import XarrayReader
+    from rio_tiler.io import DataArrayReader
     from rio_tiler.models import ImageData
 
     feat = {
@@ -1121,7 +1121,7 @@ EPSG:4326
         },
     }
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         # src.part(geojson_feature, dst_crs, shape_crs, auto_expand, nodata, max_size, height, width, resampling_method)
         img = src.feature(feat)
         assert isinstance(img, ImageData)
@@ -1129,7 +1129,7 @@ EPSG:4326
         assert img.bounds == (-55.61, 72.36, -53.83, 73.05)  # bbox of the input feature
 
     # Pass bbox in WGS84 (default) but return data in the input dataset CRS
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         img = src.feature(feat, dst_crs=src.dataset.crs)
         assert img.crs == src.dataset.crs
     ```
@@ -1137,10 +1137,10 @@ EPSG:4326
 - **point()**: Read the pixel values of a DataArray for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
 
     ```python
-    from rio_tiler.io import XarrayReader
+    from rio_tiler.io import DataArrayReader
     from rio_tiler.models import PointData
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         # src.point(lon, lat, coord_crs)
         pt = src.point(-100, 25)
         assert isinstance(pt, PointData)
@@ -1149,10 +1149,10 @@ EPSG:4326
 - **info()**: Return simple metadata about the DataArray
 
     ```python
-    from rio_tiler.io import XarrayReader
+    from rio_tiler.io import DataArrayReader
     from rio_tiler.models import Info
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         info = src.info()
         assert isinstance(info, Info)
 
@@ -1177,17 +1177,17 @@ EPSG:4326
 - **preview()**: Return low-resolution representation of the DataArray
 
     ```python
-    from rio_tiler.io import XarrayReader
+    from rio_tiler.io import DataArrayReader
     from rio_tiler.models import ImageData
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         # src.preview(dst_crs, reproject_method, nodata, max_size, height, width, resampling_method)
         img = src.preview()
         assert isinstance(img, ImageData)
         assert img.crs == data.rio.crs
         assert img.bounds == data.rio.bounds()
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         img = src.preview(WGS84_CRS, max_size=100)
         assert img.crs == WGS84_CRS
     ```
@@ -1199,10 +1199,10 @@ EPSG:4326
 - **statistics()**: Return DataArray statistics (Min/Max/Stdev)
 
     ```python
-    from rio_tiler.io import XarrayReader
+    from rio_tiler.io import DataArrayReader
     from rio_tiler.models import ImageData
 
-    with XarrayReader(data) as src:
+    with DataArrayReader(data) as src:
         stats = src.statistics()
         assert isinstance(stats, dict)
 
