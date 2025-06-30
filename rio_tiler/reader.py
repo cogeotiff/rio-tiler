@@ -297,6 +297,19 @@ def read(
             numpy.multiply(data, scales, out=data, casting="unsafe")
             numpy.add(data, offsets, out=data, casting="unsafe")
 
+            # apply scale/offsets to stats
+            if dataset_statistics:
+                scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1].reshape(
+                    (-1, 1)
+                )
+                offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1].reshape(
+                    (-1, 1)
+                )
+                stats_array = numpy.array(dataset_statistics)
+                numpy.multiply(stats_array, scales, out=stats_array, casting="unsafe")
+                numpy.add(stats_array, offsets, out=stats_array, casting="unsafe")
+                dataset_statistics = [tuple(s) for s in stats_array.tolist()]
+
         if post_process:
             data = post_process(data)
 

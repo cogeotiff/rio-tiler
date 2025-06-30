@@ -48,6 +48,25 @@ print(ImageData(data))
 - **data**: Return data part of the masked array.
 - **mask**: Return the mask part in form of rasterio dataset mask.
 
+#### ClassMethods
+
+- **from_bytes()**: Create an ImageData instance from a Raster buffer
+
+    ```python
+    with open("img.tif", "rb") as f:
+        img = ImageData.from_bytes(f.read())
+    ```
+
+- **create_from_list()**: Create ImageData from a sequence of ImageData objects.
+
+    ```python
+    r = ImageData(numpy.zeros((1, 256, 256)))
+    g = ImageData(numpy.zeros((1, 256, 256)))
+    b = ImageData(numpy.zeros((1, 256, 256)))
+
+    img = ImageData.create_from_list([r, g, b])
+    ```
+
 #### Methods
 
 - **data_as_image()**: Return the data array reshaped into an image processing/visualization software friendly order
@@ -100,6 +119,14 @@ print(ImageData(data))
     assert img_r.count == 3
     assert img_r.width == 256
     assert img_r.height == 256
+    ```
+
+- **reproject()**: Reproject the ImageData to a user defined projection
+
+    ```python
+    data = numpy.zeros((3, 1024, 1024), dtype="uint8")
+    img = ImageData(data, crs="epsg:4326", bounds=(-180, -90, 180, 90))
+    img = img.reproject(dst_crs="epsg:3857")
     ```
 
 - **post_process()**: Apply rescaling or/and `color-operations` formula to the data array. Returns a new ImageData instance.
@@ -306,6 +333,13 @@ print(ImageData(data))
 Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for a driver (e.g `float` for `PNG`),
 `rio-tiler` will automatically rescale the data using the `min/max` value for the datatype (ref: https://github.com/cogeotiff/rio-tiler/pull/391).
 
+
+- **to_raster()**: Save ImageData array to raster file
+
+    ```python
+    img = ImageData(numpy.zeros((1, 256, 256)))
+    img.to_raster("img.tif", driver="GTiff")
+    ```
 
 ## PointData
 

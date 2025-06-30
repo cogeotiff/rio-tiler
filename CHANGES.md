@@ -52,6 +52,14 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
     >> ['b1']
 ```
 
+# 7.8.1 (2025-06-16)
+
+* apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)
+
+# 7.8.0 (2025-06-03)
+
+* add `to_raster()` method to `ImageData` class
+
 # 7.7.4 (2025-05-29)
 
 * fix band names for Xarray DataArray
