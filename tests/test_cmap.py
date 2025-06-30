@@ -4,6 +4,7 @@ import json
 import os
 import pathlib
 from copy import deepcopy
+from importlib.resources import as_file
 
 import numpy
 import pytest
@@ -15,12 +16,6 @@ from rio_tiler.errors import (
     InvalidColorMapName,
     InvalidFormat,
 )
-
-try:
-    from importlib.resources import as_file
-except ImportError:
-    # Try backported to PY<39 `importlib_resources`.
-    from importlib_resources import as_file  # type: ignore
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures", "cmap")
 

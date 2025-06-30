@@ -91,3 +91,7 @@ class MissingCRS(RioTilerError):
 
 class InvalidGeographicBounds(RioTilerError):
     """Invalid Geographic bounds."""
+
+
+class RioTilerExperimentalWarning(UserWarning):
+    """A rio-tiler specific experimental functionality warning."""

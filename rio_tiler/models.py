@@ -6,6 +6,7 @@ from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union
 
 import attr
 import numpy
+import rasterio
 from affine import Affine
 from color_operations import parse_operations, scale_dtype, to_math_type
 from numpy.typing import NDArray
@@ -14,13 +15,13 @@ from rasterio import windows
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
-from rasterio.enums import ColorInterp
+from rasterio.enums import ColorInterp, Resampling
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import rasterize
 from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
-from rasterio.transform import from_bounds
-from rasterio.warp import transform_geom
+from rasterio.transform import array_bounds, from_bounds
+from rasterio.warp import calculate_default_transform, reproject, transform_geom
 from typing_extensions import Self
 
 from rio_tiler.colormap import apply_cmap
@@ -34,6 +35,7 @@ from rio_tiler.types import (
     IntervalTuple,
     NumType,
     RIOResampling,
+    WarpResampling,
 )
 from rio_tiler.utils import (
     _validate_shape_input,
@@ -157,6 +159,9 @@ class PointData:
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     assets: Optional[List] = attr.ib(default=None, kw_only=True)
     metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
+    pixel_location: Optional[Tuple[NumType, NumType]] = attr.ib(
+        default=None, kw_only=True
+    )
 
     @array.validator
     def _validate_data(self, attribute, value):
@@ -240,9 +245,9 @@ class PointData:
         return cls(
             arr,
             assets=assets,
-            crs=data[0].crs,
-            coordinates=data[0].coordinates,
             band_names=band_names,
+            coordinates=data[0].coordinates,
+            crs=data[0].crs,
             metadata=metadata,
         )
 
@@ -261,6 +266,7 @@ class PointData:
             coordinates=self.coordinates,
             band_names=blocks,
             metadata=self.metadata,
+            pixel_location=self.pixel_location,
         )
 
 
@@ -714,6 +720,42 @@ class ImageData:
 
         return render(array.data, img_format=img_format, colormap=colormap, **kwargs)
 
+    def to_raster(self, dst_path: str, *, driver: str = "GTIFF", **kwargs: Any) -> None:
+        """Save ImageData array to file."""
+        if driver.upper() == "GTIFF":
+            if "transform" not in kwargs:
+                kwargs.update({"transform": self.transform})
+            if "crs" not in kwargs and self.crs:
+                kwargs.update({"crs": self.crs})
+
+        write_nodata = "nodata" in kwargs
+        count, height, width = self.array.shape
+
+        output_profile = {
+            "dtype": self.array.dtype,
+            "count": count if write_nodata else count + 1,
+            "height": height,
+            "width": width,
+        }
+        output_profile.update(kwargs)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            with rasterio.open(dst_path, "w", driver=driver, **output_profile) as dst:
+                dst.write(self.data, indexes=list(range(1, count + 1)))
+
+                # Use Mask as an alpha band
+                if not write_nodata:
+                    if ColorInterp.alpha not in dst.colorinterp:
+                        dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
+                    dst.write(self.mask.astype(self.array.dtype), indexes=count + 1)
+
+        return
+
     def statistics(
         self,
         categorical: bool = False,
@@ -745,7 +787,7 @@ class ImageData:
         shape_crs: CRS = WGS84_CRS,
         cover_scale: int = 10,
     ) -> NDArray[numpy.floating]:
-        """Post-process image data.
+        """Get Coverage array for a Geometry.
 
         Args:
             shape (Dict): GeoJSON geometry or Feature.
@@ -786,3 +828,44 @@ class ImageData:
         ).astype("float32")
 
         return cover_array.sum(-1).sum(1) / (cover_scale**2)
+
+    def reproject(
+        self,
+        dst_crs: CRS,
+        resolution: Optional[Tuple[float, float]] = None,
+        reproject_method: WarpResampling = "nearest",
+    ) -> "ImageData":
+        """Reproject data and mask."""
+        dst_transform, w, h = calculate_default_transform(
+            self.crs,
+            dst_crs,
+            self.width,
+            self.height,
+            *self.bounds,
+            resolution=resolution,
+        )
+
+        destination = numpy.ma.masked_array(
+            numpy.zeros((self.count, h, w), dtype=self.array.dtype),
+        )
+        destination, _ = reproject(
+            self.array,
+            destination,
+            src_transform=self.transform,
+            src_crs=self.crs,
+            dst_transform=dst_transform,
+            dst_crs=dst_crs,
+            resampling=Resampling[reproject_method],
+        )
+
+        bounds = array_bounds(h, w, dst_transform)
+
+        return ImageData(
+            destination,
+            assets=self.assets,
+            crs=dst_crs,
+            bounds=bounds,
+            band_names=self.band_names,
+            metadata=self.metadata,
+            dataset_statistics=self.dataset_statistics,
+        )

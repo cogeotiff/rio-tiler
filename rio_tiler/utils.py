@@ -59,8 +59,8 @@ def _weighted_stdev(
     values: NDArray[numpy.floating],
     weights: NDArray[numpy.floating],
 ) -> float:
-    average = numpy.average(values, weights=weights)
-    variance = numpy.average((values - average) ** 2, weights=weights)
+    average = numpy.ma.average(values, weights=weights)
+    variance = numpy.ma.average((values - average) ** 2, weights=weights)
     return float(math.sqrt(variance))
 
 
@@ -174,35 +174,44 @@ def get_array_statistics(
                 _weighted_quantiles(data_comp, masked_coverage.compressed(), pp / 100.0)
                 for pp in percentiles
             ]
-        else:
-            percentiles_values = [numpy.nan] * len(percentiles_names)
-
-        if valid_pixels:
             majority = float(keys[counts.tolist().index(counts.max())].tolist())
             minority = float(keys[counts.tolist().index(counts.min())].tolist())
+            std = _weighted_stdev(data_comp, masked_coverage.compressed())
+            med = _weighted_quantiles(data_comp, masked_coverage.compressed())
+            _min = float(data[b].min())
+            _max = float(data[b].max())
+            _mean = float(data_cov.sum() / masked_coverage.sum())
+            _count = float(masked_coverage.sum())
+            _sum = float(data_cov.sum())
+
         else:
+            percentiles_values = [numpy.nan] * len(percentiles_names)
             majority = numpy.nan
             minority = numpy.nan
-
-        _count = masked_coverage.sum()
-        _sum = data_cov.sum()
+            std = numpy.nan
+            med = numpy.nan
+            _min = numpy.nan
+            _max = numpy.nan
+            _count = 0
+            _sum = 0
+            _mean = numpy.nan
 
         output.append(
             {
                 # Minimum value, not taking coverage fractions into account.
-                "min": float(data[b].min()),
+                "min": _min,
                 # Maximum value, not taking coverage fractions into account.
-                "max": float(data[b].max()),
+                "max": _max,
                 # Mean value, weighted by the percent of each cell that is covered.
-                "mean": float(_sum / _count),
+                "mean": _mean,
                 # Sum of all non-masked cell coverage fractions.
-                "count": float(_count),
+                "count": _count,
                 # Sum of values, weighted by their coverage fractions.
-                "sum": float(_sum),
+                "sum": _sum,
                 # Population standard deviation of cell values, taking into account coverage fraction.
-                "std": _weighted_stdev(data_comp, masked_coverage.compressed()),
+                "std": std,
                 # Median value of cells, weighted by the percent of each cell that is covered.
-                "median": _weighted_quantiles(data_comp, masked_coverage.compressed()),
+                "median": med,
                 # The value occupying the greatest number of cells.
                 "majority": majority,
                 # The value occupying the least number of cells.
@@ -408,7 +417,17 @@ def get_vrt_transform(
     # NOTE: When we have desired output height/width, we can use them to
     # calculate the output size/transform. The VRT resolution will be aligned with the desired
     # output resolution (if not bigger)
-    if height and width:
+    if height or width:
+        if not height or not width:
+            # get the size's ratio of the reprojected dataset
+            _w = max(1, round((e - w) / w_res))
+            _h = max(1, round((s - n) / h_res))
+            ratio = _h / _w
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
+
         output_transform = from_bounds(w, s, e, n, width, height)
 
         # NOTE: Here we check if the Output Resolution is higher thant the dataset resolution (OverZoom)
@@ -773,14 +792,15 @@ def resize_array(
             category=NotGeoreferencedWarning,
             module="rasterio",
         )
-        with rasterio.open(datasetname, "r+") as src:
-            # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
-            indexes = 1 if len(data.shape) == 2 else None
-            return src.read(
-                out_shape=out_shape,
-                indexes=indexes,
-                resampling=Resampling[resampling_method],
-            )
+        with rasterio.Env(GDAL_MEM_ENABLE_OPEN=True):
+            with rasterio.open(datasetname, "r+") as src:
+                # if a 2D array is passed, using indexes=1 makes sure we return an 2D array
+                indexes = 1 if len(data.shape) == 2 else None
+                return src.read(
+                    out_shape=out_shape,
+                    indexes=indexes,
+                    resampling=Resampling[resampling_method],
+                )
 
 
 def normalize_bounds(bounds: BBox) -> BBox:

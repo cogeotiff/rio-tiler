@@ -36,6 +36,7 @@ COG_NODATA_FLOAT_NAN = os.path.join(
     os.path.dirname(__file__), "fixtures", "cog_nodata_float_nan.tif"
 )
 COG_INVERTED = os.path.join(os.path.dirname(__file__), "fixtures", "inverted_lat.tif")
+COG_WORLD = os.path.join(os.path.dirname(__file__), "fixtures", "cog_world.tif")
 
 
 @pytest.fixture(autouse=True)
@@ -102,6 +103,111 @@ def test_tile_read_valid():
     assert mask.shape == (25, 25)
 
 
+def test_sizes_with_read():
+    """test automatic width/height calc for reader.read."""
+    # Dataset is almost square with a ratio ~1.0
+    with rasterio.open(COG) as src_dst:
+        img = reader.read(src_dst, max_size=50)
+        assert img.height == 50
+        assert img.width == 50
+
+        img = reader.read(src_dst, width=50)
+        assert img.height == 51
+        assert img.width == 50
+
+        img = reader.read(src_dst, height=50)
+        assert img.height == 50
+        assert img.width == 50
+
+        # in EPSG:3857 the dataset has a ratio of 0.95
+        img = reader.read(src_dst, max_size=50, dst_crs="epsg:3857")
+        assert img.height == 48
+        assert img.width == 50
+
+        img = reader.read(src_dst, width=50, dst_crs="epsg:3857")
+        assert img.height == 48
+        assert img.width == 50
+
+        img = reader.read(src_dst, height=50, dst_crs="epsg:3857")
+        assert img.height == 50
+        assert img.width == 53
+
+        img = reader.read(src_dst, window=((0, 100), (0, 100)))
+        assert img.width == 100
+        assert img.height == 100
+
+        img = reader.read(src_dst, window=((0, 100), (0, 100)), max_size=200)
+        assert img.width == 100
+        assert img.height == 100
+
+        img = reader.read(src_dst, window=((0, 100), (0, 100)), max_size=50)
+        assert img.width == 50
+        assert img.height == 50
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), height=200)
+        assert img.width == 100
+        assert img.height == 200
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), height=50)
+        assert img.width == 25
+        assert img.height == 50
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), width=200)
+        assert img.width == 200
+        assert img.height == 400
+
+        img = reader.read(src_dst, window=((0, 100), (0, 50)), width=50)
+        assert img.width == 50
+        assert img.height == 100
+
+    # Dataset is almost a rectangle with a ratio ~0.5
+    with rasterio.open(COG_WORLD) as src_dst:
+        # Dataset is almost square with a ratio ~1.0
+        arr, _ = reader.read(src_dst, max_size=50)
+        assert arr.shape == (1, 25, 50)
+
+        arr, _ = reader.read(src_dst, width=50)
+        assert arr.shape == (1, 25, 50)
+
+        arr, _ = reader.read(src_dst, height=50)
+        assert arr.shape == (1, 50, 100)
+
+
+def test_sizes_with_part():
+    """test automatic width/height calc for reader.part."""
+    # rectangular shape
+    bounds = [467258, 8141872, 566702, 8207016]
+    with rasterio.open(COG) as src_dst:
+        # full res
+        img = reader.part(src_dst, bounds)
+        assert img.height == 651
+        assert img.width == 994
+
+        img = reader.part(src_dst, bounds, max_size=100)
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, width=100)
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, height=66)
+        assert img.height == 66
+        assert img.width == 101
+
+        img = reader.part(src_dst, bounds, max_size=100, dst_crs="epsg:4326")
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, width=100, dst_crs="epsg:4326")
+        assert img.height == 66
+        assert img.width == 100
+
+        img = reader.part(src_dst, bounds, height=66, dst_crs="epsg:4326")
+        assert img.height == 66
+        assert img.width == 101
+
+
 def test_resampling_returns_different_results():
     """Make sure resampling works."""
     bounds = [
@@ -111,25 +217,14 @@ def test_resampling_returns_different_results():
         12523442.714243278,
     ]
     with rasterio.open(COG) as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS)
+        arr, _ = reader.part(src_dst, bounds, 64, 64, dst_crs=constants.WEB_MERCATOR_CRS)
         arr2, _ = reader.part(
             src_dst,
             bounds,
-            16,
-            16,
+            64,
+            64,
             dst_crs=constants.WEB_MERCATOR_CRS,
             resampling_method="bilinear",
-        )
-        assert not numpy.array_equal(arr, arr2)
-
-        arr, _ = reader.part(src_dst, bounds, 16, 16, dst_crs=constants.WEB_MERCATOR_CRS)
-        arr2, _ = reader.part(
-            src_dst,
-            bounds,
-            16,
-            16,
-            dst_crs=constants.WEB_MERCATOR_CRS,
-            reproject_method="bilinear",
         )
         assert not numpy.array_equal(arr, arr2)
 
@@ -421,6 +516,88 @@ def test_point():
         )
         assert pt.data == numpy.array([1])
         assert pt.mask == numpy.array([0])
+        assert pt.band_names == ["b1"]
+        assert pt.pixel_location
+        assert isinstance(pt.pixel_location[0], int)
+
+        # Interpolate=False
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+        )
+        assert pt.data == numpy.array([2800])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
+        # resampling_method is useless with interpolate=False
+        with pytest.warns(UserWarning):
+            pt = reader.point(
+                src_dst,
+                [-57.566, 73.6885],
+                coord_crs="epsg:4326",
+                indexes=1,
+                nodata=1,
+                resampling_method="bilinear",
+            )
+
+        # Interpolate=True with Nearest
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2800])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+        assert pt.pixel_location
+        assert isinstance(pt.pixel_location[0], float)
+
+        # Interpolate=True + resampling=bilinear, default buffer
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            resampling_method="bilinear",
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2819])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
+        # Interpolate=True + resampling=average
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            resampling_method="average",
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2904])
+        assert pt.mask == numpy.array([255])
+        assert pt.band_names == ["b1"]
+
+        # Interpolate=True + resampling=Cubic
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            indexes=1,
+            nodata=1,
+            resampling_method="cubic",
+            interpolate=True,
+        )
+        assert pt.data == numpy.array([2812])
+        assert pt.mask == numpy.array([255])
         assert pt.band_names == ["b1"]
 
     with rasterio.open(COG_SCALE) as src_dst:
@@ -923,3 +1100,28 @@ def test_inverted_latitude_point():
         with rasterio.open(COG_INVERTED) as src_dst:
             pt = reader.point(src_dst, [-104.77519499, 38.95367054])
             assert pt.data[0] == -9999.0
+
+
+def test_out_dtype():
+    """Test Out_Dtype option."""
+    with rasterio.open(COG) as src_dst:
+        img = reader.read(src_dst)
+        assert img.array.dtype == numpy.uint16
+
+        img = reader.read(src_dst, out_dtype="float32")
+        assert img.array.dtype == numpy.float32
+
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+        )
+        assert pt.array.dtype == numpy.uint16
+
+        pt = reader.point(
+            src_dst,
+            [-57.566, 73.6885],
+            coord_crs="epsg:4326",
+            out_dtype="float32",
+        )
+        assert pt.array.dtype == numpy.float32

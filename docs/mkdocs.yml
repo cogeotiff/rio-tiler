@@ -31,6 +31,7 @@ nav:
     - Mosaic: 'mosaic.md'
     - Colormaps: 'colormap.md'
     - Supported file formats: 'supported_format.md'
+    - Experimental: experimental.md
   - Advanced Topics:
     - Base classes and custom readers: 'advanced/custom_readers.md'
     - Read Polygon-shaped regions: 'advanced/feature.md'

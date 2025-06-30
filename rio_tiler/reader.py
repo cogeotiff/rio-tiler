@@ -11,7 +11,7 @@ from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import ColorInterp, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
-from rasterio.transform import array_bounds
+from rasterio.transform import array_bounds, rowcol
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds
@@ -58,6 +58,12 @@ def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int
     return height, width
 
 
+def _missing_size(w: Optional[int] = None, h: Optional[int] = None):
+    """Check if one and only one size (width, height) is valid."""
+    iterator = iter([w, h])
+    return any(iterator) and not any(iterator)
+
+
 def _apply_buffer(
     buffer: float,
     bounds: BBox,
@@ -94,6 +100,7 @@ def read(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
+    out_dtype: Optional[Union[str, numpy.dtype]] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
@@ -123,11 +130,12 @@ def read(
     """
     indexes = cast_to_sequence(indexes)
 
-    if max_size and width and height:
+    if max_size and (width or height):
         warnings.warn(
-            "'max_size' will be ignored with with 'height' and 'width' set.",
+            "'max_size' will be ignored with with 'height' or 'width' set.",
             UserWarning,
         )
+        max_size = None
 
     io_resampling = Resampling[resampling_method]
     warp_resampling = Resampling[reproject_method]
@@ -151,7 +159,6 @@ def read(
                         "nodata": nodata,
                         "add_alpha": False,
                         "src_nodata": nodata,
-                        "dtype": src_dst.dtypes[0],
                     }
                 )
 
@@ -167,11 +174,10 @@ def read(
         else:
             dataset = src_dst
 
-        if max_size and not (width and height):
-            height, width = _get_width_height(max_size, dataset.height, dataset.width)
-
         if indexes is None:
             indexes = non_alpha_indexes(dataset)
+
+        max_height, max_width = dataset.height, dataset.width
 
         boundless = False
         if window:
@@ -187,6 +193,18 @@ def read(
                 or row_stop >= dataset.height
             ):
                 boundless = True
+
+            max_height, max_width = window.height, window.width
+
+        if max_size:
+            height, width = _get_width_height(max_size, max_height, max_width)
+
+        elif _missing_size(width, height):
+            ratio = max_height / max_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
 
         if ColorInterp.alpha in dataset.colorinterp and nodata is None:
             # If dataset has an alpha band we need to get the mask using the alpha band index
@@ -204,6 +222,7 @@ def read(
                     ),
                     resampling=io_resampling,
                     boundless=boundless,
+                    out_dtype=out_dtype,
                 )
                 mask = dataset.read(
                     indexes=(alpha_idx,),
@@ -211,6 +230,7 @@ def read(
                     out_shape=(1, height, width) if height and width else None,
                     resampling=io_resampling,
                     boundless=boundless,
+                    out_dtype=out_dtype,
                 )
                 data = numpy.ma.MaskedArray(values)
                 data.mask = ~mask.astype("bool")
@@ -223,6 +243,7 @@ def read(
                     out_shape=(len(idx), height, width) if height and width else None,
                     resampling=io_resampling,
                     boundless=boundless,
+                    out_dtype=out_dtype,
                 )
                 mask = ~values[-1].astype("bool")
                 data = numpy.ma.MaskedArray(values[0:-1])
@@ -237,6 +258,7 @@ def read(
                 boundless=boundless,
                 masked=True,
                 fill_value=nodata,
+                out_dtype=out_dtype,
             )
 
             # if data has Nodata then we simply make sure the mask == the nodata
@@ -275,6 +297,19 @@ def read(
             numpy.multiply(data, scales, out=data, casting="unsafe")
             numpy.add(data, offsets, out=data, casting="unsafe")
 
+            # apply scale/offsets to stats
+            if dataset_statistics:
+                scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1].reshape(
+                    (-1, 1)
+                )
+                offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1].reshape(
+                    (-1, 1)
+                )
+                stats_array = numpy.array(dataset_statistics)
+                numpy.multiply(stats_array, scales, out=stats_array, casting="unsafe")
+                numpy.add(stats_array, offsets, out=stats_array, casting="unsafe")
+                dataset_statistics = [tuple(s) for s in stats_array.tolist()]
+
         if post_process:
             data = post_process(data)
 
@@ -308,6 +343,7 @@ def part(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
+    out_dtype: Optional[Union[str, numpy.dtype]] = None,
     align_bounds_with_dataset: bool = False,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
@@ -340,11 +376,12 @@ def part(
         ImageData
 
     """
-    if max_size and width and height:
+    if max_size and (width or height):
         warnings.warn(
-            "'max_size' will be ignored with with 'height' and 'width' set.",
+            "'max_size' will be ignored with with 'height' or 'width' set.",
             UserWarning,
         )
+        max_size = None
 
     if buffer and buffer % 0.5:
         raise InvalidBufferSize(
@@ -372,7 +409,7 @@ def part(
             )
 
     # Use WarpedVRT when Re-projection or User VRT Option (cutline)
-    if (dst_crs != src_dst.crs) or vrt_options:
+    if (dst_crs != src_dst.crs) or vrt_options or isinstance(src_dst, WarpedVRT):
         window = None
         vrt_transform, vrt_width, vrt_height = get_vrt_transform(
             src_dst,
@@ -384,8 +421,15 @@ def part(
         )
         bounds = array_bounds(vrt_height, vrt_width, vrt_transform)
 
-        if max_size and not (width and height):
+        if max_size:
             height, width = _get_width_height(max_size, vrt_height, vrt_width)
+
+        elif _missing_size(width, height):
+            ratio = vrt_height / vrt_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
 
         height = height or vrt_height
         width = width or vrt_width
@@ -430,6 +474,7 @@ def part(
             window=window,
             nodata=nodata,
             vrt_options=vrt_params,
+            out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
@@ -443,10 +488,17 @@ def part(
         window = _round_window(window)
         bounds = windows.bounds(window, src_dst.transform)
 
-    if max_size and not (width and height):
+    if max_size:
         height, width = _get_width_height(
             max_size, round(window.height), round(window.width)
         )
+
+    elif _missing_size(width, height):
+        ratio = window.height / window.width
+        if width:
+            height = math.ceil(width * ratio)
+        else:
+            width = math.ceil(height / ratio)
 
     height = height or max(1, round(window.height))
     width = width or max(1, round(window.width))
@@ -467,6 +519,7 @@ def part(
             height=height,
             window=window,
             nodata=nodata,
+            out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
             force_binary_mask=force_binary_mask,
@@ -490,6 +543,7 @@ def part(
         height=height,
         window=window,
         nodata=nodata,
+        out_dtype=out_dtype,
         resampling_method=resampling_method,
         reproject_method=reproject_method,
         force_binary_mask=force_binary_mask,
@@ -506,8 +560,10 @@ def point(
     force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
+    out_dtype: Optional[Union[str, numpy.dtype]] = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
+    interpolate: bool = False,
     unscale: bool = False,
     post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
 ) -> PointData:
@@ -520,8 +576,9 @@ def point(
         coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
         nodata (int or float, optional): Overwrite dataset internal nodata value.
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
-        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
+        resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Only used when `interpolate=True`. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+        interpolate (bool, optional): Interpolate pixels around the coordinates. Defaults to `False`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -537,6 +594,7 @@ def point(
             vrt_params = {
                 "add_alpha": True,
                 "resampling": Resampling[reproject_method],
+                "dtype": src_dst.dtypes[0],
             }
             nodata = nodata if nodata is not None else src_dst.nodata
             if nodata is not None:
@@ -580,11 +638,30 @@ def point(
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        row, col = dataset.index(lon, lat)
+        if interpolate:
+            # Ref: https://github.com/cogeotiff/rio-tiler/issues/793
+            # https://github.com/OSGeo/gdal/blob/a3d68b069e6b3676ba437faca5dca6ae2076ce24/swig/python/gdal-utils/osgeo_utils/samples/gdallocationinfo.py#L185-L197
+            rows, cols = rowcol(dataset.transform, xs=[lon], ys=[lat], op=lambda x: x)
+            row, col = float(rows[0]), float(cols[0])
+            row_off, col_off = row - 0.5, col - 0.5
+
+        else:
+            if resampling_method != "nearest":
+                warnings.warn(
+                    f"{resampling_method} resampling will be ignored when `interpolate=False`.",
+                    UserWarning,
+                )
+
+            row, col = dataset.index(lon, lat)
+            row_off, col_off = row, col
+
+        window = windows.Window(row_off=row_off, col_off=col_off, width=1, height=1)
+
         img = read(
             dataset,
             indexes=indexes,
-            window=windows.Window(row_off=row, col_off=col, width=1, height=1),
+            window=window,
+            out_dtype=out_dtype,
             resampling_method=resampling_method,
             force_binary_mask=force_binary_mask,
             unscale=unscale,
@@ -593,8 +670,9 @@ def point(
 
         return PointData(
             img.array[:, 0, 0],
+            band_names=img.band_names,
             coordinates=coordinates,
             crs=coord_crs,
-            band_names=img.band_names,
             metadata=dataset.tags(),
+            pixel_location=(col, row),
         )

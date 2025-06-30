@@ -1,4 +1,131 @@
-# Unreleased (TBD)
+
+# Unreleased
+
+# 7.8.1 (2025-06-16)
+
+* apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)
+
+# 7.8.0 (2025-06-03)
+
+* add `to_raster()` method to `ImageData` class
+
+# 7.7.4 (2025-05-29)
+
+* fix band names for Xarray DataArray
+
+# 7.7.3.post1 (2025-05-22)
+
+* remove unwanted breaking change
+
+# 7.7.3 (2025-05-22) **YANKED**
+
+* fix Boundless `part` read when using GCPs dataset
+
+# 7.7.2 (2025-05-15)
+
+* add `repr` method to Mosaic Method classes
+* add metadata (pixel selection method, assets count, asset used count) on Image/Point object returned by `mosaic_reader`
+
+    ```python
+    from rio_tiler.io import Reader
+    from rio_tiler.mosaic import mosaic_reader
+
+    def tiler(src_path: str, *args, **kwargs):
+        with Reader(src_path) as src:
+            return src.tile(*args, **kwargs)
+
+    mosaic_assets = ["tests/fixtures/mosaic_value_1.tif", "tests/fixtures/mosaic_value_1.tif", "tests/fixtures/mosaic_value_2.tif"]
+    x = 150
+    y = 182
+    z = 9
+
+    # Use Default First value method
+    img, _ = mosaic_reader(mosaic_assets, tiler, x, y, z)
+    print(img.metadata)
+    >> {'mosaic_method': 'FirstMethod', 'mosaic_assets_count': 3, 'mosaic_assets_used': 1}
+    ```
+
+# 7.7.1 (2025-05-13)
+
+* add `max`, `min`, `med`, `q1` and `q3` resampling methods to `WarpResampling` literal
+
+# 7.7.0 (2025-05-05)
+
+* fix size estimation when using `window` an `reader.read` method
+* add `width` or `height` estimation when passing only one size
+
+# 7.6.1 (2025-04-22)
+
+* fix Xarray indexes check when passing a list
+
+# 7.6.0 (2025-03-31)
+
+* add `interpolate=True/False` to `.point()` methods to allow interpolation of surrounding pixels
+
+    ```python
+    with Reader("tests/fixtures/cog.tif") as src:
+        pt = src.point(-57.566, 73.68856)
+        print(pt.data[0])
+        >> 2800
+
+        pt = src.point(-57.566, 73.68856, interpolate=True, resampling_method="bilinear")
+        print(pt.data[0])
+        >> 2819
+    ```
+
+* add `pixel_location` property to `PointData` model
+
+    ```python
+    with Reader("tests/fixtures/cog.tif") as src:
+        pt = src.point(-57.566, 73.68856)
+        print(pt.pixel_location)
+        >> (1090, 1086)
+
+    with Reader("tests/fixtures/cog.tif") as src:
+        pt = src.point(-57.566, 73.68856, interpolate=True)
+        print(pt.pixel_location)
+        >> (1090.5924744641266, 1086.2541429827688)
+    ```
+
+* add `out_dtype` to reader's methods to allow user setting the output data type
+
+    ```python
+    from rio_tiler.io import Reader
+
+    with Reader("tests/fixtures/cog.tif") as src:
+        img = src.preview()
+        print(img.array.dtype)
+        >> uint16
+
+        img = src.preview(out_dtype="float32")
+        print(img.array.dtype)
+        >> float32
+    ```
+
+* update pystac dependency to `>=1.9,<2.0`
+
+# 7.5.1 (2025-03-19)
+
+* fix `utils.get_array_statistics` method to avoid `ZeroDivisionError` when there is no valid pixel
+* use `GDAL_MEM_ENABLE_OPEN=TRUE` when opening a numpy array with rasterio
+
+# 7.5.0 (2025-02-26)
+
+* add `rio_tiler.experimental` submodule
+* add `rio_tiler.experimental.vsifile.VSIReader` VSIFile based experimental reader
+
+# 7.4.0 (2025-01-28)
+
+* update rasterio dependency to `>=1.4.0`
+
+* add `reproject` method for `ImageData` objects (author @emmanuelmathot, https://github.com/cogeotiff/rio-tiler/pull/782)
+
+    ```python
+    from rio_tiler.models import ImageData
+
+    img = ImageData(numpy.zeros((3, 256, 256), crs=CRS.from_epsg(4326), dtype="uint8"))
+    img_3857 = img.reproject("epsg:3857")
+    ```
 
 * add `indexes` parameter for `XarrayReader` methods. As for Rasterio, the indexes values start at `1`.
 

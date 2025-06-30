@@ -45,7 +45,7 @@ RIOResampling = Literal[
 ]
 
 # WarpKernel resampling method.
-# ref: https://gdal.org/api/gdalwarp_cpp.html#_CPPv4N14GDALWarpKernel9eResampleE
+# ref: https://gdal.org/en/stable/api/gdalwarp_cpp.html#_CPPv415GDALResampleAlg
 WarpResampling = Literal[
     "nearest",
     "bilinear",
@@ -54,6 +54,11 @@ WarpResampling = Literal[
     "lanczos",
     "average",
     "mode",
+    "max",
+    "min",
+    "med",
+    "q1",
+    "q3",
     "sum",
     "rms",
 ]

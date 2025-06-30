@@ -111,7 +111,14 @@ class DataArrayReader(BaseReader):
         self._dims = [
             d
             for d in self.input.dims
-            if d not in [self.input.rio.x_dim, self.input.rio.y_dim]
+            if d
+            not in [
+                self.input.rio.x_dim,
+                self.input.rio.y_dim,
+                "spatial_ref",
+                "crs_wkt",
+                "grid_mapping",
+            ]
         ]
         assert len(self._dims) in [0, 1], "Can't handle >=4D DataArray"
 
@@ -133,9 +140,20 @@ class DataArrayReader(BaseReader):
         `Bands` are all dimensions not defined as spatial dims by rioxarray.
         """
         if not self._dims:
-            coords_name = list(self.input.coords)
-            if len(coords_name) > 3 and (coord := coords_name[2]):
-                return [str(self.input.coords[coord].data)]
+            coords_name = [
+                d
+                for d in self.input.coords
+                if d
+                not in [
+                    self.input.rio.x_dim,
+                    self.input.rio.y_dim,
+                    "spatial_ref",
+                    "crs_wkt",
+                    "grid_mapping",
+                ]
+            ]
+            if coords_name:
+                return [str(self.input.coords[coords_name[0]].data)]
 
             return [self.input.name or "array"]
 
@@ -176,7 +194,7 @@ class DataArrayReader(BaseReader):
         if indexes := cast_to_sequence(indexes):
             assert all(v > 0 for v in indexes), "Indexes value must be >= 1"
             if da.ndim == 2:
-                if indexes != (1,):
+                if set(indexes) != set({1}):
                     raise ValueError(
                         f"Invalid indexes {indexes} for array of shape {da.shape}"
                     )
@@ -230,6 +248,7 @@ class DataArrayReader(BaseReader):
         auto_expand: bool = True,
         nodata: Optional[NoData] = None,
         indexes: Optional[Indexes] = None,
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a dataset.
@@ -281,6 +300,8 @@ class DataArrayReader(BaseReader):
             stats = ((minv, maxv),) * da.rio.count
 
         arr = da.to_masked_array()
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
@@ -309,6 +330,7 @@ class DataArrayReader(BaseReader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         resampling_method: RIOResampling = "nearest",
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset.
@@ -371,6 +393,8 @@ class DataArrayReader(BaseReader):
             stats = ((minv, maxv),) * da.rio.count
 
         arr = da.to_masked_array()
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
@@ -410,6 +434,7 @@ class DataArrayReader(BaseReader):
         dst_crs: Optional[CRS] = None,
         reproject_method: WarpResampling = "nearest",
         resampling_method: RIOResampling = "nearest",
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a dataset.
@@ -461,6 +486,8 @@ class DataArrayReader(BaseReader):
             stats = ((minv, maxv),) * da.rio.count
 
         arr = da.to_masked_array()
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
@@ -497,6 +524,7 @@ class DataArrayReader(BaseReader):
         coord_crs: CRS = WGS84_CRS,
         nodata: Optional[NoData] = None,
         indexes: Optional[Indexes] = None,
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> PointData:
         """Read a pixel value from a dataset.
@@ -531,6 +559,8 @@ class DataArrayReader(BaseReader):
         else:
             arr = da[:, int(y[0]), int(x[0])].to_masked_array()
 
+        if out_dtype:
+            arr = arr.astype(out_dtype)
         arr.mask |= arr.data == da.rio.nodata
 
         return PointData(
@@ -538,6 +568,7 @@ class DataArrayReader(BaseReader):
             coordinates=(lon, lat),
             crs=coord_crs,
             band_names=band_names,
+            pixel_location=(x, y),
         )
 
     def feature(
@@ -553,6 +584,7 @@ class DataArrayReader(BaseReader):
         height: Optional[int] = None,
         width: Optional[int] = None,
         resampling_method: RIOResampling = "nearest",
+        out_dtype: str | numpy.dtype | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature.
@@ -592,6 +624,7 @@ class DataArrayReader(BaseReader):
             height=height,
             reproject_method=reproject_method,
             resampling_method=resampling_method,
+            out_dtype=out_dtype,
         )
 
         if dst_crs != shape_crs:
