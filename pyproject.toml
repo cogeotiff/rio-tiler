@@ -43,6 +43,7 @@ test = [
     "rioxarray",
     "h5netcdf",
     "zarr",
+    "fsspec",
     # S3
     "boto3",
     # Some tests will fail with 5.0

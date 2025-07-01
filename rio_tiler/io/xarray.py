@@ -5,6 +5,7 @@ from __future__ import annotations
 import contextlib
 import warnings
 from typing import Any, Callable, Dict, List, Literal, Optional, Tuple, Union
+from urllib.parse import urlparse
 
 import attr
 import numpy
@@ -39,10 +40,10 @@ from rio_tiler.utils import (
 
 try:
     import xarray
-    from xarray import open_dataset
+    from xarray.namedarray.utils import module_available
 except ImportError:  # pragma: nocover
     xarray = None  # type: ignore
-    open_dataset = None  # type: ignore
+    module_available = None  # type: ignore
 
 try:
     import rioxarray
@@ -655,6 +656,83 @@ class DataArrayReader(BaseReader):
 sel_methods = Literal["nearest", "pad", "ffill", "backfill", "bfill"]
 
 
+def open_dataset(
+    src_path: str,
+    group: Optional[str] = None,
+    decode_times: bool = True,
+    **kwargs: Any,
+) -> xarray.Dataset:
+    """Open Xarray dataset
+
+    Args:
+        src_path (str): dataset path.
+        group (Optional, str): path to the netCDF/Zarr group in the given file to open given as a str.
+        decode_times (bool):  If True, decode times encoded in the standard NetCDF datetime format into datetime objects. Otherwise, leave them encoded as numbers.
+
+    Returns:
+        xarray.Dataset
+
+    """
+    import fsspec  # noqa
+
+    try:
+        import h5netcdf
+    except ImportError:  # pragma: nocover
+        h5netcdf = None  # type: ignore
+
+    try:
+        import zarr
+    except ImportError:  # pragma: nocover
+        zarr = None  # type: ignore
+
+    parsed = urlparse(src_path)
+    protocol = parsed.scheme or "file"
+
+    if any(src_path.lower().endswith(ext) for ext in [".nc", ".nc4"]):
+        assert h5netcdf is not None, "'h5netcdf' must be installed to read NetCDF dataset"
+
+        xr_engine = "h5netcdf"
+
+    else:
+        assert zarr is not None, "'zarr' must be installed to read Zarr dataset"
+        xr_engine = "zarr"
+
+    # Arguments for xarray.open_dataset
+    # Default args
+    xr_open_args: Dict[str, Any] = {
+        "decode_coords": "all",
+        "decode_times": decode_times,
+        **kwargs,
+    }
+
+    # Argument if we're opening a datatree
+    if group is not None:
+        xr_open_args["group"] = group
+
+    # NetCDF arguments
+    if xr_engine == "h5netcdf":
+        xr_open_args.update(
+            {
+                "engine": "h5netcdf",
+                "lock": False,
+            }
+        )
+        fs = fsspec.filesystem(protocol)
+        ds = xarray.open_dataset(fs.open(src_path), **xr_open_args)
+
+    # Fallback to Zarr
+    else:
+        if module_available("zarr", minversion="3.0"):
+            store = zarr.storage.FsspecStore.from_url(
+                src_path, storage_options={"asynchronous": True}
+            )
+        else:
+            store = fsspec.filesystem(protocol).get_mapper(src_path)
+
+        ds = xarray.open_zarr(store, **{"consolidated": True, **xr_open_args})
+    return ds
+
+
 @attr.s
 class DatasetReader(BaseReader):
     """Xarray Reader.
@@ -663,7 +741,7 @@ class DatasetReader(BaseReader):
         input (str): dataset path.
         dataset (xarray.Dataset): Xarray dataset.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
-        opener (Callable): Xarray dataset opener. Defaults to `xarray.open_dataset`.
+        opener (Callable): Xarray dataset opener. Defaults to `open_dataset`.
         opener_options (dict): Options to forward to the opener callable.
 
     Examples:
