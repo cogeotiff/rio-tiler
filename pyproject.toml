@@ -42,6 +42,7 @@ test = [
     "xarray",
     "rioxarray",
     "h5netcdf",
+    "zarr",
     # S3
     "boto3",
     # Some tests will fail with 5.0
