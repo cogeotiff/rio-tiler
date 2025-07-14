@@ -38,6 +38,7 @@ from rio_tiler.types import BBox, Indexes, NumType, RIOResampling
 from rio_tiler.utils import (
     CRS_to_uri,
     _validate_shape_input,
+    create_cutline,
     has_alpha_band,
     has_mask_band,
 )
@@ -254,6 +255,7 @@ class Reader(BaseReader):
         tile_y: int,
         tile_z: int,
         tilesize: int = 256,
+        aoi: Optional[Dict] = None,
         indexes: Optional[Indexes] = None,
         expression: Optional[str] = None,
         buffer: Optional[float] = None,
@@ -280,6 +282,11 @@ class Reader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
+        vrt_options = kwargs.pop("vrt_options", {})
+        if aoi is not None:
+            cutline = create_cutline(self.dataset, aoi, geometry_crs="epsg:4326")
+            vrt_options.update({"cutline": cutline})
+
         return self.part(
             tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
             dst_crs=self.tms.rasterio_crs,
@@ -290,6 +297,7 @@ class Reader(BaseReader):
             indexes=indexes,
             expression=expression,
             buffer=buffer,
+            vrt_options=vrt_options,
             **kwargs,
         )
 
