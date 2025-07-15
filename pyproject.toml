@@ -191,3 +191,9 @@ tag_name = "{new_version}"
 filename = "rio_tiler/__init__.py"
 search = '__version__ = "{current_version}"'
 replace = '__version__ = "{new_version}"'
+
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::rio_tiler.errors.RioTilerExperimentalWarning",
+]
