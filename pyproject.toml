@@ -48,6 +48,8 @@ test = [
     "morecantile>=6.0,<7.0",
     # Experimental
     "vsifile>=0.2",
+    "zarr",
+    "fsspec",
 ]
 
 benchmark = [
