@@ -15,6 +15,7 @@ This class has helper methods like `render` which forward internal data and mask
 - **band_names**: image band's names
 - **dataset_statistics**: Dataset's min/max values (list of (min,max), optional)
 - **cutline_mask**: array representing the mask for `feature` methods
+- **alpha_nask**: array reprsenting the alpha mask (allowing partial transparency)
 
 ```python
 import numpy

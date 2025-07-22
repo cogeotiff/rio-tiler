@@ -328,40 +328,40 @@ def test_xarray_reader_external_nodata():
 
         # TILE
         img = dst.tile(0, 0, 1)
-        assert img.mask.all()
+        assert img._mask.all()
         assert img.data[0, 0, 0] == 0
         assert img.data[0, 100, 100]
         assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         img = dst.tile(0, 0, 1, nodata=0)
-        assert not img.mask.all()  # not all the mask value are set to 255
+        assert not img._mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
         assert dst.input.rio.nodata is None
 
         # PART
         img = dst.part((-160, -80, 160, 80))
-        assert img.mask.all()
+        assert img._mask.all()
         assert img.data[0, 0, 0] == 0
         assert img.data[0, 100, 100]
         assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         img = dst.part((-160, -80, 160, 80), nodata=0)
-        assert not img.mask.all()  # not all the mask value are set to 255
+        assert not img._mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
 
         # POINT
         pt = dst.point(-179, 89)
-        assert pt.mask[0] == 255
+        assert pt._mask[0]
         assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         pt = dst.point(-179, 89, nodata=0)
         assert pt.count == 1
-        assert pt.mask[0] == 0
+        assert not pt._mask[0]
         assert dst.input.rio.nodata is None
 
         feat = {
@@ -383,14 +383,14 @@ def test_xarray_reader_external_nodata():
 
         # FEATURE
         img = dst.feature(feat)
-        assert img.mask.all()
+        assert img._mask.all()
         assert img.data[0, 0, 0] == 0
         assert img.data[0, 50, 100]
         assert dst.input.rio.nodata is None
 
         # overwrite the nodata value to 0
         img = dst.feature(feat, nodata=0)
-        assert not img.mask.all()  # not all the mask value are set to 255
+        assert not img._mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
         assert dst.input.rio.nodata is None
@@ -421,20 +421,20 @@ def test_xarray_reader_internal_nodata():
     with XarrayReader(data) as dst:
         # TILE
         img = dst.tile(0, 0, 1)
-        assert not img.mask.all()  # not all the mask value are set to 255
+        assert not img._mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
 
         # PART
         img = dst.part((-160, -80, 160, 80))
-        assert not img.mask.all()  # not all the mask value are set to 255
+        assert not img._mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
 
         # POINT
         pt = dst.point(-179, 89)
         assert pt.count == 1
-        assert pt.mask[0] == 0
+        assert not pt._mask[0]
 
         feat = {
             "type": "Feature",
@@ -455,7 +455,7 @@ def test_xarray_reader_internal_nodata():
 
         # FEATURE
         img = dst.feature(feat)
-        assert not img.mask.all()  # not all the mask value are set to 255
+        assert not img._mask.all()  # not all the mask value are set to 255
         assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
         assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
 

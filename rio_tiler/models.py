@@ -179,21 +179,21 @@ class PointData:
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
 
-    ###########################################################################
-    # For compatibility
     @property
     def data(self) -> numpy.ndarray:
         """Return data part of the masked array."""
         return self.array.data
 
     @property
+    def _mask(self):
+        """Return `inverted/merged` mask from data array."""
+        return numpy.array([numpy.logical_and.reduce(~self.array.mask)])
+
+    @property
     def mask(self) -> numpy.ndarray:
         """Return Mask in form of rasterio dataset mask."""
-        return numpy.array([numpy.logical_and.reduce(~self.array.mask)]) * numpy.uint8(
-            255
-        )
-
-    ###########################################################################
+        minv, maxv = dtype_ranges[str(self.array.dtype)]
+        return numpy.where(self._mask, maxv, minv).astype(self.array.dtype)
 
     def __iter__(self):
         """Allow for variable expansion."""
@@ -316,13 +316,30 @@ class ImageData:
         default=None, kw_only=True
     )
     cutline_mask: Optional[numpy.ndarray] = attr.ib(default=None)
+    alpha_mask: Optional[numpy.ndarray] = attr.ib(default=None)
 
     @band_names.default
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
 
-    ###########################################################################
-    # For compatibility
+    @alpha_mask.validator
+    def _check_alpha_mask(self, attribute, value):
+        """Make sure alpha mask has valid shame and datatype."""
+        if value is not None:
+            if (
+                len(value.shape) != 2
+                or value.shape[0] != self.height
+                or value.shape[1] != self.width
+            ):
+                raise ValueError(
+                    f"Invalide shape {value.shape} for AlphaMask, should be of shape {self.height}x{self.width}"
+                )
+
+            if not value.dtype == self.array.dtype:
+                raise ValueError(
+                    f"Invalide dtype {value.dtype} for AlphaMask, should be of {self.array.dtype}"
+                )
+
     @property
     def data(self) -> numpy.ndarray:
         """Return data part of the masked array."""
@@ -331,9 +348,17 @@ class ImageData:
     @property
     def mask(self) -> numpy.ndarray:
         """Return Mask in form of rasterio dataset mask."""
-        return numpy.logical_or.reduce(~self.array.mask) * numpy.uint8(255)
+        # NOTE: if available we return the alpha_maks
+        if self.alpha_mask is not None:
+            return self.alpha_mask
 
-    ###########################################################################
+        minv, maxv = dtype_ranges[str(self.array.dtype)]
+        return numpy.where(self._mask, maxv, minv).astype(self.array.dtype)
+
+    @property
+    def _mask(self):
+        """Return `inverted/merged` mask from data array."""
+        return numpy.logical_or.reduce(~self.array.mask)
 
     def __iter__(self):
         """Allow for variable expansion (``arr, mask = ImageData``)"""
@@ -503,33 +528,23 @@ class ImageData:
     ) -> Self:
         """Rescale data in place."""
         self.array = rescale_image(
-            self.array.copy(),
+            self.array,
             in_range=in_range,
             out_range=out_range,
             out_dtype=out_dtype,
         )
+        if self.alpha_mask is not None:
+            self.alpha_mask = linear_rescale(
+                self.alpha_mask,
+                in_range=dtype_ranges[str(self.alpha_mask.dtype)],
+                out_range=dtype_ranges[out_dtype],
+            ).astype(out_dtype)
+
         return self
-
-    def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
-        """Apply colormap to the image data."""
-        data, alpha = apply_cmap(self.array.data, colormap)
-
-        # Use Dataset Mask which is fine
-        # because in theory self.array should be a 1 band image
-        array = numpy.ma.MaskedArray(data)
-        array.mask = numpy.bitwise_and(alpha, self.mask) == 0
-
-        return ImageData(
-            array,
-            assets=self.assets,
-            crs=self.crs,
-            bounds=self.bounds,
-            metadata=self.metadata,
-        )
 
     def apply_color_formula(self, color_formula: Optional[str]) -> Self:
         """Apply color-operations formula in place."""
-        out = self.array.data.copy()
+        out = self.array.data
         out[out < 0] = 0
 
         for ops in parse_operations(color_formula):
@@ -538,7 +553,42 @@ class ImageData:
         data = numpy.ma.MaskedArray(out)
         data.mask = self.array.mask
         self.array = data
+
+        # NOTE: we need to rescale the alpha mask if not in Uint8
+        if self.alpha_mask is not None and self.alpha_mask.dtype != "uint8":
+            self.alpha_mask = linear_rescale(
+                self.alpha_mask, in_range=dtype_ranges[str(self.alpha_mask.dtype)]
+            ).astype("uint8")
+
         return self
+
+    def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
+        """Apply colormap to the image data."""
+        data, alpha = apply_cmap(self.array.data, colormap)
+
+        array = numpy.ma.MaskedArray(data)
+
+        # `inValid/Valid` values for colormaped datatype (e.g 0 for uint8)
+        invalid, valid = dtype_ranges[str(alpha.dtype)]
+
+        # Combine both dataset mask and alpha from colormap
+        array.mask = numpy.bitwise_or(alpha != valid, ~self._mask)
+
+        if self.alpha_mask is not None:
+            warnings.warn(
+                "Alpha Mask value ignored from the input ImageData object when applying colormap.",
+                UserWarning,
+            )
+
+        return ImageData(
+            array,
+            assets=self.assets,
+            crs=self.crs,
+            bounds=self.bounds,
+            metadata=self.metadata,
+            # NOTE: make sure masked part from initial data are also masked in alpha band
+            alpha_mask=numpy.where(~self._mask, invalid, alpha),
+        )
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
@@ -557,7 +607,7 @@ class ImageData:
                 )
             )
 
-        data = apply_expression(blocks, self.band_names, self.array)
+        data = apply_expression(blocks, self.band_names, self.array.copy())
         # NOTE: We use dataset mask when mixing bands
         data.mask = numpy.logical_or.reduce(self.array.mask)
 
@@ -569,6 +619,7 @@ class ImageData:
             band_names=blocks,
             metadata=self.metadata,
             dataset_statistics=stats,
+            alpha_mask=self.alpha_mask,
         )
 
     def resize(
@@ -582,6 +633,9 @@ class ImageData:
         mask = resize_array(self.array.mask * 1, height, width, resampling_method).astype(
             "bool"
         )
+        alpha_mask = self.alpha_mask
+        if alpha_mask is not None:
+            alpha_mask = resize_array(alpha_mask.copy(), height, width, resampling_method)
 
         return ImageData(
             numpy.ma.MaskedArray(data, mask=mask),
@@ -591,6 +645,7 @@ class ImageData:
             band_names=self.band_names,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
+            alpha_mask=alpha_mask,
         )
 
     def clip(self, bbox: BBox) -> "ImageData":
@@ -607,6 +662,9 @@ class ImageData:
             band_names=self.band_names,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
+            alpha_mask=self.alpha_mask[row_slice, col_slice].copy()
+            if self.alpha_mask is not None
+            else None,
         )
 
     def post_process(
@@ -633,24 +691,23 @@ class ImageData:
             >>> img.post_process(color_formula="Gamma RGB 4.1")
 
         """
-        array = self.array.copy()
-
-        if in_range:
-            array = rescale_image(array, in_range, out_dtype=out_dtype, **kwargs)
-
-        if color_formula:
-            array[array < 0] = 0
-            for ops in parse_operations(color_formula):
-                array = scale_dtype(ops(to_math_type(array)), numpy.uint8)
-            array.mask = self.array.mask
-
-        return ImageData(
-            array,
+        img = ImageData(
+            self.array.copy(),
             crs=self.crs,
             bounds=self.bounds,
             assets=self.assets,
             metadata=self.metadata,
+            dataset_statistics=self.dataset_statistics,
+            alpha_mask=self.alpha_mask.copy() if self.alpha_mask is not None else None,
         )
+
+        if in_range:
+            img.rescale(in_range, out_dtype=out_dtype, **kwargs)
+
+        if color_formula:
+            img.apply_color_formula(color_formula)
+
+        return img
 
     def render(
         self,
@@ -680,39 +737,31 @@ class ImageData:
                 kwargs.update({"crs": self.crs})
 
         array = self.array.copy()
+        mask = self.mask
 
         datatype_range = self.dataset_statistics or (dtype_ranges[str(array.dtype)],)
 
         if not colormap:
-            if img_format in ["PNG"] and array.dtype not in ["uint8", "uint16"]:
+            format_dtypes = {
+                "PNG": ["uint8", "uint16"],
+                "JPEG": ["uint8"],
+                "WEBP": ["uint8"],
+                "JP2OPENJPEG": ["uint8", "int16", "uint16"],
+            }
+            valid_dtypes = format_dtypes.get(img_format, [])
+            if valid_dtypes and array.dtype not in valid_dtypes:
                 warnings.warn(
                     f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
                 array = rescale_image(array, in_range=datatype_range)
-
-            elif img_format in ["JPEG", "WEBP"] and array.dtype not in ["uint8"]:
-                warnings.warn(
-                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
-                    InvalidDatatypeWarning,
-                )
-                array = rescale_image(array, in_range=datatype_range)
-
-            elif img_format in ["JP2OPENJPEG"] and array.dtype not in [
-                "uint8",
-                "int16",
-                "uint16",
-            ]:
-                warnings.warn(
-                    f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
-                    InvalidDatatypeWarning,
-                )
-                array = rescale_image(array, in_range=datatype_range)
+                if mask is not None:
+                    mask = linear_rescale(mask, in_range=dtype_ranges[str(array.dtype)])
 
         if add_mask:
             return render(
                 array.data,
-                self.mask,  # We use dataset mask for rendering
+                mask,
                 img_format=img_format,
                 colormap=colormap,
                 **kwargs,
@@ -858,6 +907,21 @@ class ImageData:
             resampling=Resampling[reproject_method],
         )
 
+        alpha_mask = self.alpha_mask
+        if self.alpha_mask is not None:
+            alpha_mask = numpy.ma.masked_array(
+                numpy.zeros((h, w), dtype=self.alpha_mask.dtype),
+            )
+            alpha_mask, _ = reproject(
+                self.alpha_mask,
+                alpha_mask,
+                src_transform=self.transform,
+                src_crs=self.crs,
+                dst_transform=dst_transform,
+                dst_crs=dst_crs,
+                resampling=Resampling[reproject_method],
+            )
+
         bounds = array_bounds(h, w, dst_transform)
 
         return ImageData(
@@ -868,4 +932,5 @@ class ImageData:
             band_names=self.band_names,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
+            alpha_mask=alpha_mask,
         )

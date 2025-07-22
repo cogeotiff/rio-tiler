@@ -236,6 +236,7 @@ def test_apply_intervals_cmap():
     data[0, 2:5, 2:5] = 1
     data[0, 5:, 5:] = 2
     d, m = colormap.apply_intervals_cmap(data, cm)
+    assert d.dtype == "uint8"
     assert d.shape == (3, 10, 10)
     assert m.shape == (10, 10)
     assert d[0, 3, 4] == 255
