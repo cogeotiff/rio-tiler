@@ -31,7 +31,7 @@ def test_non_geo_image():
 
             img = src.tile(0, 0, 3)
             assert img.array.dtype == numpy.uint8
-            assert img.mask.all()
+            assert img._mask.all()
 
             img = src.tile(0, 0, 3, out_dtype="float32")
             assert img.array.dtype == numpy.float32
@@ -42,7 +42,7 @@ def test_non_geo_image():
 
             # Tile at zoom 0 should have masked part
             img = src.tile(0, 0, 0)
-            assert not img.mask.all()
+            assert not img._mask.all()
 
             with pytest.raises(TileOutsideBounds):
                 max_x_tile = src.dataset.width // 256 + 1
@@ -104,7 +104,7 @@ def test_non_geo_image():
     with pytest.warns((NotGeoreferencedWarning)):
         with ImageReader(NO_GEO_PORTRAIT) as src:
             img = src.tile(5, 2, 3)
-            assert not img.mask.all()
+            assert not img._mask.all()
 
 
 def test_with_geo_image():
@@ -118,13 +118,13 @@ def test_with_geo_image():
         assert list(src.tms.xy_bounds(0, 0, 0)) == [0, 1024, 1024, 0]
 
         img = src.tile(10, 12, 4)
-        assert img.mask.all()
+        assert img._mask.all()
         # img should keep the geo information from the dataset
         assert img.crs == src.dataset.crs
         assert img.bounds != list(src.tms.xy_bounds(10, 12, 4))
 
         img = src.tile(0, 0, 3)
-        assert not img.mask.any()
+        assert not img._mask.any()
 
         # Make sure no resampling was done at full resolution
         data = src.dataset.read(window=((0, 256), (0, 256)))
@@ -132,7 +132,7 @@ def test_with_geo_image():
 
         # Tile at zoom 0 should have masked part
         img = src.tile(0, 0, 0)
-        assert not img.mask.all()
+        assert not img._mask.all()
 
         with pytest.raises(TileOutsideBounds):
             max_x_tile = src.dataset.width // 256 + 1
@@ -153,7 +153,7 @@ def test_with_geo_image():
         pt = src.point(0, 0)
         # pixel 0,0 is masked
         assert len(pt.mask) == 1
-        assert pt.mask[0] == 0
+        assert not pt._mask[0]
 
         data = list(src.dataset.sample([(0, 0)]))[0]
         numpy.testing.assert_array_equal(pt.data, data)
@@ -161,7 +161,7 @@ def test_with_geo_image():
         pt = src.point(400, 800)
         # pixel 400,800 has valid values
         assert len(pt.mask) == 1
-        assert pt.mask[0] == 255
+        assert pt._mask[0]
 
         pt = src.point(920, 883)
         data = list(src.dataset.sample([(920, 883)]))[0]

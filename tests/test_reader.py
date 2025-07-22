@@ -425,19 +425,19 @@ def test_read_nodata():
     with rasterio.open(COG) as src_dst:
         arr, mask = reader.part(src_dst, bounds, nodata=1)
 
-    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
+    masknodata = (arr[0] != 1).astype(numpy.uint16) * 65535
     numpy.testing.assert_array_equal(mask, masknodata)
 
     with rasterio.open(COG) as src_dst:
         arr, mask = reader.read(src_dst, nodata=1)
 
-    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
+    masknodata = (arr[0] != 1).astype(numpy.uint16) * 65535
     numpy.testing.assert_array_equal(mask, masknodata)
 
     with rasterio.open(COG) as src_dst:
         arr, mask = reader.read(src_dst, dst_crs="epsg:3857", nodata=1)
 
-    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
+    masknodata = (arr[0] != 1).astype(numpy.uint16) * 65535
     numpy.testing.assert_array_equal(mask, masknodata)
 
 
@@ -529,7 +529,7 @@ def test_point():
             nodata=1,
         )
         assert pt.data == numpy.array([2800])
-        assert pt.mask == numpy.array([255])
+        assert pt.mask == numpy.array([[65535]])
         assert pt.band_names == ["b1"]
 
         # resampling_method is useless with interpolate=False
@@ -553,7 +553,7 @@ def test_point():
             interpolate=True,
         )
         assert pt.data == numpy.array([2800])
-        assert pt.mask == numpy.array([255])
+        assert pt.mask == numpy.array([[65535]])
         assert pt.band_names == ["b1"]
         assert pt.pixel_location
         assert isinstance(pt.pixel_location[0], float)
@@ -569,7 +569,7 @@ def test_point():
             interpolate=True,
         )
         assert pt.data == numpy.array([2819])
-        assert pt.mask == numpy.array([255])
+        assert pt.mask == numpy.array([[65535]])
         assert pt.band_names == ["b1"]
 
         # Interpolate=True + resampling=average
@@ -583,7 +583,7 @@ def test_point():
             interpolate=True,
         )
         assert pt.data == numpy.array([2904])
-        assert pt.mask == numpy.array([255])
+        assert pt.mask == numpy.array([[65535]])
         assert pt.band_names == ["b1"]
 
         # Interpolate=True + resampling=Cubic
@@ -597,13 +597,13 @@ def test_point():
             interpolate=True,
         )
         assert pt.data == numpy.array([2812])
-        assert pt.mask == numpy.array([255])
+        assert pt.mask == numpy.array([[65535]])
         assert pt.band_names == ["b1"]
 
     with rasterio.open(COG_SCALE) as src_dst:
         pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs, indexes=1)
         assert pt.data == numpy.array([8917])
-        assert pt.mask == numpy.array([255])
+        assert pt.mask == numpy.array([[32767]])
         assert pt.band_names == ["b1"]
 
         pt = reader.point(src_dst, [310000, 4100000], coord_crs=src_dst.crs)
@@ -780,11 +780,11 @@ def test_read():
 
     with rasterio.open(COG) as src:
         img = reader.read(src)
-        assert img.mask.all()
+        assert img._mask.all()
 
     with rasterio.open(COG) as src:
         img = reader.read(src, nodata=1)
-        assert not img.mask.all()
+        assert not img._mask.all()
 
     with rasterio.open(COG) as src:
         img = reader.read(src, window=((0, 100), (0, 100)))
@@ -827,7 +827,7 @@ def test_read():
     # Dataset with Alpha using WarpedVRT
     with rasterio.open(S3_ALPHA_PATH) as src:
         img = reader.read(src, dst_crs="epsg:3857")
-        assert not img.mask.all()
+        assert not img._mask.all()
 
 
 def test_part_no_VRT():
@@ -847,7 +847,7 @@ def test_part_no_VRT():
         img = reader.part(src_dst, bounds, bounds_crs="epsg:4326")
         assert img.height == 1453
         assert img.width == 1613
-        assert img.mask[0, 0] == 255
+        assert img.mask[0, 0] == 65535
         assert img.mask[-1, -1] == 0  # boundless
         assert img.bounds == bounds_dst_crs
 
@@ -855,7 +855,7 @@ def test_part_no_VRT():
         img_crs = reader.part(src_dst, bounds_dst_crs)
         assert img.height == 1453
         assert img.width == 1613
-        assert img_crs.mask[0, 0] == 255
+        assert img_crs.mask[0, 0] == 65535
         assert img_crs.mask[-1, -1] == 0  # boundless
         assert img.bounds == bounds_dst_crs
 
@@ -863,7 +863,7 @@ def test_part_no_VRT():
         img = reader.part(src_dst, bounds, bounds_crs="epsg:4326", max_size=1024)
         assert img.height < 1024
         assert img.width == 1024
-        assert img.mask[0, 0] == 255
+        assert img.mask[0, 0] == 65535
         assert img.mask[-1, -1] == 0  # boundless
         assert img.bounds == bounds_dst_crs
 
@@ -877,7 +877,7 @@ def test_part_no_VRT():
         )
         assert img.height == 100
         assert img.width == 100
-        assert img.mask[0, 0] == 255
+        assert img.mask[0, 0] == 65535
         assert img.mask[-1, -1] == 0  # boundless
         assert img.bounds == bounds_dst_crs
 
@@ -885,7 +885,7 @@ def test_part_no_VRT():
         img = reader.part(src_dst, bounds, bounds_crs="epsg:4326", buffer=1)
         assert img.height == 1455
         assert img.width == 1615
-        assert img.mask[0, 0] == 255
+        assert img.mask[0, 0] == 65535
         assert img.mask[-1, -1] == 0  # boundless
         assert not img.bounds == bounds_dst_crs
 
@@ -894,7 +894,7 @@ def test_part_no_VRT():
         img_pad = reader.part(src_dst, bounds, bounds_crs="epsg:4326", padding=1)
         assert img_pad.height == 1453
         assert img_pad.width == 1613
-        assert img_pad.mask[0, 0] == 255
+        assert img_pad.mask[0, 0] == 65535
         assert img_pad.mask[-1, -1] == 0  # boundless
         assert img_pad.bounds == bounds_dst_crs
         # Padding should not have any influence when not doing any rescaling/reprojection
@@ -1082,7 +1082,7 @@ def test_nodata_orverride():
         assert prev.mask[0, 0] == 0
 
         prev = reader.read(src_dst, max_size=100, nodata=2720)
-        assert prev.mask[0, 0] == 255
+        assert prev.mask[0, 0] == 65535
         assert not numpy.all(prev.mask)
 
 
@@ -1090,8 +1090,8 @@ def test_tile_read_nodata_float():
     """Should work as expected when using NaN as nodata value."""
     with rasterio.open(COG_NODATA_FLOAT_NAN) as src_dst:
         prev = reader.read(src_dst, max_size=100)
-        assert prev.mask[0, 0] == 0
-        assert not numpy.all(prev.mask)
+        assert prev.mask[0, 0] == -3.4028235e38
+        assert not numpy.all(prev._mask)
 
 
 def test_inverted_latitude_point():

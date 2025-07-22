@@ -1,6 +1,12 @@
 
 # Unreleased
 
+* only cast data to `uint8` if colormap values are of type `uint8`
+* add `alpha_mask` attribute to `ImageData` class
+* allow partial alpha values from alpha band
+* better handle non-uint8 alpha band
+* remove deprecated `force_binary_mask` option in `reader.read` function  **breaking change**
+
 # 7.8.1 (2025-06-16)
 
 * apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)

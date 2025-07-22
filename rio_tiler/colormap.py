@@ -1,5 +1,6 @@
 """rio-tiler colormap functions and classes."""
 
+import itertools
 import json
 import os
 import pathlib
@@ -166,9 +167,10 @@ def apply_discrete_cmap(
 
     data = numpy.transpose(res, [2, 0, 1])
 
-    # If the output data has values between 0-255
+    # If colormap values are between 0-255
     # we cast the output array to Uint8
-    if data.min() >= 0 and data.max() <= 255:
+    cmap_v = list(itertools.chain(*colormap.values()))
+    if min(cmap_v) >= 0 and max(cmap_v) <= 255:
         data = data.astype("uint8")
 
     return data[:-1], data[-1]
@@ -206,9 +208,10 @@ def apply_intervals_cmap(
 
     data = numpy.transpose(res, [2, 0, 1])
 
-    # If the output data has values between 0-255
+    # If colormap values are between 0-255
     # we cast the output array to Uint8
-    if data.min() >= 0 and data.max() <= 255:
+    cmap_v = list(itertools.chain(*[v for k, v in colormap]))
+    if min(cmap_v) >= 0 and max(cmap_v) <= 255:
         data = data.astype("uint8")
 
     return data[:-1], data[-1]
