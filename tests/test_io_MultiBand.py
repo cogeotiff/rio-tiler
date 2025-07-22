@@ -180,7 +180,7 @@ def test_MultiBandReader():
 
         img = src.feature(feat, bands="band1")
         assert img.data.any()
-        assert not img.mask.all()
+        assert not img._mask.all()
         assert img.band_names == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):

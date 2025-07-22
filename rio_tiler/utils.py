@@ -495,7 +495,7 @@ def linear_rescale(
     """
     imin, imax = in_range
     omin, omax = out_range
-    im = numpy.clip(image, imin, imax) - imin
+    im = numpy.clip(image, imin, imax, dtype=numpy.float64) - imin
     im = im / numpy.float64(imax - imin)
     return im * (omax - omin) + omin
 

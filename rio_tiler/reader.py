@@ -33,7 +33,6 @@ from rio_tiler.utils import (
 class Options(TypedDict, total=False):
     """Reader Options."""
 
-    force_binary_mask: Optional[bool]
     nodata: Optional[NoData]
     vrt_options: Optional[Dict]
     resampling_method: Optional[RIOResampling]
@@ -97,7 +96,6 @@ def read(
     max_size: Optional[int] = None,
     indexes: Optional[Indexes] = None,
     window: Optional[windows.Window] = None,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     out_dtype: Optional[Union[str, numpy.dtype]] = None,
@@ -120,7 +118,6 @@ def read(
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
-        force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -279,10 +276,6 @@ def read(
         # We only add dataset statistics if we have them for all the indexes
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
-        # TODO: DEPRECATED, masked array are already using bool
-        if force_binary_mask:
-            pass
-
         if unscale:
             data = data.astype("float32", casting="unsafe")
 
@@ -340,7 +333,6 @@ def part(
     minimum_overlap: Optional[float] = None,
     padding: Optional[int] = None,
     buffer: Optional[float] = None,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     out_dtype: Optional[Union[str, numpy.dtype]] = None,
@@ -477,7 +469,6 @@ def part(
             out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
-            force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
         )
@@ -522,7 +513,6 @@ def part(
             out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
-            force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
         )
@@ -546,7 +536,6 @@ def part(
         out_dtype=out_dtype,
         resampling_method=resampling_method,
         reproject_method=reproject_method,
-        force_binary_mask=force_binary_mask,
         unscale=unscale,
         post_process=post_process,
     )
@@ -557,7 +546,6 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Indexes] = None,
     coord_crs: CRS = WGS84_CRS,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     out_dtype: Optional[Union[str, numpy.dtype]] = None,
@@ -663,7 +651,6 @@ def point(
             window=window,
             out_dtype=out_dtype,
             resampling_method=resampling_method,
-            force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
         )
