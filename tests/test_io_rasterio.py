@@ -414,6 +414,13 @@ def test_statistics():
         assert stats["b1*2"]
         assert stats["b1"].min == stats["b1*2"].min / 2
 
+    with Reader(COG_TAGS) as src:
+        stats = src.statistics()
+        assert len(stats) == 1
+        assert isinstance(stats["Green"], BandStatistics)
+        assert stats["Green"].percentile_2
+        assert stats["Green"].percentile_98
+
 
 def test_Reader_Options():
     """Set options in reader."""
@@ -1010,10 +1017,10 @@ def test_metadata_img():
         img = src.preview()
         assert img.dataset_statistics
         assert img.metadata
-        assert img.band_names == ["b1"]
+        assert img.band_names == ["Green"]
 
         stats = src.statistics()
-        assert "b1" in stats
+        assert "Green" in stats
 
 
 def test_feature_statistics():
