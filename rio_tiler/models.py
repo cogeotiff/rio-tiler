@@ -348,7 +348,7 @@ class ImageData:
     @property
     def mask(self) -> numpy.ndarray:
         """Return Mask in form of rasterio dataset mask."""
-        # NOTE: if available we return the alpha_maks
+        # NOTE: if available we return the alpha_mask
         if self.alpha_mask is not None:
             return self.alpha_mask
 
