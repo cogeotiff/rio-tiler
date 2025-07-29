@@ -312,6 +312,7 @@ class XarrayReader(BaseReader):
             crs=dst_crs,
             dataset_statistics=stats,
             band_names=band_names,
+            nodata=da.rio.nodata,
         )
 
     def part(
@@ -405,6 +406,7 @@ class XarrayReader(BaseReader):
             crs=da.rio.crs,
             dataset_statistics=stats,
             band_names=band_names,
+            nodata=da.rio.nodata,
         )
 
         output_height = height or img.height
@@ -498,6 +500,7 @@ class XarrayReader(BaseReader):
             crs=da.rio.crs,
             dataset_statistics=stats,
             band_names=band_names,
+            nodata=da.rio.nodata,
         )
 
         output_height = height or img.height
@@ -566,6 +569,7 @@ class XarrayReader(BaseReader):
             crs=coord_crs,
             band_names=band_names,
             pixel_location=(x, y),
+            nodata=da.rio.nodata,
         )
 
     def feature(
