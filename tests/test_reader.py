@@ -176,40 +176,48 @@ def test_sizes_with_read():
 def test_sizes_with_part():
     """test automatic width/height calc for reader.part."""
     # rectangular shape
+    # bounds in dataset CRS
     bounds = [467258, 8141872, 566702, 8207016]
     with rasterio.open(COG) as src_dst:
         # full res
-        img = reader.part(src_dst, bounds)
+        img = reader.part(src_dst, bounds, bounds_crs=src_dst.crs)
         assert img.height == 651
         assert img.width == 994
 
-        img = reader.part(src_dst, bounds, max_size=100)
+        img = reader.part(src_dst, bounds, bounds_crs=src_dst.crs, max_size=100)
         assert img.height == 66
         assert img.width == 100
 
-        img = reader.part(src_dst, bounds, width=100)
+        img = reader.part(src_dst, bounds, bounds_crs=src_dst.crs, width=100)
         assert img.height == 66
         assert img.width == 100
 
-        img = reader.part(src_dst, bounds, height=66)
+        img = reader.part(src_dst, bounds, bounds_crs=src_dst.crs, height=66)
         assert img.height == 66
         assert img.width == 101
 
-        img = reader.part(src_dst, bounds, max_size=100, dst_crs="epsg:4326")
-        assert img.height == 66
+        img = reader.part(
+            src_dst, bounds, bounds_crs=src_dst.crs, max_size=100, dst_crs="epsg:4326"
+        )
+        assert img.height == 19
         assert img.width == 100
 
-        img = reader.part(src_dst, bounds, width=100, dst_crs="epsg:4326")
-        assert img.height == 66
+        img = reader.part(
+            src_dst, bounds, bounds_crs=src_dst.crs, width=100, dst_crs="epsg:4326"
+        )
+        assert img.height == 19
         assert img.width == 100
 
-        img = reader.part(src_dst, bounds, height=66, dst_crs="epsg:4326")
-        assert img.height == 66
-        assert img.width == 101
+        img = reader.part(
+            src_dst, bounds, bounds_crs=src_dst.crs, height=19, dst_crs="epsg:4326"
+        )
+        assert img.height == 19
+        assert img.width == 104
 
 
 def test_resampling_returns_different_results():
     """Make sure resampling works."""
+    # bounds in EPSG:3857
     bounds = [
         -6574807.42497772,
         12210356.646387195,
@@ -217,12 +225,20 @@ def test_resampling_returns_different_results():
         12523442.714243278,
     ]
     with rasterio.open(COG) as src_dst:
-        arr, _ = reader.part(src_dst, bounds, 64, 64, dst_crs=constants.WEB_MERCATOR_CRS)
+        arr, _ = reader.part(
+            src_dst,
+            bounds,
+            64,
+            64,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+        )
         arr2, _ = reader.part(
             src_dst,
             bounds,
             64,
             64,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
             dst_crs=constants.WEB_MERCATOR_CRS,
             resampling_method="bilinear",
         )
@@ -231,6 +247,7 @@ def test_resampling_returns_different_results():
 
 def test_resampling_with_diff_padding_returns_different_results():
     """Test result is different with different padding."""
+    # bounds in EPSG:3857
     bounds = [
         -6574807.42497772,
         12210356.646387195,
@@ -279,6 +296,7 @@ def test_resampling_with_diff_padding_returns_different_results():
 
 def test_tile_read_invalidResampling():
     """Should raise an error on invalid resampling method name."""
+    # bounds in EPSG:3857
     bounds = [
         -6574807.42497772,
         12210356.646387195,
@@ -287,11 +305,20 @@ def test_tile_read_invalidResampling():
     ]
     with pytest.raises(KeyError):
         with rasterio.open(COG) as src_dst:
-            reader.part(src_dst, bounds, 16, 16, resampling_method="jacques")
+            reader.part(
+                src_dst,
+                bounds,
+                16,
+                16,
+                resampling_method="jacques",
+                bounds_crs=constants.WEB_MERCATOR_CRS,
+                dst_crs=constants.WEB_MERCATOR_CRS,
+            )
 
 
-def test_tile_read_tuple_index():
+def test_tile_read_index():
     """Should work as expected"""
+    # bounds in EPSG:3857
     bounds = (
         -11663507.036777973,
         4715018.0897710975,
@@ -299,23 +326,17 @@ def test_tile_read_tuple_index():
         4715037.199028169,
     )
     with rasterio.open(S3_PATH) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, 16, 16, indexes=(1,))
-    assert arr.shape == (1, 16, 16)
-    assert mask.shape == (16, 16)
+        arr, mask = reader.part(
+            src_dst, bounds, 16, 16, indexes=(1,), bounds_crs=constants.WEB_MERCATOR_CRS
+        )
+        assert arr.shape == (1, 16, 16)
+        assert mask.shape == (16, 16)
 
-
-def test_tile_read_int_index():
-    """Should work as expected."""
-    bounds = (
-        -11663507.036777973,
-        4715018.0897710975,
-        -11663487.927520901,
-        4715037.199028169,
-    )
-    with rasterio.open(S3_PATH) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, 16, 16, indexes=1)
-    assert arr.shape == (1, 16, 16)
-    assert mask.shape == (16, 16)
+        arr, mask = reader.part(
+            src_dst, bounds, 16, 16, indexes=1, bounds_crs=constants.WEB_MERCATOR_CRS
+        )
+        assert arr.shape == (1, 16, 16)
+        assert mask.shape == (16, 16)
 
 
 def test_tile_read_bgr():
@@ -327,7 +348,14 @@ def test_tile_read_bgr():
         4715037.199028169,
     )
     with rasterio.open(S3_PATH) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, 16, 16, indexes=(3, 2, 1))
+        arr, mask = reader.part(
+            src_dst,
+            bounds,
+            16,
+            16,
+            indexes=(3, 2, 1),
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+        )
     assert arr.shape == (3, 16, 16)
     assert mask.shape == (16, 16)
 
@@ -343,7 +371,14 @@ def test_tile_read_nodata():
     ]
     tilesize = 16
     with rasterio.open(COG) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=1)
+        arr, mask = reader.part(
+            src_dst,
+            bounds,
+            tilesize,
+            tilesize,
+            nodata=1,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+        )
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
     assert not mask.all()
@@ -360,7 +395,14 @@ def test_tile_read_nodata_and_alpha():
 
     tilesize = 16
     with rasterio.open(PIX4D_PATH) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, indexes=[1, 2, 3])
+        arr, mask = reader.part(
+            src_dst,
+            bounds,
+            tilesize,
+            tilesize,
+            indexes=[1, 2, 3],
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+        )
     assert arr.shape == (3, 16, 16)
     assert mask.shape == (16, 16)
     assert not mask.all()
@@ -377,7 +419,9 @@ def test_tile_read_dataset_nodata():
     )
     tilesize = 16
     with rasterio.open(S3_NODATA_PATH) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize)
+        arr, mask = reader.part(
+            src_dst, bounds, tilesize, tilesize, bounds_crs=constants.WEB_MERCATOR_CRS
+        )
     assert arr.shape == (3, 16, 16)
     assert not mask.all()
 
@@ -393,7 +437,14 @@ def test_tile_read_not_covering_the_whole_tile():
     tilesize = 16
     with pytest.raises(TileOutsideBounds):
         with rasterio.open(COG) as src_dst:
-            reader.part(src_dst, bounds, tilesize, tilesize, minimum_overlap=0.6)
+            reader.part(
+                src_dst,
+                bounds,
+                tilesize,
+                tilesize,
+                minimum_overlap=0.6,
+                bounds_crs=constants.WEB_MERCATOR_CRS,
+            )
 
 
 # See https://github.com/cogeotiff/rio-tiler/issues/105#issuecomment-492268836
@@ -408,9 +459,16 @@ def test_tile_read_validMask():
     ]
     tilesize = 128
     with rasterio.open(COG) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, tilesize, tilesize, nodata=1)
+        arr, mask = reader.part(
+            src_dst,
+            bounds,
+            tilesize,
+            tilesize,
+            nodata=1,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+        )
 
-    masknodata = (arr[0] != 1).astype(numpy.uint8) * 255
+    masknodata = (arr[0] != 1).astype(numpy.uint16) * 65535
     numpy.testing.assert_array_equal(mask, masknodata)
 
 
@@ -423,7 +481,7 @@ def test_read_nodata():
         8148789,
     ]
     with rasterio.open(COG) as src_dst:
-        arr, mask = reader.part(src_dst, bounds, nodata=1)
+        arr, mask = reader.part(src_dst, bounds, nodata=1, bounds_crs=src_dst.crs)
 
     masknodata = (arr[0] != 1).astype(numpy.uint16) * 65535
     numpy.testing.assert_array_equal(mask, masknodata)
@@ -443,6 +501,7 @@ def test_read_nodata():
 
 def test_tile_read_crs():
     """Read tile using different target CRS and bounds CRS."""
+    # Bounds in epsg:3857
     bounds = (
         -11663507.036777973,
         4715018.0897710975,
@@ -465,6 +524,7 @@ def test_tile_read_crs():
         assert mask.shape == (16, 16)
 
         # Test target CRS with input bounds in target CRS
+        # bounds in epsg:4326
         bounds = (
             -104.7750663757324,
             38.95353532141203,
@@ -499,6 +559,7 @@ def test_tile_read_vrt_option():
             tilesize,
             tilesize,
             vrt_options={"source_extra": 10, "num_threads": 10},
+            bounds_crs=constants.WEB_MERCATOR_CRS,
         )
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
@@ -621,6 +682,7 @@ def test_point():
 
 def test_part_with_buffer():
     """Make sure buffer works as expected."""
+    # Bounds in EPSG:3857
     bounds = [
         -6574807.42497772,
         12210356.646387195,
@@ -629,7 +691,12 @@ def test_part_with_buffer():
     ]
     # Read part at full resolution
     with rasterio.open(COG) as src_dst:
-        img_no_buffer = reader.part(src_dst, bounds, dst_crs=constants.WEB_MERCATOR_CRS)
+        img_no_buffer = reader.part(
+            src_dst,
+            bounds,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+        )
 
     x_size = img_no_buffer.width
     y_size = img_no_buffer.height
@@ -654,12 +721,19 @@ def test_part_with_buffer():
             height=ny,
             width=nx,
             dst_crs=constants.WEB_MERCATOR_CRS,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
         )
         assert img.width == nx
         assert img.height == ny
 
     with rasterio.open(COG) as src_dst:
-        imgb = reader.part(src_dst, bounds, buffer=2, dst_crs=constants.WEB_MERCATOR_CRS)
+        imgb = reader.part(
+            src_dst,
+            bounds,
+            buffer=2,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+        )
         assert imgb.width == nx
         assert imgb.height == ny
 
@@ -685,6 +759,7 @@ def test_part_with_buffer_overzoom():
         img_no_buffer = reader.part(
             src_dst,
             bounds,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
             dst_crs=constants.WEB_MERCATOR_CRS,
             height=2000,
             width=2000,
@@ -712,6 +787,7 @@ def test_part_with_buffer_overzoom():
             bounds_with_buffer,
             height=ny,
             width=nx,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
             dst_crs=constants.WEB_MERCATOR_CRS,
         )
         assert img.width == nx
@@ -722,6 +798,7 @@ def test_part_with_buffer_overzoom():
             src_dst,
             bounds,
             buffer=2,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
             dst_crs=constants.WEB_MERCATOR_CRS,
             height=2000,
             width=2000,
@@ -852,7 +929,7 @@ def test_part_no_VRT():
         assert img.bounds == bounds_dst_crs
 
         # Use bbox in Image CRS
-        img_crs = reader.part(src_dst, bounds_dst_crs)
+        img_crs = reader.part(src_dst, bounds_dst_crs, bounds_crs=src_dst.crs)
         assert img.height == 1453
         assert img.width == 1613
         assert img_crs.mask[0, 0] == 65535
