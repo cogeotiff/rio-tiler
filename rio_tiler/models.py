@@ -33,6 +33,7 @@ from rio_tiler.types import (
     ColorMapType,
     GDALColorMapType,
     IntervalTuple,
+    NoData,
     NumType,
     RIOResampling,
     WarpResampling,
@@ -159,6 +160,9 @@ class PointData:
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     assets: Optional[List] = attr.ib(default=None, kw_only=True)
     metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
+    nodata: Optional[NoData] = attr.ib(default=None, kw_only=True)
+    scales: Optional[List[NumType]] = attr.ib(kw_only=True)
+    offsets: Optional[List[NumType]] = attr.ib(kw_only=True)
     pixel_location: Optional[Tuple[NumType, NumType]] = attr.ib(
         default=None, kw_only=True
     )
@@ -178,6 +182,14 @@ class PointData:
     @band_names.default
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
+
+    @scales.default
+    def _default_scales(self):
+        return [1.0] * self.count
+
+    @offsets.default
+    def _default_offsets(self):
+        return [0.0] * self.count
 
     @property
     def data(self) -> numpy.ndarray:
@@ -236,6 +248,10 @@ class PointData:
             itertools.chain.from_iterable([pt.band_names for pt in data if pt.band_names])
         )
 
+        scales = list(itertools.chain.from_iterable([pt.scales for pt in data]))
+
+        offsets = list(itertools.chain.from_iterable([pt.offsets for pt in data]))
+
         metadata = dict(
             itertools.chain.from_iterable(
                 [pt.metadata.items() for pt in data if pt.metadata]
@@ -246,6 +262,8 @@ class PointData:
             arr,
             assets=assets,
             band_names=band_names,
+            offsets=offsets,
+            scales=scales,
             coordinates=data[0].coordinates,
             crs=data[0].crs,
             metadata=metadata,
@@ -311,6 +329,9 @@ class ImageData:
     )
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
+    nodata: Optional[NoData] = attr.ib(default=None, kw_only=True)
+    scales: Optional[List[NumType]] = attr.ib(kw_only=True)
+    offsets: Optional[List[NumType]] = attr.ib(kw_only=True)
     band_names: Optional[List[str]] = attr.ib(kw_only=True)
     dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
         default=None, kw_only=True
@@ -321,6 +342,14 @@ class ImageData:
     @band_names.default
     def _default_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
+
+    @scales.default
+    def _default_scales(self):
+        return [1.0] * self.count
+
+    @offsets.default
+    def _default_offsets(self):
+        return [0.0] * self.count
 
     @alpha_mask.validator
     def _check_alpha_mask(self, attribute, value):
@@ -411,7 +440,14 @@ class ImageData:
                         array,
                         crs=dataset.crs,
                         bounds=dataset.bounds,
+                        band_names=[
+                            dataset.descriptions[ix - 1] or f"b{idx}" for idx in indexes
+                        ],
                         dataset_statistics=dataset_statistics,
+                        nodata=dataset.nodata,
+                        scales=list(dataset.scales),
+                        offsets=list(dataset.offsets),
+                        metadata=dataset.tags(),
                     )
 
     @classmethod
@@ -464,6 +500,10 @@ class ImageData:
             )
         )
 
+        scales = list(itertools.chain.from_iterable([img.scales for img in data]))
+
+        offsets = list(itertools.chain.from_iterable([img.offsets for img in data]))
+
         stats = list(
             itertools.chain.from_iterable(
                 [img.dataset_statistics for img in data if img.dataset_statistics]
@@ -486,6 +526,8 @@ class ImageData:
             dataset_statistics=dataset_statistics,
             cutline_mask=cutline_mask,
             metadata=metadata,
+            scales=scales,
+            offsets=offsets,
         )
 
     def data_as_image(self) -> numpy.ndarray:
@@ -540,6 +582,10 @@ class ImageData:
                 out_range=dtype_ranges[out_dtype],
             ).astype(out_dtype)
 
+        # reset scales/offsets
+        self.scales = [1.0] * self.count
+        self.offsets = [0.0] * self.count
+
         return self
 
     def apply_color_formula(self, color_formula: Optional[str]) -> Self:
@@ -559,6 +605,10 @@ class ImageData:
             self.alpha_mask = linear_rescale(
                 self.alpha_mask, in_range=dtype_ranges[str(self.alpha_mask.dtype)]
             ).astype("uint8")
+
+        # reset scales/offsets
+        self.scales = [1.0] * self.count
+        self.offsets = [0.0] * self.count
 
         return self
 
@@ -643,6 +693,9 @@ class ImageData:
             crs=self.crs,
             bounds=self.bounds,
             band_names=self.band_names,
+            nodata=self.nodata,
+            scales=self.scales,
+            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,
@@ -660,6 +713,9 @@ class ImageData:
             crs=self.crs,
             bounds=bbox,
             band_names=self.band_names,
+            nodata=self.nodata,
+            scales=self.scales,
+            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=self.alpha_mask[row_slice, col_slice].copy()
@@ -777,7 +833,7 @@ class ImageData:
             if "crs" not in kwargs and self.crs:
                 kwargs.update({"crs": self.crs})
 
-        write_nodata = "nodata" in kwargs
+        write_nodata = self.nodata is not None
         count, height, width = self.array.shape
 
         output_profile = {
@@ -785,6 +841,7 @@ class ImageData:
             "count": count if write_nodata else count + 1,
             "height": height,
             "width": width,
+            "nodata": self.nodata,
         }
         output_profile.update(kwargs)
 
@@ -930,6 +987,9 @@ class ImageData:
             crs=dst_crs,
             bounds=bounds,
             band_names=self.band_names,
+            nodata=self.nodata,
+            scales=self.scales,
+            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,

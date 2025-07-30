@@ -276,32 +276,32 @@ def read(
         # We only add dataset statistics if we have them for all the indexes
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
+        scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1]
+        offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1]
         if unscale:
             data = data.astype("float32", casting="unsafe")
-
-            # reshaped to match data
-            scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1].reshape(
-                (-1, 1, 1)
-            )
-            offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1].reshape(
-                (-1, 1, 1)
-            )
-
-            numpy.multiply(data, scales, out=data, casting="unsafe")
-            numpy.add(data, offsets, out=data, casting="unsafe")
+            numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
+            numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
 
             # apply scale/offsets to stats
             if dataset_statistics:
-                scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1].reshape(
-                    (-1, 1)
-                )
-                offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1].reshape(
-                    (-1, 1)
-                )
                 stats_array = numpy.array(dataset_statistics)
-                numpy.multiply(stats_array, scales, out=stats_array, casting="unsafe")
-                numpy.add(stats_array, offsets, out=stats_array, casting="unsafe")
+                numpy.multiply(
+                    stats_array,
+                    scales.reshape((-1, 1)),
+                    out=stats_array,
+                    casting="unsafe",
+                )
+                numpy.add(
+                    stats_array,
+                    offsets.reshape((-1, 1)),
+                    out=stats_array,
+                    casting="unsafe",
+                )
                 dataset_statistics = [tuple(s) for s in stats_array.tolist()]
+
+            scales = numpy.zeros(len(indexes)) + 1.0
+            offsets = numpy.zeros(len(indexes))
 
         if post_process:
             data = post_process(data)
@@ -317,6 +317,9 @@ def read(
             band_names=[dataset.descriptions[ix - 1] or f"b{idx}" for idx in indexes],
             dataset_statistics=dataset_statistics,
             metadata=dataset.tags(),
+            nodata=nodata,
+            scales=scales.tolist(),
+            offsets=offsets.tolist(),
         )
 
 
@@ -522,6 +525,9 @@ def part(
             bounds=bounds,
             crs=img.crs,
             band_names=img.band_names,
+            nodata=img.nodata,
+            scales=img.scales,
+            offsets=img.offsets,
             dataset_statistics=img.dataset_statistics,
             metadata=img.metadata,
         )
@@ -660,6 +666,9 @@ def point(
             band_names=img.band_names,
             coordinates=coordinates,
             crs=coord_crs,
-            metadata=dataset.tags(),
             pixel_location=(col, row),
+            nodata=img.nodata,
+            scales=img.scales,
+            offsets=img.offsets,
+            metadata=img.metadata,
         )

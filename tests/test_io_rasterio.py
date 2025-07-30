@@ -1177,6 +1177,8 @@ def test_unscale_stats():
     """check if scale/offset were applied on stats."""
     with Reader(COG_SCALE_STATS) as src:
         img = src.read(unscale=True)
+        assert img.scales == [1.0, 1.0]
+        assert img.offsets == [0.0, 0.0]
         stats = img.statistics()
         minb1, maxb1 = stats["b1"].min, stats["b1"].max
 
@@ -1184,6 +1186,8 @@ def test_unscale_stats():
         assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
 
         img = src.read()
+        assert img.scales == [0.0001, 0.001]
+        assert img.offsets == [1000.0, 2000.0]
         stats = img.statistics()
         minb1, maxb1 = stats["b1"].min, stats["b1"].max
 
