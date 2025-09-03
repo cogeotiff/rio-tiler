@@ -95,6 +95,7 @@ def mosaic_reader(  # noqa: C901
                 crs = img.crs
                 bounds = img.bounds
                 band_names = img.band_names
+                band_descriptions = img.band_descriptions
                 pixel_selection.cutline_mask = img.cutline_mask
                 pixel_selection.width = img.width
                 pixel_selection.height = img.height
@@ -135,6 +136,7 @@ def mosaic_reader(  # noqa: C901
                         crs=crs,
                         bounds=bounds,
                         band_names=band_names,
+                        band_descriptions=band_descriptions,
                         metadata={
                             "mosaic_method": pixel_selection.__class__.__name__,
                             "mosaic_assets_count": len(mosaic_assets),
@@ -154,6 +156,7 @@ def mosaic_reader(  # noqa: C901
             crs=crs,
             bounds=bounds,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             metadata={
                 "mosaic_method": pixel_selection.__class__.__name__,
                 "mosaic_assets_count": len(mosaic_assets),
@@ -229,6 +232,7 @@ def mosaic_point_reader(
                 crs = pt.crs
                 coordinates = pt.coordinates
                 band_names = pt.band_names
+                band_descriptions = pt.band_descriptions
                 pixel_selection.width = 1
                 pixel_selection.height = 1
                 pixel_selection.count = pt.count
@@ -248,6 +252,7 @@ def mosaic_point_reader(
                         crs=crs,
                         coordinates=coordinates,
                         band_names=band_names,
+                        band_descriptions=band_descriptions,
                         metadata={
                             "mosaic_method": pixel_selection.__class__.__name__,
                             "mosaic_assets_count": len(mosaic_assets),
@@ -267,6 +272,7 @@ def mosaic_point_reader(
             crs=crs,
             coordinates=coordinates,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             metadata={
                 "mosaic_method": pixel_selection.__class__.__name__,
                 "mosaic_assets_count": len(mosaic_assets),
