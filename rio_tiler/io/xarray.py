@@ -130,7 +130,7 @@ class XarrayReader(BaseReader):
         return self._maxzoom
 
     @property
-    def band_names(self) -> List[str]:
+    def band_descriptions(self) -> List[str]:
         """
         Return list of `band descriptions` in DataArray.
 
@@ -152,7 +152,7 @@ class XarrayReader(BaseReader):
             if coords_name:
                 return [str(self.input.coords[coords_name[0]].data)]
 
-            return [self.input.name or "array"]
+            return [self.input.name or ""]
 
         return [str(band) for d in self._dims for band in self.input[d].values]
 
@@ -165,7 +165,7 @@ class XarrayReader(BaseReader):
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             "band_metadata": [(f"b{ix}", v) for ix, v in enumerate(metadata, 1)],
             "band_descriptions": [
-                (f"b{ix}", v) for ix, v in enumerate(self.band_names, 1)
+                (f"b{ix}", v) for ix, v in enumerate(self.band_descriptions, 1)
             ],
             "dtype": str(self.input.dtype),
             "nodata_type": "Nodata" if self.input.rio.nodata is not None else "None",
@@ -184,10 +184,12 @@ class XarrayReader(BaseReader):
 
     def _sel_indexes(
         self, indexes: Optional[Indexes] = None
-    ) -> Tuple[xarray.DataArray, List[str]]:
+    ) -> Tuple[xarray.DataArray, List[str], List[str]]:
         """Select `band` indexes in DataArray."""
         da = self.input
-        band_names = self.band_names
+        band_descriptions = self.band_descriptions
+        band_names = [f"b{ix + 1}" for ix in range(self.input.rio.count)]
+
         if indexes := cast_to_sequence(indexes):
             assert all(v > 0 for v in indexes), "Indexes value must be >= 1"
             if da.ndim == 2:
@@ -196,13 +198,15 @@ class XarrayReader(BaseReader):
                         f"Invalid indexes {indexes} for array of shape {da.shape}"
                     )
 
-                return da, band_names
+                return da, band_names, band_descriptions
 
             indexes = [idx - 1 for idx in indexes]
-            da = da[indexes]
-            band_names = [self.band_names[idx] for idx in indexes]
 
-        return da, band_names
+            da = da[indexes]
+            band_descriptions = [band_descriptions[idx] for idx in indexes]
+            band_names = [band_names[idx] for idx in indexes]
+
+        return da, band_names, band_descriptions
 
     def statistics(
         self,
@@ -217,7 +221,7 @@ class XarrayReader(BaseReader):
         """Return statistics from a dataset."""
         hist_options = hist_options or {}
 
-        da, band_names = self._sel_indexes(indexes)
+        da, band_names, _ = self._sel_indexes(indexes)
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
@@ -268,7 +272,7 @@ class XarrayReader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
-        da, band_names = self._sel_indexes(indexes)
+        da, band_names, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
@@ -312,6 +316,7 @@ class XarrayReader(BaseReader):
             crs=dst_crs,
             dataset_statistics=stats,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             nodata=da.rio.nodata,
         )
 
@@ -357,7 +362,7 @@ class XarrayReader(BaseReader):
 
         dst_crs = dst_crs or bounds_crs
 
-        da, band_names = self._sel_indexes(indexes)
+        da, band_names, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
@@ -406,6 +411,7 @@ class XarrayReader(BaseReader):
             crs=da.rio.crs,
             dataset_statistics=stats,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             nodata=da.rio.nodata,
         )
 
@@ -457,7 +463,7 @@ class XarrayReader(BaseReader):
                 UserWarning,
             )
 
-        da, band_names = self._sel_indexes(indexes)
+        da, band_names, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
@@ -500,6 +506,7 @@ class XarrayReader(BaseReader):
             crs=da.rio.crs,
             dataset_statistics=stats,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             nodata=da.rio.nodata,
         )
 
@@ -547,7 +554,7 @@ class XarrayReader(BaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        da, band_names = self._sel_indexes(indexes)
+        da, band_names, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
@@ -568,6 +575,7 @@ class XarrayReader(BaseReader):
             coordinates=(lon, lat),
             crs=coord_crs,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             pixel_location=(x, y),
             nodata=da.rio.nodata,
         )

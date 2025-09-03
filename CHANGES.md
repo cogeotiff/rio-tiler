@@ -3,14 +3,12 @@
 
 # 8.0.0
 
-* use **description** as band name (instead of `b{ix}`) in `Reader`'s outputs **breaking change**
+* add **band_descriptions** in ImageData and PointData objects
 
 ```python
-# before
 with Reader("tests/fixtures/cog_tags.tif") as src:
     info = src.info()
     img = src.preview()
-    stats = src.statistics()
 
     print(info.band_descriptions)
     >> [('b1', 'Green')]
@@ -18,39 +16,66 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
     print(img.band_names)
     >> ['b1']
 
-    print(list(stats))
-    >> ['b1']
-
-# now
-with Reader("tests/fixtures/cog_tags.tif") as src:
-    info = src.info()
-    img = src.preview()
-    stats = src.statistics()
-
-    print(info.band_descriptions)
+    print(img.band_descriptions)
     >> [('b1', 'Green')]
-
-    print(img.band_names)
-    >> ['Green']
-
-    print(list(stats))
-    >> ['Green']
-
-    # Band without description
-    with Reader("tests/fixtures/cog.tif") as src:
-        info = src.info()
-        stats = src.statistics()
-        img = src.preview()
-
-    print(info.band_descriptions)
-    >> [('b1', '')]
-
-    print(list(stats))
-    >> ['b1']
-
-    print(list(stats))
-    >> ['b1']
 ```
+
+* use `b{idx}` as band names in `XarrayReader` result (instead of band descriptions) **breaking change**
+
+```python
+    arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(2, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+   
+    # Before
+    with XarrayReader(data) as dst:
+        assert info.band_metadata == [("b1", {}), ("b2", {})]
+        assert info.band_descriptions == [
+            ("b1", "2022-01-01T00:00:00.000000000"),
+            ("b2", "2022-01-02T00:00:00.000000000"),
+        ]
+ 
+        stats = dst.statistics()
+        assert list(stats) == [
+            "2022-01-01T00:00:00.000000000",
+            "2022-01-02T00:00:00.000000000",
+        ]
+        
+        img = dst.tile(0, 0, 0)
+        assert img.band_names == [
+            "2022-01-01T00:00:00.000000000",
+            "2022-01-02T00:00:00.000000000",
+        ]
+
+    # Now
+    with XarrayReader(data) as dst:
+        stats = dst.statistics()
+        assert list(stats) == [
+            "b1",
+            "b2",
+        ]
+
+        img = dst.tile(0, 0, 0)
+        assert img.band_names == [
+            "b1",
+            "b2",
+        ]
+        assert img.band_descriptions == [
+            "2022-01-01T00:00:00.000000000",
+            "2022-01-02T00:00:00.000000000",
+        ]
+```
+
+* rename `XarrayReader.band_names` -> `XarrayReader.band_descriptions`  **breaking change**
 
 * only cast data to `uint8` if colormap values are of type `uint8`
 

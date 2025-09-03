@@ -12,7 +12,8 @@ This class has helper methods like `render` which forward internal data and mask
 - **bounds**: bounds of the data ([rasterio.coords.BoundingBox](https://github.com/rasterio/rasterio/blob/main/rasterio/coords.py#L8), optional)
 - **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/main/rasterio/crs.py#L21), optional)
 - **metadata**: additional metadata (dict, optional)
-- **band_names**: image band's names
+- **band_names**: image band's names (e.g `["b1", "b2"]`)
+- **band_descriptions**: image band's descriptions (e.g `["Green", "Red"]`)
 - **dataset_statistics**: Dataset's min/max values (list of (min,max), optional)
 - **cutline_mask**: array representing the mask for `feature` methods
 - **alpha_nask**: array reprsenting the alpha mask (allowing partial transparency)
@@ -353,7 +354,8 @@ Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for 
 - **coordinates**: Coordinates of the point (Tuple[float, float], optional)
 - **crs**: coordinate reference system for the data ([rasterio.crs.CRS](https://github.com/rasterio/rasterio/blob/master/rasterio/crs.py#L21), optional)
 - **metadata**: additional metadata (dict, optional)
-- **band_names**: values band's names
+- **band_names**: image band's names (e.g `["b1", "b2"]`)
+- **band_descriptions**: image band's descriptions (e.g `["Green", "Red"]`)
 - **pixel_location**: X, Y coordinates in raster space (Tuple[float, float], optional)
 
 ```python

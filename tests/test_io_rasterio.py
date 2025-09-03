@@ -152,6 +152,7 @@ def test_tile_valid_default():
         assert img.data.shape == (1, 256, 256)
         assert img._mask.all()
         assert img.band_names == ["b1"]
+        assert img.band_descriptions == [""]
 
         # Validate that Tile and Part gives the same result
         tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
@@ -417,9 +418,9 @@ def test_statistics():
     with Reader(COG_TAGS) as src:
         stats = src.statistics()
         assert len(stats) == 1
-        assert isinstance(stats["Green"], BandStatistics)
-        assert stats["Green"].percentile_2
-        assert stats["Green"].percentile_98
+        assert isinstance(stats["b1"], BandStatistics)
+        assert stats["b1"].percentile_2
+        assert stats["b1"].percentile_98
 
 
 def test_Reader_Options():
@@ -1017,10 +1018,11 @@ def test_metadata_img():
         img = src.preview()
         assert img.dataset_statistics
         assert img.metadata
-        assert img.band_names == ["Green"]
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["Green"]
 
         stats = src.statistics()
-        assert "Green" in stats
+        assert "b1" in stats
 
 
 def test_feature_statistics():
