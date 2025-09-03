@@ -156,6 +156,7 @@ class PointData:
 
     array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
     band_names: List[str] = attr.ib(kw_only=True)
+    band_descriptions: Optional[List[str]] = attr.ib(kw_only=True)
     coordinates: Optional[Tuple[float, float]] = attr.ib(default=None, kw_only=True)
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     assets: Optional[List] = attr.ib(default=None, kw_only=True)
@@ -180,8 +181,12 @@ class PointData:
             raise ValueError("Coordinates data has to be a 2d list")
 
     @band_names.default
-    def _default_names(self):
+    def _default_band_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
+
+    @band_descriptions.default
+    def _default_band_descriptions(self):
+        return ["" for ix in range(self.count)]
 
     @scales.default
     def _default_scales(self):
@@ -248,6 +253,12 @@ class PointData:
             itertools.chain.from_iterable([pt.band_names for pt in data if pt.band_names])
         )
 
+        band_descriptions = list(
+            itertools.chain.from_iterable(
+                [pt.band_descriptions for pt in data if pt.band_descriptions]
+            )
+        )
+
         scales = list(itertools.chain.from_iterable([pt.scales for pt in data]))
 
         offsets = list(itertools.chain.from_iterable([pt.offsets for pt in data]))
@@ -262,6 +273,7 @@ class PointData:
             arr,
             assets=assets,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             offsets=offsets,
             scales=scales,
             coordinates=data[0].coordinates,
@@ -276,6 +288,8 @@ class PointData:
         data = apply_expression(blocks, self.band_names, self.array)
         # Using numexpr do not preserve mask info
         data.mask = False
+
+        # TODO: Update band descriptions
 
         return PointData(
             data,
@@ -315,7 +329,7 @@ class ImageData:
         bounds (BoundingBox, optional): bounding box of the data.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
-        band_names (list, optional): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
+        band_names (list, optional): name of each band. Defaults to `["b1", "b2", "b3"]` for 3 bands image.
         dataset_statistics (list, optional): dataset statistics `[(min, max), (min, max)]`
 
     Note: `mask` should be considered as `PER_BAND` so shape should be similar as the data
@@ -333,6 +347,7 @@ class ImageData:
     scales: Optional[List[NumType]] = attr.ib(kw_only=True)
     offsets: Optional[List[NumType]] = attr.ib(kw_only=True)
     band_names: Optional[List[str]] = attr.ib(kw_only=True)
+    band_descriptions: Optional[List[str]] = attr.ib(kw_only=True)
     dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
         default=None, kw_only=True
     )
@@ -340,8 +355,12 @@ class ImageData:
     alpha_mask: Optional[numpy.ndarray] = attr.ib(default=None)
 
     @band_names.default
-    def _default_names(self):
+    def _default_band_names(self):
         return [f"b{ix + 1}" for ix in range(self.count)]
+
+    @band_descriptions.default
+    def _default_band_descriptions(self):
+        return ["" for ix in range(self.count)]
 
     @scales.default
     def _default_scales(self):
@@ -440,8 +459,9 @@ class ImageData:
                         array,
                         crs=dataset.crs,
                         bounds=dataset.bounds,
-                        band_names=[
-                            dataset.descriptions[ix - 1] or f"b{idx}" for idx in indexes
+                        band_names=[f"b{idx}" for idx in indexes],
+                        band_descriptions=[
+                            dataset.descriptions[ix - 1] or "" for idx in indexes
                         ],
                         dataset_statistics=dataset_statistics,
                         nodata=dataset.nodata,
@@ -500,6 +520,12 @@ class ImageData:
             )
         )
 
+        band_descriptions = list(
+            itertools.chain.from_iterable(
+                [img.band_descriptions for img in data if img.band_descriptions]
+            )
+        )
+
         scales = list(itertools.chain.from_iterable([img.scales for img in data]))
 
         offsets = list(itertools.chain.from_iterable([img.offsets for img in data]))
@@ -523,6 +549,7 @@ class ImageData:
             crs=crs,
             bounds=bounds,
             band_names=band_names,
+            band_descriptions=band_descriptions,
             dataset_statistics=dataset_statistics,
             cutline_mask=cutline_mask,
             metadata=metadata,
@@ -661,6 +688,8 @@ class ImageData:
         # NOTE: We use dataset mask when mixing bands
         data.mask = numpy.logical_or.reduce(self.array.mask)
 
+        # TODO: update band descriptions
+
         return ImageData(
             data,
             assets=self.assets,
@@ -693,6 +722,7 @@ class ImageData:
             crs=self.crs,
             bounds=self.bounds,
             band_names=self.band_names,
+            band_descriptions=self.band_descriptions,
             nodata=self.nodata,
             scales=self.scales,
             offsets=self.offsets,
@@ -713,6 +743,7 @@ class ImageData:
             crs=self.crs,
             bounds=bbox,
             band_names=self.band_names,
+            band_descriptions=self.band_descriptions,
             nodata=self.nodata,
             scales=self.scales,
             offsets=self.offsets,
@@ -987,6 +1018,7 @@ class ImageData:
             crs=dst_crs,
             bounds=bounds,
             band_names=self.band_names,
+            band_descriptions=self.band_descriptions,
             nodata=self.nodata,
             scales=self.scales,
             offsets=self.offsets,

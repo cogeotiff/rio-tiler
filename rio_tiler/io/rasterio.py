@@ -787,6 +787,7 @@ class ImageReader(Reader):
             coordinates=self.dataset.xy(x, y),
             crs=self.dataset.crs,
             band_names=img.band_names,
+            band_descriptions=img.band_descriptions,
             pixel_location=(x, y),
         )
 
