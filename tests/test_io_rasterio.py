@@ -150,8 +150,9 @@ def test_tile_valid_default():
         # Full tile
         img = src.tile(43, 24, 7)
         assert img.data.shape == (1, 256, 256)
-        assert img.mask.all()
+        assert img._mask.all()
         assert img.band_names == ["b1"]
+        assert img.band_descriptions == [""]
 
         # Validate that Tile and Part gives the same result
         tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
@@ -259,7 +260,7 @@ def test_point_valid():
         pt = src.point(lon, lat, expression="b1*2;b1-100")
         assert len(pt.data) == 2
         assert len(pt.mask) == 1
-        assert pt.mask[0] == 255
+        assert pt._mask[0]
         assert pt.band_names == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
@@ -284,7 +285,7 @@ def test_point_valid():
 
         pt = src.point(-59.53, 74.03, indexes=(1, 1, 1))
         assert len(pt.data) == 3
-        assert pt.mask[0] == 0
+        assert not pt._mask[0]
         assert pt.band_names == ["b1", "b1", "b1"]
 
 
@@ -413,6 +414,13 @@ def test_statistics():
         assert stats["b1"]
         assert stats["b1*2"]
         assert stats["b1"].min == stats["b1*2"].min / 2
+
+    with Reader(COG_TAGS) as src:
+        stats = src.statistics()
+        assert len(stats) == 1
+        assert isinstance(stats["b1"], BandStatistics)
+        assert stats["b1"].percentile_2
+        assert stats["b1"].percentile_98
 
 
 def test_Reader_Options():
@@ -550,11 +558,11 @@ def test_imageData_output():
     with Reader(COG_NODATA) as src:
         img = src.tile(43, 24, 7)
         assert img.data.shape == (1, 256, 256)
-        assert img.mask.all()
+        assert img._mask.all()
         assert img.count == 1
         assert img.data_as_image().shape == (256, 256, 1)
 
-        assert numpy.array_equal(~img.array.mask[0] * 255, img.mask)
+        assert numpy.array_equal(~img.array.mask[0], img._mask)
 
         assert img.crs == WEB_MERCATOR_TMS.crs
         assert img.bounds == WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
@@ -706,7 +714,7 @@ def test_feature_valid():
         }
 
         img = src.feature(mask_feat, max_size=1024)
-        assert not img.mask.all()
+        assert not img._mask.all()
 
         outside_mask_feature = {
             "type": "Feature",
@@ -727,7 +735,7 @@ def test_feature_valid():
             },
         }
         img = src.feature(outside_mask_feature, max_size=1024)
-        assert not img.mask.all()
+        assert not img._mask.all()
 
 
 def test_equality_part_feature():
@@ -800,7 +808,7 @@ def test_tile_read_alpha():
             not nb == img.count
         )  # rio-tiler removes the alpha band from the `data` array
         assert img.data.shape == (3, 256, 256)
-        assert not img.mask.all()
+        assert not img._mask.all()
 
 
 def test_tile_read_mask():
@@ -811,12 +819,12 @@ def test_tile_read_mask():
             img = src.tile(876431, 1603669, 22, tilesize=16)
             assert img.data.shape == (3, 16, 16)
             assert img.mask.shape == (16, 16)
-            assert not img.mask.all()
+            assert not img._mask.all()
 
             # boundless tile covering the masked part
             img = src.tile(876431, 1603668, 22, tilesize=256)
             assert img.data.shape == (3, 256, 256)
-            assert not img.mask.all()
+            assert not img._mask.all()
 
 
 def test_tile_read_extmask():
@@ -827,7 +835,7 @@ def test_tile_read_extmask():
             img = src.tile(876431, 1603669, 22)
             assert img.data.shape == (3, 256, 256)
             assert img.mask.shape == (256, 256)
-            assert not img.mask.all()
+            assert not img._mask.all()
 
 
 def test_dateline():
@@ -1011,6 +1019,7 @@ def test_metadata_img():
         assert img.dataset_statistics
         assert img.metadata
         assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["Green"]
 
         stats = src.statistics()
         assert "b1" in stats
@@ -1143,13 +1152,13 @@ def test_int16_colormap():
         assert info.nodata_value == -32768
 
         img = src.preview()
-        assert img.mask.any()
+        assert img._mask.any()
 
         with pytest.warns(UserWarning):
             im = img.apply_colormap(color_map)
 
             # make sure we keep the nodata part masked
-            assert not im.mask.all()
+            assert not im._mask.all()
 
 
 def test_titiler_issue_1163_warpedVrt():
@@ -1170,6 +1179,8 @@ def test_unscale_stats():
     """check if scale/offset were applied on stats."""
     with Reader(COG_SCALE_STATS) as src:
         img = src.read(unscale=True)
+        assert img.scales == [1.0, 1.0]
+        assert img.offsets == [0.0, 0.0]
         stats = img.statistics()
         minb1, maxb1 = stats["b1"].min, stats["b1"].max
 
@@ -1177,6 +1188,8 @@ def test_unscale_stats():
         assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
 
         img = src.read()
+        assert img.scales == [0.0001, 0.001]
+        assert img.offsets == [1000.0, 2000.0]
         stats = img.statistics()
         minb1, maxb1 = stats["b1"].min, stats["b1"].max
 

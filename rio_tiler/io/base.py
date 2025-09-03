@@ -620,8 +620,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                                 "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
+                        data.band_descriptions = [asset]
                     else:
                         data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                        data.band_descriptions = [
+                            f"{asset}_{n}" for n in data.band_descriptions
+                        ]
 
                     return data
 
@@ -711,8 +715,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                                 "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
+                        data.band_descriptions = [asset]
                     else:
                         data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                        data.band_descriptions = [
+                            f"{asset}_{n}" for n in data.band_descriptions
+                        ]
 
                     return data
 
@@ -800,8 +808,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                                 "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
+                        data.band_descriptions = [asset]
                     else:
                         data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                        data.band_descriptions = [
+                            f"{asset}_{n}" for n in data.band_descriptions
+                        ]
 
                     return data
 
@@ -887,8 +899,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                                 "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
+                        data.band_descriptions = [asset]
                     else:
                         data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                        data.band_descriptions = [
+                            f"{asset}_{n}" for n in data.band_descriptions
+                        ]
 
                     return data
 
@@ -978,8 +994,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                                 "Can't use `asset_as_band` for multibands asset"
                             )
                         data.band_names = [asset]
+                        data.band_descriptions = [asset]
                     else:
                         data.band_names = [f"{asset}_{n}" for n in data.band_names]
+                        data.band_descriptions = [
+                            f"{asset}_{n}" for n in data.band_descriptions
+                        ]
 
                     return data
 

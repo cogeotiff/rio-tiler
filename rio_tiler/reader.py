@@ -33,7 +33,6 @@ from rio_tiler.utils import (
 class Options(TypedDict, total=False):
     """Reader Options."""
 
-    force_binary_mask: Optional[bool]
     nodata: Optional[NoData]
     vrt_options: Optional[Dict]
     resampling_method: Optional[RIOResampling]
@@ -97,7 +96,6 @@ def read(
     max_size: Optional[int] = None,
     indexes: Optional[Indexes] = None,
     window: Optional[windows.Window] = None,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     out_dtype: Optional[Union[str, numpy.dtype]] = None,
@@ -120,7 +118,6 @@ def read(
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
-        force_binary_mask (bool, optional): Cast returned mask to binary values (0 or 255). Defaults to `True`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
@@ -279,36 +276,32 @@ def read(
         # We only add dataset statistics if we have them for all the indexes
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
-        # TODO: DEPRECATED, masked array are already using bool
-        if force_binary_mask:
-            pass
-
+        scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1]
+        offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1]
         if unscale:
             data = data.astype("float32", casting="unsafe")
-
-            # reshaped to match data
-            scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1].reshape(
-                (-1, 1, 1)
-            )
-            offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1].reshape(
-                (-1, 1, 1)
-            )
-
-            numpy.multiply(data, scales, out=data, casting="unsafe")
-            numpy.add(data, offsets, out=data, casting="unsafe")
+            numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
+            numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
 
             # apply scale/offsets to stats
             if dataset_statistics:
-                scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1].reshape(
-                    (-1, 1)
-                )
-                offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1].reshape(
-                    (-1, 1)
-                )
                 stats_array = numpy.array(dataset_statistics)
-                numpy.multiply(stats_array, scales, out=stats_array, casting="unsafe")
-                numpy.add(stats_array, offsets, out=stats_array, casting="unsafe")
+                numpy.multiply(
+                    stats_array,
+                    scales.reshape((-1, 1)),
+                    out=stats_array,
+                    casting="unsafe",
+                )
+                numpy.add(
+                    stats_array,
+                    offsets.reshape((-1, 1)),
+                    out=stats_array,
+                    casting="unsafe",
+                )
                 dataset_statistics = [tuple(s) for s in stats_array.tolist()]
+
+            scales = numpy.zeros(len(indexes)) + 1.0
+            offsets = numpy.zeros(len(indexes))
 
         if post_process:
             data = post_process(data)
@@ -322,8 +315,12 @@ def read(
             bounds=out_bounds,
             crs=dataset.crs,
             band_names=[f"b{idx}" for idx in indexes],
+            band_descriptions=[dataset.descriptions[ix - 1] or "" for idx in indexes],
             dataset_statistics=dataset_statistics,
             metadata=dataset.tags(),
+            nodata=nodata,
+            scales=scales.tolist(),
+            offsets=offsets.tolist(),
         )
 
 
@@ -340,7 +337,6 @@ def part(
     minimum_overlap: Optional[float] = None,
     padding: Optional[int] = None,
     buffer: Optional[float] = None,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     out_dtype: Optional[Union[str, numpy.dtype]] = None,
@@ -477,7 +473,6 @@ def part(
             out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
-            force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
         )
@@ -522,7 +517,6 @@ def part(
             out_dtype=out_dtype,
             resampling_method=resampling_method,
             reproject_method=reproject_method,
-            force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
         )
@@ -532,6 +526,10 @@ def part(
             bounds=bounds,
             crs=img.crs,
             band_names=img.band_names,
+            band_descriptions=img.band_descriptions,
+            nodata=img.nodata,
+            scales=img.scales,
+            offsets=img.offsets,
             dataset_statistics=img.dataset_statistics,
             metadata=img.metadata,
         )
@@ -546,7 +544,6 @@ def part(
         out_dtype=out_dtype,
         resampling_method=resampling_method,
         reproject_method=reproject_method,
-        force_binary_mask=force_binary_mask,
         unscale=unscale,
         post_process=post_process,
     )
@@ -557,7 +554,6 @@ def point(
     coordinates: Tuple[float, float],
     indexes: Optional[Indexes] = None,
     coord_crs: CRS = WGS84_CRS,
-    force_binary_mask: bool = True,
     nodata: Optional[NoData] = None,
     vrt_options: Optional[Dict] = None,
     out_dtype: Optional[Union[str, numpy.dtype]] = None,
@@ -663,7 +659,6 @@ def point(
             window=window,
             out_dtype=out_dtype,
             resampling_method=resampling_method,
-            force_binary_mask=force_binary_mask,
             unscale=unscale,
             post_process=post_process,
         )
@@ -671,8 +666,12 @@ def point(
         return PointData(
             img.array[:, 0, 0],
             band_names=img.band_names,
+            band_descriptions=img.band_descriptions,
             coordinates=coordinates,
             crs=coord_crs,
-            metadata=dataset.tags(),
             pixel_location=(col, row),
+            nodata=img.nodata,
+            scales=img.scales,
+            offsets=img.offsets,
+            metadata=img.metadata,
         )

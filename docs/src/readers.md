@@ -1209,10 +1209,10 @@ EPSG:4326
     # stats will be in form or {"band": BandStatistics(), ...}
     print(stats)
     >>> {
-        '2022-01-01T00:00:00.000000000': BandStatistics(...),
+        'b1': BandStatistics(...),
     }
 
-    print(stats["2022-01-01T00:00:00.000000000"].model_dump())
+    print(stats["b1"].model_dump())
     >>> {
         "min": 1,
         "max": 7872,
