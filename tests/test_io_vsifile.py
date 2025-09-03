@@ -5,7 +5,7 @@ import os
 import numpy
 import pytest
 
-from rio_tiler.errors import RioTilerExperimentalWarning
+from rio_tiler.experimental.vsifile import VSIReader
 from rio_tiler.io import Reader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -15,9 +15,6 @@ COGEO = os.path.join(PREFIX, "cog.tif")
 def test_vsireader():
     """Test Reader using VSIFile handler."""
     pytest.importorskip("vsifile")
-
-    with pytest.warns((RioTilerExperimentalWarning)):
-        from rio_tiler.experimental.vsifile import VSIReader
 
     # VSIReader doesn't take dataset as input
     with pytest.raises(TypeError):

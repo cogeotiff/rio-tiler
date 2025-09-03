@@ -48,6 +48,8 @@ test = [
     "morecantile>=6.0,<7.0",
     # Experimental
     "vsifile>=0.2",
+    "zarr",
+    "fsspec",
 ]
 
 benchmark = [
@@ -191,3 +193,9 @@ tag_name = "{new_version}"
 filename = "rio_tiler/__init__.py"
 search = '__version__ = "{current_version}"'
 replace = '__version__ = "{new_version}"'
+
+
+[tool.pytest.ini_options]
+filterwarnings = [
+    "ignore::rio_tiler.errors.RioTilerExperimentalWarning",
+]
