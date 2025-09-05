@@ -3,6 +3,8 @@
 
 # 8.0.0
 
+* remove python 3.9 and 3.10 support **breaking change**
+
 * add **band_descriptions** in ImageData and PointData objects
 
 ```python
