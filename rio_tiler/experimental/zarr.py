@@ -1,4 +1,4 @@
-"""rio_tiler.io.experimental.xarray Readers."""
+"""rio_tiler experimental ZarrReaders."""
 
 from __future__ import annotations
 
