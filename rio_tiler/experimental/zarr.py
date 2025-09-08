@@ -37,7 +37,7 @@ sel_methods = Literal["nearest", "pad", "ffill", "backfill", "bfill"]
 
 
 @cache
-def open_dataset(src_path: str) -> xarray.Dataset:
+def open_dataset(src_path: str, **kwargs: Any) -> xarray.Dataset:
     """Open Xarray dataset
 
     Args:
@@ -51,7 +51,7 @@ def open_dataset(src_path: str) -> xarray.Dataset:
     if not parsed.scheme:
         src_path = str(Path(src_path).resolve())
         src_path = "file://" + src_path
-    store = obstore.store.from_url(src_path)
+    store = obstore.store.from_url(src_path, **kwargs)
     zarr_store = ObjectStore(store=store, read_only=True)
     ds = xarray.open_dataset(
         zarr_store,
@@ -77,7 +77,10 @@ class ZarrReader(BaseReader):
     Examples:
         >>> with ZarrReader(
                 "s3://mur-sst/zarr-v1",
-                opener_options={"engine": "zarr"}
+                opener_options={
+                    "skip_signature": True,
+                    "region": "us-west-2",
+                }
             ) as src:
                 print(src)
                 print(src.variables)
@@ -91,7 +94,7 @@ class ZarrReader(BaseReader):
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     opener: Callable[..., xarray.Dataset] = attr.ib(default=open_dataset)
-
+    opener_options: Dict = attr.ib(factory=dict)
     _ctx_stack: contextlib.ExitStack = attr.ib(init=False, factory=contextlib.ExitStack)
 
     def __attrs_post_init__(self):
@@ -100,7 +103,9 @@ class ZarrReader(BaseReader):
         assert rioxarray is not None, "rioxarray must be installed to use XarrayReader"
 
         if not self.dataset:
-            self.dataset = self._ctx_stack.enter_context(self.opener(self.input))
+            self.dataset = self._ctx_stack.enter_context(
+                self.opener(self.input, **self.opener_options)
+            )
 
         # NOTE: rioxarray returns **ordered** bounds in form of (minx, miny, maxx, maxx)
         self.bounds = tuple(self.dataset.rio.bounds())

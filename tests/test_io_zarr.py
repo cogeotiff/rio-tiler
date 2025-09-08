@@ -11,14 +11,15 @@ ZARR_3D = os.path.join(PREFIX, "dataset_3d.zarr")
 
 
 @pytest.mark.parametrize(
-    "filename",
+    "filename,options",
     [
-        ZARR_3D,
+        (ZARR_3D, {}),
+        ("s3://mur-sst/zarr-v1", {"skip_signature": True, "region": "us-west-2"}),
     ],
 )
-def test_dataset_reader(filename):
+def test_dataset_reader(filename, options):
     """test reader."""
-    with ZarrReader(filename) as ds:
+    with ZarrReader(filename, opener_options=options) as ds:
         assert ds.variables
         assert ds.crs
         assert ds.transform
