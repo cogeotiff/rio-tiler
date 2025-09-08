@@ -46,7 +46,7 @@ test = [
     "morecantile>=6.0,<7.0",
     # Experimental
     "vsifile>=0.2",
-    "zarr",
+    "zarr~=3.0",
     "obstore",
 ]
 
@@ -70,6 +70,10 @@ s3 = [
 xarray = [
     "xarray",
     "rioxarray",
+]
+zarr = [
+    "zarr~=3.0",
+    "obstore",
 ]
 docs = [
     "mkdocs>=1.4.3",
