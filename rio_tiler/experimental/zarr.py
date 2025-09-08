@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import contextlib
+from functools import cache
+from pathlib import Path
 from typing import Any, Callable, Dict, List, Literal, Optional, Union
 from urllib.parse import urlparse
 
@@ -18,64 +20,46 @@ from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox
 
 try:
-    import xarray
-    from xarray.namedarray.utils import module_available
+    import obstore
+    from zarr.storage import ObjectStore
 except ImportError:  # pragma: nocover
-    xarray = None  # type: ignore
-    module_available = None  # type: ignore
+    ObjectStore = None  # type: ignore
+    obstore = None  # type: ignore
 
 try:
     import rioxarray
+    import xarray
 except ImportError:  # pragma: nocover
+    xarray = None  # type: ignore
     rioxarray = None  # type: ignore
 
 sel_methods = Literal["nearest", "pad", "ffill", "backfill", "bfill"]
 
 
-def open_dataset(
-    src_path: str,
-    group: Optional[str] = None,
-    decode_times: bool = True,
-    **kwargs: Any,
-) -> xarray.Dataset:
+@cache
+def open_dataset(src_path: str) -> xarray.Dataset:
     """Open Xarray dataset
 
     Args:
         src_path (str): dataset path.
-        group (Optional, str): path to the netCDF/Zarr group in the given file to open given as a str.
-        decode_times (bool):  If True, decode times encoded in the standard NetCDF datetime format into datetime objects. Otherwise, leave them encoded as numbers.
 
     Returns:
-        xarray.Dataset
+        xarray.DataTree
 
     """
-    import fsspec  # noqa
-    import zarr  # noqa
-
     parsed = urlparse(src_path)
-    protocol = parsed.scheme or "file"
-
-    # Arguments for xarray.open_dataset
-    # Default args
-    xr_open_args: Dict[str, Any] = {
-        "consolidated": True,
-        "decode_coords": "all",
-        "decode_times": decode_times,
-        **kwargs,
-    }
-
-    # Argument if we're opening a datatree
-    if group is not None:
-        xr_open_args["group"] = group
-
-    if module_available("zarr", minversion="3.0"):
-        store = zarr.storage.FsspecStore.from_url(
-            src_path, storage_options={"asynchronous": True}
-        )
-    else:
-        store = fsspec.filesystem(protocol).get_mapper(src_path)
-
-    ds = xarray.open_zarr(store, **xr_open_args)
+    if not parsed.scheme:
+        src_path = str(Path(src_path).resolve())
+        src_path = "file://" + src_path
+    store = obstore.store.from_url(src_path)
+    zarr_store = ObjectStore(store=store, read_only=True)
+    ds = xarray.open_dataset(
+        zarr_store,
+        decode_times=True,
+        decode_coords="all",
+        consolidated=True,
+        engine="zarr",
+    )
     return ds
 
 
@@ -107,7 +91,6 @@ class ZarrReader(BaseReader):
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     opener: Callable[..., xarray.Dataset] = attr.ib(default=open_dataset)
-    opener_options: Dict = attr.ib(factory=dict)
 
     _ctx_stack: contextlib.ExitStack = attr.ib(init=False, factory=contextlib.ExitStack)
 
@@ -117,13 +100,16 @@ class ZarrReader(BaseReader):
         assert rioxarray is not None, "rioxarray must be installed to use XarrayReader"
 
         if not self.dataset:
-            self.dataset = self._ctx_stack.enter_context(
-                self.opener(self.input, **self.opener_options)
-            )
+            self.dataset = self._ctx_stack.enter_context(self.opener(self.input))
 
         # NOTE: rioxarray returns **ordered** bounds in form of (minx, miny, maxx, maxx)
         self.bounds = tuple(self.dataset.rio.bounds())
-        self.crs = self.dataset.rio.crs or "epsg:4326"
+        # Make sure we have a valid CRS
+        self.dataset = self.dataset.rio.write_crs(
+            self.dataset.rio.crs or "epsg:4326",
+        )
+
+        self.crs = self.dataset.rio.crs
 
         # adds half x/y resolution on each values
         # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634

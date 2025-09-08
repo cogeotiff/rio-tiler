@@ -41,36 +41,40 @@ def test_dataset_reader_variable():
 
     with ZarrReader(ZARR_3D) as ds:
         stats = ds.statistics(variable="dataset")
-        assert stats["2022-01-01T00:00:00.000000000"]
+        assert stats["b1"]
 
         img = ds.tile(0, 0, 0, variable="dataset")
         assert img.band_names == [
+            "b1",
+            "b2",
+        ]
+        assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000000",
             "2023-01-01T00:00:00.000000000",
         ]
 
         img = ds.tile(0, 0, 0, variable="dataset", indexes=1)
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_descriptions == ["2022-01-01T00:00:00.000000000"]
 
         img = ds.tile(
             0, 0, 0, variable="dataset", sel=["time=2022-01-01T00:00:00.000000000"]
         )
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_descriptions == ["2022-01-01T00:00:00.000000000"]
 
         img = ds.part((-160, -80, 160, 80), variable="dataset")
-        assert img.band_names == [
+        assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000000",
             "2023-01-01T00:00:00.000000000",
         ]
 
         img = ds.preview(variable="dataset")
-        assert img.band_names == [
+        assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000000",
             "2023-01-01T00:00:00.000000000",
         ]
 
         pts = ds.point(0, 0, variable="dataset")
-        assert pts.band_names == [
+        assert pts.band_descriptions == [
             "2022-01-01T00:00:00.000000000",
             "2023-01-01T00:00:00.000000000",
         ]
@@ -88,7 +92,7 @@ def test_dataset_reader_variable():
             ],
         }
         img = ds.feature(feat, variable="dataset")
-        assert img.band_names == [
+        assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000000",
             "2023-01-01T00:00:00.000000000",
         ]

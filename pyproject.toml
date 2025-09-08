@@ -47,7 +47,7 @@ test = [
     # Experimental
     "vsifile>=0.2",
     "zarr",
-    "fsspec",
+    "obstore",
 ]
 
 benchmark = [
