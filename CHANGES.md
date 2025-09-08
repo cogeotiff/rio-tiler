@@ -91,6 +91,8 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
 * add `nodata`, `scales` and `offsets` attributes to `ImageData` and `PointData` classes
 
+* add `rio_tiler.experimental.zarr.ZarrReader` Zarr Dataset experimental reader
+
 # 7.8.1 (2025-06-16)
 
 * apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)
