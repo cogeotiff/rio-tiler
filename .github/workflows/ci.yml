@@ -4,7 +4,7 @@ name: CI
 on:
   push:
     branches:
-    - main
+    - maint-7.x
     tags:
     - '*'
   pull_request:
