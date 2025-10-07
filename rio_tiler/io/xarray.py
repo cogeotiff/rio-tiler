@@ -399,10 +399,13 @@ class XarrayReader(BaseReader):
             src_height = round(w.height)
             src_width = round(w.width)
 
-        # transform of the reprojected dataset
-        dst_transform, _, _ = calculate_default_transform(
-            self.crs, dst_crs, src_width, src_height, *src_bounds
-        )
+        if dst_crs != self.crs:
+            # transform of the reprojected dataset
+            dst_transform, _, _ = calculate_default_transform(
+                self.crs, dst_crs, src_width, src_height, *src_bounds
+            )
+        else:
+            dst_transform = from_bounds(*src_bounds, src_width, src_height)
 
         if bounds_crs and bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
