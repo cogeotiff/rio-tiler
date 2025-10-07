@@ -94,6 +94,12 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * add `rio_tiler.experimental.zarr.ZarrReader` Zarr Dataset experimental reader
 
 * refactor `XarrayReader.part` method to better handle reprojection and re-usability
+* move `_get_width_height` and `_missing_size` from `rio_tiler.reader` to `rio_tiler.utils`
+
+# 7.9.0 (2025-10-07)
+
+* refactor XarrayReader.part method to better handle reprojection and re-usability (https://github.com/cogeotiff/rio-tiler/pull/828) **Backported**
+* move `_get_width_height` and `_missing_size` from `rio_tiler.reader` to `rio_tiler.utils` **Backported**
 
 # 7.8.1 (2025-06-16)
 

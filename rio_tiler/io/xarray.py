@@ -29,10 +29,10 @@ from rio_tiler.errors import (
 )
 from rio_tiler.io.base import BaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.reader import _get_width_height
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
+    _get_width_height,
     _missing_size,
     _validate_shape_input,
     cast_to_sequence,
