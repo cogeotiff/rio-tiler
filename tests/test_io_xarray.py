@@ -8,7 +8,6 @@ import numpy
 import pytest
 import rioxarray
 import xarray
-from geojson_pydantic import Polygon
 from rasterio.crs import CRS as rioCRS
 
 from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
@@ -934,9 +933,15 @@ def test_xarray_partial_read():
         assert img_part.bounds == bounds
         numpy.testing.assert_array_equal(img.array, img_part.array)
 
-        feat = Polygon.from_bounds(*bounds)
+        xmin, ymin, xmax, ymax = bounds
+        geom = {
+            "type": "Polygon",
+            "coordinates": [
+                [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]
+            ],
+        }
         img_feature = dst.feature(
-            feat.model_dump(exclude_none=True),
+            geom,
             dst_crs="epsg:3857",
             shape_crs="epsg:3857",
             indexes=1,
