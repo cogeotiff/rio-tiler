@@ -93,6 +93,8 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
 * add `rio_tiler.experimental.zarr.ZarrReader` Zarr Dataset experimental reader
 
+* refactor `XarrayReader.part` method to better handle reprojection and re-usability
+
 # 7.8.1 (2025-06-16)
 
 * apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)
