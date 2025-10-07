@@ -43,6 +43,12 @@ def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, Non
         yield my_list[i : i + chuck_size]
 
 
+def _missing_size(w: Optional[int] = None, h: Optional[int] = None):
+    """Check if one and only one size (width, height) is valid."""
+    iterator = iter([w, h])
+    return any(iterator) and not any(iterator)
+
+
 # Ref: https://stackoverflow.com/posts/73905572
 def _weighted_quantiles(
     values: NDArray[numpy.floating],

@@ -20,6 +20,7 @@ from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
+from rio_tiler.utils import _missing_size
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import (
     _round_window,
@@ -55,12 +56,6 @@ def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int
         height = math.ceil(width * ratio)
 
     return height, width
-
-
-def _missing_size(w: Optional[int] = None, h: Optional[int] = None):
-    """Check if one and only one size (width, height) is valid."""
-    iterator = iter([w, h])
-    return any(iterator) and not any(iterator)
 
 
 def _apply_buffer(
