@@ -8,6 +8,7 @@ import numpy
 import pytest
 import rioxarray
 import xarray
+from geojson_pydantic import Polygon
 from rasterio.crs import CRS as rioCRS
 
 from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
@@ -859,7 +860,7 @@ def test_compare_readers():
     numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
 
 
-def test_xarray_part_and_tile():
+def test_xarray_partial_read():
     """test XarrayReader equality for part and tile methods."""
     arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(2, 33, 35)
     data = xarray.DataArray(
@@ -897,3 +898,16 @@ def test_xarray_part_and_tile():
         assert img_part.crs == "epsg:3857"
         assert img_part.bounds == bounds
         numpy.testing.assert_array_equal(img.array, img_part.array)
+
+        feat = Polygon.from_bounds(*bounds)
+        img_feature = dst.feature(
+            feat.model_dump(exclude_none=True),
+            dst_crs="epsg:3857",
+            shape_crs="epsg:3857",
+            indexes=1,
+            width=256,
+            height=256,
+        )
+        assert img_feature.crs == "epsg:3857"
+        assert img_feature.bounds == bounds
+        numpy.testing.assert_array_equal(img.array, img_feature.array)
