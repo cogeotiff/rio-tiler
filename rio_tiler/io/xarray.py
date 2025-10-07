@@ -9,6 +9,7 @@ from typing import Any, Dict, List, Tuple
 import attr
 import numpy
 from morecantile import Tile, TileMatrixSet
+from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.errors import NotGeoreferencedWarning
@@ -19,7 +20,7 @@ from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
 
-from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.constants import WEB_MERCATOR_CRS, WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     InvalidGeographicBounds,
     MissingCRS,
@@ -36,7 +37,6 @@ from rio_tiler.utils import (
     _validate_shape_input,
     cast_to_sequence,
     get_array_statistics,
-    resize_array,
 )
 
 try:
@@ -276,52 +276,21 @@ class XarrayReader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
-        da, band_names, band_descriptions = self._sel_indexes(indexes)
-
-        if nodata is not None:
-            da = da.rio.write_nodata(nodata)
-
         tile_bounds = tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)))
         dst_crs = self.tms.rasterio_crs
 
-        # Create source array by clipping the xarray dataset to extent of the tile.
-        da = da.rio.clip_box(
-            *tile_bounds,
-            crs=dst_crs,
+        return self.part(
+            tile_bounds,
+            dst_crs=dst_crs,
+            bounds_crs=dst_crs,
+            reproject_method=reproject_method,
             auto_expand=auto_expand,
-        )
-        da = da.rio.reproject(
-            dst_crs,
-            shape=(tilesize, tilesize),
-            transform=from_bounds(*tile_bounds, height=tilesize, width=tilesize),
-            resampling=Resampling[reproject_method],
             nodata=nodata,
-        )
-
-        # Forward valid_min/valid_max to the ImageData object
-        minv, maxv = da.attrs.get("valid_min"), da.attrs.get("valid_max")
-        stats = None
-        if minv is not None and maxv is not None and nodata not in [minv, maxv]:
-            stats = ((minv, maxv),) * da.rio.count
-
-        arr = da.to_masked_array()
-        if out_dtype:
-            arr = arr.astype(out_dtype)
-        arr.mask |= arr.data == da.rio.nodata
-
-        output_bounds = da.rio._unordered_bounds()
-        if output_bounds[1] > output_bounds[3] and da.rio.transform().e > 0:
-            yaxis = self.input.dims.index(self.input.rio.y_dim)
-            arr = numpy.flip(arr, axis=yaxis)
-
-        return ImageData(
-            arr,
-            bounds=tile_bounds,
-            crs=dst_crs,
-            dataset_statistics=stats,
-            band_names=band_names,
-            band_descriptions=band_descriptions,
-            nodata=da.rio.nodata,
+            indexes=indexes,
+            height=tilesize,
+            width=tilesize,
+            out_dtype=out_dtype,
+            **kwargs,
         )
 
     def part(  # noqa: C901
@@ -384,63 +353,89 @@ class XarrayReader(BaseReader):
             auto_expand=auto_expand,
         )
 
-        if dst_crs != self.crs:
-            # transform of the reprojected dataset
-            dst_transform, _, _ = calculate_default_transform(
-                self.crs,
-                dst_crs,
-                da.rio.width,
-                da.rio.height,
-                *da.rio.bounds(),
+        src_width = da.rio.width
+        src_height = da.rio.height
+        src_bounds = list(da.rio.bounds())
+        src_transform = da.rio.transform()
+
+        # Fix for https://github.com/cogeotiff/rio-tiler/issues/654
+        #
+        # When using `calculate_default_transform` with dataset
+        # which span at high/low latitude outside the area_of_use
+        # of the WebMercator projection, we `crop` the dataset
+        # to get the transform (resolution).
+        #
+        # Note: Should be handled in gdal 3.8 directly
+        # https://github.com/OSGeo/gdal/pull/8775
+        if (
+            self.crs == WGS84_CRS
+            and dst_crs == WEB_MERCATOR_CRS
+            and (src_bounds[1] < -85.06 or src_bounds[3] > 85.06)
+        ):
+            warnings.warn(
+                "Adjusting dataset latitudes to avoid re-projection overflow",
+                UserWarning,
             )
+            src_bounds[1] = max(src_bounds[1], -85.06)
+            src_bounds[3] = min(src_bounds[3], 85.06)
+            w = windows.from_bounds(*src_bounds, transform=src_transform)
+            src_height = round(w.height)
+            src_width = round(w.width)
 
-            if bounds_crs and bounds_crs != dst_crs:
-                bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
-
-            w, s, e, n = bbox
-            # max size of the output dataset for the bbox
-            dst_width = max(1, round((e - w) / dst_transform.a))
-            dst_height = max(1, round((s - n) / dst_transform.e))
-            if max_size:
-                height, width = _get_width_height(max_size, dst_height, dst_width)
-
-            elif _missing_size(height, width):
-                ratio = dst_height / dst_width
-                if width:
-                    height = math.ceil(width * ratio)
-                else:
-                    width = math.ceil(height / ratio)
-
-            height = height or dst_height
-            width = width or dst_width
-            da = da.rio.reproject(
-                dst_crs,
-                shape=(height, width),
-                transform=from_bounds(w, s, e, n, width, height),
-                resampling=Resampling[reproject_method],
-                nodata=nodata,
+        # Specific FIX when bounds and transform are inverted
+        # See: https://github.com/US-GHG-Center/veda-config-ghg/pull/333
+        elif (
+            self.crs == WGS84_CRS
+            and dst_crs == WEB_MERCATOR_CRS
+            and (src_bounds[1] > 85.06 or src_bounds[3] < -85.06)
+        ):
+            warnings.warn(
+                "Adjusting dataset latitudes to avoid re-projection overflow",
+                UserWarning,
             )
-            arr = da.to_masked_array()
+            src_bounds[1] = min(src_bounds[1], 85.06)
+            src_bounds[3] = max(src_bounds[3], -85.06)
+            w = windows.from_bounds(*src_bounds, transform=src_transform)
+            src_height = round(w.height)
+            src_width = round(w.width)
 
-        else:
-            arr = da.to_masked_array()
+        # transform of the reprojected dataset
+        dst_transform, _, _ = calculate_default_transform(
+            self.crs, dst_crs, src_width, src_height, *src_bounds
+        )
 
-            if max_size:
-                height, width = _get_width_height(max_size, da.rio.height, da.rio.width)
+        if bounds_crs and bounds_crs != dst_crs:
+            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
 
-            elif _missing_size(height, width):
-                ratio = da.rio.height / da.rio.width
-                if width:
-                    height = math.ceil(width * ratio)
-                else:
-                    width = math.ceil(height / ratio)
+        w, s, e, n = bbox
+        # max size of the output dataset for the bbox
+        dst_width = max(1, round((e - w) / dst_transform.a))
+        dst_height = max(1, round((s - n) / dst_transform.e))
 
-            if (height and width) and (height != da.rio.height or width != da.rio.width):
-                arr = numpy.ma.MaskedArray(resize_array(arr, height, width))
+        if max_size:
+            height, width = _get_width_height(max_size, dst_height, dst_width)
 
+        elif _missing_size(height, width):
+            ratio = dst_height / dst_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
+
+        height = height or dst_height
+        width = width or dst_width
+        da = da.rio.reproject(
+            dst_crs,
+            shape=(height, width),
+            transform=from_bounds(w, s, e, n, width, height),
+            resampling=Resampling[reproject_method],
+            nodata=nodata,
+        )
+
+        arr = da.to_masked_array()
+        arr.mask |= arr.data == da.rio.nodata
         if out_dtype:
             arr = arr.astype(out_dtype)
-        arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
         if output_bounds[1] > output_bounds[3] and da.rio.transform().e > 0:

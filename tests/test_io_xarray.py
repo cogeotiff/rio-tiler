@@ -143,7 +143,7 @@ def test_xarray_reader():
         assert img.count == 1
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000000"]
-        assert img.array.shape == (1, 33, 33)
+        assert img.array.shape == (1, 32, 32)
         assert img.array.dtype == numpy.float32
 
         img = dst.part((-160, -80, 160, 80), out_dtype="uint8")
@@ -281,7 +281,7 @@ def test_xarray_reader():
             "2022-01-01T00:00:00.000000000",
             "2022-01-02T00:00:00.000000000",
         ]
-        assert img.array.shape == (2, 25, 32)
+        assert img.array.shape == (2, 24, 31)
 
         img = dst.feature(feat, out_dtype="uint8")
         assert img.count == 2
@@ -291,7 +291,7 @@ def test_xarray_reader():
         assert img.count == 1
         assert img.band_names == ["b2"]
         assert img.band_descriptions == ["2022-01-02T00:00:00.000000000"]
-        assert img.array.shape == (1, 25, 32)
+        assert img.array.shape == (1, 24, 31)
 
         img = dst.feature(feat, dst_crs="epsg:3857", indexes=1)
         assert img.count == 1
@@ -703,8 +703,8 @@ def test_xarray_reader_no_dims():
 
         img = dst.part((-160, -80, 160, 80))
         assert img.count == 1
-        assert img.width == 33
-        assert img.height == 33
+        assert img.width == 32
+        assert img.height == 32
         assert img.band_names == ["b1"]
         assert img.band_descriptions == [""]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
@@ -837,6 +837,27 @@ def test_xarray_reader_Y_axis():
 
 def test_compare_readers():
     """Compare XarrayReader and Reader"""
+    # Preview
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            img_xr = src.preview(nodata=0)
+
+    with Reader(COGEO) as src:
+        img_gdal = src.preview(nodata=0)
+
+    assert img_xr.bounds == img_gdal.bounds
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            img_xr = src.preview(nodata=0, dst_crs="epsg:3857")
+
+    with Reader(COGEO) as src:
+        img_gdal = src.preview(nodata=0, dst_crs="epsg:3857")
+
+    assert img_xr.bounds == img_gdal.bounds
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
     # Tile
     with rioxarray.open_rasterio(COGEO) as da:
         with XarrayReader(da) as src:
@@ -851,12 +872,26 @@ def test_compare_readers():
     # Part
     with rioxarray.open_rasterio(COGEO) as da:
         with XarrayReader(da) as src:
-            img_xr = src.part((-160, -80, 160, 80), nodata=0, dst_crs="epsg:3857")
+            bounds = list(src.tms.bounds(1, 1, 1))
+            img_xr = src.part(bounds, nodata=0)
 
     with Reader(COGEO) as src:
-        img_gdal = src.part((-160, -80, 160, 80), nodata=0, dst_crs="epsg:3857")
+        bounds = list(src.tms.bounds(1, 1, 1))
+        img_gdal = src.part(bounds, nodata=0)
 
-    assert img_xr.bounds == img_gdal.bounds
+    assert [round(b, 6) for b in img_xr.bounds] == [round(b, 6) for b in img_gdal.bounds]
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            bounds = list(src.tms.bounds(1, 1, 1))
+            img_xr = src.part(bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20)
+
+    with Reader(COGEO) as src:
+        bounds = list(src.tms.bounds(1, 1, 1))
+        img_gdal = src.part(bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20)
+
+    assert [round(b, 6) for b in img_xr.bounds] == [round(b, 6) for b in img_gdal.bounds]
     numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
 
 
