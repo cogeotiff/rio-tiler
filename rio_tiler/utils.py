@@ -43,6 +43,28 @@ def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, Non
         yield my_list[i : i + chuck_size]
 
 
+def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int]:
+    """Get Output Width/Height based on a max_size and dataset shape."""
+    if max(dataset_height, dataset_width) < max_size:
+        return dataset_height, dataset_width
+
+    ratio = dataset_height / dataset_width
+    if ratio > 1:
+        height = max_size
+        width = math.ceil(height / ratio)
+    else:
+        width = max_size
+        height = math.ceil(width * ratio)
+
+    return height, width
+
+
+def _missing_size(w: Optional[int] = None, h: Optional[int] = None):
+    """Check if one and only one size (width, height) is valid."""
+    iterator = iter([w, h])
+    return any(iterator) and not any(iterator)
+
+
 # Ref: https://stackoverflow.com/posts/73905572
 def _weighted_quantiles(
     values: NDArray[numpy.floating],
