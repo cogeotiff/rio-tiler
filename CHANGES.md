@@ -1,6 +1,11 @@
 
 # Unreleased
 
+# 7.9.0 (2025-10-07)
+
+* refactor XarrayReader.part method to better handle reprojection and re-usability (https://github.com/cogeotiff/rio-tiler/pull/828)
+* move `_get_width_height` and `_missing_size` from `rio_tiler.reader` to `rio_tiler.utils`
+
 # 7.8.1 (2025-06-16)
 
 * apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)
