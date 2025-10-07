@@ -1,5 +1,6 @@
 """tests rio_tiler.io.xarray.XarrayReader"""
 
+import os
 from datetime import datetime
 
 import morecantile
@@ -10,7 +11,28 @@ import xarray
 from rasterio.crs import CRS as rioCRS
 
 from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
-from rio_tiler.io import XarrayReader
+from rio_tiler.io import Reader, XarrayReader
+
+PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
+
+# Simple COG created with
+# arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(2, 33, 35)
+# data = xarray.DataArray(
+#     arr,
+#     dims=("time", "y", "x"),
+#     coords={
+#         "x": numpy.arange(-170, 180, 10),
+#         "y": numpy.arange(85, -80, -5),
+#         "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+#     },
+# )
+# data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+# data.rio.write_crs("epsg:4326", inplace=True)
+
+# ds = data.to_dataset(name="dataset")
+# da = ds["dataset"].sel(time="2022-01-01")
+# da.rio.to_raster("gradient.tif")
+COGEO = os.path.join(PREFIX, "cog_gradient.tif")
 
 
 def test_xarray_reader():
@@ -120,7 +142,7 @@ def test_xarray_reader():
         assert img.count == 1
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000000"]
-        assert img.array.shape == (1, 33, 33)
+        assert img.array.shape == (1, 32, 32)
         assert img.array.dtype == numpy.float32
 
         img = dst.part((-160, -80, 160, 80), out_dtype="uint8")
@@ -131,7 +153,7 @@ def test_xarray_reader():
         assert img.count == 1
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000000"]
-        assert img.array.shape == (1, 32, 34)
+        assert img.array.shape == (1, 29, 33)
 
         img = dst.part((-160, -80, 160, 80), max_size=15, indexes=1)
         assert img.array.shape == (1, 15, 15)
@@ -258,7 +280,7 @@ def test_xarray_reader():
             "2022-01-01T00:00:00.000000000",
             "2022-01-02T00:00:00.000000000",
         ]
-        assert img.array.shape == (2, 25, 32)
+        assert img.array.shape == (2, 24, 31)
 
         img = dst.feature(feat, out_dtype="uint8")
         assert img.count == 2
@@ -268,14 +290,14 @@ def test_xarray_reader():
         assert img.count == 1
         assert img.band_names == ["b2"]
         assert img.band_descriptions == ["2022-01-02T00:00:00.000000000"]
-        assert img.array.shape == (1, 25, 32)
+        assert img.array.shape == (1, 24, 31)
 
         img = dst.feature(feat, dst_crs="epsg:3857", indexes=1)
         assert img.count == 1
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000000"]
         assert img.crs == "epsg:3857"
-        assert img.array.shape == (1, 20, 35)
+        assert img.array.shape == (1, 19, 34)
 
         img = dst.feature(feat, max_size=15, indexes=1)
         assert img.array.shape == (1, 12, 15)
@@ -680,8 +702,8 @@ def test_xarray_reader_no_dims():
 
         img = dst.part((-160, -80, 160, 80))
         assert img.count == 1
-        assert img.width == 33
-        assert img.height == 33
+        assert img.width == 32
+        assert img.height == 32
         assert img.band_names == ["b1"]
         assert img.band_descriptions == [""]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
@@ -810,3 +832,122 @@ def test_xarray_reader_Y_axis():
             y = xy[1]
             pt = dst.point(x, y)
             assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
+
+
+def test_compare_readers():
+    """Compare XarrayReader and Reader"""
+    # Preview
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            img_xr = src.preview(nodata=0)
+
+    with Reader(COGEO) as src:
+        img_gdal = src.preview(nodata=0)
+
+    assert img_xr.bounds == img_gdal.bounds
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            img_xr = src.preview(nodata=0, dst_crs="epsg:3857")
+
+    with Reader(COGEO) as src:
+        img_gdal = src.preview(nodata=0, dst_crs="epsg:3857")
+
+    assert img_xr.bounds == img_gdal.bounds
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
+    # Tile
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            img_xr = src.tile(1, 1, 1, nodata=0)
+
+    with Reader(COGEO) as src:
+        img_gdal = src.tile(1, 1, 1, nodata=0)
+
+    assert img_xr.bounds == img_gdal.bounds
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
+    # Part
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            bounds = list(src.tms.bounds(1, 1, 1))
+            img_xr = src.part(bounds, nodata=0)
+
+    with Reader(COGEO) as src:
+        bounds = list(src.tms.bounds(1, 1, 1))
+        img_gdal = src.part(bounds, nodata=0)
+
+    assert [round(b, 6) for b in img_xr.bounds] == [round(b, 6) for b in img_gdal.bounds]
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
+    with rioxarray.open_rasterio(COGEO) as da:
+        with XarrayReader(da) as src:
+            bounds = list(src.tms.bounds(1, 1, 1))
+            img_xr = src.part(bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20)
+
+    with Reader(COGEO) as src:
+        bounds = list(src.tms.bounds(1, 1, 1))
+        img_gdal = src.part(bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20)
+
+    assert [round(b, 6) for b in img_xr.bounds] == [round(b, 6) for b in img_gdal.bounds]
+    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+
+
+def test_xarray_partial_read():
+    """test XarrayReader equality for part and tile methods."""
+    arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(2, 33, 35)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-170, 180, 10),
+            "y": numpy.arange(-80, 85, 5),
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data) as dst:
+        # Tests for auto_expand
+        # Test that a high-zoom tile will error with auto_expand=False
+        tms = morecantile.tms.get("WebMercatorQuad")
+        zoom = 10
+        x, y = tms.xy(-170, -80)
+        tile = tms._tile(x, y, zoom)
+        bounds = tms.xy_bounds(tile)
+
+        img = dst.tile(tile.x, tile.y, zoom, indexes=1)
+        assert img.crs == "epsg:3857"
+        assert img.bounds == bounds
+
+        img_part = dst.part(
+            bounds,
+            bounds_crs="epsg:3857",
+            dst_crs="epsg:3857",
+            indexes=1,
+            width=256,
+            height=256,
+        )
+        assert img_part.crs == "epsg:3857"
+        assert img_part.bounds == bounds
+        numpy.testing.assert_array_equal(img.array, img_part.array)
+
+        xmin, ymin, xmax, ymax = bounds
+        geom = {
+            "type": "Polygon",
+            "coordinates": [
+                [(xmin, ymin), (xmax, ymin), (xmax, ymax), (xmin, ymax), (xmin, ymin)]
+            ],
+        }
+        img_feature = dst.feature(
+            geom,
+            dst_crs="epsg:3857",
+            shape_crs="epsg:3857",
+            indexes=1,
+            width=256,
+            height=256,
+        )
+        assert img_feature.crs == "epsg:3857"
+        assert img_feature.bounds == bounds
+        numpy.testing.assert_array_equal(img.array, img_feature.array)
