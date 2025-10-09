@@ -378,23 +378,14 @@ class XarrayReader(BaseReader):
             )
             src_bounds[1] = max(src_bounds[1], -85.06)
             src_bounds[3] = min(src_bounds[3], 85.06)
-            w = windows.from_bounds(*src_bounds, transform=src_transform)
-            src_height = round(w.height)
-            src_width = round(w.width)
 
-        # Specific FIX when bounds and transform are inverted
-        # See: https://github.com/US-GHG-Center/veda-config-ghg/pull/333
-        elif (
-            self.crs == WGS84_CRS
-            and dst_crs == WEB_MERCATOR_CRS
-            and (src_bounds[1] > 85.06 or src_bounds[3] < -85.06)
-        ):
-            warnings.warn(
-                "Adjusting dataset latitudes to avoid re-projection overflow",
-                UserWarning,
-            )
-            src_bounds[1] = min(src_bounds[1], 85.06)
-            src_bounds[3] = max(src_bounds[3], -85.06)
+            # North->South
+            if src_transform.e > 0:
+                src_bounds = [src_bounds[0], src_bounds[3], src_bounds[2], src_bounds[1]]
+            # West->East
+            if src_transform.a < 0:
+                src_bounds = [src_bounds[2], src_bounds[1], src_bounds[1], src_bounds[3]]
+
             w = windows.from_bounds(*src_bounds, transform=src_transform)
             src_height = round(w.height)
             src_width = round(w.width)
@@ -496,12 +487,55 @@ class XarrayReader(BaseReader):
             da = da.rio.write_nodata(nodata)
 
         if dst_crs and dst_crs != self.crs:
+            src_width = da.rio.width
+            src_height = da.rio.height
+            src_bounds = list(da.rio.bounds())
+            src_transform = da.rio.transform()
+
+            # Fix for https://github.com/cogeotiff/rio-tiler/issues/654
+            #
+            # When using `calculate_default_transform` with dataset
+            # which span at high/low latitude outside the area_of_use
+            # of the WebMercator projection, we `crop` the dataset
+            # to get the transform (resolution).
+            #
+            # Note: Should be handled in gdal 3.8 directly
+            # https://github.com/OSGeo/gdal/pull/8775
+            if (
+                self.crs == WGS84_CRS
+                and dst_crs == WEB_MERCATOR_CRS
+                and (src_bounds[1] < -85.06 or src_bounds[3] > 85.06)
+            ):
+                warnings.warn(
+                    "Adjusting dataset latitudes to avoid re-projection overflow",
+                    UserWarning,
+                )
+                src_bounds[1] = max(src_bounds[1], -85.06)
+                src_bounds[3] = min(src_bounds[3], 85.06)
+
+                # North->South
+                if src_transform.e > 0:
+                    src_bounds = [
+                        src_bounds[0],
+                        src_bounds[3],
+                        src_bounds[2],
+                        src_bounds[1],
+                    ]
+                # West->East
+                if src_transform.a < 0:
+                    src_bounds = [
+                        src_bounds[2],
+                        src_bounds[1],
+                        src_bounds[1],
+                        src_bounds[3],
+                    ]
+
+                w = windows.from_bounds(*src_bounds, transform=src_transform)
+                src_height = round(w.height)
+                src_width = round(w.width)
+
             dst_transform, w, h = calculate_default_transform(
-                self.crs,
-                dst_crs,
-                da.rio.width,
-                da.rio.height,
-                *da.rio.bounds(),
+                self.crs, dst_crs, src_width, src_height, *src_bounds
             )
             da = da.rio.reproject(
                 dst_crs,
