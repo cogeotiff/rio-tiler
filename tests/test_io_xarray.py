@@ -1006,3 +1006,10 @@ def test_titiler_multidi_issue102():
         ):
             img = dst.preview(indexes=1, dst_crs="epsg:3857")
         assert img.array.shape == (1, 56, 56)
+
+        with pytest.warns(
+            UserWarning,
+            match="Adjusting dataset latitudes to avoid re-projection overflow",
+        ):
+            img = dst.tile(0, 0, 0)
+        assert img.array.shape == (2, 256, 256)

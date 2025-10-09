@@ -96,6 +96,14 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * refactor `XarrayReader.part` method to better handle reprojection and re-usability
 * move `_get_width_height` and `_missing_size` from `rio_tiler.reader` to `rio_tiler.utils`
 
+# 7.9.2 (2025-10-09)
+
+* fix: bad code logic in XarrayReader
+
+# 7.9.1 (2025-10-09)
+
+* fix: better handler inverted (SouthUp) dataset in XarrayReader
+
 # 7.9.0 (2025-10-07)
 
 * refactor XarrayReader.part method to better handle reprojection and re-usability (https://github.com/cogeotiff/rio-tiler/pull/828) **Backported**
