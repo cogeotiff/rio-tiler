@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 7.9.1 (2025-10-09)
+
+* fix: better handler inverted (SouthUp) dataset in XarrayReader
+
 # 7.9.0 (2025-10-07)
 
 * refactor XarrayReader.part method to better handle reprojection and re-usability (https://github.com/cogeotiff/rio-tiler/pull/828)
