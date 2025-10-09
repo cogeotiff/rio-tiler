@@ -342,80 +342,84 @@ def test_xarray_reader_external_nodata():
     data.rio.write_crs("epsg:4326", inplace=True)
     assert data.rio.nodata is None
 
-    with XarrayReader(data) as dst:
-        info = dst.info()
-        assert info.height == 180
-        assert info.width == 360
-        assert info.count == 1
+    with pytest.warns(
+        UserWarning,
+        match="Adjusting dataset latitudes to avoid re-projection overflow",
+    ):
+        with XarrayReader(data) as dst:
+            info = dst.info()
+            assert info.height == 180
+            assert info.width == 360
+            assert info.count == 1
 
-        # TILE
-        img = dst.tile(0, 0, 1)
-        assert img.mask.all()
-        assert img.data[0, 0, 0] == 0
-        assert img.data[0, 100, 100]
-        assert dst.input.rio.nodata is None
+            # TILE
+            img = dst.tile(0, 0, 1)
+            assert img.mask.all()
+            assert img.data[0, 0, 0] == 0
+            assert img.data[0, 100, 100]
+            assert dst.input.rio.nodata is None
 
-        # overwrite the nodata value to 0
-        img = dst.tile(0, 0, 1, nodata=0)
-        assert not img.mask.all()  # not all the mask value are set to 255
-        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
-        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
-        assert dst.input.rio.nodata is None
+            # overwrite the nodata value to 0
+            img = dst.tile(0, 0, 1, nodata=0)
+            assert not img.mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+            assert dst.input.rio.nodata is None
 
-        # PART
-        img = dst.part((-160, -80, 160, 80))
-        assert img.mask.all()
-        assert img.data[0, 0, 0] == 0
-        assert img.data[0, 100, 100]
-        assert dst.input.rio.nodata is None
+            # PART
+            img = dst.part((-160, -80, 160, 80))
+            assert img.mask.all()
+            assert img.data[0, 0, 0] == 0
+            assert img.data[0, 100, 100]
+            assert dst.input.rio.nodata is None
 
-        # overwrite the nodata value to 0
-        img = dst.part((-160, -80, 160, 80), nodata=0)
-        assert not img.mask.all()  # not all the mask value are set to 255
-        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
-        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+            # overwrite the nodata value to 0
+            img = dst.part((-160, -80, 160, 80), nodata=0)
+            assert not img.mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
 
-        # POINT
-        pt = dst.point(-179, 89)
-        assert pt.mask[0] == 255
-        assert dst.input.rio.nodata is None
+            # POINT
+            pt = dst.point(-179, 89)
+            assert pt.mask[0] == 255
+            assert dst.input.rio.nodata is None
 
-        # overwrite the nodata value to 0
-        pt = dst.point(-179, 89, nodata=0)
-        assert pt.count == 1
-        assert pt.mask[0] == 0
-        assert dst.input.rio.nodata is None
+            # overwrite the nodata value to 0
+            pt = dst.point(-179, 89, nodata=0)
+            assert pt.count == 1
+            assert pt.mask[0] == 0
+            assert dst.input.rio.nodata is None
 
-        feat = {
-            "type": "Feature",
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
-                    [
-                        [-180.0, 0],
-                        [-180.0, 85.0511287798066],
-                        [0, 85.0511287798066],
-                        [0, 6.023673383202919e-13],
-                        [-180.0, 0],
-                    ]
-                ],
-            },
-            "properties": {"title": "XYZ tile (0, 0, 1)"},
-        }
+            feat = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [-180.0, 0],
+                            [-180.0, 85.0511287798066],
+                            [0, 85.0511287798066],
+                            [0, 6.023673383202919e-13],
+                            [-180.0, 0],
+                        ]
+                    ],
+                },
+                "properties": {"title": "XYZ tile (0, 0, 1)"},
+            }
 
-        # FEATURE
-        img = dst.feature(feat)
-        assert img.mask.all()
-        assert img.data[0, 0, 0] == 0
-        assert img.data[0, 50, 100]
-        assert dst.input.rio.nodata is None
+            # FEATURE
+            img = dst.feature(feat)
+            assert img.mask.all()
+            assert img.data[0, 0, 0] == 0
+            assert img.data[0, 50, 100]
+            assert dst.input.rio.nodata is None
 
-        # overwrite the nodata value to 0
-        img = dst.feature(feat, nodata=0)
-        assert not img.mask.all()  # not all the mask value are set to 255
-        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
-        assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
-        assert dst.input.rio.nodata is None
+            # overwrite the nodata value to 0
+            img = dst.feature(feat, nodata=0)
+            assert not img.mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
+            assert dst.input.rio.nodata is None
 
 
 def test_xarray_reader_internal_nodata():
@@ -440,46 +444,50 @@ def test_xarray_reader_internal_nodata():
     data.rio.write_crs("epsg:4326", inplace=True)
     assert data.rio.nodata is not None
 
-    with XarrayReader(data) as dst:
-        # TILE
-        img = dst.tile(0, 0, 1)
-        assert not img.mask.all()  # not all the mask value are set to 255
-        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
-        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+    with pytest.warns(
+        UserWarning,
+        match="Adjusting dataset latitudes to avoid re-projection overflow",
+    ):
+        with XarrayReader(data) as dst:
+            # TILE
+            img = dst.tile(0, 0, 1)
+            assert not img.mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
 
-        # PART
-        img = dst.part((-160, -80, 160, 80))
-        assert not img.mask.all()  # not all the mask value are set to 255
-        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
-        assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+            # PART
+            img = dst.part((-160, -80, 160, 80))
+            assert not img.mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
 
-        # POINT
-        pt = dst.point(-179, 89)
-        assert pt.count == 1
-        assert pt.mask[0] == 0
+            # POINT
+            pt = dst.point(-179, 89)
+            assert pt.count == 1
+            assert pt.mask[0] == 0
 
-        feat = {
-            "type": "Feature",
-            "geometry": {
-                "type": "Polygon",
-                "coordinates": [
-                    [
-                        [-180.0, 0],
-                        [-180.0, 85.0511287798066],
-                        [0, 85.0511287798066],
-                        [0, 6.023673383202919e-13],
-                        [-180.0, 0],
-                    ]
-                ],
-            },
-            "properties": {"title": "XYZ tile (0, 0, 1)"},
-        }
+            feat = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [-180.0, 0],
+                            [-180.0, 85.0511287798066],
+                            [0, 85.0511287798066],
+                            [0, 6.023673383202919e-13],
+                            [-180.0, 0],
+                        ]
+                    ],
+                },
+                "properties": {"title": "XYZ tile (0, 0, 1)"},
+            }
 
-        # FEATURE
-        img = dst.feature(feat)
-        assert not img.mask.all()  # not all the mask value are set to 255
-        assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
-        assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
+            # FEATURE
+            img = dst.feature(feat)
+            assert not img.mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
 
 
 def test_xarray_reader_resampling():
@@ -799,62 +807,76 @@ def test_xarray_reader_Y_axis():
 
 def test_compare_readers():
     """Compare XarrayReader and Reader"""
-    # Preview
-    with rioxarray.open_rasterio(COGEO) as da:
-        with XarrayReader(da) as src:
-            img_xr = src.preview(nodata=0)
+    with pytest.warns(
+        UserWarning,
+        match="Adjusting dataset latitudes to avoid re-projection overflow",
+    ):
+        # Preview
+        with rioxarray.open_rasterio(COGEO) as da:
+            with XarrayReader(da) as src:
+                img_xr = src.preview(nodata=0)
 
-    with Reader(COGEO) as src:
-        img_gdal = src.preview(nodata=0)
+        with Reader(COGEO) as src:
+            img_gdal = src.preview(nodata=0)
 
-    assert img_xr.bounds == img_gdal.bounds
-    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+        assert img_xr.bounds == img_gdal.bounds
+        numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
 
-    with rioxarray.open_rasterio(COGEO) as da:
-        with XarrayReader(da) as src:
-            img_xr = src.preview(nodata=0, dst_crs="epsg:3857")
+        # We cannot compare XarrayReader/Reader because in XarrayReader
+        # We apply lon/lat correction
+        # with rioxarray.open_rasterio(COGEO) as da:
+        #     with XarrayReader(da) as src:
+        #         img_xr = src.preview(nodata=0, dst_crs="epsg:3857")
 
-    with Reader(COGEO) as src:
-        img_gdal = src.preview(nodata=0, dst_crs="epsg:3857")
+        # with Reader(COGEO) as src:
+        #     img_gdal = src.preview(nodata=0, dst_crs="epsg:3857")
 
-    assert img_xr.bounds == img_gdal.bounds
-    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+        # assert img_xr.bounds == img_gdal.bounds
+        # numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
 
-    # Tile
-    with rioxarray.open_rasterio(COGEO) as da:
-        with XarrayReader(da) as src:
-            img_xr = src.tile(1, 1, 1, nodata=0)
+        # Tile
+        with rioxarray.open_rasterio(COGEO) as da:
+            with XarrayReader(da) as src:
+                img_xr = src.tile(1, 1, 1, nodata=0)
 
-    with Reader(COGEO) as src:
-        img_gdal = src.tile(1, 1, 1, nodata=0)
+        with Reader(COGEO) as src:
+            img_gdal = src.tile(1, 1, 1, nodata=0)
 
-    assert img_xr.bounds == img_gdal.bounds
-    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+        assert img_xr.bounds == img_gdal.bounds
+        numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
 
-    # Part
-    with rioxarray.open_rasterio(COGEO) as da:
-        with XarrayReader(da) as src:
+        # Part
+        with rioxarray.open_rasterio(COGEO) as da:
+            with XarrayReader(da) as src:
+                bounds = list(src.tms.bounds(1, 1, 1))
+                img_xr = src.part(bounds, nodata=0)
+
+        with Reader(COGEO) as src:
             bounds = list(src.tms.bounds(1, 1, 1))
-            img_xr = src.part(bounds, nodata=0)
+            img_gdal = src.part(bounds, nodata=0)
 
-    with Reader(COGEO) as src:
-        bounds = list(src.tms.bounds(1, 1, 1))
-        img_gdal = src.part(bounds, nodata=0)
+        assert [round(b, 6) for b in img_xr.bounds] == [
+            round(b, 6) for b in img_gdal.bounds
+        ]
+        numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
 
-    assert [round(b, 6) for b in img_xr.bounds] == [round(b, 6) for b in img_gdal.bounds]
-    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+        with rioxarray.open_rasterio(COGEO) as da:
+            with XarrayReader(da) as src:
+                bounds = list(src.tms.bounds(1, 1, 1))
+                img_xr = src.part(
+                    bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20
+                )
 
-    with rioxarray.open_rasterio(COGEO) as da:
-        with XarrayReader(da) as src:
+        with Reader(COGEO) as src:
             bounds = list(src.tms.bounds(1, 1, 1))
-            img_xr = src.part(bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20)
+            img_gdal = src.part(
+                bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20
+            )
 
-    with Reader(COGEO) as src:
-        bounds = list(src.tms.bounds(1, 1, 1))
-        img_gdal = src.part(bounds, nodata=0, dst_crs="epsg:3857", width=20, height=20)
-
-    assert [round(b, 6) for b in img_xr.bounds] == [round(b, 6) for b in img_gdal.bounds]
-    numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
+        assert [round(b, 6) for b in img_xr.bounds] == [
+            round(b, 6) for b in img_gdal.bounds
+        ]
+        numpy.testing.assert_array_equal(img_xr.array, img_gdal.array)
 
 
 def test_xarray_partial_read():
@@ -914,3 +936,37 @@ def test_xarray_partial_read():
         assert img_feature.crs == "epsg:3857"
         assert img_feature.bounds == bounds
         numpy.testing.assert_array_equal(img.array, img_feature.array)
+
+
+def test_titiler_multidi_issue102():
+    """Better handle Inverted transform (SouthUp)"""
+    # replicate zarr_store_v3.zarr from
+    # https://github.com/developmentseed/titiler-multidim/tree/support-icechunk/tests/fixtures/zarr_store_v3.zarr
+    arr = numpy.arange(0.0, 72 * 36 * 2, dtype="float32").reshape(2, 36, 72)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.linspace(-177.5, 177.5, 72),
+            "y": numpy.linspace(-87.5, 87.5, 36),
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+    with XarrayReader(data) as dst:
+        assert dst.bounds == (-180.0, -90.0, 180.0, 90.0)
+        # Check inverted transform
+        # For NorthUp dataset it will be (5.0, -5.0)
+        assert (dst.transform.a, dst.transform.e) == (5.0, 5.0)
+        img = dst.preview(indexes=1)
+        assert img.array.shape == (1, 36, 72)
+        assert img.bounds == (-180.0, -90.0, 180.0, 90.0)
+
+        with pytest.warns(
+            UserWarning,
+            match="Adjusting dataset latitudes to avoid re-projection overflow",
+        ):
+            img = dst.preview(indexes=1, dst_crs="epsg:3857")
+        assert img.array.shape == (1, 56, 56)
