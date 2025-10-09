@@ -373,9 +373,6 @@ class XarrayReader(BaseReader):
             )
             src_bounds[1] = max(src_bounds[1], -85.06)
             src_bounds[3] = min(src_bounds[3], 85.06)
-            w = windows.from_bounds(*src_bounds, transform=src_transform)
-            src_height = round(w.height)
-            src_width = round(w.width)
 
             # South->North
             if src_transform.e > 0:
@@ -383,6 +380,10 @@ class XarrayReader(BaseReader):
             # West->East
             if src_transform.a < 0:
                 src_bounds = [src_bounds[2], src_bounds[1], src_bounds[1], src_bounds[3]]
+
+            w = windows.from_bounds(*src_bounds, transform=src_transform)
+            src_height = round(w.height)
+            src_width = round(w.width)
 
         if dst_crs != self.crs:
             # transform of the reprojected dataset

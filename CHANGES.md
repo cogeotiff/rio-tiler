@@ -1,6 +1,11 @@
 
 # Unreleased
 
+# 7.9.2 (2025-10-09)
+
+* fix: bad code logic in XarrayReader
+
+
 # 7.9.1 (2025-10-09)
 
 * fix: better handler inverted (SouthUp) dataset in XarrayReader
