@@ -364,7 +364,7 @@ class XarrayReader(BaseReader):
         pixel_count = reduce(lambda x, y: x * y, da.shape)
         if pixel_count > MAX_PIXELS:
             raise MaxPixelsError(
-                f"Maximum pixel limit reached, cannot put dataarray of shape {da.shape} in memory"
+                f"Maximum pixel limit {MAX_PIXELS} reached, trying to put DataArray of {da.shape} in memory."
             )
 
         src_width = da.rio.width
@@ -500,7 +500,7 @@ class XarrayReader(BaseReader):
         pixel_count = reduce(lambda x, y: x * y, da.shape)
         if pixel_count > MAX_PIXELS:
             raise MaxPixelsError(
-                f"Maximum pixel limit reached, cannot put dataarray of shape {da.shape} in memory"
+                f"Maximum pixel limit {MAX_PIXELS} reached, trying to put DataArray of {da.shape} in memory."
             )
 
         if nodata is not None:
