@@ -95,3 +95,7 @@ class InvalidGeographicBounds(RioTilerError):
 
 class RioTilerExperimentalWarning(UserWarning):
     """A rio-tiler specific experimental functionality warning."""
+
+
+class MaxPixelsError(RioTilerError):
+    """Trying to load to many pixels in memory."""

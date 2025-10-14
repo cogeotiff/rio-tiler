@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 import math
+import os
 import warnings
+from functools import reduce
 from typing import Any, Dict, List, Tuple
 
 import attr
@@ -23,6 +25,7 @@ from rasterio.warp import transform_bounds, transform_geom
 from rio_tiler.constants import WEB_MERCATOR_CRS, WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     InvalidGeographicBounds,
+    MaxPixelsError,
     MissingCRS,
     PointOutsideBounds,
     TileOutsideBounds,
@@ -48,6 +51,11 @@ try:
     import rioxarray
 except ImportError:  # pragma: nocover
     rioxarray = None  # type: ignore
+
+
+MAX_PIXELS = os.environ.get(
+    "RIO_TILER_MAX_PIXELS", 100_000_000
+)  # 100 million pixels default
 
 
 @attr.s
@@ -353,6 +361,12 @@ class XarrayReader(BaseReader):
             auto_expand=auto_expand,
         )
 
+        pixel_count = reduce(lambda x, y: x * y, da.shape)
+        if pixel_count > MAX_PIXELS:
+            raise MaxPixelsError(
+                f"Maximum pixel limit reached, cannot put dataarray of shape {da.shape} in memory"
+            )
+
         src_width = da.rio.width
         src_height = da.rio.height
         src_bounds = list(da.rio.bounds())
@@ -446,7 +460,7 @@ class XarrayReader(BaseReader):
             nodata=da.rio.nodata,
         )
 
-    def preview(
+    def preview(  # noqa: C901
         self,
         max_size: int = 1024,
         height: int | None = None,
@@ -482,6 +496,12 @@ class XarrayReader(BaseReader):
             max_size = None
 
         da, band_names, band_descriptions = self._sel_indexes(indexes)
+
+        pixel_count = reduce(lambda x, y: x * y, da.shape)
+        if pixel_count > MAX_PIXELS:
+            raise MaxPixelsError(
+                f"Maximum pixel limit reached, cannot put dataarray of shape {da.shape} in memory"
+            )
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
