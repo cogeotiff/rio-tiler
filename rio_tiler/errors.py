@@ -97,5 +97,5 @@ class RioTilerExperimentalWarning(UserWarning):
     """A rio-tiler specific experimental functionality warning."""
 
 
-class MaxPixelsError(RioTilerError):
+class MaxArraySizeError(RioTilerError):
     """Trying to load to many pixels in memory."""

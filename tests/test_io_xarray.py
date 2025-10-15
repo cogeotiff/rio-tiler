@@ -11,7 +11,7 @@ import rioxarray
 import xarray
 from rasterio.crs import CRS as rioCRS
 
-from rio_tiler.errors import InvalidGeographicBounds, MaxPixelsError, MissingCRS
+from rio_tiler.errors import InvalidGeographicBounds, MaxArraySizeError, MissingCRS
 from rio_tiler.io import Reader, XarrayReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -1016,10 +1016,12 @@ def test_titiler_multidi_issue102():
         assert img.array.shape == (2, 256, 256)
 
 
-@patch("rio_tiler.io.xarray.MAX_PIXELS", 1000)
+@patch("rio_tiler.io.xarray.MAX_ARRAY_SIZE", 100000)
 def test_max_pixels():
     """Should raise MaxPixelsError when trying to put too many pixels in memory."""
-    arr = numpy.arange(0.0, 1000 * 500 * 3, dtype="float32").reshape(3, 500, 1000)
+    arr = numpy.arange(0.0, 1000 * 500 * 3, dtype="float32").reshape(
+        3, 500, 1000
+    )  # 6000000 bytes
     data = xarray.DataArray(
         arr,
         dims=("time", "y", "x"),
@@ -1034,10 +1036,10 @@ def test_max_pixels():
     data.rio.write_crs("epsg:4326", inplace=True)
 
     with XarrayReader(data) as dst:
-        with pytest.raises(MaxPixelsError):
+        with pytest.raises(MaxArraySizeError):
             _ = dst.preview()
 
-        with pytest.raises(MaxPixelsError):
+        with pytest.raises(MaxArraySizeError):
             _ = dst.tile(0, 0, 0)
 
         # Should not raise error when using a small area
