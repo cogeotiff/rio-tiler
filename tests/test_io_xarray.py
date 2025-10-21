@@ -2,6 +2,7 @@
 
 import os
 from datetime import datetime
+from unittest.mock import patch
 
 import morecantile
 import numpy
@@ -10,7 +11,7 @@ import rioxarray
 import xarray
 from rasterio.crs import CRS as rioCRS
 
-from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
+from rio_tiler.errors import InvalidGeographicBounds, MaxArraySizeError, MissingCRS
 from rio_tiler.io import Reader, XarrayReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -1013,3 +1014,34 @@ def test_titiler_multidi_issue102():
         ):
             img = dst.tile(0, 0, 0)
         assert img.array.shape == (2, 256, 256)
+
+
+@patch("rio_tiler.io.xarray.MAX_ARRAY_SIZE", 100000)
+def test_max_pixels():
+    """Should raise MaxPixelsError when trying to put too many pixels in memory."""
+    arr = numpy.arange(0.0, 1000 * 500 * 3, dtype="float32").reshape(
+        3, 500, 1000
+    )  # 6000000 bytes
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.linspace(-177.5, 177.5, 1000),
+            "y": numpy.linspace(87.5, -87.5, 500),
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2), datetime(2022, 1, 3)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    with XarrayReader(data) as dst:
+        with pytest.raises(MaxArraySizeError):
+            _ = dst.preview()
+
+        with pytest.raises(MaxArraySizeError):
+            _ = dst.tile(0, 0, 0)
+
+        # Should not raise error when using a small area
+        img = dst.tile(0, 0, 5)
+        assert img.array.shape == (3, 256, 256)
