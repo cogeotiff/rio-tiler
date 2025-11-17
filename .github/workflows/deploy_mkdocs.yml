@@ -27,4 +27,4 @@ jobs:
           enable-cache: true
 
       - name: Deploy docs
-        run: run: uv run --group docs mkdocs gh-deploy --force -f docs/mkdocs.yml
+        run: uv run --group docs mkdocs gh-deploy --force -f docs/mkdocs.yml
