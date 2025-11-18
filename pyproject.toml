@@ -31,6 +31,7 @@ dependencies = [
     "color-operations",
     "typing-extensions",
 ]
+
 [dependency-groups]
 dev = [
     "pytest",
