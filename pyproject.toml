@@ -31,11 +31,11 @@ dependencies = [
     "color-operations",
     "typing-extensions",
 ]
-
-[project.optional-dependencies]
-test = [
+[dependency-groups]
+dev = [
     "pytest",
     "pytest-cov",
+    "pytest-benchmark",
     # XarrayReader
     "xarray",
     "rioxarray",
@@ -48,22 +48,29 @@ test = [
     "vsifile>=0.2",
     "zarr~=3.0",
     "obstore",
-]
-
-benchmark = [
-    "pytest",
-    "pytest-benchmark",
-]
-
-tilebench = [
-    "pytest",
     "tilebench",
-]
-
-dev = [
     "pre-commit",
     "bump-my-version",
 ]
+
+performance = [
+    "pytest-benchmark",
+    "tilebench",
+]
+
+docs = [
+    "mkdocs>=1.4.3",
+    "mkdocs-jupyter>=0.24.5",
+    "mkdocs-material[imaging]>=9.5",
+    "griffe-inherited-docstrings>=1.0.0",
+    "mkdocstrings[python]>=0.25.1",
+    "pygments",
+]
+deploy = [
+    "hatch",
+]
+
+[project.optional-dependencies]
 s3 = [
     "boto3",
 ]
@@ -75,14 +82,6 @@ zarr = [
     "zarr~=3.0",
     "obstore",
 ]
-docs = [
-    "mkdocs>=1.4.3",
-    "mkdocs-jupyter>=0.24.5",
-    "mkdocs-material[imaging]>=9.5",
-    "griffe-inherited-docstrings>=1.0.0",
-    "mkdocstrings[python]>=0.25.1",
-    "pygments",
-]
 
 [project.urls]
 Homepage = 'https://cogeotiff.github.io/rio-tiler/'
@@ -91,28 +90,18 @@ Issues = "https://github.com/cogeotiff/rio-tiler/issues"
 Source = "https://github.com/cogeotiff/rio-tiler"
 Changelog = "https://cogeotiff.github.io/rio-tiler/release-notes/"
 
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
 
 [tool.hatch.version]
 path = "rio_tiler/__init__.py"
 
 [tool.hatch.build.targets.sdist]
-exclude = [
-  "/tests",
-  "/docs",
-  ".github",
-  ".history",
-  ".bumpversion.cfg",
-  ".flake8",
-  ".gitignore",
-  ".pre-commit-config.yaml",
-  "AUTHORS.txt",
-  "CHANGES.md",
-  "CONTRIBUTING.md",
-]
+only-include = ["rio_tiler/"]
 
-[build-system]
-requires = ["hatchling"]
-build-backend = "hatchling.build"
+[tool.hatch.build.targets.wheel]
+only-include = ["rio_tiler/"]
 
 [tool.coverage.run]
 branch = true
@@ -195,7 +184,6 @@ tag_name = "{new_version}"
 filename = "rio_tiler/__init__.py"
 search = '__version__ = "{current_version}"'
 replace = '__version__ = "{new_version}"'
-
 
 [tool.pytest.ini_options]
 filterwarnings = [

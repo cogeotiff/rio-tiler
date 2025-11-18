@@ -169,17 +169,17 @@ At the low level, `rio-tiler` is *just* a wrapper around the [rasterio](https://
 You can install `rio-tiler` using pip
 
 ```bash
-$ python -m pip install -U pip
-$ python -m pip install -U rio-tiler
+python -m pip install -U pip
+python -m pip install -U rio-tiler
 ```
 
 or install from source:
 
 ```bash
-$ git clone https://github.com/cogeotiff/rio-tiler.git
-$ cd rio-tiler
-$ python -m pip install -U pip
-$ python -m pip install -e .
+git clone https://github.com/cogeotiff/rio-tiler.git
+cd rio-tiler
+python -m pip install -U pip
+python -m pip install -e .
 ```
 
 ## Plugins

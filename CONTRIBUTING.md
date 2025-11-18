@@ -2,25 +2,29 @@
 
 Issues and pull requests are more than welcome.
 
+We recommand using [`uv`](https://docs.astral.sh/uv) as project manager for development.
+
+See https://docs.astral.sh/uv/getting-started/installation/ for installation 
+
 ### dev install
 
 ```bash
 git clone https://github.com/cogeotiff/rio-tiler.git
 cd rio-tiler
-python -m pip install -e ".[test,dev]"
+
+uv sync
 ```
 
 You can then run the tests with the following command:
 
 ```sh
-python -m pytest --cov rio_tiler --cov-report term-missing
+uv run pytest --cov rio_tiler --cov-report term-missing
 ```
 
 ##### Performance tests
 
 ```sh
-python -m pip install -e ".[benchmark]"
-python -m pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min'
+uv run --group performance pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min'
 ```
 
 ### pre-commit
@@ -28,7 +32,7 @@ python -m pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-col
 This repo is set to use `pre-commit` to run *isort*, *flake8*, *pydocstring*, *black* ("uncompromising Python code formatter") and mypy when committing new code.
 
 ```bash
-$ pre-commit install
+uv run pre-commit install
 ```
 
 ### Docs
@@ -36,41 +40,17 @@ $ pre-commit install
 ```bash
 git clone https://github.com/cogeotiff/rio-tiler.git
 cd rio-tiler
-python -m pip install -e .["docs"]
 ```
 
 Hot-reloading docs:
 
 ```bash
-$ mkdocs serve -f docs/mkdocs.yml
+uv run --group docs mkdocs serve -f docs/mkdocs.yml
 ```
 
 To manually deploy docs (note you should never need to do this because Github
 Actions deploys automatically for new commits.):
 
 ```bash
-$ mkdocs gh-deploy -f docs/mkdocs.yml
-```
-
-```bash
-pdocs as_markdown \
-   --output_dir docs/src/api/ \
-   --exclude_source \
-   --overwrite \
-   rio_tiler.colormap \
-   rio_tiler.constants \
-   rio_tiler.errors \
-   rio_tiler.expression \
-   rio_tiler.models \
-   rio_tiler.io.base \
-   rio_tiler.io.rasterio \
-   rio_tiler.io.stac \
-   rio_tiler.io.xarray \
-   rio_tiler.mosaic.methods.base \
-   rio_tiler.mosaic.methods.defaults \
-   rio_tiler.mosaic.reader \
-   rio_tiler.profiles \
-   rio_tiler.reader \
-   rio_tiler.tasks \
-   rio_tiler.utils
+uv run --group docs mkdocs gh-deploy -f docs/mkdocs.yml
 ```
