@@ -16,7 +16,7 @@ from rio_tiler.errors import NoAssetFoundError, PointOutsideBounds
 from rio_tiler.io import BaseReader, MultiBandReader, MultiBaseReader, Reader
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.mosaic import mosaic_reader
-from rio_tiler.tasks import multi_values
+from rio_tiler.tasks import multi_values_list
 from rio_tiler.types import BBox
 from rio_tiler.utils import CRS_to_uri, Timer, _validate_shape_input
 
@@ -61,7 +61,7 @@ class BaseBackend(BaseReader):
     maxzoom: int = attr.ib(init=False)
 
     @abc.abstractmethod
-    def assets_for_tile(self, x: int, y: int, z: int, **kwargs: Any) -> list[str]:
+    def assets_for_tile(self, x: int, y: int, z: int, **kwargs: Any) -> list[Any]:
         """Retrieve assets for tile."""
 
     @abc.abstractmethod
@@ -71,7 +71,7 @@ class BaseBackend(BaseReader):
         lat: float,
         coord_crs: CRS | None = None,
         **kwargs: Any,
-    ) -> list[str]:
+    ) -> list[Any]:
         """Retrieve assets for point."""
 
     @abc.abstractmethod
@@ -83,7 +83,7 @@ class BaseBackend(BaseReader):
         ymax: float,
         coord_crs: CRS | None = None,
         **kwargs,
-    ) -> list[str]:
+    ) -> list[Any]:
         """Retrieve assets for bbox."""
 
     def asset_name(self, asset: Any) -> str:
@@ -104,7 +104,7 @@ class BaseBackend(BaseReader):
         coord_crs: CRS = WGS84_CRS,
         search_options: dict | None = None,
         **kwargs: Any,
-    ) -> list[PointData]:
+    ) -> list[tuple[str, PointData]]:
         """Get Point value from multiple assets."""
         search_options = search_options or {}
         mosaic_assets = self.assets_for_point(
@@ -114,7 +114,7 @@ class BaseBackend(BaseReader):
             raise NoAssetFoundError(f"No assets found for point ({lon},{lat})")
 
         def _reader(
-            asset: str, lon: float, lat: float, coord_crs: CRS, **kwargs
+            asset: Any, lon: float, lat: float, coord_crs: CRS, **kwargs
         ) -> PointData:
             with self.reader(asset, **self.reader_options) as src_dst:
                 return src_dst.point(lon, lat, coord_crs=coord_crs, **kwargs)
@@ -125,9 +125,12 @@ class BaseBackend(BaseReader):
         logger.info(
             f"reading Point for {len(mosaic_assets)} assets with reader: {self.reader}"
         )
-        return list(
-            multi_values(mosaic_assets, _reader, lon, lat, coord_crs, **kwargs).values()
-        )
+        return [
+            (self.asset_name(asset), pt)
+            for asset, pt in multi_values_list(
+                mosaic_assets, _reader, lon, lat, coord_crs, **kwargs
+            )
+        ]
 
     def tile(  # type: ignore
         self,
@@ -147,7 +150,7 @@ class BaseBackend(BaseReader):
         if not mosaic_assets:
             raise NoAssetFoundError(f"No assets found for tile {z}-{x}-{y}")
 
-        def _reader(asset: str, x: int, y: int, z: int, **kwargs: Any) -> ImageData:
+        def _reader(asset: Any, x: int, y: int, z: int, **kwargs: Any) -> ImageData:
             with self.reader(asset, tms=self.tms, **self.reader_options) as src_dst:
                 return src_dst.tile(x, y, z, **kwargs)
 
@@ -188,7 +191,7 @@ class BaseBackend(BaseReader):
         if not mosaic_assets:
             raise NoAssetFoundError("No assets found for bbox input")
 
-        def _reader(asset: str, bbox: BBox, bounds_crs: CRS, **kwargs: Any) -> ImageData:
+        def _reader(asset: Any, bbox: BBox, bounds_crs: CRS, **kwargs: Any) -> ImageData:
             with self.reader(asset, **self.reader_options) as src_dst:
                 return src_dst.part(bbox, bounds_crs=bounds_crs, **kwargs)
 

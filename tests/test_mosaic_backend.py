@@ -10,6 +10,7 @@ from rasterio.crs import CRS
 
 from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.io import BaseReader, MultiBandReader, MultiBaseReader, Reader
+from rio_tiler.models import PointData
 from rio_tiler.mosaic.backend import BaseBackend
 from rio_tiler.mosaic.methods import defaults
 from rio_tiler.types import BBox
@@ -128,6 +129,8 @@ def test_backend():
         lon, lat = -73.69990294755982, 45.49950291143219
         point_values = backend.point(lon, lat, coord_crs=CRS.from_epsg(4326))
         assert len(point_values) == 2
+        assert isinstance(point_values[0][0], str)
+        assert isinstance(point_values[0][1], PointData)
 
         feat = {
             "type": "Polygon",
