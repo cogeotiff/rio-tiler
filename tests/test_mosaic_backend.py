@@ -103,7 +103,7 @@ def test_backend():
 
         img, assets_used = backend.tile(x, y, z, pixel_selection=defaults.MeanMethod)
         assert img.array.shape == (3, 256, 256)
-        assert set(assets_used) == set(asset1, asset2)
+        assert set(assets_used) == {asset1, asset2}
         assert "timings" in img.metadata
         assert img.metadata["timings"][0][0] == "search"
         assert img.metadata["timings"][1][0] == "mosaicking"
@@ -120,7 +120,7 @@ def test_backend():
             )
         assert img.crs == CRS.from_epsg(4326)
         assert img.array.shape == (3, 147, 211)
-        assert set(assets_used) == set(asset1, asset2)
+        assert set(assets_used) == {asset1, asset2}
         assert "timings" in img.metadata
         assert img.metadata["timings"][0][0] == "search"
         assert img.metadata["timings"][1][0] == "mosaicking"
@@ -150,7 +150,7 @@ def test_backend():
         )
         assert img.crs == CRS.from_epsg(4326)
         assert img.array.shape == (3, 147, 211)
-        assert set(assets_used) == set(asset1, asset2)
+        assert set(assets_used) == {asset1, asset2}
         assert "timings" in img.metadata
         assert img.metadata["timings"][0][0] == "search"
         assert img.metadata["timings"][1][0] == "mosaicking"
