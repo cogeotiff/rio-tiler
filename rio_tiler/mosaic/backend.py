@@ -209,7 +209,7 @@ class BaseBackend(BaseReader):
         self,
         shape: dict,
         shape_crs: CRS = WGS84_CRS,
-        get_asset_options: dict | None = None,
+        search_options: dict | None = None,
         **kwargs: Any,
     ) -> Tuple[ImageData, List[str]]:
         """Create an Image from multiple assets for a GeoJSON feature."""
@@ -219,7 +219,7 @@ class BaseBackend(BaseReader):
         img, asset_used = self.part(
             bbox,
             bounds_crs=shape_crs,
-            get_asset_options=get_asset_options,
+            search_options=search_options,
             **kwargs,
         )
         img.array.mask = geometry_mask([shape], (img.height, img.width), img.transform)
