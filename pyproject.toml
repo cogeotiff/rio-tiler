@@ -24,7 +24,7 @@ dependencies = [
     "httpx",
     "numexpr",
     "numpy",
-    "morecantile>=5.0,<7.0",
+    "morecantile>=5.0,<8.0",
     "pydantic~=2.0",
     "pystac>=1.9,<2.0",
     "rasterio>=1.4.0",
@@ -44,7 +44,7 @@ dev = [
     # S3
     "boto3",
     # Some tests will fail with 5.0
-    "morecantile>=6.0,<7.0",
+    "morecantile>=6.0,<8.0",
     # Experimental
     "vsifile>=0.2",
     "zarr~=3.0",

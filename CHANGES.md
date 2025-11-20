@@ -97,6 +97,7 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * move `_get_width_height` and `_missing_size` from `rio_tiler.reader` to `rio_tiler.utils`
 * add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable.
 * add Mosaic Backend abstract base class
+* update morecantile requirements to `>=5.0,<8.0`
 
 # 7.9.2 (2025-10-09)
 
