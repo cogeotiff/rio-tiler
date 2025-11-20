@@ -1,7 +1,7 @@
 
 # Unreleased
 
-# 8.0.0
+# 8.0.0 (2025-11-20)
 
 * remove python 3.9 and 3.10 support **breaking change**
 
