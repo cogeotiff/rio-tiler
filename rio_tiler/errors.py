@@ -99,3 +99,7 @@ class RioTilerExperimentalWarning(UserWarning):
 
 class MaxArraySizeError(RioTilerError):
     """Trying to load to many pixels in memory."""
+
+
+class NoAssetFoundError(RioTilerError):
+    """No Asset found"""

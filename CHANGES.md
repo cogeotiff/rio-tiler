@@ -96,6 +96,7 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * refactor `XarrayReader.part` method to better handle reprojection and re-usability
 * move `_get_width_height` and `_missing_size` from `rio_tiler.reader` to `rio_tiler.utils`
 * add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable.
+* add Mosaic Backend abstract base class
 
 # 7.9.2 (2025-10-09)
 
