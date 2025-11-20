@@ -6,7 +6,7 @@ from typing import Any, Type
 
 import attr
 from morecantile import TileMatrixSet
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from rasterio.crs import CRS
 from rasterio.features import bounds as featureBounds
 from rasterio.features import geometry_mask
@@ -28,6 +28,8 @@ class MosaicInfo(BaseModel):
 
     bounds: BBox = Field(default=(-180, -90, 180, 90))
     crs: str
+
+    model_config = ConfigDict(extra="allow")
 
 
 @attr.s
