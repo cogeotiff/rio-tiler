@@ -2,7 +2,7 @@
 
 import abc
 import logging
-from typing import Any, List, Tuple, Type
+from typing import Any, Type
 
 import attr
 from morecantile import TileMatrixSet
@@ -104,7 +104,7 @@ class BaseBackend(BaseReader):
         coord_crs: CRS = WGS84_CRS,
         search_options: dict | None = None,
         **kwargs: Any,
-    ) -> List[PointData]:
+    ) -> list[PointData]:
         """Get Point value from multiple assets."""
         search_options = search_options or {}
         mosaic_assets = self.assets_for_point(
@@ -136,7 +136,7 @@ class BaseBackend(BaseReader):
         z: int,
         search_options: dict | None = None,
         **kwargs: Any,
-    ) -> Tuple[ImageData, List[str]]:
+    ) -> tuple[ImageData, list[str]]:
         """Get Tile from multiple assets."""
         timings = []
         with Timer() as t:
@@ -168,7 +168,7 @@ class BaseBackend(BaseReader):
         bounds_crs: CRS = WGS84_CRS,
         search_options: dict | None = None,
         **kwargs: Any,
-    ) -> Tuple[ImageData, List[str]]:
+    ) -> tuple[ImageData, list[str]]:
         """Create an Image from multiple assets for a bbox."""
         xmin, ymin, xmax, ymax = bbox
         timings = []
@@ -211,7 +211,7 @@ class BaseBackend(BaseReader):
         shape_crs: CRS = WGS84_CRS,
         search_options: dict | None = None,
         **kwargs: Any,
-    ) -> Tuple[ImageData, List[str]]:
+    ) -> tuple[ImageData, list[str]]:
         """Create an Image from multiple assets for a GeoJSON feature."""
         shape = _validate_shape_input(shape)
         bbox = featureBounds(shape)
