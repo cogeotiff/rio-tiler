@@ -34,6 +34,7 @@ nav:
     - Experimental: experimental.md
   - Advanced Topics:
     - Base classes and custom readers: 'advanced/custom_readers.md'
+    - Mosaic Backend: 'advanced/mosaic_backend.md'
     - Read Polygon-shaped regions: 'advanced/feature.md'
     - Statistics: 'advanced/statistics.md'
     - Create a Dynamic Tiler: 'advanced/dynamic_tiler.md'

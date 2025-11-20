@@ -99,3 +99,19 @@ def multi_values(
         asset: val
         for val, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)
     }
+
+
+def multi_values_list(
+    asset_list: Sequence,
+    reader: Callable,
+    *args: Any,
+    threads: int = MAX_THREADS,
+    allowed_exceptions: Optional[Tuple] = None,
+    **kwargs: Any,
+) -> list[tuple[Any, Any]]:
+    """Merge values returned from tasks."""
+    tasks = create_tasks(reader, asset_list, threads, *args, **kwargs)
+    return [
+        (asset, val)
+        for val, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)
+    ]
