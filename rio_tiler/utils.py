@@ -22,7 +22,7 @@ from affine import Affine
 from numpy.typing import NDArray
 from rasterio import windows
 from rasterio.crs import CRS
-from rasterio.dtypes import _gdal_typename
+from rasterio.dtypes import _gdal_typename, dtype_ranges
 from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import is_valid_geom
@@ -583,13 +583,18 @@ def render(
     if len(data.shape) < 3:
         data = numpy.expand_dims(data, axis=0)
 
+    input_range = dtype_ranges[str(data.dtype)]
     if colormap:
         data, alpha = apply_cmap(data, colormap)
+
         # We take both the input mask and the alpha from the colormap
         # if input mask is not provided then we assume output is wanted without alpha band
         # this can be seen as a bug but at the time of writing we assume it's a feature.
         if mask is not None:
-            mask = numpy.bitwise_and(alpha, mask)
+            output_range = dtype_ranges[str(data.dtype)]
+            mask = numpy.where(mask != input_range[0], alpha, output_range[0]).astype(
+                data.dtype
+            )
 
     # WEBP doesn't support 1band dataset so we must hack to create a RGB dataset
     if img_format == "WEBP" and data.shape[0] == 1:

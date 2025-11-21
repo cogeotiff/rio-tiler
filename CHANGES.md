@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 8.0.1 (2025-11-21)
+
+* Better handle mask and alpha band from colormap when rendering images
+
 # 8.0.0 (2025-11-20)
 
 * remove python 3.9 and 3.10 support **breaking change**
