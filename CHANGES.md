@@ -19,7 +19,7 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
     >> ['b1']
 
     print(img.band_descriptions)
-    >> [('b1', 'Green')]
+    >> ['Green']
 ```
 
 * use `b{idx}` as band names in `XarrayReader` result (instead of band descriptions) **breaking change**
