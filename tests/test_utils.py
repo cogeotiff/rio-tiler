@@ -10,6 +10,7 @@ import numpy as np
 import pytest
 import rasterio
 from rasterio.crs import CRS
+from rasterio.dtypes import dtype_ranges
 from rasterio.enums import ColorInterp
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
@@ -745,3 +746,66 @@ def test_get_vrt_transform_world_file(dataset_fixture):
     assert vrt_transform[5] == 6446275.841017159
     assert vrt_width == 501  # 59 without the latitude adjust patch
     assert vrt_height == 181  # 21 without the latitude adjust patch
+
+
+def test_render_partial_alpha():
+    """Mix Alpha Mask and Alpha from ColorMap"""
+    # Partial alpha values
+    cm = {
+        1: (0, 0, 0, 0),
+        500: (100, 100, 100, 50),
+        1000: (255, 255, 255, 255),
+    }
+    data = np.zeros((1, 256, 256), dtype="float32") + 1
+    data[0, 0, 0] = 0
+    data[0, 1:, 1:] = 1
+    data[0, 2:, 2:] = 500
+    data[0, 3:, 3:] = 1000
+
+    minv, maxv = dtype_ranges["float32"]
+    alpha = np.zeros((1, 256, 256), dtype="float32") + maxv
+    alpha[0, 0, 0] = minv
+
+    content = utils.render(
+        data,
+        mask=alpha[0],
+        img_format="PNG",
+        colormap=cm,
+    )
+
+    with MemoryFile(content) as mem:
+        with mem.open() as dst:
+            data_converted = dst.read()
+            assert dst.count == 4
+            assert dst.dtypes == ("uint8", "uint8", "uint8", "uint8")
+            assert data[:, 0, 0].tolist() == [0]
+            assert data_converted[:, 0, 0].tolist() == [
+                0,
+                0,
+                0,
+                0,
+            ]  # Masked from Original Mask | set to UINT8 (0)
+
+            assert data[:, 1, 1].tolist() == [1]
+            assert data_converted[:, 1, 1].tolist() == [
+                0,
+                0,
+                0,
+                0,
+            ]  # masked from CMAP
+
+            assert data[:, 2, 2].tolist() == [500]
+            assert data_converted[:, 2, 2].tolist() == [
+                100,
+                100,
+                100,
+                50,
+            ]  # Partially masked from CMAP
+
+            assert data[:, 3, 3].tolist() == [1000]
+            assert data_converted[:, 3, 3].tolist() == [
+                255,
+                255,
+                255,
+                255,
+            ]  # Non-masked from CMAP
