@@ -3,6 +3,7 @@
 import os
 from io import BytesIO
 from typing import Any, Dict
+from unittest.mock import patch
 
 import morecantile
 import numpy
@@ -33,6 +34,7 @@ from rio_tiler.utils import create_cutline
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 
 COGEO = os.path.join(PREFIX, "cog.tif")
+COGEO_VRT = os.path.join(PREFIX, "cog.vrt")
 COG_WEB = os.path.join(PREFIX, "web.tif")
 COG_CMAP = os.path.join(PREFIX, "cog_cmap.tif")
 COG_TAGS = os.path.join(PREFIX, "cog_tags.tif")
@@ -1195,3 +1197,32 @@ def test_unscale_stats():
 
         assert pytest.approx(img.dataset_statistics[0][0]) == pytest.approx(minb1)
         assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
+
+
+@patch("rio_tiler.io.rasterio.ALLOWED_RASTERIO_SOURCES_HOST", ["*"])
+@patch("rio_tiler.io.rasterio.ALLOWED_RASTERIO_SOURCES_EXT", [".tif"])
+def test_allow_tif():
+    """Test source path filtering."""
+    with Reader(COGEO) as src:
+        assert src.info()
+
+    with pytest.raises(ValueError):
+        with Reader(COGEO_VRT) as src:
+            pass
+
+
+@patch("rio_tiler.io.rasterio.ALLOWED_RASTERIO_SOURCES_HOST", ["eoapi.dev"])
+@patch("rio_tiler.io.rasterio.ALLOWED_RASTERIO_SOURCES_EXT", [".tif"])
+def test_allow_tif_host():
+    """Test source path filtering."""
+    with pytest.raises(ValueError):
+        with Reader(COGEO) as src:
+            assert src.info()
+
+    with pytest.raises(ValueError):
+        with Reader(COGEO_VRT) as src:
+            pass
+
+    with pytest.raises(ValueError):
+        with Reader("https://eoapi.dev/cogeo.vrt") as src:
+            pass
