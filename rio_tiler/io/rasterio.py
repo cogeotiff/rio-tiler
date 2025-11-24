@@ -1,8 +1,11 @@
 """rio_tiler.io.rasterio: rio-tiler reader built on top Rasterio"""
 
 import contextlib
+import os
+import re
 import warnings
 from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from urllib.parse import urlparse
 
 import attr
 import numpy
@@ -42,6 +45,36 @@ from rio_tiler.utils import (
     has_mask_band,
 )
 
+ALLOWED_RASTERIO_SOURCES_HOST = ",".split(
+    os.environ.get("RIO_TILER_ALLOWED_RASTERIO_SOURCES_HOST", "*")
+)
+ALLOWED_RASTERIO_SOURCES_EXT = ",".split(
+    os.environ.get("RIO_TILER_ALLOWED_RASTERIO_EXTENSIONS", "*")
+)
+
+
+def _check_dataset_path(instance, attribute, value):
+    if value:
+        parsed = urlparse(value)
+
+        host = parsed.netloc
+        if "*" not in ALLOWED_RASTERIO_SOURCES_HOST:
+            if not host:
+                raise ValueError(f"File with {host} hostname is not allowed")
+
+            if not any(
+                re.compile(allowed_host).match(host) or host in allowed_host
+                for allowed_host in ALLOWED_RASTERIO_SOURCES_HOST
+            ):
+                raise ValueError(f"File with {host} hostname is not allowed")
+
+        if "*" not in ALLOWED_RASTERIO_SOURCES_EXT:
+            if not any(
+                parsed.path.endswith(allowed_ext)
+                for allowed_ext in ALLOWED_RASTERIO_SOURCES_EXT
+            ):
+                raise ValueError("File's extension is not allowed")
+
 
 @attr.s
 class Reader(BaseReader):
@@ -73,7 +106,7 @@ class Reader(BaseReader):
 
     """
 
-    input: str = attr.ib()
+    input: str = attr.ib(validator=_check_dataset_path)
     dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
         default=None
     )
