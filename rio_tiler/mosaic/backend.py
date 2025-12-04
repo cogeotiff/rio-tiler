@@ -14,7 +14,7 @@ from rasterio.features import geometry_mask
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import NoAssetFoundError, PointOutsideBounds
 from rio_tiler.io import BaseReader, MultiBandReader, MultiBaseReader, Reader
-from rio_tiler.models import ImageData, PointData
+from rio_tiler.models import BandStatistics, ImageData, PointData
 from rio_tiler.mosaic import mosaic_reader
 from rio_tiler.tasks import multi_values_list
 from rio_tiler.types import BBox
@@ -233,10 +233,18 @@ class BaseBackend(BaseReader):
     ############################################################################
     # Not Implemented methods
     # BaseReader required those method to be implemented
-    def statistics(self):
+    def statistics(
+        self,
+        search_options: dict | None = None,
+        **kwargs: Any,
+    ) -> dict[str, BandStatistics]:
         """PlaceHolder for statistics."""
         raise NotImplementedError
 
-    def preview(self):
+    def preview(  # type: ignore
+        self,
+        search_options: dict | None = None,
+        **kwargs: Any,
+    ) -> tuple[ImageData, list[str]]:
         """PlaceHolder for preview."""
         raise NotImplementedError
