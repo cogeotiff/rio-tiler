@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 8.0.2 (2025-12-04)
+
+* add arguments to `rio_tiler.mosaic.BaseBackend`'s `statistics` and `preview` methods to avoid `unexpected keyword argument` errors
+
 # 8.0.1 (2025-11-21)
 
 * Better handle mask and alpha band from colormap when rendering images
