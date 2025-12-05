@@ -352,9 +352,11 @@ class XarrayReader(BaseReader):
         if minv is not None and maxv is not None:
             stats = ((minv, maxv),) * da.rio.count
 
+        if bounds_crs and bounds_crs != self.crs:
+            bbox = transform_bounds(bounds_crs, self.crs, *bbox, densify_pts=21)
+
         da = da.rio.clip_box(
             *bbox,
-            crs=bounds_crs,
             auto_expand=auto_expand,
         )
 
@@ -405,13 +407,13 @@ class XarrayReader(BaseReader):
             dst_transform, _, _ = calculate_default_transform(
                 self.crs, dst_crs, src_width, src_height, *src_bounds
             )
+            # transform bounds in output-crs
+            src_bounds = transform_bounds(self.crs, dst_crs, *src_bounds, densify_pts=21)
+
         else:
             dst_transform = from_bounds(*src_bounds, src_width, src_height)
 
-        if bounds_crs and bounds_crs != dst_crs:
-            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
-
-        w, s, e, n = bbox
+        w, s, e, n = src_bounds
         # max size of the output dataset for the bbox
         dst_width = max(1, round((e - w) / dst_transform.a))
         dst_height = max(1, round((s - n) / dst_transform.e))
@@ -448,7 +450,7 @@ class XarrayReader(BaseReader):
 
         return ImageData(
             arr,
-            bounds=bbox,
+            bounds=list(da.rio.bounds()),
             crs=da.rio.crs,
             dataset_statistics=stats,
             band_names=band_names,
