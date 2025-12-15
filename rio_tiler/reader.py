@@ -3,7 +3,7 @@
 import contextlib
 import math
 import warnings
-from typing import Callable, Dict, Optional, Tuple, TypedDict, Union
+from typing import Callable, Dict, Optional, Tuple, TypedDict, Union, cast
 
 import numpy
 from affine import Affine
@@ -258,7 +258,11 @@ def read(
         scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1]
         offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1]
         if unscale:
-            data = data.astype("float32", casting="unsafe")
+            data = cast(
+                numpy.ma.MaskedArray,
+                data.astype("float32", casting="unsafe"),
+            )
+
             numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
             numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
 

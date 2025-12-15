@@ -5,7 +5,7 @@ import contextlib
 import re
 import warnings
 from functools import cached_property
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union, cast
 
 import attr
 import numpy
@@ -188,6 +188,8 @@ class SpatialMixin:
                     *tile_bounds,
                     densify_pts=21,
                 )
+
+        tile_bounds = cast(BBox, tile_bounds)
 
         # If tile_bounds has non-finite value in the dataset CRS we return True
         if not all(numpy.isfinite(tile_bounds)):
@@ -1115,7 +1117,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             bands_metadata[band].colorinterp[0] for _, band in enumerate(bands)
         ]
         meta["nodata_type"] = bands_metadata[bands[0]].nodata_type
-        return Info(**meta)
+        return Info.model_validate(meta)
 
     def statistics(
         self,

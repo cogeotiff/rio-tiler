@@ -331,7 +331,7 @@ class ColorMaps:
                 if isinstance(cmap_data, Sequence):
                     cmap_data = [
                         (tuple(inter), parse_color(v))  # type: ignore
-                        for (inter, v) in cmap_data
+                        for (inter, v) in cmap_data  # type: ignore
                     ]
 
             else:

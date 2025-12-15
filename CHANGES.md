@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 8.0.3 (2015-12-15)
+
+* improve and fix type hints
+
 # 8.0.2 (2025-12-04)
 
 * add arguments to `rio_tiler.mosaic.BaseBackend`'s `statistics` and `preview` methods to avoid `unexpected keyword argument` errors

@@ -139,7 +139,7 @@ def get_array_statistics(
     percentiles = percentiles or [2, 98]
 
     if len(data.shape) < 3:
-        data = numpy.ma.expand_dims(data, axis=0)
+        data = numpy.ma.expand_dims(data, axis=0)  # type: ignore [assignment]
 
     output: List[Dict[Any, Any]] = []
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]

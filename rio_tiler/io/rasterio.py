@@ -2,7 +2,7 @@
 
 import contextlib
 import warnings
-from typing import Any, Callable, Dict, List, Optional, Sequence, Union
+from typing import Any, Callable, Dict, List, Optional, Sequence, Union, cast
 
 import attr
 import numpy
@@ -281,7 +281,7 @@ class Reader(BaseReader):
             )
 
         return self.part(
-            tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
+            cast(BBox, self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             height=tilesize,
@@ -667,7 +667,7 @@ class ImageReader(Reader):
             )
 
         return self.part(
-            tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
+            cast(BBox, self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
             height=tilesize,
             width=tilesize,
             max_size=None,
@@ -810,7 +810,7 @@ class ImageReader(Reader):
         bbox = featureBounds(shape)
 
         # If Image Origin is top Left (non-geo) we need to invert the bbox
-        bbox = [bbox[0], bbox[3], bbox[2], bbox[1]]
+        bbox = (bbox[0], bbox[3], bbox[2], bbox[1])
 
         img = self.part(
             bbox,

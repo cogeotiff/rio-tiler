@@ -54,7 +54,7 @@ def open_dataset(src_path: str, **kwargs: Any) -> xarray.Dataset:
     store = obstore.store.from_url(src_path, **kwargs)
     zarr_store = ObjectStore(store=store, read_only=True)
     ds = xarray.open_dataset(
-        zarr_store,
+        zarr_store,  # type: ignore
         decode_times=True,
         decode_coords="all",
         consolidated=True,
@@ -144,7 +144,7 @@ class ZarrReader(BaseReader):
     @property
     def variables(self) -> List[str]:
         """Return dataset variable names"""
-        return list(self.dataset.data_vars)
+        return list(self.dataset.data_vars)  # type: ignore
 
     def _arrange_dims(self, da: xarray.DataArray) -> xarray.DataArray:
         """Arrange coordinates and time dimensions.

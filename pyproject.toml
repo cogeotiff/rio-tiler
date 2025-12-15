@@ -15,6 +15,7 @@ classifiers = [
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
+    "Programming Language :: Python :: 3.14",
     "Topic :: Scientific/Engineering :: GIS",
 ]
 dynamic = ["version"]
@@ -27,7 +28,7 @@ dependencies = [
     "morecantile>=5.0,<8.0",
     "pydantic~=2.0",
     "pystac>=1.9,<2.0",
-    "rasterio==1.4.4rc0",
+    "rasterio>=1.4.0",
     "color-operations",
     "typing-extensions",
 ]
@@ -69,6 +70,11 @@ docs = [
 ]
 deploy = [
     "hatch",
+]
+notebook = [
+    "IPython",
+    "jupyter",
+    "matplotlib",
 ]
 
 [project.optional-dependencies]
@@ -155,7 +161,7 @@ exclude = [
 max-complexity = 14
 
 [tool.bumpversion]
-current_version = "8.0.2"
+current_version = "8.0.3"
 parse = """(?x)
     (?P<major>\\d+)\\.
     (?P<minor>\\d+)\\.
