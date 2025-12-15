@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 8.0.4 (2015-12-15)
+
+* add support for python 3.14
+
 # 8.0.3 (2015-12-15)
 
 * improve and fix type hints
