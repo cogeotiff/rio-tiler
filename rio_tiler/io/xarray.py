@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import os
 import warnings
-from typing import Any, Dict, List, Tuple
+from typing import Any, Dict, List, Tuple, cast
 
 import attr
 import numpy
@@ -52,7 +52,7 @@ except ImportError:  # pragma: nocover
     rioxarray = None  # type: ignore
 
 
-MAX_ARRAY_SIZE = os.environ.get("RIO_TILER_MAX_ARRAY_SIZE", 1_000_000_000)  # 1Gb
+MAX_ARRAY_SIZE = int(os.environ.get("RIO_TILER_MAX_ARRAY_SIZE", 1_000_000_000))  # 1Gb
 
 
 @attr.s
@@ -160,7 +160,7 @@ class XarrayReader(BaseReader):
             if coords_name:
                 return [str(self.input.coords[coords_name[0]].data)]
 
-            return [self.input.name or ""]
+            return [self.input.name or ""]  # type: ignore
 
         return [str(band) for d in self._dims for band in self.input[d].values]
 
@@ -281,13 +281,10 @@ class XarrayReader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
-        tile_bounds = tuple(self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)))
-        dst_crs = self.tms.rasterio_crs
-
         return self.part(
-            tile_bounds,
-            dst_crs=dst_crs,
-            bounds_crs=dst_crs,
+            cast(BBox, self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
+            dst_crs=self.tms.rasterio_crs,
+            bounds_crs=self.tms.rasterio_crs,
             reproject_method=reproject_method,
             auto_expand=auto_expand,
             nodata=nodata,
@@ -568,13 +565,13 @@ class XarrayReader(BaseReader):
 
         arr = da.to_masked_array()
         if out_dtype:
-            arr = arr.astype(out_dtype)
+            arr = cast(numpy.ma.MaskedArray, arr.astype(out_dtype))
         arr.mask |= arr.data == da.rio.nodata
 
         output_bounds = da.rio._unordered_bounds()
         if output_bounds[1] > output_bounds[3] and da.rio.transform().e > 0:
             yaxis = self.input.dims.index(self.input.rio.y_dim)
-            arr = numpy.flip(arr, axis=yaxis)
+            arr = cast(numpy.ma.MaskedArray, numpy.flip(arr, axis=yaxis))
 
         img = ImageData(
             arr,
@@ -645,7 +642,7 @@ class XarrayReader(BaseReader):
 
         if out_dtype:
             arr = arr.astype(out_dtype)
-        arr.mask |= arr.data == da.rio.nodata
+        arr.mask |= arr.data == da.rio.nodata  # type: ignore [attr-defined]
 
         return PointData(
             arr,

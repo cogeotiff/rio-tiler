@@ -2,7 +2,7 @@
 
 import itertools
 import warnings
-from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union
+from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union, cast
 
 import attr
 import numpy
@@ -104,7 +104,7 @@ def rescale_image(
 ) -> numpy.ma.MaskedArray:
     """Rescale image data in-place."""
     if len(array.shape) < 3:
-        array = numpy.expand_dims(array, axis=0)
+        array = numpy.expand_dims(array, axis=0)  # type: ignore [assignment]
 
     nbands = array.shape[0]
 
@@ -116,14 +116,14 @@ def rescale_image(
 
     for bdx in range(nbands):
         array.data[bdx] = numpy.where(
-            ~array.mask[bdx],
+            ~array.mask[bdx],  # type: ignore [index]
             linear_rescale(
                 array.data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
             ),
             0,
         )
 
-    return array.astype(out_dtype)
+    return array.astype(out_dtype)  # type: ignore [return-value]
 
 
 def to_masked(array: numpy.ndarray) -> numpy.ma.MaskedArray:
@@ -131,6 +131,7 @@ def to_masked(array: numpy.ndarray) -> numpy.ma.MaskedArray:
     if not numpy.ma.isarray(array):
         array = numpy.ma.asarray(array)
 
+    array = cast(numpy.ma.MaskedArray, array)
     # when a masked array is totally valid, the mask is set to numpy.ma.nomask
     # https://numpy.org/doc/stable/reference/maskedarray.baseclass.html#numpy.ma.nomask
     # doing `array.mask = False` force the creation of the mask array
@@ -156,14 +157,14 @@ class PointData:
 
     array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
     band_names: List[str] = attr.ib(kw_only=True)
-    band_descriptions: Optional[List[str]] = attr.ib(kw_only=True)
+    band_descriptions: List[str] = attr.ib(kw_only=True)
     coordinates: Optional[Tuple[float, float]] = attr.ib(default=None, kw_only=True)
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     assets: Optional[List] = attr.ib(default=None, kw_only=True)
     metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
     nodata: Optional[NoData] = attr.ib(default=None, kw_only=True)
-    scales: Optional[List[NumType]] = attr.ib(kw_only=True)
-    offsets: Optional[List[NumType]] = attr.ib(kw_only=True)
+    scales: List[NumType] = attr.ib(kw_only=True)
+    offsets: List[NumType] = attr.ib(kw_only=True)
     pixel_location: Optional[Tuple[NumType, NumType]] = attr.ib(
         default=None, kw_only=True
     )
@@ -310,6 +311,8 @@ def masked_and_3d(array: numpy.ndarray) -> numpy.ma.MaskedArray:
     if len(array.shape) < 3:
         array = numpy.expand_dims(array, axis=0)
 
+    array = cast(numpy.ma.MaskedArray, array)
+
     # when a masked array is totally valid, the mask is set to numpy.ma.nomask
     # https://numpy.org/doc/stable/reference/maskedarray.baseclass.html#numpy.ma.nomask
     # doing `array.mask = False` force the creation of the mask array
@@ -344,10 +347,10 @@ class ImageData:
     crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
     metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
     nodata: Optional[NoData] = attr.ib(default=None, kw_only=True)
-    scales: Optional[List[NumType]] = attr.ib(kw_only=True)
-    offsets: Optional[List[NumType]] = attr.ib(kw_only=True)
-    band_names: Optional[List[str]] = attr.ib(kw_only=True)
-    band_descriptions: Optional[List[str]] = attr.ib(kw_only=True)
+    scales: List[NumType] = attr.ib(kw_only=True)
+    offsets: List[NumType] = attr.ib(kw_only=True)
+    band_names: List[str] = attr.ib(kw_only=True)
+    band_descriptions: List[str] = attr.ib(kw_only=True)
     dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
         default=None, kw_only=True
     )
@@ -495,8 +498,8 @@ class ImageData:
                 if img.height == max_h and img.width == max_w:
                     continue
                 arr = numpy.ma.MaskedArray(
-                    resize_array(img.array.data, max_h, max_w),
-                    mask=resize_array(img.array.mask * 1, max_h, max_w).astype("bool"),
+                    resize_array(img.array.data, max_h, max_w),  # type: ignore [arg-type]
+                    mask=resize_array(img.array.mask * 1, max_h, max_w).astype("bool"),  # type: ignore [arg-type]
                 )
                 img.array = arr
 
@@ -708,8 +711,8 @@ class ImageData:
         resampling_method: RIOResampling = "nearest",
     ) -> "ImageData":
         """Resize data and mask."""
-        data = resize_array(self.array.data, height, width, resampling_method)
-        mask = resize_array(self.array.mask * 1, height, width, resampling_method).astype(
+        data = resize_array(self.array.data, height, width, resampling_method)  # type: ignore [arg-type]
+        mask = resize_array(self.array.mask * 1, height, width, resampling_method).astype(  # type: ignore [arg-type]
             "bool"
         )
         alpha_mask = self.alpha_mask
