@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import os
 import warnings
-from typing import Any, Dict, List, Tuple, cast
+from typing import Any, cast
 
 import attr
 import numpy
@@ -81,7 +81,7 @@ class XarrayReader(BaseReader):
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    _dims: List = attr.ib(init=False, factory=list)
+    _dims: list = attr.ib(init=False, factory=list)
 
     def __attrs_post_init__(self):
         """Set bounds and CRS."""
@@ -138,7 +138,7 @@ class XarrayReader(BaseReader):
         return self._maxzoom
 
     @property
-    def band_descriptions(self) -> List[str]:
+    def band_descriptions(self) -> list[str]:
         """
         Return list of `band descriptions` in DataArray.
 
@@ -193,7 +193,7 @@ class XarrayReader(BaseReader):
     def _sel_indexes(
         self,
         indexes: Indexes | None = None,
-    ) -> Tuple[xarray.DataArray, List[str], List[str]]:
+    ) -> tuple[xarray.DataArray, list[str], list[str]]:
         """Select `band` indexes in DataArray."""
         da = self.input
         band_descriptions = self.band_descriptions
@@ -220,13 +220,13 @@ class XarrayReader(BaseReader):
     def statistics(
         self,
         categorical: bool = False,
-        categories: List[float] | None = None,
-        percentiles: List[int] | None = None,
-        hist_options: Dict | None = None,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
         nodata: NoData | None = None,
         indexes: Indexes | None = None,
         **kwargs: Any,
-    ) -> Dict[str, BandStatistics]:
+    ) -> dict[str, BandStatistics]:
         """Return statistics from a dataset."""
         hist_options = hist_options or {}
 
@@ -656,7 +656,7 @@ class XarrayReader(BaseReader):
 
     def feature(
         self,
-        shape: Dict,
+        shape: dict,
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
         reproject_method: WarpResampling = "nearest",

@@ -1,34 +1,31 @@
 """rio-tiler types."""
 
-from typing import Any, Dict, Literal, Optional, Sequence, Tuple, TypedDict, Union
+from collections.abc import Sequence
+from typing import Any, Literal, TypedDict
 
 import numpy
 
-NumType = Union[float, int]
+NumType = float | int
 
-BBox = Tuple[float, float, float, float]
-NoData = Union[float, int, str]
-Indexes = Union[Sequence[int], int]
+BBox = tuple[float, float, float, float]
+NoData = float | int | str
+Indexes = Sequence[int] | int
 
-DataMaskType = Tuple[numpy.ndarray, numpy.ndarray]
+DataMaskType = tuple[numpy.ndarray, numpy.ndarray]
 
-ColorTuple = Tuple[int, int, int, int]  # (red, green, blue, alpha)
-IntervalTuple = Tuple[NumType, NumType]  # (0, 100)
+ColorTuple = tuple[int, int, int, int]  # (red, green, blue, alpha)
+IntervalTuple = tuple[NumType, NumType]  # (0, 100)
 
 # ColorMap Dict: {1: (0, 0, 0, 255), ...}
-GDALColorMapType = Dict[int, ColorTuple]
+GDALColorMapType = dict[int, ColorTuple]
 
 # Discrete Colormap, like GDALColorMapType but accept Float: {0.1: (0, 0, 0, 255), ...}
-DiscreteColorMapType = Dict[NumType, ColorTuple]
+DiscreteColorMapType = dict[NumType, ColorTuple]
 
 # Intervals ColorMap: [((0, 1), (0, 0, 0, 0)), ...]
-IntervalColorMapType = Sequence[Tuple[IntervalTuple, ColorTuple]]
+IntervalColorMapType = Sequence[tuple[IntervalTuple, ColorTuple]]
 
-ColorMapType = Union[
-    GDALColorMapType,
-    DiscreteColorMapType,
-    IntervalColorMapType,
-]
+ColorMapType = GDALColorMapType | DiscreteColorMapType | IntervalColorMapType
 
 # RasterIO() resampling method.
 # ref: https://gdal.org/api/raster_c_api.html#_CPPv418GDALRIOResampleAlg
@@ -69,6 +66,6 @@ class AssetInfo(TypedDict, total=False):
 
     url: Any
     media_type: str
-    env: Optional[Dict]
-    metadata: Optional[Dict]
-    dataset_statistics: Optional[Sequence[Tuple[float, float]]]
+    env: dict | None
+    metadata: dict | None
+    dataset_statistics: Sequence[tuple[float, float]] | None

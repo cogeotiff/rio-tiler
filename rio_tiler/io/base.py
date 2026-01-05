@@ -4,8 +4,9 @@ import abc
 import contextlib
 import re
 import warnings
+from collections.abc import Sequence
 from functools import cached_property
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union, cast
+from typing import Any, cast
 
 import attr
 import numpy
@@ -44,9 +45,9 @@ class SpatialMixin:
     bounds: BBox = attr.ib(init=False)
     crs: CRS = attr.ib(init=False)
 
-    transform: Optional[Affine] = attr.ib(default=None, init=False)
-    height: Optional[int] = attr.ib(default=None, init=False)
-    width: Optional[int] = attr.ib(default=None, init=False)
+    transform: Affine | None = attr.ib(default=None, init=False)
+    height: int | None = attr.ib(default=None, init=False)
+    width: int | None = attr.ib(default=None, init=False)
 
     def get_geographic_bounds(self, crs: CRS) -> BBox:
         """Return Geographic Bounds for a Geographic CRS."""
@@ -238,11 +239,11 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def statistics(self) -> Dict[str, BandStatistics]:
+    def statistics(self) -> dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
 
         Returns:
-            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+            dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
         ...
@@ -300,7 +301,7 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    def feature(self, shape: Dict) -> ImageData:
+    def feature(self, shape: dict) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
@@ -331,16 +332,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
+    minzoom: int | None = attr.ib(default=None)
+    maxzoom: int | None = attr.ib(default=None)
 
-    reader: Type[BaseReader] = attr.ib(init=False)
-    reader_options: Dict = attr.ib(factory=dict)
+    reader: type[BaseReader] = attr.ib(init=False)
+    reader_options: dict = attr.ib(factory=dict)
 
     assets: Sequence[str] = attr.ib(init=False)
-    default_assets: Optional[Sequence[str]] = attr.ib(init=False, default=None)
+    default_assets: Sequence[str] | None = attr.ib(init=False, default=None)
 
-    ctx: Type[contextlib.AbstractContextManager] = attr.ib(
+    ctx: type[contextlib.AbstractContextManager] = attr.ib(
         init=False, default=contextlib.nullcontext
     )
 
@@ -357,11 +358,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Validate asset name and construct url."""
         ...
 
-    def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
+    def _get_reader(self, asset_info: AssetInfo) -> tuple[type[BaseReader], dict]:
         """Get Asset Reader and options."""
         return self.reader, {}
 
-    def parse_expression(self, expression: str, asset_as_band: bool = False) -> Tuple:
+    def parse_expression(self, expression: str, asset_as_band: bool = False) -> tuple:
         """Parse rio-tiler band math expression."""
         input_assets = "|".join(self.assets)
 
@@ -383,8 +384,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     def _update_statistics(
         self,
         img: ImageData,
-        indexes: Optional[Indexes] = None,
-        statistics: Optional[Sequence[Tuple[float, float]]] = None,
+        indexes: Indexes | None = None,
+        statistics: Sequence[tuple[float, float]] | None = None,
     ):
         """Update ImageData Statistics from AssetInfo."""
         indexes = cast_to_sequence(indexes)
@@ -400,9 +401,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def info(
         self,
-        assets: Optional[Union[Sequence[str], str]] = None,
+        assets: Sequence[str] | str | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Info]:
+    ) -> dict[str, Info]:
         """Return metadata from multiple assets.
 
         Args:
@@ -419,7 +420,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
         assets = cast_to_sequence(assets or self.assets)
 
-        def _reader(asset: str, **kwargs: Any) -> Dict:
+        def _reader(asset: str, **kwargs: Any) -> dict:
             asset_info = self._get_asset_info(asset)
             reader, options = self._get_reader(asset_info)
 
@@ -435,11 +436,11 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def statistics(
         self,
-        assets: Optional[Union[Sequence[str], str]] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,
-        asset_expression: Optional[Dict[str, str]] = None,
+        assets: Sequence[str] | str | None = None,
+        asset_indexes: dict[str, Indexes] | None = None,
+        asset_expression: dict[str, str] | None = None,
         **kwargs: Any,
-    ) -> Dict[str, Dict[str, BandStatistics]]:
+    ) -> dict[str, dict[str, BandStatistics]]:
         """Return array statistics for multiple assets.
 
         Args:
@@ -462,7 +463,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         asset_indexes = asset_indexes or {}
         asset_expression = asset_expression or {}
 
-        def _reader(asset: str, *args: Any, **kwargs: Any) -> Dict:
+        def _reader(asset: str, *args: Any, **kwargs: Any) -> dict:
             asset_info = self._get_asset_info(asset)
             reader, options = self._get_reader(asset_info)
 
@@ -483,16 +484,16 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def merged_statistics(
         self,
-        assets: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,
+        assets: Sequence[str] | str | None = None,
+        expression: str | None = None,
+        asset_indexes: dict[str, Indexes] | None = None,
         categorical: bool = False,
-        categories: Optional[List[float]] = None,
-        percentiles: Optional[List[int]] = None,
-        hist_options: Optional[Dict] = None,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
         max_size: int = 1024,
         **kwargs: Any,
-    ) -> Dict[str, BandStatistics]:
+    ) -> dict[str, BandStatistics]:
         """Return array statistics for multiple assets.
 
         Args:
@@ -538,9 +539,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        assets: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,
+        assets: Sequence[str] | str | None = None,
+        expression: str | None = None,
+        asset_indexes: dict[str, Indexes] | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -640,9 +641,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     def part(
         self,
         bbox: BBox,
-        assets: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,
+        assets: Sequence[str] | str | None = None,
+        expression: str | None = None,
+        asset_indexes: dict[str, Indexes] | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -734,9 +735,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def preview(
         self,
-        assets: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,
+        assets: Sequence[str] | str | None = None,
+        expression: str | None = None,
+        asset_indexes: dict[str, Indexes] | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -829,9 +830,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         self,
         lon: float,
         lat: float,
-        assets: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,
+        assets: Sequence[str] | str | None = None,
+        expression: str | None = None,
+        asset_indexes: dict[str, Indexes] | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> PointData:
@@ -918,10 +919,10 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def feature(
         self,
-        shape: Dict,
-        assets: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
-        asset_indexes: Optional[Dict[str, Indexes]] = None,
+        shape: dict,
+        assets: Sequence[str] | str | None = None,
+        expression: str | None = None,
+        asset_indexes: dict[str, Indexes] | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
     ) -> ImageData:
@@ -1030,14 +1031,14 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
+    minzoom: int | None = attr.ib(default=None)
+    maxzoom: int | None = attr.ib(default=None)
 
-    reader: Type[BaseReader] = attr.ib(init=False)
-    reader_options: Dict = attr.ib(factory=dict)
+    reader: type[BaseReader] = attr.ib(init=False)
+    reader_options: dict = attr.ib(factory=dict)
 
     bands: Sequence[str] = attr.ib(init=False)
-    default_bands: Optional[Sequence[str]] = attr.ib(init=False, default=None)
+    default_bands: Sequence[str] | None = attr.ib(init=False, default=None)
 
     def __enter__(self):
         """Support using with Context Managers."""
@@ -1052,7 +1053,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         """Validate band name and construct url."""
         ...
 
-    def parse_expression(self, expression: str) -> Tuple:
+    def parse_expression(self, expression: str) -> tuple:
         """Parse rio-tiler band math expression."""
         input_bands = "|".join([rf"\b{band}\b" for band in self.bands])
         _re = re.compile(input_bands.replace("\\\\", "\\"))
@@ -1067,7 +1068,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def info(
         self,
-        bands: Optional[Union[Sequence[str], str]] = None,
+        bands: Sequence[str] | str | None = None,
         **kwargs: Any,
     ) -> Info:
         """Return metadata from multiple bands.
@@ -1121,15 +1122,15 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def statistics(
         self,
-        bands: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
+        bands: Sequence[str] | str | None = None,
+        expression: str | None = None,
         categorical: bool = False,
-        categories: Optional[List[float]] = None,
-        percentiles: Optional[List[int]] = None,
-        hist_options: Optional[Dict] = None,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
         max_size: int = 1024,
         **kwargs: Any,
-    ) -> Dict[str, BandStatistics]:
+    ) -> dict[str, BandStatistics]:
         """Return array statistics for multiple assets.
 
         Args:
@@ -1172,8 +1173,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        bands: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
+        bands: Sequence[str] | str | None = None,
+        expression: str | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge Web Map tiles multiple bands.
@@ -1244,8 +1245,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
     def part(
         self,
         bbox: BBox,
-        bands: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
+        bands: Sequence[str] | str | None = None,
+        expression: str | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts from multiple bands.
@@ -1308,8 +1309,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def preview(
         self,
-        bands: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
+        bands: Sequence[str] | str | None = None,
+        expression: str | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge previews from multiple bands.
@@ -1373,8 +1374,8 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         self,
         lon: float,
         lat: float,
-        bands: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
+        bands: Sequence[str] | str | None = None,
+        expression: str | None = None,
         **kwargs: Any,
     ) -> PointData:
         """Read a pixel values from multiple bands.
@@ -1437,9 +1438,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def feature(
         self,
-        shape: Dict,
-        bands: Optional[Union[Sequence[str], str]] = None,
-        expression: Optional[str] = None,
+        shape: dict,
+        bands: Sequence[str] | str | None = None,
+        expression: str | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read and merge parts defined by geojson feature from multiple bands.

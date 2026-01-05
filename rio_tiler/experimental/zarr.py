@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import contextlib
+from collections.abc import Callable
 from functools import cache
 from pathlib import Path
-from typing import Any, Callable, Dict, List, Literal, Optional, Union
+from typing import Any, Literal
 from urllib.parse import urlparse
 
 import attr
@@ -88,13 +89,13 @@ class ZarrReader(BaseReader):
 
     """
 
-    input: str = attr.ib()
-    dataset: xarray.Dataset = attr.ib(default=None)
+    input: str | None = attr.ib()
+    dataset: xarray.Dataset | None = attr.ib(default=None)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     opener: Callable[..., xarray.Dataset] = attr.ib(default=open_dataset)
-    opener_options: Dict = attr.ib(factory=dict)
+    opener_options: dict = attr.ib(factory=dict)
     _ctx_stack: contextlib.ExitStack = attr.ib(init=False, factory=contextlib.ExitStack)
 
     def __attrs_post_init__(self):
@@ -142,7 +143,7 @@ class ZarrReader(BaseReader):
         self.close()
 
     @property
-    def variables(self) -> List[str]:
+    def variables(self) -> list[str]:
         """Return dataset variable names"""
         return list(self.dataset.data_vars)  # type: ignore
 
@@ -191,16 +192,16 @@ class ZarrReader(BaseReader):
     def _get_variable(
         self,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
     ) -> xarray.DataArray:
         """Get DataArray from xarray Dataset."""
         da = self.dataset[variable]
 
         if sel:
-            _idx: Dict[str, List] = {}
+            _idx: dict[str, list] = {}
             for s in sel:
-                val: Union[str, slice]
+                val: str | slice
                 dim, val = s.split("=")
 
                 # cast string to dtype of the dimension
@@ -239,8 +240,8 @@ class ZarrReader(BaseReader):
         self,
         *,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
     ):
         """Return xarray.DataArray info."""
         with XarrayReader(
@@ -258,8 +259,8 @@ class ZarrReader(BaseReader):
         crs: CRS,
         *,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
     ) -> BBox:
         """Return Geographic Bounds for a Geographic CRS."""
         with XarrayReader(
@@ -271,8 +272,8 @@ class ZarrReader(BaseReader):
         self,
         *,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
     ) -> Info:
         """Return xarray.DataArray info."""
         with XarrayReader(
@@ -284,10 +285,10 @@ class ZarrReader(BaseReader):
         self,
         *args: Any,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
         **kwargs: Any,
-    ) -> Dict[str, BandStatistics]:
+    ) -> dict[str, BandStatistics]:
         """Return statistics from a dataset."""
         with XarrayReader(
             self._get_variable(variable, sel=sel, method=method),
@@ -298,8 +299,8 @@ class ZarrReader(BaseReader):
         self,
         *args: Any,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read a Web Map tile from a dataset."""
@@ -313,8 +314,8 @@ class ZarrReader(BaseReader):
         self,
         *args: Any,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset."""
@@ -327,8 +328,8 @@ class ZarrReader(BaseReader):
         self,
         *args: Any,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Return a preview of a dataset."""
@@ -341,8 +342,8 @@ class ZarrReader(BaseReader):
         self,
         *args: Any,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
         **kwargs: Any,
     ) -> PointData:
         """Read a pixel value from a dataset."""
@@ -355,8 +356,8 @@ class ZarrReader(BaseReader):
         self,
         *args: Any,
         variable: str,
-        sel: Optional[List[str]] = None,
-        method: Optional[sel_methods] = None,
+        sel: list[str] | None = None,
+        method: sel_methods | None = None,
         **kwargs: Any,
     ) -> ImageData:
         """Read part of a dataset defined by a geojson feature."""

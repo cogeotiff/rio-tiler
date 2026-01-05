@@ -3,18 +3,8 @@
 import json
 import os
 import warnings
-from typing import (
-    Any,
-    Dict,
-    Iterator,
-    List,
-    Optional,
-    Sequence,
-    Set,
-    Tuple,
-    Type,
-    Union,
-)
+from collections.abc import Iterator, Sequence
+from typing import Any
 from urllib.parse import urlparse
 
 import attr
@@ -111,7 +101,7 @@ def aws_get_object(
     LRUCache(maxsize=512),
     key=lambda filepath, **kargs: hashkey(filepath, json.dumps(kargs)),
 )
-def fetch(filepath: str, **kwargs: Any) -> Dict:
+def fetch(filepath: str, **kwargs: Any) -> dict:
     """Fetch STAC items.
 
     A LRU cache is set on top of this function.
@@ -142,11 +132,11 @@ def fetch(filepath: str, **kwargs: Any) -> Dict:
 
 def _get_assets(
     stac_item: pystac.Item,
-    include: Optional[Set[str]] = None,
-    exclude: Optional[Set[str]] = None,
-    include_asset_types: Optional[Set[str]] = None,
-    exclude_asset_types: Optional[Set[str]] = None,
-) -> Iterator:
+    include: set[str] | None = None,
+    exclude: set[str] | None = None,
+    include_asset_types: set[str] | None = None,
+    exclude_asset_types: set[str] | None = None,
+) -> Iterator[str]:
     """Get valid asset list.
 
     Args:
@@ -183,7 +173,7 @@ def _get_assets(
         yield asset
 
 
-def _to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.Item]:
+def _to_pystac_item(item: dict | pystac.Item | None) -> pystac.Item | None:
     """Attr converter to convert to Dict to pystac.Item
 
     Args:
@@ -193,7 +183,7 @@ def _to_pystac_item(item: Union[None, Dict, pystac.Item]) -> Union[None, pystac.
         pystac.Item: pystac STAC item object.
 
     """
-    if isinstance(item, Dict):
+    if isinstance(item, dict):
         return pystac.Item.from_dict(item)
 
     return item
@@ -237,26 +227,26 @@ class STACReader(MultiBaseReader):
 
     """
 
-    input: str = attr.ib()
-    item: pystac.Item = attr.ib(default=None, converter=_to_pystac_item)
+    input: str | None = attr.ib()
+    item: pystac.Item | None = attr.ib(default=None, converter=_to_pystac_item)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
+    minzoom: int | None = attr.ib(default=None)
+    maxzoom: int | None = attr.ib(default=None)
 
-    include_assets: Optional[Set[str]] = attr.ib(default=None)
-    exclude_assets: Optional[Set[str]] = attr.ib(default=None)
+    include_assets: set[str] | None = attr.ib(default=None)
+    exclude_assets: set[str] | None = attr.ib(default=None)
 
-    include_asset_types: Set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
-    exclude_asset_types: Optional[Set[str]] = attr.ib(default=None)
+    include_asset_types: set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
+    exclude_asset_types: set[str] | None = attr.ib(default=None)
 
     assets: Sequence[str] = attr.ib(init=False)
-    default_assets: Optional[Sequence[str]] = attr.ib(default=None)
+    default_assets: Sequence[str] | None = attr.ib(default=None)
 
-    reader: Type[BaseReader] = attr.ib(default=Reader)
-    reader_options: Dict = attr.ib(factory=dict)
+    reader: type[BaseReader] = attr.ib(default=Reader)
+    reader_options: dict = attr.ib(factory=dict)
 
-    fetch_options: Dict = attr.ib(factory=dict)
+    fetch_options: dict = attr.ib(factory=dict)
 
     ctx: rasterio.Env = attr.ib(default=rasterio.Env)
 
@@ -289,7 +279,7 @@ class STACReader(MultiBaseReader):
         if not self.assets:
             raise MissingAssets("No valid asset found. Asset's media types not supported")
 
-    def get_asset_list(self) -> List[str]:
+    def get_asset_list(self) -> list[str]:
         """Get valid asset list"""
         return list(
             _get_assets(
@@ -301,11 +291,11 @@ class STACReader(MultiBaseReader):
             )
         )
 
-    def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
+    def _get_reader(self, asset_info: AssetInfo) -> tuple[type[BaseReader], dict]:
         """Get Asset Reader."""
         return self.reader, {}
 
-    def _parse_vrt_asset(self, asset: str) -> Tuple[str, Optional[str]]:
+    def _parse_vrt_asset(self, asset: str) -> tuple[str, str | None]:
         if asset.startswith("vrt://") and asset not in self.assets:
             parsed = urlparse(asset)
             if not parsed.netloc:

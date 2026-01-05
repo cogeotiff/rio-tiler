@@ -1,19 +1,20 @@
 """rio_tiler.tasks: tools for handling rio-tiler's future tasks."""
 
+from collections.abc import Callable, Generator, Sequence
 from concurrent import futures
 from functools import partial
-from typing import Any, Callable, Dict, Generator, Optional, Sequence, Tuple, Union
+from typing import Any
 
 from rio_tiler.constants import MAX_THREADS
 from rio_tiler.logger import logger
 from rio_tiler.models import ImageData, PointData
 
-TaskType = Sequence[Tuple[Union[futures.Future, Callable], Any]]
+TaskType = Sequence[tuple[futures.Future | Callable, Any]]
 
 
 def filter_tasks(
     tasks: TaskType,
-    allowed_exceptions: Optional[Tuple] = None,
+    allowed_exceptions: tuple | None = None,
 ) -> Generator:
     """Filter Tasks to remove Exceptions.
 
@@ -60,7 +61,7 @@ def multi_arrays(
     reader: Callable[..., ImageData],
     *args: Any,
     threads: int = MAX_THREADS,
-    allowed_exceptions: Optional[Tuple] = None,
+    allowed_exceptions: tuple | None = None,
     **kwargs: Any,
 ) -> ImageData:
     """Merge arrays returned from tasks."""
@@ -75,7 +76,7 @@ def multi_points(
     reader: Callable[..., PointData],
     *args: Any,
     threads: int = MAX_THREADS,
-    allowed_exceptions: Optional[Tuple] = None,
+    allowed_exceptions: tuple | None = None,
     **kwargs: Any,
 ) -> PointData:
     """Merge points returned from tasks."""
@@ -90,9 +91,9 @@ def multi_values(
     reader: Callable,
     *args: Any,
     threads: int = MAX_THREADS,
-    allowed_exceptions: Optional[Tuple] = None,
+    allowed_exceptions: tuple | None = None,
     **kwargs: Any,
-) -> Dict:
+) -> dict:
     """Merge values returned from tasks."""
     tasks = create_tasks(reader, asset_list, threads, *args, **kwargs)
     return {
@@ -106,7 +107,7 @@ def multi_values_list(
     reader: Callable,
     *args: Any,
     threads: int = MAX_THREADS,
-    allowed_exceptions: Optional[Tuple] = None,
+    allowed_exceptions: tuple | None = None,
     **kwargs: Any,
 ) -> list[tuple[Any, Any]]:
     """Merge values returned from tasks."""
