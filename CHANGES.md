@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 8.0.5 (2026-01-05)
+
+* improve type hints - part 2: change old Union and `typing.*` notations
+
 # 8.0.4 (2015-12-15)
 
 * add support for python 3.14
