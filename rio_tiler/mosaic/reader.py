@@ -9,7 +9,12 @@ import numpy
 from rasterio.crs import CRS
 
 from rio_tiler.constants import MAX_THREADS
-from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
+from rio_tiler.errors import (
+    EmptyMosaicError,
+    InvalidMosaicMethod,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.mosaic.methods.base import MosaicMethodBase
 from rio_tiler.mosaic.methods.defaults import FirstMethod
@@ -170,7 +175,7 @@ def mosaic_point_reader(
     pixel_selection: type[MosaicMethodBase] | MosaicMethodBase = FirstMethod,
     chunk_size: int | None = None,
     threads: int = MAX_THREADS,
-    allowed_exceptions: tuple = (TileOutsideBounds,),
+    allowed_exceptions: tuple = (PointOutsideBounds,),
     **kwargs,
 ) -> tuple[PointData, list]:
     """Merge multiple assets.
