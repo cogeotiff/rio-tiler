@@ -2,7 +2,8 @@
 
 import itertools
 import warnings
-from typing import Any, Dict, List, Literal, Optional, Sequence, Tuple, Union, cast
+from collections.abc import Sequence
+from typing import Any, Literal, cast
 
 import attr
 import numpy
@@ -34,7 +35,6 @@ from rio_tiler.types import (
     GDALColorMapType,
     IntervalTuple,
     NoData,
-    NumType,
     RIOResampling,
     WarpResampling,
 )
@@ -58,14 +58,14 @@ class Bounds(BaseModel):
 class Info(Bounds):
     """Dataset Info."""
 
-    band_metadata: List[Tuple[str, Dict]]
-    band_descriptions: List[Tuple[str, str]]
+    band_metadata: list[tuple[str, dict]]
+    band_descriptions: list[tuple[str, str]]
     dtype: str
     nodata_type: Literal["Alpha", "Mask", "Internal", "Nodata", "None"]
-    colorinterp: Optional[List[str]] = None
-    scales: Optional[List[float]] = None
-    offsets: Optional[List[float]] = None
-    colormap: Optional[GDALColorMapType] = None
+    colorinterp: list[str] | None = None
+    scales: list[float] | None = None
+    offsets: list[float] | None = None
+    colormap: GDALColorMapType | None = None
 
     model_config = {"extra": "allow"}
 
@@ -83,7 +83,7 @@ class BandStatistics(BaseModel):
     majority: float
     minority: float
     unique: float
-    histogram: List[List[NumType]]
+    histogram: list[list[float | int]]
     valid_percent: float
     masked_pixels: float
     valid_pixels: float
@@ -91,7 +91,7 @@ class BandStatistics(BaseModel):
     model_config = {"extra": "allow"}
 
 
-def to_coordsbbox(bbox) -> Optional[BoundingBox]:
+def to_coordsbbox(bbox) -> BoundingBox | None:
     """Convert bbox to CoordsBbox nameTuple."""
     return BoundingBox(*bbox) if bbox else None
 
@@ -100,7 +100,7 @@ def rescale_image(
     array: numpy.ma.MaskedArray,
     in_range: Sequence[IntervalTuple],
     out_range: Sequence[IntervalTuple] = ((0, 255),),
-    out_dtype: Union[str, numpy.number] = "uint8",
+    out_dtype: str | numpy.number = "uint8",
 ) -> numpy.ma.MaskedArray:
     """Rescale image data in-place."""
     if len(array.shape) < 3:
@@ -156,16 +156,16 @@ class PointData:
     """
 
     array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
-    band_names: List[str] = attr.ib(kw_only=True)
-    band_descriptions: List[str] = attr.ib(kw_only=True)
-    coordinates: Optional[Tuple[float, float]] = attr.ib(default=None, kw_only=True)
-    crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
-    assets: Optional[List] = attr.ib(default=None, kw_only=True)
-    metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
-    nodata: Optional[NoData] = attr.ib(default=None, kw_only=True)
-    scales: List[NumType] = attr.ib(kw_only=True)
-    offsets: List[NumType] = attr.ib(kw_only=True)
-    pixel_location: Optional[Tuple[NumType, NumType]] = attr.ib(
+    band_names: list[str] = attr.ib(kw_only=True)
+    band_descriptions: list[str] = attr.ib(kw_only=True)
+    coordinates: tuple[float, float] | None = attr.ib(default=None, kw_only=True)
+    crs: CRS | None = attr.ib(default=None, kw_only=True)
+    assets: list | None = attr.ib(default=None, kw_only=True)
+    metadata: dict | None = attr.ib(factory=dict, kw_only=True)
+    nodata: NoData | None = attr.ib(default=None, kw_only=True)
+    scales: list[float | int] = attr.ib(kw_only=True)
+    offsets: list[float | int] = attr.ib(kw_only=True)
+    pixel_location: tuple[float | int, float | int] | None = attr.ib(
         default=None, kw_only=True
     )
 
@@ -340,22 +340,22 @@ class ImageData:
     """
 
     array: numpy.ma.MaskedArray = attr.ib(converter=masked_and_3d)
-    assets: Optional[List] = attr.ib(default=None, kw_only=True)
-    bounds: Optional[BoundingBox] = attr.ib(
+    assets: list | None = attr.ib(default=None, kw_only=True)
+    bounds: BoundingBox | None = attr.ib(
         default=None, converter=to_coordsbbox, kw_only=True
     )
-    crs: Optional[CRS] = attr.ib(default=None, kw_only=True)
-    metadata: Optional[Dict] = attr.ib(factory=dict, kw_only=True)
-    nodata: Optional[NoData] = attr.ib(default=None, kw_only=True)
-    scales: List[NumType] = attr.ib(kw_only=True)
-    offsets: List[NumType] = attr.ib(kw_only=True)
-    band_names: List[str] = attr.ib(kw_only=True)
-    band_descriptions: List[str] = attr.ib(kw_only=True)
-    dataset_statistics: Optional[Sequence[Tuple[float, float]]] = attr.ib(
+    crs: CRS | None = attr.ib(default=None, kw_only=True)
+    metadata: dict | None = attr.ib(factory=dict, kw_only=True)
+    nodata: NoData | None = attr.ib(default=None, kw_only=True)
+    scales: list[float | int] = attr.ib(kw_only=True)
+    offsets: list[float | int] = attr.ib(kw_only=True)
+    band_names: list[str] = attr.ib(kw_only=True)
+    band_descriptions: list[str] = attr.ib(kw_only=True)
+    dataset_statistics: Sequence[tuple[float, float]] | None = attr.ib(
         default=None, kw_only=True
     )
-    cutline_mask: Optional[numpy.ndarray] = attr.ib(default=None)
-    alpha_mask: Optional[numpy.ndarray] = attr.ib(default=None)
+    cutline_mask: numpy.ndarray | None = attr.ib(default=None)
+    alpha_mask: numpy.ndarray | None = attr.ib(default=None)
 
     @band_names.default
     def _default_band_names(self):
@@ -596,7 +596,7 @@ class ImageData:
         self,
         in_range: Sequence[IntervalTuple],
         out_range: Sequence[IntervalTuple] = ((0, 255),),
-        out_dtype: Union[str, numpy.number] = "uint8",
+        out_dtype: str | numpy.number = "uint8",
     ) -> Self:
         """Rescale data in place."""
         self.array = rescale_image(
@@ -618,7 +618,7 @@ class ImageData:
 
         return self
 
-    def apply_color_formula(self, color_formula: Optional[str]) -> Self:
+    def apply_color_formula(self, color_formula: str | None) -> Self:
         """Apply color-operations formula in place."""
         out = self.array.data
         out[out < 0] = 0
@@ -759,9 +759,9 @@ class ImageData:
 
     def post_process(
         self,
-        in_range: Optional[Sequence[IntervalTuple]] = None,
-        out_dtype: Union[str, numpy.number] = "uint8",
-        color_formula: Optional[str] = None,
+        in_range: Sequence[IntervalTuple] | None = None,
+        out_dtype: str | numpy.number = "uint8",
+        color_formula: str | None = None,
         **kwargs: Any,
     ) -> "ImageData":
         """Post-process image data.
@@ -803,7 +803,7 @@ class ImageData:
         self,
         add_mask: bool = True,
         img_format: str = "PNG",
-        colormap: Optional[ColorMapType] = None,
+        colormap: ColorMapType | None = None,
         **kwargs,
     ) -> bytes:
         """Render data to image blob.
@@ -899,11 +899,11 @@ class ImageData:
     def statistics(
         self,
         categorical: bool = False,
-        categories: Optional[List[float]] = None,
-        percentiles: Optional[List[int]] = None,
-        hist_options: Optional[Dict] = None,
-        coverage: Optional[numpy.ndarray] = None,
-    ) -> Dict[str, BandStatistics]:
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
+        coverage: numpy.ndarray | None = None,
+    ) -> dict[str, BandStatistics]:
         """Return statistics from ImageData."""
         hist_options = hist_options or {}
 
@@ -923,7 +923,7 @@ class ImageData:
 
     def get_coverage_array(
         self,
-        shape: Dict,
+        shape: dict,
         shape_crs: CRS = WGS84_CRS,
         cover_scale: int = 10,
     ) -> NDArray[numpy.floating]:
@@ -972,7 +972,7 @@ class ImageData:
     def reproject(
         self,
         dst_crs: CRS,
-        resolution: Optional[Tuple[float, float]] = None,
+        resolution: tuple[float, float] | None = None,
         reproject_method: WarpResampling = "nearest",
     ) -> "ImageData":
         """Reproject data and mask."""

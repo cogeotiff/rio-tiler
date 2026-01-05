@@ -1,7 +1,6 @@
 """rio_tiler.mosaic.methods.defaults: default mosaic filling methods."""
 
 from dataclasses import dataclass, field
-from typing import List, Optional
 
 import numpy
 
@@ -18,7 +17,7 @@ class FirstMethod(MosaicMethodBase):
         """Mosaic Method repr."""
         return "<Mosaic: FirstMethod>"
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add data to the mosaic array."""
         if self.mosaic is None:
             self.mosaic = array
@@ -39,7 +38,7 @@ class HighestMethod(MosaicMethodBase):
         """Mosaic Method repr."""
         return "<Mosaic: HighestMethod>"
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add data to the mosaic array."""
         if self.mosaic is None:
             self.mosaic = array
@@ -63,7 +62,7 @@ class LowestMethod(MosaicMethodBase):
         """Mosaic Method repr."""
         return "<Mosaic: LowestMethod>"
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add data to the mosaic array."""
         if self.mosaic is None:
             self.mosaic = array
@@ -84,14 +83,14 @@ class MeanMethod(MosaicMethodBase):
     """Stack the arrays and return the Mean pixel value."""
 
     enforce_data_type: bool = True
-    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+    stack: list[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
     def __repr__(self):
         """Mosaic Method repr."""
         return "<Mosaic: MeanMethod>"
 
     @property
-    def data(self) -> Optional[numpy.ma.MaskedArray]:
+    def data(self) -> numpy.ma.MaskedArray | None:
         """Return Mean of the data stack."""
         if self.stack:
             array = numpy.ma.mean(numpy.ma.stack(self.stack, axis=0), axis=0)
@@ -112,14 +111,14 @@ class MedianMethod(MosaicMethodBase):
     """Stack the arrays and return the Median pixel value."""
 
     enforce_data_type: bool = True
-    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+    stack: list[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
     def __repr__(self):
         """Mosaic Method repr."""
         return "<Mosaic: MedianMethod>"
 
     @property
-    def data(self) -> Optional[numpy.ma.MaskedArray]:
+    def data(self) -> numpy.ma.MaskedArray | None:
         """Return Median of the data stack."""
         if self.stack:
             array = numpy.ma.median(numpy.ma.stack(self.stack, axis=0), axis=0)
@@ -130,7 +129,7 @@ class MedianMethod(MosaicMethodBase):
 
         return None
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add array to the stack."""
         self.stack.append(array)
 
@@ -139,21 +138,21 @@ class MedianMethod(MosaicMethodBase):
 class StdevMethod(MosaicMethodBase):
     """Stack the arrays and return the Standard Deviation value."""
 
-    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+    stack: list[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
     def __repr__(self):
         """Mosaic Method repr."""
         return "<Mosaic: StdevMethod>"
 
     @property
-    def data(self) -> Optional[numpy.ma.MaskedArray]:
+    def data(self) -> numpy.ma.MaskedArray | None:
         """Return STDDEV of the data stack."""
         if self.stack:
             return numpy.ma.std(numpy.ma.stack(self.stack, axis=0), axis=0)
 
         return None
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add array to the stack."""
         self.stack.append(array)
 
@@ -167,14 +166,14 @@ class LastBandHighMethod(MosaicMethodBase):
         return "<Mosaic: LastBandHighMethod>"
 
     @property
-    def data(self) -> Optional[numpy.ma.MaskedArray]:
+    def data(self) -> numpy.ma.MaskedArray | None:
         """Return data."""
         if self.mosaic is not None:
             return self.mosaic[:-1].copy()
 
         return None
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add data to the mosaic array."""
         if self.mosaic is None:
             self.mosaic = array
@@ -199,14 +198,14 @@ class LastBandLowMethod(MosaicMethodBase):
         return "<Mosaic: LastBandLowMethod>"
 
     @property
-    def data(self) -> Optional[numpy.ma.MaskedArray]:
+    def data(self) -> numpy.ma.MaskedArray | None:
         """Return data."""
         if self.mosaic is not None:
             return self.mosaic[:-1].copy()
 
         return None
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add data to the mosaic array."""
         if self.mosaic is None:
             self.mosaic = array
@@ -226,14 +225,14 @@ class LastBandLowMethod(MosaicMethodBase):
 class CountMethod(MosaicMethodBase):
     """Stack the arrays and return the valid pixel count."""
 
-    stack: List[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+    stack: list[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
 
     def __repr__(self):
         """Mosaic Method repr."""
         return "<Mosaic: CountMethod>"
 
     @property
-    def data(self) -> Optional[numpy.ma.MaskedArray]:
+    def data(self) -> numpy.ma.MaskedArray | None:
         """Return valid data count of the data stack."""
         if self.stack:
             data = numpy.ma.count(numpy.ma.stack(self.stack, axis=0), axis=0)
@@ -254,6 +253,6 @@ class CountMethod(MosaicMethodBase):
 
         return None
 
-    def feed(self, array: Optional[numpy.ma.MaskedArray]):
+    def feed(self, array: numpy.ma.MaskedArray | None):
         """Add array to the stack."""
         self.stack.append(array)

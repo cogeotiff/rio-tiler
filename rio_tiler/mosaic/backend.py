@@ -2,7 +2,7 @@
 
 import abc
 import logging
-from typing import Any, Type
+from typing import Any
 
 import attr
 from morecantile import TileMatrixSet
@@ -51,7 +51,7 @@ class BaseBackend(BaseReader):
     input: str = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    reader: Type[BaseReader] | Type[MultiBaseReader] | Type[MultiBandReader] = attr.ib(
+    reader: type[BaseReader] | type[MultiBaseReader] | type[MultiBandReader] = attr.ib(
         default=Reader
     )
     reader_options: dict = attr.ib(factory=dict)

@@ -1,7 +1,7 @@
 """rio-tiler.expression: Parse and Apply expression."""
 
 import re
-from typing import List, Sequence, Tuple
+from collections.abc import Sequence
 
 import numexpr
 import numpy
@@ -9,7 +9,7 @@ import numpy
 from rio_tiler.errors import InvalidExpression
 
 
-def parse_expression(expression: str, cast: bool = True) -> Tuple:
+def parse_expression(expression: str, cast: bool = True) -> tuple:
     """Parse rio-tiler band math expression and extract bands.
 
     Args:
@@ -37,7 +37,7 @@ def parse_expression(expression: str, cast: bool = True) -> Tuple:
     return output_bands
 
 
-def get_expression_blocks(expression: str) -> List[str]:
+def get_expression_blocks(expression: str) -> list[str]:
     """Split expression in blocks.
 
     Args:

@@ -1,7 +1,5 @@
 """rio_tiler.io.Reader with VSIFILE/Obstore Opener."""
 
-from typing import Union
-
 import attr
 import rasterio
 from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
@@ -21,7 +19,7 @@ except ImportError:  # pragma: nocover
 class VSIReader(Reader):
     """Rasterio Reader with VSIFILE opener."""
 
-    dataset: Union[DatasetReader, DatasetWriter, MemoryFile, WarpedVRT] = attr.ib(
+    dataset: DatasetReader | DatasetWriter | MemoryFile | WarpedVRT | None = attr.ib(
         default=None, init=False
     )
 

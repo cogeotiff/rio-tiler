@@ -3,7 +3,8 @@
 import contextlib
 import math
 import warnings
-from typing import Callable, Dict, Optional, Tuple, TypedDict, Union, cast
+from collections.abc import Callable
+from typing import TypedDict, cast
 
 import numpy
 from affine import Affine
@@ -34,12 +35,12 @@ from rio_tiler.utils import (
 class Options(TypedDict, total=False):
     """Reader Options."""
 
-    nodata: Optional[NoData]
-    vrt_options: Optional[Dict]
-    resampling_method: Optional[RIOResampling]
-    reproject_method: Optional[WarpResampling]
-    unscale: Optional[bool]
-    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]]
+    nodata: NoData | None
+    vrt_options: dict | None
+    resampling_method: RIOResampling | None
+    reproject_method: WarpResampling | None
+    unscale: bool | None
+    post_process: Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray] | None
 
 
 def _apply_buffer(
@@ -47,7 +48,7 @@ def _apply_buffer(
     bounds: BBox,
     height: int,
     width: int,
-) -> Tuple[BBox, int, int]:
+) -> tuple[BBox, int, int]:
     """Apply buffer on bounds."""
     x_res = (bounds[2] - bounds[0]) / width
     y_res = (bounds[3] - bounds[1]) / height
@@ -68,20 +69,20 @@ def _apply_buffer(
 
 
 def read(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    dst_crs: Optional[CRS] = None,
-    height: Optional[int] = None,
-    width: Optional[int] = None,
-    max_size: Optional[int] = None,
-    indexes: Optional[Indexes] = None,
-    window: Optional[windows.Window] = None,
-    nodata: Optional[NoData] = None,
-    vrt_options: Optional[Dict] = None,
-    out_dtype: Optional[Union[str, numpy.dtype]] = None,
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
+    dst_crs: CRS | None = None,
+    height: int | None = None,
+    width: int | None = None,
+    max_size: int | None = None,
+    indexes: Indexes | None = None,
+    window: windows.Window | None = None,
+    nodata: NoData | None = None,
+    vrt_options: dict | None = None,
+    out_dtype: str | numpy.dtype | None = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
+    post_process: Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray] | None = None,
 ) -> ImageData:
     """Low level read function.
 
@@ -309,25 +310,25 @@ def read(
 
 # flake8: noqa: C901
 def part(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
     bounds: BBox,
-    height: Optional[int] = None,
-    width: Optional[int] = None,
-    max_size: Optional[int] = None,
-    dst_crs: Optional[CRS] = None,
-    bounds_crs: Optional[CRS] = None,
-    indexes: Optional[Indexes] = None,
-    minimum_overlap: Optional[float] = None,
-    padding: Optional[int] = None,
-    buffer: Optional[float] = None,
-    nodata: Optional[NoData] = None,
-    vrt_options: Optional[Dict] = None,
-    out_dtype: Optional[Union[str, numpy.dtype]] = None,
+    height: int | None = None,
+    width: int | None = None,
+    max_size: int | None = None,
+    dst_crs: CRS | None = None,
+    bounds_crs: CRS | None = None,
+    indexes: Indexes | None = None,
+    minimum_overlap: float | None = None,
+    padding: int | None = None,
+    buffer: float | None = None,
+    nodata: NoData | None = None,
+    vrt_options: dict | None = None,
+    out_dtype: str | numpy.dtype | None = None,
     align_bounds_with_dataset: bool = False,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
-    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
+    post_process: Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray] | None = None,
 ) -> ImageData:
     """Read part of a dataset.
 
@@ -533,18 +534,18 @@ def part(
 
 
 def point(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    coordinates: Tuple[float, float],
-    indexes: Optional[Indexes] = None,
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
+    coordinates: tuple[float, float],
+    indexes: Indexes | None = None,
     coord_crs: CRS = WGS84_CRS,
-    nodata: Optional[NoData] = None,
-    vrt_options: Optional[Dict] = None,
-    out_dtype: Optional[Union[str, numpy.dtype]] = None,
+    nodata: NoData | None = None,
+    vrt_options: dict | None = None,
+    out_dtype: str | numpy.dtype | None = None,
     resampling_method: RIOResampling = "nearest",
     reproject_method: WarpResampling = "nearest",
     interpolate: bool = False,
     unscale: bool = False,
-    post_process: Optional[Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray]] = None,
+    post_process: Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray] | None = None,
 ) -> PointData:
     """Read a pixel value for a point.
 

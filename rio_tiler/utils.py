@@ -3,18 +3,9 @@
 import math
 import time
 import warnings
+from collections.abc import Callable, Generator
 from io import BytesIO
-from typing import (
-    Any,
-    Callable,
-    Dict,
-    Generator,
-    List,
-    Optional,
-    Sequence,
-    Tuple,
-    Union,
-)
+from typing import Any, Sequence
 
 import numpy
 import rasterio
@@ -44,7 +35,7 @@ def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, Non
         yield my_list[i : i + chuck_size]
 
 
-def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int]:
+def _get_width_height(max_size, dataset_height, dataset_width) -> tuple[int, int]:
     """Get Output Width/Height based on a max_size and dataset shape."""
     if max(dataset_height, dataset_width) < max_size:
         return dataset_height, dataset_width
@@ -60,7 +51,7 @@ def _get_width_height(max_size, dataset_height, dataset_width) -> Tuple[int, int
     return height, width
 
 
-def _missing_size(w: Optional[int] = None, h: Optional[int] = None):
+def _missing_size(w: int | None = None, h: int | None = None):
     """Check if one and only one size (width, height) is valid."""
     iterator = iter([w, h])
     return any(iterator) and not any(iterator)
@@ -90,11 +81,11 @@ def _weighted_stdev(
 def get_array_statistics(
     data: numpy.ma.MaskedArray,
     categorical: bool = False,
-    categories: Optional[List[float]] = None,
-    percentiles: Optional[List[int]] = None,
-    coverage: Optional[NDArray[numpy.floating]] = None,
+    categories: list[float] | None = None,
+    percentiles: list[int] | None = None,
+    coverage: NDArray[numpy.floating] | None = None,
     **kwargs: Any,
-) -> List[Dict[Any, Any]]:
+) -> list[dict[Any, Any]]:
     """Calculate per band array statistics.
 
     Args:
@@ -141,7 +132,7 @@ def get_array_statistics(
     if len(data.shape) < 3:
         data = numpy.ma.expand_dims(data, axis=0)  # type: ignore [assignment]
 
-    output: List[Dict[Any, Any]] = []
+    output: list[dict[Any, Any]] = []
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
 
     if coverage is not None:
@@ -274,7 +265,7 @@ def _round_window(window: windows.Window) -> windows.Window:
 
 
 def get_overview_level(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
     bounds: BBox,
     height: int,
     width: int,
@@ -327,14 +318,14 @@ def get_overview_level(
 
 
 def get_vrt_transform(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
     bounds: BBox,
-    height: Optional[int] = None,
-    width: Optional[int] = None,
+    height: int | None = None,
+    width: int | None = None,
     dst_crs: CRS = WEB_MERCATOR_CRS,
     window_precision: int = 6,
     align_bounds_with_dataset: bool = False,
-) -> Tuple[Affine, int, int]:
+) -> tuple[Affine, int, int]:
     """Calculate VRT transform.
 
     Args:
@@ -468,7 +459,7 @@ def get_vrt_transform(
     return vrt_transform, vrt_width, vrt_height
 
 
-def has_alpha_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> bool:
+def has_alpha_band(src_dst: DatasetReader | DatasetWriter | WarpedVRT) -> bool:
     """Check for alpha band or mask in source."""
     if (
         any(MaskFlags.alpha in flags for flags in src_dst.mask_flag_enums)
@@ -478,7 +469,7 @@ def has_alpha_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> b
     return False
 
 
-def has_mask_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> bool:
+def has_mask_band(src_dst: DatasetReader | DatasetWriter | WarpedVRT) -> bool:
     """Check for mask band in source."""
     if any(
         (MaskFlags.per_dataset in flags and MaskFlags.alpha not in flags)
@@ -488,7 +479,7 @@ def has_mask_band(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> bo
     return False
 
 
-def non_alpha_indexes(src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT]) -> Tuple:
+def non_alpha_indexes(src_dst: DatasetReader | DatasetWriter | WarpedVRT) -> tuple:
     """Return indexes of non-alpha bands."""
     return tuple(
         b
@@ -524,7 +515,7 @@ def linear_rescale(
 
 
 def _requested_tile_aligned_with_internal_tile(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
     bounds: BBox,
     bounds_crs: CRS = WEB_MERCATOR_CRS,
 ) -> bool:
@@ -553,9 +544,9 @@ def _requested_tile_aligned_with_internal_tile(
 
 def render(
     data: numpy.ndarray,
-    mask: Optional[numpy.ndarray] = None,
+    mask: numpy.ndarray | None = None,
     img_format: str = "PNG",
-    colormap: Optional[ColorMapType] = None,
+    colormap: ColorMapType | None = None,
     **creation_options: Any,
 ) -> bytes:
     """Translate numpy.ndarray to image bytes.
@@ -705,10 +696,10 @@ def pansharpening_brovey(
 
 
 def _convert_to_raster_space(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    poly_coordinates: List,
-    op: Optional[Callable[[float], Any]] = None,
-) -> List[str]:
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
+    poly_coordinates: list,
+    op: Callable[[float], Any] | None = None,
+) -> list[str]:
     # NOTE: we could remove this once we have rasterio >= 1.4.2
     op = op or numpy.floor
     polygons = []
@@ -722,10 +713,10 @@ def _convert_to_raster_space(
 
 
 def create_cutline(
-    src_dst: Union[DatasetReader, DatasetWriter, WarpedVRT],
-    geometry: Dict,
+    src_dst: DatasetReader | DatasetWriter | WarpedVRT,
+    geometry: dict,
     geometry_crs: CRS = None,
-    op: Optional[Callable[[float], Any]] = None,
+    op: Callable[[float], Any] | None = None,
 ) -> str:
     """
     Create WKT Polygon Cutline for GDALWarpOptions.
@@ -807,7 +798,7 @@ def resize_array(
     resampling_method: RIOResampling = "nearest",
 ) -> numpy.ndarray:
     """resize array to a given height and width."""
-    out_shape: Union[Tuple[int, int], Tuple[int, int, int]]
+    out_shape: int | tuple[int, int] | tuple[int, int, int]
     if len(data.shape) == 2:
         out_shape = (height, width)
     else:
@@ -841,7 +832,7 @@ def normalize_bounds(bounds: BBox) -> BBox:
     )
 
 
-def _validate_shape_input(shape: Dict) -> Dict:
+def _validate_shape_input(shape: dict) -> dict:
     """Ensure input shape is valid and reduce features to geometry"""
 
     if "geometry" in shape:
@@ -853,7 +844,7 @@ def _validate_shape_input(shape: Dict) -> Dict:
     return shape
 
 
-def cast_to_sequence(val: Optional[Any] = None) -> Sequence:
+def cast_to_sequence(val: Any | None = None) -> Sequence:
     """Cast input to sequence if not Tuple of List."""
     if val is not None and not isinstance(val, (list, tuple)):
         val = (val,)
@@ -861,7 +852,7 @@ def cast_to_sequence(val: Optional[Any] = None) -> Sequence:
     return val
 
 
-def _CRS_authority_info(crs: CRS) -> Optional[Tuple[str, str, str]]:
+def _CRS_authority_info(crs: CRS) -> tuple[str, str, str] | None:
     """Convert CRS to URI.
 
     Code adapted from https://github.com/developmentseed/morecantile/blob/1829fe12408e4a1feee7493308f3f02257ef4caf/morecantile/models.py#L148-L161
@@ -879,7 +870,7 @@ def _CRS_authority_info(crs: CRS) -> Optional[Tuple[str, str, str]]:
     return None
 
 
-def CRS_to_uri(crs: CRS) -> Optional[str]:
+def CRS_to_uri(crs: CRS) -> str | None:
     """Convert CRS to URI."""
     if info := _CRS_authority_info(crs):
         authority, version, code = info
@@ -889,7 +880,7 @@ def CRS_to_uri(crs: CRS) -> Optional[str]:
     return None
 
 
-def CRS_to_urn(crs: CRS) -> Optional[str]:
+def CRS_to_urn(crs: CRS) -> str | None:
     """Convert CRS to URN."""
     if info := _CRS_authority_info(crs):
         authority, version, code = info
