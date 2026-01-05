@@ -25,7 +25,7 @@ def mosaic_reader(  # noqa: C901
     pixel_selection: type[MosaicMethodBase] | MosaicMethodBase = FirstMethod,
     chunk_size: int | None = None,
     threads: int = MAX_THREADS,
-    allowed_exceptions: tuple | None = None,
+    allowed_exceptions: tuple = (TileOutsideBounds,),
     **kwargs,
 ) -> tuple[ImageData, list]:
     """Merge multiple assets.
@@ -60,8 +60,6 @@ def mosaic_reader(  # noqa: C901
 
 
     """
-    allowed_exceptions = allowed_exceptions or (TileOutsideBounds,)
-
     if isclass(pixel_selection):
         pixel_selection = cast(type[MosaicMethodBase], pixel_selection)
 
@@ -172,7 +170,7 @@ def mosaic_point_reader(
     pixel_selection: type[MosaicMethodBase] | MosaicMethodBase = FirstMethod,
     chunk_size: int | None = None,
     threads: int = MAX_THREADS,
-    allowed_exceptions: tuple | None = None,
+    allowed_exceptions: tuple = (TileOutsideBounds,),
     **kwargs,
 ) -> tuple[PointData, list]:
     """Merge multiple assets.
@@ -199,8 +197,6 @@ def mosaic_point_reader(
             pt = mosaic_point_reader(["cog.tif", "cog2.tif"], reader, 0, 0)
 
     """
-    allowed_exceptions = allowed_exceptions or (TileOutsideBounds,)
-
     if isclass(pixel_selection):
         pixel_selection = cast(type[MosaicMethodBase], pixel_selection)
 
