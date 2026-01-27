@@ -253,7 +253,7 @@ class XarrayReader(BaseReader):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        tilesize: int = 256,
+        tilesize: int | None = None,
         reproject_method: WarpResampling = "nearest",
         auto_expand: bool = True,
         nodata: NoData | None = None,
@@ -281,16 +281,22 @@ class XarrayReader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
+        matrix = self.tms.matrix(tile_z)
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
         return self.part(
-            cast(BBox, self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
+            bbox,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             reproject_method=reproject_method,
             auto_expand=auto_expand,
             nodata=nodata,
             indexes=indexes,
-            height=tilesize,
-            width=tilesize,
+            height=tilesize or matrix.tileHeight,
+            width=tilesize or matrix.tileWidth,
             out_dtype=out_dtype,
             **kwargs,
         )

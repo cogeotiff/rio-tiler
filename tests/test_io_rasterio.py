@@ -1195,3 +1195,17 @@ def test_unscale_stats():
 
         assert pytest.approx(img.dataset_statistics[0][0]) == pytest.approx(minb1)
         assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
+
+
+def test_custom_tms():
+    """Test tile size per TMS matrix"""
+    tms = morecantile.tms.get("WebMercatorQuad").model_dump()
+    tms["tileMatrices"][0]["tileHeight"] = 512
+    tms["tileMatrices"][0]["tileWidth"] = 512
+    web_mercator = morecantile.TileMatrixSet.model_validate(tms)
+    with Reader(COGEO, tms=web_mercator) as src:
+        tile = src.tile(0, 0, 0)
+        assert tile.data.shape == (1, 512, 512)
+
+        tile = src.tile(0, 0, 1)
+        assert tile.data.shape == (1, 256, 256)

@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 9.0.0 (TBD)
+
+* remove default tilesize (256) for `tile()` methods and default to TMS tilematrix `tileHeight` and `tileWidth` **breaking change**
+
 # 8.0.5 (2026-01-05)
 
 * improve type hints - part 2: change old Union and `typing.*` notations
