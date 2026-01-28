@@ -37,13 +37,21 @@ wgs84_grid = morecantile.tms.get("WorldCRS84Quad")
 with Reader("my.tif", tms=wgs84_grid) as cog:
     img = cog.tile(1, 1, 1)
     assert img.crs == CRS.from_epsg(4326)
+    assert img.width == 256
+    assert img.height == 256
 
 # Create Custom grid
 extent = [-948.75, -543592.47, 5817.41, -3333128.95]  # From https:///epsg.io/3031
 epsg3031TMS = morecantile.TileMatrixSet.custom(
-    extent, projCRS.from_epsg(3031), identifier="MyCustomTmsEPSG3031"
+    extent, 
+    projCRS.from_epsg(3031), 
+    identifier="MyCustomTmsEPSG3031",
+    tile_width=512,
+    tile_height=512,
 )
 with Reader("my.tif", tms=epsg3031TMS) as cog:
     img = cog.tile(1, 1, 1)
     assert img.crs == CRS.from_epsg(3031)
+    assert img.width == 512
+    assert img.height == 512
 ```

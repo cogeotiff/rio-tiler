@@ -254,7 +254,7 @@ class Reader(BaseReader):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        tilesize: int = 256,
+        tilesize: int | None = None,
         indexes: Indexes | None = None,
         expression: str | None = None,
         buffer: float | None = None,
@@ -266,7 +266,7 @@ class Reader(BaseReader):
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
-            tilesize (int, optional): Output image size. Defaults to `256`.
+            tilesize (int, optional): Output image size.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             buffer (float, optional): Buffer on each side of the given tile. It must be a multiple of `0.5`. Output **tilesize** will be expanded to `tilesize + 2 * tile_buffer` (e.g 0.5 = 257x257, 1.0 = 258x258).
@@ -281,12 +281,18 @@ class Reader(BaseReader):
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
             )
 
+        matrix = self.tms.matrix(tile_z)
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
         return self.part(
-            cast(BBox, self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
+            bbox,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
-            height=tilesize,
-            width=tilesize,
+            height=tilesize or matrix.tileHeight,
+            width=tilesize or matrix.tileWidth,
             max_size=None,
             indexes=indexes,
             expression=expression,
@@ -593,7 +599,7 @@ class LocalTileMatrixSet:
 class ImageReader(Reader):
     """Non Geo Image Reader"""
 
-    tms: TileMatrixSet = attr.ib(init=False)
+    tms: LocalTileMatrixSet = attr.ib(init=False)  # type: ignore[assignment]
 
     crs: CRS | None = attr.ib(init=False, default=None)
     transform: Affine = attr.ib(init=False)
@@ -635,7 +641,7 @@ class ImageReader(Reader):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        tilesize: int = 256,
+        tilesize: int | None = None,
         indexes: Indexes | None = None,
         expression: str | None = None,
         out_dtype: str | numpy.dtype | None = None,
@@ -666,10 +672,15 @@ class ImageReader(Reader):
                 f"Tile {tile_z}/{tile_x}/{tile_y} is outside {self.input} bounds"
             )
 
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
         return self.part(
-            cast(BBox, self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z))),
-            height=tilesize,
-            width=tilesize,
+            bbox,
+            height=tilesize or self.tms.tile_size,
+            width=tilesize or self.tms.tile_size,
             max_size=None,
             indexes=indexes,
             expression=expression,

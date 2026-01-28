@@ -127,12 +127,12 @@ EPSG:32620
     # - https://github.com/cogeotiff/rio-tiler/pull/405
     with Reader("myfile.tif") as src:
         # add 0.5 pixel on each side of the tile
-        img = src.tile(1, 2, 3, buffer=0.5)
+        img = src.tile(1, 2, 3, buffer=0.5, tilesize=256)
         assert img.width == 257
         assert img.height == 257
 
         # add 1 pixel on each side of the tile
-        img = src.tile(1, 2, 3, buffer=1)
+        img = src.tile(1, 2, 3, buffer=1, tilesize=256)
         assert img.width == 258
         assert img.height == 258
     ```
