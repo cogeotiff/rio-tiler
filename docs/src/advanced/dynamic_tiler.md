@@ -66,10 +66,11 @@ def tile(
     x: int,
     y: int,
     url: str = Query(..., description="Cloud Optimized GeoTIFF URL."),
+    tilesize: int | none = Query(None, description="TileSize"),
 ):
     """Handle tile requests."""
     with Reader(url) as cog:
-        img = cog.tile(x, y, z)
+        img = cog.tile(x, y, z, tilesize=tilesize)
 
     content = img.render(img_format="PNG", **img_profiles.get("png"))
     return Response(content, media_type="image/png")
@@ -79,10 +80,13 @@ def tile(
 def tilejson(
     request: Request,
     url: str = Query(..., description="Cloud Optimized GeoTIFF URL."),
+    tilesize: int | none = Query(None, description="TileSize"),
 ):
     """Return TileJSON document for a COG."""
     tile_url = str(request.url_for("tile", z="{z}", x="{x}", y="{y}"))
     tile_url = f"{tile_url}?url={url}"
+    if tilesize:
+        tile_url += f"&tilesize={tilesize}"
 
     with Reader(url) as cog:
         return {
