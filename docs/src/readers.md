@@ -1,5 +1,5 @@
 
-`rio-tiler`'s  Reader are built from its abstract base classes (`BaseReader`, `MultiBandReader`, `MultiBaseReader`). Those Classes implements defaults interfaces which helps the integration in broader application. To learn more about `rio-tiler`'s base classes see [Base classes and custom readers](advanced/custom_readers.md)
+`rio-tiler`'s  Reader are built from its abstract base classes (`BaseReader`, `MultiBaseReader`). Those Classes implements defaults interfaces which helps the integration in broader application. To learn more about `rio-tiler`'s base classes see [Base classes and custom readers](advanced/custom_readers.md)
 
 ## rio_tiler.io.rasterio.Reader
 
@@ -87,13 +87,13 @@ EPSG:32620
     with Reader("myfile.tif") as src:
         img = src.read(indexes=1)  # or src.read(indexes=(1,))
         assert img.count == 1
-        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["b1"]
 
     # With expression
     with Reader("myfile.tif") as src:
         img = src.read(expression="b1/b2")
         assert img.count == 1
-        assert img.band_names == ["b1/b2"]
+        assert img.band_descriptions == ["b1/b2"]
     ```
 
 - **tile()**: Read map tile from a raster
@@ -281,7 +281,7 @@ EPSG:32620
         "bounds": [373185.0, 8019284.949381611, 639014.9492102272, 8286015.0],
         "crs": "http://www.opengis.net/def/crs/EPSG/0/32621"
         "band_metadata": [["b1", {}]],
-        "band_descriptions": [["b1", ""]],
+        "band_descriptions": [["b1", "b1"]],
         "dtype": "int8",
         "colorinterp": ["palette"],
         "nodata_type": "Nodata",
@@ -336,6 +336,7 @@ EPSG:32620
         "valid_pixels": 1045504,
         "percentile_98": 6896,
         "percentile_2": 1
+        "description": "b1",
     }
 
     with Reader("myfile_with_colormap.tif") as src:
@@ -452,8 +453,7 @@ EPSG:4326
 The `STACReader` has the same methods as the `Reader` (defined by the BaseReader/MultiBaseReader classes).
 
 !!! Important
-    - Most of `STACReader` methods require to set either `assets=` or `expression=` option.
-    - `asset_indexes` and `asset_expression` are available for all STACReader methods except `info`.
+    - Most of `STACReader` methods require to set either `assets=` (except if `default_assets` is set).
 
 - **tile()**: Read map tile from a STAC Item
 
@@ -474,13 +474,13 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
         )
         assert img.count == 2  # each assets have one band
 
-    print(img.assets)
-    >>> [
-        'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B01.tif',
-        'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B02.tif',
-    ]
-    print(img.band_names)
-    >>> ['B01_b1', 'B02_b1']
+        print(img.assets)
+        >>> [
+            'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B01.tif',
+            'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B02.tif',
+        ]
+        print(img.band_descriptions)
+        >>> ['B01_b1', 'B02_b1']
 
     # Using `expression=`
     with STACReader(stac_url, exclude_assets={"thumbnail"}) as stac:
@@ -489,23 +489,51 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
             103,
             8,
             tilesize=256,
-            expression="B01_b1/B02_b1",
+            assets=["B01", "B02"],
+            expression="b1/b2",
         )
         assert img.count == 1
+        print(img.band_descriptions)
+        >>> ['B01_b1/B02_b1']
 
-    # Using `assets=` + `asset_indexes` (select a specific index in an asset)
+    # Using `assets=` + `|indexes=` (select a specific index in an asset)
     with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
         img = stac.tile(
             145,
             103,
             8,
             tilesize=256,
-            assets=["B01"],
-            asset_indexes={
-                "B01": (1, 1, 1),  # return the first band 3 times
-            }
+            assets=["B01|indexes=1,1,1"],
         )
         assert img.count == 3
+        print(img.band_descriptions)
+        >>> ['B01_b1', 'B01_b1', 'B01_b1']
+
+    # Using `assets=` + `|expression=`
+    with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
+        img = stac.tile(
+            145,
+            103,
+            8,
+            tilesize=256,
+            assets=["B01|expression=b1*2"],
+        )
+        assert img.count == 3
+        print(img.band_descriptions)
+        >>> ['B01_b1*2']
+
+    with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
+        img = stac.tile(
+            145,
+            103,
+            8,
+            tilesize=256,
+            assets=["B01|expression=b1*2"],
+            expression="b1/2"
+        )
+        assert img.count == 3
+        print(img.band_descriptions)
+        >>> ['B01_b1*2/2']
     ```
 
 - **part()**: Read a STAC item for a given bounding box (`bbox`). By default the bbox is considered to be in WGS84.
@@ -516,6 +544,8 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
         # stac.part((minx, miny, maxx, maxy), assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)
         img = stac.part(bbox, assets=["B01", "B02"], max_size=128)
         assert img.count == 2  # each assets have one band
+        print(img.band_descriptions)
+        >>> ['B01_b1', 'B02_b1']
     ```
 
 - **feature()**: Read a STAC item for a geojson feature. By default the feature is considered to be in WGS84.
@@ -540,6 +570,8 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
         # stac.feature(feature, assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)
         img = stac.feature(feat, assets=["B01", "B02"], max_size=128)
         assert img.count == 2  # each assets have one band
+        print(img.band_descriptions)
+        >>> ['B01_b1', 'B02_b1']
     ```
 
 - **preview()**: Read a preview of STAC Item
@@ -549,6 +581,8 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
         # stac.preview(assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)
         img = stac.preview(assets=["B01", "B02"], max_size=128)
         assert img.count == 2  # each assets have one band
+        print(img.band_descriptions)
+        >>> ['B01_b1', 'B02_b1']
     ```
 
 - **point()**: Read the pixel values for assets for a given `lon, lat` coordinates. By default the coordinates are considered to be in WGS84.
@@ -557,12 +591,13 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
     with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
         # stac.point(lon, lat, assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)
         data = stac.point(24.1, 31.9, assets=["B01", "B02"])
-
-    print(data.data)
-    >>> [
-        3595,  # values for B01
-        3198  # values for B02
-    ]
+        print(data.data)
+        >>> [
+            3595,  # values for B01
+            3198  # values for B02
+        ]
+        print(data.band_descriptions)
+        >>> ['B01_b1', 'B02_b1']
     ```
 
 - **info()**: Return simple metadata about the assets
@@ -575,12 +610,12 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
     print(list(info))
     >>> ["B01", "B02"]
 
-    print(info["B01"].json(exclude_none=True))
+    print(info["B01"].model_dump(mode="json", exclude_none=True))
     >>> {
         "bounds": [373185.0, 8019284.949381611, 639014.9492102272, 8286015.0],
         "crs": "http://www.opengis.net/def/crs/EPSG/0/32621"
         "band_metadata": [["b1", {}]],
-        "band_descriptions": [["b1", ""]],
+        "band_descriptions": [['b1', 'b1']],
         "dtype": "uint16",
         "nodata_type": "Nodata",
         "colorinterp": ["gray"],
@@ -607,7 +642,7 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
     print(list(stats["B01"]))
     >>> ["b1"]  # B01 has only one band entry "1"
 
-    print(stats["B01"]["b1"].json(exclude_none=True))
+    print(stats["B01"]["b1"].model_dump(mode="json", exclude_none=True))
     {
         "min": 283.0,
         "max": 7734.0,
@@ -627,7 +662,8 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
         "masked_pixels": 4229.0,
         "valid_pixels": 12155.0,
         "percentile_2": 326.08000000000004,
-        "percentile_98": 5026.76
+        "percentile_98": 5026.76,
+        "description": "b1"
     }
     ```
 
@@ -642,11 +678,11 @@ The `merged_statistics` enable the use of `expression` to perform assets mixing 
 
     # stats will be in form or {"band": BandStatistics(), ...}
     print(list(stats))
-    >>> ["B01_b1", "B02_b1"]
+    >>> ["b1", "b2"]
 
-    assert isinstance(stats["B01_b1"], BandStatistics)
+    assert isinstance(stats["b1"], BandStatistics)
 
-    print(info["B01_b1"].json(exclude_none=True))
+    print(stats["b1"].model_dump(mode="json", exclude_none=True))
     {
         "min": 283.0,
         "max": 7734.0,
@@ -666,22 +702,20 @@ The `merged_statistics` enable the use of `expression` to perform assets mixing 
         "masked_pixels": 4229.0,
         "valid_pixels": 12155.0,
         "percentile_2": 326.08000000000004,
-        "percentile_98": 5026.76
+        "percentile_98": 5026.76,
+        "description": "B01_b1"
     }
 
     with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
         # stac.statistics(assets=?, asset_expression=?, asset_indexes=?, **kwargs)
-        stats = stac.merged_statistics(expression=["B01_b1/B02_b1"], max_size=128)
+        stats = stac.merged_statistics(assets=["B01", "B02"], expression="b1/b2", max_size=128)
 
     print(list(stats))
-    >>> ["B01_b1/B02_b1"]
+    >>> ["b1"]
 
-    assert isinstance(stats["B01_b1/B02_b1"], BandStatistics)
+    assert isinstance(stats["b1"], BandStatistics)
+    assert stats["b1"].description == "B01_b1/B02_b1"
     ```
-
-### STAC Expression
-
-When using `expression`, the user will need to explicitly pass the band number to use within the asset e.g: `asset1_b1 + asset2_b2`.
 
 ### Asset As Band
 
@@ -690,13 +724,13 @@ in rio-tiler `4.1.0`, we've added `asset_as_band: bool` option to the data metho
 ```python
 # For expression, without `asset_as_band` tag, users have to pass `_b{n}` suffix to indicate the band index
 with STACReader(STAC_PATH) as stac:
-    img = stac.tile(71, 102, 8, expression="green_b1/red_b1")
-    assert img.band_names == ["green_b1/red_b1"]
+    img = stac.tile(71, 102, 8, assets=["green", "red"], expression="b1/b2")
+    assert img.band_description == ["green_b1/red_b1"]
 
 # With `asset_as_band=True`, expression can be the asset names
 with STACReader(STAC_PATH) as stac:
-    img = stac.tile(71, 102, 8, expression="green/red", asset_as_band=True)
-    assert img.band_names == ["green/red"]
+    img = stac.tile(71, 102, 8, assets=["green", "red"], expression="b1/b2", asset_as_band=True)
+    assert img.band_description == ["green/red"]
 ```
 
 ## rio_tiler.io.rasterio.ImageReader
@@ -772,13 +806,13 @@ Affine(1.0, 0.0, 0.0,  0.0, 1.0, 0.0)
     with ImageReader("image.jpeg") as src:
         img = src.read(indexes=1)  # or src.read(indexes=(1,))
         assert img.count == 1
-        assert img.band_names == ["b1"]
+        assert img.band_description == ["b1"]
 
     # With expression
     with ImageReader("image.jpeg") as src:
         img = src.read(expression="b1/b2")
         assert img.count == 1
-        assert img.band_names == ["b1/b2"]
+        assert img.band_description == ["b1/b2"]
     ```
 
 - **tile()**: Read tile from the image
@@ -1232,7 +1266,8 @@ EPSG:4326
         "masked_pixels": 0,
         "valid_pixels": 1045504,
         "percentile_98": 6896,
-        "percentile_2": 1
+        "percentile_2": 1,
+        "description": "2022-01-01T00:00:00.000000000"
     }
     ```
 

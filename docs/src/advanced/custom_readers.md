@@ -107,7 +107,7 @@ class AssetFileReader(MultiBaseReader):
                 f"'{asset}' is not valid, should be one of {self.assets}"
             )
 
-        return AssetInfo(url=os.path.join(self.input, f"{self.prefix}{asset}.tif"))
+        return AssetInfo(url=os.path.join(self.input, f"{self.prefix}{asset}.tif"), name=asset, method_options={})
 
 # we have a directoty with "scene_b1.tif", "scene_b2.tif"
 with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
@@ -139,7 +139,7 @@ with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
         "band_descriptions": [
             [
                 "b1",
-                ""
+                "b1"
             ]
         ],
         "dtype": "uint16",
@@ -171,119 +171,6 @@ with AssetFileReader(input="my_dir/", prefix="scene_") as cr:
     print(img.data.shape)
     >>> (2, 256, 256)
 ```
-
-### **MultiBandsReader**
-
-Almost as the previous `MultiBaseReader`, the `MultiBandsReader` children will merge results extracted from different file but taking each file as individual bands.
-
-The `MultiBaseReader` has the same attributes/properties/methods as the `BaseReader`.
-
-Example
-
-```python
-import os
-import pathlib
-from typing import Dict, Type
-
-import attr
-from morecantile import TileMatrixSet
-from rio_tiler.io.base import MultiBandReader
-from rio_tiler.io import COGReader, BaseReader
-from rio_tiler.constants import WEB_MERCATOR_TMS
-
-@attr.s
-class BandFileReader(MultiBandReader):
-
-    input: str = attr.ib()
-    prefix: str = attr.ib() # we add a custom attribute
-
-    # because we add another attribute (prefix) we need to
-    # re-specify the other attribute for the class
-    reader: Type[BaseReader] = attr.ib(default=COGReader)
-    reader_options: Dict = attr.ib(factory=dict)
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    # we place min/max zoom in __init__
-    minzoom: int = attr.ib(default=None)
-    maxzoom: int = attr.ib(default=None)
-
-    def __attrs_post_init__(self):
-        """Parse Sceneid and get grid bounds."""
-        self.bands = sorted(
-            [p.stem.split("_")[1] for p in pathlib.Path(self.input).glob(f"*{self.prefix}*.tif")]
-        )
-        with self.reader(self._get_band_url(self.bands[0])) as cog:
-            self.bounds = cog.bounds
-            self.crs = cog.crs
-            self.transform = cog.transform
-            self.height = cog.height
-            self.width = cog.width
-            if self.minzoom is None:
-                self.minzoom = cog.minzoom
-
-            if self.maxzoom is None:
-                self.maxzoom = cog.maxzoom
-
-    def _get_band_url(self, band: str) -> str:
-        """Validate band's name and return band's url."""
-        return os.path.join(self.input, f"{self.prefix}{band}.tif")
-
-
-# we have a directoty with "scene_b1.tif", "scene_b2.tif"
-with BandFileReader(input="my_dir/", prefix="scene_") as cr:
-    print(cr.bands)
-    >>> ['band1', 'band2']
-
-    print(cr.info(bands=("band1", "band2")).model_dump_json(exclude_none=True))
-    >>> {
-        "bounds": [
-            199980,
-            2690220,
-            309780,
-            2800020
-        ],
-        "crs": "http://www.opengis.net/def/crs/EPSG/0/32629",
-        "band_metadata": [
-            [
-                "band1",
-                {}
-            ],
-            [
-                "band2",
-                {}
-            ]
-        ],
-        "band_descriptions": [
-            [
-                "band1",
-                ""
-            ],
-            [
-                "band2",
-                ""
-            ]
-        ],
-        "dtype": "uint16",
-        "nodata_type": "Nodata",
-        "colorinterp": [
-            "gray",
-            "gray"
-        ]
-    }
-
-    img = cr.tile(238, 218, 9, bands=("band1", "band2"))
-
-    print(img.assets)
-    >>> ['my_dir/scene_band1.tif', 'my_dir/scene_band2.tif']
-
-    print(img.data.shape)
-    >>> (2, 256, 256)
-```
-
-Note: [`rio-tiler-pds`][rio-tiler-pds] readers are built using the `MultiBandReader` base class.
-
-[rio-tiler-pds]: https://github.com/cogeotiff/rio-tiler-pds
-
 
 ## Custom Reader subclass
 

@@ -51,7 +51,7 @@ def get_expression_blocks(expression: str) -> list[str]:
             ['b1/b2', 'b2+b1']
 
     """
-    return [expr for expr in expression.split(";") if expr]
+    return [expr.lower() for expr in expression.split(";") if expr]
 
 
 def apply_expression(

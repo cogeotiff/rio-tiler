@@ -312,35 +312,6 @@ wheels = [
 ]
 
 [[package]]
-name = "bracex"
-version = "2.6"
-source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/63/9a/fec38644694abfaaeca2798b58e276a8e61de49e2e37494ace423395febc/bracex-2.6.tar.gz", hash = "sha256:98f1347cd77e22ee8d967a30ad4e310b233f7754dbf31ff3fceb76145ba47dc7", size = 26642, upload-time = "2025-06-22T19:12:31.254Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/9d/2a/9186535ce58db529927f6cf5990a849aa9e052eea3e2cfefe20b9e1802da/bracex-2.6-py3-none-any.whl", hash = "sha256:0b0049264e7340b3ec782b5cb99beb325f36c3782a32e36e876452fd49a09952", size = 11508, upload-time = "2025-06-22T19:12:29.781Z" },
-]
-
-[[package]]
-name = "bump-my-version"
-version = "1.2.6"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "httpx" },
-    { name = "pydantic" },
-    { name = "pydantic-settings" },
-    { name = "questionary" },
-    { name = "rich" },
-    { name = "rich-click" },
-    { name = "tomlkit" },
-    { name = "wcmatch" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/47/d3/43acec2ec4a477d6c6191faebe5f2e79facd80936ab3e93b6f9d18d11593/bump_my_version-1.2.6.tar.gz", hash = "sha256:1f2f0daa5d699904e9739be8efb51c4c945461bad83cd4da4c89d324d9a18343", size = 1195328, upload-time = "2025-12-29T11:59:30.389Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/ab/8e/39de3356f72327dd0bf569540a858723f3fc4f11f3c5bfae85b3dadac5c3/bump_my_version-1.2.6-py3-none-any.whl", hash = "sha256:a2f567c10574a374b81a9bd6d2bd3cb2ca74befe5c24c3021123773635431659", size = 59791, upload-time = "2025-12-29T11:59:27.873Z" },
-]
-
-[[package]]
 name = "cachetools"
 version = "6.2.4"
 source = { registry = "https://pypi.org/simple" }
@@ -3400,18 +3371,6 @@ wheels = [
 ]
 
 [[package]]
-name = "questionary"
-version = "2.1.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "prompt-toolkit" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/f6/45/eafb0bba0f9988f6a2520f9ca2df2c82ddfa8d67c95d6625452e97b204a5/questionary-2.1.1.tar.gz", hash = "sha256:3d7e980292bb0107abaa79c68dd3eee3c561b83a0f89ae482860b181c8bd412d", size = 25845, upload-time = "2025-08-28T19:00:20.851Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/3c/26/1062c7ec1b053db9e499b4d2d5bc231743201b74051c973dadeac80a8f43/questionary-2.1.1-py3-none-any.whl", hash = "sha256:a51af13f345f1cdea62347589fbb6df3b290306ab8930713bfae4d475a7d4a59", size = 36753, upload-time = "2025-08-28T19:00:19.56Z" },
-]
-
-[[package]]
 name = "rasterio"
 version = "1.4.4"
 source = { registry = "https://pypi.org/simple" }
@@ -3595,20 +3554,6 @@ wheels = [
 ]
 
 [[package]]
-name = "rich-click"
-version = "1.9.5"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "click" },
-    { name = "colorama", marker = "sys_platform == 'win32'" },
-    { name = "rich" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/6b/d1/b60ca6a8745e76800b50c7ee246fd73f08a3be5d8e0b551fc93c19fa1203/rich_click-1.9.5.tar.gz", hash = "sha256:48120531493f1533828da80e13e839d471979ec8d7d0ca7b35f86a1379cc74b6", size = 73927, upload-time = "2025-12-21T14:49:44.167Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/25/0a/d865895e1e5d88a60baee0fc3703eb111c502ee10c8c107516bc7623abf8/rich_click-1.9.5-py3-none-any.whl", hash = "sha256:9b195721a773b1acf0e16ff9ec68cef1e7d237e53471e6e3f7ade462f86c403a", size = 70580, upload-time = "2025-12-21T14:49:42.905Z" },
-]
-
-[[package]]
 name = "rio-tiler"
 source = { editable = "." }
 dependencies = [
@@ -3646,8 +3591,10 @@ deploy = [
 ]
 dev = [
     { name = "boto3" },
-    { name = "bump-my-version" },
     { name = "h5netcdf" },
+    { name = "ipython" },
+    { name = "jupyter" },
+    { name = "matplotlib" },
     { name = "morecantile" },
     { name = "obstore" },
     { name = "pre-commit" },
@@ -3668,11 +3615,6 @@ docs = [
     { name = "mkdocs-material", extra = ["imaging"] },
     { name = "mkdocstrings", extra = ["python"] },
     { name = "pygments" },
-]
-notebook = [
-    { name = "ipython" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
 ]
 performance = [
     { name = "pytest-benchmark" },
@@ -3704,8 +3646,10 @@ provides-extras = ["s3", "xarray", "zarr"]
 deploy = [{ name = "hatch" }]
 dev = [
     { name = "boto3" },
-    { name = "bump-my-version" },
     { name = "h5netcdf" },
+    { name = "ipython" },
+    { name = "jupyter" },
+    { name = "matplotlib" },
     { name = "morecantile", specifier = ">=6.0,<8.0" },
     { name = "obstore" },
     { name = "pre-commit" },
@@ -3725,11 +3669,6 @@ docs = [
     { name = "mkdocs-material", extras = ["imaging"], specifier = ">=9.5" },
     { name = "mkdocstrings", extras = ["python"], specifier = ">=0.25.1" },
     { name = "pygments" },
-]
-notebook = [
-    { name = "ipython" },
-    { name = "jupyter" },
-    { name = "matplotlib" },
 ]
 performance = [
     { name = "pytest-benchmark" },
@@ -4420,18 +4359,6 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/bd/95/615e72cd27b85b61eec764a5ca51bd94d40b5adea5ff47567d9ebc4d275a/watchfiles-1.1.1-pp311-pypy311_pp73-macosx_11_0_arm64.whl", hash = "sha256:89eef07eee5e9d1fda06e38822ad167a044153457e6fd997f8a858ab7564a336", size = 396117, upload-time = "2025-10-14T15:06:11.28Z" },
     { url = "https://files.pythonhosted.org/packages/c9/81/e7fe958ce8a7fb5c73cc9fb07f5aeaf755e6aa72498c57d760af760c91f8/watchfiles-1.1.1-pp311-pypy311_pp73-manylinux_2_17_aarch64.manylinux2014_aarch64.whl", hash = "sha256:ce19e06cbda693e9e7686358af9cd6f5d61312ab8b00488bc36f5aabbaf77e24", size = 450493, upload-time = "2025-10-14T15:06:12.321Z" },
     { url = "https://files.pythonhosted.org/packages/6e/d4/ed38dd3b1767193de971e694aa544356e63353c33a85d948166b5ff58b9e/watchfiles-1.1.1-pp311-pypy311_pp73-manylinux_2_17_x86_64.manylinux2014_x86_64.whl", hash = "sha256:3e6f39af2eab0118338902798b5aa6664f46ff66bc0280de76fca67a7f262a49", size = 457546, upload-time = "2025-10-14T15:06:13.372Z" },
-]
-
-[[package]]
-name = "wcmatch"
-version = "10.1"
-source = { registry = "https://pypi.org/simple" }
-dependencies = [
-    { name = "bracex" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/79/3e/c0bdc27cf06f4e47680bd5803a07cb3dfd17de84cde92dd217dcb9e05253/wcmatch-10.1.tar.gz", hash = "sha256:f11f94208c8c8484a16f4f48638a85d771d9513f4ab3f37595978801cb9465af", size = 117421, upload-time = "2025-06-22T19:14:02.49Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/eb/d8/0d1d2e9d3fabcf5d6840362adcf05f8cf3cd06a73358140c3a97189238ae/wcmatch-10.1-py3-none-any.whl", hash = "sha256:5848ace7dbb0476e5e55ab63c6bbd529745089343427caa5537f230cc01beb8a", size = 39854, upload-time = "2025-06-22T19:14:00.978Z" },
 ]
 
 [[package]]

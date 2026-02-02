@@ -280,7 +280,7 @@ print(ImageData(data))
     ratio = img.apply_expression("b1/b2")  # Returns a new ImageData object
     assert isinstance(ratio, ImageData)
 
-    print(ratio.band_names)
+    print(ratio.band_descriptions)
     >>> ["b1/b2"]
 
     print(ratio.data.shape)

@@ -171,6 +171,12 @@ def test_tile_valid_default():
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["b1+2"]
 
+        img = src.tile(43, 24, 7, expression="B1+2")
+        assert img.data.shape == (1, 256, 256)
+        assert img._mask.all()
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["b1+2"]
+
         # Partial tile
         data, mask = src.tile(42, 24, 7)
         assert data.shape == (1, 256, 256)
