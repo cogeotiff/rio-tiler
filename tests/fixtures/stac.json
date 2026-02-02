@@ -67,6 +67,10 @@
         "href": "http://somewhere-over-the-rainbow.io/lowres.tif",
         "title": "lowres"
     },
+    "rgb": {
+        "href": "http://somewhere-over-the-rainbow.io/rgb.tif",
+        "title": "lowres"
+    },
     "thumbnail": {
       "href": "http://cool-sat.com/catalog/a-fake-item/thumbnail.png",
       "title": "Thumbnail",

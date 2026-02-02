@@ -4,6 +4,82 @@
 # 9.0.0 (TBD)
 
 * remove default tilesize (256) for `tile()` methods and default to TMS tilematrix `tileHeight` and `tileWidth` **breaking change**
+* remove: `parse_expression` method in `MultiBaseReader` **breaking change**
+* change: type information for `AssetInfo` model 
+
+    ```python
+    class AssetInfo(TypedDict):
+        """Asset Reader Options."""
+
+        url: Any
+        name: str
+        media_type: str | None
+        method_options: dict
+        env: NotRequired[dict]
+        metadata: NotRequired[dict]
+        dataset_statistics: NotRequired[Sequence[tuple[float, float]]]
+    ```
+
+* add: `AssetInfo.method_options` to be used in `MultiBaseReader` to pass method's options
+* remove: `asset_indexes` and `asset_as_bands` options for `MultiBaseReader` **breaking change**
+* change: in `MultiBaseReader`, expression are now in form of `b1/b2` indicating the band index within the ImageData object returned by the `read` method **breaking change**
+
+    ```python
+    with MultiBaseReader(input) as src:
+        # asset1 and asset2 are both 1-band dataset
+        src.preview(assets=["asset1", "asset2"], expression="b1+b2")
+
+        # asset1 has 1 band while asset3 has 2 bands
+        src.preview(assets=["asset1", "asset3"], expression="b1+b2/b3")
+    ```
+
+* change: STACReader now accept `assets` options in form of `assets="{asset_name}|some_option=some_value&another_option=another_value"` (e.g `assets=visual|indexes=1,2,3`)
+
+* add `description` in `BandStatistics` model
+
+* change: use band name (index) instead of band description in statistics
+
+    ```python
+    # before
+    with Reader(path) as src:
+        img = src.read()
+        print(img.band_names) 
+        >> ["b1", "b2", "b3"]
+        >> ["red", "green", "blue"]  # or ["", "", ""] if no band description
+
+        stats = src.statistics(expression="b1+2")
+        print(list(stats))
+        >> "b1+2"
+
+    # now 
+    with Reader(path) as src:
+        img = src.read()
+        print(img.band_names) 
+        >> ["b1", "b2", "b3"]
+        >> ["red", "green", "blue"]  # or ["b1", "b2", "b3"] if no band description
+
+        stats = src.statistics(expression="b1+2")
+        print(list(stats))
+        >> "b1"
+        print(stats["b1"].description)
+        >> "red+2"  # b1+2 if no band description
+    ```
+
+* add: infer band description in expression's band_descriptions
+
+    ```python
+    # before
+    with Reader(COG_TAGS) as src:
+        img = src.preview(expression="b1*2")
+        assert img.band_descriptions == [""]
+
+    # now
+    with Reader(COG_TAGS) as src:
+        img = src.preview(expression="b1*2")
+        assert img.band_descriptions == ["Green*2"]
+    ```
+
+* change: deprecate `MultiBandReader` **breaking change**
 
 # 8.0.5 (2026-01-05)
 

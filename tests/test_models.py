@@ -150,7 +150,7 @@ def test_apply_expression():
     assert img2.count == 1
     assert img2.width == 256
     assert img2.height == 256
-    assert img2.band_names == ["b1+b2"]
+    assert img2.band_descriptions == ["b1+b2"]
 
 
 def test_dataset_statistics():
@@ -257,11 +257,11 @@ def test_point_data():
     assert pt1.count == 2
     assert pt1.band_names == ["b1", "b2"]
     assert pt2.count == 1
-    assert pt2.band_names == ["b1+b2"]
+    assert pt2.band_descriptions == ["b1+b2"]
 
     pts = PointData.create_from_list([pt1, pt2])
     assert pts.data.tolist() == [1, 2, 3]
-    assert pts.band_names == ["b1", "b2", "b1+b2"]
+    assert pts.band_descriptions == ["b1", "b2", "b1+b2"]
     assert pts._mask.tolist() == [True]
     assert pt.scales == [1.0, 1.0, 1.0]
     assert pt.offsets == [0.0, 0.0, 0.0]

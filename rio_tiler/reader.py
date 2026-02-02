@@ -299,7 +299,9 @@ def read(
             bounds=out_bounds,
             crs=dataset.crs,
             band_names=[f"b{idx}" for idx in indexes],
-            band_descriptions=[dataset.descriptions[ix - 1] or "" for idx in indexes],
+            band_descriptions=[
+                dataset.descriptions[ix - 1] or f"b{idx}" for idx in indexes
+            ],
             dataset_statistics=dataset_statistics,
             metadata=dataset.tags(),
             nodata=nodata,

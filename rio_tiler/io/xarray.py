@@ -160,7 +160,7 @@ class XarrayReader(BaseReader):
             if coords_name:
                 return [str(self.input.coords[coords_name[0]].data)]
 
-            return [self.input.name or ""]  # type: ignore
+            return [self.input.name or "b1"]  # type: ignore
 
         return [str(band) for d in self._dims for band in self.input[d].values]
 
@@ -173,7 +173,8 @@ class XarrayReader(BaseReader):
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             "band_metadata": [(f"b{ix}", v) for ix, v in enumerate(metadata, 1)],
             "band_descriptions": [
-                (f"b{ix}", v) for ix, v in enumerate(self.band_descriptions, 1)
+                (f"b{ix}", v or f"b{ix}")
+                for ix, v in enumerate(self.band_descriptions, 1)
             ],
             "dtype": str(self.input.dtype),
             "nodata_type": "Nodata" if self.input.rio.nodata is not None else "None",
@@ -230,7 +231,7 @@ class XarrayReader(BaseReader):
         """Return statistics from a dataset."""
         hist_options = hist_options or {}
 
-        da, band_names, _ = self._sel_indexes(indexes)
+        da, band_names, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
@@ -246,7 +247,13 @@ class XarrayReader(BaseReader):
             **hist_options,
         )
 
-        return {band_names[ix]: BandStatistics(**val) for ix, val in enumerate(stats)}
+        return {
+            band_names[ix]: BandStatistics(
+                **val,
+                description=band_descriptions[ix],
+            )
+            for ix, val in enumerate(stats)
+        }
 
     def tile(
         self,

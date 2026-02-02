@@ -169,7 +169,7 @@ class Reader(BaseReader):
 
         def _get_descr(ix):
             """Return band description."""
-            return self.dataset.descriptions[ix - 1] or ""
+            return self.dataset.descriptions[ix - 1] or f"b{ix}"
 
         if self.options.get("nodata", self.dataset.nodata) is not None:
             nodata_type = "Nodata"

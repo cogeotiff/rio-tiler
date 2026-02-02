@@ -675,7 +675,7 @@ def test_xarray_reader_no_dims():
         crs = info.crs
         assert rioCRS.from_user_input(crs) == dst.crs
         assert info.band_metadata == [("b1", {})]
-        assert info.band_descriptions == [("b1", "")]
+        assert info.band_descriptions == [("b1", "b1")]
         assert info.height == 33
         assert info.width == 35
         assert info.count == 1
@@ -684,6 +684,7 @@ def test_xarray_reader_no_dims():
         stats = dst.statistics()
         assert stats["b1"]
         assert stats["b1"].min == 0.0
+        assert stats["b1"].description == "b1"
 
         stats = dst.statistics(indexes=1)
         assert stats["b1"]
@@ -705,7 +706,7 @@ def test_xarray_reader_no_dims():
         assert img.width == 256
         assert img.height == 256
         assert img.band_names == ["b1"]
-        assert img.band_descriptions == [""]
+        assert img.band_descriptions == ["b1"]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         img = dst.part((-160, -80, 160, 80))
@@ -713,13 +714,13 @@ def test_xarray_reader_no_dims():
         assert img.width == 32
         assert img.height == 32
         assert img.band_names == ["b1"]
-        assert img.band_descriptions == [""]
+        assert img.band_descriptions == ["b1"]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         pt = dst.point(0, 0)
         assert pt.count == 1
         assert pt.band_names == ["b1"]
-        assert img.band_descriptions == [""]
+        assert img.band_descriptions == ["b1"]
         assert pt.coordinates
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
         for xy in xys:

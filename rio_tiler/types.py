@@ -1,7 +1,7 @@
 """rio-tiler types."""
 
 from collections.abc import Sequence
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, NotRequired, TypedDict
 
 import numpy
 
@@ -61,11 +61,13 @@ WarpResampling = Literal[
 ]
 
 
-class AssetInfo(TypedDict, total=False):
+class AssetInfo(TypedDict):
     """Asset Reader Options."""
 
     url: Any
-    media_type: str
-    env: dict | None
-    metadata: dict | None
-    dataset_statistics: Sequence[tuple[float, float]] | None
+    name: str
+    media_type: str | None
+    method_options: dict
+    env: NotRequired[dict]
+    metadata: NotRequired[dict]
+    dataset_statistics: NotRequired[Sequence[tuple[float, float]]]
