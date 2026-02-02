@@ -323,33 +323,52 @@ class STACReader(MultiBaseReader):
 
         """
         asset, vrt_options = self._parse_vrt_asset(asset)
+
+        method_options: dict[str, Any] = {}
+
+        # NOTE: asset can be in form of
+        # "{asset_name}|some_option=some_value&another_option=another_value"
+        if "|" in asset:
+            asset, params = asset.split("|", 1)
+            # NOTE: Construct method options from params
+            if params:
+                for param in params.split("&"):
+                    key, value = param.split("=", 1)
+                    if key == "indexes":
+                        method_options["indexes"] = list(map(int, value.split(",")))
+                    elif key == "expression":
+                        method_options["expression"] = value
+
         if asset not in self.assets:
             raise InvalidAssetName(
                 f"'{asset}' is not valid, should be one of {self.assets}"
             )
+
+        asset_modified = "expression" in method_options or vrt_options
 
         asset_info = self.item.assets[asset]
         extras = asset_info.extra_fields
 
         info = AssetInfo(
             url=asset_info.get_absolute_href() or asset_info.href,
-            metadata=extras if not vrt_options else None,
+            name=asset,
+            media_type=asset_info.media_type,
+            method_options=method_options,
         )
+
+        if not asset_modified:
+            info["metadata"] = extras
 
         if STAC_ALTERNATE_KEY and extras.get("alternate"):
             if alternate := extras["alternate"].get(STAC_ALTERNATE_KEY):
                 info["url"] = alternate["href"]
-
-        if asset_info.media_type:
-            info["media_type"] = asset_info.media_type
 
         # https://github.com/stac-extensions/file
         if head := extras.get("file:header_size"):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
 
         # https://github.com/stac-extensions/raster
-        if extras.get("raster:bands") and not vrt_options:
-            bands = extras.get("raster:bands")
+        if (bands := extras.get("raster:bands", [])) and not asset_modified:
             stats = [
                 (b["statistics"]["minimum"], b["statistics"]["maximum"])
                 for b in bands

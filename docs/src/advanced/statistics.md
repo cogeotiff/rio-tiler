@@ -28,6 +28,7 @@ print(stats["1"].model_dump().keys())
     "valid_percent",
     "masked_pixels",
     "valid_pixels",
+    "description",
     # Percentile entries depend on user inputs
     "percentile_2",
     "percentile_98",

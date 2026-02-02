@@ -52,7 +52,9 @@ dev = [
     "obstore",
     "tilebench",
     "pre-commit",
-    "bump-my-version",
+    "IPython",
+    "jupyter",
+    "matplotlib",
 ]
 
 performance = [
@@ -70,11 +72,6 @@ docs = [
 ]
 deploy = [
     "hatch",
-]
-notebook = [
-    "IPython",
-    "jupyter",
-    "matplotlib",
 ]
 
 [project.optional-dependencies]

@@ -1,6 +1,7 @@
 """rio-tiler models."""
 
 import itertools
+import re
 import warnings
 from collections.abc import Sequence
 from typing import Any, Literal, cast
@@ -87,6 +88,7 @@ class BandStatistics(BaseModel):
     valid_percent: float
     masked_pixels: float
     valid_pixels: float
+    description: str
 
     model_config = {"extra": "allow"}
 
@@ -187,7 +189,7 @@ class PointData:
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return ["" for ix in range(self.count)]
+        return ["" or f"b{ix + 1}" for ix in range(self.count)]
 
     @scales.default
     def _default_scales(self):
@@ -290,14 +292,20 @@ class PointData:
         # Using numexpr do not preserve mask info
         data.mask = False
 
-        # TODO: Update band descriptions
+        mapexpr = {
+            self.band_names[idx]: desc for idx, desc in enumerate(self.band_descriptions)
+        }
+        _re = re.compile(r"\bb[0-9A-Z]+\b")
+        band_descriptions = [
+            _re.sub(lambda x: mapexpr[x.group()], block) for block in blocks
+        ]
 
         return PointData(
             data,
             assets=self.assets,
             crs=self.crs,
             coordinates=self.coordinates,
-            band_names=blocks,
+            band_descriptions=band_descriptions,
             metadata=self.metadata,
             pixel_location=self.pixel_location,
         )
@@ -363,7 +371,7 @@ class ImageData:
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return ["" for ix in range(self.count)]
+        return ["" or f"b{ix + 1}" for ix in range(self.count)]
 
     @scales.default
     def _default_scales(self):
@@ -691,14 +699,20 @@ class ImageData:
         # NOTE: We use dataset mask when mixing bands
         data.mask = numpy.logical_or.reduce(self.array.mask)
 
-        # TODO: update band descriptions
+        mapexpr = {
+            self.band_names[idx]: desc for idx, desc in enumerate(self.band_descriptions)
+        }
+        _re = re.compile(r"\bb[0-9A-Z]+\b")
+        band_descriptions = [
+            _re.sub(lambda x: mapexpr[x.group()], block) for block in blocks
+        ]
 
         return ImageData(
             data,
             assets=self.assets,
             crs=self.crs,
             bounds=self.bounds,
-            band_names=blocks,
+            band_descriptions=band_descriptions,
             metadata=self.metadata,
             dataset_statistics=stats,
             alpha_mask=self.alpha_mask,
@@ -917,7 +931,10 @@ class ImageData:
         )
 
         return {
-            f"{self.band_names[ix]}": BandStatistics(**stats[ix])
+            f"{self.band_names[ix]}": BandStatistics(
+                **stats[ix],
+                description=self.band_descriptions[ix],
+            )
             for ix in range(len(stats))
         }
 

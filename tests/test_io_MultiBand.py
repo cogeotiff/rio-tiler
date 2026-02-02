@@ -72,86 +72,89 @@ def test_MultiBandReader():
 
         with pytest.warns(UserWarning):
             meta = src.info()
-        assert meta.band_descriptions == [("band1", ""), ("band2", "")]
+        assert meta.band_descriptions == [("band1", "b1"), ("band2", "b1")]
 
         meta = src.info(bands="band1")
-        assert meta.band_descriptions == [("band1", "")]
+        assert meta.band_descriptions == [("band1", "b1")]
 
         meta = src.info(bands=("band1", "band2"))
-        assert meta.band_descriptions == [("band1", ""), ("band2", "")]
+        assert meta.band_descriptions == [("band1", "b1"), ("band2", "b1")]
 
         with pytest.warns(UserWarning):
             stats = src.statistics()
-            assert stats["band1"]
-            assert stats["band2"]
+            assert stats["b1"].description == "band1"
+            assert stats["b2"].description == "band2"
 
         stats = src.statistics(bands="band1")
-        assert "band1" in stats
-        assert isinstance(stats["band1"], BandStatistics)
+        assert "b1" in stats
+        assert isinstance(stats["b1"], BandStatistics)
+        assert stats["b1"].description == "band1"
 
         stats = src.statistics(bands=("band1", "band2"))
-        assert stats["band1"]
-        assert stats["band2"]
+        assert stats["b1"].description == "band1"
+        assert stats["b2"].description == "band2"
 
         stats = src.statistics(expression="band1;band1+band2;band1-100")
-        assert stats["band1"]
-        assert stats["band1+band2"]
-        assert stats["band1-100"]
+        assert stats["b1"].description == "band1"
+        assert stats["b2"].description == "band1+band2"
+        assert stats["b3"].description == "band1-100"
 
         with pytest.raises(MissingBands):
             src.tile(238, 218, 9)
 
         img = src.tile(238, 218, 9, bands="band1")
         assert img.data.shape == (1, 256, 256)
-        assert img.band_names == ["band1"]
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.tile(238, 218, 9, bands="band1", expression="band1*2")
         assert img.data.shape == (1, 256, 256)
-        assert img.band_names == ["band1*2"]
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["band1*2"]
 
         with pytest.raises(MissingBands):
             src.part((-11.5, 24.5, -11.0, 25.0))
 
         img = src.part((-11.5, 24.5, -11.0, 25.0), bands="band1")
         assert img.data.any()
-        assert img.band_names == ["band1"]
+        assert img.band_descriptions == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.part(
                 (-11.5, 24.5, -11.0, 25.0), bands="band1", expression="band1*2"
             )
         assert img.data.any()
-        assert img.band_names == ["band1*2"]
+        assert img.band_descriptions == ["band1*2"]
 
         with pytest.raises(MissingBands):
             src.preview()
 
         img = src.preview(bands="band1")
         assert img.data.any()
-        assert img.band_names == ["band1"]
+        assert img.band_descriptions == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.preview(bands="band1", expression="band1*2")
         assert img.data.any()
-        assert img.band_names == ["band1*2"]
+        assert img.band_descriptions == ["band1*2"]
 
         with pytest.raises(MissingBands):
             src.point(-11.5, 24.5)
 
         pt = src.point(-11.5, 24.5, bands="band1")
         assert len(pt.data) == 1
-        assert pt.band_names == ["band1"]
+        assert pt.band_descriptions == ["band1"]
         assert len(pt.mask) == 1
 
         pt = src.point(-11.5, 24.5, bands=("band1", "band2"))
         assert len(pt.data) == 2
-        assert pt.band_names == ["band1", "band2"]
+        assert pt.band_descriptions == ["band1", "band2"]
         assert len(pt.mask) == 1
 
         pt = src.point(-11.5, 24.5, expression="band1/band2")
         assert len(pt.data) == 1
-        assert pt.band_names == ["band1/band2"]
+        assert pt.band_descriptions == ["band1/band2"]
 
         with pytest.warns(ExpressionMixingWarning):
             assert src.point(-11.5, 24.5, bands="band1", expression="band1*2")
@@ -181,11 +184,11 @@ def test_MultiBandReader():
         img = src.feature(feat, bands="band1")
         assert img.data.any()
         assert not img._mask.all()
-        assert img.band_names == ["band1"]
+        assert img.band_descriptions == ["band1"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.feature(feat, bands="band1", expression="band1*2")
-            assert img.band_names == ["band1*2"]
+            assert img.band_descriptions == ["band1*2"]
 
         img = src.preview(bands=("band1", "band2"))
         assert img.metadata
@@ -201,20 +204,20 @@ def test_MultiBandReader_default_bands():
         with pytest.warns(UserWarning):
             img = src.tile(238, 218, 9)
             assert img.data.shape == (1, 256, 256)
-            assert img.band_names == ["band1"]
+            assert img.band_descriptions == ["band1"]
 
         with pytest.warns(UserWarning):
             img = src.part((-11.5, 24.5, -11.0, 25.0))
-            assert img.band_names == ["band1"]
+            assert img.band_descriptions == ["band1"]
 
         with pytest.warns(UserWarning):
             img = src.preview()
-            assert img.band_names == ["band1"]
+            assert img.band_descriptions == ["band1"]
 
         with pytest.warns(UserWarning):
             pt = src.point(-11.5, 24.5)
             assert len(pt.data) == 1
-            assert pt.band_names == ["band1"]
+            assert pt.band_descriptions == ["band1"]
 
         feat = {
             "type": "Feature",
@@ -237,4 +240,4 @@ def test_MultiBandReader_default_bands():
         }
         with pytest.warns(UserWarning):
             img = src.feature(feat)
-            assert img.band_names == ["band1"]
+            assert img.band_descriptions == ["band1"]

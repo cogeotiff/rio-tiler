@@ -152,7 +152,7 @@ def test_tile_valid_default():
         assert img.data.shape == (1, 256, 256)
         assert img._mask.all()
         assert img.band_names == ["b1"]
-        assert img.band_descriptions == [""]
+        assert img.band_descriptions == ["b1"]  # default to b{idx}
 
         # Validate that Tile and Part gives the same result
         tile_bounds = WEB_MERCATOR_TMS.xy_bounds(43, 24, 7)
@@ -165,6 +165,18 @@ def test_tile_valid_default():
         )
         assert numpy.array_equal(img.data, data_part)
 
+        img = src.tile(43, 24, 7, expression="b1+2")
+        assert img.data.shape == (1, 256, 256)
+        assert img._mask.all()
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["b1+2"]
+
+        img = src.tile(43, 24, 7, expression="B1+2")
+        assert img.data.shape == (1, 256, 256)
+        assert img._mask.all()
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["b1+2"]
+
         # Partial tile
         data, mask = src.tile(42, 24, 7)
         assert data.shape == (1, 256, 256)
@@ -173,12 +185,12 @@ def test_tile_valid_default():
         # Expression
         img = src.tile(43, 24, 7, expression="b1*2;b1-100")
         assert img.data.shape == (2, 256, 256)
-        assert img.band_names == ["b1*2", "b1-100"]
+        assert img.band_descriptions == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.tile(43, 24, 7, indexes=(1, 2, 3), expression="b1*2")
             assert img.data.shape == (1, 256, 256)
-        assert img.band_names == ["b1*2"]
+        assert img.band_descriptions == ["b1*2"]
 
         data, mask = src.tile(43, 24, 7, indexes=1)
         assert data.shape == (1, 256, 256)
@@ -193,7 +205,7 @@ def test_tile_valid_default():
             ),
         )
         assert img.data.shape == (2, 256, 256)
-        assert img.band_names == ["b1", "b1"]
+        assert img.band_descriptions == ["b1", "b1"]
 
     # We are using a file that is aligned with the grid so no resampling should be involved
     with Reader(COG_WEB) as src:
@@ -261,16 +273,16 @@ def test_point_valid():
         assert len(pt.data) == 2
         assert len(pt.mask) == 1
         assert pt._mask[0]
-        assert pt.band_names == ["b1*2", "b1-100"]
+        assert pt.band_descriptions == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
             pt = src.point(lon, lat, indexes=(1, 2, 3), expression="b1*2")
             assert len(pt.data) == 1
-            assert pt.band_names == ["b1*2"]
+            assert pt.band_descriptions == ["b1*2"]
 
         pt = src.point(lon, lat, indexes=1)
         assert len(pt.data) == 1
-        assert pt.band_names == ["b1"]
+        assert pt.band_descriptions == ["b1"]
 
         pt = src.point(
             lon,
@@ -281,12 +293,12 @@ def test_point_valid():
             ),
         )
         assert len(pt.data) == 2
-        assert pt.band_names == ["b1", "b1"]
+        assert pt.band_descriptions == ["b1", "b1"]
 
         pt = src.point(-59.53, 74.03, indexes=(1, 1, 1))
         assert len(pt.data) == 3
         assert not pt._mask[0]
-        assert pt.band_names == ["b1", "b1", "b1"]
+        assert pt.band_descriptions == ["b1", "b1", "b1"]
 
 
 def test_area_valid():
@@ -310,12 +322,12 @@ def test_area_valid():
 
         img = src.part(bbox, expression="b1*2;b1-100")
         assert img.data.shape == (2, 11, 40)
-        assert img.band_names == ["b1*2", "b1-100"]
+        assert img.band_descriptions == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.part(bbox, indexes=(1, 2, 3), expression="b1*2")
             assert img.data.shape == (1, 11, 40)
-            assert img.band_names == ["b1*2"]
+            assert img.band_descriptions == ["b1*2"]
 
         data, mask = src.part(bbox, indexes=1)
         assert data.shape == (1, 11, 40)
@@ -336,19 +348,19 @@ def test_preview_valid():
     with Reader(COGEO) as src:
         img = src.preview(max_size=128)
         assert img.data.shape == (1, 128, 128)
-        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["b1"]
 
         data, mask = src.preview()
         assert data.shape == (1, 1024, 1021)
 
         img = src.preview(max_size=128, expression="b1*2;b1-100")
         assert img.data.shape == (2, 128, 128)
-        assert img.band_names == ["b1*2", "b1-100"]
+        assert img.band_descriptions == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.preview(max_size=128, indexes=(1, 2, 3), expression="b1*2")
             assert img.data.shape == (1, 128, 128)
-            assert img.band_names == ["b1*2"]
+            assert img.band_descriptions == ["b1*2"]
 
         data, mask = src.preview(max_size=128, indexes=1)
         assert data.shape == (1, 128, 128)
@@ -412,8 +424,10 @@ def test_statistics():
     with Reader(COGEO) as src:
         stats = src.statistics(expression="b1;b1*2")
         assert stats["b1"]
-        assert stats["b1*2"]
-        assert stats["b1"].min == stats["b1*2"].min / 2
+        assert stats["b1"].description == "b1"
+        assert stats["b2"]
+        assert stats["b2"].description == "b1*2"
+        assert stats["b1"].min == stats["b2"].min / 2
 
     with Reader(COG_TAGS) as src:
         stats = src.statistics()
@@ -494,7 +508,7 @@ def test_cog_with_internal_gcps():
         metadata = src.info()
         assert metadata.nodata_type == "Alpha"
         assert len(metadata.band_metadata) == 2
-        assert metadata.band_descriptions == [("b1", ""), ("b2", "")]
+        assert metadata.band_descriptions == [("b1", "b1"), ("b2", "b2")]
         assert metadata.colorinterp == ["gray", "alpha"]
 
         # The topleft corner should be masked
@@ -526,7 +540,7 @@ def test_cog_with_internal_gcps():
                 metadata = src.info()
                 assert metadata.nodata_type == "None"
                 assert len(metadata.band_metadata) == 1
-                assert metadata.band_descriptions == [("b1", "")]
+                assert metadata.band_descriptions == [("b1", "b1")]
                 assert metadata.colorinterp == ["gray"]
 
                 # The topleft corner is not masked because we didn't add mask
@@ -672,14 +686,14 @@ def test_feature_valid():
 
         img = src.feature(feature, expression="b1*2;b1-100", max_size=1024)
         assert img.data.shape == (2, 348, 1024)
-        assert img.band_names == ["b1*2", "b1-100"]
+        assert img.band_descriptions == ["b1*2", "b1-100"]
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.feature(
                 feature, indexes=(1, 2, 3), expression="b1*2", max_size=1024
             )
             assert img.data.shape == (1, 348, 1024)
-            assert img.band_names == ["b1*2"]
+            assert img.band_descriptions == ["b1*2"]
 
         img = src.feature(feature, indexes=1, max_size=1024)
         assert img.data.shape == (1, 348, 1024)
@@ -693,7 +707,7 @@ def test_feature_valid():
             max_size=1024,
         )
         assert img.data.shape == (2, 348, 1024)
-        assert img.band_names == ["b1", "b1"]
+        assert img.band_descriptions == ["b1", "b1"]
 
         # feature overlaping on mask area
         mask_feat = {
@@ -1023,6 +1037,10 @@ def test_metadata_img():
 
         stats = src.statistics()
         assert "b1" in stats
+        assert stats["b1"].description == "Green"
+
+        img = src.preview(expression="b1*2")
+        assert img.band_descriptions == ["Green*2"]
 
 
 def test_feature_statistics():
