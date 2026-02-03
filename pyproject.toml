@@ -42,6 +42,7 @@ dev = [
     "xarray",
     "rioxarray",
     "h5netcdf",
+    "h5py",
     # S3
     "boto3",
     # Some tests will fail with 5.0
