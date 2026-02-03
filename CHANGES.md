@@ -1,7 +1,7 @@
 
 # Unreleased
 
-# 9.0.0 (TBD)
+# 9.0.0a1 (2026-02-03)
 
 * remove: default tilesize option (`256`) for `tile()` methods and default to TMS tilematrix `tileHeight` and `tileWidth`
 * remove: `parse_expression` method in `MultiBaseReader`
