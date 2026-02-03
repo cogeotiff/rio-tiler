@@ -6,6 +6,21 @@
 * remove: default tilesize option (`256`) for `tile()` methods and default to TMS tilematrix `tileHeight` and `tileWidth`
 * remove: `parse_expression` method in `MultiBaseReader`
 * remove: `asset_indexes` option for `MultiBaseReader`
+* change: band indexes in `ImageData.band_names` for Reader's responses
+    ```python
+    # before
+    with Reader(path) as src:
+        img = src.read(indexes=(1,1,))
+        print(img.band_names)
+        >> ["b1", "b1"]
+
+    # now
+    with Reader(path) as src:
+        img = src.read(indexes=(1,1,))
+        print(img.band_names)
+        >> ["b1", "b2"]
+    ```
+
 * change: deprecate `MultiBandReader`
 * change: type informations for `AssetInfo` model 
 

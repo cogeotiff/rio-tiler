@@ -340,7 +340,8 @@ def test_area_valid():
             ),
         )
         assert img.data.shape == (2, 11, 40)
-        assert img.band_names == ["b1", "b1"]
+        assert img.band_names == ["b1", "b2"]
+        assert img.band_descriptions == ["b1", "b1"]
 
 
 def test_preview_valid():
@@ -373,7 +374,8 @@ def test_preview_valid():
             ),
         )
         assert img.data.shape == (2, 128, 128)
-        assert img.band_names == ["b1", "b1"]
+        assert img.band_names == ["b1", "b2"]
+        assert img.band_descriptions == ["b1", "b1"]
 
 
 def test_statistics():
