@@ -493,6 +493,12 @@ def test_merged_statistics_valid(rio):
             assert stats["b6"].description == "rgb_b2"
             assert stats["b7"].description == "rgb_b3"
 
+        with pytest.warns(UserWarning):
+            stats = stac.merged_statistics(expression="b1+b5")
+            assert len(stats) == 1
+            assert isinstance(stats["b1"], BandStatistics)
+            assert stats["b1"].description == "red_b1+rgb_b1"
+
         with pytest.raises(InvalidAssetName):
             stac.merged_statistics(assets="vert")
 

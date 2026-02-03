@@ -475,13 +475,12 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        if not expression:
-            if not assets:
-                warnings.warn(
-                    "No `assets` option passed, will fetch statistics for all available assets.",
-                    UserWarning,
-                )
-            assets = cast_to_sequence(assets or self.assets)
+        if not assets:
+            warnings.warn(
+                "No `assets` option passed, will fetch statistics for all available assets.",
+                UserWarning,
+            )
+        assets = cast_to_sequence(assets or self.assets)
 
         data = self.preview(
             assets=assets,
