@@ -176,6 +176,37 @@ with Reader("cog.tif") as src:
 ```
 
 
+## MultiBaseReader._get_reader Method Signature
+
+The `_get_reader` method signature has changed. It now only returns the reader class, not a tuple of `(reader, reader_options)`. Reader options should now be passed via the `AssetInfo["reader_options"]` field instead.
+
+```python
+from rio_tiler.io.base import MultiBaseReader
+from rio_tiler.io import Reader
+from rio_tiler.types import AssetInfo
+
+# before (8.x)
+class MyReader(MultiBaseReader):
+    def _get_reader(self, asset_info: AssetInfo) -> tuple[type[Reader], dict]:
+        """Get Asset Reader and options."""
+        reader_options = {"nodata": 0}
+        return Reader, reader_options
+
+# now (9.x)
+class MyReader(MultiBaseReader):
+    def _get_reader(self, asset_info: AssetInfo) -> type[Reader]:
+        """Get Asset Reader."""
+        return Reader
+
+    def _get_asset_info(self, asset: str) -> AssetInfo:
+        """Return asset info with reader options."""
+        ...
+        # Reader options are now passed via AssetInfo
+        info["reader_options"] = {"nodata": 0}
+        return info
+```
+
+
 ## AssetInfo Type Changes
 
 The `AssetInfo` TypedDict has been updated with new fields:
@@ -190,13 +221,14 @@ class AssetInfo(TypedDict):
     url: Any
     name: str
     media_type: str | None
+    reader_options: dict  # NEW: used to pass reader-specific options
     method_options: dict  # NEW: used to pass method-specific options
     env: NotRequired[dict]
     metadata: NotRequired[dict]
     dataset_statistics: NotRequired[Sequence[tuple[float, float]]]
 ```
 
-The new `method_options` attribute is used in `MultiBaseReader` to pass method-specific options (like `indexes` or `expression`) to the underlying reader.
+The new `reader_options/method_options` attributes is used in `MultiBaseReader` to pass specific options (like `indexes` or `expression`) to the underlying reader.
 
 
 ## BandStatistics Model
@@ -251,6 +283,50 @@ with STACReader("item.json") as src:
     img = src.tile(0, 0, 0, assets=["visual|indexes=1,2"])
 ```
 
+### reader_options in AssetInfo
+
+The `reader_options` attribute in `AssetInfo` allows passing reader-specific options when reading assets in `MultiBaseReader`:
+
+```python
+from typing import Any
+import attr
+from rio_tiler.io.stac import STACReader
+
+
+@attr.s
+class CustomSTACReader(STACReader):
+
+    def _get_asset_info(self, asset: str) -> AssetInfo:
+
+        reader_options: dict[str, Any] = {}
+        method_options: dict[str, Any] = {}
+
+        if "|" in asset:
+            asset, params = asset.split("|", 1)
+            # NOTE: Construct method options from params
+            if params:
+                for param in params.split("&"):
+                    key, value = param.split("=", 1)
+                    if key == "indexes":
+                        method_options["indexes"] = list(map(int, value.split(",")))
+                    elif key == "expression":
+                        method_options["expression"] = value
+                    
+                    # NOTE: `nodata` can be a `Reader` Option
+                    elif key == "nodata":
+                        reader_options = float(value) # cast nodata to float
+
+        info = super()._get_asset_info(asset)
+        info["reader_options"] = reader_options
+        info["method_options"] = method_options
+        return info
+
+with CustomSTACReader("item.json") as src:
+    # indexes=1,2: method option
+    # nodata=0: reader option
+    img = src.tile(0, 0, 0, assets=["visual|indexes=1,2&nodata=0"])
+```
+
 ### BandStatistics description
 
 Statistics now include a `description` field that provides context about what the statistic represents:
@@ -291,4 +367,6 @@ with Reader("cog.tif") as src:
 
 5. **Update statistics parsing** - If you accessed statistics by expression strings, update to use band name keys and check the `description` field
 
-6. **Update AssetInfo handling** - If you create custom `AssetInfo` objects, add the new `method_options` field
+6. **Update AssetInfo handling** - If you create custom `AssetInfo` objects, add the new `reader_options` and `method_options` fields
+
+7. **Update _get_reader overrides** - If you override `_get_reader`, update to return only the reader class and move reader options to `_get_asset_info`
