@@ -67,6 +67,7 @@ class AssetInfo(TypedDict):
     url: Any
     name: str
     media_type: str | None
+    reader_options: dict
     method_options: dict
     env: NotRequired[dict]
     metadata: NotRequired[dict]

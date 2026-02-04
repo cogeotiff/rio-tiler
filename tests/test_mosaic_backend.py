@@ -9,7 +9,7 @@ from morecantile import TileMatrixSet
 from rasterio.crs import CRS
 
 from rio_tiler.constants import WEB_MERCATOR_TMS
-from rio_tiler.io import BaseReader, MultiBandReader, MultiBaseReader, Reader
+from rio_tiler.io import BaseReader, MultiBaseReader, Reader
 from rio_tiler.models import PointData
 from rio_tiler.mosaic.backend import BaseBackend
 from rio_tiler.mosaic.methods import defaults
@@ -30,9 +30,7 @@ def test_backend():
         input: list[str] = attr.ib()
         tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-        reader: Type[BaseReader] | Type[MultiBaseReader] | Type[MultiBandReader] = (
-            attr.ib(default=Reader)
-        )
+        reader: Type[BaseReader] | Type[MultiBaseReader] = attr.ib(default=Reader)
         reader_options: dict = attr.ib(factory=dict)
 
         bounds: BBox = attr.ib(init=False)

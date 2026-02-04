@@ -669,7 +669,7 @@ The `STACReader` has the same methods as the `Reader` (defined by the BaseReader
 
 - **merged_statistics()**: Return statistics when merging assets
 
-The `merged_statistics` enable the use of `expression` to perform assets mixing (e.g `"asset1/asset2"`). The main difference with the `statistics` method is that we will first use the `self.preview` method to obtain a merged array and then calculate the statistics.
+The `merged_statistics` enable the use of `expression` to perform assets mixing (e.g `"asset1_b1/asset2_b2"`). The main difference with the `statistics` method is that we will first use the `self.preview` method to obtain a merged array and then calculate the statistics.
 
     ```python
     with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
