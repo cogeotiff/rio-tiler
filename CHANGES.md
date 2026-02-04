@@ -1,6 +1,8 @@
 
 # Unreleased
 
+# 9.0.0a2 (2026-02-04)
+
 * change: `MultiReaderBase._get_reader` signature to only return `type[BaseReader]`
 * add: `reader_options` in `AssetInfo` model
 
