@@ -4,11 +4,13 @@ import json
 import math
 import os
 import warnings
+from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
 
 import numpy as np
 import pytest
 import rasterio
+import rasterio.env
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
 from rasterio.enums import ColorInterp
@@ -809,3 +811,45 @@ def test_render_partial_alpha():
                 255,
                 255,
             ]  # Non-masked from CMAP
+
+
+def test_inherit_rasterio_env_empty():
+    """When there's no rasterio env, inheriting the env should be a no-op."""
+
+    def hasenv() -> bool:
+        return rasterio.env.hasenv()
+
+    bare_hasenv = hasenv
+    decorated_hasenv = utils.inherit_rasterio_env(hasenv)
+
+    assert decorated_hasenv is bare_hasenv
+    assert decorated_hasenv() is False
+
+
+def test_inherit_rasterio_env_not_empty():
+    """When there is a rasterio env, it should be inherited."""
+
+    def hasenv() -> bool:
+        return rasterio.env.hasenv()
+
+    bare_hasenv = hasenv
+
+    with rasterio.Env():
+        decorated_hasenv = utils.inherit_rasterio_env(hasenv)
+
+    assert bare_hasenv() is False
+    assert decorated_hasenv is not bare_hasenv
+    assert decorated_hasenv() is True
+
+
+def test_inherit_rasterio_env_not_empty_separate_thread():
+    """When there is a rasterio env, it should be inherited from separate thread."""
+
+    with rasterio.Env():
+
+        @utils.inherit_rasterio_env
+        def hasenv(*args: object) -> bool:
+            return rasterio.env.hasenv()
+
+    with ThreadPoolExecutor() as exec:
+        assert list(exec.map(hasenv, [0])) == [True]
