@@ -3,7 +3,7 @@
 import json
 import os
 import sys
-from typing import Dict, List, Set, Tuple, Type
+from typing import List, Set
 from unittest.mock import patch
 
 import attr
@@ -912,25 +912,25 @@ def test_netcdf_reader():
     class CustomSTACReader(STACReader):
         include_asset_types: Set[str] = attr.ib(default=valid_types)
 
-        def _get_reader(self, asset_info: AssetInfo) -> Tuple[Type[BaseReader], Dict]:
+        def _get_reader(self, asset_info: AssetInfo) -> type[BaseReader]:
             """Get Asset Reader."""
             asset_type = asset_info.get("media_type", None)
             if asset_type and asset_type in [
                 "application/x-netcdf",
             ]:
-                return NetCDFReader, {}
+                return NetCDFReader
 
-            return Reader, {}
+            return Reader
 
     with CustomSTACReader(STAC_NETCDF_PATH) as stac:
         assert stac.assets == ["geotiff", "netcdf"]
         info = stac._get_asset_info("netcdf")
         assert info["media_type"] == "application/x-netcdf"
-        assert stac._get_reader(info) == (NetCDFReader, {})
+        assert stac._get_reader(info) == NetCDFReader
 
         info = stac._get_asset_info("geotiff")
         assert info["media_type"] == "image/tiff; application=geotiff"
-        assert stac._get_reader(info) == (Reader, {})
+        assert stac._get_reader(info) == Reader
 
     with CustomSTACReader(
         STAC_NETCDF_PATH, reader_options={"variable": "dataset"}

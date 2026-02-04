@@ -1,6 +1,9 @@
 
 # Unreleased
 
+* change: `MultiReaderBase._get_reader` signature to only return `type[BaseReader]`
+* add: `reader_options` in `AssetInfo` model
+
 # 9.0.0a1 (2026-02-03)
 
 * remove: default tilesize option (`256`) for `tile()` methods and default to TMS tilematrix `tileHeight` and `tileWidth`

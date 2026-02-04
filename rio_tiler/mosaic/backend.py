@@ -13,7 +13,7 @@ from rasterio.features import geometry_mask
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import NoAssetFoundError, PointOutsideBounds
-from rio_tiler.io import BaseReader, MultiBandReader, MultiBaseReader, Reader
+from rio_tiler.io import BaseReader, MultiBaseReader, Reader
 from rio_tiler.models import BandStatistics, ImageData, PointData
 from rio_tiler.mosaic import mosaic_reader
 from rio_tiler.tasks import multi_values_list
@@ -51,9 +51,7 @@ class BaseBackend(BaseReader):
     input: str = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    reader: type[BaseReader] | type[MultiBaseReader] | type[MultiBandReader] = attr.ib(
-        default=Reader
-    )
+    reader: type[BaseReader] | type[MultiBaseReader] = attr.ib(default=Reader)
     reader_options: dict = attr.ib(factory=dict)
 
     bounds: BBox = attr.ib(init=False)

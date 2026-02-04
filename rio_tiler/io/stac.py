@@ -291,9 +291,9 @@ class STACReader(MultiBaseReader):
             )
         )
 
-    def _get_reader(self, asset_info: AssetInfo) -> tuple[type[BaseReader], dict]:
+    def _get_reader(self, asset_info: AssetInfo) -> type[BaseReader]:
         """Get Asset Reader."""
-        return self.reader, {}
+        return self.reader
 
     def _parse_vrt_asset(self, asset: str) -> tuple[str, str | None]:
         if asset.startswith("vrt://") and asset not in self.assets:
@@ -353,6 +353,7 @@ class STACReader(MultiBaseReader):
             url=asset_info.get_absolute_href() or asset_info.href,
             name=asset,
             media_type=asset_info.media_type,
+            reader_options={},
             method_options=method_options,
         )
 
