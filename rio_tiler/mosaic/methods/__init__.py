@@ -27,3 +27,17 @@ class PixelSelectionMethod(Enum):
     lastbandlow = LastBandLowMethod
     lastbandhight = LastBandHighMethod
     count = CountMethod
+
+
+__all__ = [
+    "PixelSelectionMethod",
+    "CountMethod",
+    "FirstMethod",
+    "HighestMethod",
+    "LastBandHighMethod",
+    "LastBandLowMethod",
+    "LowestMethod",
+    "MeanMethod",
+    "MedianMethod",
+    "StdevMethod",
+]

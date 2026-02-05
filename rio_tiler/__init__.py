@@ -1,8 +1,8 @@
 """rio-tiler."""
 
-__version__ = "9.0.0a2"
+__version__ = "9.0.0a3"
 
-from . import (  # noqa
+from . import (
     colormap,
     constants,
     errors,
@@ -14,3 +14,16 @@ from . import (  # noqa
     tasks,
     utils,
 )
+
+__all__ = [
+    "colormap",
+    "constants",
+    "errors",
+    "expression",
+    "io",
+    "mosaic",
+    "profiles",
+    "reader",
+    "tasks",
+    "utils",
+]

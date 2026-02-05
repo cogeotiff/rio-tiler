@@ -1,8 +1,9 @@
 
 # Unreleased
 
-* add: `inherit_rasterio_env` decorator to `utils` module for decorating
-  functions that need to inherit rasterio env settings from a parent thread.
+# 9.0.0a3 (2026-02-05)
+
+* add: `inherit_rasterio_env` decorator to `utils` module for decorating functions that need to inherit rasterio env settings from a parent thread.
 * fix: automatically forward rasterio env settings to threads in multibase reader
 
 # 9.0.0a2 (2026-02-04)
