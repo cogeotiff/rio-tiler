@@ -1,0 +1,3979 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+        <meta name="description" content="User friendly Rasterio plugin to read raster datasets.">
+      
+      
+      
+        <link rel="canonical" href="https://cogeotiff.github.io/rio-tiler/api/rio_tiler/utils/">
+      
+      
+        <link rel="prev" href="../tasks/">
+      
+      
+        <link rel="next" href="../../../advanced/benchmark.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="../../../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.1">
+    
+    
+      
+        <title>rio_tiler.utils - rio-tiler</title>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/stylesheets/main.484c7ddc.min.css">
+      
+        
+        <link rel="stylesheet" href="../../../assets/stylesheets/palette.ab4e12ef.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,300i,400,400i,700,700i%7CFira+Code:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Nunito Sans";--md-code-font:"Fira Code"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../../../assets/_mkdocstrings.css">
+    
+    <script>__md_scope=new URL("../../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="default" data-md-color-primary="blue" data-md-color-accent="light-blue">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#rio_tiler.utils" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="../../.." title="rio-tiler" class="md-header__button md-logo" aria-label="rio-tiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3zm0 5h18v2H3zm0 5h18v2H3z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            rio-tiler
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              rio_tiler.utils
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+    
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.52 6.52 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5"/></svg>
+        
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7s-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91s2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" tabindex="0" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list" role="presentation"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+      
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/cogeotiff/rio-tiler" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cogeotiff/rio-tiler
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="../../.." title="rio-tiler" class="md-nav__button md-logo" aria-label="rio-tiler" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
+
+    </a>
+    rio-tiler
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/cogeotiff/rio-tiler" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+  </div>
+  <div class="md-source__repository">
+    cogeotiff/rio-tiler
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../.." class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Home
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_2" id="__nav_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    User Guide
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    User Guide
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../intro/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../readers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Readers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../mosaic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mosaic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../colormap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Colormaps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../supported_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported file formats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../experimental/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experimental
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Advanced Topics
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Advanced Topics
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/custom_readers/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Base classes and custom readers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/mosaic_backend/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mosaic Backend
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/feature/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Read Polygon-shaped regions
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/statistics/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Statistics
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/dynamic_tiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Create a Dynamic Tiler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/tms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    TileMatrixSet
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Examples
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Examples
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction to rio-tiler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler-mosaic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio-tiler.mosaic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-tms/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction to TileMatrixSets
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler-STACReader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Introduction to rio-tiler + STAC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-nonEarth-dataset/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Using Non Earth dataset
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/Using-rio-tiler-XarrayReader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Xarray + rio-tiler
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../examples/STAC_datacube_support/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Add support for STAC Datacube extension
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Migration Guides
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Migration Guides
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v2_migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v1.0 -> v2.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v3_migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v2.0 -> v3.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v4_migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v3.0 -> v4.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v5_migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v4.0 -> v5.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v7_migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v6.0 -> v7.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../migrations/v9_migration/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    v8.0 -> v9.0
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    API
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    API
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../colormap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.colormap
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../constants/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.constants
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../errors/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.errors
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../expression/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.expression
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_6" id="__nav_6_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    rio_tiler.io
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.base
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/rasterio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.rasterio
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/stac/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.stac
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../io/xarray/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.xarray
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7" id="__nav_6_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.mosaic
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    rio_tiler.mosaic
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mosaic/reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.mosaic.reader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_7_2" >
+        
+          
+          <label class="md-nav__link" for="__nav_6_7_2" id="__nav_6_7_2_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.mosaic.methods
+  
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="3" aria-labelledby="__nav_6_7_2_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6_7_2">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    rio_tiler.mosaic.methods
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mosaic/methods/base/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.mosaic.methods.base
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mosaic/methods/defaults/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.mosaic.methods.defaults
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../profiles/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.profiles
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../reader/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.reader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../tasks/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.tasks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.utils
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.utils
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rio_tiler.utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;utils
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" utils">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Timer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Timer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer.from_start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;from_start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer.__enter__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__enter__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer.__exit__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__exit__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.CRS_to_uri" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;CRS_to_uri
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.CRS_to_urn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;CRS_to_urn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._CRS_authority_info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_CRS_authority_info
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._array_gdal_name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_array_gdal_name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_chunks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._get_width_height" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_width_height
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._missing_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_missing_size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_requested_tile_aligned_with_internal_tile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._validate_shape_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_validate_shape_input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.cast_to_sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;cast_to_sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.create_cutline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;create_cutline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.get_array_statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_array_statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.get_overview_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_overview_level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.get_vrt_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_vrt_transform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_alpha_band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_alpha_band
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_mask_band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_mask_band
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.inherit_rasterio_env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;inherit_rasterio_env
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.linear_rescale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;linear_rescale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.mapzen_elevation_rgb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;mapzen_elevation_rgb
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.non_alpha_indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;non_alpha_indexes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.normalize_bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;normalize_bounds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.pansharpening_brovey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pansharpening_brovey
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;render
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.resize_array" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;resize_array
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../advanced/benchmark.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Benchmarking
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../contributing/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Development - Contributing
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../release-notes/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Release Notes
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rio_tiler.utils" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;utils
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" utils">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Timer
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Timer">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer.from_start" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;from_start
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer.__enter__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__enter__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.Timer.__exit__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__exit__
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.CRS_to_uri" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;CRS_to_uri
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.CRS_to_urn" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;CRS_to_urn
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._CRS_authority_info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_CRS_authority_info
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._array_gdal_name" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_array_gdal_name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._chunks" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_chunks
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._get_width_height" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_width_height
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._missing_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_missing_size
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_requested_tile_aligned_with_internal_tile
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._validate_shape_input" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_validate_shape_input
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.cast_to_sequence" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;cast_to_sequence
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.create_cutline" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;create_cutline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.get_array_statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_array_statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.get_overview_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_overview_level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.get_vrt_transform" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;get_vrt_transform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_alpha_band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_alpha_band
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_mask_band" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_mask_band
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.inherit_rasterio_env" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;inherit_rasterio_env
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.linear_rescale" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;linear_rescale
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.mapzen_elevation_rgb" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;mapzen_elevation_rgb
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.non_alpha_indexes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;non_alpha_indexes
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.normalize_bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;normalize_bounds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.pansharpening_brovey" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;pansharpening_brovey
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.render" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;render
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.resize_array" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;resize_array
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+              <article class="md-content__inner md-typeset">
+                
+
+
+
+                  
+
+
+  
+  
+
+
+  <h1>rio_tiler.utils</h1>
+
+<div class="doc doc-object doc-module">
+
+
+
+<h2 id="rio_tiler.utils" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">rio_tiler.utils</span>
+
+
+<a href="#rio_tiler.utils" class="headerlink" title="Permanent link">&para;</a></h2>
+
+    <div class="doc doc-contents first">
+
+        <p>rio_tiler.utils: utility functions.</p>
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="rio_tiler.utils.Timer" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">Timer</span>
+
+
+<a href="#rio_tiler.utils.Timer" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="object">object</span></code></p>
+
+
+
+        <p>Time a code block.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h4 id="rio_tiler.utils.Timer.from_start" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">from_start</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-property"><code>property</code></small>
+  </span>
+
+<a href="#rio_tiler.utils.Timer.from_start" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">from_start</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return time elapsed from start.</p>
+
+    </div>
+
+</div>
+
+
+
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="rio_tiler.utils.Timer.__enter__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__enter__</span>
+
+
+<a href="#rio_tiler.utils.Timer.__enter__" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">__enter__</span><span class="p">()</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Starts timer.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h4 id="rio_tiler.utils.Timer.__exit__" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">__exit__</span>
+
+
+<a href="#rio_tiler.utils.Timer.__exit__" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">__exit__</span><span class="p">(</span><span class="n">ty</span><span class="p">,</span> <span class="n">val</span><span class="p">,</span> <span class="n">tb</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Stops timer.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.CRS_to_uri" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">CRS_to_uri</span>
+
+
+<a href="#rio_tiler.utils.CRS_to_uri" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">CRS_to_uri</span><span class="p">(</span><span class="n">crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Convert CRS to URI.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.CRS_to_urn" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">CRS_to_urn</span>
+
+
+<a href="#rio_tiler.utils.CRS_to_urn" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">CRS_to_urn</span><span class="p">(</span><span class="n">crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Convert CRS to URN.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils._CRS_authority_info" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_CRS_authority_info</span>
+
+
+<a href="#rio_tiler.utils._CRS_authority_info" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_CRS_authority_info</span><span class="p">(</span><span class="n">crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Convert CRS to URI.</p>
+<p>Code adapted from <a href="https://github.com/developmentseed/morecantile/blob/1829fe12408e4a1feee7493308f3f02257ef4caf/morecantile/models.py#L148-L161">github.com/developmentseed/morecantile/blob/1829fe12408e4a1feee7493308f3f02257ef4caf/morecantile/models.py#L148-L161</a></p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils._array_gdal_name" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_array_gdal_name</span>
+
+
+<a href="#rio_tiler.utils._array_gdal_name" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_array_gdal_name</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="str">str</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return GDAL MEM dataset name.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils._chunks" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_chunks</span>
+
+
+<a href="#rio_tiler.utils._chunks" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_chunks</span><span class="p">(</span><span class="n">my_list</span><span class="p">:</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">,</span> <span class="n">chuck_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="collections.abc.Generator">Generator</span></span><span class="p">[</span><span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">,</span> <span class="kc">None</span><span class="p">,</span> <span class="kc">None</span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Yield successive n-sized chunks from l.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils._get_width_height" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_get_width_height</span>
+
+
+<a href="#rio_tiler.utils._get_width_height" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_width_height</span><span class="p">(</span><span class="n">max_size</span><span class="p">,</span> <span class="n">dataset_height</span><span class="p">,</span> <span class="n">dataset_width</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Get Output Width/Height based on a max_size and dataset shape.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils._missing_size" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_missing_size</span>
+
+
+<a href="#rio_tiler.utils._missing_size" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_missing_size</span><span class="p">(</span><span class="n">w</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check if one and only one size (width, height) is valid.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_requested_tile_aligned_with_internal_tile</span>
+
+
+<a href="#rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_requested_tile_aligned_with_internal_tile</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check if tile is aligned with internal tiles.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils._validate_shape_input" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_validate_shape_input</span>
+
+
+<a href="#rio_tiler.utils._validate_shape_input" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_validate_shape_input</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Ensure input shape is valid and reduce features to geometry</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.cast_to_sequence" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">cast_to_sequence</span>
+
+
+<a href="#rio_tiler.utils.cast_to_sequence" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">cast_to_sequence</span><span class="p">(</span><span class="n">val</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.Sequence">Sequence</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Cast input to sequence if not Tuple of List.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.create_cutline" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">create_cutline</span>
+
+
+<a href="#rio_tiler.utils.create_cutline" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">create_cutline</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">geometry</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">geometry_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">op</span><span class="p">:</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[[</span><span class="n"><span title="float">float</span></span><span class="p">],</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="str">str</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Create WKT Polygon Cutline for GDALWarpOptions.</p>
+<p>Ref: <a href="https://gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions">gdal.org/api/gdalwarp_cpp.html?highlight=vrt#_CPPv415GDALWarpOptions</a></p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>src_dst</code></b>
+              (<code><span title="rasterio.io.DatasetReader">DatasetReader</span> or <span title="rasterio.io.DatasetWriter">DatasetWriter</span> or <span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Rasterio dataset.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>geometry</code></b>
+              (<code><span title="dict">dict</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>GeoJSON feature or GeoJSON geometry. By default the coordinates are considered to be in the dataset CRS. Use <code>geometry_crs</code> to set a specific CRS.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>geometry_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Input geometry Coordinate Reference System</p>
+          </div>
+        </li>
+    </ul>
+        <p>Returns:
+    str: WKT geometry in form of `POLYGON ((x y, x y, ...)))</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.get_array_statistics" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_array_statistics</span>
+
+
+<a href="#rio_tiler.utils.get_array_statistics" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_array_statistics</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">,</span> <span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coverage</span><span class="p">:</span> <span class="n"><span title="numpy.typing.NDArray">NDArray</span></span><span class="p">[</span><span class="n"><span title="numpy.floating">floating</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate per band array statistics.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>data</code></b>
+              (<code><span title="numpy.ma.MaskedArray">MaskedArray</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>input masked array data to get the statistics from.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>categorical</code></b>
+              (<code><span title="bool">bool</span></code>, default:
+                  <code>False</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>treat input data as categorical data. Defaults to <code>False</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>categories</code></b>
+              (<code>list of numbers</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>list of categories to return value for.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>percentiles</code></b>
+              (<code>list of numbers</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>list of percentile values to calculate. Defaults to <code>[2, 98]</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>coverage</code></b>
+              (<code><span title="numpy.array">array</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Data coverage fraction.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>kwargs</code></b>
+              (<code><span title="optional">optional</span></code>, default:
+                  <code>{}</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>options to forward to <code>numpy.histogram</code> function (only applies for non-categorical data).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>list</code></b> (              <code><span title="list">list</span>[<span title="dict">dict</span>[<span title="typing.Any">Any</span>, <span title="typing.Any">Any</span>]]</code>
+)          –
+          <div class="doc-md-description">
+            <p>list of array statistics (dict)</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="codehilite"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
+<span class="gp">&gt;&gt;&gt; </span><span class="n">get_array_statistics</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
+<span class="go">[</span>
+<span class="go">    {</span>
+<span class="go">        &#39;min&#39;: 0.0,</span>
+<span class="go">        &#39;max&#39;: 0.0,</span>
+<span class="go">        &#39;mean&#39;: 0.0,</span>
+<span class="go">        &#39;count&#39;: 65536.0,</span>
+<span class="go">        &#39;sum&#39;: 0.0,</span>
+<span class="go">        &#39;std&#39;: 0.0,</span>
+<span class="go">        &#39;median&#39;: 0.0,</span>
+<span class="go">        &#39;majority&#39;: 0.0,</span>
+<span class="go">        &#39;minority&#39;: 0.0,</span>
+<span class="go">        &#39;unique&#39;: 1.0,</span>
+<span class="go">        &#39;percentile_2&#39;: 0.0,</span>
+<span class="go">        &#39;percentile_98&#39;: 0.0,</span>
+<span class="go">        &#39;histogram&#39;: [</span>
+<span class="go">            [0, 0, 0, 0, 0, 65536, 0, 0, 0, 0],</span>
+<span class="go">            [-0.5, -0.4, -0.3, -0.19999999999999996, -0.09999999999999998, 0.0, 0.10000000000000009, 0.20000000000000007, 0.30000000000000004, 0.4, 0.5]</span>
+<span class="go">        ],</span>
+<span class="go">        &#39;valid_pixels&#39;: 65536.0,</span>
+<span class="go">        &#39;masked_pixels&#39;: 0.0,</span>
+<span class="go">        &#39;valid_percent&#39;: 100.0</span>
+<span class="go">    }</span>
+<span class="go">]</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.get_overview_level" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_overview_level</span>
+
+
+<a href="#rio_tiler.utils.get_overview_level" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_overview_level</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="int">int</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the overview level corresponding to the tile resolution.</p>
+<p>Freely adapted from <a href="https://github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e944744b7c9b2bd6c400/gdal/apps/gdalwarp_lib.cpp#L2293-L2362">github.com/OSGeo/gdal/blob/41993f127e6e1669fbd9e944744b7c9b2bd6c400/gdal/apps/gdalwarp_lib.cpp#L2293-L2362</a></p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>src_dst</code></b>
+              (<code><span title="rasterio.io.DatasetReader">DatasetReader</span> or <span title="rasterio.io.DatasetWriter">DatasetWriter</span> or <span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Rasterio dataset.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>bounds</code></b>
+              (<code><span title="tuple">tuple</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Bounding box coordinates in target crs (<strong>dst_crs</strong>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Desired output height of the array for the input bounds.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Desired output width of the array for the input bounds.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target Coordinate Reference System. Defaults to <code>epsg:3857</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>int</code></b> (              <code><span title="int">int</span></code>
+)          –
+          <div class="doc-md-description">
+            <p>Overview level.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.get_vrt_transform" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">get_vrt_transform</span>
+
+
+<a href="#rio_tiler.utils.get_vrt_transform" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_vrt_transform</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">,</span> <span class="n">window_precision</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">align_bounds_with_dataset</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="affine.Affine">Affine</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Calculate VRT transform.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>src_dst</code></b>
+              (<code><span title="rasterio.io.DatasetReader">DatasetReader</span> or <span title="rasterio.io.DatasetWriter">DatasetWriter</span> or <span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Rasterio dataset.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>bounds</code></b>
+              (<code><span title="tuple">tuple</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Bounding box coordinates in target crs (<strong>dst_crs</strong>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output height of the array for the input bounds.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output width of the array for the input bounds.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target Coordinate Reference System. Defaults to <code>epsg:3857</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>align_bounds_with_dataset</code></b>
+              (<code><span title="bool">bool</span></code>, default:
+                  <code>False</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Align input bounds with dataset transform. Defaults to <code>False</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>tuple</code></b> (              <code><span title="tuple">tuple</span>[<span title="affine.Affine">Affine</span>, <span title="int">int</span>, <span title="int">int</span>]</code>
+)          –
+          <div class="doc-md-description">
+            <p>VRT transform (affine.Affine), width (int) and height (int)</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.has_alpha_band" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">has_alpha_band</span>
+
+
+<a href="#rio_tiler.utils.has_alpha_band" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">has_alpha_band</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check for alpha band or mask in source.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.has_mask_band" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">has_mask_band</span>
+
+
+<a href="#rio_tiler.utils.has_mask_band" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">has_mask_band</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check for mask band in source.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.inherit_rasterio_env" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">inherit_rasterio_env</span>
+
+
+<a href="#rio_tiler.utils.inherit_rasterio_env" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">inherit_rasterio_env</span><span class="p">(</span><span class="n">f</span><span class="p">:</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.utils._P">_P</span></span><span class="p">,</span> <span class="n"><span title="rio_tiler.utils._R">_R</span></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.utils._P">_P</span></span><span class="p">,</span> <span class="n"><span title="rio_tiler.utils._R">_R</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Wrap a function to run in a rasterio environment like the current one.</p>
+<p>This differs from the function <code>rasterio.env.ensure_env_with_credentials</code> in
+that this function copies the rasterio environment active at the time this
+function is invoked, rather than at the time the wrapped function is
+invoked. This enables replicating the environment from the thread active at
+the time this function is invoked to the thread active at the time the
+wrapped function is invoked.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>f</code></b>
+              (<code><span title="collections.abc.Callable">Callable</span>[<span title="rio_tiler.utils._P">_P</span>, <span title="rio_tiler.utils._R">_R</span>]</code>)
+          –
+          <div class="doc-md-description">
+            <p>The function to wrap.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="collections.abc.Callable">Callable</span>[<span title="rio_tiler.utils._P">_P</span>, <span title="rio_tiler.utils._R">_R</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>Callable[P, R]: A function wrapping <code>f</code> that executes <code>f</code> within a
+rasterio environment configured identically to the rasterio
+environment active at the time this wrapper is created.  Returns
+<code>f</code> unwrapped if no rasterio environment is active when this
+function is called.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.linear_rescale" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">linear_rescale</span>
+
+
+<a href="#rio_tiler.utils.linear_rescale" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">linear_rescale</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span><span class="p">,</span> <span class="n">out_range</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Apply linear rescaling to a numpy array.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>image</code></b>
+              (<code><span title="numpy.ndarray">ndarray</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>array to rescale.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>in_range</code></b>
+              (<code><span title="tuple">tuple</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>array min/max value to rescale from.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>out_range</code></b>
+              (<code><span title="tuple">tuple</span></code>, default:
+                  <code>(0, 255)</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>output min/max bounds to rescale to. Defaults to <code>(0, 255)</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="numpy.ndarray">ndarray</span></code>
+          –
+          <div class="doc-md-description">
+            <p>numpy.ndarray: linear rescaled array.</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.mapzen_elevation_rgb" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">mapzen_elevation_rgb</span>
+
+
+<a href="#rio_tiler.utils.mapzen_elevation_rgb" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">mapzen_elevation_rgb</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Encode elevation value to RGB values compatible with Mapzen tangram.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>data</code></b>
+              (<code><span title="numpy.ndarray">ndarray</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image array to encode.</p>
+          </div>
+        </li>
+    </ul>
+        <p>Returns
+    numpy.ndarray: Elevation encoded in a RGB array.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.non_alpha_indexes" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">non_alpha_indexes</span>
+
+
+<a href="#rio_tiler.utils.non_alpha_indexes" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">non_alpha_indexes</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return indexes of non-alpha bands.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.normalize_bounds" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">normalize_bounds</span>
+
+
+<a href="#rio_tiler.utils.normalize_bounds" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">normalize_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return BBox in correct minx, miny, maxx, maxy order.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.pansharpening_brovey" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">pansharpening_brovey</span>
+
+
+<a href="#rio_tiler.utils.pansharpening_brovey" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">pansharpening_brovey</span><span class="p">(</span><span class="n">rgb</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">pan</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">weight</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">pan_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Apply Brovey pansharpening method.</p>
+<p>Brovey Method: Each resampled, multispectral pixel is
+multiplied by the ratio of the corresponding
+panchromatic pixel intensity to the sum of all the
+multispectral intensities.</p>
+<p>Original code from <a class="magiclink magiclink-github magiclink-repository" href="https://github.com/mapbox/rio-pansharpen" title="GitHub Repository: mapbox/rio-pansharpen">mapbox/rio-pansharpen</a></p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.render" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">render</span>
+
+
+<a href="#rio_tiler.utils.render" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">render</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">img_format</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;PNG&#39;</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.ColorMapType">ColorMapType</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">creation_options</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Translate numpy.ndarray to image bytes.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>data</code></b>
+              (<code><span title="numpy.ndarray">ndarray</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Image array to encode.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>mask</code></b>
+              (<code><span title="numpy.ndarray">ndarray</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Mask array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>img_format</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;PNG&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Image format. See: for the list of supported format by GDAL: <a href="https://www.gdal.org/formats_list.html">www.gdal.org/formats_list.html</a>. Defaults to <code>PNG</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>colormap</code></b>
+              (<code><span title="dict">dict</span> or <span title="sequence">sequence</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>RGBA Color Table dictionary or sequence.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>creation_options</code></b>
+              (<code><span title="optional">optional</span></code>, default:
+                  <code>{}</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Image driver creation options to forward to GDAL.</p>
+          </div>
+        </li>
+    </ul>
+        <p>Returns
+    bytes: image body.</p>
+
+
+<p><span class="doc-section-title">Examples:</span></p>
+    <div class="codehilite"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="go">    img = src.preview()</span>
+<span class="go">    with open(&#39;test.jpg&#39;, &#39;wb&#39;) as f:</span>
+<span class="go">        f.write(render(img.data, img.mask, img_format=&quot;jpeg&quot;))</span>
+</code></pre></div>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.resize_array" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">resize_array</span>
+
+
+<a href="#rio_tiler.utils.resize_array" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">resize_array</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">&#39;nearest&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>resize array to a given height and width.</p>
+
+
+    </div>
+
+</div>
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
+
+
+
+
+
+
+
+
+
+
+
+                
+
+              </article>
+            </div>
+          
+          
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+        
+<div class="md-social">
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://github.com/cogeotiff" target="_blank" rel="noopener" title="github.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M173.9 397.4c0 2-2.3 3.6-5.2 3.6-3.3.3-5.6-1.3-5.6-3.6 0-2 2.3-3.6 5.2-3.6 3-.3 5.6 1.3 5.6 3.6m-31.1-4.5c-.7 2 1.3 4.3 4.3 4.9 2.6 1 5.6 0 6.2-2s-1.3-4.3-4.3-5.2c-2.6-.7-5.5.3-6.2 2.3m44.2-1.7c-2.9.7-4.9 2.6-4.6 4.9.3 2 2.9 3.3 5.9 2.6 2.9-.7 4.9-2.6 4.6-4.6-.3-1.9-3-3.2-5.9-2.9M252.8 8C114.1 8 8 113.3 8 252c0 110.9 69.8 205.8 169.5 239.2 12.8 2.3 17.3-5.6 17.3-12.1 0-6.2-.3-40.4-.3-61.4 0 0-70 15-84.7-29.8 0 0-11.4-29.1-27.8-36.6 0 0-22.9-15.7 1.6-15.4 0 0 24.9 2 38.6 25.8 21.9 38.6 58.6 27.5 72.9 20.9 2.3-16 8.8-27.1 16-33.7-55.9-6.2-112.3-14.3-112.3-110.5 0-27.5 7.6-41.3 23.6-58.9-2.6-6.5-11.1-33.3 2.6-67.9 20.9-6.5 69 27 69 27 20-5.6 41.5-8.5 62.8-8.5s42.8 2.9 62.8 8.5c0 0 48.1-33.6 69-27 13.7 34.7 5.2 61.4 2.6 67.9 16 17.7 25.8 31.5 25.8 58.9 0 96.5-58.9 104.2-114.8 110.5 9.2 7.9 17 22.9 17 46.4 0 33.7-.3 75.4-.3 83.6 0 6.5 4.6 14.4 17.3 12.1C436.2 457.8 504 362.9 504 252 504 113.3 391.5 8 252.8 8M105.2 352.9c-1.3 1-1 3.3.7 5.2 1.6 1.6 3.9 2.3 5.2 1 1.3-1 1-3.3-.7-5.2-1.6-1.6-3.9-2.3-5.2-1m-10.8-8.1c-.7 1.3.3 2.9 2.3 3.9 1.6 1 3.6.7 4.3-.7.7-1.3-.3-2.9-2.3-3.9-2-.6-3.6-.3-4.3.7m32.4 35.6c-1.6 1.3-1 4.3 1.3 6.2 2.3 2.3 5.2 2.6 6.5 1 1.3-1.3.7-4.3-1.3-6.2-2.2-2.3-5.2-2.6-6.5-1m-11.4-14.7c-1.6 1-1.6 3.6 0 5.9s4.3 3.3 5.6 2.3c1.6-1.3 1.6-3.9 0-6.2-1.4-2.3-4-3.3-5.6-2"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://twitter.com/cogeotiff" target="_blank" rel="noopener" title="twitter.com" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M459.4 151.7c.3 4.5.3 9.1.3 13.6 0 138.7-105.6 298.6-298.6 298.6-59.5 0-114.7-17.2-161.1-47.1 8.4 1 16.6 1.3 25.3 1.3 49.1 0 94.2-16.6 130.3-44.8-46.1-1-84.8-31.2-98.1-72.8 6.5 1 13 1.6 19.8 1.6 9.4 0 18.8-1.3 27.6-3.6-48.1-9.7-84.1-52-84.1-103v-1.3c14 7.8 30.2 12.7 47.4 13.3-28.3-18.8-46.8-51-46.8-87.4 0-19.5 5.2-37.4 14.3-53C87.4 130.8 165 172.4 252.1 176.9c-1.6-7.8-2.6-15.9-2.6-24C249.5 95.1 296.3 48 354.4 48c30.2 0 57.5 12.7 76.7 33.1 23.7-4.5 46.5-13.3 66.6-25.3-7.8 24.4-24.4 44.8-46.1 57.8 21.1-2.3 41.6-8.1 60.4-16.2-14.3 20.8-32.2 39.3-52.6 54.3"/></svg>
+    </a>
+  
+    
+    
+    
+    
+      
+      
+    
+    <a href="https://www.cogeo.org/" target="_blank" rel="noopener" title="www.cogeo.org" class="md-social__link">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><!--! Font Awesome Free 7.1.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2025 Fonticons, Inc.--><path d="M351.9 280H161c2.9 64.5 17.2 123.9 37.5 167.4 11.4 24.5 23.7 41.8 35.1 52.4 11.2 10.5 18.9 12.2 22.9 12.2s11.7-1.7 22.9-12.2c11.4-10.6 23.7-28 35.1-52.4 20.3-43.5 34.6-102.9 37.5-167.4zm-191-48h190.9c-2.8-64.5-17.1-123.9-37.4-167.4-11.4-24.4-23.7-41.8-35.1-52.4C268.1 1.7 260.4 0 256.4 0s-11.7 1.7-22.9 12.2c-11.4 10.6-23.7 28-35.1 52.4-20.3 43.5-34.6 102.9-37.5 167.4m-48 0c3.5-85.6 25.6-165.1 57.9-217.3C78.7 47.3 10.9 131.2 1.5 232zM1.5 280c9.4 100.8 77.2 184.7 169.3 217.3-32.3-52.2-54.4-131.7-57.9-217.3zm398.4 0c-3.5 85.6-25.6 165.1-57.9 217.3 92.1-32.7 159.9-116.5 169.3-217.3zm111.4-48C501.9 131.2 434.1 47.3 342 14.7c32.3 52.2 54.4 131.7 57.9 217.3z"/></svg>
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate": null, "base": "../../..", "features": ["content.code.annotate", "content.code.copy", "navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": null}</script>
+    
+    
+      <script src="../../../assets/javascripts/bundle.79ae519e.min.js"></script>
+      
+    
+  </body>
+</html>
