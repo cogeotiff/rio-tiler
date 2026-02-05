@@ -11,6 +11,7 @@ import numpy as np
 import pytest
 import rasterio
 import rasterio.env
+from rasterio._env import get_gdal_config
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
 from rasterio.enums import ColorInterp
@@ -842,14 +843,33 @@ def test_inherit_rasterio_env_not_empty():
     assert decorated_hasenv() is True
 
 
-def test_inherit_rasterio_env_not_empty_separate_thread():
+def test_inherit_rasterio_env_not_empty_separate_thread(monkeypatch):
     """When there is a rasterio env, it should be inherited from separate thread."""
 
-    with rasterio.Env():
+    monkeypatch.setenv("GDAL_DISABLE_READDIR_ON_OPEN", "something")
+
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
 
         @utils.inherit_rasterio_env
-        def hasenv(*args: object) -> bool:
-            return rasterio.env.hasenv()
+        def hasenv(*args: object) -> tuple[bool, str]:
+            return (
+                rasterio.env.hasenv(),
+                get_gdal_config("GDAL_DISABLE_READDIR_ON_OPEN"),
+            )
+
+        def hasnotenv(*args: object) -> tuple[bool, bool]:
+            return (
+                rasterio.env.hasenv(),
+                get_gdal_config("GDAL_DISABLE_READDIR_ON_OPEN"),
+            )
 
     with ThreadPoolExecutor() as exec:
-        assert list(exec.map(hasenv, [0])) == [True]
+        futures = [
+            exec.submit(hasenv, [0]),
+            exec.submit(hasnotenv, [0]),
+        ]
+        resuts = [f.result() for f in futures]
+        assert resuts == [
+            (True, "FALSE"),
+            (False, "something"),
+        ]
