@@ -112,7 +112,7 @@ def mosaic_reader(  # noqa: C901
                 ]
             ):
                 warnings.warn(
-                    "Cannot concatenate images with different size. Will resize using fist asset width/heigh",
+                    "Cannot concatenate images with different sizes. Will resize using first asset's width/height.",
                     UserWarning,
                 )
                 h = pixel_selection.height
