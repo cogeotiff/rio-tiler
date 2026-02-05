@@ -4,6 +4,7 @@ import json
 import os
 import warnings
 from collections.abc import Iterator, Sequence
+from threading import Lock
 from typing import Any
 from urllib.parse import urlparse
 
@@ -103,6 +104,7 @@ def aws_get_object(
 @cached(  # type: ignore
     lru_cache,
     key=lambda filepath, **kargs: hashkey(filepath, json.dumps(kargs)),
+    lock=Lock(),
 )
 def fetch(filepath: str, **kwargs: Any) -> dict:
     """Fetch STAC items.
