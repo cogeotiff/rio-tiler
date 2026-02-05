@@ -4,11 +4,13 @@ import math
 import time
 import warnings
 from collections.abc import Callable, Generator
+from functools import wraps
 from io import BytesIO
-from typing import Any, Sequence
+from typing import Any, ParamSpec, Sequence, TypeVar
 
 import numpy
 import rasterio
+import rasterio.env
 from affine import Affine
 from numpy.typing import NDArray
 from rasterio import windows
@@ -27,6 +29,9 @@ from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
 from rio_tiler.errors import InvalidFormat, RioTilerError
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
+
+_P = ParamSpec("_P")
+_R = TypeVar("_R")
 
 
 def _chunks(my_list: Sequence, chuck_size: int) -> Generator[Sequence, None, None]:
@@ -890,6 +895,38 @@ def CRS_to_urn(crs: CRS) -> str | None:
         return f"urn:ogc:def:crs:{authority}:{version}:{code}"
 
     return None
+
+
+def inherit_rasterio_env(f: Callable[_P, _R]) -> Callable[_P, _R]:
+    """Wrap a function to run in a rasterio environment like the current one.
+
+    This differs from the function `rasterio.env.ensure_env_with_credentials` in
+    that this function copies the rasterio environment active at the time this
+    function is invoked, rather than at the time the wrapped function is
+    invoked. This enables replicating the environment from the thread active at
+    the time this function is invoked to the thread active at the time the
+    wrapped function is invoked.
+
+    Args:
+        f: The function to wrap.
+
+    Returns:
+        Callable[P, R]: A function wrapping ``f`` that executes ``f`` within a
+            rasterio environment configured identically to the rasterio
+            environment active at the time this wrapper is created.  Returns
+            ``f`` unwrapped if no rasterio environment is active when this
+            function is called.
+    """
+    if (env := rasterio.env.getenv() if rasterio.env.hasenv() else None) is None:
+        return f
+
+    @wraps(f)
+    def wrapper(*args: _P.args, **kwargs: _P.kwargs) -> _R:
+        with rasterio.Env():
+            rasterio.env.setenv(**env)
+            return f(*args, **kwargs)
+
+    return wrapper
 
 
 # This code is copied from marblecutter

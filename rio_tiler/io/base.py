@@ -28,7 +28,12 @@ from rio_tiler.errors import (
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.tasks import multi_arrays, multi_points, multi_values
 from rio_tiler.types import AssetInfo, BBox, Indexes
-from rio_tiler.utils import CRS_to_uri, cast_to_sequence, normalize_bounds
+from rio_tiler.utils import (
+    CRS_to_uri,
+    cast_to_sequence,
+    inherit_rasterio_env,
+    normalize_bounds,
+)
 
 
 @attr.s
@@ -401,7 +406,8 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
         assets = cast_to_sequence(assets or self.assets)
 
-        def _reader(asset: str, **kwargs: Any) -> dict:
+        @inherit_rasterio_env
+        def _reader(asset: str, **kwargs: Any) -> Info:
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
             reader_options = {**self.reader_options, **asset_info["reader_options"]}
@@ -436,6 +442,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         assets = cast_to_sequence(assets or self.assets)
 
+        @inherit_rasterio_env
         def _reader(asset: str, *args: Any, **kwargs: Any) -> dict:
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
@@ -545,6 +552,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "No Asset defined by `assets` option or class-level `default_assets`."
             )
 
+        @inherit_rasterio_env
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
@@ -625,6 +633,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "No Asset defined by `assets` option or class-level `default_assets`."
             )
 
+        @inherit_rasterio_env
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
@@ -703,6 +712,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "No Asset defined by `assets` option or class-level `default_assets`."
             )
 
+        @inherit_rasterio_env
         def _reader(asset: str, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
@@ -785,6 +795,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "No Asset defined by `assets` option or class-level `default_assets`."
             )
 
+        @inherit_rasterio_env
         def _reader(asset: str, *args: Any, **kwargs: Any) -> PointData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
@@ -860,6 +871,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "No Asset defined by `assets` option or class-level `default_assets`."
             )
 
+        @inherit_rasterio_env
         def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
@@ -991,6 +1003,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         bands = cast_to_sequence(bands or self.bands)
 
+        @inherit_rasterio_env
         def _reader(band: str, **kwargs: Any) -> Info:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:
@@ -1117,6 +1130,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via `expression` or `bands` options."
             )
 
+        @inherit_rasterio_env
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:
@@ -1177,6 +1191,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via `expression` or `bands` options."
             )
 
+        @inherit_rasterio_env
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:
@@ -1235,6 +1250,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via `expression` or `bands` options."
             )
 
+        @inherit_rasterio_env
         def _reader(band: str, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:
@@ -1297,6 +1313,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via `expression` or `bands` options."
             )
 
+        @inherit_rasterio_env
         def _reader(band: str, *args: Any, **kwargs: Any) -> PointData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:
@@ -1357,6 +1374,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 "bands must be passed either via `expression` or `bands` options."
             )
 
+        @inherit_rasterio_env
         def _reader(band: str, *args: Any, **kwargs: Any) -> ImageData:
             url = self._get_band_url(band)
             with self.reader(url, tms=self.tms, **self.reader_options) as src:
