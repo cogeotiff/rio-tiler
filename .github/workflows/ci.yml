@@ -5,6 +5,7 @@ on:
   push:
     branches:
     - main
+    - maint-8.x
     tags:
     - '*'
   pull_request:
