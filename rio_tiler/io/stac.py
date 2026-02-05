@@ -30,6 +30,9 @@ except ImportError:  # pragma: nocover
     boto3_session = None  # type: ignore
 
 
+lru_cache = LRUCache(maxsize=512)  # type: ignore
+
+
 DEFAULT_VALID_TYPE = {
     "image/tiff; application=geotiff",
     "image/tiff; application=geotiff; profile=cloud-optimized",
@@ -98,7 +101,7 @@ def aws_get_object(
 
 
 @cached(  # type: ignore
-    LRUCache(maxsize=512),
+    lru_cache,
     key=lambda filepath, **kargs: hashkey(filepath, json.dumps(kargs)),
 )
 def fetch(filepath: str, **kwargs: Any) -> dict:
