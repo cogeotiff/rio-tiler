@@ -499,7 +499,7 @@ class ImageData:
 
         if len(set(h)) > 1 or len(set(w)) > 1:
             warnings.warn(
-                "Cannot concatenate images with different size. Will resize using max width/heigh",
+                "Cannot concatenate images with different sizes. Will resize using max width/height.",
                 UserWarning,
             )
             for img in data:
