@@ -4,6 +4,7 @@ import json
 import os
 import warnings
 from collections.abc import Iterator, Sequence
+from threading import Lock
 from typing import Any
 from urllib.parse import urlparse
 
@@ -28,6 +29,9 @@ try:
 
 except ImportError:  # pragma: nocover
     boto3_session = None  # type: ignore
+
+
+lru_cache = LRUCache(maxsize=512)  # type: ignore
 
 
 DEFAULT_VALID_TYPE = {
@@ -98,8 +102,9 @@ def aws_get_object(
 
 
 @cached(  # type: ignore
-    LRUCache(maxsize=512),
+    lru_cache,
     key=lambda filepath, **kargs: hashkey(filepath, json.dumps(kargs)),
+    lock=Lock(),
 )
 def fetch(filepath: str, **kwargs: Any) -> dict:
     """Fetch STAC items.

@@ -1,14 +1,30 @@
 """Benchmark."""
 
+import os
+from datetime import datetime
+from unittest.mock import patch
+
 import morecantile
+import numpy
 import pytest
 import rasterio
+import xarray
 from rasterio.coords import BoundingBox
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
 from rasterio.io import MemoryFile
 
-from rio_tiler.io import Reader
+from rio_tiler.io import Reader, STACReader, XarrayReader
+from rio_tiler.io.stac import fetch
+from rio_tiler.mosaic import mosaic_reader
+from rio_tiler.mosaic.methods.defaults import FirstMethod, MeanMethod
+
+stac_item = "https://stac.eoapi.dev/collections/MAXAR_afghanistan_earthquake22/items/42_120200201121_10300100D4928800"
+_ = fetch(stac_item)  # Cache the STAC Item for the benchmarks.
+
+asset1 = os.path.join(os.path.dirname(__file__), "..", "fixtures", "mosaic_value_1.tif")
+asset2 = os.path.join(os.path.dirname(__file__), "..", "fixtures", "mosaic_value_2.tif")
+assets = [asset2, asset1]
 
 benchmark_tiles = {
     "north": {
@@ -68,21 +84,18 @@ datasets = {
 }
 
 
-def read_tile(dst, tile):
-    """Benchmark rio-tiler.utils._tile_read."""
-    # We make sure to not store things in cache.
-    with Reader(None, dataset=dst) as src:
-        return src.tile(*tile)
-
-
 @pytest.mark.parametrize("dataset_name", ["equator", "dateline"])
 @pytest.mark.parametrize("data_type", list(dtype_ranges.keys()))
 @pytest.mark.parametrize("nodata_type", ["nodata", "alpha", "mask", "none"])
 def test_tile(nodata_type, data_type, dataset_name, dataset_fixture, benchmark):
-    """Test tile read for multiple combination of datatype/mask/tile extent."""
+    """Benchmark Reader.tile method."""
     benchmark.name = f"{dataset_name}-{data_type}-{nodata_type}"
     benchmark.fullname = f"{dataset_name}-{data_type}-{nodata_type}"
     benchmark.group = dataset_name
+
+    def _tile(dst, tile):
+        with Reader(None, dataset=dst) as src:
+            return src.tile(*tile)
 
     tile = benchmark_tiles[dataset_name]["full"]
     dst_info = datasets[dataset_name]
@@ -99,5 +112,84 @@ def test_tile(nodata_type, data_type, dataset_name, dataset_fixture, benchmark):
             )
         ) as memfile:
             with memfile.open() as dst:
-                img = benchmark(read_tile, dst, tile)
+                img = benchmark(_tile, dst, tile)
                 assert img.data.dtype == data_type
+
+
+@pytest.mark.parametrize("threads", [1, 10])
+@patch("rio_tiler.io.stac.STAC_ALTERNATE_KEY", "public")
+def test_stac(threads, benchmark):
+    """Benchmark STACReader."""
+    benchmark.name = "STACReader" if threads == 1 else "STACReader-With-Threads"
+    benchmark.fullname = "STACReader" if threads == 1 else "STACReader-With-Threads"
+    benchmark.group = "STACReader" if threads == 1 else "STACReader-With-Threads"
+
+    def _tile():
+        with STACReader(stac_item) as src:
+            return src.tile(
+                11365, 6592, 14, assets=["visual", "ms_analytic"], threads=threads
+            )
+
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", NUM_THREADS="all"):
+        _ = benchmark(_tile)
+
+
+def test_xarray(benchmark):
+    """Benchmark XarrayReader."""
+    benchmark.name = "XarrayReader"
+    benchmark.fullname = "XarrayReader"
+    benchmark.group = "XarrayReader"
+
+    arr = numpy.arange(0.0, 1000 * 500 * 3, dtype="float32").reshape(3, 500, 1000)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.linspace(-177.5, 177.5, 1000),
+            "y": numpy.linspace(87.5, -87.5, 500),
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2), datetime(2022, 1, 3)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    def _tile():
+        with XarrayReader(data) as dst:
+            _ = dst.tile(0, 0, 1)
+
+    _ = benchmark(_tile)
+
+
+@pytest.mark.parametrize("threads", [1, 10])
+@pytest.mark.parametrize("method", [FirstMethod, MeanMethod])
+def test_mosaic(method, threads, benchmark):
+    """Benchmark mosaic_reader."""
+    benchmark.name = (
+        f"Mosaic-{method.__name__}"
+        if threads == 1
+        else f"Mosaic-{method.__name__}-With-Threads"
+    )
+    benchmark.fullname = (
+        f"Mosaic-{method.__name__}"
+        if threads == 1
+        else f"Mosaic-{method.__name__}-With-Threads"
+    )
+    benchmark.group = (
+        f"Mosaic-{method.__name__}"
+        if threads == 1
+        else f"Mosaic-{method.__name__}-With-Threads"
+    )
+
+    def _tile():
+        def _reader(asset, *args, **kwargs):
+            with Reader(asset) as src:
+                return src.tile(*args, **kwargs)
+
+        # Full covered tile
+        # Tile 9-150-182 fully covering mosaic_value_1 an partially covering mosaic_value_2
+        return mosaic_reader(
+            assets * 3, _reader, 150, 182, 9, threads=threads, pixel_selection=method()
+        )
+
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR", NUM_THREADS="all"):
+        _ = benchmark(_tile)
