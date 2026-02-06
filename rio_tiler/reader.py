@@ -4,9 +4,11 @@ import contextlib
 import math
 import warnings
 from collections.abc import Callable
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from typing import TypedDict, cast
 
 import numpy
+import rasterio
 from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
@@ -41,6 +43,152 @@ class Options(TypedDict, total=False):
     reproject_method: WarpResampling | None
     unscale: bool | None
     post_process: Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray] | None
+
+
+def _get_block_windows(
+    dataset: DatasetReader,
+    window: windows.Window,
+) -> list[tuple[windows.Window, tuple[int, int]]]:
+    """
+    Calculate which internal COG blocks overlap with the requested window.
+
+    Returns list of (block_window, (row_offset, col_offset)) tuples.
+    """
+    # Get the block size for band 1 (assuming all bands have same block size)
+    block_height, block_width = dataset.block_shapes[0]
+
+    # Calculate block indices that overlap with window
+    col_start = int(window.col_off // block_width)
+    col_end = int(math.ceil((window.col_off + window.width) / block_width))
+    row_start = int(window.row_off // block_height)
+    row_end = int(math.ceil((window.row_off + window.height) / block_height))
+
+    block_windows = []
+    for block_row in range(row_start, row_end):
+        for block_col in range(col_start, col_end):
+            # Calculate the window for this block
+            block_window = windows.Window(
+                col_off=block_col * block_width,
+                row_off=block_row * block_height,
+                width=block_width,
+                height=block_height,
+            )
+
+            # Intersect with the requested window
+            intersection = windows.intersection(block_window, window)
+            if intersection.width > 0 and intersection.height > 0:
+                # Calculate offset within output array
+                out_row = int(intersection.row_off - window.row_off)
+                out_col = int(intersection.col_off - window.col_off)
+                block_windows.append((intersection, (out_row, out_col)))
+
+    return block_windows
+
+
+def _read_block_thread_safe(
+    dataset_path: str,
+    block_window: windows.Window,
+    indexes: tuple[int, ...],
+    out_dtype: str | numpy.dtype | None = None,
+    resampling: str = "nearest",
+) -> numpy.ma.MaskedArray:
+    """Read a single block from the dataset using a fresh connection (thread-safe)."""
+    # Open a fresh connection for thread safety - rasterio datasets are NOT thread-safe
+    with rasterio.open(dataset_path) as dataset:
+        return dataset.read(
+            indexes=indexes,
+            window=block_window,
+            resampling=Resampling[resampling],
+            out_dtype=out_dtype,
+            masked=True,
+        )
+
+
+def _parallel_block_read(
+    dataset: DatasetReader,
+    window: windows.Window,
+    indexes: tuple[int, ...],
+    out_dtype: str | numpy.dtype | None = None,
+    resampling_method: str = "nearest",
+    max_workers: int = 8,
+) -> numpy.ma.MaskedArray:
+    """
+    Read a window from a COG using parallel block reads.
+
+    This function identifies which internal COG blocks overlap with the
+    requested window and reads them in parallel using a thread pool.
+    Each thread opens its own dataset connection for thread safety.
+
+    Args:
+        dataset: Open rasterio dataset (used for metadata only)
+        window: Window to read
+        indexes: Band indexes to read
+        out_dtype: Output data type
+        resampling_method: Resampling method
+        max_workers: Maximum number of parallel reads
+
+    Returns:
+        numpy.ma.MaskedArray with the requested data
+    """
+    # Get the dataset path for thread-safe reads
+    dataset_path = dataset.name
+
+    # Get blocks that overlap with window
+    block_windows = _get_block_windows(dataset, window)
+
+    # If only one block, just read directly (no parallelism overhead)
+    if len(block_windows) <= 1:
+        return dataset.read(
+            indexes=indexes,
+            window=window,
+            resampling=Resampling[resampling_method],
+            out_dtype=out_dtype,
+            masked=True,
+        )
+
+    # Prepare output array
+    out_height = int(window.height)
+    out_width = int(window.width)
+
+    # Determine dtype
+    dtype = out_dtype or dataset.dtypes[0]
+    output = numpy.ma.zeros((len(indexes), out_height, out_width), dtype=dtype)
+    output.mask = numpy.ones_like(output, dtype=bool)
+
+    def read_and_place(
+        block_info: tuple[windows.Window, tuple[int, int]]
+    ) -> tuple[numpy.ma.MaskedArray, tuple[int, int, int, int]]:
+        block_window, (out_row, out_col) = block_info
+
+        # Read the block using a fresh connection (thread-safe)
+        data = _read_block_thread_safe(
+            dataset_path, block_window, indexes, out_dtype, resampling_method
+        )
+
+        return data, (
+            out_row,
+            out_col,
+            int(block_window.height),
+            int(block_window.width),
+        )
+
+    # Read blocks in parallel
+    with ThreadPoolExecutor(
+        max_workers=min(max_workers, len(block_windows))
+    ) as executor:
+        futures = {executor.submit(read_and_place, bw): bw for bw in block_windows}
+
+        for future in as_completed(futures):
+            data, (row, col, h, w) = future.result()
+            # Clip to output bounds
+            out_h = min(h, out_height - row)
+            out_w = min(w, out_width - col)
+            output[:, row : row + out_h, col : col + out_w] = data[:, :out_h, :out_w]
+            output.mask[:, row : row + out_h, col : col + out_w] = data.mask[
+                :, :out_h, :out_w
+            ]
+
+    return output
 
 
 def _apply_buffer(
@@ -83,6 +231,7 @@ def read(
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray] | None = None,
+    max_workers: int | None = None,
 ) -> ImageData:
     """Low level read function.
 
@@ -100,6 +249,9 @@ def read(
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
+        max_workers (int, optional): Maximum number of parallel workers for block reads.
+            When set and > 1, reads spanning multiple internal COG blocks will be
+            parallelized for improved performance, especially with remote COGs.
 
     Returns:
         ImageData
@@ -227,16 +379,45 @@ def read(
                 data.mask = mask
 
         else:
-            data = dataset.read(
-                indexes=indexes,
-                window=window,
-                out_shape=(len(indexes), height, width) if height and width else None,
-                resampling=io_resampling,
-                boundless=boundless,
-                masked=True,
-                fill_value=nodata,
-                out_dtype=out_dtype,
-            )
+            # Check if we should use parallel block reads
+            use_parallel = False
+            if (
+                max_workers
+                and max_workers > 1
+                and window
+                and not boundless
+                and not (height and width)  # No resampling needed
+                and isinstance(src_dst, DatasetReader)  # Not a VRT
+                and hasattr(src_dst, "block_shapes")
+            ):
+                # Check if window spans multiple blocks
+                block_h, block_w = src_dst.block_shapes[0]
+                blocks_x = math.ceil(window.width / block_w)
+                blocks_y = math.ceil(window.height / block_h)
+                if blocks_x * blocks_y > 1:
+                    use_parallel = True
+
+            if use_parallel:
+                # Use parallel block reads for better performance
+                data = _parallel_block_read(
+                    src_dst,
+                    window=window,
+                    indexes=tuple(indexes),
+                    out_dtype=out_dtype,
+                    resampling_method=resampling_method,
+                    max_workers=max_workers,
+                )
+            else:
+                data = dataset.read(
+                    indexes=indexes,
+                    window=window,
+                    out_shape=(len(indexes), height, width) if height and width else None,
+                    resampling=io_resampling,
+                    boundless=boundless,
+                    masked=True,
+                    fill_value=nodata,
+                    out_dtype=out_dtype,
+                )
 
             # if data has Nodata then we simply make sure the mask == the nodata
             if nodata is not None:
@@ -330,6 +511,7 @@ def part(
     reproject_method: WarpResampling = "nearest",
     unscale: bool = False,
     post_process: Callable[[numpy.ma.MaskedArray], numpy.ma.MaskedArray] | None = None,
+    max_workers: int | None = None,
 ) -> ImageData:
     """Read part of a dataset.
 
@@ -352,6 +534,9 @@ def part(
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
+        max_workers (int, optional): Maximum number of parallel workers for block reads.
+            When set and > 1, reads spanning multiple internal COG blocks will be
+            parallelized for improved performance, especially with remote COGs.
 
     Returns:
         ImageData
@@ -460,6 +645,7 @@ def part(
             reproject_method=reproject_method,
             unscale=unscale,
             post_process=post_process,
+            max_workers=max_workers,
         )
 
     # else no re-projection needed
@@ -504,6 +690,7 @@ def part(
             reproject_method=reproject_method,
             unscale=unscale,
             post_process=post_process,
+            max_workers=max_workers,
         )
 
         return ImageData(
@@ -530,6 +717,7 @@ def part(
         reproject_method=reproject_method,
         unscale=unscale,
         post_process=post_process,
+        max_workers=max_workers,
     )
 
 
