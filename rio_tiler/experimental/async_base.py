@@ -1,4 +1,4 @@
-"""rio_tiler.io.base: ABC class for rio-tiler readers."""
+"""rio_tiler.experimental.async_base: ABC class for rio-tiler Async readers."""
 
 from __future__ import annotations
 
