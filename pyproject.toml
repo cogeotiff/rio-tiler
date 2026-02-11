@@ -42,6 +42,7 @@ dev = [
     "xarray",
     "rioxarray",
     "h5netcdf",
+    "h5py",
     # S3
     "boto3",
     # Some tests will fail with 5.0
@@ -158,7 +159,7 @@ exclude = [
 max-complexity = 14
 
 [tool.bumpversion]
-current_version = "9.0.0dev"
+current_version = "9.0.0a3"
 parse = """(?x)
     (?P<major>\\d+)\\.
     (?P<minor>\\d+)\\.
