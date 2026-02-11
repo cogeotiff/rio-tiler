@@ -30,7 +30,6 @@ dependencies = [
     "pystac>=1.9,<2.0",
     "rasterio>=1.4.0",
     "color-operations",
-    "typing-extensions",
 ]
 
 [dependency-groups]

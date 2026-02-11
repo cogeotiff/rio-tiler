@@ -1,6 +1,11 @@
 
 # Unreleased
 
+# 9.0.0a4 (2026-02-11)
+
+* fix: type hint for ImageData/PointData methods
+* remove: `typing-extensions` from requirements
+
 # 9.0.0a3 (2026-02-05)
 
 * add: `inherit_rasterio_env` decorator to `utils` module for decorating functions that need to inherit rasterio env settings from a parent thread.
