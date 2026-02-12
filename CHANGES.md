@@ -227,6 +227,10 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * add Mosaic Backend abstract base class
 * update morecantile requirements to `>=5.0,<8.0`
 
+# 7.9.3 (2026-02-12)
+
+* add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable  **Backported**
+
 # 7.9.2 (2025-10-09)
 
 * fix: bad code logic in XarrayReader
