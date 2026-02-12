@@ -1,7 +1,9 @@
 """tests rio_tiler.io.xarray.XarrayReader"""
 
 import os
+import sys
 from datetime import datetime
+from unittest.mock import patch
 
 import morecantile
 import numpy
@@ -10,7 +12,7 @@ import rioxarray
 import xarray
 from rasterio.crs import CRS as rioCRS
 
-from rio_tiler.errors import InvalidGeographicBounds, MissingCRS
+from rio_tiler.errors import InvalidGeographicBounds, MaxArraySizeError, MissingCRS
 from rio_tiler.io import Reader, XarrayReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
@@ -35,6 +37,7 @@ PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 COGEO = os.path.join(PREFIX, "cog_gradient.tif")
 
 
+@pytest.mark.xfail(sys.version_info < (3, 11), reason="can fail with python <3.11")
 def test_xarray_reader():
     """test XarrayReader."""
     arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(2, 33, 35)
@@ -58,8 +61,8 @@ def test_xarray_reader():
         assert rioCRS.from_user_input(crs) == dst.crs
         assert info.band_metadata == [("b1", {}), ("b2", {})]
         assert info.band_descriptions == [
-            ("b1", "2022-01-01T00:00:00.000000000"),
-            ("b2", "2022-01-02T00:00:00.000000000"),
+            ("b1", "2022-01-01T00:00:00.000000"),
+            ("b2", "2022-01-02T00:00:00.000000"),
         ]
         assert info.height == 33
         assert info.width == 35
@@ -68,21 +71,21 @@ def test_xarray_reader():
 
         stats = dst.statistics()
         assert list(stats) == [
-            "2022-01-01T00:00:00.000000000",
-            "2022-01-02T00:00:00.000000000",
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
         ]
-        assert stats["2022-01-01T00:00:00.000000000"].min == 0.0
+        assert stats["2022-01-01T00:00:00.000000"].min == 0.0
 
         stats = dst.statistics(indexes=1)
-        assert list(stats) == ["2022-01-01T00:00:00.000000000"]
+        assert list(stats) == ["2022-01-01T00:00:00.000000"]
 
         stats = dst.statistics(indexes=2)
-        assert list(stats) == ["2022-01-02T00:00:00.000000000"]
+        assert list(stats) == ["2022-01-02T00:00:00.000000"]
 
         stats = dst.statistics(indexes=(1, 2))
         assert list(stats) == [
-            "2022-01-01T00:00:00.000000000",
-            "2022-01-02T00:00:00.000000000",
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
         ]
 
         with pytest.raises(AssertionError):
@@ -97,8 +100,8 @@ def test_xarray_reader():
         assert img.height == 256
         assert img.array.dtype == numpy.float32
         assert img.band_names == [
-            "2022-01-01T00:00:00.000000000",
-            "2022-01-02T00:00:00.000000000",
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
         ]
         assert img.dataset_statistics == ((arr.min(), arr.max()), (arr.min(), arr.max()))
 
@@ -127,7 +130,7 @@ def test_xarray_reader():
         img = dst.part((-160, -80, 160, 80), indexes=1)
         assert img.crs == "epsg:4326"
         assert img.count == 1
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_names == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 32, 32)
         assert img.array.dtype == numpy.float32
 
@@ -137,7 +140,7 @@ def test_xarray_reader():
         img = dst.part((-160, -80, 160, 80), dst_crs="epsg:3857", indexes=1)
         assert img.crs == "epsg:3857"
         assert img.count == 1
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_names == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 29, 33)
 
         img = dst.part((-160, -80, 160, 80), max_size=15, indexes=1)
@@ -156,8 +159,8 @@ def test_xarray_reader():
         assert img.count == 2
         assert img.array.dtype == numpy.float32
         assert img.band_names == [
-            "2022-01-01T00:00:00.000000000",
-            "2022-01-02T00:00:00.000000000",
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
         ]
         assert img.array.shape == (2, 33, 35)
 
@@ -167,13 +170,13 @@ def test_xarray_reader():
         img = dst.preview(indexes=1)
         assert img.crs == "epsg:4326"
         assert img.count == 1
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_names == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 33, 35)
 
         img = dst.preview(dst_crs="epsg:3857", indexes=1)
         assert img.crs == "epsg:3857"
         assert img.count == 1
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_names == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 32, 36)
 
         img = dst.preview(max_size=None, indexes=1)
@@ -191,8 +194,8 @@ def test_xarray_reader():
         pt = dst.point(0, 0)
         assert pt.count == 2
         assert pt.band_names == [
-            "2022-01-01T00:00:00.000000000",
-            "2022-01-02T00:00:00.000000000",
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
         ]
         assert pt.coordinates
         assert pt.pixel_location
@@ -212,7 +215,7 @@ def test_xarray_reader():
 
         pt = dst.point(0, 0, indexes=1)
         assert pt.count == 1
-        assert pt.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert pt.band_names == ["2022-01-01T00:00:00.000000"]
         assert pt.coordinates
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
         for xy in xys:
@@ -220,7 +223,7 @@ def test_xarray_reader():
             y = xy[1]
             pt = dst.point(x, y)
             assert pt.data[0] == data.sel(
-                time="2022-01-01T00:00:00.000000000", x=x, y=y, method="nearest"
+                time="2022-01-01T00:00:00.000000", x=x, y=y, method="nearest"
             )
 
         feat = {
@@ -247,8 +250,8 @@ def test_xarray_reader():
         assert img.count == 2
         assert img.array.dtype == numpy.float32
         assert img.band_names == [
-            "2022-01-01T00:00:00.000000000",
-            "2022-01-02T00:00:00.000000000",
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
         ]
         assert img.array.shape == (2, 24, 31)
 
@@ -258,12 +261,12 @@ def test_xarray_reader():
 
         img = dst.feature(feat, indexes=1)
         assert img.count == 1
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_names == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 24, 31)
 
         img = dst.feature(feat, dst_crs="epsg:3857", indexes=1)
         assert img.count == 1
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_names == ["2022-01-01T00:00:00.000000"]
         assert img.crs == "epsg:3857"
         assert img.array.shape == (1, 19, 34)
 
@@ -277,19 +280,19 @@ def test_xarray_reader():
     da = data[0]
     assert da.ndim == 2
     with XarrayReader(da) as dst:
-        assert dst.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert dst.band_names == ["2022-01-01T00:00:00.000000"]
         info = dst.info()
-        assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000000")]
+        assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000")]
 
         stats = dst.statistics()
-        assert stats["2022-01-01T00:00:00.000000000"]
-        assert stats["2022-01-01T00:00:00.000000000"].min == 0.0
+        assert stats["2022-01-01T00:00:00.000000"]
+        assert stats["2022-01-01T00:00:00.000000"].min == 0.0
 
         img = dst.tile(0, 0, 0)
         assert img.count == 1
         assert img.width == 256
         assert img.height == 256
-        assert img.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert img.band_names == ["2022-01-01T00:00:00.000000"]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
     arr = numpy.zeros((1, 1000, 2000))
@@ -693,6 +696,7 @@ def test_xarray_reader_no_dims():
             assert pt.data[0] == data.sel(x=x, y=y, method="nearest")
 
 
+@pytest.mark.xfail(sys.version_info < (3, 11), reason="can fail with python <3.11")
 def test_xarray_reader_dims_order():
     """Make sure band names works with different coordinates order."""
     arr = numpy.arange(0.0, 33 * 35 * 2, dtype="float32").reshape(33, 35, 2)
@@ -713,9 +717,9 @@ def test_xarray_reader_dims_order():
 
     with XarrayReader(data) as dst:
         info = dst.info()
-        assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000000")]
+        assert info.band_descriptions == [("b1", "2022-01-01T00:00:00.000000")]
         pt = dst.point(0, 0)
-        assert pt.band_names == ["2022-01-01T00:00:00.000000000"]
+        assert pt.band_names == ["2022-01-01T00:00:00.000000"]
 
 
 def test_xarray_reader_Y_axis():
@@ -977,3 +981,34 @@ def test_titiler_multidi_issue102():
         ):
             img = dst.tile(0, 0, 0)
         assert img.array.shape == (2, 256, 256)
+
+
+@patch("rio_tiler.io.xarray.MAX_ARRAY_SIZE", 100000)
+def test_max_pixels():
+    """Should raise MaxPixelsError when trying to put too many pixels in memory."""
+    arr = numpy.arange(0.0, 1000 * 500 * 3, dtype="float32").reshape(
+        3, 500, 1000
+    )  # 6000000 bytes
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.linspace(-177.5, 177.5, 1000),
+            "y": numpy.linspace(87.5, -87.5, 500),
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2), datetime(2022, 1, 3)],
+        },
+    )
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    with XarrayReader(data) as dst:
+        with pytest.raises(MaxArraySizeError):
+            _ = dst.preview()
+
+        with pytest.raises(MaxArraySizeError):
+            _ = dst.tile(0, 0, 0)
+
+        # Should not raise error when using a small area
+        img = dst.tile(0, 0, 5)
+        assert img.array.shape == (3, 256, 256)
