@@ -18,7 +18,12 @@ from rio_tiler.models import BandStatistics, ImageData, PointData
 from rio_tiler.mosaic import mosaic_reader
 from rio_tiler.tasks import multi_values_list
 from rio_tiler.types import BBox
-from rio_tiler.utils import CRS_to_uri, Timer, _validate_shape_input
+from rio_tiler.utils import (
+    CRS_to_uri,
+    Timer,
+    _validate_shape_input,
+    inherit_rasterio_env,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -113,6 +118,7 @@ class BaseBackend(BaseReader):
         if not mosaic_assets:
             raise NoAssetFoundError(f"No assets found for point ({lon},{lat})")
 
+        @inherit_rasterio_env
         def _reader(
             asset: Any, lon: float, lat: float, coord_crs: CRS, **kwargs
         ) -> PointData:
@@ -150,6 +156,7 @@ class BaseBackend(BaseReader):
         if not mosaic_assets:
             raise NoAssetFoundError(f"No assets found for tile {z}-{x}-{y}")
 
+        @inherit_rasterio_env
         def _reader(asset: Any, x: int, y: int, z: int, **kwargs: Any) -> ImageData:
             with self.reader(asset, tms=self.tms, **self.reader_options) as src_dst:
                 return src_dst.tile(x, y, z, **kwargs)
@@ -191,6 +198,7 @@ class BaseBackend(BaseReader):
         if not mosaic_assets:
             raise NoAssetFoundError("No assets found for bbox input")
 
+        @inherit_rasterio_env
         def _reader(asset: Any, bbox: BBox, bounds_crs: CRS, **kwargs: Any) -> ImageData:
             with self.reader(asset, **self.reader_options) as src_dst:
                 return src_dst.part(bbox, bounds_crs=bounds_crs, **kwargs)

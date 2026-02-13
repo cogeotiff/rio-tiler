@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 9.0.0a6 (2026-02-13)
+
+* add: wraps readers within the mosaic Backends with `inherit_rasterio_env` decorator.
+
 # 9.0.0a5 (2026-02-13)
 
 * add: reader's level options for XarrayReader
