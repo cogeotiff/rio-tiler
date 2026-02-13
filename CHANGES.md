@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 9.0.0a5 (2026-02-13)
+
+* add: reader's level options for XarrayReader
+
 # 9.0.0a4 (2026-02-11)
 
 * fix: type hint for ImageData/PointData methods
