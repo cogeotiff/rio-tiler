@@ -20,6 +20,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import InvalidAssetName, MissingAssets, TileOutsideBounds
 from rio_tiler.io import BaseReader, Reader, STACReader, XarrayReader
 from rio_tiler.io.stac import DEFAULT_VALID_TYPE
+from rio_tiler.io.xarray import Options
 from rio_tiler.models import BandStatistics
 from rio_tiler.types import AssetInfo
 
@@ -885,7 +886,13 @@ def test_netcdf_reader():
         ds: xarray.Dataset = attr.ib(init=False)
         input: xarray.DataArray = attr.ib(init=False)
 
+        options: Options = attr.ib()
+
         _dims: List = attr.ib(init=False, factory=list)
+
+        @options.default
+        def _options_default(self):
+            return {}
 
         def __attrs_post_init__(self):
             """Set bounds and CRS."""
