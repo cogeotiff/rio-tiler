@@ -26,7 +26,7 @@ from rio_tiler.errors import (
     TileOutsideBounds,
 )
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.tasks import multi_arrays, multi_points, multi_values
+from rio_tiler.tasks import multi_arrays, multi_points, multi_values, multi_values_list
 from rio_tiler.types import AssetInfo, BBox, Indexes
 from rio_tiler.utils import (
     CRS_to_uri,
@@ -319,6 +319,9 @@ class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
 
+AssetsType = Sequence[str | dict] | str | dict | None
+
+
 @attr.s
 class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """MultiBaseReader Reader.
@@ -344,7 +347,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     reader_options: dict = attr.ib(factory=dict)
 
     assets: Sequence[str] = attr.ib(init=False)
-    default_assets: Sequence[str] | None = attr.ib(init=False, default=None)
+    default_assets: Sequence[str | dict] | None = attr.ib(init=False, default=None)
 
     ctx: type[contextlib.AbstractContextManager] = attr.ib(
         init=False, default=contextlib.nullcontext
@@ -359,7 +362,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    def _get_asset_info(self, asset: str) -> AssetInfo:
+    def _get_asset_info(self, asset: str | dict) -> AssetInfo:
         """Validate asset name and construct url."""
         ...
 
@@ -385,11 +388,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
             img.dataset_statistics = [statistics[bidx - 1] for bidx in indexes]
 
-    def info(
-        self,
-        assets: Sequence[str] | str | None = None,
-        **kwargs: Any,
-    ) -> dict[str, Info]:
+    def info(self, assets: AssetsType = None, **kwargs: Any) -> dict[str, Info]:
         """Return metadata from multiple assets.
 
         Args:
@@ -407,7 +406,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets = cast_to_sequence(assets or self.assets)
 
         @inherit_rasterio_env
-        def _reader(asset: str, **kwargs: Any) -> Info:
+        def _reader(asset: str | dict, **kwargs: Any) -> Info:
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
             reader_options = {**self.reader_options, **asset_info["reader_options"]}
@@ -417,12 +416,17 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
                     return src.info(**method_options)
 
-        return multi_values(assets, _reader, **kwargs)
+        infos = multi_values_list(assets, _reader, **kwargs)
+
+        def _dict_to_str(asset: dict):
+            name = asset.pop("name")
+            opts = [f"{k}={str(v).replace(" ", "")}" for k, v in asset.items()]
+            return f"{name}|{'&'.join(opts)}"
+
+        return {k if isinstance(k, str) else _dict_to_str(k): v for k, v in infos}
 
     def statistics(
-        self,
-        assets: Sequence[str] | str | None = None,
-        **kwargs: Any,
+        self, assets: AssetsType = None, **kwargs: Any
     ) -> dict[str, dict[str, BandStatistics]]:
         """Return array statistics for multiple assets.
 
@@ -443,7 +447,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         assets = cast_to_sequence(assets or self.assets)
 
         @inherit_rasterio_env
-        def _reader(asset: str, *args: Any, **kwargs: Any) -> dict:
+        def _reader(asset: str | dict, *args: Any, **kwargs: Any) -> dict:
             asset_info = self._get_asset_info(asset)
             reader = self._get_reader(asset_info)
             reader_options = {**self.reader_options, **asset_info["reader_options"]}
@@ -453,11 +457,18 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
                     return src.statistics(*args, **method_options)
 
-        return multi_values(assets, _reader, **kwargs)
+        stats = multi_values_list(assets, _reader, **kwargs)
+
+        def _dict_to_str(asset: dict):
+            name = asset.pop("name")
+            opts = [f"{k}={str(v).replace(" ", "")}" for k, v in asset.items()]
+            return f"{name}|{'&'.join(opts)}"
+
+        return {k if isinstance(k, str) else _dict_to_str(k): v for k, v in stats}
 
     def merged_statistics(
         self,
-        assets: Sequence[str] | str | None = None,
+        assets: AssetsType = None,
         expression: str | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
@@ -508,7 +519,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         tile_x: int,
         tile_y: int,
         tile_z: int,
-        assets: Sequence[str] | str | None = None,
+        assets: AssetsType = None,
         expression: str | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
@@ -553,7 +564,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         @inherit_rasterio_env
-        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
+        def _reader(asset: str | dict, *args: Any, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
             reader = self._get_reader(asset_info)
@@ -572,7 +583,6 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     if m := asset_info.get("metadata"):
                         metadata.update(m)
                     data.metadata = {asset_name: metadata}
-                    data.metadata = {asset: metadata}
 
                     data.band_descriptions = [
                         f"{asset_name}_{n}" for n in data.band_descriptions
@@ -596,7 +606,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     def part(
         self,
         bbox: BBox,
-        assets: Sequence[str] | str | None = None,
+        assets: AssetsType = None,
         expression: str | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
@@ -634,7 +644,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         @inherit_rasterio_env
-        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
+        def _reader(asset: str | dict, *args: Any, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
             reader = self._get_reader(asset_info)
@@ -676,7 +686,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def preview(
         self,
-        assets: Sequence[str] | str | None = None,
+        assets: AssetsType = None,
         expression: str | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
@@ -713,7 +723,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         @inherit_rasterio_env
-        def _reader(asset: str, **kwargs: Any) -> ImageData:
+        def _reader(asset: str | dict, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
             reader = self._get_reader(asset_info)
@@ -757,7 +767,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         self,
         lon: float,
         lat: float,
-        assets: Sequence[str] | str | None = None,
+        assets: AssetsType = None,
         expression: str | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
@@ -796,7 +806,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         @inherit_rasterio_env
-        def _reader(asset: str, *args: Any, **kwargs: Any) -> PointData:
+        def _reader(asset: str | dict, *args: Any, **kwargs: Any) -> PointData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
             reader = self._get_reader(asset_info)
@@ -834,7 +844,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     def feature(
         self,
         shape: dict,
-        assets: Sequence[str] | str | None = None,
+        assets: AssetsType = None,
         expression: str | None = None,
         asset_as_band: bool = False,
         **kwargs: Any,
@@ -872,7 +882,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             )
 
         @inherit_rasterio_env
-        def _reader(asset: str, *args: Any, **kwargs: Any) -> ImageData:
+        def _reader(asset: str | dict, *args: Any, **kwargs: Any) -> ImageData:
             asset_info = self._get_asset_info(asset)
             asset_name = asset_info["name"]
             reader = self._get_reader(asset_info)

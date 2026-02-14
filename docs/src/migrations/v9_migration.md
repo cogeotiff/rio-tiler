@@ -112,14 +112,21 @@ with STACReader("item.json") as src:
 
 # now (9.x) - use asset option syntax instead
 with STACReader("item.json") as src:
-    # Use the new asset option syntax: "{asset_name}|indexes=1,2,3"
-    img = src.tile(0, 0, 0, assets=["visual|indexes=1,2,3"])
+    # Use the new asset option syntax: {"name": `asset_name`, "indexes": [1], ...}
+    img = src.tile(
+        0, 
+        0, 
+        0, 
+        assets=[
+            {"name": "visual", "indexes": [1, 2, 3]}
+        ]
+    )
 ```
 
 
 ## STACReader Asset Options Syntax
 
-`STACReader` now accepts asset-specific options using the syntax `assets="{asset_name}|some_option=some_value&another_option=another_value"`:
+`STACReader` now accepts asset-specific options using dictionaries `{"name": "asset_name", "indexes": [1], ...}`:
 
 ```python
 from rio_tiler.io.stac import STACReader
@@ -131,14 +138,13 @@ with STACReader("item.json") as src:
 # now (9.x)
 with STACReader("item.json") as src:
     # Specify indexes per asset using the pipe syntax
-    img = src.tile(0, 0, 0, assets=["visual|indexes=1,2,3"])
+    img = src.tile(0, 0, 0, assets=[{"name": "visual", "indexes": [1, 2, 3]}])
 
-    # Multiple options can be combined with &
-    img = src.tile(0, 0, 0, assets=["visual|indexes=1,2,3&expression=b1+b2"])
+    # Multiple options can be combined
+    img = src.tile(0, 0, 0, assets=[{"name": "visual", "indexes": [1, 2, 3], "expression": "b1+b2-b3"}])
 ```
 
-Asset parsing is done in the `_get_asset_info` method, which can be overridden for custom behavior.
-
+Asset's options are distributed between `reader-options` and `method-options` in `_get_asset_info` method, which can be overridden for custom behavior.
 
 ## Statistics Key Names
 
@@ -280,7 +286,7 @@ from rio_tiler.io.stac import STACReader
 
 with STACReader("item.json") as src:
     # Using asset option syntax passes options via method_options
-    img = src.tile(0, 0, 0, assets=["visual|indexes=1,2"])
+    img = src.tile(0, 0, 0, assets=[{"name": "visual", "indexes": [1, 2]}])
 ```
 
 ### reader_options in AssetInfo
@@ -296,27 +302,28 @@ from rio_tiler.io.stac import STACReader
 @attr.s
 class CustomSTACReader(STACReader):
 
-    def _get_asset_info(self, asset: str) -> AssetInfo:
+    def _get_asset_info(self, asset: str | dict) -> AssetInfo:
 
+        asset_name: str
         reader_options: dict[str, Any] = {}
         method_options: dict[str, Any] = {}
+        if isinstance(asset, dict):
 
-        if "|" in asset:
-            asset, params = asset.split("|", 1)
-            # NOTE: Construct method options from params
-            if params:
-                for param in params.split("&"):
-                    key, value = param.split("=", 1)
-                    if key == "indexes":
-                        method_options["indexes"] = list(map(int, value.split(",")))
-                    elif key == "expression":
-                        method_options["expression"] = value
-                    
-                    # NOTE: `nodata` can be a `Reader` Option
-                    elif key == "nodata":
-                        reader_options = float(value) # cast nodata to float
+            # NOTE: if asset is a dict, the `asset name` should be store in
+            # the `name` key:val
+            asset_name = asset["name"]
+            
+            if indexes := asset.get("indexes"):
+                method_options["indexes"] = indexes
+            if expr := asset.get("expression"):
+                method_options["expression"] = expr
+            if "nodata" in asset:
+                # NOTE: `nodata` can be a `Reader` Option
+                reader_options = float(asset["nodata"]) # cast nodata to float
+        else:
+            asset_name = asset
 
-        info = super()._get_asset_info(asset)
+        info = super()._get_asset_info(asset_name)
         info["reader_options"] = reader_options
         info["method_options"] = method_options
         return info
@@ -324,7 +331,7 @@ class CustomSTACReader(STACReader):
 with CustomSTACReader("item.json") as src:
     # indexes=1,2: method option
     # nodata=0: reader option
-    img = src.tile(0, 0, 0, assets=["visual|indexes=1,2&nodata=0"])
+    img = src.tile(0, 0, 0, assets=[{"name": "visual", "indexes": [1, 2], "nodata": 0}])
 ```
 
 ### BandStatistics description
@@ -361,7 +368,7 @@ with Reader("cog.tif") as src:
 
 2. **Update expressions in MultiBaseReader** - Change expressions from asset-specific syntax to merged band index syntax (`b1`, `b2`, etc.)
 
-3. **Replace asset_indexes** - Use the new asset option syntax `"asset|indexes=1,2,3"` instead of the `asset_indexes` parameter
+3. **Replace asset_indexes** - Use the new asset option syntax `{"name" : "asset", "indexes": [1, 2, 3]}` instead of the `asset_indexes` parameter
 
 4. **Update MultiBandReader subclasses** - Migrate to `MultiBaseReader`
 

@@ -3,7 +3,7 @@
 import json
 import os
 import sys
-from typing import List, Set
+from typing import Any, List, Set
 from unittest.mock import patch
 
 import attr
@@ -191,11 +191,13 @@ def test_tile_valid(rio):
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["green_b1"]
 
-        imge = stac.tile(71, 102, 8, assets="green|expression=b1*2")
+        imge = stac.tile(71, 102, 8, assets={"name": "green", "expression": "b1*2"})
         assert imge.band_descriptions == ["green_b1*2"]
         numpy.array_equal(imge.array, img.array * 2)
 
-        imge = stac.tile(71, 102, 8, assets="green|expression=b1*2", asset_as_band=True)
+        imge = stac.tile(
+            71, 102, 8, assets={"name": "green", "expression": "b1*2"}, asset_as_band=True
+        )
         # NOTE: We can't keep track of the sub-expression in band description when asset_as_band=True
         assert imge.band_descriptions == ["green"]
         numpy.array_equal(imge.array, img.array * 2)
@@ -236,7 +238,10 @@ def test_tile_valid(rio):
             71,
             102,
             8,
-            assets=("green|indexes=1,1", "red|indexes=1"),
+            assets=(
+                {"name": "green", "indexes": [1, 1]},
+                {"name": "red", "indexes": [1]},
+            ),
         )
         assert img.data.shape == (3, 256, 256)
         assert img.mask.shape == (256, 256)
@@ -247,7 +252,10 @@ def test_tile_valid(rio):
             71,
             102,
             8,
-            assets=["green|indexes=1", "red|indexes=1"],
+            assets=(
+                {"name": "green", "indexes": [1]},
+                {"name": "red", "indexes": [1]},
+            ),
             expression="b1*2;b1;b2*2",
         )
         assert img.data.shape == (3, 256, 256)
@@ -303,7 +311,10 @@ def test_part_valid(rio):
 
         img = stac.part(
             bbox,
-            assets=("green|indexes=1,1", "red|indexes=1"),
+            assets=(
+                {"name": "green", "indexes": [1, 1]},
+                {"name": "red", "indexes": [1]},
+            ),
         )
         assert img.data.shape == (3, 73, 83)
         assert img.mask.shape == (73, 83)
@@ -311,7 +322,10 @@ def test_part_valid(rio):
 
         img = stac.part(
             bbox,
-            assets=["green|indexes=1", "red|indexes=1"],
+            assets=(
+                {"name": "green", "indexes": [1]},
+                {"name": "red", "indexes": [1]},
+            ),
             expression="b1*2;b1;b2*2",
         )
         assert img.data.shape == (3, 73, 83)
@@ -360,13 +374,21 @@ def test_preview_valid(rio):
         assert img.mask.shape == (259, 255)
         assert img.band_descriptions == ["green/red"]
 
-        img = stac.preview(assets=("green|indexes=1,1", "red|indexes=1"))
+        img = stac.preview(
+            assets=(
+                {"name": "green", "indexes": [1, 1]},
+                {"name": "red", "indexes": [1]},
+            ),
+        )
         assert img.data.shape == (3, 259, 255)
         assert img.mask.shape == (259, 255)
         assert img.band_descriptions == ["green_b1", "green_b1", "red_b1"]
 
         img = stac.preview(
-            assets=["green|indexes=1", "red|indexes=1"],
+            assets=(
+                {"name": "green", "indexes": [1]},
+                {"name": "red", "indexes": [1]},
+            ),
             expression="b1*2;b1;b2*2",
         )
         assert img.data.shape == (3, 259, 255)
@@ -421,7 +443,10 @@ def test_point_valid(rio):
         pt = stac.point(
             -80.477,
             33.4453,
-            assets=("green|indexes=1,1", "red|indexes=1"),
+            assets=(
+                {"name": "green", "indexes": [1, 1]},
+                {"name": "red", "indexes": [1]},
+            ),
         )
         assert len(pt.data) == 3
         assert len(pt.mask) == 1
@@ -431,7 +456,10 @@ def test_point_valid(rio):
         pt = stac.point(
             -80.477,
             33.4453,
-            assets=["green|indexes=1", "red|indexes=1"],
+            assets=(
+                {"name": "green", "indexes": [1]},
+                {"name": "red", "indexes": [1]},
+            ),
             expression="b1*2;b1;b2*2",
         )
         assert len(pt.data) == 3
@@ -464,14 +492,24 @@ def test_statistics_valid(rio):
         assert len(stats["green"]["b1"].histogram[0]) == 20
 
         # Check that asset_expression is passed
-        stats = stac.statistics(assets=("green|expression=b1*2", "red|expression=b1+100"))
+        stats = stac.statistics(
+            assets=(
+                {"name": "green", "expression": "b1*2"},
+                {"name": "red", "expression": "b1+100"},
+            ),
+        )
         assert stats["green|expression=b1*2"]
         assert isinstance(stats["green|expression=b1*2"]["b1"], BandStatistics)
         assert stats["green|expression=b1*2"]["b1"].description == "b1*2"
         assert isinstance(stats["red|expression=b1+100"]["b1"], BandStatistics)
         assert stats["red|expression=b1+100"]["b1"].description == "b1+100"
 
-        stats = stac.statistics(assets=("green|indexes=1", "red|indexes=1"))
+        stats = stac.statistics(
+            assets=(
+                {"name": "green", "indexes": 1},
+                {"name": "red", "indexes": 1},
+            ),
+        )
         assert stats["green|indexes=1"]
         assert isinstance(stats["green|indexes=1"]["b1"], BandStatistics)
         assert isinstance(stats["red|indexes=1"]["b1"], BandStatistics)
@@ -616,14 +654,23 @@ def test_feature_valid(rio):
         assert img.data.shape == (1, 30, 25)
         assert img.mask.shape == (30, 25)
 
-        img = stac.feature(feat, assets=("green|indexes=1,1", "red|indexes=1"))
+        img = stac.feature(
+            feat,
+            assets=(
+                {"name": "green", "indexes": [1, 1]},
+                {"name": "red", "indexes": [1]},
+            ),
+        )
         assert img.data.shape == (3, 118, 96)
         assert img.mask.shape == (118, 96)
         assert img.band_descriptions == ["green_b1", "green_b1", "red_b1"]
 
         img = stac.feature(
             feat,
-            assets=["green|indexes=1", "red|indexes=1"],
+            assets=(
+                {"name": "green", "indexes": [1]},
+                {"name": "red", "indexes": [1]},
+            ),
             expression="b1*2;b1;b2*2",
         )
         assert img.data.shape == (3, 118, 96)
@@ -632,7 +679,10 @@ def test_feature_valid(rio):
 
         img = stac.feature(
             feat,
-            assets=["green|indexes=1", "red|indexes=1"],
+            assets=(
+                {"name": "green", "indexes": [1]},
+                {"name": "red", "indexes": [1]},
+            ),
             expression="b1*2;b1;b2*2",
             asset_as_band=True,
         )
@@ -929,6 +979,34 @@ def test_netcdf_reader():
 
             return Reader
 
+        def _get_asset_info(self, asset: str | dict) -> AssetInfo:
+            """Validate asset names and return asset's info."""
+            asset_name: str = asset["name"] if isinstance(asset, dict) else asset
+            if asset_name not in self.assets:
+                raise InvalidAssetName(
+                    f"'{asset_name}' is not valid, should be one of {self.assets}"
+                )
+
+            asset_info = self.item.assets[asset_name]
+
+            method_options: dict[str, Any] = {}
+            reader_options: dict[str, Any] = {}
+            if isinstance(asset, dict):
+                if indexes := asset.get("indexes"):
+                    method_options["indexes"] = indexes
+                if variable := asset.get("variable"):
+                    reader_options["variable"] = variable
+
+            info = AssetInfo(
+                url=asset_info.get_absolute_href() or asset_info.href,
+                name=asset_name,
+                media_type=asset_info.media_type,
+                reader_options=reader_options,
+                method_options=method_options,
+            )
+
+            return info
+
     with CustomSTACReader(STAC_NETCDF_PATH) as stac:
         assert stac.assets == ["geotiff", "netcdf"]
         info = stac._get_asset_info("netcdf")
@@ -939,6 +1017,7 @@ def test_netcdf_reader():
         assert info["media_type"] == "image/tiff; application=geotiff"
         assert stac._get_reader(info) == Reader
 
+    # Pass reader options in object init
     with CustomSTACReader(
         STAC_NETCDF_PATH, reader_options={"variable": "dataset"}
     ) as stac:
@@ -946,6 +1025,14 @@ def test_netcdf_reader():
         assert info["netcdf"].crs
 
         img = stac.preview(assets=["netcdf"])
+        assert img.band_descriptions == ["netcdf_dataset"]
+
+    # Pass reader options in asset input
+    with CustomSTACReader(STAC_NETCDF_PATH) as stac:
+        info = stac.info(assets=[{"name": "netcdf", "variable": "dataset"}])
+        assert info["netcdf|variable=dataset"].crs
+
+        img = stac.preview(assets=[{"name": "netcdf", "variable": "dataset"}])
         assert img.band_descriptions == ["netcdf_dataset"]
 
 
