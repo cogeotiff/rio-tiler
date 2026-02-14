@@ -208,7 +208,7 @@ class STACReader(MultiBaseReader):
         exclude_assets (set of string, optional): Exclude specific assets.
         include_asset_types (set of string, optional): Only include some assets base on their type.
         exclude_asset_types (set of string, optional): Exclude some assets base on their type.
-        default_assets (list of string, optional): Default assets to use if none are defined.
+        default_assets (list of string or dict, optional): Default assets to use if none are defined.
         reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.Reader`.
         reader_options (dict, optional): Additional option to forward to the Reader. Defaults to `{}`.
         fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`.
@@ -246,7 +246,7 @@ class STACReader(MultiBaseReader):
     exclude_asset_types: set[str] | None = attr.ib(default=None)
 
     assets: Sequence[str] = attr.ib(init=False)
-    default_assets: Sequence[str] | None = attr.ib(default=None)
+    default_assets: Sequence[str | dict] | None = attr.ib(default=None)
 
     reader: type[BaseReader] = attr.ib(default=Reader)
     reader_options: dict = attr.ib(factory=dict)
@@ -317,7 +317,7 @@ class STACReader(MultiBaseReader):
 
         return asset, None
 
-    def _get_asset_info(self, asset: str) -> AssetInfo:
+    def _get_asset_info(self, asset: str | dict) -> AssetInfo:
         """Validate asset names and return asset's info.
 
         Args:
@@ -327,38 +327,42 @@ class STACReader(MultiBaseReader):
             AssetInfo: STAC asset info.
 
         """
-        asset, vrt_options = self._parse_vrt_asset(asset)
+        asset_name: str
+        if isinstance(asset, dict):
+            if not asset.get("name"):
+                raise ValueError("asset dictionary does not have `name` key")
+            asset_name = asset["name"]
+        else:
+            asset_name = asset
+
+        asset_name, vrt_options = self._parse_vrt_asset(asset_name)
+
+        if asset_name not in self.assets:
+            raise InvalidAssetName(
+                f"'{asset_name}' is not valid, should be one of {self.assets}"
+            )
+
+        asset_info = self.item.assets[asset_name]
+        extras = asset_info.extra_fields
 
         method_options: dict[str, Any] = {}
+        reader_options: dict[str, Any] = {}
+        if isinstance(asset, dict):
+            if indexes := asset.get("indexes"):
+                method_options["indexes"] = indexes
+            if expr := asset.get("expression"):
+                method_options["expression"] = expr
 
-        # NOTE: asset can be in form of
-        # "{asset_name}|some_option=some_value&another_option=another_value"
-        if "|" in asset:
-            asset, params = asset.split("|", 1)
-            # NOTE: Construct method options from params
-            if params:
-                for param in params.split("&"):
-                    key, value = param.split("=", 1)
-                    if key == "indexes":
-                        method_options["indexes"] = list(map(int, value.split(",")))
-                    elif key == "expression":
-                        method_options["expression"] = value
-
-        if asset not in self.assets:
-            raise InvalidAssetName(
-                f"'{asset}' is not valid, should be one of {self.assets}"
-            )
+            # TODO: handle `bands` options
+            # convert bands to indexes based on the band metadata
 
         asset_modified = "expression" in method_options or vrt_options
 
-        asset_info = self.item.assets[asset]
-        extras = asset_info.extra_fields
-
         info = AssetInfo(
             url=asset_info.get_absolute_href() or asset_info.href,
-            name=asset,
+            name=asset_name,
             media_type=asset_info.media_type,
-            reader_options={},
+            reader_options=reader_options,
             method_options=method_options,
         )
 
