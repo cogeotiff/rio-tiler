@@ -420,7 +420,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _dict_to_str(asset: dict):
             name = asset.pop("name")
-            opts = [f"{k}={str(v).replace(" ", "")}" for k, v in asset.items()]
+            opts = [f"{k}={str(v).replace(' ', '')}" for k, v in asset.items()]
             return f"{name}|{'&'.join(opts)}"
 
         return {k if isinstance(k, str) else _dict_to_str(k): v for k, v in infos}
@@ -461,7 +461,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         def _dict_to_str(asset: dict):
             name = asset.pop("name")
-            opts = [f"{k}={str(v).replace(" ", "")}" for k, v in asset.items()]
+            opts = [f"{k}={str(v).replace(' ', '')}" for k, v in asset.items()]
             return f"{name}|{'&'.join(opts)}"
 
         return {k if isinstance(k, str) else _dict_to_str(k): v for k, v in stats}
