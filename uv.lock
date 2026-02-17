@@ -291,30 +291,30 @@ css = [
 
 [[package]]
 name = "boto3"
-version = "1.42.46"
+version = "1.42.50"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "botocore" },
     { name = "jmespath" },
     { name = "s3transfer" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/d9/87/1ccd436a6815c18107aa74aa2b7b2745dc5a1db83cf58afc591df2755775/boto3-1.42.46.tar.gz", hash = "sha256:c8c82ab34dd8d2d4d93a562d0e75fca164efa644651d3ccddb0f4aa88a481b38", size = 112795, upload-time = "2026-02-10T20:38:10.784Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/59/41/7a7280875ec000e280b0392478a5d6247bc88e7ecf2ae6ec8f4ddb35b014/boto3-1.42.50.tar.gz", hash = "sha256:38545d7e6e855fefc8a11e899ccbd6d2c9f64671d6648c2acfb1c78c1057a480", size = 112851, upload-time = "2026-02-16T20:42:09.203Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/ce/41/978d749a6604bf93e05e8be56db07eb1402ffe576e1bb9b65aa391ebcb73/boto3-1.42.46-py3-none-any.whl", hash = "sha256:679cf4930e559621653bbd1439cf6e93b138cbaf46e36e5d7d95319999b7a356", size = 140606, upload-time = "2026-02-10T20:38:08.175Z" },
+    { url = "https://files.pythonhosted.org/packages/5e/14/bf4077d843d737bec6f4176e113182a4435a1864e2a819ca07004da8a9ac/boto3-1.42.50-py3-none-any.whl", hash = "sha256:2fdf8f5349b130d62576068a6c47b3eec368a70bc28f16d8cce17c5f7e74fc2e", size = 140604, upload-time = "2026-02-16T20:42:06.652Z" },
 ]
 
 [[package]]
 name = "botocore"
-version = "1.42.46"
+version = "1.42.50"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "jmespath" },
     { name = "python-dateutil" },
     { name = "urllib3" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/86/2d/6f6101f567a69c3b2ebe3f1f81bfd56eda9d5f6f466d0d919293499ab050/botocore-1.42.46.tar.gz", hash = "sha256:fc290b33aba6e271f627c4f46b8bcebfa1a94e19157d396732da417404158c01", size = 14948751, upload-time = "2026-02-10T20:37:58.663Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/93/fd/e63789133b2bf044c8550cd6766ec93628b0ac18a03f2aa0b80171f0697a/botocore-1.42.50.tar.gz", hash = "sha256:de1e128e4898f4e66877bfabbbb03c61f99366f27520442539339e8a74afe3a5", size = 14958074, upload-time = "2026-02-16T20:41:58.814Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/a0/88/5c2f4e65fe8dba7709a219b768e5ac89a112c6dde9527a5009cb82ee9124/botocore-1.42.46-py3-none-any.whl", hash = "sha256:f7459fcf586f38a3b0a242a172d3332141c770a3f5767bbb21e79d810db95d75", size = 14622519, upload-time = "2026-02-10T20:37:54.223Z" },
+    { url = "https://files.pythonhosted.org/packages/aa/b8/b02ad16c5198e652eafdd8bad76aa62ac094afabbe1241b4be1cd4075666/botocore-1.42.50-py3-none-any.whl", hash = "sha256:3ec7004009d1557a881b1d076d54b5768230849fa9ccdebfd409f0571490e691", size = 14631256, upload-time = "2026-02-16T20:41:55.004Z" },
 ]
 
 [[package]]
@@ -3623,8 +3623,7 @@ s3 = [
     { name = "boto3" },
 ]
 xarray = [
-    { name = "rioxarray", version = "0.19.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "rioxarray", version = "0.21.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "rioxarray" },
     { name = "xarray" },
 ]
 zarr = [
@@ -3649,8 +3648,7 @@ dev = [
     { name = "pytest" },
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
-    { name = "rioxarray", version = "0.19.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "rioxarray", version = "0.21.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "rioxarray" },
     { name = "tilebench" },
     { name = "vsifile" },
     { name = "xarray" },
@@ -3727,45 +3725,17 @@ performance = [
 name = "rioxarray"
 version = "0.19.0"
 source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version < '3.12' and sys_platform == 'win32'",
-    "python_full_version < '3.12' and sys_platform == 'emscripten'",
-    "python_full_version < '3.12' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
 dependencies = [
-    { name = "numpy", marker = "python_full_version < '3.12'" },
-    { name = "packaging", marker = "python_full_version < '3.12'" },
-    { name = "pyproj", marker = "python_full_version < '3.12'" },
+    { name = "numpy" },
+    { name = "packaging" },
+    { name = "pyproj" },
     { name = "rasterio", version = "1.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
-    { name = "xarray", marker = "python_full_version < '3.12'" },
+    { name = "rasterio", version = "1.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "xarray" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/3d/8e/fe4e87460f8c62d8d5c683e09f19fbde5d9cfcfd0342d02df1f452999b5d/rioxarray-0.19.0.tar.gz", hash = "sha256:7819a0036fd874c8c8e280447cbbe43d8dc72fc4a14ac7852a665b1bdb7d4b04", size = 54600, upload-time = "2025-04-21T17:46:54.183Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2a/2f/63d2cacc0e525f8e3398bcf32bd3620385f22cd1600834ec49d7f3597a7b/rioxarray-0.19.0-py3-none-any.whl", hash = "sha256:494ee4fff1781072d55ee5276f5d07b63d93b05093cb33b926a12186ba5bb8ef", size = 62151, upload-time = "2025-04-21T17:46:52.801Z" },
-]
-
-[[package]]
-name = "rioxarray"
-version = "0.21.0"
-source = { registry = "https://pypi.org/simple" }
-resolution-markers = [
-    "python_full_version >= '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'win32'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform == 'emscripten'",
-    "python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'emscripten' and sys_platform != 'win32'",
-]
-dependencies = [
-    { name = "numpy", marker = "python_full_version >= '3.12'" },
-    { name = "packaging", marker = "python_full_version >= '3.12'" },
-    { name = "pyproj", marker = "python_full_version >= '3.12'" },
-    { name = "rasterio", version = "1.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "xarray", marker = "python_full_version >= '3.12'" },
-]
-sdist = { url = "https://files.pythonhosted.org/packages/68/ba/9b70c0e33159244b264aed7b331ff349bc0a3a4ac50e8bea08729bf6ae53/rioxarray-0.21.0.tar.gz", hash = "sha256:a292d96f4d6412c05ff09629b72523ae2e9c42598183f5e9c555fc368f867c0f", size = 56555, upload-time = "2026-01-26T17:15:46.783Z" }
-wheels = [
-    { url = "https://files.pythonhosted.org/packages/62/aa/4ba81b24acf2b05cb00fd7603f84e5088af72596839f85c23c6ff5d249d7/rioxarray-0.21.0-py3-none-any.whl", hash = "sha256:f8793822f09ab7de3a82ffe711beff4cdf313a860ff86df0942f3385374ac562", size = 64940, upload-time = "2026-01-26T17:15:45.648Z" },
 ]
 
 [[package]]
@@ -4534,16 +4504,16 @@ wheels = [
 
 [[package]]
 name = "xarray"
-version = "2025.11.0"
+version = "2026.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "numpy" },
     { name = "packaging" },
     { name = "pandas" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/39/ad/b072c970cfb2e2724509bf1e8d7fb4084cc186a90d486c9ac4a48ff83186/xarray-2025.11.0.tar.gz", hash = "sha256:d7a4aa4500edbfd60676b1613db97da309ab144cac0bcff0cbf483c61c662af1", size = 3072276, upload-time = "2025-11-17T16:12:09.167Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/0f/03/e3353b72e518574b32993989d8f696277bf878e9d508c7dd22e86c0dab5b/xarray-2026.2.0.tar.gz", hash = "sha256:978b6acb018770554f8fd964af4eb02f9bcc165d4085dbb7326190d92aa74bcf", size = 3111388, upload-time = "2026-02-13T22:20:50.18Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/86/b4/cfa7aa56807dd2d9db0576c3440b3acd51bae6207338ec5610d4878e5c9b/xarray-2025.11.0-py3-none-any.whl", hash = "sha256:986893b995de4a948429356a3897d78e634243c1cac242bd59d03832b9d72dd1", size = 1375447, upload-time = "2025-11-17T16:12:07.123Z" },
+    { url = "https://files.pythonhosted.org/packages/99/92/545eb2ca17fc0e05456728d7e4378bfee48d66433ae3b7e71948e46826fb/xarray-2026.2.0-py3-none-any.whl", hash = "sha256:e927d7d716ea71dea78a13417970850a640447d8dd2ceeb65c5687f6373837c9", size = 1405358, upload-time = "2026-02-13T22:20:47.847Z" },
 ]
 
 [[package]]
