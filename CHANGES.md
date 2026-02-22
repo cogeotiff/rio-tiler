@@ -1,6 +1,35 @@
 
 # Unreleased
 
+# 9.0.0b1 
+
+* add `AssetType = str | AssetWithOptions`, with `AssetWithOptions` beeing a typed dict with required `name` key
+* change: `assets` signature in `MultiBaseReader` method to be a union of `Sequence[AssetType] | AssetType`
+* remove: `asset` parsing in `STACReader._get_asset_info()` method. Options needs to be passed as dictionary:
+    ```python
+    # 9.0.0a1
+    with STACReader(stac.json) as stac:
+        _ = stac.tile(
+            0, 
+            0, 
+            0, 
+            assets=[
+                "asset|indexes=1,2,3",
+            ]
+        )
+
+    # 9.0.0b1
+    with STACReader(stac.json) as stac:
+        _ = stac.tile(
+            0, 
+            0, 
+            0, 
+            assets=[
+                {"name": "asset", "indexes": [1, 2, 3]},
+            ]
+        )
+    ```
+
 # 9.0.0a6 (2026-02-13)
 
 * add: wraps readers within the mosaic Backends with `inherit_rasterio_env` decorator.
