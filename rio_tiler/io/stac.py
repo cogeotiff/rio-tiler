@@ -22,7 +22,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import InvalidAssetName, MissingAssets
 from rio_tiler.io.base import BaseReader, MultiBaseReader
 from rio_tiler.io.rasterio import Reader
-from rio_tiler.types import AssetInfo, AssetWithOptions
+from rio_tiler.types import AssetInfo, AssetType
 
 try:
     from boto3.session import Session as boto3_session
@@ -246,7 +246,7 @@ class STACReader(MultiBaseReader):
     exclude_asset_types: set[str] | None = attr.ib(default=None)
 
     assets: Sequence[str] = attr.ib(init=False)
-    default_assets: Sequence[str | AssetWithOptions] | None = attr.ib(default=None)
+    default_assets: Sequence[AssetType] | None = attr.ib(default=None)
 
     reader: type[BaseReader] = attr.ib(default=Reader)
     reader_options: dict = attr.ib(factory=dict)
@@ -317,11 +317,11 @@ class STACReader(MultiBaseReader):
 
         return asset, None
 
-    def _get_asset_info(self, asset: str | AssetWithOptions) -> AssetInfo:
+    def _get_asset_info(self, asset: AssetType) -> AssetInfo:
         """Validate asset names and return asset's info.
 
         Args:
-            asset (str | AssetWithOptions): STAC asset name.
+            asset (AssetType): STAC asset name.
 
         Returns:
             AssetInfo: STAC asset info.

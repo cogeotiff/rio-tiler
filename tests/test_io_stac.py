@@ -22,7 +22,7 @@ from rio_tiler.io import BaseReader, Reader, STACReader, XarrayReader
 from rio_tiler.io.stac import DEFAULT_VALID_TYPE
 from rio_tiler.io.xarray import Options
 from rio_tiler.models import BandStatistics
-from rio_tiler.types import AssetInfo
+from rio_tiler.types import AssetInfo, AssetType
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
@@ -979,7 +979,7 @@ def test_netcdf_reader():
 
             return Reader
 
-        def _get_asset_info(self, asset: str | dict) -> AssetInfo:
+        def _get_asset_info(self, asset: AssetType) -> AssetInfo:
             """Validate asset names and return asset's info."""
             asset_name: str = asset["name"] if isinstance(asset, dict) else asset
             if asset_name not in self.assets:
