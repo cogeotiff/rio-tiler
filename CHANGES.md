@@ -1,7 +1,7 @@
 
 # Unreleased
 
-# 9.0.0b1 
+# 9.0.0b1 (2026-02-22)
 
 * add `AssetType = str | AssetWithOptions`, with `AssetWithOptions` beeing a typed dict with required `name` key
 * change: `assets` signature in `MultiBaseReader` method to be a union of `Sequence[AssetType] | AssetType`
