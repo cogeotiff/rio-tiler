@@ -1,9 +1,16 @@
 """rio-tiler types."""
 
+import sys
 from collections.abc import Sequence
-from typing import Any, Literal, NotRequired, TypedDict
+from typing import Any, Literal, NotRequired
 
 import numpy
+
+if sys.version_info >= (3, 15):
+    from typing import TypedDict
+else:
+    from typing_extensions import TypedDict
+
 
 NumType = float | int
 
@@ -59,6 +66,15 @@ WarpResampling = Literal[
     "sum",
     "rms",
 ]
+
+
+class AssetWithOptions(TypedDict, extra_items=True):  # type: ignore[call-arg]
+    """Asset with additional options."""
+
+    name: str
+
+
+AssetType = str | AssetWithOptions
 
 
 class AssetInfo(TypedDict):
