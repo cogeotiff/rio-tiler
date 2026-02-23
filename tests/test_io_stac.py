@@ -36,6 +36,7 @@ STAC_ALTERNATE_PATH = os.path.join(PREFIX, "stac_alternate.json")
 STAC_GRIB_PATH = os.path.join(PREFIX, "stac_grib.json")
 STAC_NETCDF_PATH = os.path.join(PREFIX, "stac_netcdf.json")
 STAC_ROTATED_AFFINE = os.path.join(PREFIX, "stac-proj-titiler-issue1074.json")
+STAC_BANDS = os.path.join(PREFIX, "stac_bands.json")
 
 with open(STAC_PATH) as f:
     item = json.loads(f.read())
@@ -1096,3 +1097,22 @@ def test_stac_with_rotate_affine():
         assert stac.transform
         assert stac.bounds
         assert stac.get_geographic_bounds("epsg:4326")
+
+
+def test_stac_with_bands_metadata():
+    """Select band indexes with band options"""
+    with STACReader(STAC_BANDS) as stac:
+        info = stac._get_asset_info(
+            {"name": "rgb_name", "bands": ["band1", "band3"]},
+        )
+        assert info["method_options"]["indexes"] == [1, 3]
+
+        info = stac._get_asset_info(
+            {"name": "rgb_common", "bands": ["blue"]},
+        )
+        assert info["method_options"]["indexes"] == [3]
+
+        info = stac._get_asset_info(
+            {"name": "rgb", "bands": ["blue", "red"]},
+        )
+        assert info["method_options"]["indexes"] == [3, 1]

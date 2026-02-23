@@ -72,6 +72,9 @@ class AssetWithOptions(TypedDict, extra_items=True):  # type: ignore[call-arg]
     """Asset with additional options."""
 
     name: str
+    indexes: NotRequired[Indexes]
+    expression: NotRequired[str]
+    bands: NotRequired[Sequence[str]]
 
 
 AssetType = str | AssetWithOptions
