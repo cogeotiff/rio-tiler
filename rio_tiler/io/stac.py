@@ -362,7 +362,7 @@ class STACReader(MultiBaseReader):
                         "Asset does not have 'bands' metadata, unable to use 'bands' option"
                     )
 
-                # There is no standard for predecedance between 'eo:common_name' and 'name'
+                # There is no standard for precedence between 'eo:common_name' and 'name'
                 # in STAC specification, so we will use 'eo:common_name' if it exists,
                 # otherwise fallback to 'name', and if not exist use the band index as last resource.
                 common_to_variable = {
