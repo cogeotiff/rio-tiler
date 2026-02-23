@@ -514,6 +514,11 @@ def test_statistics_valid(rio):
         assert isinstance(stats["green|indexes=1"]["b1"], BandStatistics)
         assert isinstance(stats["red|indexes=1"]["b1"], BandStatistics)
 
+        stats = stac.statistics(
+            assets={"name": "green", "indexes": [1]},
+        )
+        assert stats["green|indexes=[1]"]
+
 
 @patch("rio_tiler.io.rasterio.rasterio")
 def test_merged_statistics_valid(rio):
