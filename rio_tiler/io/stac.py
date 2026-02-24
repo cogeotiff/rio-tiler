@@ -224,6 +224,78 @@ def _extract_proj_info(
         return None
 
     crs = item.ext.proj.crs_string
+
+    # Asset level projection extension
+    assets = assets or list(item.assets)
+    asset_proj: dict[str, Any] = {}
+
+    for asset in assets:
+        asset_info = item.assets[asset]
+        if asset_info.ext.has("proj"):
+            if all(
+                [
+                    asset_info.ext.proj.transform,
+                    asset_info.ext.proj.shape,
+                ]
+            ):
+                tr = Affine(*asset_info.ext.proj.transform)
+                asset_proj[asset] = {
+                    "shape": asset_info.ext.proj.shape,
+                    "transform": tr,
+                    "bounds": array_bounds(
+                        asset_info.ext.proj.shape[0],
+                        asset_info.ext.proj.shape[1],
+                        tr,
+                    ),
+                    "crs_string": asset_info.ext.proj.crs_string or crs,
+                }
+
+    if asset_proj:
+        # 1. check that all assets have the same projection info
+        # if multiple CRS if will be too expensive to handle
+        crss = [p["crs_string"] for p in asset_proj.values()]
+        if crs:
+            crss.append(crs)
+
+        if len(set(crss)) == 1:
+            crs = next(iter(crss))
+            if not crs:
+                return None
+
+            # 2. create unified bounds, transform and shape for the item based on the assets info
+            bounds = (
+                min(p["bounds"][0] for p in asset_proj.values()),
+                min(p["bounds"][1] for p in asset_proj.values()),
+                max(p["bounds"][2] for p in asset_proj.values()),
+                max(p["bounds"][3] for p in asset_proj.values()),
+            )
+
+            # 3. Get the highest resolution asset and use its transform to calculate
+            # the theoritical shape of the item
+            highest_res_asset = min(
+                asset_proj.items(),
+                key=lambda p: (
+                    abs(p[1]["transform"][0]),  # pixel width
+                    abs(p[1]["transform"][4]),  # pixel height
+                ),
+            )
+            xres = highest_res_asset[1]["transform"][0]
+            yres = highest_res_asset[1]["transform"][4]
+
+            # 4. Get dataset shape from bounds and resolution
+            height = abs(math.floor((bounds[3] - bounds[1]) / yres))
+            width = abs(math.floor((bounds[2] - bounds[0]) / xres))
+
+            transform = from_bounds(*bounds, width, height)
+
+            return Projection(
+                width=width,
+                height=height,
+                bounds=bounds,
+                transform=transform,
+                crs=CRS.from_string(crs),
+            )
+
     # Item Level projection extension
     if all(
         [
@@ -235,83 +307,14 @@ def _extract_proj_info(
         height, width = item.ext.proj.shape
         transform = Affine(*item.ext.proj.transform)
         bounds = array_bounds(height, width, transform)
-        crs = CRS.from_string(crs)
 
         return Projection(
             width=width,
             height=height,
             bounds=bounds,
             transform=transform,
-            crs=crs,
+            crs=CRS.from_string(crs),
         )
-
-    # Try assets level projection extension
-    else:
-        assets = assets or list(item.assets)
-        asset_proj: dict[str, Any] = {}
-
-        for asset in assets:
-            asset_info = item.assets[asset]
-            if asset_info.ext.has("proj"):
-                if all(
-                    [
-                        asset_info.ext.proj.transform,
-                        asset_info.ext.proj.shape,
-                    ]
-                ):
-                    asset_proj[asset] = {
-                        "shape": asset_info.ext.proj.shape,
-                        "transform": asset_info.ext.proj.transform,
-                        "bounds": array_bounds(
-                            asset_info.ext.proj.shape[0],
-                            asset_info.ext.proj.shape[1],
-                            asset_info.ext.proj.transform,
-                        ),
-                        "crs_string": asset_info.ext.proj.crs_string or crs,
-                    }
-
-        if asset_proj:
-            # 1. check that all assets have the same projection info
-            # if multiple CRS if will be too expensive to handle
-            crss = [p["crs_string"] for p in asset_proj.values()]
-            if crs:
-                crss.append(crs)
-
-            if len(set(crss)) == 1:
-                # 2. create unified bounds, transform and shape for the item based on the assets info
-                bounds = (
-                    min(p["bounds"][0] for p in asset_proj.values()),
-                    min(p["bounds"][1] for p in asset_proj.values()),
-                    max(p["bounds"][2] for p in asset_proj.values()),
-                    max(p["bounds"][3] for p in asset_proj.values()),
-                )
-
-                # 3. Get the highest resolution asset and use its transform to calculate
-                # the theoritical shape of the item
-                highest_res_asset = min(
-                    asset_proj.items(),
-                    key=lambda p: (
-                        abs(p[1]["transform"][0]),  # pixel width
-                        abs(p[1]["transform"][4]),  # pixel height
-                    ),
-                )
-                xres = highest_res_asset[1]["transform"][0]
-                yres = highest_res_asset[1]["transform"][4]
-
-                # 4. Get dataset shape from bounds and resolution
-                height = abs(math.floor((bounds[3] - bounds[1]) / yres))
-                width = abs(math.floor((bounds[2] - bounds[0]) / xres))
-
-                transform = from_bounds(*bounds, width, height)
-                crs = CRS.from_string(next(iter(crss)))
-
-                return Projection(
-                    width=width,
-                    height=height,
-                    bounds=bounds,
-                    transform=transform,
-                    crs=crs,
-                )
 
     return None
 
