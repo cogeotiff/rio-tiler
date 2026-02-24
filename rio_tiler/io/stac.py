@@ -1,11 +1,12 @@
 """rio_tiler.io.stac: STAC reader."""
 
 import json
+import math
 import os
 import warnings
 from collections.abc import Iterator, Sequence
 from threading import Lock
-from typing import Any
+from typing import Any, TypedDict
 from urllib.parse import urlparse
 
 import attr
@@ -16,7 +17,9 @@ from affine import Affine
 from cachetools import LRUCache, cached
 from cachetools.keys import hashkey
 from morecantile import TileMatrixSet
-from rasterio.transform import array_bounds
+from rasterio.crs import CRS
+from rasterio.features import bounds as featureBounds
+from rasterio.transform import array_bounds, from_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import InvalidAssetName, MissingAssets
@@ -194,6 +197,128 @@ def _to_pystac_item(item: dict | pystac.Item | None) -> pystac.Item | None:
     return item
 
 
+class Projection(TypedDict):
+    """Projection info extracted from STAC Item."""
+
+    width: int
+    height: int
+    bounds: tuple[float, float, float, float]
+    transform: Affine
+    crs: CRS
+
+
+def _extract_proj_info(
+    item: pystac.Item, assets: list[str] | None = None
+) -> Projection | None:
+    """Extract projection info from STAC Item.
+
+    Args:
+        item (pystac.Item): STAC Item.
+        assets (list[str]): An optional list of assets to use instead of the item's proj value.
+
+    Returns:
+        Projection: projection info extracted from the STAC Item.
+
+    """
+    if not item.ext.has("proj"):
+        return None
+
+    crs = item.ext.proj.crs_string
+
+    # Asset level projection extension
+    assets = assets or list(item.assets)
+    asset_proj: dict[str, Any] = {}
+
+    for asset in assets:
+        asset_info = item.assets[asset]
+        if asset_info.ext.has("proj"):
+            if all(
+                [
+                    asset_info.ext.proj.transform,
+                    asset_info.ext.proj.shape,
+                ]
+            ):
+                tr = Affine(*asset_info.ext.proj.transform)
+                asset_proj[asset] = {
+                    "shape": asset_info.ext.proj.shape,
+                    "transform": tr,
+                    "bounds": array_bounds(
+                        asset_info.ext.proj.shape[0],
+                        asset_info.ext.proj.shape[1],
+                        tr,
+                    ),
+                    "crs_string": asset_info.ext.proj.crs_string or crs,
+                }
+
+    if asset_proj:
+        # 1. check that all assets have the same projection info
+        # if multiple CRS if will be too expensive to handle
+        crss = [p["crs_string"] for p in asset_proj.values()]
+        if crs:
+            crss.append(crs)
+
+        if len(set(crss)) == 1:
+            crs = next(iter(crss))
+            if not crs:
+                return None
+
+            # 2. create unified bounds, transform and shape for the item based on the assets info
+            bounds = (
+                min(p["bounds"][0] for p in asset_proj.values()),
+                min(p["bounds"][1] for p in asset_proj.values()),
+                max(p["bounds"][2] for p in asset_proj.values()),
+                max(p["bounds"][3] for p in asset_proj.values()),
+            )
+
+            # 3. Get the highest resolution asset and use its transform to calculate
+            # the theoritical shape of the item
+            highest_res_asset = min(
+                asset_proj.items(),
+                key=lambda p: (
+                    abs(p[1]["transform"][0]),  # pixel width
+                    abs(p[1]["transform"][4]),  # pixel height
+                ),
+            )
+            xres = highest_res_asset[1]["transform"][0]
+            yres = highest_res_asset[1]["transform"][4]
+
+            # 4. Get dataset shape from bounds and resolution
+            height = abs(math.floor((bounds[3] - bounds[1]) / yres))
+            width = abs(math.floor((bounds[2] - bounds[0]) / xres))
+
+            transform = from_bounds(*bounds, width, height)
+
+            return Projection(
+                width=width,
+                height=height,
+                bounds=bounds,
+                transform=transform,
+                crs=CRS.from_string(crs),
+            )
+
+    # Item Level projection extension
+    if all(
+        [
+            item.ext.proj.transform,
+            item.ext.proj.shape,
+            crs,
+        ]
+    ):
+        height, width = item.ext.proj.shape
+        transform = Affine(*item.ext.proj.transform)
+        bounds = array_bounds(height, width, transform)
+
+        return Projection(
+            width=width,
+            height=height,
+            bounds=bounds,
+            transform=transform,
+            crs=CRS.from_string(crs),
+        )
+
+    return None
+
+
 @attr.s
 class STACReader(MultiBaseReader):
     """STAC Reader.
@@ -253,36 +378,33 @@ class STACReader(MultiBaseReader):
 
     fetch_options: dict = attr.ib(factory=dict)
 
-    ctx: rasterio.Env = attr.ib(default=rasterio.Env)
+    ctx: type[rasterio.Env] = attr.ib(default=rasterio.Env)
 
     def __attrs_post_init__(self):
         """Fetch STAC Item and get list of valid assets."""
         self.item = self.item or pystac.Item.from_dict(
             fetch(self.input, **self.fetch_options), self.input
         )
-
-        self.bounds = tuple(self.item.bbox)
-        self.crs = WGS84_CRS
-
-        if hasattr(self.item, "ext") and self.item.ext.has("proj"):
-            if all(
-                [
-                    self.item.ext.proj.transform,
-                    self.item.ext.proj.shape,
-                    self.item.ext.proj.crs_string,
-                ]
-            ):
-                self.height, self.width = self.item.ext.proj.shape
-                self.transform = Affine(*self.item.ext.proj.transform)
-                self.bounds = array_bounds(self.height, self.width, self.transform)
-                self.crs = rasterio.crs.CRS.from_string(self.item.ext.proj.crs_string)
-
-        self.minzoom = self.minzoom if self.minzoom is not None else self._minzoom
-        self.maxzoom = self.maxzoom if self.maxzoom is not None else self._maxzoom
-
         self.assets = self.get_asset_list()
         if not self.assets:
             raise MissingAssets("No valid asset found. Asset's media types not supported")
+
+        if proj := _extract_proj_info(self.item, assets=self.assets):
+            self.height = proj["height"]
+            self.width = proj["width"]
+            self.bounds = proj["bounds"]
+            self.transform = proj["transform"]
+            self.crs = proj["crs"]
+        else:
+            self.bounds = (
+                tuple(self.item.bbox)
+                if self.item.bbox
+                else featureBounds(self.item.geometry)
+            )
+            self.crs = WGS84_CRS
+
+        self.minzoom = self.minzoom if self.minzoom is not None else self._minzoom
+        self.maxzoom = self.maxzoom if self.maxzoom is not None else self._maxzoom
 
     def get_asset_list(self) -> list[str]:
         """Get valid asset list"""
