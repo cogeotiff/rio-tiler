@@ -1017,3 +1017,74 @@ def test_max_pixels():
         # Should not raise error when using a small area
         img = dst.tile(0, 0, 5)
         assert img.array.shape == (3, 256, 256)
+
+
+def test_xarray_reader_nodata_option():
+    """test XarrayReader."""
+    # Create a 360/180 dataset that covers the whole world
+    arr = numpy.arange(0.0, 360 * 180).reshape(1, 180, 360)
+    arr[:, 0:50, 0:50] = 0  # we set the top-left corner to 0
+
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "x": numpy.arange(-179.5, 180.5, 1),
+            "y": numpy.arange(89.5, -90.5, -1),
+            "time": [datetime(2022, 1, 1)],
+        },
+    )
+
+    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+
+    data.rio.write_crs("epsg:4326", inplace=True)
+    assert data.rio.nodata is None
+    with pytest.warns(
+        UserWarning,
+        match="Adjusting dataset latitudes to avoid re-projection overflow",
+    ):
+        with XarrayReader(data, options={"nodata": 0}) as dst:
+            info = dst.info()
+            assert info.height == 180
+            assert info.width == 360
+            assert info.count == 1
+
+            img = dst.tile(0, 0, 1)
+            assert not img._mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+            assert dst.input.rio.nodata is None
+
+            img = dst.part((-160, -80, 160, 80))
+            assert not img._mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 100, 100]  # pixel 100,100 shouldn't be masked
+
+            # overwrite the nodata value to 0
+            pt = dst.point(-179, 89)
+            assert pt.count == 1
+            assert not pt._mask[0]
+            assert dst.input.rio.nodata is None
+
+            feat = {
+                "type": "Feature",
+                "geometry": {
+                    "type": "Polygon",
+                    "coordinates": [
+                        [
+                            [-180.0, 0],
+                            [-180.0, 85.0511287798066],
+                            [0, 85.0511287798066],
+                            [0, 6.023673383202919e-13],
+                            [-180.0, 0],
+                        ]
+                    ],
+                },
+                "properties": {"title": "XYZ tile (0, 0, 1)"},
+            }
+
+            img = dst.feature(feat)
+            assert not img._mask.all()  # not all the mask value are set to 255
+            assert img.array.mask[0, 0, 0]  # the top left pixel should be masked
+            assert not img.array.mask[0, 50, 100]  # pixel 50,100 shouldn't be masked
+            assert dst.input.rio.nodata is None

@@ -1,6 +1,48 @@
 
 # Unreleased
 
+# 9.0.0b1 (2026-02-22)
+
+* add `AssetType = str | AssetWithOptions`, with `AssetWithOptions` beeing a typed dict with required `name` key
+* change: `assets` signature in `MultiBaseReader` method to be a union of `Sequence[AssetType] | AssetType`
+* remove: `asset` parsing in `STACReader._get_asset_info()` method. Options needs to be passed as dictionary:
+    ```python
+    # 9.0.0a1
+    with STACReader(stac.json) as stac:
+        _ = stac.tile(
+            0, 
+            0, 
+            0, 
+            assets=[
+                "asset|indexes=1,2,3",
+            ]
+        )
+
+    # 9.0.0b1
+    with STACReader(stac.json) as stac:
+        _ = stac.tile(
+            0, 
+            0, 
+            0, 
+            assets=[
+                {"name": "asset", "indexes": [1, 2, 3]},
+            ]
+        )
+    ```
+
+# 9.0.0a6 (2026-02-13)
+
+* add: wraps readers within the mosaic Backends with `inherit_rasterio_env` decorator.
+
+# 9.0.0a5 (2026-02-13)
+
+* add: reader's level options for XarrayReader
+
+# 9.0.0a4 (2026-02-11)
+
+* fix: type hint for ImageData/PointData methods
+* remove: `typing-extensions` from requirements
+
 # 9.0.0a3 (2026-02-05)
 
 * add: `inherit_rasterio_env` decorator to `utils` module for decorating functions that need to inherit rasterio env settings from a parent thread.
@@ -221,6 +263,10 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable.
 * add Mosaic Backend abstract base class
 * update morecantile requirements to `>=5.0,<8.0`
+
+# 7.9.3 (2026-02-12)
+
+* add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable  **Backported**
 
 # 7.9.2 (2025-10-09)
 

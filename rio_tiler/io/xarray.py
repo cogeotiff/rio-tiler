@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import os
 import warnings
-from typing import Any, cast
+from typing import Any, TypedDict, cast
 
 import attr
 import numpy
@@ -55,6 +55,12 @@ except ImportError:  # pragma: nocover
 MAX_ARRAY_SIZE = int(os.environ.get("RIO_TILER_MAX_ARRAY_SIZE", 1_000_000_000))  # 1Gb
 
 
+class Options(TypedDict, total=False):
+    """Reader Options."""
+
+    nodata: NoData | None
+
+
 @attr.s
 class XarrayReader(BaseReader):
     """Xarray Reader.
@@ -81,7 +87,13 @@ class XarrayReader(BaseReader):
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
+    options: Options = attr.ib()
+
     _dims: list = attr.ib(init=False, factory=list)
+
+    @options.default
+    def _options_default(self):
+        return {}
 
     def __attrs_post_init__(self):
         """Set bounds and CRS."""
@@ -168,6 +180,10 @@ class XarrayReader(BaseReader):
         """Return xarray.DataArray info."""
         metadata = [band.attrs for d in self._dims for band in self.input[d]] or [{}]
 
+        nodata_type = "None"
+        if self.options.get("nodata", self.input.rio.nodata) is not None:
+            nodata_type = "Nodata"
+
         meta = {
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
@@ -177,7 +193,7 @@ class XarrayReader(BaseReader):
                 for ix, v in enumerate(self.band_descriptions, 1)
             ],
             "dtype": str(self.input.dtype),
-            "nodata_type": "Nodata" if self.input.rio.nodata is not None else "None",
+            "nodata_type": nodata_type,
             "name": self.input.name,
             "count": self.input.rio.count,
             "width": self.input.rio.width,
@@ -232,6 +248,8 @@ class XarrayReader(BaseReader):
         da, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
+            da = da.rio.write_nodata(nodata)
+        elif (nodata := self.options.get("nodata")) is not None:
             da = da.rio.write_nodata(nodata)
 
         data = da.to_masked_array()
@@ -352,6 +370,8 @@ class XarrayReader(BaseReader):
         da, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
+            da = da.rio.write_nodata(nodata)
+        elif (nodata := self.options.get("nodata")) is not None:
             da = da.rio.write_nodata(nodata)
 
         # Forward valid_min/valid_max to the ImageData object
@@ -507,6 +527,8 @@ class XarrayReader(BaseReader):
 
         if nodata is not None:
             da = da.rio.write_nodata(nodata)
+        elif (nodata := self.options.get("nodata")) is not None:
+            da = da.rio.write_nodata(nodata)
 
         if dst_crs and dst_crs != self.crs:
             src_width = da.rio.width
@@ -640,6 +662,8 @@ class XarrayReader(BaseReader):
         da, band_descriptions = self._sel_indexes(indexes)
 
         if nodata is not None:
+            da = da.rio.write_nodata(nodata)
+        elif (nodata := self.options.get("nodata")) is not None:
             da = da.rio.write_nodata(nodata)
 
         y, x = rowcol(da.rio.transform(), da_lon, da_lat)

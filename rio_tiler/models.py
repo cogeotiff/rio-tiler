@@ -4,7 +4,7 @@ import itertools
 import re
 import warnings
 from collections.abc import Sequence
-from typing import Any, Literal, cast
+from typing import Any, Literal, Self, cast
 
 import attr
 import numpy
@@ -24,7 +24,6 @@ from rasterio.io import MemoryFile
 from rasterio.plot import reshape_as_image
 from rasterio.transform import array_bounds, from_bounds
 from rasterio.warp import calculate_default_transform, reproject, transform_geom
-from typing_extensions import Self
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WGS84_CRS
@@ -226,7 +225,7 @@ class PointData:
         return self.array.shape[0]
 
     @classmethod
-    def create_from_list(cls, data: Sequence["PointData"]) -> Self:
+    def create_from_list(cls, data: Sequence["PointData"]) -> "PointData":
         """Create PointData from a sequence of PointsData objects.
 
         Args:
@@ -425,7 +424,7 @@ class ImageData:
             yield i
 
     @classmethod
-    def from_bytes(cls, data: bytes) -> Self:
+    def from_bytes(cls, data: bytes) -> "ImageData":
         """Create ImageData from bytes.
 
         Args:
@@ -482,7 +481,7 @@ class ImageData:
                     )
 
     @classmethod
-    def create_from_list(cls, data: Sequence["ImageData"]) -> Self:
+    def create_from_list(cls, data: Sequence["ImageData"]) -> "ImageData":
         """Create ImageData from a sequence of ImageData objects.
 
         Args:

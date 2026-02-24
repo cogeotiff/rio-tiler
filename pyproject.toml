@@ -30,7 +30,7 @@ dependencies = [
     "pystac>=1.9,<2.0",
     "rasterio>=1.4.0",
     "color-operations",
-    "typing-extensions",
+    "typing-extensions>=4.10.0; python_version < '3.12'",
 ]
 
 [dependency-groups]
@@ -159,7 +159,7 @@ exclude = [
 max-complexity = 14
 
 [tool.bumpversion]
-current_version = "9.0.0a3"
+current_version = "9.0.0b1"
 parse = """(?x)
     (?P<major>\\d+)\\.
     (?P<minor>\\d+)\\.
