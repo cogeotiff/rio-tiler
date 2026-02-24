@@ -478,7 +478,7 @@ class STACReader(MultiBaseReader):
                 method_options["expression"] = expr
             # Bands
             if bands := asset.get("bands", []):
-                stac_bands = extras.get("bands", [])
+                stac_bands = extras.get("bands", extras.get("eo:bands", []))
                 if not stac_bands:
                     raise ValueError(
                         "Asset does not have 'bands' metadata, unable to use 'bands' option"
@@ -488,7 +488,10 @@ class STACReader(MultiBaseReader):
                 # in STAC specification, so we will use 'eo:common_name' if it exists,
                 # otherwise fallback to 'name', and if not exist use the band index as last resource.
                 common_to_variable = {
-                    b.get("eo:common_name") or b.get("name") or str(ix): ix
+                    b.get("eo:common_name")
+                    or b.get("name")
+                    or b.get("common_name")
+                    or str(ix): ix
                     for ix, b in enumerate(stac_bands, 1)
                 }
                 band_indexes: list[int] = []
