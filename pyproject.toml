@@ -38,6 +38,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-benchmark",
+    "pytest-asyncio",
     # XarrayReader
     "xarray",
     "rioxarray",
@@ -51,6 +52,7 @@ dev = [
     "vsifile>=0.2",
     "zarr~=3.0",
     "obstore",
+    "async-geotiff>=0.2.0",
     "tilebench",
     "pre-commit",
     "IPython",
@@ -85,6 +87,10 @@ xarray = [
 ]
 zarr = [
     "zarr~=3.0",
+    "obstore",
+]
+async = [
+    "async-geotiff>=0.2.0",
     "obstore",
 ]
 
