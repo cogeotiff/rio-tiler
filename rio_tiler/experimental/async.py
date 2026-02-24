@@ -18,7 +18,7 @@ if TYPE_CHECKING:
 
 
 @attr.s
-class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
+class BaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     """Rio-tiler.io AsyncBaseReader."""
 
     input: Any = attr.ib()
