@@ -214,6 +214,7 @@ def _extract_proj_info(
 
     Args:
         item (pystac.Item): STAC Item.
+        assets (list[str]): An optional list of assets to use instead of the item's proj value.
 
     Returns:
         Projection: projection info extracted from the STAC Item.
