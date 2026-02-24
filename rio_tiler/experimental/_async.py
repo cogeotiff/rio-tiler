@@ -21,8 +21,6 @@ from rio_tiler.types import BBox, Indexes
 from rio_tiler.utils import cast_to_sequence
 
 if TYPE_CHECKING:
-    from collections.abc import Awaitable
-
     from async_geotiff import GeoTIFF
 
 
@@ -42,7 +40,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         pass
 
     @abc.abstractmethod
-    async def info(self) -> Awaitable[Info]:
+    async def info(self) -> Info:
         """Return Dataset's info.
 
         Returns:
@@ -52,7 +50,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    async def statistics(self) -> Awaitable[dict[str, BandStatistics]]:
+    async def statistics(self) -> dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
 
         Returns:
@@ -62,7 +60,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> Awaitable[ImageData]:
+    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> ImageData:
         """Read a Map tile from the Dataset.
 
         Args:
@@ -77,7 +75,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    async def part(self, bbox: BBox, **kwargs: Any) -> Awaitable[ImageData]:
+    async def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
         """Read a Part of a Dataset.
 
         Args:
@@ -90,7 +88,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    async def preview(self) -> Awaitable[ImageData]:
+    async def preview(self) -> ImageData:
         """Read a preview of a Dataset.
 
         Returns:
@@ -114,7 +112,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
         ...
 
     @abc.abstractmethod
-    async def feature(self, shape: dict) -> Awaitable[ImageData]:
+    async def feature(self, shape: dict) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
@@ -157,7 +155,7 @@ class Reader(AsyncBaseReader):
         if self.colormap is None and self.input.colormap is not None:
             self.colormap = self.input.colormap.as_rasterio()
 
-    async def info(self) -> Awaitable[Info]:
+    async def info(self) -> Info:
         """Return Dataset's info.
 
         Returns:
@@ -166,7 +164,7 @@ class Reader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def statistics(self) -> Awaitable[dict[str, BandStatistics]]:
+    async def statistics(self) -> dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
 
         Returns:
@@ -175,7 +173,7 @@ class Reader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> Awaitable[ImageData]:
+    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> ImageData:
         """Read a Map tile from the Dataset.
 
         Args:
@@ -189,7 +187,7 @@ class Reader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def part(self, bbox: BBox, **kwargs: Any) -> Awaitable[ImageData]:
+    async def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
         """Read a Part of a Dataset.
 
         Args:
@@ -201,7 +199,7 @@ class Reader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def preview(self) -> Awaitable[ImageData]:
+    async def preview(self) -> ImageData:
         """Read a preview of a Dataset.
 
         Returns:
@@ -287,7 +285,7 @@ class Reader(AsyncBaseReader):
 
         return pt
 
-    async def feature(self, shape: dict) -> Awaitable[ImageData]:
+    async def feature(self, shape: dict) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
