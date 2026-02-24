@@ -1,4 +1,4 @@
-"""rio_tiler.experimental.async_base: ABC class for rio-tiler Async readers."""
+"""rio_tiler.experimental.async_geotiff: rio-tiler Async reader built on top of async-geotiff."""
 
 from __future__ import annotations
 
