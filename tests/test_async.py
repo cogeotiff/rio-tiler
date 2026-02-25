@@ -10,6 +10,7 @@ from obstore.store import LocalStore
 from rio_tiler.errors import ExpressionMixingWarning
 from rio_tiler.experimental._async import Reader
 from rio_tiler.io import Reader as SyncReader
+from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 store = LocalStore(PREFIX)
@@ -21,6 +22,7 @@ store = LocalStore(PREFIX)
     [
         ("cog.tif", None),
         ("cog_nodata.tif", 1),
+        ("cog_cmap.tif", 0),
     ],
 )
 async def test_async_reader(src_path, nodata):
@@ -145,3 +147,60 @@ async def test_async_reader_preview():
                 )
                 assert img.array.shape == (1, 128, 128)
                 assert img.band_descriptions == ["b1*2"]
+
+
+@pytest.mark.asyncio
+async def test_async_reader_stats():
+    """Read preview."""
+    geotiff = await GeoTIFF.open("cog_ovr.tif", store=store)
+    with SyncReader(os.path.join(PREFIX, "cog_ovr.tif")) as sync_src:
+        async with Reader(geotiff) as src:
+            stats = await src.statistics()
+            assert len(stats) == 1
+            assert isinstance(stats["b1"], BandStatistics)
+            assert stats["b1"].percentile_2
+            assert stats["b1"].percentile_98
+
+            sync_stats = sync_src.statistics()
+            assert sync_stats["b1"].percentile_2 == stats["b1"].percentile_2
+            assert sync_stats["b1"].percentile_98 == stats["b1"].percentile_98
+
+            stats = await src.statistics(percentiles=[3])
+            assert stats["b1"].percentile_3
+
+            stats = await src.statistics(percentiles=[3])
+            assert stats["b1"].percentile_3
+
+            # make sure kwargs are passed to `preview`
+            stats = await src.statistics(width=100, height=100, max_size=None)
+            assert stats["b1"].count == 10000.0
+
+            stats = await src.statistics(expression="b1;b1*2")
+            assert stats["b1"]
+            assert stats["b1"].description == "b1"
+            assert stats["b2"]
+            assert stats["b2"].description == "b1*2"
+            assert stats["b1"].min == stats["b2"].min / 2
+
+    geotiff = await GeoTIFF.open("cog_cmap.tif", store=store)
+    async with Reader(geotiff) as src:
+        stats = await src.statistics(categorical=True)
+        assert stats["b1"].histogram[1] == [
+            1.0,
+            3.0,
+            4.0,
+            5.0,
+            6.0,
+            7.0,
+            8.0,
+            9.0,
+            10.0,
+            11.0,
+            12.0,
+        ]
+
+        stats = await src.statistics(categorical=True, categories=[1, 3])
+        assert stats["b1"].histogram[1] == [
+            1.0,
+            3.0,
+        ]

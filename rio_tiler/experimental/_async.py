@@ -8,13 +8,17 @@ import warnings
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
+import numpy
 from async_geotiff import Window
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
+from rasterio.errors import NotGeoreferencedWarning
+from rasterio.features import bounds as featureBounds
+from rasterio.features import rasterize
 from rasterio.transform import from_bounds
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
-from rasterio.warp import transform_bounds
+from rasterio.warp import transform_bounds, transform_geom
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -26,7 +30,12 @@ from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import SpatialMixin
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, RIOResampling, WarpResampling
-from rio_tiler.utils import _get_width_height, _missing_size, cast_to_sequence
+from rio_tiler.utils import (
+    _get_width_height,
+    _missing_size,
+    _validate_shape_input,
+    cast_to_sequence,
+)
 
 if TYPE_CHECKING:
     from async_geotiff import GeoTIFF, Overview
@@ -202,14 +211,43 @@ class Reader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def statistics(self) -> dict[str, BandStatistics]:
+    async def statistics(
+        self,
+        categorical: bool = False,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
+        max_size: int = 1024,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        **kwargs: Any,
+    ) -> dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
+
+        Args:
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of categories to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            indexes (int or sequence of int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to `self.read`.
 
         Returns:
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        raise NotImplementedError
+        data = await self.preview(
+            max_size=max_size, indexes=indexes, expression=expression, **kwargs
+        )
+
+        return data.statistics(
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            hist_options=hist_options,
+        )
 
     async def tile(
         self,
@@ -273,6 +311,15 @@ class Reader(AsyncBaseReader):
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            bounds_crs (rasterio.crs.CRS, optional): Coordinate reference system of the input bounds. Defaults to WGS84.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
+            reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -293,6 +340,15 @@ class Reader(AsyncBaseReader):
         **kwargs: Any,
     ) -> ImageData:
         """Read a preview of a Dataset.
+
+        Args:
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
+            reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -470,14 +526,75 @@ class Reader(AsyncBaseReader):
 
         return pt
 
-    async def feature(self, shape: dict) -> ImageData:
+    async def feature(
+        self,
+        shape: dict,
+        dst_crs: CRS | None = None,
+        shape_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
             shape (dict): Valid GeoJSON feature.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            **kwargs: Any: Additional parameters to pass to `.part()` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        shape = _validate_shape_input(shape)
+
+        if not dst_crs:
+            dst_crs = shape_crs
+
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
+
+        img = await self.part(
+            bbox,
+            dst_crs=dst_crs,
+            bounds_crs=shape_crs,
+            indexes=indexes,
+            expression=expression,
+            max_size=max_size,
+            width=width,
+            height=height,
+            **kwargs,
+        )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            cutline_mask = rasterize(
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            ).astype("bool")
+
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
