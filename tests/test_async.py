@@ -204,3 +204,28 @@ async def test_async_reader_stats():
             1.0,
             3.0,
         ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "src_path",
+    [
+        "cog.tif",
+        "cog_nodata.tif",
+        "cog_cmap.tif",
+    ],
+)
+async def test_async_reader_info(src_path):
+    """tests async reader."""
+    geotiff = await GeoTIFF.open(src_path, store=store)
+    async with Reader(geotiff) as src:
+        info = await src.info()
+
+    with SyncReader(os.path.join(PREFIX, src_path)) as sync_src:
+        sync_info = sync_src.info()
+
+    assert info.bounds == sync_info.bounds
+    assert info.crs == sync_info.crs
+    assert info.height == sync_info.height
+    assert info.width == sync_info.width
+    assert info.band_descriptions == sync_info.band_descriptions

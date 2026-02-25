@@ -12,6 +12,7 @@ import numpy
 from async_geotiff import Window
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
+from rasterio.enums import ColorInterp
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
@@ -31,6 +32,7 @@ from rio_tiler.io.base import SpatialMixin
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, RIOResampling, WarpResampling
 from rio_tiler.utils import (
+    CRS_to_uri,
     _get_width_height,
     _missing_size,
     _validate_shape_input,
@@ -209,7 +211,72 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.Info: Dataset info.
 
         """
-        raise NotImplementedError
+        if self.input.nodata is not None:
+            nodata_type = "Nodata"
+        # colorinterp is not yet available
+        # https://github.com/developmentseed/async-geotiff/issues/12#issuecomment-3962171963
+        # elif has_alpha_band(self.input):
+        #     nodata_type = "Alpha"
+        elif self.input._mask_ifd:
+            nodata_type = "Mask"
+        else:
+            nodata_type = "None"
+
+        def _get_scale_offset(geotiff: GeoTIFF) -> dict:
+            offsets = []
+            scales = []
+            if m := geotiff._primary_ifd.gdal_metadata:
+                from xml.etree import ElementTree as ET
+
+                parsed = ET.fromstring(m)
+                for item in parsed.findall("Item"):
+                    name = item.get("name")
+                    if name == "OFFSET":
+                        offsets.append(float(item.text))
+                    elif name == "SCALE":
+                        scales.append(float(item.text))
+
+            return {
+                "scales": scales or [1.0] * geotiff.count,
+                "offsets": offsets or [0.0] * geotiff.count,
+            }
+
+        scale_and_offsets = _get_scale_offset(self.input)
+        overviews = [
+            math.ceil(self.input.width / ovr.width) for ovr in self.input.overviews
+        ]
+
+        meta = {
+            "bounds": self.bounds,
+            "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
+            # TODO: get we can band metadata from async-geotiff
+            "band_metadata": [(f"b{ix+1}", {}) for ix in range(self.input.count)],
+            # TODO: get we can band names from async-geotiff
+            "band_descriptions": [
+                (f"b{ix+1}", f"b{ix+1}") for ix in range(self.input.count)
+            ],
+            "dtype": self.input.dtype.name,
+            # TODO: get actual colorinterp from the dataset instead of defaulting to undefined
+            # https://github.com/developmentseed/async-geotiff/issues/12#issuecomment-3962171963
+            "colorinterp": [ColorInterp.undefined] * self.input.count,
+            "nodata_type": nodata_type,
+            # additional info (not in default model)
+            "driver": "GTiff",
+            "count": self.input.count,
+            "width": self.input.width,
+            "height": self.input.height,
+            "overviews": overviews,
+            "scales": scale_and_offsets["scales"],
+            "offsets": scale_and_offsets["offsets"],
+        }
+
+        if self.colormap:
+            meta.update({"colormap": self.colormap})
+
+        if nodata_type == "Nodata":
+            meta.update({"nodata_value": self.input.nodata})
+
+        return Info(**meta)
 
     async def statistics(
         self,
