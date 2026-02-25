@@ -3,25 +3,33 @@
 from __future__ import annotations
 
 import abc
+import math
 import warnings
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
 from async_geotiff import Window
-from morecantile import TileMatrixSet
+from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
+from rasterio.transform import from_bounds
+from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
+from rasterio.warp import transform_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import ExpressionMixingWarning, PointOutsideBounds
+from rio_tiler.errors import (
+    ExpressionMixingWarning,
+    PointOutsideBounds,
+    TileOutsideBounds,
+)
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import SpatialMixin
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, Indexes
-from rio_tiler.utils import cast_to_sequence
+from rio_tiler.types import BBox, Indexes, RIOResampling, WarpResampling
+from rio_tiler.utils import _get_width_height, _missing_size, cast_to_sequence
 
 if TYPE_CHECKING:
-    from async_geotiff import GeoTIFF
+    from async_geotiff import GeoTIFF, Overview
 
 
 @attr.s
@@ -155,6 +163,36 @@ class Reader(AsyncBaseReader):
         if self.colormap is None and self.input.colormap is not None:
             self.colormap = self.input.colormap.as_rasterio()
 
+    def _get_overview_level(
+        self,
+        target_res: float,
+        zoom_level_strategy: Literal["AUTO", "LOWER", "UPPER"] = "AUTO",
+    ) -> int:
+        """Return the overview level corresponding to the resolution."""
+        src_res = max(abs(self.input.transform.a), abs(self.input.transform.e))
+
+        available_resolutions = [src_res] + [
+            min(abs(ovr.transform.a), abs(ovr.transform.e))
+            for ovr in self.input.overviews
+        ]
+
+        # Based on aiocogeo:
+        # https://github.com/geospatial-jeff/aiocogeo/blob/5a1d32c3f22c883354804168a87abb0a2ea1c328/aiocogeo/partial_reads.py#L113-L147
+        percentage = {"AUTO": 50, "LOWER": 100, "UPPER": 0}.get(zoom_level_strategy, 50)
+
+        assert 0 <= percentage <= 100
+        # Iterate over zoom levels from lowest/coarsest to highest/finest. If the `target_res` is more than `percentage`
+        # percent of the way from the zoom level below to the zoom level above, then upsample the zoom level below, else
+        # downsample the zoom level above.
+        for i in reversed(range(1, len(available_resolutions))):
+            res_current = available_resolutions[i]
+            res_higher = available_resolutions[i - 1]
+            threshold = res_current - (res_current - res_higher) * (percentage / 100.0)
+            if target_res > threshold or target_res == res_current:
+                return i
+
+        return 0
+
     async def info(self) -> Info:
         """Return Dataset's info.
 
@@ -173,7 +211,16 @@ class Reader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> ImageData:
+    async def tile(
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        tilesize: int | None = None,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a Map tile from the Dataset.
 
         Args:
@@ -185,9 +232,43 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        raise NotImplementedError
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
+            )
 
-    async def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
+        matrix = self.tms.matrix(tile_z)
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
+        return await self.part(
+            bbox,
+            dst_crs=self.tms.rasterio_crs,
+            bounds_crs=self.tms.rasterio_crs,
+            height=tilesize or matrix.tileHeight,
+            width=tilesize or matrix.tileWidth,
+            max_size=None,
+            indexes=indexes,
+            expression=expression,
+            **kwargs,
+        )
+
+    async def part(  # noqa: C901
+        self,
+        bbox: BBox,
+        dst_crs: CRS | None = None,
+        bounds_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        resampling_method: RIOResampling = "nearest",
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a Part of a Dataset.
 
         Args:
@@ -199,14 +280,118 @@ class Reader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def preview(self) -> ImageData:
+    async def preview(
+        self,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        dst_crs: CRS | None = None,
+        max_size: int = 1024,
+        height: int | None = None,
+        width: int | None = None,
+        resampling_method: RIOResampling = "nearest",
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a preview of a Dataset.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        if max_size and (width or height):
+            warnings.warn(
+                "'max_size' will be ignored with with 'height' or 'width' set.",
+                UserWarning,
+            )
+            max_size = None
+
+        # 1. Determine output shape
+        # get height/width of the dataset in the output CRS
+        dst_width = self.input.width
+        dst_height = self.input.height
+        if dst_crs and dst_crs != self.crs:
+            # Get shape of the dataset in the output CRS
+            _, dst_width, dst_height = calculate_default_transform(
+                self.crs, dst_crs, self.width, self.height, *self.bounds
+            )
+
+        if max_size:
+            height, width = _get_width_height(max_size, dst_height, dst_width)
+
+        elif _missing_size(width, height):
+            ratio = dst_height / dst_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
+
+        # Shape in the output CRS
+        height = height or dst_height
+        width = width or dst_width
+
+        # 2. determine overview level to read
+        # Output dataset `transform` in the output CRS
+        if dst_crs and dst_crs != self.crs:
+            proj_bbox = transform_bounds(
+                self.crs, dst_crs, *self.input.bounds, densify_pts=21
+            )
+            transform, _, _ = calculate_default_transform(
+                dst_crs,
+                self.crs,
+                width,
+                height,
+                *proj_bbox,
+            )
+        else:
+            transform = from_bounds(*self.input.bounds, width, height)
+
+        # 3. Select Overview level
+        target_res = min(abs(transform.a), abs(transform.e))
+        dataset: GeoTIFF | Overview = self.input
+        if level := self._get_overview_level(target_res):
+            dataset = self.input.overviews[level - 1]
+
+        # 4. Read data
+        array = await dataset.read()
+
+        indexes = indexes or list(range(1, self.input.count + 1))
+        img = ImageData(
+            array.as_masked()[[ix - 1 for ix in indexes]],
+            crs=CRS.from_user_input(self.input.crs),
+            bounds=self.input.bounds,
+            band_descriptions=[f"b{ix}" for ix in indexes],
+        )
+
+        if expression:
+            img = img.apply_expression(expression)
+
+        # 5. Reproject if needed
+        if dst_crs and dst_crs != self.crs:
+            img = img.reproject(
+                dst_crs=dst_crs,
+                reproject_method=reproject_method,
+            )
+
+        # 6. Resize
+        if width != img.width or height != img.height:
+            img = img.resize(
+                width=width,
+                height=height,
+                resampling_method=resampling_method,
+            )
+
+        return img
 
     async def point(
         self,
@@ -281,7 +466,7 @@ class Reader(AsyncBaseReader):
         )
 
         if expression:
-            return pt.apply_expression(expression)
+            pt = pt.apply_expression(expression)
 
         return pt
 
