@@ -570,7 +570,7 @@ class Reader(AsyncBaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        row, col = self.input.index(lon, lat, op=lambda x: math.floor(x))
+        row, col = self.input.index(lon, lat)
         window = Window(row_off=row, col_off=col, width=1, height=1)
         img = await self.read(self.input, indexes=indexes, window=window, unscale=unscale)
 
