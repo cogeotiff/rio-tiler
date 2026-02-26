@@ -686,7 +686,7 @@ class Reader(AsyncBaseReader):
         # scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
         # offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
         if unscale:
-            data = data.astype("float32", casting="unsafe")
+            data = cast(numpy.ma.MaskedArray, data.astype("float32", casting="unsafe"))
 
             numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
             numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
