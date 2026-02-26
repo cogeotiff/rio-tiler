@@ -570,13 +570,10 @@ class Reader(AsyncBaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        # TODO: handle interpolation
-        row, col = self.input.index(lon, lat)
-        row_off, col_off = row, col
-
-        window = Window(row_off=row_off, col_off=col_off, width=1, height=1)
-
+        row, col = self.input.index(lon, lat, op=lambda x: math.floor(x))
+        window = Window(row_off=row, col_off=col, width=1, height=1)
         img = await self.read(self.input, indexes=indexes, window=window, unscale=unscale)
+
         pt = PointData(
             img.array[:, 0, 0],
             band_descriptions=img.band_descriptions,

@@ -50,6 +50,7 @@ async def test_async_reader_point():
             sync_pt = sync_src.point(-60, 73)
             numpy.testing.assert_array_equal(sync_pt.array, pt.array)
             assert pt.band_descriptions == sync_pt.band_descriptions
+            # assert pt.pixel_location == sync_pt.pixel_location
 
             pt = await src.point(-60, 73, indexes=1)
             assert len(pt.data) == 1
@@ -91,6 +92,21 @@ async def test_async_reader_point():
             sync_pt = sync_src.point(-59.53, 74.03, indexes=(1, 1, 1))
             numpy.testing.assert_array_equal(sync_pt.array, pt.array)
             assert pt.band_descriptions == sync_pt.band_descriptions
+            # assert pt.pixel_location == sync_pt.pixel_location
+
+    # Test coordinates
+    geotiff = await GeoTIFF.open("dataset_2d.tif", store=store)
+    with SyncReader(os.path.join(PREFIX, "dataset_2d.tif")) as sync_src:
+        async with Reader(geotiff) as src:
+            pt = await src.point(0, 0)
+            sync_pt = sync_src.point(0, 0)
+            numpy.testing.assert_array_equal(sync_pt.array, pt.array)
+            assert pt.pixel_location == sync_pt.pixel_location
+
+            pt = await src.point(0.15, 0.15)
+            sync_pt = sync_src.point(0.15, 0.15)
+            numpy.testing.assert_array_equal(sync_pt.array, pt.array)
+            assert pt.pixel_location == sync_pt.pixel_location
 
 
 @pytest.mark.asyncio
