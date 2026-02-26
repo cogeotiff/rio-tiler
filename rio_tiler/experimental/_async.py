@@ -5,6 +5,7 @@ from __future__ import annotations
 import abc
 import math
 import warnings
+from collections.abc import Sequence
 from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
@@ -16,7 +17,7 @@ from rasterio.enums import ColorInterp
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
-from rasterio.transform import from_bounds
+from rasterio.transform import array_bounds, from_bounds
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
@@ -370,6 +371,7 @@ class Reader(AsyncBaseReader):
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
+        unscale: bool = False,
         resampling_method: RIOResampling = "nearest",
         reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
@@ -385,6 +387,7 @@ class Reader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
+            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
             reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
@@ -402,6 +405,7 @@ class Reader(AsyncBaseReader):
         max_size: int = 1024,
         height: int | None = None,
         width: int | None = None,
+        unscale: bool = False,
         resampling_method: RIOResampling = "nearest",
         reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
@@ -414,6 +418,7 @@ class Reader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
+            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
             reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
@@ -486,16 +491,7 @@ class Reader(AsyncBaseReader):
             dataset = self.input.overviews[level - 1]
 
         # 4. Read data
-        array = await dataset.read()
-
-        indexes = indexes or list(range(1, self.input.count + 1))
-        img = ImageData(
-            array.as_masked()[[ix - 1 for ix in indexes]],
-            crs=CRS.from_user_input(self.input.crs),
-            bounds=self.input.bounds,
-            band_descriptions=[f"b{ix}" for ix in indexes],
-        )
-
+        img = await self.read(dataset, indexes=indexes, unscale=unscale)
         if expression:
             img = img.apply_expression(expression)
 
@@ -523,6 +519,7 @@ class Reader(AsyncBaseReader):
         coord_crs: CRS = WGS84_CRS,
         indexes: Indexes | None = None,
         expression: str | None = None,
+        unscale: bool = False,
         **kwargs: Any,
     ) -> PointData:
         """Read a value from a Dataset.
@@ -533,9 +530,10 @@ class Reader(AsyncBaseReader):
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             indexes (sequence of int or int, optional): Band indexes.
             expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
+            unscale: (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
 
         Returns:
-            list: Pixel value per bands/assets.
+            PointData: Pixel value per bands/assets.
 
         """
         if indexes and expression:
@@ -549,6 +547,7 @@ class Reader(AsyncBaseReader):
 
         indexes = cast_to_sequence(indexes)
 
+        coordinates = (lon, lat)
         if coord_crs != self.crs:
             xs, ys = transform_coords(coord_crs, self.crs, [lon], [lat])
             lon, lat = xs[0], ys[0]
@@ -577,17 +576,18 @@ class Reader(AsyncBaseReader):
 
         window = Window(row_off=row_off, col_off=col_off, width=1, height=1)
 
-        array = await self.input.read(window=window)
-        indexes = indexes or list(range(1, self.input.count + 1))
-
+        img = await self.read(self.input, indexes=indexes, window=window, unscale=unscale)
         pt = PointData(
-            array.as_masked()[[ix - 1 for ix in indexes], 0, 0],
-            coordinates=(lon, lat),
+            img.array[:, 0, 0],
+            band_descriptions=img.band_descriptions,
+            coordinates=coordinates,
             crs=coord_crs,
-            pixel_location=(row, col),
-            band_descriptions=[f"b{ix}" for ix in indexes],
+            pixel_location=(col, row),
+            nodata=img.nodata,
+            scales=img.scales,
+            offsets=img.offsets,
+            metadata=img.metadata,
         )
-
         if expression:
             pt = pt.apply_expression(expression)
 
@@ -663,5 +663,48 @@ class Reader(AsyncBaseReader):
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
+
+    async def read(
+        self,
+        dataset: GeoTIFF | Overview,
+        indexes: Sequence[int] | None = None,
+        window: Window | None = None,
+        unscale: bool = False,
+    ) -> ImageData:
+        """Reader Data from GeoTIFF or Overview."""
+        array = await dataset.read(window=window)
+        data = array.as_masked()
+
+        indexes = indexes or list(range(1, array.count + 1))
+        # 1. Handle Alpha bands
+        # Ref: https://github.com/developmentseed/async-geotiff/issues/104
+        # 1.1 Remove alpha bands from data
+
+        # 2. Handle Scale/Offset
+        # Ref: https://github.com/developmentseed/async-geotiff/issues/103
+        scales = numpy.zeros(len(indexes)) + 1.0
+        offsets = numpy.zeros(len(indexes))
+        # scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
+        # offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
+        if unscale:
+            data = data.astype("float32", casting="unsafe")
+
+            numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
+            numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
+
+            scales = numpy.zeros(len(indexes)) + 1.0
+            offsets = numpy.zeros(len(indexes))
+
+        img = ImageData(
+            data[[ix - 1 for ix in indexes]],
+            crs=CRS.from_user_input(array.crs),
+            bounds=array_bounds(array.height, array.width, array.transform),
+            band_descriptions=[f"b{ix}" for ix in indexes],
+            scales=scales.tolist(),
+            offsets=offsets.tolist(),
+            nodata=array.nodata,
+        )
 
         return img
