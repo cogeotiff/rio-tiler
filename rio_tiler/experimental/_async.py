@@ -11,9 +11,9 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 import attr
 import numpy
 from async_geotiff import Window
+from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
-from rasterio.enums import ColorInterp
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
@@ -218,6 +218,8 @@ class Reader(AsyncBaseReader):
         # https://github.com/developmentseed/async-geotiff/issues/12#issuecomment-3962171963
         # elif has_alpha_band(self.input):
         #     nodata_type = "Alpha"
+        elif any(c == ColorInterp.ALPHA for c in self.input.colorinterp):
+            nodata_type = "Alpha"
         elif self.input._mask_ifd:
             nodata_type = "Mask"
         else:
@@ -257,9 +259,7 @@ class Reader(AsyncBaseReader):
                 (f"b{ix+1}", f"b{ix+1}") for ix in range(self.input.count)
             ],
             "dtype": self.input.dtype.name,
-            # TODO: get actual colorinterp from the dataset instead of defaulting to undefined
-            # https://github.com/developmentseed/async-geotiff/issues/12#issuecomment-3962171963
-            "colorinterp": [ColorInterp.undefined] * self.input.count,
+            "colorinterp": [ix.name for ix in self.input.colorinterp],
             "nodata_type": nodata_type,
             # additional info (not in default model)
             "driver": "GTiff",

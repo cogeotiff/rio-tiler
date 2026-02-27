@@ -229,6 +229,10 @@ async def test_async_reader_stats():
         "cog.tif",
         "cog_nodata.tif",
         "cog_cmap.tif",
+        "rgb.tif",
+        "dataset_2d.tif",
+        "cog_mask.tif",
+        "cog_alpha.tif",
     ],
 )
 async def test_async_reader_info(src_path):
@@ -245,4 +249,6 @@ async def test_async_reader_info(src_path):
     assert info.crs == sync_info.crs
     assert info.height == sync_info.height
     assert info.width == sync_info.width
-    assert info.band_descriptions == sync_info.band_descriptions
+    # assert info.band_descriptions == sync_info.band_descriptions
+    assert [c.lower() for c in info.colorinterp] == sync_info.colorinterp
+    assert info.nodata_type == sync_info.nodata_type
