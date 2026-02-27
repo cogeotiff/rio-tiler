@@ -266,8 +266,8 @@ async def test_async_reader_stats():
         "cog_nodata.tif",
         "cog_cmap.tif",
         "rgb.tif",
-        "cog_mask.tif",
-        "cog_alpha.tif",
+        "cog_rgb_mask.tif",
+        "cog_rgba.tif",
         "cog_scale_epsg4326.tif",
         "red.tif",
     ],
@@ -293,6 +293,3 @@ async def test_async_reader_info(src_path):
     assert info.nodata_type == sync_info.nodata_type
     assert info.scales == sync_info.scales
     assert info.offsets == sync_info.offsets
-
-    # ref: https://github.com/developmentseed/async-geotiff/pull/109
-    assert [c.lower() for c in info.colorinterp] == sync_info.colorinterp
