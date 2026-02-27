@@ -5,10 +5,12 @@ import os
 import sys
 from typing import Any, List, Set
 from unittest.mock import patch
+from urllib.parse import urlparse
 
 import attr
 import morecantile
 import numpy
+import pystac
 import pytest
 import rasterio
 import xarray
@@ -22,7 +24,7 @@ from rio_tiler.io import BaseReader, Reader, STACReader, XarrayReader
 from rio_tiler.io.stac import DEFAULT_VALID_TYPE
 from rio_tiler.io.xarray import Options
 from rio_tiler.models import BandStatistics
-from rio_tiler.types import AssetInfo, AssetType
+from rio_tiler.types import AssetInfo, AssetType, AssetWithOptions
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 STAC_PATH = os.path.join(PREFIX, "stac.json")
@@ -31,6 +33,7 @@ STAC_PATH_PROJ_2_0 = os.path.join(PREFIX, "stac_proj_2_0.json")
 STAC_PATH_PROJ_2_0_ASSETS = os.path.join(PREFIX, "stac_proj_2_0_assets.json")
 STAC_REL_PATH = os.path.join(PREFIX, "stac_relative.json")
 STAC_GDAL_PATH = os.path.join(PREFIX, "stac_headers.json")
+STAC_RASTER_V1_PATH = os.path.join(PREFIX, "stac_raster_v1.json")
 STAC_RASTER_PATH = os.path.join(PREFIX, "stac_raster.json")
 STAC_WRONGSTATS_PATH = os.path.join(PREFIX, "stac_wrong_stats.json")
 STAC_ALTERNATE_PATH = os.path.join(PREFIX, "stac_alternate.json")
@@ -795,6 +798,29 @@ def test_img_dataset_stats(rio):
         img = stac.preview(assets=("green", "red"))
         assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
 
+        img = stac.preview(
+            assets=[{"name": "green"}, {"name": "red"}],
+        )
+        assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+
+        img = stac.preview(
+            assets=[{"name": "green", "indexes": [1, 1, 1]}, {"name": "red"}],
+        )
+        assert img.dataset_statistics == [
+            (6883, 62785),
+            (6883, 62785),
+            (6883, 62785),
+            (6101, 65035),
+        ]
+
+        img = stac.preview(
+            assets=[{"name": "green", "expression": "b1"}, {"name": "red"}],
+        )
+        assert img.dataset_statistics == [
+            (6883.0, 62785.0),
+            (6101.0, 65035.0),
+        ]
+
         img = stac.preview(assets=["green", "red"], expression="b1/b2")
         assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
 
@@ -821,7 +847,7 @@ def test_metadata_from_stac(rio):
     """Make sure dataset statistics are forwarded from the raster extension."""
     rio.open = mock_rasterio_open
 
-    with STACReader(STAC_RASTER_PATH) as stac:
+    with STACReader(STAC_RASTER_V1_PATH) as stac:
         info = stac._get_asset_info("green")
         assert info["dataset_statistics"] == [(6883, 62785)]
         assert info["metadata"]
@@ -832,10 +858,28 @@ def test_metadata_from_stac(rio):
         assert img.metadata["red"]["raster:bands"]
         assert img.metadata["green"]
 
+        img = stac.preview(assets=[{"name": "green", "indexes": [1, 1]}])
+        assert img.dataset_statistics == [(6883, 62785), (6883, 62785)]
+
         img = stac.preview(assets=["green", "red"], expression="b1/b2")
         assert img.dataset_statistics == [(6883 / 65035, 62785 / 6101)]
         assert img.metadata["red"]["raster:bands"]
         assert img.metadata["green"]
+
+    with STACReader(STAC_RASTER_PATH) as stac:
+        info = stac._get_asset_info("green")
+        assert info["dataset_statistics"] == [(6883, 62785)]
+        assert info["metadata"]
+        assert "bands" in info["metadata"]
+
+        img = stac.preview(assets=("green", "red"))
+        assert img.dataset_statistics == [(6883, 62785), (6101, 65035)]
+
+        img = stac.preview(assets=[{"name": "green", "indexes": [1, 1]}])
+        assert img.dataset_statistics == [(6883, 62785), (6883, 62785)]
+
+        img = stac.preview(assets=[{"name": "green", "bands": ["green"]}])
+        assert img.dataset_statistics == [(6883, 62785)]
 
 
 @patch("rio_tiler.io.rasterio.rasterio")
@@ -935,7 +979,7 @@ def test_default_assets(rio):
             assert img.band_descriptions == ["green_b1"]
 
 
-def test_netcdf_reader():
+def test_netcdf_reader():  # noqa: C901
     """Should use the correct reader depending on the media type."""
 
     @attr.s
@@ -993,33 +1037,63 @@ def test_netcdf_reader():
 
             return Reader
 
-        def _get_asset_info(self, asset: AssetType) -> AssetInfo:
-            """Validate asset names and return asset's info."""
-            asset_name: str = asset["name"] if isinstance(asset, dict) else asset
-            if asset_name not in self.assets:
-                raise InvalidAssetName(
-                    f"'{asset_name}' is not valid, should be one of {self.assets}"
-                )
-
-            asset_info = self.item.assets[asset_name]
-
+        def _get_options(
+            self,
+            asset: AssetWithOptions,
+            metadata: pystac.Asset,
+        ) -> tuple[dict[str, Any], dict[str, Any]]:
             method_options: dict[str, Any] = {}
             reader_options: dict[str, Any] = {}
-            if isinstance(asset, dict):
-                if indexes := asset.get("indexes"):
-                    method_options["indexes"] = indexes
-                if variable := asset.get("variable"):
-                    reader_options["variable"] = variable
 
-            info = AssetInfo(
-                url=asset_info.get_absolute_href() or asset_info.href,
-                name=asset_name,
-                media_type=asset_info.media_type,
-                reader_options=reader_options,
-                method_options=method_options,
-            )
+            # Indexes
+            if indexes := asset.get("indexes"):
+                method_options["indexes"] = indexes
+            # Expression
+            if expr := asset.get("expression"):
+                method_options["expression"] = expr
+            # Variable
+            if variable := asset.get("variable"):
+                reader_options["variable"] = variable
+            # Bands
+            if bands := asset.get("bands", []):
+                stac_bands = metadata.extra_fields.get(
+                    "bands"
+                ) or metadata.extra_fields.get("eo:bands")
+                if not stac_bands:
+                    raise ValueError(
+                        "Asset does not have 'bands' metadata, unable to use 'bands' option"
+                    )
 
-            return info
+                if metadata.media_type == "application/x-netcdf":
+                    common_to_variable = {
+                        b.get("eo:common_name") or b.get("common_name") or b["name"]: b[
+                            "name"
+                        ]
+                        for b in stac_bands
+                    }
+                    method_options["variables"] = [
+                        common_to_variable.get(v, v) for v in bands
+                    ]
+                else:
+                    common_to_variable = {
+                        b.get("eo:common_name")
+                        or b.get("common_name")
+                        or b.get("name")
+                        or ix: ix
+                        for ix, b in enumerate(stac_bands, 1)
+                    }
+                    band_indexes: list[int] = []
+                    for b in bands:
+                        if idx := common_to_variable.get(b):
+                            band_indexes.append(idx)
+                        else:
+                            raise ValueError(
+                                f"Band '{b}' not found in asset metadata, unable to use 'bands' option"
+                            )
+
+                        method_options["indexes"] = band_indexes
+
+            return reader_options, method_options
 
     with CustomSTACReader(STAC_NETCDF_PATH) as stac:
         assert stac.assets == ["geotiff", "netcdf"]
@@ -1066,7 +1140,56 @@ def test_vrt_string_assets():
         "application/wmo-GRIB2",
     }
 
-    with STACReader(STAC_GRIB_PATH, include_asset_types=VALID_TYPE) as stac:
+    @attr.s
+    class CustomSTACReader(STACReader):
+        def _parse_vrt_asset(self, asset: str) -> tuple[str, str | None]:
+            if asset.startswith("vrt://") and asset not in self.assets:
+                parsed = urlparse(asset)
+                if not parsed.netloc:
+                    raise InvalidAssetName(
+                        f"'{asset}' is not valid, couldn't find valid asset"
+                    )
+
+                if parsed.netloc not in self.assets:
+                    raise InvalidAssetName(
+                        f"'{parsed.netloc}' is not valid, should be one of {self.assets}"
+                    )
+
+                return parsed.netloc, parsed.query
+
+            return asset, None
+
+        def _get_asset_info(self, asset: AssetType) -> AssetInfo:  # noqa: C901
+            """Validate asset names and return asset's info.
+
+            Args:
+                asset (AssetType): STAC asset name.
+
+            Returns:
+                AssetInfo: STAC asset info.
+
+            """
+            asset_name: str
+            if isinstance(asset, dict):
+                if not asset.get("name"):
+                    raise ValueError("asset dictionary does not have `name` key")
+
+                asset_name, vrt_options = self._parse_vrt_asset(asset["name"])
+                asset["name"] = asset_name
+                info = super()._get_asset_info(asset)
+
+                if vrt_options:
+                    info["url"] = f"vrt://{info['url']}?{vrt_options}"
+
+            else:
+                asset_name, vrt_options = self._parse_vrt_asset(asset)
+                info = super()._get_asset_info(asset_name)
+                if vrt_options:
+                    info["url"] = f"vrt://{info['url']}?{vrt_options}"
+
+            return info
+
+    with CustomSTACReader(STAC_GRIB_PATH, include_asset_types=VALID_TYPE) as stac:
         assert stac.assets == ["asset"]
         info = stac._get_asset_info("asset")
         assert info["url"]
@@ -1131,3 +1254,8 @@ def test_stac_with_bands_metadata(stac_path):
             {"name": "rgb", "bands": ["blue", "red"]},
         )
         assert info["method_options"]["indexes"] == [3, 1]
+
+        info = stac._get_asset_info(
+            {"name": "rgb_indexes", "bands": [1, 2]},
+        )
+        assert info["method_options"]["indexes"] == [1, 2]
