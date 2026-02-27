@@ -108,6 +108,22 @@ async def test_async_reader_point():
             numpy.testing.assert_array_equal(sync_pt.array, pt.array)
             assert pt.pixel_location == sync_pt.pixel_location
 
+    geotiff = await GeoTIFF.open("cog_scale_epsg4326.tif", store=store)
+    with SyncReader(os.path.join(PREFIX, "cog_scale_epsg4326.tif")) as sync_src:
+        async with Reader(geotiff) as src:
+            pt = await src.point(127, 37)
+            sync_pt = sync_src.point(127, 37)
+            numpy.testing.assert_array_equal(sync_pt.array, pt.array)
+            assert pt.pixel_location == sync_pt.pixel_location
+            assert pt.scales == [0.0001, 0.001]
+            assert pt.offsets == [1000.0, 2000.0]
+
+            pt = await src.point(127, 37, unscale=True)
+            sync_pt = sync_src.point(127, 37, unscale=True)
+            numpy.testing.assert_array_equal(sync_pt.array, pt.array)
+            assert pt.scales == [1.0, 1.0]
+            assert pt.offsets == [0.0, 0.0]
+
 
 @pytest.mark.asyncio
 async def test_async_reader_preview():
@@ -163,6 +179,21 @@ async def test_async_reader_preview():
                 )
                 assert img.array.shape == (1, 128, 128)
                 assert img.band_descriptions == ["b1*2"]
+
+    geotiff = await GeoTIFF.open("cog_scale_epsg4326.tif", store=store)
+    with SyncReader(os.path.join(PREFIX, "cog_scale_epsg4326.tif")) as sync_src:
+        async with Reader(geotiff) as src:
+            img = await src.preview(max_size=128)
+            sync_img = sync_src.preview(max_size=128)
+            numpy.testing.assert_array_equal(sync_img.array, img.array)
+            assert img.scales == [0.0001, 0.001]
+            assert img.offsets == [1000.0, 2000.0]
+
+            img = await src.preview(max_size=128, unscale=True)
+            sync_img = sync_src.preview(max_size=128, unscale=True)
+            numpy.testing.assert_array_equal(sync_img.array, img.array)
+            assert img.scales == [1.0, 1.0]
+            assert img.offsets == [0.0, 0.0]
 
 
 @pytest.mark.asyncio
@@ -230,9 +261,9 @@ async def test_async_reader_stats():
         "cog_nodata.tif",
         "cog_cmap.tif",
         "rgb.tif",
-        "dataset_2d.tif",
         "cog_mask.tif",
         "cog_alpha.tif",
+        "cog_scale_epsg4326.tif",
     ],
 )
 async def test_async_reader_info(src_path):
@@ -244,11 +275,18 @@ async def test_async_reader_info(src_path):
     with SyncReader(os.path.join(PREFIX, src_path)) as sync_src:
         sync_info = sync_src.info()
 
-    # Ref: https://github.com/developmentseed/async-geotiff/issues/100
-    # assert info.bounds == sync_info.bounds
+    assert info.bounds == sync_info.bounds
     assert info.crs == sync_info.crs
+
     assert info.height == sync_info.height
     assert info.width == sync_info.width
+
+    # TODO: band descriptions are not yet available in async-geotiff
     # assert info.band_descriptions == sync_info.band_descriptions
-    assert [c.lower() for c in info.colorinterp] == sync_info.colorinterp
+
     assert info.nodata_type == sync_info.nodata_type
+    assert info.scales == sync_info.scales
+    assert info.offsets == sync_info.offsets
+
+    # ref: https://github.com/developmentseed/async-geotiff/pull/109
+    assert [c.lower() for c in info.colorinterp] == sync_info.colorinterp

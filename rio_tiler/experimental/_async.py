@@ -214,10 +214,6 @@ class Reader(AsyncBaseReader):
         """
         if self.input.nodata is not None:
             nodata_type = "Nodata"
-        # colorinterp is not yet available
-        # https://github.com/developmentseed/async-geotiff/issues/12#issuecomment-3962171963
-        # elif has_alpha_band(self.input):
-        #     nodata_type = "Alpha"
         elif any(c == ColorInterp.ALPHA for c in self.input.colorinterp):
             nodata_type = "Alpha"
         elif self.input._mask_ifd:
@@ -225,26 +221,6 @@ class Reader(AsyncBaseReader):
         else:
             nodata_type = "None"
 
-        def _get_scale_offset(geotiff: GeoTIFF) -> dict:
-            offsets = []
-            scales = []
-            if m := geotiff._primary_ifd.gdal_metadata:
-                from xml.etree import ElementTree as ET
-
-                parsed = ET.fromstring(m)
-                for item in parsed.findall("Item"):
-                    name = item.get("name")
-                    if name == "OFFSET":
-                        offsets.append(float(item.text))
-                    elif name == "SCALE":
-                        scales.append(float(item.text))
-
-            return {
-                "scales": scales or [1.0] * geotiff.count,
-                "offsets": offsets or [0.0] * geotiff.count,
-            }
-
-        scale_and_offsets = _get_scale_offset(self.input)
         overviews = [
             math.ceil(self.input.width / ovr.width) for ovr in self.input.overviews
         ]
@@ -267,8 +243,8 @@ class Reader(AsyncBaseReader):
             "width": self.input.width,
             "height": self.input.height,
             "overviews": overviews,
-            "scales": scale_and_offsets["scales"],
-            "offsets": scale_and_offsets["offsets"],
+            "scales": self.input.scales,
+            "offsets": self.input.offsets,
         }
 
         if self.colormap:
@@ -681,10 +657,8 @@ class Reader(AsyncBaseReader):
 
         # 2. Handle Scale/Offset
         # Ref: https://github.com/developmentseed/async-geotiff/issues/103
-        scales = numpy.zeros(len(indexes)) + 1.0
-        offsets = numpy.zeros(len(indexes))
-        # scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
-        # offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
+        scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
+        offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
         if unscale:
             data = cast(numpy.ma.MaskedArray, data.astype("float32", casting="unsafe"))
 
