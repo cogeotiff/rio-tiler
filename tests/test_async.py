@@ -195,6 +195,11 @@ async def test_async_reader_preview():
             assert img.scales == [1.0, 1.0]
             assert img.offsets == [0.0, 0.0]
 
+    geotiff = await GeoTIFF.open("red.tif", store=store)
+    async with Reader(geotiff) as src:
+        img = await src.preview(max_size=128)
+        assert img.dataset_statistics == [(6101.0, 65035.0)]
+
 
 @pytest.mark.asyncio
 async def test_async_reader_stats():
@@ -264,6 +269,7 @@ async def test_async_reader_stats():
         "cog_mask.tif",
         "cog_alpha.tif",
         "cog_scale_epsg4326.tif",
+        "red.tif",
     ],
 )
 async def test_async_reader_info(src_path):

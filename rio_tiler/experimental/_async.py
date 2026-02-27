@@ -668,6 +668,16 @@ class Reader(AsyncBaseReader):
             scales = numpy.zeros(len(indexes)) + 1.0
             offsets = numpy.zeros(len(indexes))
 
+        stats = []
+        if gdal_stats := self.input.stored_stats:
+            for idx in indexes:
+                if b := gdal_stats.get(idx):
+                    if b.min is not None and b.max is not None:
+                        stats.append((b.min, b.max))
+
+        # We only add dataset statistics if we have them for all the indexes
+        dataset_statistics = stats if len(stats) == len(indexes) else None
+
         img = ImageData(
             data[[ix - 1 for ix in indexes]],
             crs=CRS.from_user_input(array.crs),
@@ -676,6 +686,7 @@ class Reader(AsyncBaseReader):
             scales=scales.tolist(),
             offsets=offsets.tolist(),
             nodata=array.nodata,
+            dataset_statistics=dataset_statistics,
         )
 
         return img
