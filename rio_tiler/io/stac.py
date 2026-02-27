@@ -439,7 +439,7 @@ class STACReader(MultiBaseReader):
 
         return asset, None
 
-    def _get_asset_info(self, asset: AssetType) -> AssetInfo:
+    def _get_asset_info(self, asset: AssetType) -> AssetInfo:  # noqa: C901
         """Validate asset names and return asset's info.
 
         Args:
@@ -470,13 +470,40 @@ class STACReader(MultiBaseReader):
         method_options: dict[str, Any] = {}
         reader_options: dict[str, Any] = {}
         if isinstance(asset, dict):
+            # Indexes
             if indexes := asset.get("indexes"):
                 method_options["indexes"] = indexes
+            # Expression
             if expr := asset.get("expression"):
                 method_options["expression"] = expr
+            # Bands
+            if bands := asset.get("bands", []):
+                stac_bands = extras.get("bands", extras.get("eo:bands", []))
+                if not stac_bands:
+                    raise ValueError(
+                        "Asset does not have 'bands' metadata, unable to use 'bands' option"
+                    )
 
-            # TODO: handle `bands` options
-            # convert bands to indexes based on the band metadata
+                # There is no standard for precedence between 'eo:common_name' and 'name'
+                # in STAC specification, so we will use 'eo:common_name' if it exists,
+                # otherwise fallback to 'name', and if not exist use the band index as last resource.
+                common_to_variable = {
+                    b.get("eo:common_name")
+                    or b.get("common_name")
+                    or b.get("name")
+                    or str(ix): ix
+                    for ix, b in enumerate(stac_bands, 1)
+                }
+                band_indexes: list[int] = []
+                for b in bands:
+                    if idx := common_to_variable.get(b):
+                        band_indexes.append(idx)
+                    else:
+                        raise ValueError(
+                            f"Band '{b}' not found in asset metadata, unable to use 'bands' option"
+                        )
+
+                    method_options["indexes"] = band_indexes
 
         asset_modified = "expression" in method_options or vrt_options
 
