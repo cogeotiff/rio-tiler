@@ -1,6 +1,8 @@
 
 # Unreleased
 
+# 9.0.0b2 (2026-02-26)
+
 * add: support for `bands` options in `STACReader._get_asset_info` methods to select band indexes based on band metadata
 * add: optional `indexes`, `expression` and `bands` keys to `AssetWithOptions` typedDict definition
 
