@@ -489,8 +489,8 @@ class STACReader(MultiBaseReader):
                 # otherwise fallback to 'name', and if not exist use the band index as last resource.
                 common_to_variable = {
                     b.get("eo:common_name")
-                    or b.get("name")
                     or b.get("common_name")
+                    or b.get("name")
                     or str(ix): ix
                     for ix, b in enumerate(stac_bands, 1)
                 }

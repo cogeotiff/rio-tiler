@@ -1,7 +1,7 @@
 {
-    "stac_version": "1.1.0",
+    "stac_version": "1.0.0",
     "stac_extensions": [
-        "https://stac-extensions.github.io/eo/v2.0.0/schema.json"
+        "https://stac-extensions.github.io/eo/v1.1.0/schema.json"
     ],
     "type": "Feature",
     "id": "JQT-123456789",
@@ -56,40 +56,40 @@
         "rgb": {
             "href": "http://somewhere-over-the-rainbow.io/rgb.tif",
             "title": "lowres",
-            "bands": [
+            "eo:bands": [
                 {
                     "name": "band1",
-                    "eo:common_name": "red"
+                    "common_name": "red"
                 },
                 {
                     "name": "band2",
-                    "eo:common_name": "green"
+                    "common_name": "green"
                 },
                 {
                     "name": "band3",
-                    "eo:common_name": "blue"
+                    "common_name": "blue"
                 }
             ]
         },
         "rgb_common": {
             "href": "http://somewhere-over-the-rainbow.io/rgb.tif",
             "title": "lowres",
-            "bands": [
+            "eo:bands": [
                 {
-                    "eo:common_name": "red"
+                    "common_name": "red"
                 },
                 {
-                    "eo:common_name": "green"
+                    "common_name": "green"
                 },
                 {
-                    "eo:common_name": "blue"
+                    "common_name": "blue"
                 }
             ]
         },
         "rgb_name": {
             "href": "http://somewhere-over-the-rainbow.io/rgb.tif",
             "title": "lowres",
-            "bands": [
+            "eo:bands": [
                 {
                     "name": "band1"
                 },
