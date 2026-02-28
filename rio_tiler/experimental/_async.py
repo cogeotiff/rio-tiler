@@ -650,10 +650,38 @@ class Reader(AsyncBaseReader):
         array = await dataset.read(window=window)
         data = array.as_masked()
 
-        indexes = indexes or list(range(1, array.count + 1))
+        if indexes is None:
+            indexes = [
+                ix
+                for ix, c in enumerate(self.input.colorinterp, 1)
+                if c != ColorInterp.ALPHA
+            ]
+
         # 1. Handle Alpha bands
         # Ref: https://github.com/developmentseed/async-geotiff/issues/104
         # 1.1 Remove alpha bands from data
+        alpha_mask: numpy.ndarray | None = None
+        if ColorInterp.ALPHA in self.input.colorinterp:
+            alpha_idx = self.input.colorinterp.index(ColorInterp.ALPHA) + 1
+            idx = tuple(indexes) + (alpha_idx,)
+            data = data[[ix - 1 for ix in idx]]
+
+            # split data and alpha mask
+            alpha_mask = data[-1]
+            mask = ~alpha_mask.astype("bool")
+
+            data = data[0:-1]
+            data.mask = mask
+
+        else:
+            data = data[[ix - 1 for ix in indexes]]
+
+            # if data has Nodata then we simply make sure the mask == the nodata
+            if self.input.nodata is not None:
+                if numpy.isnan(self.input.nodata):
+                    data.mask = numpy.isnan(data.data)
+                else:
+                    data.mask = data.data == self.input.nodata
 
         # 2. Handle Scale/Offset
         # Ref: https://github.com/developmentseed/async-geotiff/issues/103
@@ -670,8 +698,8 @@ class Reader(AsyncBaseReader):
 
         stats = []
         if gdal_stats := self.input.stored_stats:
-            for idx in indexes:
-                if b := gdal_stats.get(idx):
+            for ii in indexes:
+                if b := gdal_stats.get(ii):
                     if b.min is not None and b.max is not None:
                         stats.append((b.min, b.max))
 
@@ -679,7 +707,8 @@ class Reader(AsyncBaseReader):
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
         img = ImageData(
-            data[[ix - 1 for ix in indexes]],
+            data,
+            alpha_mask=alpha_mask,
             crs=CRS.from_user_input(array.crs),
             bounds=array_bounds(array.height, array.width, array.transform),
             band_descriptions=[f"b{ix}" for ix in indexes],

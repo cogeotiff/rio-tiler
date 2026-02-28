@@ -293,3 +293,40 @@ async def test_async_reader_info(src_path):
     assert info.nodata_type == sync_info.nodata_type
     assert info.scales == sync_info.scales
     assert info.offsets == sync_info.offsets
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "src_path",
+    [
+        # "cog_uint8_rgb_mask.tif",  # async-geotiff has an issue with this file
+        "cog_uint8_rgb_nodata.tif",
+        "cog_uint8_rgba.tif",
+    ],
+)
+async def test_mask(src_path):
+    """Test tile read for multiple combination of datatype/mask/tile extent."""
+    geotiff = await GeoTIFF.open(src_path, store=store)
+    async with Reader(geotiff) as src:
+        im = await src.preview(max_size=1024)
+        assert im.count == 3
+
+        assert im.array.data[0, 0, 0] == 0
+        assert im.array.data[0, -1, -1]
+        assert im.array.mask[0, 0, 0]
+        assert not im.array.mask[0, -1, -1]
+
+        # GDAL Like mask (0 = valid, 255 = invalid)
+        assert im.mask[0, 0] == 0
+        assert im.mask[-1, -1] == 255
+
+        # Alpha mask (0 = invalid, 255 = valid)
+        if im.alpha_mask is not None:
+            assert im.alpha_mask[0, 0] == 0
+            assert im.alpha_mask[-1, -1] == 255
+
+    # Check with rio-tiler Reader
+    with SyncReader(os.path.join(PREFIX, src_path)) as sync_src:
+        sync_im = sync_src.preview(max_size=1024)
+        numpy.testing.assert_array_equal(im.array.data, sync_im.array.data)
+        numpy.testing.assert_array_equal(im.array.mask, sync_im.array.mask)
