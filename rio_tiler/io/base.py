@@ -380,7 +380,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
             indexes = tuple(range(1, img.count + 1))
 
         if not img.dataset_statistics and statistics:
-            if max(max(indexes), len(indexes)) > len(statistics):  # type: ignore
+            if max(indexes) > len(statistics):  # type: ignore
                 return
 
             img.dataset_statistics = [statistics[bidx - 1] for bidx in indexes]
@@ -579,7 +579,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                     data = src.tile(*args, **method_options)
 
                     self._update_statistics(
-                        data, statistics=asset_info.get("dataset_statistics")
+                        data,
+                        indexes=method_options.get("indexes"),
+                        statistics=asset_info.get("dataset_statistics"),
                     )
 
                     metadata = data.metadata or {}
@@ -660,6 +662,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     self._update_statistics(
                         data,
+                        indexes=method_options.get("indexes"),
                         statistics=asset_info.get("dataset_statistics"),
                     )
 
@@ -739,6 +742,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     self._update_statistics(
                         data,
+                        indexes=method_options.get("indexes"),
                         statistics=asset_info.get("dataset_statistics"),
                     )
 

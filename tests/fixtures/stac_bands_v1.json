@@ -100,6 +100,21 @@
                     "name": "band3"
                 }
             ]
+        },
+        "rgb_indexes": {
+            "href": "http://somewhere-over-the-rainbow.io/rgb.tif",
+            "title": "lowres",
+            "eo:bands": [
+                {
+                    "value": "band1"
+                },
+                {
+                    "value": "band2"
+                },
+                {
+                    "value": "band3"
+                }
+            ]
         }
     }
 }
