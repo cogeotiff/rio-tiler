@@ -276,7 +276,7 @@ class Reader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            kwargs (optional): Options to forward to `self.read`.
+            kwargs (optional): Options to forward to `self._read`.
 
         Returns:
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
@@ -467,7 +467,7 @@ class Reader(AsyncBaseReader):
             dataset = self.input.overviews[level - 1]
 
         # 4. Read data
-        img = await self.read(dataset, indexes=indexes, unscale=unscale)
+        img = await self._read(dataset, indexes=indexes, unscale=unscale)
         if expression:
             img = img.apply_expression(expression)
 
@@ -548,7 +548,9 @@ class Reader(AsyncBaseReader):
 
         row, col = self.input.index(lon, lat)
         window = Window(row_off=row, col_off=col, width=1, height=1)
-        img = await self.read(self.input, indexes=indexes, window=window, unscale=unscale)
+        img = await self._read(
+            self.input, indexes=indexes, window=window, unscale=unscale
+        )
 
         pt = PointData(
             img.array[:, 0, 0],
@@ -639,7 +641,7 @@ class Reader(AsyncBaseReader):
 
         return img
 
-    async def read(
+    async def _read(
         self,
         dataset: GeoTIFF | Overview,
         indexes: Sequence[int] | None = None,
@@ -657,10 +659,8 @@ class Reader(AsyncBaseReader):
                 if c != ColorInterp.ALPHA
             ]
 
-        # 1. Handle Alpha bands
-        # Ref: https://github.com/developmentseed/async-geotiff/issues/104
-        # 1.1 Remove alpha bands from data
         alpha_mask: numpy.ndarray | None = None
+        # RGBA datasets
         if ColorInterp.ALPHA in self.input.colorinterp:
             alpha_idx = self.input.colorinterp.index(ColorInterp.ALPHA) + 1
             idx = tuple(indexes) + (alpha_idx,)
@@ -683,8 +683,7 @@ class Reader(AsyncBaseReader):
                 else:
                     data.mask = data.data == self.input.nodata
 
-        # 2. Handle Scale/Offset
-        # Ref: https://github.com/developmentseed/async-geotiff/issues/103
+        # Handle Scale/Offset
         scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
         offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
         if unscale:
@@ -696,6 +695,7 @@ class Reader(AsyncBaseReader):
             scales = numpy.zeros(len(indexes)) + 1.0
             offsets = numpy.zeros(len(indexes))
 
+        # Get dataset statistics
         stats = []
         if gdal_stats := self.input.stored_stats:
             for ii in indexes:
@@ -706,7 +706,8 @@ class Reader(AsyncBaseReader):
         # We only add dataset statistics if we have them for all the indexes
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
-        img = ImageData(
+        # Create ImageData object
+        return ImageData(
             data,
             alpha_mask=alpha_mask,
             crs=CRS.from_user_input(array.crs),
@@ -717,5 +718,3 @@ class Reader(AsyncBaseReader):
             nodata=array.nodata,
             dataset_statistics=dataset_statistics,
         )
-
-        return img
