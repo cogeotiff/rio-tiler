@@ -25,7 +25,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import InvalidAssetName, MissingAssets
 from rio_tiler.io.base import BaseReader, MultiBaseReader
 from rio_tiler.io.rasterio import Reader
-from rio_tiler.types import AssetInfo, AssetType
+from rio_tiler.types import AssetInfo, AssetType, AssetWithOptions
 
 try:
     from boto3.session import Session as boto3_session
@@ -418,26 +418,50 @@ class STACReader(MultiBaseReader):
             )
         )
 
-    def _get_reader(self, asset_info: AssetInfo) -> type[BaseReader]:
-        """Get Asset Reader."""
-        return self.reader
+    def _get_options(
+        self,
+        asset: AssetWithOptions,
+        metadata: pystac.Asset,
+    ) -> tuple[dict[str, Any], dict[str, Any]]:
+        method_options: dict[str, Any] = {}
+        reader_options: dict[str, Any] = {}
 
-    def _parse_vrt_asset(self, asset: str) -> tuple[str, str | None]:
-        if asset.startswith("vrt://") and asset not in self.assets:
-            parsed = urlparse(asset)
-            if not parsed.netloc:
-                raise InvalidAssetName(
-                    f"'{asset}' is not valid, couldn't find valid asset"
+        # Indexes
+        if indexes := asset.get("indexes"):
+            method_options["indexes"] = indexes
+        # Expression
+        if expr := asset.get("expression"):
+            method_options["expression"] = expr
+        # Bands
+        if bands := asset.get("bands"):
+            stac_bands = (
+                metadata.extra_fields.get("bands")
+                or metadata.extra_fields.get("eo:bands")  # V1.0
+            )
+            if not stac_bands:
+                raise ValueError(
+                    "Asset does not have 'bands' metadata, unable to use 'bands' option"
                 )
 
-            if parsed.netloc not in self.assets:
-                raise InvalidAssetName(
-                    f"'{parsed.netloc}' is not valid, should be one of {self.assets}"
-                )
+            # There is no standard for precedence between 'eo:common_name' and 'name'
+            # in STAC specification, so we will use 'eo:common_name' if it exists,
+            # otherwise fallback to 'name', and if not exist use the band index as last resource.
+            common_to_variable = {
+                b.get("eo:common_name") or b.get("common_name") or b.get("name") or ix: ix
+                for ix, b in enumerate(stac_bands, 1)
+            }
+            band_indexes: list[int] = []
+            for b in bands:
+                if idx := common_to_variable.get(b):
+                    band_indexes.append(idx)
+                else:
+                    raise ValueError(
+                        f"Band '{b}' not found in asset metadata, unable to use 'bands' option"
+                    )
 
-            return parsed.netloc, parsed.query
+                method_options["indexes"] = band_indexes
 
-        return asset, None
+        return reader_options, method_options
 
     def _get_asset_info(self, asset: AssetType) -> AssetInfo:  # noqa: C901
         """Validate asset names and return asset's info.
@@ -449,63 +473,21 @@ class STACReader(MultiBaseReader):
             AssetInfo: STAC asset info.
 
         """
-        asset_name: str
-        if isinstance(asset, dict):
-            if not asset.get("name"):
-                raise ValueError("asset dictionary does not have `name` key")
-            asset_name = asset["name"]
-        else:
-            asset_name = asset
+        if isinstance(asset, str):
+            asset = {"name": asset}
 
-        asset_name, vrt_options = self._parse_vrt_asset(asset_name)
+        if not asset.get("name"):
+            raise ValueError("asset dictionary does not have `name` key")
 
+        asset_name = asset["name"]
         if asset_name not in self.assets:
             raise InvalidAssetName(
                 f"'{asset_name}' is not valid, should be one of {self.assets}"
             )
 
         asset_info = self.item.assets[asset_name]
-        extras = asset_info.extra_fields
 
-        method_options: dict[str, Any] = {}
-        reader_options: dict[str, Any] = {}
-        if isinstance(asset, dict):
-            # Indexes
-            if indexes := asset.get("indexes"):
-                method_options["indexes"] = indexes
-            # Expression
-            if expr := asset.get("expression"):
-                method_options["expression"] = expr
-            # Bands
-            if bands := asset.get("bands", []):
-                stac_bands = extras.get("bands", extras.get("eo:bands", []))
-                if not stac_bands:
-                    raise ValueError(
-                        "Asset does not have 'bands' metadata, unable to use 'bands' option"
-                    )
-
-                # There is no standard for precedence between 'eo:common_name' and 'name'
-                # in STAC specification, so we will use 'eo:common_name' if it exists,
-                # otherwise fallback to 'name', and if not exist use the band index as last resource.
-                common_to_variable = {
-                    b.get("eo:common_name")
-                    or b.get("common_name")
-                    or b.get("name")
-                    or str(ix): ix
-                    for ix, b in enumerate(stac_bands, 1)
-                }
-                band_indexes: list[int] = []
-                for b in bands:
-                    if idx := common_to_variable.get(b):
-                        band_indexes.append(idx)
-                    else:
-                        raise ValueError(
-                            f"Band '{b}' not found in asset metadata, unable to use 'bands' option"
-                        )
-
-                    method_options["indexes"] = band_indexes
-
-        asset_modified = "expression" in method_options or vrt_options
+        reader_options, method_options = self._get_options(asset, asset_info)
 
         info = AssetInfo(
             url=asset_info.get_absolute_href() or asset_info.href,
@@ -515,37 +497,39 @@ class STACReader(MultiBaseReader):
             method_options=method_options,
         )
 
-        if not asset_modified:
-            info["metadata"] = extras
+        info["metadata"] = asset_info.extra_fields
 
-        if STAC_ALTERNATE_KEY and extras.get("alternate"):
-            if alternate := extras["alternate"].get(STAC_ALTERNATE_KEY):
+        if STAC_ALTERNATE_KEY and asset_info.extra_fields.get("alternate"):
+            if alternate := asset_info.extra_fields["alternate"].get(STAC_ALTERNATE_KEY):
                 info["url"] = alternate["href"]
 
         # https://github.com/stac-extensions/file
-        if head := extras.get("file:header_size"):
+        if head := asset_info.extra_fields.get("file:header_size"):
             info["env"] = {"GDAL_INGESTED_BYTES_AT_OPEN": head}
 
         # https://github.com/stac-extensions/raster
-        if (bands := extras.get("raster:bands", [])) and not asset_modified:
+        if (
+            stac_bands := (
+                asset_info.extra_fields.get("bands")
+                or asset_info.extra_fields.get("raster:bands")  # V1.0
+            )
+        ) and "expression" not in method_options:
             stats = [
-                (b["statistics"]["minimum"], b["statistics"]["maximum"])
-                for b in bands
+                (float(b["statistics"]["minimum"]), float(b["statistics"]["maximum"]))
+                for b in stac_bands
                 if {"minimum", "maximum"}.issubset(b.get("statistics", {}))
             ]
-            # check that stats data are all double and make warning if not
+            # check that stats data are all double and raise warning if not
             if (
                 stats
                 and all(isinstance(v, (int, float)) for stat in stats for v in stat)
-                and len(stats) == len(bands)
+                and len(stats) == len(stac_bands)
             ):
                 info["dataset_statistics"] = stats
             else:
                 warnings.warn(
-                    "Some statistics data in STAC are invalid, they will be ignored."
+                    "Some statistics data in STAC are invalid, they will be ignored.",
+                    UserWarning,
                 )
-
-        if vrt_options:
-            info["url"] = f"vrt://{info['url']}?{vrt_options}"
 
         return info

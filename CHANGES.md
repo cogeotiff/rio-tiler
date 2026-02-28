@@ -1,6 +1,10 @@
 
 # Unreleased
 
+* remove: support for `vrt://` notation in STACReader
+* add: `STACReader._get_options()` method to extract reader/method options (used within `_get_asset_info` method)
+* fix: statistics from stac metadata when `bands` option is used 
+
 # 9.0.0b2 (2026-02-26)
 
 * add: support for `bands` options in `STACReader._get_asset_info` methods to select band indexes based on band metadata

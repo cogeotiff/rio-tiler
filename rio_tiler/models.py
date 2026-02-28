@@ -689,8 +689,8 @@ class ImageData:
 
             stats = list(
                 zip(
-                    [min(r) for r in zip(*res)],
-                    [max(r) for r in zip(*res)],
+                    [float(min(r)) for r in zip(*res)],
+                    [float(max(r)) for r in zip(*res)],
                 )
             )
 
