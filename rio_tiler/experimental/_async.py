@@ -407,10 +407,12 @@ class Reader(AsyncBaseReader):
         if bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
 
-        ####################################################
-        # Estimate `natural` output dimensions in output CRS
-        dst_bounds = bbox
+        # 1. Estimate `max` output dimensions
         if dst_crs != self.crs:
+            # Case 1: Reprojection needed
+            # - reproject bbox to dataset CRS
+            # - compute native output shape in dataset resolution/CRS
+            # - compute output shape in output CRS
             dst_bounds = transform_bounds(dst_crs, self.crs, *bbox, densify_pts=21)
             native_src_w = max(
                 1, round((dst_bounds[2] - dst_bounds[0]) / abs(self.input.transform.a))
@@ -423,11 +425,21 @@ class Reader(AsyncBaseReader):
             )
 
         else:
+            # Case 2: No reprojection needed
+            # - keep output dataset bbox as input bbox
+            # - compute output shape in dataset resolution/CRS
+            dst_bounds = bbox
             dst_width = max(1, round((bbox[2] - bbox[0]) / abs(self.input.transform.a)))
             dst_height = max(1, round((bbox[3] - bbox[1]) / abs(self.input.transform.e)))
 
+        # Case 1: `max_size` is set,
+        # compute output shape based on it,
+        # respecting aspect ratio of the output bbox (dst_width/dst_height)
         if max_size:
             height, width = _get_width_height(max_size, dst_height, dst_width)
+
+        # Case 2: One of width/height is missing,
+        # compute it but keep the aspect ratio from the max output bbox (dst_width/dst_height)
         elif _missing_size(width, height):
             ratio = dst_height / dst_width
             if width:
@@ -435,13 +447,13 @@ class Reader(AsyncBaseReader):
             else:
                 width = math.ceil(height / ratio)
 
-        # Output shape in the output CRS
+        # 2. Output shape (in the output CRS)
         height = cast(int, height or dst_height)
         width = cast(int, width or dst_width)
 
-        #################################################################
-        # Select IFD based on target resolution in dataset CRS
+        # 3. Select IFD based on output resolution in dataset CRS
         if dst_crs != self.crs:
+            # Get Transform from output shape and bbox
             transform, _, _ = calculate_default_transform(
                 dst_crs, self.crs, width, height, *bbox
             )
@@ -454,14 +466,14 @@ class Reader(AsyncBaseReader):
         if level := self._get_overview_level(target_res):
             dataset = self.input.overviews[level - 1]
 
-        ###############################################
-        # Build pixel window, clamped to dataset bounds
+        # 4. Build pixel window, clamped to dataset bounds
         rasterio_win = window_from_bounds(*dst_bounds, transform=dataset.transform)
         row_off = math.floor(rasterio_win.row_off)
         col_off = math.floor(rasterio_win.col_off)
         win_width = math.ceil(rasterio_win.width)
         win_height = math.ceil(rasterio_win.height)
 
+        # TODO: add `minimum_overlap` like in reader.part method
         col_end = min(dataset.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
         row_end = min(
             dataset.height, math.ceil(rasterio_win.row_off + rasterio_win.height)
@@ -476,6 +488,7 @@ class Reader(AsyncBaseReader):
         clipped_width = clipped_col_stop - clipped_col_off
         clipped_height = clipped_row_stop - clipped_row_off
 
+        # 5. Read GeotTIFF/Overview dataset with input window in dataset CRS
         img = await self._read(
             dataset,
             indexes=indexes,
@@ -488,6 +501,7 @@ class Reader(AsyncBaseReader):
             unscale=unscale,
         )
 
+        # 6. Reproject/resample using rasterio.warp.reproject
         img = warp(
             img,
             dst_crs=dst_crs,
@@ -854,12 +868,17 @@ def warp(
     dst_height: int,
     reproject_method: WarpResampling = "nearest",
 ) -> ImageData:
-    """Reproject data and mask."""
+    """Reproject data and mask.
+
+    In the async reader we can't use the rasterio/GDAL WarpedVRT to handle reprojection/resampling,
+    so we need to do it manually with `rasterio.warp.reproject`.
+
+    """
     dst_transform = from_bounds(*dst_bounds, dst_width, dst_height)
 
     destination = numpy.zeros((img.count, dst_height, dst_width), dtype=img.array.dtype)
     destination, _ = reproject(
-        img.data,
+        img.array,
         destination,
         src_transform=img.transform,
         src_crs=img.crs,
@@ -887,13 +906,10 @@ def warp(
     )
 
     return ImageData(
-        numpy.ma.MaskedArray(
-            destination,
-            mask=~alpha_mask.astype(bool),
-        ),
+        numpy.ma.MaskedArray(destination, mask=~alpha_mask.astype(bool)),
         assets=img.assets,
         crs=dst_crs,
-        bounds=array_bounds(dst_height, dst_width, dst_transform),
+        bounds=dst_bounds,
         band_names=img.band_names,
         band_descriptions=img.band_descriptions,
         nodata=img.nodata,
