@@ -7,7 +7,7 @@ import pytest
 from async_geotiff import GeoTIFF
 from obstore.store import LocalStore
 
-from rio_tiler.errors import ExpressionMixingWarning
+from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
 from rio_tiler.experimental._async import Reader
 from rio_tiler.io import Reader as SyncReader
 from rio_tiler.models import BandStatistics
@@ -330,3 +330,36 @@ async def test_mask(src_path):
         sync_im = sync_src.preview(max_size=1024)
         numpy.testing.assert_array_equal(im.array.data, sync_im.array.data)
         numpy.testing.assert_array_equal(im.array.mask, sync_im.array.mask)
+
+
+@pytest.mark.asyncio
+async def test_async_reader_tile():
+    """tests async reader tile() method."""
+    geotiff = await GeoTIFF.open("cog_nodata.tif", store=store)
+    with SyncReader(os.path.join(PREFIX, "cog_nodata.tif")) as sync_src:
+        async with Reader(geotiff) as src:
+            minzoom, maxzoom = src.minzoom, src.maxzoom
+            w, s, e, n = src.get_geographic_bounds("epsg:4326")
+            tilematrixset = src.tms
+
+            extrema = {}
+            for zoom in range(minzoom, maxzoom):
+                ul_tile = tilematrixset.tile(w, n, zoom)
+                lr_tile = tilematrixset.tile(e, s, zoom)
+                extrema[zoom] = {
+                    "x": {"min": ul_tile.x, "max": lr_tile.x + 1},
+                    "y": {"min": ul_tile.y, "max": lr_tile.y + 1},
+                }
+
+            for zoom, ext in extrema.items():
+                for x in range(ext["x"]["min"], ext["x"]["max"]):
+                    for y in range(ext["y"]["min"], ext["y"]["max"]):
+                        tile = await src.tile(x, y, zoom)
+                        sync_tile = sync_src.tile(x, y, zoom)
+                        assert tile.bounds == sync_tile.bounds
+                        numpy.testing.assert_almost_equal(sync_tile.array, tile.array)
+
+            with pytest.raises(TileOutsideBounds):
+                await src.tile(
+                    extrema[minzoom]["x"]["max"], extrema[minzoom]["y"]["max"], minzoom
+                )

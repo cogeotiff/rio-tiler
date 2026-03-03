@@ -10,17 +10,20 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
 import numpy
+from affine import Affine
 from async_geotiff import Window
 from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
+from rasterio.enums import Resampling
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
 from rasterio.transform import array_bounds, from_bounds
-from rasterio.warp import calculate_default_transform
+from rasterio.warp import calculate_default_transform, reproject
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
+from rasterio.windows import from_bounds as window_from_bounds
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -174,6 +177,16 @@ class Reader(AsyncBaseReader):
 
         if self.colormap is None and self.input.colormap is not None:
             self.colormap = self.input.colormap.as_rasterio()
+
+    @property
+    def minzoom(self):
+        """Return dataset minzoom."""
+        return self._minzoom
+
+    @property
+    def maxzoom(self):
+        """Return dataset maxzoom."""
+        return self._maxzoom
 
     def _get_overview_level(
         self,
@@ -371,7 +384,126 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        if max_size and (width or height):
+            warnings.warn(
+                "'max_size' will be ignored with with 'height' or 'width' set.",
+                UserWarning,
+            )
+            max_size = None
+
+        # Resolve destination CRS
+        dst_crs = dst_crs or self.crs
+
+        # Transform bbox from bounds_crs → dst_crs
+        if bounds_crs != dst_crs:
+            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        ####################################################
+        # Estimate `natural` output dimensions in output CRS
+        dst_bounds = bbox
+        if dst_crs != self.crs:
+            dst_bounds = transform_bounds(dst_crs, self.crs, *bbox, densify_pts=21)
+            native_src_w = max(
+                1, round((dst_bounds[2] - dst_bounds[0]) / abs(self.input.transform.a))
+            )
+            native_src_h = max(
+                1, round((dst_bounds[3] - dst_bounds[1]) / abs(self.input.transform.e))
+            )
+            _, dst_width, dst_height = calculate_default_transform(
+                self.crs, dst_crs, native_src_w, native_src_h, *dst_bounds
+            )
+
+        else:
+            dst_width = max(1, round((bbox[2] - bbox[0]) / abs(self.input.transform.a)))
+            dst_height = max(1, round((bbox[3] - bbox[1]) / abs(self.input.transform.e)))
+
+        if max_size:
+            height, width = _get_width_height(max_size, dst_height, dst_width)
+        elif _missing_size(width, height):
+            ratio = dst_height / dst_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
+
+        # Output shape in the output CRS
+        height = cast(int, height or dst_height)
+        width = cast(int, width or dst_width)
+
+        #################################################################
+        # Select IFD based on target resolution in dataset CRS
+        if dst_crs != self.crs:
+            transform, _, _ = calculate_default_transform(
+                dst_crs, self.crs, width, height, *bbox
+            )
+        else:
+            transform = from_bounds(*bbox, width, height)
+
+        target_res = min(abs(transform.a), abs(transform.e))
+
+        dataset: GeoTIFF | Overview = self.input
+        if level := self._get_overview_level(target_res):
+            dataset = self.input.overviews[level - 1]
+
+        ###############################################
+        # Build pixel window, clamped to dataset bounds
+        rasterio_win = window_from_bounds(*dst_bounds, transform=dataset.transform)
+        row_off = math.floor(rasterio_win.row_off)
+        col_off = math.floor(rasterio_win.col_off)
+        win_width = math.ceil(rasterio_win.width)
+        win_height = math.ceil(rasterio_win.height)
+
+        col_end = min(dataset.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
+        row_end = min(
+            dataset.height, math.ceil(rasterio_win.row_off + rasterio_win.height)
+        )
+        if col_off >= col_end or row_off >= row_end:
+            raise ValueError("Input BBOX and dataset's bounds do not intersect")
+
+        clipped_col_off = max(0, col_off)
+        clipped_row_off = max(0, row_off)
+        clipped_col_stop = min(dataset.width, col_off + win_width)
+        clipped_row_stop = min(dataset.height, row_off + win_height)
+        clipped_width = clipped_col_stop - clipped_col_off
+        clipped_height = clipped_row_stop - clipped_row_off
+
+        img = await self._read(
+            dataset,
+            indexes=indexes,
+            window=Window(
+                col_off=clipped_col_off,
+                row_off=clipped_row_off,
+                width=clipped_width,
+                height=clipped_height,
+            ),
+            unscale=unscale,
+        )
+
+        dst_transform = from_bounds(*bbox, width, height)
+        img = warp(
+            img,
+            dst_crs,
+            dst_transform,
+            width,
+            height,
+            reproject_method=reproject_method,
+        )
+
+        if expression:
+            img = img.apply_expression(expression)
+
+        return img
 
     async def preview(
         self,
@@ -659,7 +791,6 @@ class Reader(AsyncBaseReader):
                 if c != ColorInterp.ALPHA
             ]
 
-        alpha_mask: numpy.ndarray | None = None
         # RGBA datasets
         if ColorInterp.ALPHA in self.input.colorinterp:
             alpha_idx = self.input.colorinterp.index(ColorInterp.ALPHA) + 1
@@ -667,9 +798,7 @@ class Reader(AsyncBaseReader):
             data = data[[ix - 1 for ix in idx]]
 
             # split data and alpha mask
-            alpha_mask = data[-1]
-            mask = ~alpha_mask.astype("bool")
-
+            mask = ~data[-1].astype("bool")
             data = data[0:-1]
             data.mask = mask
 
@@ -709,7 +838,6 @@ class Reader(AsyncBaseReader):
         # Create ImageData object
         return ImageData(
             data,
-            alpha_mask=alpha_mask,
             crs=CRS.from_user_input(array.crs),
             bounds=array_bounds(array.height, array.width, array.transform),
             band_descriptions=[f"b{ix}" for ix in indexes],
@@ -718,3 +846,60 @@ class Reader(AsyncBaseReader):
             nodata=array.nodata,
             dataset_statistics=dataset_statistics,
         )
+
+
+def warp(
+    img: ImageData,
+    dst_crs: CRS,
+    dst_transform: Affine,
+    dst_width: int,
+    dst_height: int,
+    reproject_method: WarpResampling = "nearest",
+) -> ImageData:
+    """Reproject data and mask."""
+    destination = numpy.zeros((img.count, dst_height, dst_width), dtype=img.array.dtype)
+
+    destination, _ = reproject(
+        img.data,
+        destination,
+        src_transform=img.transform,
+        src_crs=img.crs,
+        dst_transform=dst_transform,
+        dst_crs=dst_crs,
+        resampling=Resampling[reproject_method],
+        src_nodata=img.nodata,
+        dst_nodata=img.nodata,
+    )
+
+    # rasterio doesn't handle masked arrays really well
+    # ref: https://github.com/rasterio/rasterio/pull/3531
+    mask = ~img.array.mask * numpy.uint8(255)
+    alpha_mask = numpy.zeros((img.count, dst_height, dst_width), dtype=numpy.uint8)
+    alpha_mask, _ = reproject(
+        mask,
+        alpha_mask,
+        src_transform=img.transform,
+        src_crs=img.crs,
+        dst_transform=dst_transform,
+        dst_crs=dst_crs,
+        resampling=Resampling["nearest"],
+        src_nodata=0,
+        dst_nodata=0,
+    )
+
+    return ImageData(
+        numpy.ma.MaskedArray(
+            destination,
+            mask=~alpha_mask.astype(bool),
+        ),
+        assets=img.assets,
+        crs=dst_crs,
+        bounds=array_bounds(dst_height, dst_width, dst_transform),
+        band_names=img.band_names,
+        band_descriptions=img.band_descriptions,
+        nodata=img.nodata,
+        scales=img.scales,
+        offsets=img.offsets,
+        metadata=img.metadata,
+        dataset_statistics=img.dataset_statistics,
+    )
