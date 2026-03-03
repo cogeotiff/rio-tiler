@@ -714,7 +714,9 @@ class ImageData:
             band_descriptions=band_descriptions,
             metadata=self.metadata,
             dataset_statistics=stats,
-            alpha_mask=self.alpha_mask,
+            alpha_mask=self.alpha_mask.astype(data.dtype)
+            if self.alpha_mask is not None
+            else None,
         )
 
     def resize(
@@ -1000,10 +1002,10 @@ class ImageData:
             *self.bounds,
             resolution=resolution,
         )
-
         destination = numpy.ma.masked_array(
             numpy.zeros((self.count, h, w), dtype=self.array.dtype),
         )
+
         destination, _ = reproject(
             self.array,
             destination,
@@ -1016,9 +1018,7 @@ class ImageData:
 
         alpha_mask = self.alpha_mask
         if self.alpha_mask is not None:
-            alpha_mask = numpy.ma.masked_array(
-                numpy.zeros((h, w), dtype=self.alpha_mask.dtype),
-            )
+            alpha_mask = numpy.zeros((h, w), dtype=self.alpha_mask.dtype)
             alpha_mask, _ = reproject(
                 self.alpha_mask,
                 alpha_mask,

@@ -38,6 +38,7 @@ dev = [
     "pytest",
     "pytest-cov",
     "pytest-benchmark",
+    "pytest-asyncio",
     # XarrayReader
     "xarray",
     "rioxarray",
@@ -51,6 +52,8 @@ dev = [
     "vsifile>=0.2",
     "zarr~=3.0",
     "obstore",
+    # "async-geotiff>=0.3.0b1",
+    "async-geotiff@git+https://github.com/developmentseed/async-geotiff.git",
     "tilebench",
     "pre-commit",
     "IPython",
@@ -87,6 +90,11 @@ zarr = [
     "zarr~=3.0",
     "obstore",
 ]
+async = [
+    # "async-geotiff>=0.3.0b1",
+    "async-geotiff@git+https://github.com/developmentseed/async-geotiff.git",
+    "obstore",
+]
 
 [project.urls]
 Homepage = 'https://cogeotiff.github.io/rio-tiler/'
@@ -107,6 +115,9 @@ only-include = ["rio_tiler/"]
 
 [tool.hatch.build.targets.wheel]
 only-include = ["rio_tiler/"]
+
+[tool.hatch.metadata]
+allow-direct-references = true
 
 [tool.coverage.run]
 branch = true

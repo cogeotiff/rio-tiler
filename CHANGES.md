@@ -4,6 +4,21 @@
 * remove: support for `vrt://` notation in STACReader
 * add: `STACReader._get_options()` method to extract reader/method options (used within `_get_asset_info` method)
 * fix: statistics from stac metadata when `bands` option is used 
+* add experimental asynchronous `Reader` built on top `obstore` and `async-geotiff`
+
+    ```python
+    from rio_tiler.experimental._async import Reader
+
+    from obstore.store import LocalStore
+    from async_geotiff import GeoTIFF
+
+    store = LocalStore("./tests/fixtures/")
+    path = "cog_nodata.tif"
+
+    geotiff = await GeoTIFF.open(path, store=store)
+    async with Reader(geotiff):
+        img = await src.tile(21, 11, 6)
+    ```
 
 # 9.0.0b2 (2026-02-26)
 

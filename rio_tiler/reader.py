@@ -414,7 +414,6 @@ def part(
 
         height = height or vrt_height
         width = width or vrt_width
-
         if buffer:
             bounds, height, width = _apply_buffer(buffer, bounds, height, width)
 
