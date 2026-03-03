@@ -10,7 +10,6 @@ from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
 import numpy
-from affine import Affine
 from async_geotiff import Window
 from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
@@ -238,7 +237,7 @@ class Reader(AsyncBaseReader):
             math.ceil(self.input.width / ovr.width) for ovr in self.input.overviews
         ]
 
-        meta = {
+        meta: dict[str, Any] = {
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             # TODO: get we can band metadata from async-geotiff
@@ -266,7 +265,7 @@ class Reader(AsyncBaseReader):
         if nodata_type == "Nodata":
             meta.update({"nodata_value": self.input.nodata})
 
-        return Info(**meta)
+        return Info.model_validate(meta)
 
     async def statistics(
         self,
@@ -369,7 +368,7 @@ class Reader(AsyncBaseReader):
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
-            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system. Defaults to bounds_crs.
             bounds_crs (rasterio.crs.CRS, optional): Coordinate reference system of the input bounds. Defaults to WGS84.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
@@ -402,8 +401,7 @@ class Reader(AsyncBaseReader):
             )
             max_size = None
 
-        # Resolve destination CRS
-        dst_crs = dst_crs or self.crs
+        dst_crs = dst_crs or bounds_crs
 
         # Transform bbox from bounds_crs → dst_crs
         if bounds_crs != dst_crs:
@@ -490,13 +488,12 @@ class Reader(AsyncBaseReader):
             unscale=unscale,
         )
 
-        dst_transform = from_bounds(*bbox, width, height)
         img = warp(
             img,
-            dst_crs,
-            dst_transform,
-            width,
-            height,
+            dst_crs=dst_crs,
+            dst_bounds=bbox,
+            dst_width=width,
+            dst_height=height,
             reproject_method=reproject_method,
         )
 
@@ -850,15 +847,17 @@ class Reader(AsyncBaseReader):
 
 def warp(
     img: ImageData,
+    *,
     dst_crs: CRS,
-    dst_transform: Affine,
+    dst_bounds: BBox,
     dst_width: int,
     dst_height: int,
     reproject_method: WarpResampling = "nearest",
 ) -> ImageData:
     """Reproject data and mask."""
-    destination = numpy.zeros((img.count, dst_height, dst_width), dtype=img.array.dtype)
+    dst_transform = from_bounds(*dst_bounds, dst_width, dst_height)
 
+    destination = numpy.zeros((img.count, dst_height, dst_width), dtype=img.array.dtype)
     destination, _ = reproject(
         img.data,
         destination,

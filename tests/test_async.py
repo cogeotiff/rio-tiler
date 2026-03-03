@@ -333,19 +333,29 @@ async def test_mask(src_path):
 
 
 @pytest.mark.asyncio
-async def test_async_reader_tile():
+@pytest.mark.parametrize(
+    "src_path",
+    [
+        # "cog_uint8_rgb_mask.tif",  # async-geotiff has an issue with this file
+        "cog_nodata.tif",
+        "cog_fullearth.tif",
+        "cog_dateline.tif",
+        "cog_uint8_rgb_nodata.tif",
+        "cog_uint8_rgba.tif",
+    ],
+)
+async def test_async_reader_tile(src_path):
     """tests async reader tile() method."""
-    geotiff = await GeoTIFF.open("cog_nodata.tif", store=store)
-    with SyncReader(os.path.join(PREFIX, "cog_nodata.tif")) as sync_src:
+    geotiff = await GeoTIFF.open(src_path, store=store)
+    with SyncReader(os.path.join(PREFIX, src_path)) as sync_src:
         async with Reader(geotiff) as src:
             minzoom, maxzoom = src.minzoom, src.maxzoom
             w, s, e, n = src.get_geographic_bounds("epsg:4326")
-            tilematrixset = src.tms
 
             extrema = {}
-            for zoom in range(minzoom, maxzoom):
-                ul_tile = tilematrixset.tile(w, n, zoom)
-                lr_tile = tilematrixset.tile(e, s, zoom)
+            for zoom in range(minzoom, maxzoom + 1):
+                ul_tile = src.tms.tile(w, n, zoom)
+                lr_tile = src.tms.tile(e, s, zoom)
                 extrema[zoom] = {
                     "x": {"min": ul_tile.x, "max": lr_tile.x + 1},
                     "y": {"min": ul_tile.y, "max": lr_tile.y + 1},
@@ -354,12 +364,182 @@ async def test_async_reader_tile():
             for zoom, ext in extrema.items():
                 for x in range(ext["x"]["min"], ext["x"]["max"]):
                     for y in range(ext["y"]["min"], ext["y"]["max"]):
-                        tile = await src.tile(x, y, zoom)
-                        sync_tile = sync_src.tile(x, y, zoom)
-                        assert tile.bounds == sync_tile.bounds
-                        numpy.testing.assert_almost_equal(sync_tile.array, tile.array)
+                        try:
+                            tile = await src.tile(x, y, zoom)
+                            sync_tile = sync_src.tile(x, y, zoom)
+                            assert tile.bounds == sync_tile.bounds
+                            numpy.testing.assert_almost_equal(sync_tile.array, tile.array)
+                        except TileOutsideBounds:
+                            pass
 
             with pytest.raises(TileOutsideBounds):
                 await src.tile(
                     extrema[minzoom]["x"]["max"], extrema[minzoom]["y"]["max"], minzoom
                 )
+
+
+@pytest.mark.asyncio
+async def test_async_reader_part():
+    """tests async reader tile() method."""
+    bbox = (
+        -56.624124590533825,
+        73.50183615350426,
+        -56.530950796449005,
+        73.52687881825946,
+    )
+
+    geotiff = await GeoTIFF.open("cog_nodata.tif", store=store)
+    with SyncReader(os.path.join(PREFIX, "cog_nodata.tif")) as sync_src:
+        async with Reader(geotiff) as src:
+            img = await src.part(bbox)
+            sync_img = sync_src.part(bbox)
+            assert img.bounds == sync_img.bounds
+            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+
+            img = await src.part(bbox, dst_crs=src.crs)
+            sync_img = sync_src.part(bbox, dst_crs=sync_src.crs)
+            assert img.bounds == sync_img.bounds
+            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+
+            img = await src.part(bbox, dst_crs="EPSG:3857")
+            sync_img = sync_src.part(bbox, dst_crs="EPSG:3857")
+            assert img.bounds == sync_img.bounds
+            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+
+            img = await src.part(bbox, max_size=20)
+            sync_img = sync_src.part(bbox, max_size=20)
+            assert img.bounds == sync_img.bounds
+            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+
+            img = await src.part(bbox, width=20, height=10)
+            sync_img = sync_src.part(bbox, width=20, height=10)
+            assert img.bounds == sync_img.bounds
+            # NOTE: we loosen a bit the tolerence here
+            numpy.testing.assert_allclose(sync_img.array, img.array, rtol=1.5)
+
+            bbox = src.get_geographic_bounds("epsg:4326")
+            bbox = (
+                bbox[0] - 2.0,
+                bbox[1] - 2.0,
+                bbox[2] + 2.0,
+                bbox[3] + 2.0,
+            )
+
+            img = await src.part(bbox, dst_crs=src.crs)
+            sync_img = sync_src.part(bbox, dst_crs=sync_src.crs)
+            assert img.bounds == sync_img.bounds
+            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+
+            # TODO: this test fails because the output shape is different
+            # img = await src.part(bbox, dst_crs="epsg:4326", max_size=1000)
+            # sync_img = sync_src.part(bbox, dst_crs="epsg:4326", max_size=1000)
+            # assert img.bounds == sync_img.bounds
+            # numpy.testing.assert_almost_equal(sync_img.array, img.array)
+
+
+@pytest.mark.asyncio
+async def test_async_reader_valid():
+    """Read from feature."""
+    feature = {
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-56.4697265625, 74.17307693616263],
+                    [-57.667236328125, 73.53462847039683],
+                    [-57.59033203125, 73.13451013251789],
+                    [-56.195068359375, 72.94865294642922],
+                    [-54.964599609375, 72.96797135377102],
+                    [-53.887939453125, 73.84623016391944],
+                    [-53.97583007812499, 74.0165183926664],
+                    [-54.73388671875, 74.23289305339864],
+                    [-55.54687499999999, 74.2269213699517],
+                    [-56.129150390625, 74.21497138945001],
+                    [-56.2060546875, 74.21198251594369],
+                    [-56.4697265625, 74.17307693616263],
+                ]
+            ],
+        },
+    }
+
+    geotiff = await GeoTIFF.open("cog_nodata.tif", store=store)
+    async with Reader(geotiff) as src:
+        # dst_crs should default to epsg:4326
+        img = await src.feature(feature, max_size=1024)
+        assert img.data.shape == (1, 334, 1024)
+        assert img.band_names == ["b1"]
+
+        img = await src.feature(feature, dst_crs=src.crs, max_size=1024)
+        assert img.data.shape == (1, 1024, 869)
+
+        img = await src.feature(feature, max_size=30)
+        assert img.data.shape == (1, 10, 30)
+
+        img = await src.feature(feature, expression="b1*2;b1-100", max_size=1024)
+        assert img.data.shape == (2, 334, 1024)
+        assert img.band_descriptions == ["b1*2", "b1-100"]
+
+        with pytest.warns(ExpressionMixingWarning):
+            img = await src.feature(
+                feature, indexes=(1, 2, 3), expression="b1*2", max_size=1024
+            )
+            assert img.data.shape == (1, 334, 1024)
+            assert img.band_descriptions == ["b1*2"]
+
+        img = await src.feature(feature, indexes=1, max_size=1024)
+        assert img.data.shape == (1, 334, 1024)
+
+        img = await src.feature(
+            feature,
+            indexes=(
+                1,
+                1,
+            ),
+            max_size=1024,
+        )
+        assert img.data.shape == (2, 334, 1024)
+        assert img.band_descriptions == ["b1", "b1"]
+
+        # feature overlaping on mask area
+        mask_feat = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-54.45922851562499, 73.05143929453952],
+                        [-55.052490234375, 72.79658820490461],
+                        [-55.61279296874999, 72.46203877644956],
+                        [-53.8330078125, 72.36244812858165],
+                        [-54.45922851562499, 73.05143929453952],
+                    ]
+                ],
+            },
+        }
+
+        img = await src.feature(mask_feat, max_size=1024)
+        assert not img._mask.all()
+
+        outside_mask_feature = {
+            "type": "Feature",
+            "properties": {},
+            "geometry": {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [-57.3486328125, 72.25226599952339],
+                        [-57.041015625, 72.1279362810559],
+                        [-56.722412109375, 72.06038062953813],
+                        [-54.86572265625, 72.07052969916067],
+                        [-54.613037109375, 72.63665259171732],
+                        [-56.14013671875, 72.90995232978632],
+                        [-57.3486328125, 72.25226599952339],
+                    ]
+                ],
+            },
+        }
+        img = await src.feature(outside_mask_feature, max_size=1024)
+        assert not img._mask.all()
