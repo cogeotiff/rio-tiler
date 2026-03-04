@@ -53,16 +53,16 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
     input: Any = attr.ib()
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    async def __aenter__(self):
+    def __enter__(self):
         """Support using with Context Managers."""
         return self
 
-    async def __aexit__(self, exc_type, exc_value, traceback):
+    def __exit__(self, exc_type, exc_value, traceback):
         """Support using with Context Managers."""
         pass
 
     @abc.abstractmethod
-    async def info(self) -> Info:
+    def info(self) -> Info:
         """Return Dataset's info.
 
         Returns:
@@ -157,14 +157,6 @@ class Reader(AsyncBaseReader):
 
     colormap: dict | None = attr.ib(default=None)
 
-    async def __aenter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
-
     def __attrs_post_init__(self):
         """Post init."""
         self.bounds = self.input.bounds
@@ -217,7 +209,7 @@ class Reader(AsyncBaseReader):
 
         return 0
 
-    async def info(self) -> Info:
+    def info(self) -> Info:
         """Return Dataset's info.
 
         Returns:
