@@ -148,7 +148,7 @@ class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
 
 @attr.s
-class Reader(AsyncBaseReader):
+class AsyncReader(AsyncBaseReader):
     """Rio-tiler.io AsyncBaseReader."""
 
     input: GeoTIFF = attr.ib()
@@ -918,3 +918,7 @@ def warp(
         metadata=img.metadata,
         dataset_statistics=img.dataset_statistics,
     )
+
+
+# compat
+Reader = AsyncReader

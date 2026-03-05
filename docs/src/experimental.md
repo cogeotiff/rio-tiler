@@ -42,3 +42,30 @@ with VSIReader("https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a
 
 - https://github.com/OSGeo/gdal/pull/1289
 - https://github.com/rasterio/rasterio/pull/2141
+
+
+## AsyncReader
+
+A asynchronous rio-tiler reader built on top [`async-geotiff`](https://github.com/developmentseed/async-geotiff). This reader is considered experimental because the API might evolve in the future and the `part()` method might be refactored to avoid using `rasterio.warp.reproject`.
+
+Required dependencies:
+- `async-geotiff>=0.3,<0.4`
+- `obstore` 
+
+You can install the dependencies with `python -m pip install "rio-tiler[async]".
+
+```python
+from obstore.store import S3Store
+from async_geotiff import GeoTIFF
+from rio_tiler.experimental._async import AsyncReader
+
+# Create Obstore Store
+store = S3Store("sentinel-cogs", skip_signature=True, region="us-west-2")
+
+# Creage GeoTIFF instance
+geotiff = await GeoTIFF.open("sentinel-s2-l2a-cogs/15/T/VK/2023/10/S2B_15TVK_20231008_0_L2A/TCI.tif", store=store)
+
+# Get Tile
+await with AsyncReader(geotiff) as src:
+    img = await src.tile(493, 741, 11)
+```

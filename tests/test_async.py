@@ -8,7 +8,7 @@ from async_geotiff import GeoTIFF
 from obstore.store import LocalStore
 
 from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
-from rio_tiler.experimental._async import Reader
+from rio_tiler.experimental._async import AsyncReader
 from rio_tiler.io import Reader as SyncReader
 from rio_tiler.models import BandStatistics
 
@@ -28,7 +28,7 @@ store = LocalStore(PREFIX)
 async def test_async_reader(src_path, nodata):
     """tests async reader."""
     geotiff = await GeoTIFF.open(src_path, store=store)
-    async with Reader(geotiff) as src:
+    async with AsyncReader(geotiff) as src:
         assert src.bounds
         assert src.crs
         assert src.transform
@@ -42,7 +42,7 @@ async def test_async_reader_point():
     """tests async reader point() method."""
     geotiff = await GeoTIFF.open("cog.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "cog.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             pt = await src.point(-60, 73)
             assert len(pt.data) == 1
             assert len(pt.mask) == 1
@@ -84,7 +84,7 @@ async def test_async_reader_point():
 
     geotiff = await GeoTIFF.open("cog_nodata.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "cog_nodata.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             pt = await src.point(-59.53, 74.03, indexes=(1, 1, 1))
             assert len(pt.data) == 3
             assert not pt._mask[0]
@@ -97,7 +97,7 @@ async def test_async_reader_point():
     # Test coordinates
     geotiff = await GeoTIFF.open("dataset_2d.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "dataset_2d.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             pt = await src.point(0, 0)
             sync_pt = sync_src.point(0, 0)
             numpy.testing.assert_array_equal(sync_pt.array, pt.array)
@@ -110,7 +110,7 @@ async def test_async_reader_point():
 
     geotiff = await GeoTIFF.open("cog_scale_epsg4326.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "cog_scale_epsg4326.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             pt = await src.point(127, 37)
             sync_pt = sync_src.point(127, 37)
             numpy.testing.assert_array_equal(sync_pt.array, pt.array)
@@ -130,7 +130,7 @@ async def test_async_reader_preview():
     """Read preview."""
     geotiff = await GeoTIFF.open("cog_ovr.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "cog_ovr.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             img = await src.preview()
             assert img.array.shape == (1, 1024, 1021)
             assert img.band_descriptions == ["b1"]
@@ -182,7 +182,7 @@ async def test_async_reader_preview():
 
     geotiff = await GeoTIFF.open("cog_scale_epsg4326.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "cog_scale_epsg4326.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             img = await src.preview(max_size=128)
             sync_img = sync_src.preview(max_size=128)
             numpy.testing.assert_array_equal(sync_img.array, img.array)
@@ -196,7 +196,7 @@ async def test_async_reader_preview():
             assert img.offsets == [0.0, 0.0]
 
     geotiff = await GeoTIFF.open("red.tif", store=store)
-    async with Reader(geotiff) as src:
+    async with AsyncReader(geotiff) as src:
         img = await src.preview(max_size=128)
         assert img.dataset_statistics == [(6101.0, 65035.0)]
 
@@ -206,7 +206,7 @@ async def test_async_reader_stats():
     """Read preview."""
     geotiff = await GeoTIFF.open("cog_ovr.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "cog_ovr.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             stats = await src.statistics()
             assert len(stats) == 1
             assert isinstance(stats["b1"], BandStatistics)
@@ -235,7 +235,7 @@ async def test_async_reader_stats():
             assert stats["b1"].min == stats["b2"].min / 2
 
     geotiff = await GeoTIFF.open("cog_cmap.tif", store=store)
-    async with Reader(geotiff) as src:
+    async with AsyncReader(geotiff) as src:
         stats = await src.statistics(categorical=True)
         assert stats["b1"].histogram[1] == [
             1.0,
@@ -275,7 +275,7 @@ async def test_async_reader_stats():
 async def test_async_reader_info(src_path):
     """tests async reader."""
     geotiff = await GeoTIFF.open(src_path, store=store)
-    async with Reader(geotiff) as src:
+    async with AsyncReader(geotiff) as src:
         info = await src.info()
 
     with SyncReader(os.path.join(PREFIX, src_path)) as sync_src:
@@ -307,7 +307,7 @@ async def test_async_reader_info(src_path):
 async def test_mask(src_path):
     """Test tile read for multiple combination of datatype/mask/tile extent."""
     geotiff = await GeoTIFF.open(src_path, store=store)
-    async with Reader(geotiff) as src:
+    async with AsyncReader(geotiff) as src:
         im = await src.preview(max_size=1024)
         assert im.count == 3
 
@@ -348,7 +348,7 @@ async def test_async_reader_tile(src_path):
     """tests async reader tile() method."""
     geotiff = await GeoTIFF.open(src_path, store=store)
     with SyncReader(os.path.join(PREFIX, src_path)) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             minzoom, maxzoom = src.minzoom, src.maxzoom
             w, s, e, n = src.get_geographic_bounds("epsg:4326")
 
@@ -393,7 +393,7 @@ async def test_async_reader_part():
 
     geotiff = await GeoTIFF.open("cog_nodata.tif", store=store)
     with SyncReader(os.path.join(PREFIX, "cog_nodata.tif")) as sync_src:
-        async with Reader(geotiff) as src:
+        async with AsyncReader(geotiff) as src:
             img = await src.part(bbox)
             sync_img = sync_src.part(bbox)
             assert img.bounds == sync_img.bounds
@@ -469,7 +469,7 @@ async def test_async_reader_valid():
     }
 
     geotiff = await GeoTIFF.open("cog_nodata.tif", store=store)
-    async with Reader(geotiff) as src:
+    async with AsyncReader(geotiff) as src:
         # dst_crs should default to epsg:4326
         img = await src.feature(feature, max_size=1024)
         assert img.data.shape == (1, 334, 1024)

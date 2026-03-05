@@ -66,7 +66,7 @@ performance = [
 ]
 
 docs = [
-    "mkdocs>=1.4.3",
+    "mkdocs>=1.4.3,<2.0",
     "mkdocs-jupyter>=0.24.5",
     "mkdocs-material[imaging]>=9.5",
     "griffe-inherited-docstrings>=1.0.0",
