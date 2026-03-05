@@ -1,12 +1,15 @@
 
 # Unreleased
 
+* fix: window calculation for async `Reader.part()`
+* change: rename `_async.Reader` to `_async.AsyncReader`
+
 # 9.0.0rc1 (2026-02-26)
 
 * remove: support for `vrt://` notation in STACReader
-* add: `STACReader._get_options()` method to extract reader/method options (used within `_get_asset_info` method)
 * fix: statistics from stac metadata when `bands` option is used 
-* add experimental asynchronous `Reader` built on top `obstore` and `async-geotiff`
+* add: `STACReader._get_options()` method to extract reader/method options (used within `_get_asset_info` method)
+* add: experimental asynchronous `Reader` built on top `obstore` and `async-geotiff`
 
     ```python
     from rio_tiler.experimental._async import Reader
