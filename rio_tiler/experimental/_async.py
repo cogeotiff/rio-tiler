@@ -470,8 +470,8 @@ class Reader(AsyncBaseReader):
         rasterio_win = window_from_bounds(*dst_bounds, transform=dataset.transform)
         row_off = math.floor(rasterio_win.row_off)
         col_off = math.floor(rasterio_win.col_off)
-        win_width = math.ceil(rasterio_win.width)
-        win_height = math.ceil(rasterio_win.height)
+        win_width = math.ceil(rasterio_win.width) + 1
+        win_height = math.ceil(rasterio_win.height) + 1
 
         # TODO: add `minimum_overlap` like in reader.part method
         col_end = min(dataset.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
@@ -882,11 +882,11 @@ def warp(
         destination,
         src_transform=img.transform,
         src_crs=img.crs,
-        dst_transform=dst_transform,
-        dst_crs=dst_crs,
-        resampling=Resampling[reproject_method],
         src_nodata=img.nodata,
+        dst_crs=dst_crs,
+        dst_transform=dst_transform,
         dst_nodata=img.nodata,
+        resampling=Resampling[reproject_method],
     )
 
     # rasterio doesn't handle masked arrays really well

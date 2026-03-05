@@ -368,7 +368,10 @@ async def test_async_reader_tile(src_path):
                             tile = await src.tile(x, y, zoom)
                             sync_tile = sync_src.tile(x, y, zoom)
                             assert tile.bounds == sync_tile.bounds
-                            numpy.testing.assert_almost_equal(sync_tile.array, tile.array)
+                            numpy.testing.assert_array_equal(sync_tile.array, tile.array)
+                            numpy.testing.assert_array_equal(
+                                sync_tile.array.mask, tile.array.mask
+                            )
                         except TileOutsideBounds:
                             pass
 
@@ -394,22 +397,22 @@ async def test_async_reader_part():
             img = await src.part(bbox)
             sync_img = sync_src.part(bbox)
             assert img.bounds == sync_img.bounds
-            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+            numpy.testing.assert_array_equal(sync_img.array, img.array)
 
             img = await src.part(bbox, dst_crs=src.crs)
             sync_img = sync_src.part(bbox, dst_crs=sync_src.crs)
             assert img.bounds == sync_img.bounds
-            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+            numpy.testing.assert_array_equal(sync_img.array, img.array)
 
             img = await src.part(bbox, dst_crs="EPSG:3857")
             sync_img = sync_src.part(bbox, dst_crs="EPSG:3857")
             assert img.bounds == sync_img.bounds
-            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+            numpy.testing.assert_array_equal(sync_img.array, img.array)
 
             img = await src.part(bbox, max_size=20)
             sync_img = sync_src.part(bbox, max_size=20)
             assert img.bounds == sync_img.bounds
-            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+            numpy.testing.assert_array_equal(sync_img.array, img.array)
 
             img = await src.part(bbox, width=20, height=10)
             sync_img = sync_src.part(bbox, width=20, height=10)
@@ -429,7 +432,7 @@ async def test_async_reader_part():
             sync_img = sync_src.part(bbox, dst_crs=sync_src.crs)
             # This test fails on github CI
             # assert img.bounds == sync_img.bounds
-            numpy.testing.assert_almost_equal(sync_img.array, img.array)
+            numpy.testing.assert_array_equal(sync_img.array, img.array)
 
             # TODO: this test fails because the output shape is different
             # img = await src.part(bbox, dst_crs="epsg:4326", max_size=1000)
