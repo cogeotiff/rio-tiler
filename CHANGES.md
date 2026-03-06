@@ -3,6 +3,7 @@
 
 * fix: window calculation for async `Reader.part()`
 * change: rename `_async.Reader` to `_async.AsyncReader`
+* change: improve partial alpha band support and internal mask for non-uint8 datatype
 
 # 9.0.0rc1 (2026-02-26)
 
