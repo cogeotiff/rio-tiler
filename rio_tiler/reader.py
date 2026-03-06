@@ -10,6 +10,7 @@ import numpy
 from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
+from rasterio.dtypes import dtype_ranges
 from rasterio.enums import ColorInterp, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.transform import array_bounds, rowcol
@@ -183,10 +184,14 @@ def read(
             else:
                 width = math.ceil(height / ratio)
 
-        if ColorInterp.alpha in dataset.colorinterp and nodata is None:
+        src_colorinterp = src_dst.colorinterp
+        dst_colorinterp = dataset.colorinterp
+
+        alpha_mask: numpy.ndarray | None = None
+        if ColorInterp.alpha in dst_colorinterp and nodata is None:
             # If dataset has an alpha band we need to get the mask using the alpha band index
             # and then split the data and mask values
-            alpha_idx = dataset.colorinterp.index(ColorInterp.alpha) + 1
+            alpha_idx = dst_colorinterp.index(ColorInterp.alpha) + 1
 
             # Read Data and Mask separately
             # Special case (see https://github.com/rasterio/rasterio/issues/2798)
@@ -201,16 +206,14 @@ def read(
                     boundless=boundless,
                     out_dtype=out_dtype,
                 )
-                mask = dataset.read(
-                    indexes=(alpha_idx,),
+                alpha_mask = dataset.read(
+                    indexes=alpha_idx,
                     window=window,
-                    out_shape=(1, height, width) if height and width else None,
+                    out_shape=(height, width) if height and width else None,
                     resampling=io_resampling,
                     boundless=boundless,
                     out_dtype=out_dtype,
                 )
-                data = numpy.ma.MaskedArray(values)
-                data.mask = ~mask.astype("bool")
 
             else:
                 idx = tuple(indexes) + (alpha_idx,)
@@ -222,9 +225,23 @@ def read(
                     boundless=boundless,
                     out_dtype=out_dtype,
                 )
-                mask = ~values[-1].astype("bool")
-                data = numpy.ma.MaskedArray(values[0:-1])
-                data.mask = mask
+                values, alpha_mask = values[:-1], values[-1]
+
+            data = numpy.ma.MaskedArray(values)
+
+            _, opaque = dtype_ranges[str(values.dtype)]
+            # There is a bug somewhere in rasterio/gdal that transform internal `mask`
+            # to alpha but with values from 0 to 255 instead of min/max datatype
+            if ColorInterp.alpha not in src_colorinterp and alpha_mask.max() == 255:
+                opaque = 255
+
+            data.mask = alpha_mask != opaque
+
+            # NOTE:  If the original dataset doesn't have an alpha band we set the `alpha_mask`
+            # to None as it means that the alpha band is only used for masking the output of the WarpedVRT
+            # and not as a real alpha band in the original dataset
+            if ColorInterp.alpha not in src_colorinterp:
+                alpha_mask = None
 
         else:
             data = dataset.read(
@@ -304,6 +321,7 @@ def read(
             dataset_statistics=dataset_statistics,
             metadata=dataset.tags(),
             nodata=nodata,
+            alpha_mask=alpha_mask,
             scales=scales.tolist(),
             offsets=offsets.tolist(),
         )
@@ -510,11 +528,14 @@ def part(
             bounds=bounds,
             crs=img.crs,
             band_descriptions=img.band_descriptions,
-            nodata=img.nodata,
-            scales=img.scales,
-            offsets=img.offsets,
             dataset_statistics=img.dataset_statistics,
             metadata=img.metadata,
+            nodata=img.nodata,
+            alpha_mask=img.alpha_mask[padding:-padding, padding:-padding]
+            if img.alpha_mask is not None
+            else None,
+            scales=img.scales,
+            offsets=img.offsets,
         )
 
     return read(

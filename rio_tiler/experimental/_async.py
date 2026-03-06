@@ -803,16 +803,13 @@ class AsyncReader(AsyncBaseReader):
             ]
 
         # RGBA datasets
+        alpha_mask: numpy.ndarray | None = None
         if ColorInterp.ALPHA in self.input.colorinterp:
             alpha_idx = self.input.colorinterp.index(ColorInterp.ALPHA) + 1
             idx = tuple(indexes) + (alpha_idx,)
             data = data[[ix - 1 for ix in idx]]
 
-            # split data and alpha mask
-            mask = ~data[-1].astype("bool")
-            data = data[0:-1]
-            data.mask = mask
-
+            data, alpha_mask = data[:-1], data[-1]
         else:
             data = data[[ix - 1 for ix in indexes]]
 
@@ -849,13 +846,14 @@ class AsyncReader(AsyncBaseReader):
         # Create ImageData object
         return ImageData(
             data,
-            crs=CRS.from_user_input(array.crs),
             bounds=array_bounds(array.height, array.width, array.transform),
+            crs=CRS.from_user_input(array.crs),
             band_descriptions=[f"b{ix}" for ix in indexes],
+            dataset_statistics=dataset_statistics,
+            nodata=array.nodata,
+            alpha_mask=alpha_mask.data if alpha_mask is not None else None,
             scales=scales.tolist(),
             offsets=offsets.tolist(),
-            nodata=array.nodata,
-            dataset_statistics=dataset_statistics,
         )
 
 
