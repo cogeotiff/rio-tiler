@@ -1,6 +1,8 @@
 
 # Unreleased
 
+# 9.0.0rc2 (2026-03-06)
+
 * fix: window calculation for async `Reader.part()`
 * change: rename `_async.Reader` to `_async.AsyncReader`
 * change: improve partial alpha band support and internal mask for non-uint8 datatype
