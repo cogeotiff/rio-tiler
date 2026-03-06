@@ -7,6 +7,7 @@ import numpy
 import pytest
 import rasterio
 from rasterio.crs import CRS
+from rasterio.dtypes import dtype_ranges
 from rasterio.enums import ColorInterp
 from rasterio.enums import Resampling as ResamplingEnums
 from rasterio.io import MemoryFile
@@ -35,23 +36,11 @@ def dataset_fixture():
         nband: int = 3,
         width: int = 256,
         height: int = 256,
-        filled: bool = False,
     ):
-        max_value = 127 if dtype == "int8" else 255
+        min_value, max_value = dtype_ranges[dtype]
 
-        # Data
-        arr = numpy.zeros((nband, height, width), dtype=dtype) + 1
-        if filled:
-            arr[:, range(height), range(width)] = max_value
-            arr[:, range(height - 1, 0, -1), range(width - 1)] = max_value
-            arr[:, :, width // 2] = max_value
-            arr[:, height // 2, :] = max_value
-
-        arr[:, 0:128, 0:128] = 0
-
-        # Mask/Alpha
-        mask = numpy.zeros((1, height, width), dtype=dtype) + max_value
-        mask[:, 0:128, 0:128] = 0
+        arr = numpy.full((nband, height, width), fill_value=max_value, dtype=dtype)
+        arr[:, 0 : height // 2, 0 : width // 2] = 1
 
         # Input Profile
         src_profile = {
@@ -65,7 +54,7 @@ def dataset_fixture():
         }
 
         if nodata_type == "nodata":
-            src_profile["nodata"] = 0
+            src_profile["nodata"] = 1
 
         elif nodata_type == "alpha":
             src_profile["count"] = nband + 1
@@ -82,6 +71,11 @@ def dataset_fixture():
                             ci += [ColorInterp.undefined] * (nband - 1)
 
                     if nodata_type == "alpha":
+                        # Mask/Alpha
+                        mask = numpy.full(
+                            (1, height, width), fill_value=max_value, dtype=dtype
+                        )
+                        mask[:, 0 : height // 2, 0 : width // 2] = min_value
                         data = numpy.concatenate([arr, mask])
                         ci += [ColorInterp.alpha]
 
@@ -95,7 +89,9 @@ def dataset_fixture():
 
                     # Write Mask
                     if nodata_type == "mask":
-                        mem.write_mask(mask[0])
+                        mask = numpy.zeros((height, width), dtype=dtype) + 1
+                        mask[0 : height // 2, 0 : width // 2] = 0
+                        mem.write_mask(mask)
 
                     overview_level = get_maximum_overview_level(
                         mem.width, mem.height, minsize=512
