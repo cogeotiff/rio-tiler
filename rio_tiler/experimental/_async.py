@@ -809,7 +809,7 @@ class AsyncReader(AsyncBaseReader):
             idx = tuple(indexes) + (alpha_idx,)
             data = data[[ix - 1 for ix in idx]]
 
-            data, alpha_mask = data[:-1], data[-1]
+            data, alpha_mask = data[:-1], data[-1].data
         else:
             data = data[[ix - 1 for ix in indexes]]
 
@@ -851,7 +851,7 @@ class AsyncReader(AsyncBaseReader):
             band_descriptions=[f"b{ix}" for ix in indexes],
             dataset_statistics=dataset_statistics,
             nodata=array.nodata,
-            alpha_mask=alpha_mask.data if alpha_mask is not None else None,
+            alpha_mask=alpha_mask if alpha_mask is not None else None,
             scales=scales.tolist(),
             offsets=offsets.tolist(),
         )

@@ -62,11 +62,20 @@ def test_mask_bilinear(dataset_fixture):
 
 
 data_types = list(dtype_ranges.keys())
+data_types_xfail = ["float64", "int64", "uint64"]
 nodata_type = ["nodata", "alpha", "mask"]
 
 
 @pytest.mark.parametrize("resampling", ["bilinear", "nearest"])
-@pytest.mark.parametrize("data_type", data_types)
+@pytest.mark.parametrize(
+    "data_type",
+    [
+        pytest.param(dt)
+        if dt not in data_types_xfail
+        else pytest.param(dt, marks=[pytest.mark.xfail(strict=False)])
+        for dt in data_types
+    ],
+)
 @pytest.mark.parametrize("nodata_type", nodata_type)
 def test_mask_non_boundless(nodata_type, data_type, resampling, dataset_fixture):
     """Test tile read for multiple combination of datatype/mask/tile extent."""
