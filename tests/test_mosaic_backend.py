@@ -7,6 +7,7 @@ import attr
 import pytest
 from morecantile import TileMatrixSet
 from rasterio.crs import CRS
+from rasterio.warp import transform_geom
 
 from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.io import BaseReader, MultiBaseReader, Reader
@@ -155,3 +156,21 @@ def test_backend():
         assert "timings" in img.metadata
         assert img.metadata["timings"][0][0] == "search"
         assert img.metadata["timings"][1][0] == "mosaicking"
+
+        # Bug: when shape_crs != dst_crs, feature() applies geometry_mask using
+        # the original shape coordinates without reprojecting to dst_crs first.
+        # The UTM coordinates land completely outside the WGS84 image extent,
+        # so geometry_mask marks every pixel as masked (outside the polygon).
+        feat_utm = transform_geom(CRS.from_epsg(4326), CRS.from_epsg(32618), feat)
+
+        img_utm, _ = backend.feature(
+            feat_utm,
+            shape_crs=CRS.from_epsg(32618),
+            dst_crs=CRS.from_epsg(4326),
+            max_size=256,
+            pixel_selection=defaults.MeanMethod,
+        )
+        assert img_utm.crs == CRS.from_epsg(4326)
+        # With the bug, all pixels are masked because the UTM shape coordinates
+        # are never reprojected to WGS84 before being passed to geometry_mask.
+        assert not img_utm.array.mask.all()
