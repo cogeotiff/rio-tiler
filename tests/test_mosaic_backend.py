@@ -144,12 +144,15 @@ def test_backend():
             ],
         }
 
-        img, assets_used = backend.feature(
-            feat,
-            shape_crs=CRS.from_epsg(4326),
-            max_size=256,
-            pixel_selection=defaults.MeanMethod,
-        )
+        with pytest.warns(
+            UserWarning, match="Cannot concatenate images with different sizes"
+        ):
+            img, assets_used = backend.feature(
+                feat,
+                shape_crs=CRS.from_epsg(4326),
+                max_size=256,
+                pixel_selection=defaults.MeanMethod,
+            )
         assert img.crs == CRS.from_epsg(4326)
         assert img.array.shape == (3, 147, 211)
         assert set(assets_used) == {asset1, asset2}
@@ -163,13 +166,16 @@ def test_backend():
         # so geometry_mask marks every pixel as masked (outside the polygon).
         feat_utm = transform_geom(CRS.from_epsg(4326), CRS.from_epsg(32618), feat)
 
-        img_utm, _ = backend.feature(
-            feat_utm,
-            shape_crs=CRS.from_epsg(32618),
-            dst_crs=CRS.from_epsg(4326),
-            max_size=256,
-            pixel_selection=defaults.MeanMethod,
-        )
+        with pytest.warns(
+            UserWarning, match="Cannot concatenate images with different sizes"
+        ):
+            img_utm, _ = backend.feature(
+                feat_utm,
+                shape_crs=CRS.from_epsg(32618),
+                dst_crs=CRS.from_epsg(4326),
+                max_size=256,
+                pixel_selection=defaults.MeanMethod,
+            )
         assert img_utm.crs == CRS.from_epsg(4326)
         # With the bug, all pixels are masked because the UTM shape coordinates
         # are never reprojected to WGS84 before being passed to geometry_mask.
