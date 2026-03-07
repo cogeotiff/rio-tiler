@@ -10,6 +10,7 @@ from pydantic import BaseModel, ConfigDict, Field
 from rasterio.crs import CRS
 from rasterio.features import bounds as featureBounds
 from rasterio.features import geometry_mask
+from rasterio.warp import transform_geom
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import NoAssetFoundError, PointOutsideBounds
@@ -220,20 +221,32 @@ class BaseBackend(BaseReader):
         self,
         shape: dict,
         shape_crs: CRS = WGS84_CRS,
+        dst_crs: CRS | None = None,
         search_options: dict | None = None,
         **kwargs: Any,
     ) -> tuple[ImageData, list[str]]:
         """Create an Image from multiple assets for a GeoJSON feature."""
         shape = _validate_shape_input(shape)
+
+        if not dst_crs:
+            dst_crs = shape_crs
+
         bbox = featureBounds(shape)
 
         img, asset_used = self.part(
             bbox,
             bounds_crs=shape_crs,
+            dst_crs=dst_crs,
             search_options=search_options,
             **kwargs,
         )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
         img.array.mask = geometry_mask([shape], (img.height, img.width), img.transform)
+        logger.info(f"transform: {img.transform}")
+
         return img, asset_used
 
     ############################################################################
