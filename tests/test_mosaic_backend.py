@@ -4,6 +4,7 @@ import os
 from typing import Type
 
 import attr
+import numpy
 import pytest
 from morecantile import TileMatrixSet
 from rasterio.crs import CRS
@@ -180,3 +181,33 @@ def test_backend():
         # With the bug, all pixels are masked because the UTM shape coordinates
         # are never reprojected to WGS84 before being passed to geometry_mask.
         assert not img_utm.array.mask.all()
+
+        cpx_shape = {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [-73.859945763944708, 47.392667290910126],
+                    [-74.833824877214042, 46.822591712410997],
+                    [-74.746729997165559, 45.801206300933401],
+                    [-73.820357182104487, 45.690358271780795],
+                    [-72.75146547241863, 45.935807479190139],
+                    [-72.878148934307319, 47.09971178529252],
+                    [-73.772850883896226, 46.624648803209915],
+                    [-73.772850883896226, 46.624648803209915],
+                    [-73.796604033000364, 46.885933443355349],
+                    [-73.677838287479702, 47.250148396285347],
+                    [-73.859945763944708, 47.392667290910126],
+                ]
+            ],
+        }
+        with pytest.warns(
+            UserWarning, match="Cannot concatenate images with different sizes"
+        ):
+            img_utm, _ = backend.feature(
+                cpx_shape,
+                shape_crs=CRS.from_epsg(4326),
+                pixel_selection=defaults.MeanMethod,
+            )
+        assert img_utm.crs == CRS.from_epsg(4326)
+        assert not img_utm.array.mask.all()
+        assert numpy.unique(img_utm.data).tolist() == [0, 1, 2]
