@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* fix: reproject feature shape to dst_crs in mosaic backend
+
 # 9.0.0rc2 (2026-03-06)
 
 * fix: window calculation for async `Reader.part()`
