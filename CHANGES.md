@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 9.0.0 (2023-03-11)
+
+* No change since 9.0.0rc3
+
 # 9.0.0rc3 (2026-03-09)
 
 * fix: reproject feature shape to dst_crs in mosaic backend
