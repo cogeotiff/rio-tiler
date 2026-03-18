@@ -340,7 +340,7 @@ def test_area_valid():
             ),
         )
         assert img.data.shape == (2, 11, 40)
-        assert img.band_names == ["b1", "b2"]
+        assert img.band_names == ["b1", "b1"]
         assert img.band_descriptions == ["b1", "b1"]
 
 
@@ -374,7 +374,7 @@ def test_preview_valid():
             ),
         )
         assert img.data.shape == (2, 128, 128)
-        assert img.band_names == ["b1", "b2"]
+        assert img.band_names == ["b1", "b1"]
         assert img.band_descriptions == ["b1", "b1"]
 
 
@@ -1229,3 +1229,26 @@ def test_custom_tms():
 
         tile = src.tile(0, 0, 1)
         assert tile.data.shape == (1, 256, 256)
+
+
+def test_expression_order():
+    """Test tile size per TMS matrix"""
+    with Reader(COG_ALPHA) as src:
+        img = src.preview(indexes=(2, 1, 3))
+        # band names should keep the order of the indexes
+        assert img.band_names == ["b2", "b1", "b3"]
+        assert img.band_descriptions == ["b2", "b1", "b3"]
+
+        img = src.preview(expression="b2;b1;b3")
+        # when using expression, the band names should represent the order of blocks
+        # and thus doesn't match the original band names
+        assert img.band_names == ["b1", "b2", "b3"]
+        assert img.band_descriptions == ["b2", "b1", "b3"]
+
+        img = src.preview(expression="b2+1;b1+2")
+        assert img.band_names == ["b1", "b2"]
+        assert img.band_descriptions == ["b2+1", "b1+2"]
+
+        arr = src.preview().array
+        numpy.testing.assert_array_equal(arr[1] + 1, img.array[0])
+        numpy.testing.assert_array_equal(arr[0] + 2, img.array[1])
