@@ -315,6 +315,7 @@ def read(
             data,
             bounds=out_bounds,
             crs=dataset.crs,
+            band_names=[f"b{idx}" for idx in indexes],
             band_descriptions=[
                 dataset.descriptions[ix - 1] or f"b{idx}" for idx in indexes
             ],
@@ -527,6 +528,7 @@ def part(
             img.array[:, padding:-padding, padding:-padding],
             bounds=bounds,
             crs=img.crs,
+            band_names=img.band_names,
             band_descriptions=img.band_descriptions,
             dataset_statistics=img.dataset_statistics,
             metadata=img.metadata,
@@ -669,6 +671,7 @@ def point(
 
         return PointData(
             img.array[:, 0, 0],
+            band_names=img.band_names,
             band_descriptions=img.band_descriptions,
             coordinates=coordinates,
             crs=coord_crs,
