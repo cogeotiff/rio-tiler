@@ -697,6 +697,7 @@ class AsyncReader(AsyncBaseReader):
 
         pt = PointData(
             img.array[:, 0, 0],
+            band_names=img.band_names,
             band_descriptions=img.band_descriptions,
             coordinates=coordinates,
             crs=coord_crs,
@@ -848,6 +849,7 @@ class AsyncReader(AsyncBaseReader):
             data,
             bounds=array_bounds(array.height, array.width, array.transform),
             crs=CRS.from_user_input(array.crs),
+            band_names=[f"b{ix}" for ix in indexes],
             band_descriptions=[f"b{ix}" for ix in indexes],
             dataset_statistics=dataset_statistics,
             nodata=array.nodata,

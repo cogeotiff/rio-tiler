@@ -1,7 +1,11 @@
 
 # Unreleased
 
-# 9.0.0 (2023-03-11)
+# 9.0.1 (2026-03-18)
+
+* fix: set correct band names when reading a single dataset
+
+# 9.0.0 (2026-03-11)
 
 * No change since 9.0.0rc3
 
