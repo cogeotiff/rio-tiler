@@ -289,6 +289,9 @@ class PointData:
 
     def apply_expression(self, expression: str) -> "PointData":
         """Apply expression to the image data."""
+        if "eval(" in expression:
+            raise InvalidExpression("Invalid expression.")
+
         blocks = get_expression_blocks(expression)
 
         data = apply_expression(blocks, self.band_names, self.array)

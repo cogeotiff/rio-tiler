@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.0.3 (2026-03-19)
+
+* fix: add missing expression check in PointData model
+
 # 9.0.2 (2026-03-19)
 
 * fix: check for malicious `eval` in expression
@@ -193,6 +197,10 @@
         img = src.preview(expression="b1*2")
         assert img.band_descriptions == ["Green*2"]
     ```
+
+## 8.0.7 (2026-03-19)
+
+* fix: add missing expression check in ImageData model and MultiBaseReader
 
 # 8.0.6 (2026-03-19)
 
