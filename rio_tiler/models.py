@@ -27,7 +27,11 @@ from rasterio.warp import calculate_default_transform, reproject, transform_geom
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WGS84_CRS
-from rio_tiler.errors import InvalidDatatypeWarning, InvalidPointDataError
+from rio_tiler.errors import (
+    InvalidDatatypeWarning,
+    InvalidExpression,
+    InvalidPointDataError,
+)
 from rio_tiler.expression import apply_expression, get_expression_blocks
 from rio_tiler.types import (
     BBox,
@@ -679,6 +683,9 @@ class ImageData:
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
+        if "eval(" in expression:
+            raise InvalidExpression("Invalid expression.")
+
         blocks = get_expression_blocks(expression)
 
         stats = self.dataset_statistics

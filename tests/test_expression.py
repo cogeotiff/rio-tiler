@@ -5,11 +5,18 @@ import warnings
 import numpy
 import pytest
 
+from rio_tiler.errors import InvalidExpression
 from rio_tiler.expression import (
     apply_expression,
     get_expression_blocks,
     parse_expression,
 )
+
+
+def test_parse_eval():
+    """test parse_expression."""
+    with pytest.raises(InvalidExpression):
+        parse_expression("eval(x) for x in ('b1', 'b2')")
 
 
 @pytest.mark.parametrize(
