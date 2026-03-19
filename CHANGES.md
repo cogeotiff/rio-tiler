@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 9.0.2 (2026-03-19)
+
+* fix: check for malicious `eval` in expression
+
 # 9.0.1 (2026-03-18)
 
 * fix: set correct band names when reading a single dataset
