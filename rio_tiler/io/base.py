@@ -361,6 +361,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str, asset_as_band: bool = False) -> Tuple:
         """Parse rio-tiler band math expression."""
+        if "eval(" in expression:
+            raise InvalidExpression("Invalid expression.")
+
         input_assets = "|".join(self.assets)
 
         if asset_as_band:
@@ -1032,6 +1035,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> Tuple:
         """Parse rio-tiler band math expression."""
+        if "eval(" in expression:
+            raise InvalidExpression("Invalid expression.")
+
         input_bands = "|".join([rf"\b{band}\b" for band in self.bands])
         _re = re.compile(input_bands.replace("\\\\", "\\"))
 

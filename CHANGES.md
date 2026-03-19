@@ -1,6 +1,10 @@
 
 # Unreleased
 
+# 7.9.4 (2026-03-19)
+
+* fix: check for malicious eval in expression [backported from 9.0.2/9.0.3]
+
 # 7.9.3 (2026-02-12)
 
 * add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable  **Backported**
