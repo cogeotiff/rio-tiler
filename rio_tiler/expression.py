@@ -27,6 +27,9 @@ def parse_expression(expression: str, cast: bool = True) -> tuple:
             ('1', '2')
 
     """
+    if "eval(" in expression:
+        raise InvalidExpression("Invalid expression.")
+
     bands = set(re.findall(r"\bb(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE))
     output_bands = tuple(map(int, bands)) if cast else tuple(bands)
     if not output_bands:
