@@ -194,6 +194,10 @@
         assert img.band_descriptions == ["Green*2"]
     ```
 
+# 8.0.6 (2026-03-19)
+
+* fix: check for malicious eval in expression [backported from 9.0.2]
+
 # 8.0.5 (2026-01-05)
 
 * improve type hints - part 2: change old Union and `typing.*` notations
