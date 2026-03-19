@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 8.0.7 (2026-03-19)
+
+* fix: add missing expression check in ImageData model and MultiBaseReader
+
 ## 8.0.6 (2026-03-19)
 
 * fix: check for malicious eval in expression [backported from 9.0.2]

@@ -364,6 +364,9 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str, asset_as_band: bool = False) -> tuple:
         """Parse rio-tiler band math expression."""
+        if "eval(" in expression:
+            raise InvalidExpression("Invalid expression.")
+
         input_assets = "|".join(self.assets)
 
         if asset_as_band:

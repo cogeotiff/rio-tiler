@@ -679,6 +679,9 @@ class ImageData:
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
+        if "eval(" in expression:
+            raise InvalidExpression("Invalid expression.")
+
         blocks = get_expression_blocks(expression)
 
         stats = self.dataset_statistics
