@@ -1,6 +1,7 @@
 """rio-tiler.mosaic.methods: Mosaic filling methods."""
 
-from enum import Enum
+import warnings
+from enum import Enum, EnumMeta
 
 from .defaults import (
     CountMethod,
@@ -15,7 +16,31 @@ from .defaults import (
 )
 
 
-class PixelSelectionMethod(Enum):
+class _DeprecatedMemberMeta(EnumMeta):
+    def __getattr__(cls, name: str):
+        if name == "lastbandhight":
+            warnings.warn(
+                "'lastbandhight' is a typo and will be removed in a future version, "
+                "use 'lastbandhigh' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return cls.lastbandhigh
+        raise AttributeError(f"'{cls.__name__}' has no attribute '{name}'")
+
+    def __getitem__(cls, name: str):
+        if name == "lastbandhight":
+            warnings.warn(
+                "'lastbandhight' is a typo and will be removed in a future version, "
+                "use 'lastbandhigh' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            return cls.lastbandhigh
+        return super().__getitem__(name)
+
+
+class PixelSelectionMethod(Enum, metaclass=_DeprecatedMemberMeta):
     """rio-tiler.mosaic pixel selection methods"""
 
     first = FirstMethod
@@ -25,7 +50,7 @@ class PixelSelectionMethod(Enum):
     median = MedianMethod
     stdev = StdevMethod
     lastbandlow = LastBandLowMethod
-    lastbandhight = LastBandHighMethod
+    lastbandhigh = LastBandHighMethod
     count = CountMethod
 
 

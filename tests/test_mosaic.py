@@ -14,7 +14,7 @@ from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
 from rio_tiler.io import Reader, STACReader
 from rio_tiler.models import ImageData, PointData
-from rio_tiler.mosaic.methods import defaults
+from rio_tiler.mosaic.methods import PixelSelectionMethod, defaults
 
 asset1 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_value_1.tif")
 asset2 = os.path.join(os.path.dirname(__file__), "fixtures", "mosaic_value_2.tif")
@@ -778,3 +778,21 @@ def test_mosaic_feature_size_diff():
     with pytest.warns(UserWarning):
         dat, _ = mosaic.mosaic_reader(assets_mixed, _read_feature, shape=feature)
         assert dat.data.shape == (3, 120, 193)
+
+
+def test_mosaic_method_enums():
+    """Test mosaic method enums."""
+    assert PixelSelectionMethod.lastbandhigh
+    assert PixelSelectionMethod["lastbandhigh"]
+
+    with pytest.warns(DeprecationWarning):
+        assert PixelSelectionMethod.lastbandhight
+
+    with pytest.warns(DeprecationWarning):
+        assert PixelSelectionMethod["lastbandhight"]
+
+    with pytest.raises(AttributeError):
+        _ = PixelSelectionMethod.yo
+
+    with pytest.raises(KeyError):
+        _ = PixelSelectionMethod["yo"]
