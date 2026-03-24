@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 8.0.8 (2026-03-24)
+
+* rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum [backported from 9.0.4]
+
 ## 8.0.7 (2026-03-19)
 
 * fix: add missing expression check in ImageData model and MultiBaseReader
