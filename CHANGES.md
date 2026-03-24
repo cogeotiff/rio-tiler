@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.0.4 (2026-03-24)
+
+* rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum
+
 ## 9.0.3 (2026-03-19)
 
 * fix: add missing expression check in PointData model
