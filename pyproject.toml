@@ -52,7 +52,7 @@ dev = [
     "vsifile>=0.2",
     "zarr~=3.0",
     "obstore",
-    "async-geotiff>=0.3,<0.4",
+    "async-geotiff>=0.3,<0.5",
     "tilebench",
     "pre-commit",
     "IPython",
@@ -90,7 +90,7 @@ zarr = [
     "obstore",
 ]
 async = [
-    "async-geotiff>=0.3,<0.4",
+    "async-geotiff>=0.3,<0.5",
     "obstore",
 ]
 
