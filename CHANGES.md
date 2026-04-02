@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.0.5 (2026-04-02)
+
+* fix: incorect default band descriptions expression 
+
 ## 9.0.4 (2026-03-24)
 
 * rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum

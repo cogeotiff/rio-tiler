@@ -192,7 +192,7 @@ class PointData:
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return ["" or f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.count)]
 
     @scales.default
     def _default_scales(self):
@@ -377,7 +377,7 @@ class ImageData:
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return ["" or f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.count)]
 
     @scales.default
     def _default_scales(self):

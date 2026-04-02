@@ -141,13 +141,12 @@ def get_array_statistics(
     percentiles_names = [f"percentile_{int(p)}" for p in percentiles]
 
     if coverage is not None:
-        assert (
-            coverage.shape
-            == (
-                data.shape[1],
-                data.shape[2],
-            )
-        ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
+        assert coverage.shape == (
+            data.shape[1],
+            data.shape[2],
+        ), (
+            f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
+        )
 
     else:
         coverage = numpy.ones((data.shape[1], data.shape[2]))

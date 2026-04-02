@@ -102,9 +102,9 @@ def mosaic_reader(  # noqa: C901
                 pixel_selection.height = img.height
                 pixel_selection.count = img.count
 
-            assert (
-                img.count == pixel_selection.count
-            ), "Assets HAVE TO have the same number of bands"
+            assert img.count == pixel_selection.count, (
+                "Assets HAVE TO have the same number of bands"
+            )
             if any(
                 [
                     img.width != pixel_selection.width,
@@ -238,9 +238,9 @@ def mosaic_point_reader(
                 pixel_selection.height = 1
                 pixel_selection.count = pt.count
 
-            assert (
-                pt.count == pixel_selection.count
-            ), "Assets HAVE TO have the same number of bands"
+            assert pt.count == pixel_selection.count, (
+                "Assets HAVE TO have the same number of bands"
+            )
 
             assets_used.append(asset)
             pixel_selection.feed(pt.array)

@@ -1,24 +1,24 @@
 repos:
   - repo: https://github.com/abravalheri/validate-pyproject
-    rev: v0.24
+    rev: v0.25
     hooks:
       - id: validate-pyproject
 
   - repo: https://github.com/PyCQA/isort
-    rev: 5.13.2
+    rev: 8.0.1
     hooks:
       - id: isort
         language_version: python
 
   - repo: https://github.com/astral-sh/ruff-pre-commit
-    rev: v0.8.4
+    rev: v0.15.8
     hooks:
       - id: ruff
         args: ["--fix"]
       - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.19.1
+    rev: v1.20.0
     hooks:
       - id: mypy
         language_version: python
@@ -29,6 +29,6 @@ repos:
         - types-cachetools
 
   - repo: https://github.com/nbQA-dev/nbQA
-    rev: 1.8.7
+    rev: 1.9.1
     hooks:
       - id: nbqa-black
