@@ -241,10 +241,10 @@ class AsyncReader(AsyncBaseReader):
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             # TODO: get we can band metadata from async-geotiff
-            "band_metadata": [(f"b{ix+1}", {}) for ix in range(self.input.count)],
+            "band_metadata": [(f"b{ix + 1}", {}) for ix in range(self.input.count)],
             # TODO: get we can band names from async-geotiff
             "band_descriptions": [
-                (f"b{ix+1}", f"b{ix+1}") for ix in range(self.input.count)
+                (f"b{ix + 1}", f"b{ix + 1}") for ix in range(self.input.count)
             ],
             "dtype": self.input.dtype.name,
             "colorinterp": [ix.name for ix in self.input.colorinterp],

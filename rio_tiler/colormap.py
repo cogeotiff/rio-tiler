@@ -27,7 +27,7 @@ from rio_tiler.types import (
     IntervalColorMapType,
 )
 
-EMPTY_COLORMAP: GDALColorMapType = {i: (0, 0, 0, 0) for i in range(256)}
+EMPTY_COLORMAP: GDALColorMapType = dict.fromkeys(range(256), (0, 0, 0, 0))
 
 _RIO_CMAP_DIR = resources_files(__package__) / "cmap_data"
 with as_file(_RIO_CMAP_DIR) as p:

@@ -22,7 +22,10 @@ from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
-from rio_tiler.utils import _get_width_height, _missing_size
+from rio_tiler.utils import (
+    _get_width_height,
+    _missing_size,
+)
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import (
     _round_window,

@@ -264,7 +264,7 @@ class XarrayReader(BaseReader):
         )
 
         return {
-            f"b{ix +1}": BandStatistics(
+            f"b{ix + 1}": BandStatistics(
                 **val,
                 description=band_descriptions[ix],
             )
