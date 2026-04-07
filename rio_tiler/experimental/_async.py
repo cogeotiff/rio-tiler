@@ -1236,6 +1236,7 @@ class AsyncZarrReader(AsyncBaseReader):
             masked_data,
             bounds=read_bounds,
             crs=self.crs,
+            band_names=[f"b{idx}" for idx in indexes],
             band_descriptions=[f"b{ix}" for ix in indexes],
             nodata=nodata,
         )
