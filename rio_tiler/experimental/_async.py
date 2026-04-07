@@ -1199,7 +1199,7 @@ class AsyncZarrReader(AsyncBaseReader):
             # Read data asynchronously
             data = await self.input.getitem(selection)
             # Ensure 3D shape (bands, height, width)
-            data = numpy.expand_dims(data, axis=0)
+            data = numpy.expand_dims(data, axis=0)  # type: ignore[assignment]
 
         else:
             # 3D array: (bands, height, width)
@@ -1212,7 +1212,7 @@ class AsyncZarrReader(AsyncBaseReader):
 
             # Use orthogonal selection for band indexing (supports list indices)
             data = await self.input.get_orthogonal_selection(
-                (band_indices, row_slice, col_slice),
+                (band_indices, row_slice, col_slice),  # type: ignore[arg-type]
             )
 
         masked_data = numpy.ma.MaskedArray(data)
