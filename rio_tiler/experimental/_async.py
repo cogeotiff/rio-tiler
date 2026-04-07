@@ -1,4 +1,4 @@
-"""rio_tiler.experimental.async_geotiff: rio-tiler Async reader built on top of async-geotiff."""
+"""rio_tiler.experimental.async readers: rio-tiler Async reader built on top of async-geotiff/zarr-python."""
 
 from __future__ import annotations
 
@@ -6,10 +6,11 @@ import abc
 import math
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
 
 import attr
 import numpy
+from affine import Affine
 from async_geotiff import Window
 from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
@@ -23,6 +24,7 @@ from rasterio.warp import calculate_default_transform, reproject
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
 from rasterio.windows import from_bounds as window_from_bounds
+from zarr.core.array import AsyncArray
 
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
@@ -33,7 +35,7 @@ from rio_tiler.errors import (
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import SpatialMixin
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, Indexes, RIOResampling, WarpResampling
+from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
     _get_width_height,
@@ -856,6 +858,386 @@ class AsyncReader(AsyncBaseReader):
             alpha_mask=alpha_mask if alpha_mask is not None else None,
             scales=scales.tolist(),
             offsets=offsets.tolist(),
+        )
+
+
+class ZarrOptions(TypedDict, total=False):
+    """Reader Options."""
+
+    nodata: NoData | None
+
+
+@attr.s
+class AsyncZarrReader(AsyncBaseReader):
+    """Rio-tiler AsyncZarrReader.
+
+    A pure zarr-python async reader that accepts a zarr AsyncArray
+    plus geospatial metadata (bounds, transform, crs) as input.
+
+    Attributes:
+        input: zarr AsyncArray (2D or 3D with bands-first layout).
+        bounds: Dataset bounds (minx, miny, maxx, maxy).
+        crs: Coordinate reference system.
+        transform: Affine transform.
+        tms: TileMatrixSet for tile operations.
+        options: Reader options including nodata.
+        colormap: Optional colormap dictionary.
+
+    Note:
+        For 3D arrays, expects bands-first layout (bands, height, width).
+        For 2D arrays, treats as single-band (height, width).
+
+    """
+
+    input: AsyncArray = attr.ib()
+
+    bounds: BBox = attr.ib()
+    crs: CRS = attr.ib()
+    transform: Affine = attr.ib()
+
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    height: int | None = attr.ib(default=None, init=False)
+    width: int | None = attr.ib(default=None, init=False)
+
+    options: ZarrOptions = attr.ib()
+
+    @options.default
+    def _options_default(self):
+        return {}
+
+    colormap: dict | None = attr.ib(default=None)
+
+    async def __aenter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
+
+    def __attrs_post_init__(self):
+        """Post init: derive height, width, count from array shape."""
+        shape = self.input.shape
+
+        # Handle 2D (height, width) vs 3D (bands, height, width)
+        if len(shape) == 2:
+            self.height, self.width = shape
+        elif len(shape) == 3:
+            _, self.height, self.width = shape
+        else:
+            raise ValueError(
+                f"Expected 2D or 3D array, got {len(shape)}D with shape {shape}"
+            )
+
+    async def info(self) -> Info:
+        """Return Dataset's info.
+
+        Returns:
+            rio_tiler.models.Info: Dataset info.
+
+        """
+        raise NotImplementedError
+
+    async def statistics(self) -> dict[str, BandStatistics]:
+        """Return bands statistics from a dataset.
+
+        Returns:
+            dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        raise NotImplementedError
+
+    async def tile(
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        tilesize: int | None = None,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Map tile from the Dataset.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+            tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
+            )
+
+        matrix = self.tms.matrix(tile_z)
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
+        return await self.part(
+            bbox,
+            dst_crs=self.tms.rasterio_crs,
+            bounds_crs=self.tms.rasterio_crs,
+            height=tilesize or matrix.tileHeight,
+            width=tilesize or matrix.tileWidth,
+            max_size=None,
+            indexes=indexes,
+            expression=expression,
+            **kwargs,
+        )
+
+    async def part(  # noqa: C901
+        self,
+        bbox: BBox,
+        dst_crs: CRS | None = None,
+        bounds_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Part of a Dataset.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
+            bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        if max_size and (width or height):
+            warnings.warn(
+                "'max_size' will be ignored with 'height' or 'width' set.",
+                UserWarning,
+            )
+            max_size = None
+
+        dst_crs = dst_crs or bounds_crs
+
+        # Transform bbox from bounds_crs → dst_crs
+        if bounds_crs != dst_crs:
+            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        # 1. Estimate output dimensions
+        if dst_crs != self.crs:
+            # Case 1: Reprojection needed
+            # - reproject bbox to dataset CRS
+            # - compute native output shape in dataset resolution/CRS
+            # - compute output shape in output CRS
+            dst_bounds = transform_bounds(dst_crs, self.crs, *bbox, densify_pts=21)
+            native_src_w = max(
+                1, round((dst_bounds[2] - dst_bounds[0]) / abs(self.transform.a))
+            )
+            native_src_h = max(
+                1, round((dst_bounds[3] - dst_bounds[1]) / abs(self.transform.e))
+            )
+            _, dst_width, dst_height = calculate_default_transform(
+                self.crs, dst_crs, native_src_w, native_src_h, *dst_bounds
+            )
+        else:
+            # Case 2: No reprojection needed
+            # - keep output dataset bbox as input bbox
+            # - compute output shape in dataset resolution/CRS
+            dst_bounds = bbox
+            dst_width = max(1, round((bbox[2] - bbox[0]) / abs(self.transform.a)))
+            dst_height = max(1, round((bbox[3] - bbox[1]) / abs(self.transform.e)))
+
+        # Case 1: `max_size` is set,
+        # compute output shape based on it,
+        # respecting aspect ratio of the output bbox (dst_width/dst_height)
+        if max_size:
+            height, width = _get_width_height(max_size, dst_height, dst_width)
+
+        # Case 2: One of width/height is missing,
+        # compute it but keep the aspect ratio from the max output bbox (dst_width/dst_height)
+        elif _missing_size(width, height):
+            ratio = dst_height / dst_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
+
+        # 2. Output shape (in the output CRS)
+        height = cast(int, height or dst_height)
+        width = cast(int, width or dst_width)
+
+        # 3. Build pixel window from bounds in dataset CRS
+        rasterio_win = window_from_bounds(*dst_bounds, transform=self.transform)
+        row_off = math.floor(rasterio_win.row_off)
+        col_off = math.floor(rasterio_win.col_off)
+        win_width = math.ceil(rasterio_win.width) + 1
+        win_height = math.ceil(rasterio_win.height) + 1
+
+        # Validate intersection
+        col_end = min(self.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
+        row_end = min(self.height, math.ceil(rasterio_win.row_off + rasterio_win.height))
+        if col_off >= col_end or row_off >= row_end:
+            raise ValueError("Input BBOX and dataset bounds do not intersect")
+
+        # Clamp window to array bounds
+        clipped_col_off = max(0, col_off)
+        clipped_row_off = max(0, row_off)
+        clipped_col_stop = min(self.width, col_off + win_width)
+        clipped_row_stop = min(self.height, row_off + win_height)
+
+        # 3. Read data from zarr array
+        img = await self._read(
+            indexes=indexes,
+            row_slice=slice(clipped_row_off, clipped_row_stop),
+            col_slice=slice(clipped_col_off, clipped_col_stop),
+        )
+
+        # 4. Reproject/resample to output CRS and dimensions
+        img = warp(
+            img,
+            dst_crs=dst_crs,
+            dst_bounds=bbox,
+            dst_width=width,
+            dst_height=height,
+            reproject_method=reproject_method,
+        )
+
+        if expression:
+            img = img.apply_expression(expression)
+
+        return img
+
+    async def preview(self) -> ImageData:
+        """Read a preview of a Dataset.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        raise NotImplementedError
+
+    async def point(self, lon: float, lat: float) -> PointData:
+        """Read a value from a Dataset.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latitude.
+
+        Returns:
+            list: Pixel value per bands/assets.
+
+        """
+        raise NotImplementedError
+
+    async def feature(self, shape: dict) -> ImageData:
+        """Read a Dataset for a GeoJSON feature.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        raise NotImplementedError
+
+    async def _read(
+        self,
+        indexes: Sequence[int] | None = None,
+        row_slice: slice | None = None,
+        col_slice: slice | None = None,
+    ) -> ImageData:
+        """Read data from zarr AsyncArray.
+
+        Args:
+            indexes: Band indexes (1-based). If None, reads all bands.
+            row_slice: Row slice for windowed read.
+            col_slice: Column slice for windowed read.
+
+        Returns:
+            ImageData: Image data with mask and spatial info.
+
+        """
+        # Default to full array
+        if row_slice is None:
+            row_slice = slice(0, self.height)
+        if col_slice is None:
+            col_slice = slice(0, self.width)
+
+        # Build selection based on array dimensionality
+        if len(self.input.shape) == 2:
+            # 2D array: (height, width) - indexes not applicable
+            selection = (row_slice, col_slice)
+            if indexes is None:
+                indexes = [1]  # Single band
+            # Read data asynchronously
+            data = await self.input.getitem(selection)
+            # Ensure 3D shape (bands, height, width)
+            data = numpy.expand_dims(data, axis=0)
+
+        else:
+            # 3D array: (bands, height, width)
+            num_bands = self.input.shape[0]
+            if indexes is None:
+                indexes = list(range(1, num_bands + 1))
+
+            # Convert 1-based indexes to 0-based for selection
+            band_indices = [ix - 1 for ix in indexes]
+
+            # Use orthogonal selection for band indexing (supports list indices)
+            data = await self.input.get_orthogonal_selection(
+                (band_indices, row_slice, col_slice),
+            )
+
+        masked_data = numpy.ma.MaskedArray(data)
+        # if data has Nodata then we simply make sure the mask == the nodata
+        nodata = self.options.get("nodata", getattr(self.input, "fill_value", None))
+        if nodata is not None:
+            if numpy.isnan(nodata):
+                masked_data.mask = numpy.isnan(masked_data.data)
+            else:
+                masked_data.mask = masked_data.data == nodata
+
+        # Calculate bounds for the read window
+        read_height = row_slice.stop - row_slice.start
+        read_width = col_slice.stop - col_slice.start
+        read_transform = self.transform * Affine.translation(
+            col_slice.start, row_slice.start
+        )
+        read_bounds = array_bounds(read_height, read_width, read_transform)
+
+        return ImageData(
+            masked_data,
+            bounds=read_bounds,
+            crs=self.crs,
+            band_descriptions=[f"b{ix}" for ix in indexes],
+            nodata=nodata,
         )
 
 

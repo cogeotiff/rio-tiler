@@ -3761,6 +3761,7 @@ dependencies = [
 async = [
     { name = "async-geotiff" },
     { name = "obstore" },
+    { name = "zarr" },
 ]
 s3 = [
     { name = "boto3" },
@@ -3834,6 +3835,7 @@ requires-dist = [
     { name = "rioxarray", marker = "extra == 'xarray'" },
     { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.10.0" },
     { name = "xarray", marker = "extra == 'xarray'" },
+    { name = "zarr", marker = "extra == 'async'", specifier = "~=3.0" },
     { name = "zarr", marker = "extra == 'zarr'", specifier = "~=3.0" },
 ]
 provides-extras = ["async", "s3", "xarray", "zarr"]
