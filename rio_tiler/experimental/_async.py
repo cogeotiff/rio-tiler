@@ -891,7 +891,6 @@ class AsyncZarrReader(AsyncBaseReader):
 
     input: AsyncArray = attr.ib()
 
-    bounds: BBox = attr.ib()
     crs: CRS = attr.ib()
     transform: Affine = attr.ib()
 
@@ -899,6 +898,7 @@ class AsyncZarrReader(AsyncBaseReader):
 
     height: int | None = attr.ib(default=None, init=False)
     width: int | None = attr.ib(default=None, init=False)
+    bounds: BBox = attr.ib(init=False)
 
     options: ZarrOptions = attr.ib()
 
@@ -929,6 +929,8 @@ class AsyncZarrReader(AsyncBaseReader):
             raise ValueError(
                 f"Expected 2D or 3D array, got {len(shape)}D with shape {shape}"
             )
+
+        self.bounds = array_bounds(self.height, self.width, self.transform)
 
     async def info(self) -> Info:
         """Return Dataset's info.

@@ -56,10 +56,10 @@ async def test_async_zarr_reader(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),  # (minx, miny, maxx, maxy)
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
+    assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
 
     # Test _read (full array)
     img = await reader._read()
@@ -87,11 +87,11 @@ async def test_2d_array(zarr_store_2d):
     transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500050, 4000050),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
 
+    assert reader.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
     img = await reader._read()
     assert img.array.shape == (1, 50, 50), f"Expected (1, 50, 50), got {img.array.shape}"
 
@@ -103,10 +103,10 @@ async def test_part_same_crs(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
+    assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
 
     # Read a 40x40 pixel subset
     img = await reader.part(
@@ -125,7 +125,6 @@ async def test_part_with_explicit_size(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
@@ -149,7 +148,6 @@ async def test_part_with_max_size(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
@@ -172,7 +170,6 @@ async def test_part_with_indexes(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
@@ -203,7 +200,6 @@ async def test_tile(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
@@ -220,7 +216,6 @@ async def test_tile_custom_size(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
@@ -237,7 +232,6 @@ async def test_tile_with_indexes(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
@@ -257,7 +251,6 @@ async def test_tile_outside_bounds(zarr_store):
     transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
     reader = AsyncZarrReader(
         input=arr,
-        bounds=(500000, 4000000, 500100, 4000100),
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
