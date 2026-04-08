@@ -3754,7 +3754,7 @@ dependencies = [
     { name = "pystac" },
     { name = "rasterio", version = "1.4.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "rasterio", version = "1.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
-    { name = "typing-extensions", marker = "python_full_version < '3.12'" },
+    { name = "typing-extensions", marker = "python_full_version < '3.15'" },
 ]
 
 [package.optional-dependencies]
@@ -3832,7 +3832,7 @@ requires-dist = [
     { name = "pystac", specifier = ">=1.9,<2.0" },
     { name = "rasterio", specifier = ">=1.4.0" },
     { name = "rioxarray", marker = "extra == 'xarray'" },
-    { name = "typing-extensions", marker = "python_full_version < '3.12'", specifier = ">=4.10.0" },
+    { name = "typing-extensions", marker = "python_full_version < '3.15'", specifier = ">=4.10.0" },
     { name = "xarray", marker = "extra == 'xarray'" },
     { name = "zarr", marker = "extra == 'zarr'", specifier = "~=3.0" },
 ]

@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.0.6 (2026-04-08)
+
+* fix: typing-extensions dependency for python <3.15
+
 ## 9.0.5 (2026-04-02)
 
 * fix: incorect default band descriptions expression 
