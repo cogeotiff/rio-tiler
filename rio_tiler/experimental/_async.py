@@ -6,7 +6,7 @@ import abc
 import math
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, TypedDict, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
 import numpy
@@ -26,9 +26,10 @@ from rasterio.warp import transform_bounds, transform_geom
 from rasterio.windows import from_bounds as window_from_bounds
 from zarr.core.array import AsyncArray
 
-from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.constants import MAX_ARRAY_SIZE, WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
+    MaxArraySizeError,
     PointOutsideBounds,
     TileOutsideBounds,
 )
@@ -861,12 +862,6 @@ class AsyncReader(AsyncBaseReader):
         )
 
 
-class ZarrOptions(TypedDict, total=False):
-    """Reader Options."""
-
-    nodata: NoData | None
-
-
 @attr.s
 class AsyncZarrReader(AsyncBaseReader):
     """Rio-tiler AsyncZarrReader.
@@ -902,12 +897,6 @@ class AsyncZarrReader(AsyncBaseReader):
 
     _dims: list = attr.ib(init=False, factory=list)
 
-    options: ZarrOptions = attr.ib()
-
-    @options.default
-    def _options_default(self):
-        return {}
-
     colormap: dict | None = attr.ib(default=None)
 
     async def __aenter__(self):
@@ -920,6 +909,11 @@ class AsyncZarrReader(AsyncBaseReader):
 
     def __attrs_post_init__(self):
         """Post init: derive height, width, count from array shape."""
+        if self.input.ndim not in (2, 3):
+            raise ValueError(
+                f"Expected 2D or 3D array, got {self.input.ndim}D with shape {self.input.shape}"
+            )
+
         shape = self.input.shape
         if len(shape) == 2:
             self.height = shape[0]
@@ -927,10 +921,6 @@ class AsyncZarrReader(AsyncBaseReader):
         elif len(shape) == 3:
             self.height = shape[1]
             self.width = shape[2]
-        else:
-            raise ValueError(
-                f"Expected 2D or 3D array, got {len(shape)}D with shape {shape}"
-            )
 
         self.bounds = array_bounds(self.height, self.width, self.transform)
 
@@ -952,14 +942,48 @@ class AsyncZarrReader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def statistics(self) -> dict[str, BandStatistics]:
+    async def statistics(
+        self,
+        categorical: bool = False,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
+        max_size: int = 1024,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
+
+        Args:
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of categories to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            indexes (int or sequence of int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to `self.preview`.
 
         Returns:
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        raise NotImplementedError
+        data = await self.preview(
+            indexes=indexes,
+            expression=expression,
+            max_size=max_size,
+            nodata=nodata,
+            **kwargs,
+        )
+
+        return data.statistics(
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            hist_options=hist_options,
+        )
 
     async def tile(
         self,
@@ -969,6 +993,8 @@ class AsyncZarrReader(AsyncBaseReader):
         tilesize: int | None = None,
         indexes: Indexes | None = None,
         expression: str | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Map tile from the Dataset.
@@ -980,6 +1006,8 @@ class AsyncZarrReader(AsyncBaseReader):
             tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -1000,12 +1028,13 @@ class AsyncZarrReader(AsyncBaseReader):
             bbox,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
+            indexes=indexes,
+            expression=expression,
             height=tilesize or matrix.tileHeight,
             width=tilesize or matrix.tileWidth,
             max_size=None,
-            indexes=indexes,
-            expression=expression,
-            **kwargs,
+            nodata=nodata,
+            reproject_method=reproject_method,
         )
 
     async def part(  # noqa: C901
@@ -1018,6 +1047,7 @@ class AsyncZarrReader(AsyncBaseReader):
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
+        nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
@@ -1032,6 +1062,7 @@ class AsyncZarrReader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
 
         Returns:
@@ -1129,6 +1160,7 @@ class AsyncZarrReader(AsyncBaseReader):
             indexes=indexes,
             row_slice=slice(clipped_row_off, clipped_row_stop),
             col_slice=slice(clipped_col_off, clipped_col_stop),
+            nodata=nodata,
         )
 
         # 4. Reproject/resample to output CRS and dimensions
@@ -1146,14 +1178,105 @@ class AsyncZarrReader(AsyncBaseReader):
 
         return img
 
-    async def preview(self) -> ImageData:
+    async def preview(
+        self,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        dst_crs: CRS | None = None,
+        max_size: int | None = 1024,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        resampling_method: RIOResampling = "nearest",
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a preview of a Dataset.
+
+        Args:
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
+            reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        nbytes = await self.input.nbytes_stored()
+        if nbytes > MAX_ARRAY_SIZE:
+            raise MaxArraySizeError(
+                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {self.input.shape} in memory."
+            )
+
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        if max_size and (width or height):
+            warnings.warn(
+                "'max_size' will be ignored with with 'height' or 'width' set.",
+                UserWarning,
+            )
+            max_size = None
+
+        # 1. Determine output shape
+        # get height/width of the dataset in the output CRS
+        dst_width = self.width
+        dst_height = self.height
+        if dst_crs and dst_crs != self.crs:
+            # Get shape of the dataset in the output CRS
+            _, dst_width, dst_height = calculate_default_transform(
+                self.crs, dst_crs, self.width, self.height, *self.bounds
+            )
+
+        if max_size:
+            height, width = _get_width_height(max_size, dst_height, dst_width)
+
+        elif _missing_size(width, height):
+            ratio = dst_height / dst_width
+            if width:
+                height = math.ceil(width * ratio)
+            else:
+                width = math.ceil(height / ratio)
+
+        # Shape in the output CRS
+        height = height or dst_height
+        width = width or dst_width
+
+        # 2. Read data
+        img = await self._read(indexes=indexes, nodata=nodata)
+        if expression:
+            img = img.apply_expression(expression)
+
+        # 3. Reproject if needed
+        if dst_crs and dst_crs != self.crs:
+            img = img.reproject(
+                dst_crs=dst_crs,
+                reproject_method=reproject_method,
+            )
+
+        # 4. Resize
+        if width != img.width or height != img.height:
+            img = img.resize(
+                width=width,
+                height=height,
+                resampling_method=resampling_method,
+            )
+
+        return img
 
     async def point(self, lon: float, lat: float) -> PointData:
         """Read a value from a Dataset.
@@ -1185,6 +1308,7 @@ class AsyncZarrReader(AsyncBaseReader):
         indexes: Sequence[int] | None = None,
         row_slice: slice | None = None,
         col_slice: slice | None = None,
+        nodata: NoData | None = None,
     ) -> ImageData:
         """Read data from zarr AsyncArray.
 
@@ -1192,6 +1316,7 @@ class AsyncZarrReader(AsyncBaseReader):
             indexes: Band indexes (1-based). If None, reads all bands.
             row_slice: Row slice for windowed read.
             col_slice: Column slice for windowed read.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
             ImageData: Image data with mask and spatial info.
@@ -1229,8 +1354,13 @@ class AsyncZarrReader(AsyncBaseReader):
             )
 
         masked_data = numpy.ma.MaskedArray(data)
+
         # if data has Nodata then we simply make sure the mask == the nodata
-        nodata = self.options.get("nodata", getattr(self.input, "fill_value", None))
+        nodata = (
+            nodata
+            if nodata is not None
+            else getattr(self.input.metadata, "fill_value", None)
+        )
         if nodata is not None:
             if numpy.isnan(nodata):
                 masked_data.mask = numpy.isnan(masked_data.data)

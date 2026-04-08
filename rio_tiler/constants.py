@@ -11,6 +11,7 @@ from rio_tiler.types import BBox, ColorTuple, Indexes, NoData, NumType  # noqa
 MAX_THREADS = int(
     os.environ.get("RIO_TILER_MAX_THREADS", multiprocessing.cpu_count() * 5)
 )
+MAX_ARRAY_SIZE = int(os.environ.get("RIO_TILER_MAX_ARRAY_SIZE", 1_000_000_000))  # 1Gb
 
 WEB_MERCATOR_CRS = CRS.from_epsg(3857)
 WGS84_CRS = CRS.from_epsg(4326)

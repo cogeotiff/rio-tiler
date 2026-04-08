@@ -3,7 +3,6 @@
 from __future__ import annotations
 
 import math
-import os
 import warnings
 from typing import Any, TypedDict, cast
 
@@ -21,7 +20,12 @@ from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
 
-from rio_tiler.constants import WEB_MERCATOR_CRS, WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.constants import (
+    MAX_ARRAY_SIZE,
+    WEB_MERCATOR_CRS,
+    WEB_MERCATOR_TMS,
+    WGS84_CRS,
+)
 from rio_tiler.errors import (
     InvalidGeographicBounds,
     MaxArraySizeError,
@@ -50,9 +54,6 @@ try:
     import rioxarray
 except ImportError:  # pragma: nocover
     rioxarray = None  # type: ignore
-
-
-MAX_ARRAY_SIZE = int(os.environ.get("RIO_TILER_MAX_ARRAY_SIZE", 1_000_000_000))  # 1Gb
 
 
 class Options(TypedDict, total=False):

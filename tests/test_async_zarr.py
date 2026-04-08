@@ -1,12 +1,14 @@
 """test rio_tiler.experimental._async.AsyncZarrReader."""
 
+import warnings
+
 import numpy as np
 import pytest
 import zarr
 from affine import Affine
 from rasterio.crs import CRS
 
-from rio_tiler.errors import TileOutsideBounds
+from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
 from rio_tiler.experimental._async import AsyncZarrReader
 
 pytestmark = pytest.mark.asyncio
@@ -262,3 +264,150 @@ async def test_tile_outside_bounds(zarr_store):
     # Tile that doesn't intersect the dataset
     with pytest.raises(TileOutsideBounds):
         await reader.tile(tile_x=1000, tile_y=1000, tile_z=10)
+
+
+async def test_preview(zarr_store):
+    """Test preview method."""
+    arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
+
+    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    reader = AsyncZarrReader(
+        input=arr,
+        crs=CRS.from_epsg(32618),
+        transform=transform,
+    )
+
+    # Dataset is 100x100, smaller than default max_size=1024 → no resize
+    img = await reader.preview()
+    assert img.array.shape == (3, 100, 100)
+    assert img.crs == CRS.from_epsg(32618)
+
+    # Test with max_size smaller than dataset dimensions
+    img = await reader.preview(max_size=50)
+    assert max(img.array.shape[1], img.array.shape[2]) == 50
+    # Square dataset → both dims should equal 50
+    assert img.array.shape == (3, 50, 50)
+
+    # Test with explicit width (height derived from aspect ratio)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        img = await reader.preview(width=64)
+    assert img.width == 64
+    assert img.count == 3
+
+    # Test with explicit height (width derived from aspect ratio)
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        img = await reader.preview(height=64)
+    assert img.height == 64
+    assert img.count == 3
+
+    # Test  with both explicit width and height
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", UserWarning)
+        img = await reader.preview(width=64, height=32)
+    assert img.array.shape == (3, 32, 64)
+
+    # Test with band selection.
+    img = await reader.preview(indexes=1)
+    assert img.count == 1
+
+    img = await reader.preview(indexes=(1, 3))
+    assert img.count == 2
+
+    # Test with band expression.
+    img = await reader.preview(expression="b1/b2")
+    assert img.count == 1
+
+    # Test warns when both expression and indexes are passed
+    with pytest.warns(ExpressionMixingWarning):
+        img = await reader.preview(indexes=1, expression="b1/b2")
+    assert img.count == 1
+
+    # Test reprojects to dst_crs
+    img = await reader.preview(dst_crs=CRS.from_epsg(4326))
+    assert img.crs == CRS.from_epsg(4326)
+
+
+async def test_preview_2d(zarr_store_2d):
+    """Test preview() with a 2D (single-band) array."""
+    arr = await zarr.api.asynchronous.open_array(store=zarr_store_2d, mode="r")
+
+    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    reader = AsyncZarrReader(
+        input=arr,
+        crs=CRS.from_epsg(32618),
+        transform=transform,
+    )
+
+    img = await reader.preview()
+    assert img.array.shape == (1, 50, 50)
+
+
+async def test_statistics(zarr_store):
+    """Test statistics() method returns BandStatistics for each band."""
+    arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
+
+    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    reader = AsyncZarrReader(
+        input=arr,
+        crs=CRS.from_epsg(32618),
+        transform=transform,
+    )
+
+    stats = await reader.statistics()
+    assert isinstance(stats, dict)
+    assert set(stats.keys()) == {"b1", "b2", "b3"}
+    for band_stats in stats.values():
+        assert band_stats.min is not None
+        assert band_stats.max is not None
+        assert band_stats.mean is not None
+        assert band_stats.count > 0
+        # nodata pixels should be excluded
+        assert band_stats.min >= 0.0
+        assert band_stats.max <= 1.0
+
+    # overwrite nodata value
+    stats = await reader.statistics(nodata=0, indexes=1)
+    assert isinstance(stats, dict)
+    band_stats = stats["b1"]
+    assert band_stats.min == -9999.0
+
+    # Test with band selection
+    stats = await reader.statistics(indexes=1)
+    assert set(stats.keys()) == {"b1"}
+
+    stats = await reader.statistics(indexes=(1, 3))
+    assert set(stats.keys()) == {"b1", "b3"}
+
+    # Test with a band expression
+    stats = await reader.statistics(expression="b1/b2")
+    assert len(stats) == 1
+    assert set(stats.keys()) == {"b1"}
+    assert stats["b1"].description == "b1/b2"
+
+    # Test returns requested percentile values
+    stats = await reader.statistics(percentiles=[5, 25, 75, 95])
+    for band_stats in stats.values():
+        extra = band_stats.model_extra or {}
+        assert "percentile_5" in extra
+        assert "percentile_25" in extra
+        assert "percentile_75" in extra
+        assert "percentile_95" in extra
+
+
+async def test_statistics_2d(zarr_store_2d):
+    """Test statistics() with a 2D (single-band) array."""
+    arr = await zarr.api.asynchronous.open_array(store=zarr_store_2d, mode="r")
+
+    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    reader = AsyncZarrReader(
+        input=arr,
+        crs=CRS.from_epsg(32618),
+        transform=transform,
+    )
+
+    stats = await reader.statistics()
+    assert set(stats.keys()) == {"b1"}
+    assert stats["b1"].min >= 0.0
+    assert stats["b1"].max <= 1.0
