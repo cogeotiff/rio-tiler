@@ -872,11 +872,10 @@ class AsyncZarrReader(AsyncBaseReader):
     """Rio-tiler AsyncZarrReader.
 
     A pure zarr-python async reader that accepts a zarr AsyncArray
-    plus geospatial metadata (bounds, transform, crs) as input.
+    plus geospatial metadata (transform, crs) as input.
 
     Attributes:
         input: zarr AsyncArray (2D or 3D with bands-first layout).
-        bounds: Dataset bounds (minx, miny, maxx, maxy).
         crs: Coordinate reference system.
         transform: Affine transform.
         tms: TileMatrixSet for tile operations.
@@ -891,14 +890,17 @@ class AsyncZarrReader(AsyncBaseReader):
 
     input: AsyncArray = attr.ib()
 
+    # TODO: this could be derived from Zarr Spatial/geo-proj conventions
     crs: CRS = attr.ib()
     transform: Affine = attr.ib()
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
-    height: int | None = attr.ib(default=None, init=False)
-    width: int | None = attr.ib(default=None, init=False)
+    height: int = attr.ib(init=False)
+    width: int = attr.ib(init=False)
     bounds: BBox = attr.ib(init=False)
+
+    _dims: list = attr.ib(init=False, factory=list)
 
     options: ZarrOptions = attr.ib()
 
@@ -919,18 +921,27 @@ class AsyncZarrReader(AsyncBaseReader):
     def __attrs_post_init__(self):
         """Post init: derive height, width, count from array shape."""
         shape = self.input.shape
-
-        # Handle 2D (height, width) vs 3D (bands, height, width)
         if len(shape) == 2:
-            self.height, self.width = shape
+            self.height = shape[0]
+            self.width = shape[1]
         elif len(shape) == 3:
-            _, self.height, self.width = shape
+            self.height = shape[1]
+            self.width = shape[2]
         else:
             raise ValueError(
                 f"Expected 2D or 3D array, got {len(shape)}D with shape {shape}"
             )
 
         self.bounds = array_bounds(self.height, self.width, self.transform)
+
+        # TODO: use spatial conventions
+        # ref: https://github.com/zarr-conventions/spatial?tab=readme-ov-file#spatialdimensions
+        dimensions = getattr(self.input.metadata, "dimension_names", [])
+        self._dims = [
+            d
+            for d in dimensions
+            if d.lower() not in ["y", "x", "latitude", "longitude", "lat", "lon"]
+        ]
 
     async def info(self) -> Info:
         """Return Dataset's info.

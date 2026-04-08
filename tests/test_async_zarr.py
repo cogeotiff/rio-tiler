@@ -22,6 +22,7 @@ def zarr_store() -> zarr.storage.MemoryStore:
         chunks=(1, 50, 50),
         dtype="float32",
         fill_value=-9999.0,
+        dimension_names=("band", "y", "x"),
     )
     arr_sync[:] = np.random.rand(3, 100, 100).astype("float32")
     arr_sync[0, 10:20, 10:20] = -9999.0  # Add some nodata
@@ -39,6 +40,7 @@ def zarr_store_2d() -> zarr.storage.MemoryStore:
         chunks=(25, 25),
         dtype="float32",
         fill_value=-9999.0,
+        dimension_names=("y", "x"),
     )
     arr_sync[:] = np.random.rand(50, 50).astype("float32")
     arr_sync[10:20, 10:20] = -9999.0  # Add some nodata
@@ -60,6 +62,7 @@ async def test_async_zarr_reader(zarr_store):
         transform=transform,
     )
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert reader._dims == ["band"]
 
     # Test _read (full array)
     img = await reader._read()
@@ -90,8 +93,9 @@ async def test_2d_array(zarr_store_2d):
         crs=CRS.from_epsg(32618),
         transform=transform,
     )
-
     assert reader.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
+    assert reader._dims == []
+
     img = await reader._read()
     assert img.array.shape == (1, 50, 50), f"Expected (1, 50, 50), got {img.array.shape}"
 
