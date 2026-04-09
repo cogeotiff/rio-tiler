@@ -1,4 +1,4 @@
-"""test rio_tiler.experimental._async.AsyncZarrReader."""
+"""test rio_tiler.experimental.zarr.Reader."""
 
 import os
 import shutil
@@ -19,7 +19,7 @@ from rio_tiler.errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
-from rio_tiler.experimental._async import AsyncZarrReader
+from rio_tiler.experimental.zarr import Reader as AsyncZarrReader
 from rio_tiler.io.xarray import XarrayReader
 
 from .utils import create_zarr

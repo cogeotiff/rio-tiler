@@ -4,7 +4,7 @@ import os
 
 import pytest
 
-from rio_tiler.experimental.zarr import ZarrReader
+from rio_tiler.experimental._zarr import ZarrReader
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")
 ZARR_3D = os.path.join(PREFIX, "dataset_3d.zarr")
