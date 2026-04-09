@@ -119,6 +119,13 @@ async def test_async_zarr_reader(zarr_store):
     img = await reader.tile(tile_x=0, tile_y=0, tile_z=0, tilesize=256)
     assert img.array.shape[0] == 3
 
+    # Test info method
+    info = await reader.info()
+    assert info.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert info.driver == "Zarr"
+    assert info.count == 3
+    assert info.model_dump()
+
 
 async def test_2d_array(zarr_store_2d):
     """Test with a 2D array (single band)."""
@@ -135,6 +142,13 @@ async def test_2d_array(zarr_store_2d):
 
     img = await reader._read()
     assert img.array.shape == (1, 50, 50), f"Expected (1, 50, 50), got {img.array.shape}"
+
+    # Test info method
+    info = await reader.info()
+    assert info.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
+    assert info.driver == "Zarr"
+    assert info.count == 1
+    assert info.model_dump()
 
 
 async def test_part_same_crs(zarr_store):

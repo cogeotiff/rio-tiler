@@ -1019,7 +1019,38 @@ class AsyncZarrReader(AsyncBaseReader):
             rio_tiler.models.Info: Dataset info.
 
         """
-        raise NotImplementedError
+        nodata = getattr(self.input.metadata, "fill_value", None)
+        if nodata is not None:
+            nodata_type = "Nodata"
+        else:
+            nodata_type = "None"
+
+        meta: dict[str, Any] = {
+            "bounds": self.bounds,
+            "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
+            "band_metadata": [(f"b{ix + 1}", {}) for ix in range(self.nbands)],
+            "band_descriptions": [
+                (f"b{ix}", val) for ix, val in enumerate(self.band_descriptions, 1)
+            ],
+            "dtype": self.input.dtype.name,
+            "nodata_type": nodata_type,
+            "colorinterp": None,
+            # additional info (not in default model)
+            "driver": "Zarr",
+            "count": self.nbands,
+            "width": self.width,
+            "height": self.height,
+            "dimensions": self._dims,
+            "attrs": {
+                k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
+                for k, v in self.input.attrs.items()
+            },
+        }
+
+        if nodata is not None:
+            meta.update({"nodata_value": nodata.item()})
+
+        return Info.model_validate(meta)
 
     async def statistics(
         self,
