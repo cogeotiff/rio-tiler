@@ -89,9 +89,8 @@ zarr = [
     "zarr~=3.0",
     "obstore",
 ]
-async = [
+geotiff = [
     "async-geotiff>=0.3,<0.5",
-    "zarr~=3.0",
     "obstore",
 ]
 

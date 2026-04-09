@@ -9,6 +9,7 @@ from typing import Any, cast
 
 import attr
 import numpy
+import zarr
 from affine import Affine
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
@@ -20,7 +21,6 @@ from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
 from rasterio.windows import from_bounds as window_from_bounds
-from zarr.core.array import AsyncArray
 
 from rio_tiler._warp import warp
 from rio_tiler.constants import MAX_ARRAY_SIZE, WEB_MERCATOR_TMS, WGS84_CRS
@@ -65,6 +65,18 @@ def _has_proj(conventions: list[dict]) -> bool:
     )
 
 
+def _get_proj_crs(attributes: dict) -> CRS:
+    """Get CRS defined by PROJ conventions."""
+    proj_string = next(
+        (  # type: ignore
+            attributes.get(key)
+            for key in ["proj:code", "proj:wkt2", "proj:projjson"]
+            if key in attributes
+        )
+    )
+    return CRS.from_user_input(proj_string)
+
+
 @attr.s
 class Reader(AsyncBaseReader):
     """Rio-tiler Zarr.AsyncArray Reader.
@@ -86,7 +98,7 @@ class Reader(AsyncBaseReader):
 
     """
 
-    input: AsyncArray = attr.ib()
+    input: zarr.AsyncArray = attr.ib()
 
     crs: CRS | None = attr.ib(default=None)
     transform: Affine | None = attr.ib(default=None)
@@ -125,8 +137,9 @@ class Reader(AsyncBaseReader):
 
         # NOTE: zarr-python says attrs is of type dict[str, JSON]
         attributes = cast(dict[str, Any], self.input.attrs)
-
         conventions: list[dict] = attributes.get("zarr_conventions", [])
+
+        # Transform
         if not self.transform and _has_spatial(conventions):
             # NOTE: `spatial:dimensions` is the only required attribute for the `spatial` convention
             # but if this ever change we default to list of common spatial dimension names
@@ -147,15 +160,9 @@ class Reader(AsyncBaseReader):
             "Affine transform is required, either as an argument or in `spatial` zarr_conventions"
         )
 
+        # CRS
         if not self.crs and _has_proj(conventions):
-            proj_string = next(
-                (  # type: ignore
-                    attributes.get(key)
-                    for key in ["proj:code", "proj:wkt2", "proj:projjson"]
-                    if key in attributes
-                )
-            )
-            self.crs = CRS.from_user_input(proj_string)
+            self.crs = _get_proj_crs(attributes)
 
         assert self.crs, (
             "CRS is required, either as an argument or in `geo-proj` zarr_conventions"
