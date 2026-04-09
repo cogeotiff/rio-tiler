@@ -19,7 +19,7 @@ from rasterio.enums import Resampling
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
-from rasterio.transform import array_bounds, from_bounds
+from rasterio.transform import array_bounds, from_bounds, rowcol
 from rasterio.warp import calculate_default_transform, reproject
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
@@ -948,7 +948,6 @@ class AsyncZarrReader(AsyncBaseReader):
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
         hist_options: dict | None = None,
-        max_size: int = 1024,
         indexes: Indexes | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
@@ -970,15 +969,28 @@ class AsyncZarrReader(AsyncBaseReader):
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        data = await self.preview(
-            indexes=indexes,
-            expression=expression,
-            max_size=max_size,
-            nodata=nodata,
-            **kwargs,
-        )
+        nbytes = await self.input.nbytes_stored()
+        if nbytes > MAX_ARRAY_SIZE:
+            raise MaxArraySizeError(
+                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {self.input.shape} in memory."
+            )
 
-        return data.statistics(
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        img = await self._read(indexes=indexes, nodata=nodata)
+        if expression:
+            img = img.apply_expression(expression)
+
+        return img.statistics(
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,
@@ -1030,9 +1042,9 @@ class AsyncZarrReader(AsyncBaseReader):
             bounds_crs=self.tms.rasterio_crs,
             indexes=indexes,
             expression=expression,
+            max_size=None,
             height=tilesize or matrix.tileHeight,
             width=tilesize or matrix.tileWidth,
-            max_size=None,
             nodata=nodata,
             reproject_method=reproject_method,
         )
@@ -1278,30 +1290,166 @@ class AsyncZarrReader(AsyncBaseReader):
 
         return img
 
-    async def point(self, lon: float, lat: float) -> PointData:
+    async def point(
+        self,
+        lon: float,
+        lat: float,
+        coord_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> PointData:
         """Read a value from a Dataset.
 
         Args:
             lon (float): Longitude.
             lat (float): Latitude.
+            coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
+            nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
 
         Returns:
-            list: Pixel value per bands/assets.
+            PointData: Pixel value per bands/assets.
 
         """
-        raise NotImplementedError
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
 
-    async def feature(self, shape: dict) -> ImageData:
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        coordinates = (lon, lat)
+        if coord_crs != self.crs:
+            xs, ys = transform_coords(coord_crs, self.crs, [lon], [lat])
+            lon, lat = xs[0], ys[0]
+
+        dataset_min_lon, dataset_min_lat, dataset_max_lon, dataset_max_lat = self.bounds
+        # check if latitude is inverted
+        if dataset_min_lat > dataset_max_lat:
+            warnings.warn(
+                "BoundingBox of the dataset is inverted (minLat > maxLat).",
+                UserWarning,
+            )
+
+        dataset_min_lat, dataset_max_lat = (
+            min(dataset_min_lat, dataset_max_lat),
+            max(dataset_min_lat, dataset_max_lat),
+        )
+        if not (
+            (dataset_min_lon < lon < dataset_max_lon)
+            and (dataset_min_lat < lat < dataset_max_lat)
+        ):
+            raise PointOutsideBounds("Point is outside dataset bounds")
+
+        y, x = rowcol(self.transform, lon, lat)
+
+        img = await self._read(
+            row_slice=slice(y, y + 1),
+            col_slice=slice(x, x + 1),
+            indexes=indexes,
+            nodata=nodata,
+        )
+
+        pt = PointData(
+            img.array[:, 0, 0],
+            band_names=img.band_names,
+            band_descriptions=img.band_descriptions,
+            coordinates=coordinates,
+            crs=coord_crs,
+            pixel_location=(x, y),
+            nodata=img.nodata,
+            scales=img.scales,
+            offsets=img.offsets,
+            metadata=img.metadata,
+        )
+        if expression:
+            pt = pt.apply_expression(expression)
+
+        return pt
+
+    async def feature(
+        self,
+        shape: dict,
+        dst_crs: CRS | None = None,
+        shape_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
             shape (dict): Valid GeoJSON feature.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        shape = _validate_shape_input(shape)
+
+        if not dst_crs:
+            dst_crs = shape_crs
+
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
+
+        img = await self.part(
+            bbox,
+            dst_crs=dst_crs,
+            bounds_crs=shape_crs,
+            indexes=indexes,
+            expression=expression,
+            max_size=max_size,
+            height=height,
+            width=width,
+            nodata=nodata,
+            reproject_method=reproject_method,
+        )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            cutline_mask = rasterize(
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            ).astype("bool")
+
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
 
     async def _read(
         self,
