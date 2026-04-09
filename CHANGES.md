@@ -1,6 +1,14 @@
 
 # Unreleased
 
+* changed: `rio_tiler.experimental.zarr.ZarrReader` -> `rio_tiler.experimental._zarr.ZarrReader` 
+* changed: `rio_tiler.experimental._async` -> `rio_tiler.experimental.geotiff` 
+* changed: `rio_tiler.experimental._async.AsyncBaseReader` -> `rio_tiler.io.base.AsyncBaseReader`
+* add: `rio_tiler.experimental.zarr.Reader` (async zarr-python reader)
+* changed: `rio_tiler.experimental._async.warp` -> `rio_tiler._warp.warp`
+* changed: `rio_tiler.io.xarray.MAX_ARRAY_SIZE` -> `rio_tiler.constant.MAX_ARRAY_SIZE` 
+* changed: `async` -> `geotiff` optional-dependencies
+
 ## 9.0.6 (2026-04-08)
 
 * fix: typing-extensions dependency for python <3.15
