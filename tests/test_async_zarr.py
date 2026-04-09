@@ -518,6 +518,40 @@ async def test_point_2d(zarr_store_2d):
     assert pt.band_names == ["b1"]
 
 
+async def test_band_descriptions(zarr_dataset):
+    """Test XarrayReader and AsyncZarrReader compatibility."""
+    store = obstore.store.from_url(f"file://{zarr_dataset}")
+    zarr_store = ObjectStore(store=store, read_only=True)
+
+    group = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
+    array = await group.getitem("dataset")
+
+    height = array.shape[1]
+    width = array.shape[2]
+    transform = from_bounds(-179.95, -89.95, 179.95, 89.95, width, height)
+
+    # Get Time coordinates from the zarr store
+    time = await group.getitem("time")
+    time_arrray = await time.getitem(slice(None))
+
+    zarrds = AsyncZarrReader(
+        input=array,
+        crs=CRS.from_epsg(4326),
+        transform=transform,
+        band_names=[str(d) for d in time_arrray.tolist()],
+    )
+    assert zarrds.band_descriptions == ["2022-01-01", "2022-01-02"]
+
+    img = await zarrds.preview(indexes=1)
+    assert img.band_descriptions == ["2022-01-01"]
+
+    img = await zarrds.preview(indexes=2)
+    assert img.band_descriptions == ["2022-01-02"]
+
+    img = await zarrds.preview(expression="b1/b2")
+    assert img.band_descriptions == ["2022-01-01/2022-01-02"]
+
+
 async def test_compat_xarray(zarr_dataset):
     """Test XarrayReader and AsyncZarrReader compatibility."""
     store = obstore.store.from_url(f"file://{zarr_dataset}")
@@ -533,11 +567,11 @@ async def test_compat_xarray(zarr_dataset):
     xarray_array = ds["dataset"]
     xarray_array = xarray_array.rio.write_crs("epsg:4326")
 
-    group = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
-    array = await group.getitem("dataset")
-
     xarrayds = XarrayReader(input=xarray_array)
     transform = from_bounds(*xarrayds.bounds, xarrayds.width, xarrayds.height)
+
+    group = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
+    array = await group.getitem("dataset")
 
     zarrds = AsyncZarrReader(
         input=array,
