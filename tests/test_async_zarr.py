@@ -92,6 +92,8 @@ async def test_async_zarr_reader(zarr_store):
     # Test _read (full array)
     img = await reader._read()
     assert img.array.shape == (3, 100, 100)
+    assert img.band_names == ["b1", "b2", "b3"]
+    assert img.band_descriptions == ["b1", "b2", "b3"]
 
     # Test _read with window
     img = await reader._read(row_slice=slice(10, 30), col_slice=slice(10, 30))
@@ -209,6 +211,8 @@ async def test_part_with_indexes(zarr_store):
         bounds_crs=CRS.from_epsg(32618),
         indexes=1,
     )
+    assert img.band_names == ["b1"]
+    assert img.band_descriptions == ["b1"]
 
     assert img.array.shape[0] == 1
 
@@ -218,6 +222,8 @@ async def test_part_with_indexes(zarr_store):
         bounds_crs=CRS.from_epsg(32618),
         indexes=(1, 3),
     )
+    assert img.band_names == ["b1", "b3"]
+    assert img.band_descriptions == ["b1", "b3"]
 
     assert img.array.shape[0] == 2
 

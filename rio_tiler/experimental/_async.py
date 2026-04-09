@@ -891,9 +891,16 @@ class AsyncZarrReader(AsyncBaseReader):
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
+    # Array shape
+    nbands: int = attr.ib(init=False)
     height: int = attr.ib(init=False)
     width: int = attr.ib(init=False)
+
+    # Array bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
+
+    # List of names for the first dimension (e.g time, bands, etc)
+    band_names: list[str] | None = attr.ib(default=None)
 
     _dims: list = attr.ib(init=False, factory=list)
 
@@ -916,9 +923,11 @@ class AsyncZarrReader(AsyncBaseReader):
 
         shape = self.input.shape
         if len(shape) == 2:
+            self.nbands = 1
             self.height = shape[0]
             self.width = shape[1]
         elif len(shape) == 3:
+            self.nbands = shape[0]
             self.height = shape[1]
             self.width = shape[2]
 
@@ -932,6 +941,23 @@ class AsyncZarrReader(AsyncBaseReader):
             for d in dimensions
             if d.lower() not in ["y", "x", "latitude", "longitude", "lat", "lon"]
         ]
+
+        if self.band_names:
+            assert len(self.band_names) == self.nbands, (
+                "Length of band_names must match number of bands in the array"
+            )
+
+    @property
+    def band_descriptions(self) -> list[str]:
+        """
+        Return list of `band descriptions` in DataArray.
+
+        `Bands` are all dimensions not defined as spatial dims by rioxarray.
+        """
+        if self.band_names:
+            return self.band_names
+
+        return [f"b{ix + 1}" for ix in range(self.nbands)]
 
     async def info(self) -> Info:
         """Return Dataset's info.
@@ -1523,12 +1549,15 @@ class AsyncZarrReader(AsyncBaseReader):
         )
         read_bounds = array_bounds(read_height, read_width, read_transform)
 
+        bdescr = self.band_descriptions
+        band_descriptions = [bdescr[ix - 1] for ix in indexes]
+
         return ImageData(
             masked_data,
             bounds=read_bounds,
             crs=self.crs,
             band_names=[f"b{idx}" for idx in indexes],
-            band_descriptions=[f"b{ix}" for ix in indexes],
+            band_descriptions=band_descriptions,
             nodata=nodata,
         )
 

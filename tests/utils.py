@@ -1,7 +1,5 @@
 """create Zarr fixtures."""
 
-from datetime import datetime
-
 import numpy
 import xarray
 from zarr.codecs import BloscCodec
@@ -18,7 +16,7 @@ def create_zarr(path: str) -> None:
         coords={
             "x": numpy.arange(-179.9, 180, 0.1),
             "y": numpy.arange(89.9, -90, -0.1),
-            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+            "time": numpy.array(["2022-01-01", "2022-01-02"], dtype="datetime64[D]"),
         },
     )
     data.attrs.update(
@@ -51,7 +49,7 @@ def create_zarr(path: str) -> None:
 
         # Add coordinate encoding
         for coord in ds.coords:
-            encoding[coord] = {"compressors": None}
+            encoding[coord] = {"compressors": None, "chunks": None}
 
         return encoding
 
