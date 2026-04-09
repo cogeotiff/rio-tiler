@@ -3758,10 +3758,9 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
-async = [
+geotiff = [
     { name = "async-geotiff" },
     { name = "obstore" },
-    { name = "zarr" },
 ]
 s3 = [
     { name = "boto3" },
@@ -3818,7 +3817,7 @@ performance = [
 
 [package.metadata]
 requires-dist = [
-    { name = "async-geotiff", marker = "extra == 'async'", specifier = ">=0.3,<0.5" },
+    { name = "async-geotiff", marker = "extra == 'geotiff'", specifier = ">=0.3,<0.5" },
     { name = "attrs" },
     { name = "boto3", marker = "extra == 's3'" },
     { name = "cachetools" },
@@ -3827,7 +3826,7 @@ requires-dist = [
     { name = "morecantile", specifier = ">=5.0,<8.0" },
     { name = "numexpr" },
     { name = "numpy" },
-    { name = "obstore", marker = "extra == 'async'" },
+    { name = "obstore", marker = "extra == 'geotiff'" },
     { name = "obstore", marker = "extra == 'zarr'" },
     { name = "pydantic", specifier = "~=2.0" },
     { name = "pystac", specifier = ">=1.9,<2.0" },
@@ -3835,10 +3834,9 @@ requires-dist = [
     { name = "rioxarray", marker = "extra == 'xarray'" },
     { name = "typing-extensions", marker = "python_full_version < '3.15'", specifier = ">=4.10.0" },
     { name = "xarray", marker = "extra == 'xarray'" },
-    { name = "zarr", marker = "extra == 'async'", specifier = "~=3.0" },
     { name = "zarr", marker = "extra == 'zarr'", specifier = "~=3.0" },
 ]
-provides-extras = ["async", "s3", "xarray", "zarr"]
+provides-extras = ["geotiff", "s3", "xarray", "zarr"]
 
 [package.metadata.requires-dev]
 deploy = [{ name = "hatch" }]
