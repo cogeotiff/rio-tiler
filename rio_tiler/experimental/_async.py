@@ -933,7 +933,7 @@ class AsyncZarrReader(AsyncBaseReader):
         """Support using with Context Managers."""
         pass
 
-    def __attrs_post_init__(self):
+    def __attrs_post_init__(self) -> None:
         """Post init: derive height, width, count from array shape."""
         if self.input.ndim not in (2, 3):
             raise ValueError(
@@ -1025,6 +1025,8 @@ class AsyncZarrReader(AsyncBaseReader):
         else:
             nodata_type = "None"
 
+        attrs: dict[str, Any] = self.input.attrs or {}
+
         meta: dict[str, Any] = {
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
@@ -1043,7 +1045,7 @@ class AsyncZarrReader(AsyncBaseReader):
             "dimensions": self._dims,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
-                for k, v in self.input.attrs.items()
+                for k, v in attrs.items()
             },
         }
 
