@@ -867,8 +867,7 @@ def _has_spatial(conventions: list[dict]) -> bool:
         (
             True
             for c in conventions
-            if c["name"] == "spatial:"
-            # if c["uuid"] == "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
+            if c["uuid"] == "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
         ),
         False,
     )
@@ -879,8 +878,7 @@ def _has_proj(conventions: list[dict]) -> bool:
         (
             True
             for c in conventions
-            if c["name"] == "proj:"
-            # if c["uuid"] == "f17cb550-5864-4468-aeb7-f3180cfb622f"
+            if c["uuid"] == "f17cb550-5864-4468-aeb7-f3180cfb622f"
         ),
         False,
     )
