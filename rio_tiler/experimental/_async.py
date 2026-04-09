@@ -862,6 +862,30 @@ class AsyncReader(AsyncBaseReader):
         )
 
 
+def _has_spatial(conventions: list[dict]) -> bool:
+    return next(
+        (
+            True
+            for c in conventions
+            if c["name"] == "spatial:"
+            # if c["uuid"] == "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
+        ),
+        False,
+    )
+
+
+def _has_proj(conventions: list[dict]) -> bool:
+    return next(
+        (
+            True
+            for c in conventions
+            if c["name"] == "proj:"
+            # if c["uuid"] == "f17cb550-5864-4468-aeb7-f3180cfb622f"
+        ),
+        False,
+    )
+
+
 @attr.s
 class AsyncZarrReader(AsyncBaseReader):
     """Rio-tiler AsyncZarrReader.
@@ -885,9 +909,8 @@ class AsyncZarrReader(AsyncBaseReader):
 
     input: AsyncArray = attr.ib()
 
-    # TODO: this could be derived from Zarr Spatial/geo-proj conventions
-    crs: CRS = attr.ib()
-    transform: Affine = attr.ib()
+    crs: CRS | None = attr.ib(default=None)
+    transform: Affine | None = attr.ib(default=None)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
@@ -901,8 +924,6 @@ class AsyncZarrReader(AsyncBaseReader):
 
     # List of names for the first dimension (e.g time, bands, etc)
     band_names: list[str] | None = attr.ib(default=None)
-
-    _dims: list = attr.ib(init=False, factory=list)
 
     colormap: dict | None = attr.ib(default=None)
 
@@ -921,6 +942,46 @@ class AsyncZarrReader(AsyncBaseReader):
                 f"Expected 2D or 3D array, got {self.input.ndim}D with shape {self.input.shape}"
             )
 
+        spatial_dims = ["y", "x", "latitude", "longitude", "lat", "lon"]
+
+        # NOTE: zarr-python says attrs is of type dict[str, JSON]
+        attributes = cast(dict[str, Any], self.input.attrs)
+
+        conventions: list[dict] = attributes.get("zarr_conventions", [])
+        if not self.transform and _has_spatial(conventions):
+            # NOTE: `spatial:dimensions` is the only required attribute for the `spatial` convention
+            # but if this ever change we default to list of common spatial dimension names
+            spatial_dims = attributes.get("spatial:dimensions", spatial_dims)
+
+            transform_type = attributes.get("spatial:transform_type") or "affine"
+            tr = attributes.get("spatial:transform")
+            if transform_type == "affine" and tr is not None:
+                if attributes.get("spatial:registration", "pixel") == "node":
+                    # NOTE: If the registration is "node", we need to adjust the transform to
+                    # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
+                    tr[2] -= tr[0] / 2
+                    tr[5] -= tr[4] / 2
+
+                self.transform = Affine(*tr)
+
+        assert self.transform, (
+            "Affine transform is required, either as an argument or in `spatial` zarr_conventions"
+        )
+
+        if not self.crs and _has_proj(conventions):
+            proj_string = next(
+                (  # type: ignore
+                    attributes.get(key)
+                    for key in ["proj:code", "proj:wkt2", "proj:projjson"]
+                    if key in attributes
+                )
+            )
+            self.crs = CRS.from_user_input(proj_string)
+
+        assert self.crs, (
+            "CRS is required, either as an argument or in `geo-proj` zarr_conventions"
+        )
+
         shape = self.input.shape
         if len(shape) == 2:
             self.nbands = 1
@@ -933,14 +994,8 @@ class AsyncZarrReader(AsyncBaseReader):
 
         self.bounds = array_bounds(self.height, self.width, self.transform)
 
-        # TODO: use spatial conventions
-        # ref: https://github.com/zarr-conventions/spatial?tab=readme-ov-file#spatialdimensions
         dimensions = getattr(self.input.metadata, "dimension_names", [])
-        self._dims = [
-            d
-            for d in dimensions
-            if d.lower() not in ["y", "x", "latitude", "longitude", "lat", "lon"]
-        ]
+        self._dims = [d for d in dimensions if d.lower() not in spatial_dims]
 
         if self.band_names:
             assert len(self.band_names) == self.nbands, (

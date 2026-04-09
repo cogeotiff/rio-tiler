@@ -30,8 +30,18 @@ pytestmark = pytest.mark.asyncio
 @pytest.fixture
 def zarr_dataset():
     """Create Zarr fixture."""
-    path = os.path.join(os.path.dirname(__file__), "fixtures", "geozarr.zarr")
+    path = os.path.join(os.path.dirname(__file__), "fixtures", "zarr_dataset.zarr")
     create_zarr(path)
+    yield path
+    if os.path.exists(path):
+        shutil.rmtree(path)
+
+
+@pytest.fixture
+def geozarr_dataset():
+    """Create Zarr fixture."""
+    path = os.path.join(os.path.dirname(__file__), "fixtures", "geozarr_dataset.zarr")
+    create_zarr(path, geozarr=True)
     yield path
     if os.path.exists(path):
         shutil.rmtree(path)
@@ -526,10 +536,6 @@ async def test_band_descriptions(zarr_dataset):
     group = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
     array = await group.getitem("dataset")
 
-    height = array.shape[1]
-    width = array.shape[2]
-    transform = from_bounds(-179.95, -89.95, 179.95, 89.95, width, height)
-
     # Get Time coordinates from the zarr store
     time = await group.getitem("time")
     time_arrray = await time.getitem(slice(None))
@@ -537,7 +543,7 @@ async def test_band_descriptions(zarr_dataset):
     zarrds = AsyncZarrReader(
         input=array,
         crs=CRS.from_epsg(4326),
-        transform=transform,
+        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
         band_names=[str(d) for d in time_arrray.tolist()],
     )
     assert zarrds.band_descriptions == ["2022-01-01", "2022-01-02"]
@@ -550,6 +556,30 @@ async def test_band_descriptions(zarr_dataset):
 
     img = await zarrds.preview(expression="b1/b2")
     assert img.band_descriptions == ["2022-01-01/2022-01-02"]
+
+
+async def test_geozarr(geozarr_dataset):
+    """Test XarrayReader and AsyncZarrReader compatibility."""
+    store = obstore.store.from_url(f"file://{geozarr_dataset}")
+    zarr_store = ObjectStore(store=store, read_only=True)
+
+    group = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
+    array = await group.getitem("dataset")
+
+    # Get Time coordinates from the zarr store
+    time = await group.getitem("time")
+    time_arrray = await time.getitem(slice(None))
+
+    zarrds = AsyncZarrReader(
+        input=array,
+        band_names=[str(d) for d in time_arrray.tolist()],
+    )
+    assert zarrds.crs == CRS.from_epsg(4326)
+    assert zarrds.bounds == (-180.0, -90.0, 180.0, 90.0)
+
+    img = await zarrds.preview(indexes=1)
+    assert img.crs == CRS.from_epsg(4326)
+    assert img.bounds == (-180.0, -90.0, 180.0, 90.0)
 
 
 async def test_compat_xarray(zarr_dataset):
@@ -576,6 +606,9 @@ async def test_compat_xarray(zarr_dataset):
     zarrds = AsyncZarrReader(
         input=array,
         crs=CRS.from_epsg(4326),
+        # Ref: https://github.com/cogeotiff/rio-tiler/issues/905
+        # Use the same transform as xarray to ensure the same bounds and pixel alignment
+        # transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
         transform=transform,
     )
 
