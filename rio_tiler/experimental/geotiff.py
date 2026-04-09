@@ -1,39 +1,38 @@
-"""rio_tiler.experimental.zarr reader: rio-tiler Async reader built on top of zarr-python."""
+"""rio_tiler.experimental.geotiff reader: rio-tiler Async reader built on top of async-geotiff."""
 
 from __future__ import annotations
 
 import math
 import warnings
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import TYPE_CHECKING, Any, Literal, cast
 
 import attr
 import numpy
-from affine import Affine
+from async_geotiff import Window
+from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
-from rasterio.transform import array_bounds, rowcol
+from rasterio.transform import array_bounds, from_bounds
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
 from rasterio.windows import from_bounds as window_from_bounds
-from zarr.core.array import AsyncArray
 
 from rio_tiler._warp import warp
-from rio_tiler.constants import MAX_ARRAY_SIZE, WEB_MERCATOR_TMS, WGS84_CRS
+from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
-    MaxArraySizeError,
     PointOutsideBounds,
     TileOutsideBounds,
 )
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import AsyncBaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
+from rio_tiler.types import BBox, Indexes, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
     _get_width_height,
@@ -42,67 +41,17 @@ from rio_tiler.utils import (
     cast_to_sequence,
 )
 
-
-def _has_spatial(conventions: list[dict]) -> bool:
-    return next(
-        (
-            True
-            for c in conventions
-            if c["uuid"] == "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
-        ),
-        False,
-    )
-
-
-def _has_proj(conventions: list[dict]) -> bool:
-    return next(
-        (
-            True
-            for c in conventions
-            if c["uuid"] == "f17cb550-5864-4468-aeb7-f3180cfb622f"
-        ),
-        False,
-    )
+if TYPE_CHECKING:
+    from async_geotiff import GeoTIFF, Overview
 
 
 @attr.s
 class Reader(AsyncBaseReader):
-    """Rio-tiler Zarr.AsyncArray Reader.
+    """Rio-tiler.io GeoTIFFReader."""
 
-    A pure zarr-python async reader that accepts a zarr AsyncArray
-    plus geospatial metadata (transform, crs) as input.
-
-    Attributes:
-        input: zarr AsyncArray (2D or 3D with bands-first layout).
-        crs: Coordinate reference system.
-        transform: Affine transform.
-        tms: TileMatrixSet for tile operations.
-        options: Reader options including nodata.
-        colormap: Optional colormap dictionary.
-
-    Note:
-        For 3D arrays, expects bands-first layout (bands, height, width).
-        For 2D arrays, treats as single-band (height, width).
-
-    """
-
-    input: AsyncArray = attr.ib()
-
-    crs: CRS | None = attr.ib(default=None)
-    transform: Affine | None = attr.ib(default=None)
+    input: GeoTIFF = attr.ib()
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    # Array shape
-    nbands: int = attr.ib(init=False)
-    height: int = attr.ib(init=False)
-    width: int = attr.ib(init=False)
-
-    # Array bounds (calculated from shape + transform)
-    bounds: BBox = attr.ib(init=False)
-
-    # List of names for the first dimension (e.g time, bands, etc)
-    band_names: list[str] | None = attr.ib(default=None)
 
     colormap: dict | None = attr.ib(default=None)
 
@@ -114,84 +63,57 @@ class Reader(AsyncBaseReader):
         """Support using with Context Managers."""
         pass
 
-    def __attrs_post_init__(self) -> None:
-        """Post init: derive height, width, count from array shape."""
-        if self.input.ndim not in (2, 3):
-            raise ValueError(
-                f"Expected 2D or 3D array, got {self.input.ndim}D with shape {self.input.shape}"
-            )
+    def __attrs_post_init__(self):
+        """Post init."""
+        self.bounds = self.input.bounds
+        self.crs = CRS.from_user_input(self.input.crs)
 
-        spatial_dims = ["y", "x", "latitude", "longitude", "lat", "lon"]
+        self.transform = self.input.transform
+        self.height = self.input.height
+        self.width = self.input.width
 
-        # NOTE: zarr-python says attrs is of type dict[str, JSON]
-        attributes = cast(dict[str, Any], self.input.attrs)
-
-        conventions: list[dict] = attributes.get("zarr_conventions", [])
-        if not self.transform and _has_spatial(conventions):
-            # NOTE: `spatial:dimensions` is the only required attribute for the `spatial` convention
-            # but if this ever change we default to list of common spatial dimension names
-            spatial_dims = attributes.get("spatial:dimensions", spatial_dims)
-
-            transform_type = attributes.get("spatial:transform_type") or "affine"
-            tr = attributes.get("spatial:transform")
-            if transform_type == "affine" and tr is not None:
-                if attributes.get("spatial:registration", "pixel") == "node":
-                    # NOTE: If the registration is "node", we need to adjust the transform to
-                    # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
-                    tr[2] -= tr[0] / 2
-                    tr[5] -= tr[4] / 2
-
-                self.transform = Affine(*tr)
-
-        assert self.transform, (
-            "Affine transform is required, either as an argument or in `spatial` zarr_conventions"
-        )
-
-        if not self.crs and _has_proj(conventions):
-            proj_string = next(
-                (  # type: ignore
-                    attributes.get(key)
-                    for key in ["proj:code", "proj:wkt2", "proj:projjson"]
-                    if key in attributes
-                )
-            )
-            self.crs = CRS.from_user_input(proj_string)
-
-        assert self.crs, (
-            "CRS is required, either as an argument or in `geo-proj` zarr_conventions"
-        )
-
-        shape = self.input.shape
-        if len(shape) == 2:
-            self.nbands = 1
-            self.height = shape[0]
-            self.width = shape[1]
-        elif len(shape) == 3:
-            self.nbands = shape[0]
-            self.height = shape[1]
-            self.width = shape[2]
-
-        self.bounds = array_bounds(self.height, self.width, self.transform)
-
-        dimensions = getattr(self.input.metadata, "dimension_names", [])
-        self._dims = [d for d in dimensions if d.lower() not in spatial_dims]
-
-        if self.band_names:
-            assert len(self.band_names) == self.nbands, (
-                "Length of band_names must match number of bands in the array"
-            )
+        if self.colormap is None and self.input.colormap is not None:
+            self.colormap = self.input.colormap.as_rasterio()
 
     @property
-    def band_descriptions(self) -> list[str]:
-        """
-        Return list of `band descriptions` in DataArray.
+    def minzoom(self):
+        """Return dataset minzoom."""
+        return self._minzoom
 
-        `Bands` are all dimensions not defined as spatial dims by rioxarray.
-        """
-        if self.band_names:
-            return self.band_names
+    @property
+    def maxzoom(self):
+        """Return dataset maxzoom."""
+        return self._maxzoom
 
-        return [f"b{ix + 1}" for ix in range(self.nbands)]
+    def _get_overview_level(
+        self,
+        target_res: float,
+        zoom_level_strategy: Literal["AUTO", "LOWER", "UPPER"] = "AUTO",
+    ) -> int:
+        """Return the overview level corresponding to the resolution."""
+        src_res = max(abs(self.input.transform.a), abs(self.input.transform.e))
+
+        available_resolutions = [src_res] + [
+            min(abs(ovr.transform.a), abs(ovr.transform.e))
+            for ovr in self.input.overviews
+        ]
+
+        # Based on aiocogeo:
+        # https://github.com/geospatial-jeff/aiocogeo/blob/5a1d32c3f22c883354804168a87abb0a2ea1c328/aiocogeo/partial_reads.py#L113-L147
+        percentage = {"AUTO": 50, "LOWER": 100, "UPPER": 0}.get(zoom_level_strategy, 50)
+
+        assert 0 <= percentage <= 100
+        # Iterate over zoom levels from lowest/coarsest to highest/finest. If the `target_res` is more than `percentage`
+        # percent of the way from the zoom level below to the zoom level above, then upsample the zoom level below, else
+        # downsample the zoom level above.
+        for i in reversed(range(1, len(available_resolutions))):
+            res_current = available_resolutions[i]
+            res_higher = available_resolutions[i - 1]
+            threshold = res_current - (res_current - res_higher) * (percentage / 100.0)
+            if target_res > threshold or target_res == res_current:
+                return i
+
+        return 0
 
     async def info(self) -> Info:
         """Return Dataset's info.
@@ -200,38 +122,46 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.Info: Dataset info.
 
         """
-        nodata = getattr(self.input.metadata, "fill_value", None)
-        if nodata is not None:
+        if self.input.nodata is not None:
             nodata_type = "Nodata"
+        elif any(c == ColorInterp.ALPHA for c in self.input.colorinterp):
+            nodata_type = "Alpha"
+        elif self.input._mask_ifd:
+            nodata_type = "Mask"
         else:
             nodata_type = "None"
 
-        attrs: dict[str, Any] = self.input.attrs or {}
+        overviews = [
+            math.ceil(self.input.width / ovr.width) for ovr in self.input.overviews
+        ]
 
         meta: dict[str, Any] = {
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
-            "band_metadata": [(f"b{ix + 1}", {}) for ix in range(self.nbands)],
+            # TODO: get we can band metadata from async-geotiff
+            "band_metadata": [(f"b{ix + 1}", {}) for ix in range(self.input.count)],
+            # TODO: get we can band names from async-geotiff
             "band_descriptions": [
-                (f"b{ix}", val) for ix, val in enumerate(self.band_descriptions, 1)
+                (f"b{ix + 1}", f"b{ix + 1}") for ix in range(self.input.count)
             ],
             "dtype": self.input.dtype.name,
+            "colorinterp": [ix.name for ix in self.input.colorinterp],
             "nodata_type": nodata_type,
-            "colorinterp": None,
             # additional info (not in default model)
-            "driver": "Zarr",
-            "count": self.nbands,
-            "width": self.width,
-            "height": self.height,
-            "dimensions": self._dims,
-            "attrs": {
-                k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
-                for k, v in attrs.items()
-            },
+            "driver": "GTiff",
+            "count": self.input.count,
+            "width": self.input.width,
+            "height": self.input.height,
+            "overviews": overviews,
+            "scales": self.input.scales,
+            "offsets": self.input.offsets,
         }
 
-        if nodata is not None:
-            meta.update({"nodata_value": nodata.item()})
+        if self.colormap:
+            meta.update({"colormap": self.colormap})
+
+        if nodata_type == "Nodata":
+            meta.update({"nodata_value": self.input.nodata})
 
         return Info.model_validate(meta)
 
@@ -241,9 +171,9 @@ class Reader(AsyncBaseReader):
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
         hist_options: dict | None = None,
+        max_size: int = 1024,
         indexes: Indexes | None = None,
         expression: str | None = None,
-        nodata: NoData | None = None,
         **kwargs: Any,
     ) -> dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
@@ -256,34 +186,17 @@ class Reader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            kwargs (optional): Options to forward to `self.preview`.
+            kwargs (optional): Options to forward to `self._read`.
 
         Returns:
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        nbytes = await self.input.nbytes_stored()
-        if nbytes > MAX_ARRAY_SIZE:
-            raise MaxArraySizeError(
-                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {self.input.shape} in memory."
-            )
+        data = await self.preview(
+            max_size=max_size, indexes=indexes, expression=expression, **kwargs
+        )
 
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
-
-        img = await self._read(indexes=indexes, nodata=nodata)
-        if expression:
-            img = img.apply_expression(expression)
-
-        return img.statistics(
+        return data.statistics(
             categorical=categorical,
             categories=categories,
             percentiles=percentiles,
@@ -298,8 +211,6 @@ class Reader(AsyncBaseReader):
         tilesize: int | None = None,
         indexes: Indexes | None = None,
         expression: str | None = None,
-        nodata: NoData | None = None,
-        reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Map tile from the Dataset.
@@ -308,11 +219,6 @@ class Reader(AsyncBaseReader):
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
-            tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
-            indexes (sequence of int or int, optional): Band indexes.
-            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            nodata (int or float, optional): Overwrite dataset internal nodata value.
-            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -333,13 +239,12 @@ class Reader(AsyncBaseReader):
             bbox,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
-            indexes=indexes,
-            expression=expression,
-            max_size=None,
             height=tilesize or matrix.tileHeight,
             width=tilesize or matrix.tileWidth,
-            nodata=nodata,
-            reproject_method=reproject_method,
+            max_size=None,
+            indexes=indexes,
+            expression=expression,
+            **kwargs,
         )
 
     async def part(  # noqa: C901
@@ -352,7 +257,8 @@ class Reader(AsyncBaseReader):
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
-        nodata: NoData | None = None,
+        unscale: bool = False,
+        resampling_method: RIOResampling = "nearest",
         reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
@@ -360,15 +266,16 @@ class Reader(AsyncBaseReader):
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
-            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
-            bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system. Defaults to bounds_crs.
+            bounds_crs (rasterio.crs.CRS, optional): Coordinate reference system of the input bounds. Defaults to WGS84.
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            max_size (int, optional): Limit the size of the longest dimension.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            nodata (int or float, optional): Overwrite dataset internal nodata value.
-            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
+            reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -387,7 +294,7 @@ class Reader(AsyncBaseReader):
 
         if max_size and (width or height):
             warnings.warn(
-                "'max_size' will be ignored with 'height' or 'width' set.",
+                "'max_size' will be ignored with with 'height' or 'width' set.",
                 UserWarning,
             )
             max_size = None
@@ -398,7 +305,7 @@ class Reader(AsyncBaseReader):
         if bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
 
-        # 1. Estimate output dimensions
+        # 1. Estimate `max` output dimensions
         if dst_crs != self.crs:
             # Case 1: Reprojection needed
             # - reproject bbox to dataset CRS
@@ -406,21 +313,22 @@ class Reader(AsyncBaseReader):
             # - compute output shape in output CRS
             dst_bounds = transform_bounds(dst_crs, self.crs, *bbox, densify_pts=21)
             native_src_w = max(
-                1, round((dst_bounds[2] - dst_bounds[0]) / abs(self.transform.a))
+                1, round((dst_bounds[2] - dst_bounds[0]) / abs(self.input.transform.a))
             )
             native_src_h = max(
-                1, round((dst_bounds[3] - dst_bounds[1]) / abs(self.transform.e))
+                1, round((dst_bounds[3] - dst_bounds[1]) / abs(self.input.transform.e))
             )
             _, dst_width, dst_height = calculate_default_transform(
                 self.crs, dst_crs, native_src_w, native_src_h, *dst_bounds
             )
+
         else:
             # Case 2: No reprojection needed
             # - keep output dataset bbox as input bbox
             # - compute output shape in dataset resolution/CRS
             dst_bounds = bbox
-            dst_width = max(1, round((bbox[2] - bbox[0]) / abs(self.transform.a)))
-            dst_height = max(1, round((bbox[3] - bbox[1]) / abs(self.transform.e)))
+            dst_width = max(1, round((bbox[2] - bbox[0]) / abs(self.input.transform.a)))
+            dst_height = max(1, round((bbox[3] - bbox[1]) / abs(self.input.transform.e)))
 
         # Case 1: `max_size` is set,
         # compute output shape based on it,
@@ -441,34 +349,57 @@ class Reader(AsyncBaseReader):
         height = cast(int, height or dst_height)
         width = cast(int, width or dst_width)
 
-        # 3. Build pixel window from bounds in dataset CRS
-        rasterio_win = window_from_bounds(*dst_bounds, transform=self.transform)
+        # 3. Select IFD based on output resolution in dataset CRS
+        if dst_crs != self.crs:
+            # Get Transform from output shape and bbox
+            transform, _, _ = calculate_default_transform(
+                dst_crs, self.crs, width, height, *bbox
+            )
+        else:
+            transform = from_bounds(*bbox, width, height)
+
+        target_res = min(abs(transform.a), abs(transform.e))
+
+        dataset: GeoTIFF | Overview = self.input
+        if level := self._get_overview_level(target_res):
+            dataset = self.input.overviews[level - 1]
+
+        # 4. Build pixel window, clamped to dataset bounds
+        rasterio_win = window_from_bounds(*dst_bounds, transform=dataset.transform)
         row_off = math.floor(rasterio_win.row_off)
         col_off = math.floor(rasterio_win.col_off)
         win_width = math.ceil(rasterio_win.width) + 1
         win_height = math.ceil(rasterio_win.height) + 1
 
-        # Validate intersection
-        col_end = min(self.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
-        row_end = min(self.height, math.ceil(rasterio_win.row_off + rasterio_win.height))
+        # TODO: add `minimum_overlap` like in reader.part method
+        col_end = min(dataset.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
+        row_end = min(
+            dataset.height, math.ceil(rasterio_win.row_off + rasterio_win.height)
+        )
         if col_off >= col_end or row_off >= row_end:
-            raise ValueError("Input BBOX and dataset bounds do not intersect")
+            raise ValueError("Input BBOX and dataset's bounds do not intersect")
 
-        # Clamp window to array bounds
         clipped_col_off = max(0, col_off)
         clipped_row_off = max(0, row_off)
-        clipped_col_stop = min(self.width, col_off + win_width)
-        clipped_row_stop = min(self.height, row_off + win_height)
+        clipped_col_stop = min(dataset.width, col_off + win_width)
+        clipped_row_stop = min(dataset.height, row_off + win_height)
+        clipped_width = clipped_col_stop - clipped_col_off
+        clipped_height = clipped_row_stop - clipped_row_off
 
-        # 3. Read data from zarr array
+        # 5. Read GeotTIFF/Overview dataset with input window in dataset CRS
         img = await self._read(
+            dataset,
             indexes=indexes,
-            row_slice=slice(clipped_row_off, clipped_row_stop),
-            col_slice=slice(clipped_col_off, clipped_col_stop),
-            nodata=nodata,
+            window=Window(
+                col_off=clipped_col_off,
+                row_off=clipped_row_off,
+                width=clipped_width,
+                height=clipped_height,
+            ),
+            unscale=unscale,
         )
 
-        # 4. Reproject/resample to output CRS and dimensions
+        # 6. Reproject/resample using rasterio.warp.reproject
         img = warp(
             img,
             dst_crs=dst_crs,
@@ -488,10 +419,10 @@ class Reader(AsyncBaseReader):
         indexes: Indexes | None = None,
         expression: str | None = None,
         dst_crs: CRS | None = None,
-        max_size: int | None = 1024,
+        max_size: int = 1024,
         height: int | None = None,
         width: int | None = None,
-        nodata: NoData | None = None,
+        unscale: bool = False,
         resampling_method: RIOResampling = "nearest",
         reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
@@ -501,11 +432,10 @@ class Reader(AsyncBaseReader):
         Args:
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
             resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
             reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
@@ -513,12 +443,6 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        nbytes = await self.input.nbytes_stored()
-        if nbytes > MAX_ARRAY_SIZE:
-            raise MaxArraySizeError(
-                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {self.input.shape} in memory."
-            )
-
         if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
@@ -539,8 +463,8 @@ class Reader(AsyncBaseReader):
 
         # 1. Determine output shape
         # get height/width of the dataset in the output CRS
-        dst_width = self.width
-        dst_height = self.height
+        dst_width = self.input.width
+        dst_height = self.input.height
         if dst_crs and dst_crs != self.crs:
             # Get shape of the dataset in the output CRS
             _, dst_width, dst_height = calculate_default_transform(
@@ -561,19 +485,41 @@ class Reader(AsyncBaseReader):
         height = height or dst_height
         width = width or dst_width
 
-        # 2. Read data
-        img = await self._read(indexes=indexes, nodata=nodata)
+        # 2. determine overview level to read
+        # Output dataset `transform` in the output CRS
+        if dst_crs and dst_crs != self.crs:
+            proj_bbox = transform_bounds(
+                self.crs, dst_crs, *self.input.bounds, densify_pts=21
+            )
+            transform, _, _ = calculate_default_transform(
+                dst_crs,
+                self.crs,
+                width,
+                height,
+                *proj_bbox,
+            )
+        else:
+            transform = from_bounds(*self.input.bounds, width, height)
+
+        # 3. Select Overview level
+        target_res = min(abs(transform.a), abs(transform.e))
+        dataset: GeoTIFF | Overview = self.input
+        if level := self._get_overview_level(target_res):
+            dataset = self.input.overviews[level - 1]
+
+        # 4. Read data
+        img = await self._read(dataset, indexes=indexes, unscale=unscale)
         if expression:
             img = img.apply_expression(expression)
 
-        # 3. Reproject if needed
+        # 5. Reproject if needed
         if dst_crs and dst_crs != self.crs:
             img = img.reproject(
                 dst_crs=dst_crs,
                 reproject_method=reproject_method,
             )
 
-        # 4. Resize
+        # 6. Resize
         if width != img.width or height != img.height:
             img = img.resize(
                 width=width,
@@ -590,7 +536,7 @@ class Reader(AsyncBaseReader):
         coord_crs: CRS = WGS84_CRS,
         indexes: Indexes | None = None,
         expression: str | None = None,
-        nodata: NoData | None = None,
+        unscale: bool = False,
         **kwargs: Any,
     ) -> PointData:
         """Read a value from a Dataset.
@@ -601,7 +547,7 @@ class Reader(AsyncBaseReader):
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             indexes (sequence of int or int, optional): Band indexes.
             expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
-            nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
+            unscale: (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
 
         Returns:
             PointData: Pixel value per bands/assets.
@@ -641,13 +587,10 @@ class Reader(AsyncBaseReader):
         ):
             raise PointOutsideBounds("Point is outside dataset bounds")
 
-        y, x = rowcol(self.transform, lon, lat)
-
+        row, col = self.input.index(lon, lat)
+        window = Window(row_off=row, col_off=col, width=1, height=1)
         img = await self._read(
-            row_slice=slice(y, y + 1),
-            col_slice=slice(x, x + 1),
-            indexes=indexes,
-            nodata=nodata,
+            self.input, indexes=indexes, window=window, unscale=unscale
         )
 
         pt = PointData(
@@ -656,7 +599,7 @@ class Reader(AsyncBaseReader):
             band_descriptions=img.band_descriptions,
             coordinates=coordinates,
             crs=coord_crs,
-            pixel_location=(x, y),
+            pixel_location=(col, row),
             nodata=img.nodata,
             scales=img.scales,
             offsets=img.offsets,
@@ -677,8 +620,6 @@ class Reader(AsyncBaseReader):
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
-        nodata: NoData | None = None,
-        reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
@@ -692,8 +633,7 @@ class Reader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            nodata (int or float, optional): Overwrite dataset internal nodata value.
-            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            **kwargs: Any: Additional parameters to pass to `.part()` method.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -714,10 +654,9 @@ class Reader(AsyncBaseReader):
             indexes=indexes,
             expression=expression,
             max_size=max_size,
-            height=height,
             width=width,
-            nodata=nodata,
-            reproject_method=reproject_method,
+            height=height,
+            **kwargs,
         )
 
         if dst_crs != shape_crs:
@@ -746,84 +685,73 @@ class Reader(AsyncBaseReader):
 
     async def _read(
         self,
+        dataset: GeoTIFF | Overview,
         indexes: Sequence[int] | None = None,
-        row_slice: slice | None = None,
-        col_slice: slice | None = None,
-        nodata: NoData | None = None,
+        window: Window | None = None,
+        unscale: bool = False,
     ) -> ImageData:
-        """Read data from zarr AsyncArray.
+        """Reader Data from GeoTIFF or Overview."""
+        array = await dataset.read(window=window)
+        data = array.as_masked()
 
-        Args:
-            indexes: Band indexes (1-based). If None, reads all bands.
-            row_slice: Row slice for windowed read.
-            col_slice: Column slice for windowed read.
-            nodata (int or float, optional): Overwrite dataset internal nodata value.
+        if indexes is None:
+            indexes = [
+                ix
+                for ix, c in enumerate(self.input.colorinterp, 1)
+                if c != ColorInterp.ALPHA
+            ]
 
-        Returns:
-            ImageData: Image data with mask and spatial info.
+        # RGBA datasets
+        alpha_mask: numpy.ndarray | None = None
+        if ColorInterp.ALPHA in self.input.colorinterp:
+            alpha_idx = self.input.colorinterp.index(ColorInterp.ALPHA) + 1
+            idx = tuple(indexes) + (alpha_idx,)
+            data = data[[ix - 1 for ix in idx]]
 
-        """
-        # Default to full array
-        if row_slice is None:
-            row_slice = slice(0, self.height)
-        if col_slice is None:
-            col_slice = slice(0, self.width)
-
-        # Build selection based on array dimensionality
-        if len(self.input.shape) == 2:
-            # 2D array: (height, width) - indexes not applicable
-            selection = (row_slice, col_slice)
-            if indexes is None:
-                indexes = [1]  # Single band
-            # Read data asynchronously
-            data = await self.input.getitem(selection)
-            # Ensure 3D shape (bands, height, width)
-            data = numpy.expand_dims(data, axis=0)  # type: ignore[assignment]
-
+            data, alpha_mask = data[:-1], data[-1].data
         else:
-            # 3D array: (bands, height, width)
-            num_bands = self.input.shape[0]
-            if indexes is None:
-                indexes = list(range(1, num_bands + 1))
+            data = data[[ix - 1 for ix in indexes]]
 
-            # Convert 1-based indexes to 0-based for selection
-            band_indices = [ix - 1 for ix in indexes]
+            # if data has Nodata then we simply make sure the mask == the nodata
+            if self.input.nodata is not None:
+                if numpy.isnan(self.input.nodata):
+                    data.mask = numpy.isnan(data.data)
+                else:
+                    data.mask = data.data == self.input.nodata
 
-            # Use orthogonal selection for band indexing (supports list indices)
-            data = await self.input.get_orthogonal_selection(
-                (band_indices, row_slice, col_slice),  # type: ignore[arg-type]
-            )
+        # Handle Scale/Offset
+        scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
+        offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
+        if unscale:
+            data = cast(numpy.ma.MaskedArray, data.astype("float32", casting="unsafe"))
 
-        masked_data = numpy.ma.MaskedArray(data)
+            numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
+            numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
 
-        # if data has Nodata then we simply make sure the mask == the nodata
-        nodata = (
-            nodata
-            if nodata is not None
-            else getattr(self.input.metadata, "fill_value", None)
-        )
-        if nodata is not None:
-            if numpy.isnan(nodata):
-                masked_data.mask = numpy.isnan(masked_data.data)
-            else:
-                masked_data.mask = masked_data.data == nodata
+            scales = numpy.zeros(len(indexes)) + 1.0
+            offsets = numpy.zeros(len(indexes))
 
-        # Calculate bounds for the read window
-        read_height = row_slice.stop - row_slice.start
-        read_width = col_slice.stop - col_slice.start
-        read_transform = self.transform * Affine.translation(
-            col_slice.start, row_slice.start
-        )
-        read_bounds = array_bounds(read_height, read_width, read_transform)
+        # Get dataset statistics
+        stats = []
+        if gdal_stats := self.input.stored_stats:
+            for ii in indexes:
+                if b := gdal_stats.get(ii):
+                    if b.min is not None and b.max is not None:
+                        stats.append((b.min, b.max))
 
-        bdescr = self.band_descriptions
-        band_descriptions = [bdescr[ix - 1] for ix in indexes]
+        # We only add dataset statistics if we have them for all the indexes
+        dataset_statistics = stats if len(stats) == len(indexes) else None
 
+        # Create ImageData object
         return ImageData(
-            masked_data,
-            bounds=read_bounds,
-            crs=self.crs,
-            band_names=[f"b{idx}" for idx in indexes],
-            band_descriptions=band_descriptions,
-            nodata=nodata,
+            data,
+            bounds=array_bounds(array.height, array.width, array.transform),
+            crs=CRS.from_user_input(array.crs),
+            band_names=[f"b{ix}" for ix in indexes],
+            band_descriptions=[f"b{ix}" for ix in indexes],
+            dataset_statistics=dataset_statistics,
+            nodata=array.nodata,
+            alpha_mask=alpha_mask if alpha_mask is not None else None,
+            scales=scales.tolist(),
+            offsets=offsets.tolist(),
         )
