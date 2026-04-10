@@ -770,33 +770,45 @@ class Reader(AsyncBaseReader):
             ImageData: Image data with mask and spatial info.
 
         """
-        # Default to full array
-        if row_slice is None:
-            row_slice = slice(0, self.height)
-        if col_slice is None:
-            col_slice = slice(0, self.width)
+        row_slice = row_slice or slice(0, self.height)
+        col_slice = col_slice or slice(0, self.width)
 
-        # Build selection based on array dimensionality
         if len(self.input.shape) == 2:
-            # 2D array: (height, width) - indexes not applicable
+            # 2D array: (height, width)
             selection = (row_slice, col_slice)
             if indexes is None:
                 indexes = [1]  # Single band
-            # Read data asynchronously
+
+            # Calculate array size in bytes
+            read_height = row_slice.stop - row_slice.start
+            read_width = col_slice.stop - col_slice.start
+            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
+            if nbytes > MAX_ARRAY_SIZE:
+                raise MaxArraySizeError(
+                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
+                )
+
             data = await self.input.getitem(selection)
+
             # Ensure 3D shape (bands, height, width)
             data = numpy.expand_dims(data, axis=0)  # type: ignore[assignment]
 
         else:
             # 3D array: (bands, height, width)
-            num_bands = self.input.shape[0]
             if indexes is None:
-                indexes = list(range(1, num_bands + 1))
+                indexes = list(range(1, self.nbands + 1))
 
-            # Convert 1-based indexes to 0-based for selection
+            # Calculate array size in bytes
+            read_height = row_slice.stop - row_slice.start
+            read_width = col_slice.stop - col_slice.start
+            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
+            if nbytes > MAX_ARRAY_SIZE:
+                raise MaxArraySizeError(
+                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
+                )
+
             band_indices = [ix - 1 for ix in indexes]
 
-            # Use orthogonal selection for band indexing (supports list indices)
             data = await self.input.get_orthogonal_selection(
                 (band_indices, row_slice, col_slice),  # type: ignore[arg-type]
             )
