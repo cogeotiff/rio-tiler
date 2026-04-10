@@ -1,8 +1,7 @@
-"""rio_tiler.experimental.async_geotiff: rio-tiler Async reader built on top of async-geotiff."""
+"""rio_tiler.experimental.geotiff reader: rio-tiler Async reader built on top of async-geotiff."""
 
 from __future__ import annotations
 
-import abc
 import math
 import warnings
 from collections.abc import Sequence
@@ -14,16 +13,16 @@ from async_geotiff import Window
 from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
-from rasterio.enums import Resampling
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
 from rasterio.transform import array_bounds, from_bounds
-from rasterio.warp import calculate_default_transform, reproject
+from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
 from rasterio.windows import from_bounds as window_from_bounds
 
+from rio_tiler._warp import warp
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
@@ -31,7 +30,7 @@ from rio_tiler.errors import (
     TileOutsideBounds,
 )
 from rio_tiler.expression import parse_expression
-from rio_tiler.io.base import SpatialMixin
+from rio_tiler.io import AsyncBaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, RIOResampling, WarpResampling
 from rio_tiler.utils import (
@@ -47,109 +46,8 @@ if TYPE_CHECKING:
 
 
 @attr.s
-class AsyncBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
-    """Rio-tiler.io AsyncBaseReader."""
-
-    input: Any = attr.ib()
-    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
-
-    async def __aenter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
-
-    @abc.abstractmethod
-    async def info(self) -> Info:
-        """Return Dataset's info.
-
-        Returns:
-            rio_tiler.models.Info: Dataset info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def statistics(self) -> dict[str, BandStatistics]:
-        """Return bands statistics from a dataset.
-
-        Returns:
-            dict[str, rio_tiler.models.BandStatistics]: bands statistics.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> ImageData:
-        """Read a Map tile from the Dataset.
-
-        Args:
-            tile_x (int): Tile's horizontal index.
-            tile_y (int): Tile's vertical index.
-            tile_z (int): Tile's zoom level index.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def part(self, bbox: BBox, **kwargs: Any) -> ImageData:
-        """Read a Part of a Dataset.
-
-        Args:
-            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def preview(self) -> ImageData:
-        """Read a preview of a Dataset.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def point(self, lon: float, lat: float) -> PointData:
-        """Read a value from a Dataset.
-
-        Args:
-            lon (float): Longitude.
-            lat (float): Latitude.
-
-        Returns:
-            list: Pixel value per bands/assets.
-
-        """
-        ...
-
-    @abc.abstractmethod
-    async def feature(self, shape: dict) -> ImageData:
-        """Read a Dataset for a GeoJSON feature.
-
-        Args:
-            shape (dict): Valid GeoJSON feature.
-
-        Returns:
-            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
-
-        """
-        ...
-
-
-@attr.s
-class AsyncReader(AsyncBaseReader):
-    """Rio-tiler.io AsyncBaseReader."""
+class Reader(AsyncBaseReader):
+    """Rio-tiler.io GeoTIFFReader."""
 
     input: GeoTIFF = attr.ib()
 
@@ -857,68 +755,3 @@ class AsyncReader(AsyncBaseReader):
             scales=scales.tolist(),
             offsets=offsets.tolist(),
         )
-
-
-def warp(
-    img: ImageData,
-    *,
-    dst_crs: CRS,
-    dst_bounds: BBox,
-    dst_width: int,
-    dst_height: int,
-    reproject_method: WarpResampling = "nearest",
-) -> ImageData:
-    """Reproject data and mask.
-
-    In the async reader we can't use the rasterio/GDAL WarpedVRT to handle reprojection/resampling,
-    so we need to do it manually with `rasterio.warp.reproject`.
-
-    """
-    dst_transform = from_bounds(*dst_bounds, dst_width, dst_height)
-
-    destination = numpy.zeros((img.count, dst_height, dst_width), dtype=img.array.dtype)
-    destination, _ = reproject(
-        img.array,
-        destination,
-        src_transform=img.transform,
-        src_crs=img.crs,
-        src_nodata=img.nodata,
-        dst_crs=dst_crs,
-        dst_transform=dst_transform,
-        dst_nodata=img.nodata,
-        resampling=Resampling[reproject_method],
-    )
-
-    # rasterio doesn't handle masked arrays really well
-    # ref: https://github.com/rasterio/rasterio/pull/3531
-    mask = ~img.array.mask * numpy.uint8(255)
-    alpha_mask = numpy.zeros((img.count, dst_height, dst_width), dtype=numpy.uint8)
-    alpha_mask, _ = reproject(
-        mask,
-        alpha_mask,
-        src_transform=img.transform,
-        src_crs=img.crs,
-        dst_transform=dst_transform,
-        dst_crs=dst_crs,
-        resampling=Resampling["nearest"],
-        src_nodata=0,
-        dst_nodata=0,
-    )
-
-    return ImageData(
-        numpy.ma.MaskedArray(destination, mask=~alpha_mask.astype(bool)),
-        assets=img.assets,
-        crs=dst_crs,
-        bounds=dst_bounds,
-        band_names=img.band_names,
-        band_descriptions=img.band_descriptions,
-        nodata=img.nodata,
-        scales=img.scales,
-        offsets=img.offsets,
-        metadata=img.metadata,
-        dataset_statistics=img.dataset_statistics,
-    )
-
-
-# compat
-Reader = AsyncReader
