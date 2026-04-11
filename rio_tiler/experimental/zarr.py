@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+import asyncio
 import math
 import warnings
 from collections.abc import Sequence
-from typing import Any, cast
+from typing import Any, Literal, TypedDict, cast
 
 import attr
 import numpy
@@ -16,7 +17,7 @@ from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
-from rasterio.transform import array_bounds, rowcol
+from rasterio.transform import array_bounds, from_bounds, rowcol
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
@@ -41,6 +42,17 @@ from rio_tiler.utils import (
     _validate_shape_input,
     cast_to_sequence,
 )
+
+
+def _has_multiscales(conventions: list[dict]) -> bool:
+    return next(
+        (
+            True
+            for c in conventions
+            if c["uuid"] == "d35379db-88df-4056-af3a-620245f8e347"
+        ),
+        False,
+    )
 
 
 def _has_spatial(conventions: list[dict]) -> bool:
@@ -89,7 +101,6 @@ class Reader(AsyncBaseReader):
         crs: Coordinate reference system.
         transform: Affine transform.
         tms: TileMatrixSet for tile operations.
-        options: Reader options including nodata.
         colormap: Optional colormap dictionary.
 
     Note:
@@ -859,3 +870,638 @@ class Reader(AsyncBaseReader):
             band_descriptions=band_descriptions,
             nodata=nodata,
         )
+
+
+def _get_zoom(
+    tms: TileMatrixSet,
+    crs: CRS,
+    width: int,
+    height: int,
+    bounds: BBox,
+) -> int:
+    """Get MaxZoom for a Group."""
+    tms_crs = tms.rasterio_crs
+    if crs != tms_crs:
+        transform, _, _ = calculate_default_transform(
+            crs,
+            tms_crs,
+            width,
+            height,
+            *bounds,
+        )
+    else:
+        transform = from_bounds(*bounds, width, height)
+
+    resolution = max(abs(transform[0]), abs(transform[4]))
+    return tms.zoom_for_res(resolution)
+
+
+class ArrayMetadata(TypedDict):
+    """Array Metadata."""
+
+    array: zarr.AsyncArray
+    crs: CRS
+    height: int
+    width: int
+    transform: Affine
+
+
+def calculate_output_transform(
+    crs: CRS,
+    bounds: BBox,
+    height: int,
+    width: int,
+    out_crs: CRS,
+    *,
+    out_bounds: BBox | None = None,
+    out_max_size: int | None = None,
+    out_height: int | None = None,
+    out_width: int | None = None,
+) -> Affine:
+    """Calculate Reprojected Dataset transform."""
+    # 1. get the `whole` reprojected dataset transfrom, shape and bounds
+    dst_transform, dst_width, dst_height = calculate_default_transform(
+        crs,
+        out_crs,
+        width,
+        height,
+        *bounds,
+    )
+
+    # If no bounds we assume the full dataset bounds
+    out_bounds = out_bounds or array_bounds(dst_height, dst_width, dst_transform)
+
+    # output Bounds
+    w, s, e, n = out_bounds
+
+    # adjust dataset virtual output shape/transform
+    dst_width = max(1, round((e - w) / dst_transform.a))
+    dst_height = max(1, round((s - n) / dst_transform.e))
+
+    # Output Transform in Output CRS
+    dst_transform = from_bounds(w, s, e, n, dst_width, dst_height)
+
+    # 2. adjust output size based on max_size if
+    # - not input width/height
+    # - max_size < dst_width and dst_height
+    if out_max_size:
+        out_height, out_width = _get_width_height(out_max_size, dst_height, dst_width)
+
+    elif out_height or out_width:
+        if not out_height or not out_width:
+            # get the size's ratio of the reprojected dataset
+            ratio = dst_height / dst_width
+            if out_width:
+                out_height = math.ceil(out_width * ratio)
+            else:
+                out_width = math.ceil(out_height / ratio)
+
+    out_height = out_height or dst_height
+    out_width = out_width or dst_width
+
+    # Get the transform in the Dataset CRS
+    transform, _, _ = calculate_default_transform(
+        out_crs,
+        crs,
+        out_width,
+        out_height,
+        *out_bounds,
+    )
+
+    return transform
+
+
+def get_target_resolution(
+    *,
+    input_crs: CRS,
+    output_crs: CRS,
+    input_height: int,
+    input_width: int,
+    input_transform: Affine,
+    output_bounds: BBox | None = None,
+    output_max_size: int | None = None,
+    output_height: int | None = None,
+    output_width: int | None = None,
+) -> float:
+    """Get Target Resolution."""
+    input_bounds = array_bounds(input_height, input_width, input_transform)
+
+    # Get Target expected resolution in Dataset CRS
+    # 1. Reprojection
+    if output_crs and output_crs != input_crs:
+        dst_transform = calculate_output_transform(
+            input_crs,
+            input_bounds,
+            input_height,
+            input_width,
+            output_crs,
+            # bounds is supposed to be in output_crs
+            out_bounds=output_bounds,
+            out_max_size=output_max_size,
+            out_height=output_height,
+            out_width=output_width,
+        )
+        return dst_transform.a
+
+    # 2. No Reprojection
+    # If no bounds we assume the full dataset bounds
+    bounds = output_bounds or input_bounds
+    window = window_from_bounds(*bounds, transform=input_transform)
+    if output_max_size:
+        output_height, output_width = _get_width_height(
+            output_max_size, round(window.height), round(window.width)
+        )
+
+    elif _missing_size(output_width, output_height):
+        ratio = window.height / window.width
+        if output_width:
+            output_height = math.ceil(output_width * ratio)
+        else:
+            output_width = math.ceil(output_height / ratio)
+
+    height = output_height or max(1, round(window.height))
+    width = output_width or max(1, round(window.width))
+    return from_bounds(*bounds, height=height, width=width).a
+
+
+def get_multiscale_level(
+    variable_metadata: list[ArrayMetadata],
+    target_res: float,
+    zoom_level_strategy: Literal["AUTO", "LOWER", "UPPER"] = "AUTO",
+) -> ArrayMetadata:
+    """Return the multiscale level corresponding to the desired resolution."""
+    ms_resolutions: list[tuple[float, ArrayMetadata]] = [
+        (min(abs(ms["transform"][0]), abs(ms["transform"][4])), ms)
+        for ms in variable_metadata
+    ]
+
+    # Based on aiocogeo:
+    # https://github.com/geospatial-jeff/aiocogeo/blob/5a1d32c3f22c883354804168a87abb0a2ea1c328/aiocogeo/partial_reads.py#L113-L147
+    percentage = {"AUTO": 50, "LOWER": 100, "UPPER": 0}.get(zoom_level_strategy, 50)
+
+    # Iterate over zoom levels from lowest/coarsest to highest/finest. If the `target_res` is more than `percentage`
+    # percent of the way from the zoom level below to the zoom level above, then upsample the zoom level below, else
+    # downsample the zoom level above.
+    available_resolutions = sorted(ms_resolutions, key=lambda x: x[0], reverse=True)
+    if len(available_resolutions) == 1:
+        return available_resolutions[0][1]
+
+    for i in range(0, len(available_resolutions) - 1):
+        res_current, _ = available_resolutions[i]
+        res_higher, _ = available_resolutions[i + 1]
+        threshold = res_higher - (res_higher - res_current) * (percentage / 100.0)
+        if target_res > threshold or target_res == res_current:
+            return available_resolutions[i][1]
+
+    # Default level is the first ms level
+    return ms_resolutions[0][1]
+
+
+@attr.s
+class GeoZarrReader(AsyncBaseReader):
+    """Rio-tiler GeoZarr Reader.
+
+    A pure zarr-python async reader that accepts a zarr AsyncGroup (GeoZarr)
+
+    Attributes:
+        input: zarr AsyncGroup
+        tms: TileMatrixSet for tile operations.
+        colormap: Optional colormap dictionary.
+
+    """
+
+    input: zarr.AsyncGroup = attr.ib()
+
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    crs: CRS = attr.ib(init=False)
+    transform: Affine = attr.ib(init=False)
+
+    # Group shape
+    height: int = attr.ib(init=False)
+    width: int = attr.ib(init=False)
+
+    # Group bounds (calculated from shape + transform)
+    bounds: BBox = attr.ib(init=False)
+
+    multiscales: bool = attr.ib(init=False)
+
+    colormap: dict | None = attr.ib(default=None)
+
+    # list of availables arrays in the group
+    _variables: dict[str, list[ArrayMetadata]] = attr.ib(init=False, default=None)
+
+    async def __aenter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
+
+    def __attrs_post_init__(self) -> None:
+        """Post init: derive height, width, count from array shape."""
+        spatial_dims = ["y", "x", "latitude", "longitude", "lat", "lon"]
+        spatial_shape: tuple[int, int] | None = None
+        transform: Affine | None = None
+
+        # NOTE: zarr-python says attrs is of type dict[str, JSON]
+        attributes = cast(dict[str, Any], self.input.attrs)
+        conventions: list[dict] = attributes.get("zarr_conventions", [])
+
+        self.multiscales = _has_multiscales(conventions)
+        # assert self.multiscales, "GeoZarr convention requires 'multiscales' convention to be present in zarr_conventions"
+
+        self.spatial = _has_spatial(conventions)
+        assert self.spatial, (
+            "GeoZarr convention requires 'spatial' convention to be present in zarr_conventions"
+        )
+
+        self.proj = _has_proj(conventions)
+        assert self.proj, (
+            "GeoZarr convention requires 'geo-proj' convention to be present in zarr_conventions"
+        )
+
+        # CRS
+        self.crs = _get_proj_crs(attributes)
+
+        # NOTE: `spatial:dimensions` is the only required attribute for the `spatial` convention
+        # but if this ever change we default to list of common spatial dimension names
+        spatial_dims = attributes.get("spatial:dimensions", spatial_dims)
+        spatial_shape = attributes.get("spatial:shape")
+
+        # Transform
+        # Case 1: Transform at group level
+        tr = attributes.get("spatial:transform")
+        transform_type = attributes.get("spatial:transform_type", "affine")
+        if transform_type == "affine" and tr is not None:
+            if attributes.get("spatial:registration", "pixel") == "node":
+                # NOTE: If the registration is "node", we need to adjust the transform to
+                # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
+                tr[2] -= tr[0] / 2
+                tr[5] -= tr[4] / 2
+
+            transform = Affine(*tr)
+
+        # Case 2: No transform at group level, check multiscales for transform and shape
+        if not transform and self.multiscales:
+            # assume the first layout is the highest resolution
+            first_res = attributes["multiscales"]["layout"][0]
+            spatial_shape = first_res.get("spatial:shape")
+
+            tr = first_res.get("spatial:transform")
+            transform_type = attributes.get("spatial:transform_type", "affine")
+            if transform_type == "affine" and tr is not None:
+                if attributes.get("spatial:registration", "pixel") == "node":
+                    # NOTE: If the registration is "node", we need to adjust the transform to
+                    # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
+                    tr[2] -= tr[0] / 2
+                    tr[5] -= tr[4] / 2
+
+                transform = Affine(*tr)
+
+        assert transform, (
+            "spatial:transform is required either at group level or in the first layout of multiscales convention"
+        )
+        self.transform = transform
+
+        # NOTE: we could potentially check for spatial:bbox and derive shape from it
+        assert spatial_shape, (
+            "spatial:shape is required either at group level or in the first layout of multiscales convention"
+        )
+        self.height = spatial_shape[0]
+        self.width = spatial_shape[1]
+
+        self.bounds = array_bounds(self.height, self.width, self.transform)
+
+    @property
+    def minzoom(self):
+        """Return dataset minzoom."""
+        if self.multiscales:
+            attributes = cast(dict[str, Any], self.input.attrs)
+            # assume the last layout is the lowest resolution
+            last_res = attributes["multiscales"]["layout"][-1]
+            shape = last_res.get("spatial:shape")
+            transform = last_res.get("spatial:transform")
+            if all([transform, shape]):
+                return _get_zoom(
+                    tms=self.tms,
+                    crs=self.crs,
+                    width=shape[1],
+                    height=shape[0],
+                    bounds=array_bounds(shape[0], shape[1], Affine(*transform)),
+                )
+
+        return self.maxzoom
+
+    @property
+    def maxzoom(self):
+        """Return dataset maxzoom."""
+        if self.multiscales:
+            attributes = cast(dict[str, Any], self.input.attrs)
+            # assume the last layout is the highest resolution
+            first_res = attributes["multiscales"]["layout"][0]
+            shape = first_res.get("spatial:shape")
+            transform = first_res.get("spatial:transform")
+            if all([transform, shape]):
+                return _get_zoom(
+                    tms=self.tms,
+                    crs=self.crs,
+                    width=shape[1],
+                    height=shape[0],
+                    bounds=array_bounds(shape[0], shape[1], Affine(*transform)),
+                )
+
+        return self._maxzoom
+
+    @property
+    async def variables(self) -> dict[str, list[ArrayMetadata]]:  # noqa: C901
+        """Return list of variables (arrays) with their geospatial metadata."""
+        if self._variables:
+            return self._variables
+
+        variables: dict[str, list[ArrayMetadata]] = {}
+        if self.multiscales:
+            attributes = cast(dict[str, Any], self.input.attrs)
+            conventions: list[dict] = attributes.get("zarr_conventions", [])
+
+            crs = _get_proj_crs(attributes) if _has_proj(conventions) else self.crs
+
+            # 1. Get MS groups + geospatial metadata (crs, transform)
+            ms_group: dict[str, dict[str, Any]] = {}
+            for layout in attributes["multiscales"]["layout"]:
+                transform_type = layout.get("spatial:transform_type") or "affine"
+                tr = layout.get("spatial:transform")
+                if transform_type == "affine" and tr is not None:
+                    if layout.get("spatial:registration", "pixel") == "node":
+                        # NOTE: If the registration is "node", we need to adjust the transform to
+                        # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
+                        tr[2] -= tr[0] / 2
+                        tr[5] -= tr[4] / 2
+
+                ms_group[layout["asset"]] = {
+                    "crs": crs,
+                    "transform": tr,
+                }
+
+            # 2. list all arrays for each layout
+            for g, meta in ms_group.items():
+                group = await self.input.getitem(g)
+                async for array in group.array_values():
+                    # NOTE: skip non-data arrays
+                    # TODO: be smarter
+                    if array.ndim < 2:
+                        continue
+
+                    variable_name = array.name.replace(f"/{g}/", "")
+                    if variable_name not in variables:
+                        variables[variable_name] = []
+
+                    attributes = cast(dict[str, Any], array.attrs)
+                    transform = attributes.get("spatial:transform")
+                    transform_type = attributes.get("spatial:transform_type") or "affine"
+                    if transform_type == "affine" and transform is not None:
+                        if attributes.get("spatial:registration", "pixel") == "node":
+                            # NOTE: If the registration is "node", we need to adjust the transform to
+                            # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
+                            transform[2] -= transform[0] / 2
+                            transform[5] -= transform[4] / 2
+
+                    transform = transform or meta["transform"]
+                    assert transform, (
+                        f"`spatial:transform` missing for multiscales layout {g} (path: '{array.name}')"
+                    )
+
+                    # TODO: is this always true
+                    height, width = array.shape[-2:]
+
+                    variables[variable_name].append(
+                        {
+                            "array": array,
+                            "crs": meta["crs"],
+                            "height": height,
+                            "width": width,
+                            "transform": Affine(*transform),
+                        }
+                    )
+
+        else:
+            async for array in self.input.array_values():
+                # NOTE: skip non-data arrays
+                # TODO: be smarter
+                if array.ndim < 2:
+                    continue
+
+                attributes = cast(dict[str, Any], array.attrs)
+                variable_name = array.name.replace(f"/{self.input.name}/", "")
+
+                transform = attributes.get("spatial:transform")
+                transform_type = attributes.get("spatial:transform_type") or "affine"
+                if transform_type == "affine" and transform is not None:
+                    if attributes.get("spatial:registration", "pixel") == "node":
+                        # NOTE: If the registration is "node", we need to adjust the transform to
+                        # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
+                        transform[2] -= transform[0] / 2
+                        transform[5] -= transform[4] / 2
+
+                transform = transform or self.transform
+                assert transform, (
+                    f"`spatial:transform` missing for array {variable_name} (path: '{array.name}')"
+                )
+
+                # TODO: is this always true
+                height, width = array.shape[-2:]
+
+                variables[variable_name] = [
+                    {
+                        "array": array,
+                        "crs": self.crs,
+                        "height": height,
+                        "width": width,
+                        "transform": Affine(*transform),
+                    }
+                ]
+
+        self._variables = variables
+
+        return self._variables
+
+    def select_variable(
+        self,
+        variable_metadata: list[ArrayMetadata],
+        *,
+        # MultiScale Selection
+        bounds: BBox | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        max_size: int | None = None,
+        dst_crs: CRS | None = None,
+    ) -> ArrayMetadata:
+        """Get DataArray from xarray Dataset."""
+        if max_size and (width or height):
+            warnings.warn(
+                "'max_size' will be ignored with with 'height' and 'width' set.",
+                UserWarning,
+                stacklevel=2,
+            )
+            max_size = None
+
+        # Default variable is the first one (hihhest resolution)
+        variable = variable_metadata[0]
+        if len(variable_metadata) == 1:
+            # NOTE: Only one variable, return it
+            return variable
+
+        # NOTE: Select a Multiscale Layer based on output resolution
+        if any([height, width, max_size]):
+            transform = variable["transform"]
+            layout_height = variable["height"]
+            layout_width = variable["width"]
+            crs = variable["crs"]
+
+            target_res = get_target_resolution(
+                input_crs=crs,
+                output_crs=dst_crs,
+                input_height=layout_height,
+                input_width=layout_width,
+                input_transform=transform,
+                output_bounds=bounds,
+                output_max_size=max_size,
+                output_height=height,
+                output_width=width,
+            )
+
+            variable = get_multiscale_level(variable_metadata, target_res)
+
+        return variable
+
+    async def info(self) -> Info:
+        """Return Dataset's info.
+
+        Returns:
+            rio_tile.models.Info: Dataset info.
+
+        """
+        raise NotImplementedError
+
+    async def statistics(self) -> dict[str, BandStatistics]:
+        """Return bands statistics from a dataset.
+
+        Returns:
+            dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        raise NotImplementedError
+
+    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> ImageData:
+        """Read a Map tile from the Dataset.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        raise NotImplementedError
+
+    async def part(self, bbox: BBox) -> ImageData:
+        """Read a Part of a Dataset.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        raise NotImplementedError
+
+    async def preview(
+        self,
+        variables: list[str] | str,
+        expression: str | None = None,
+        dst_crs: CRS | None = None,
+        max_size: int | None = 1024,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        resampling_method: RIOResampling = "nearest",
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a preview of a Dataset.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        availables_variables = await self.variables
+
+        variables = cast_to_sequence(variables)
+        if vars := set(variables).difference(availables_variables.keys()):
+            raise ValueError(
+                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
+            )
+
+        async def _preview(variable: str) -> ImageData:
+            array_metadata = self.select_variable(
+                availables_variables[variable],
+                max_size=max_size,
+                height=height,
+                width=width,
+                dst_crs=dst_crs,
+            )
+
+            async with Reader(
+                input=array_metadata["array"],
+                transform=array_metadata["transform"],
+                crs=array_metadata["crs"],
+                tms=self.tms,
+            ) as src:
+                return await src.preview(
+                    max_size=max_size,
+                    height=height,
+                    width=width,
+                    dst_crs=dst_crs,
+                    nodata=nodata,
+                    resampling_method=resampling_method,
+                    reproject_method=reproject_method,
+                    **kwargs,
+                )
+
+        img_stack = await asyncio.gather(*(_preview(variable) for variable in variables))
+
+        img = ImageData.create_from_list(img_stack)
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    async def point(self, lon: float, lat: float) -> PointData:
+        """Read a value from a Dataset.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latitude.
+
+        Returns:
+            rio_tiler.models.PointData: PointData instance with data, mask and spatial info.
+
+        """
+        raise NotImplementedError
+
+    async def feature(self, shape: dict) -> ImageData:
+        """Read a Dataset for a GeoJSON feature.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        raise NotImplementedError
