@@ -293,12 +293,6 @@ class Reader(AsyncBaseReader):
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        nbytes = await self.input.nbytes_stored()
-        if nbytes > MAX_ARRAY_SIZE:
-            raise MaxArraySizeError(
-                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {self.input.shape} in memory."
-            )
-
         if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
@@ -544,12 +538,6 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        nbytes = await self.input.nbytes_stored()
-        if nbytes > MAX_ARRAY_SIZE:
-            raise MaxArraySizeError(
-                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {self.input.shape} in memory."
-            )
-
         if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
