@@ -1379,13 +1379,14 @@ class GeoZarrReader(AsyncBaseReader):
 
     async def statistics(
         self,
+        *,
         variables: Sequence[str] | str | None = None,
+        expression: str | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
         hist_options: dict | None = None,
         max_size: int | None = 1024,
-        expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
     ) -> dict[str, BandStatistics]:
@@ -1437,8 +1438,8 @@ class GeoZarrReader(AsyncBaseReader):
         tile_z: int,
         *,
         variables: Sequence[str] | str,
-        tilesize: int | None = None,
         expression: str | None = None,
+        tilesize: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
         **kwargs: Any,
@@ -1610,7 +1611,17 @@ class GeoZarrReader(AsyncBaseReader):
 
         return img
 
-    async def point(self, lon: float, lat: float) -> PointData:
+    async def point(  # type: ignore[override]
+        self,
+        lon: float,
+        lat: float,
+        *,
+        variables: Sequence[str] | str,
+        expression: str | None = None,
+        coord_crs: CRS = WGS84_CRS,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> PointData:
         """Read a value from a Dataset.
 
         Args:
@@ -1621,9 +1632,53 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.PointData: PointData instance with data, mask and spatial info.
 
         """
-        raise NotImplementedError
+        availables_variables = await self.variables
 
-    async def feature(self, shape: dict) -> ImageData:
+        variables = cast_to_sequence(variables)
+        if vars := set(variables).difference(availables_variables.keys()):
+            raise ValueError(
+                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
+            )
+
+        async def _point(variable: str) -> PointData:
+            array_metadata = self.select_variable(availables_variables[variable])
+            async with Reader(
+                input=array_metadata["array"],
+                transform=array_metadata["transform"],
+                crs=array_metadata["crs"],
+                tms=self.tms,
+            ) as src:
+                return await src.point(
+                    lon,
+                    lat,
+                    coord_crs=coord_crs,
+                    nodata=nodata,
+                )
+
+        point_stack = await asyncio.gather(*(_point(variable) for variable in variables))
+
+        pt = PointData.create_from_list(point_stack)
+        pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+        if expression:
+            return pt.apply_expression(expression)
+
+        return pt
+
+    async def feature(  # type: ignore[override]
+        self,
+        shape: dict,
+        *,
+        variables: Sequence[str] | str,
+        dst_crs: CRS | None = None,
+        shape_crs: CRS = WGS84_CRS,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
@@ -1633,4 +1688,55 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        availables_variables = await self.variables
+
+        variables = cast_to_sequence(variables)
+        if vars := set(variables).difference(availables_variables.keys()):
+            raise ValueError(
+                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
+            )
+
+        shape = _validate_shape_input(shape)
+
+        if not dst_crs:
+            dst_crs = shape_crs
+
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
+
+        img = await self.part(
+            bbox,
+            variables=variables,
+            dst_crs=dst_crs,
+            bounds_crs=shape_crs,
+            expression=expression,
+            max_size=max_size,
+            height=height,
+            width=width,
+            nodata=nodata,
+            reproject_method=reproject_method,
+        )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            cutline_mask = rasterize(
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            ).astype("bool")
+
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
