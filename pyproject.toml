@@ -58,10 +58,12 @@ dev = [
     "IPython",
     "jupyter",
     "matplotlib",
+    "pyinstrument",
 ]
 
 performance = [
     "pytest-benchmark",
+    "pytest-async-benchmark",
     "tilebench",
 ]
 
