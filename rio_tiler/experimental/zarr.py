@@ -1235,6 +1235,9 @@ class GeoZarrReader(AsyncBaseReader):
             # 2. list all arrays for each layout
             for group_name, meta in ms_group.items():
                 group = await self.input.getitem(group_name)
+
+                # NOTE: `ms_group` reference group names so we know `getitem` return a group
+                group = cast(zarr.AsyncGroup, group)
                 async for array in group.array_values():
                     # NOTE: skip non-data arrays
                     # TODO: be smarter
