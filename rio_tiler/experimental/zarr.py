@@ -1233,19 +1233,19 @@ class GeoZarrReader(AsyncBaseReader):
                 }
 
             # 2. list all arrays for each layout
-            for g, meta in ms_group.items():
-                group = await self.input.getitem(g)
+            for group_name, meta in ms_group.items():
+                group = await self.input.getitem(group_name)
                 async for array in group.array_values():
                     # NOTE: skip non-data arrays
                     # TODO: be smarter
                     if array.ndim < 2:
                         continue
 
-                    variable_name = array.name.replace(f"/{g}/", "")
+                    attributes = cast(dict[str, Any], array.attrs)
+                    variable_name = array.name.replace(f"/{group_name}/", "")
                     if variable_name not in variables:
                         variables[variable_name] = []
 
-                    attributes = cast(dict[str, Any], array.attrs)
                     transform = attributes.get("spatial:transform")
                     transform_type = attributes.get("spatial:transform_type") or "affine"
                     if transform_type == "affine" and transform is not None:
@@ -1257,7 +1257,7 @@ class GeoZarrReader(AsyncBaseReader):
 
                     transform = transform or meta["transform"]
                     assert transform, (
-                        f"`spatial:transform` missing for multiscales layout {g} (path: '{array.name}')"
+                        f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
                     )
 
                     # TODO: is this always true
@@ -1275,13 +1275,15 @@ class GeoZarrReader(AsyncBaseReader):
 
         else:
             async for array in self.input.array_values():
+                group_name = self.input.name
+
                 # NOTE: skip non-data arrays
                 # TODO: be smarter
                 if array.ndim < 2:
                     continue
 
                 attributes = cast(dict[str, Any], array.attrs)
-                variable_name = array.name.replace(f"/{self.input.name}/", "")
+                variable_name = array.name.replace(f"/{group_name}/", "")
 
                 transform = attributes.get("spatial:transform")
                 transform_type = attributes.get("spatial:transform_type") or "affine"
@@ -1309,6 +1311,9 @@ class GeoZarrReader(AsyncBaseReader):
                         "transform": Affine(*transform),
                     }
                 ]
+
+        if not variables:
+            raise ValueError("No variables (data arrays) found in the dataset.")
 
         self._variables = variables
 
@@ -1372,16 +1377,72 @@ class GeoZarrReader(AsyncBaseReader):
         """
         raise NotImplementedError
 
-    async def statistics(self) -> dict[str, BandStatistics]:
+    async def statistics(
+        self,
+        variables: Sequence[str] | str | None = None,
+        categorical: bool = False,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
+        max_size: int | None = 1024,
+        expression: str | None = None,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> dict[str, BandStatistics]:
         """Return bands statistics from a dataset.
+
+        Args:
+            variables (list of str or str, optional): list of variables to return value for. Defaults to all variables.
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of categories to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to `self.preview`.
 
         Returns:
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        raise NotImplementedError
+        availables_variables = await self.variables
 
-    async def tile(self, tile_x: int, tile_y: int, tile_z: int) -> ImageData:
+        variables = variables or list(availables_variables.keys())
+
+        variables = cast_to_sequence(variables)
+        if vars := set(variables).difference(availables_variables.keys()):
+            raise ValueError(
+                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
+            )
+
+        img = await self.preview(
+            variables=variables,
+            expression=expression,
+            max_size=max_size,
+            nodata=nodata,
+            **kwargs,
+        )
+
+        return img.statistics(
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            hist_options=hist_options,
+        )
+
+    async def tile(  # type: ignore[override]
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        *,
+        variables: Sequence[str] | str,
+        tilesize: int | None = None,
+        expression: str | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a Map tile from the Dataset.
 
         Args:
@@ -1393,23 +1454,103 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
-        raise NotImplementedError
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
+            )
 
-    async def part(self, bbox: BBox) -> ImageData:
+        matrix = self.tms.matrix(tile_z)
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
+        return await self.part(
+            bbox,
+            variables=variables,
+            expression=expression,
+            dst_crs=self.tms.rasterio_crs,
+            bounds_crs=self.tms.rasterio_crs,
+            max_size=None,
+            height=tilesize or matrix.tileHeight,
+            width=tilesize or matrix.tileWidth,
+            nodata=nodata,
+            reproject_method=reproject_method,
+            **kwargs,
+        )
+
+    async def part(  # type: ignore[override]
+        self,
+        bbox: BBox,
+        *,
+        variables: Sequence[str] | str,
+        expression: str | None = None,
+        dst_crs: CRS | None = None,
+        bounds_crs: CRS = WGS84_CRS,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
         """Read a Part of a Dataset.
 
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            variables (list of str or str): list of variables to return value for.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        raise NotImplementedError
+        availables_variables = await self.variables
 
-    async def preview(
+        variables = cast_to_sequence(variables)
+        if vars := set(variables).difference(availables_variables.keys()):
+            raise ValueError(
+                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
+            )
+
+        async def _part(variable: str) -> ImageData:
+            array_metadata = self.select_variable(
+                availables_variables[variable],
+                max_size=max_size,
+                height=height,
+                width=width,
+                dst_crs=dst_crs,
+            )
+
+            async with Reader(
+                input=array_metadata["array"],
+                transform=array_metadata["transform"],
+                crs=array_metadata["crs"],
+                tms=self.tms,
+            ) as src:
+                return await src.part(
+                    bbox,
+                    dst_crs=dst_crs,
+                    bounds_crs=bounds_crs,
+                    max_size=max_size,
+                    height=height,
+                    width=width,
+                    nodata=nodata,
+                    reproject_method=reproject_method,
+                )
+
+        img_stack = await asyncio.gather(*(_part(variable) for variable in variables))
+
+        img = ImageData.create_from_list(img_stack)
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    async def preview(  # type: ignore[override]
         self,
-        variables: list[str] | str,
+        *,
+        variables: Sequence[str] | str,
         expression: str | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
