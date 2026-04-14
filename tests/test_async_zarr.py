@@ -97,7 +97,7 @@ async def test_async_zarr_reader(zarr_store):
         transform=transform,
     )
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
-    assert reader._dims == ["band"]
+    assert reader._dims == ["band", "y", "x"]
 
     # Test _read (full array)
     img = await reader._read()
@@ -138,7 +138,7 @@ async def test_2d_array(zarr_store_2d):
         transform=transform,
     )
     assert reader.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
-    assert reader._dims == []
+    assert reader._dims == ["y", "x"]
 
     img = await reader._read()
     assert img.array.shape == (1, 50, 50), f"Expected (1, 50, 50), got {img.array.shape}"

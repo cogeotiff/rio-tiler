@@ -33,7 +33,7 @@ from rio_tiler.errors import (
 )
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import AsyncBaseReader
-from rio_tiler.models import BandStatistics, ImageData, Info, PointData
+from rio_tiler.models import BandStatistics, Bounds, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
@@ -144,18 +144,12 @@ class Reader(AsyncBaseReader):
                 f"Expected 2D or 3D array, got {self.input.ndim}D with shape {self.input.shape}"
             )
 
-        spatial_dims = ["y", "x", "latitude", "longitude", "lat", "lon"]
-
         # NOTE: zarr-python says attrs is of type dict[str, JSON]
         attributes = cast(dict[str, Any], self.input.attrs)
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
         # Transform
         if not self.transform and _has_spatial(conventions):
-            # NOTE: `spatial:dimensions` is the only required attribute for the `spatial` convention
-            # but if this ever change we default to list of common spatial dimension names
-            spatial_dims = attributes.get("spatial:dimensions", spatial_dims)
-
             transform_type = attributes.get("spatial:transform_type") or "affine"
             tr = attributes.get("spatial:transform")
             if transform_type == "affine" and tr is not None:
@@ -191,8 +185,7 @@ class Reader(AsyncBaseReader):
 
         self.bounds = array_bounds(self.height, self.width, self.transform)
 
-        dimensions = getattr(self.input.metadata, "dimension_names", [])
-        self._dims = [d for d in dimensions if d.lower() not in spatial_dims]
+        self._dims = list(getattr(self.input.metadata, "dimension_names", []))
 
         if self.band_names:
             assert len(self.band_names) == self.nbands, (
@@ -1045,6 +1038,14 @@ def get_multiscale_level(
     return ms_resolutions[0][1]
 
 
+class GeoZarrInfo(Bounds):
+    """GeoZarr Info."""
+
+    multiscales: bool
+    variables: list[str]
+    attributes: dict[str, Any]
+
+
 @attr.s
 class GeoZarrReader(AsyncBaseReader):
     """Rio-tiler GeoZarr Reader.
@@ -1089,16 +1090,11 @@ class GeoZarrReader(AsyncBaseReader):
 
     def __attrs_post_init__(self) -> None:
         """Post init: derive height, width, count from array shape."""
-        spatial_dims = ["y", "x", "latitude", "longitude", "lat", "lon"]
-        spatial_shape: tuple[int, int] | None = None
-        transform: Affine | None = None
-
         # NOTE: zarr-python says attrs is of type dict[str, JSON]
         attributes = cast(dict[str, Any], self.input.attrs)
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
         self.multiscales = _has_multiscales(conventions)
-        # assert self.multiscales, "GeoZarr convention requires 'multiscales' convention to be present in zarr_conventions"
 
         self.spatial = _has_spatial(conventions)
         assert self.spatial, (
@@ -1113,54 +1109,59 @@ class GeoZarrReader(AsyncBaseReader):
         # CRS
         self.crs = _get_proj_crs(attributes)
 
-        # NOTE: `spatial:dimensions` is the only required attribute for the `spatial` convention
-        # but if this ever change we default to list of common spatial dimension names
-        spatial_dims = attributes.get("spatial:dimensions", spatial_dims)
-        spatial_shape = attributes.get("spatial:shape")
+        if spatial_shape := attributes.get("spatial:shape"):
+            self.height = spatial_shape[0]
+            self.width = spatial_shape[1]
+
+        if bbox := attributes.get("spatial:bbox"):
+            self.bounds = bbox
 
         # Transform
         # Case 1: Transform at group level
         tr = attributes.get("spatial:transform")
         transform_type = attributes.get("spatial:transform_type", "affine")
-        if transform_type == "affine" and tr is not None:
+        if tr is not None and transform_type == "affine":
             if attributes.get("spatial:registration", "pixel") == "node":
                 # NOTE: If the registration is "node", we need to adjust the transform to
                 # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
                 tr[2] -= tr[0] / 2
                 tr[5] -= tr[4] / 2
 
-            transform = Affine(*tr)
+            self.transform = Affine(*tr)
 
-        # Case 2: No transform at group level, check multiscales for transform and shape
-        if not transform and self.multiscales:
+        # Case 2: check multiscales for transform and shape
+        if self.multiscales:
             # assume the first layout is the highest resolution
             first_res = attributes["multiscales"]["layout"][0]
-            spatial_shape = first_res.get("spatial:shape")
+
+            if spatial_shape := attributes.get("spatial:shape"):
+                self.height = self.height or spatial_shape[0]
+                self.width = self.width or spatial_shape[1]
+
+            if bbox := attributes.get("spatial:bbox"):
+                self.bounds = self.bounds or bbox
 
             tr = first_res.get("spatial:transform")
-            transform_type = attributes.get("spatial:transform_type", "affine")
-            if transform_type == "affine" and tr is not None:
-                if attributes.get("spatial:registration", "pixel") == "node":
+            transform_type = first_res.get("spatial:transform_type", "affine")
+            if tr is not None and transform_type == "affine":
+                if first_res.get("spatial:registration", "pixel") == "node":
                     # NOTE: If the registration is "node", we need to adjust the transform to
                     # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
                     tr[2] -= tr[0] / 2
                     tr[5] -= tr[4] / 2
 
-                transform = Affine(*tr)
+            self.transform = self.transform or Affine(*tr)
 
-        assert transform, (
+        assert self.transform, (
             "spatial:transform is required either at group level or in the first layout of multiscales convention"
         )
-        self.transform = transform
 
-        # NOTE: we could potentially check for spatial:bbox and derive shape from it
-        assert spatial_shape, (
-            "spatial:shape is required either at group level or in the first layout of multiscales convention"
+        if not self.bounds and all([self.width, self.height]):
+            self.bounds = array_bounds(self.height, self.width, self.transform)
+
+        assert self.bounds, (
+            "spatial:bbox or spatial:shape is required either at group level or in the first layout of multiscales convention"
         )
-        self.height = spatial_shape[0]
-        self.width = spatial_shape[1]
-
-        self.bounds = array_bounds(self.height, self.width, self.transform)
 
     @property
     def minzoom(self):
@@ -1199,6 +1200,20 @@ class GeoZarrReader(AsyncBaseReader):
                     height=shape[0],
                     bounds=array_bounds(shape[0], shape[1], Affine(*transform)),
                 )
+
+        if not all([self.bounds, self.width, self.height]):
+            dst_affine = self.transform
+            tms_crs = self.tms.rasterio_crs
+            if self.crs != tms_crs:
+                dst_affine, _, _ = calculate_default_transform(
+                    self.crs,
+                    self.tms.rasterio_crs,
+                    1,
+                    1,
+                    *self.bounds,
+                )
+            resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
+            return self.tms.zoom_for_res(resolution)
 
         return self._maxzoom
 
@@ -1277,16 +1292,15 @@ class GeoZarrReader(AsyncBaseReader):
                     )
 
         else:
+            group_name = self.input.name
             async for array in self.input.array_values():
-                group_name = self.input.name
-
                 # NOTE: skip non-data arrays
                 # TODO: be smarter
                 if array.ndim < 2:
                     continue
 
                 attributes = cast(dict[str, Any], array.attrs)
-                variable_name = array.name.replace(f"/{group_name}/", "")
+                variable_name = array.name.replace(f"{group_name}/", "")
 
                 transform = attributes.get("spatial:transform")
                 transform_type = attributes.get("spatial:transform_type") or "affine"
@@ -1371,14 +1385,31 @@ class GeoZarrReader(AsyncBaseReader):
 
         return variable
 
-    async def info(self) -> Info:
+    async def info(self) -> GeoZarrInfo:  # type: ignore[override]
         """Return Dataset's info.
 
         Returns:
-            rio_tile.models.Info: Dataset info.
+            GeoZarrInfo: Dataset info.
 
         """
-        raise NotImplementedError
+        availables_variables = await self.variables
+
+        attrs: dict[str, Any] = self.input.attrs or {}
+
+        meta: dict[str, Any] = {
+            "bounds": self.bounds,
+            "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
+            # additional info (not in default model)
+            "driver": "GeoZarr",
+            "multiscales": self.multiscales,
+            "variables": list(availables_variables.keys()),
+            "attributes": {
+                k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
+                for k, v in attrs.items()
+            },
+        }
+
+        return GeoZarrInfo.model_validate(meta)
 
     async def statistics(
         self,
