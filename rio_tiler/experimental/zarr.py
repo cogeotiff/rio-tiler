@@ -189,6 +189,19 @@ class Reader(AsyncBaseReader):
             )
 
     @property
+    def minzoom(self):
+        """Return dataset minzoom.
+
+        NOTE: because a zarr.Array doesn't have overviews, minzoom is the same as maxzoom.
+        """
+        return self._maxzoom
+
+    @property
+    def maxzoom(self):
+        """Return dataset maxzoom."""
+        return self._maxzoom
+
+    @property
     def band_descriptions(self) -> list[str]:
         """
         Return list of `band descriptions` in DataArray.
