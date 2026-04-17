@@ -1106,8 +1106,9 @@ class GeoZarrReader(AsyncBaseReader):
 
     def __attrs_post_init__(self) -> None:
         """Post init: derive height, width, count from array shape."""
-        # NOTE: zarr-python says attrs is of type dict[str, JSON]
-        attributes = cast(dict[str, Any], self.input.attrs)
+        assert isinstance(self.input, zarr.AsyncGroup), "Input must be a zarr AsyncGroup"
+
+        attributes = self.input.attrs
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
         # Default CRS/Bounds for a Zarr Store
@@ -1138,22 +1139,23 @@ class GeoZarrReader(AsyncBaseReader):
                 # assume the first layout is the highest resolution
                 first_res = attributes["multiscales"]["layout"][0]
 
-                if bbox := attributes.get("spatial:bbox"):
+                if bbox := first_res.get("spatial:bbox"):
                     bounds = bounds or bbox
 
                 transform = transform or _get_transform(first_res)
 
-                if spatial_shape := attributes.get("spatial:shape"):
+                if spatial_shape := first_res.get("spatial:shape"):
                     height = height or spatial_shape[0]
                     width = width or spatial_shape[1]
 
             if not bounds and all([width, height, transform]):
                 bounds = array_bounds(height, width, transform)
 
-            if all([transform, bounds]):
+            if bounds:
                 self.crs = crs
-                self.transform = transform
                 self.bounds = bounds
+                if transform:
+                    self.transform = transform
 
             if all([height, width]):
                 self.height = height
@@ -1162,15 +1164,16 @@ class GeoZarrReader(AsyncBaseReader):
     @property
     def minzoom(self) -> int:
         """Return dataset minzoom."""
-        attributes = cast(dict[str, Any], self.input.attrs)
-        conventions: list[dict] = attributes.get("zarr_conventions", [])
-
+        conventions: list[dict] = self.input.attrs.get("zarr_conventions", [])
         if _has_multiscales(conventions):
-            attributes = cast(dict[str, Any], self.input.attrs)
-            # assume the last layout is the lowest resolution
-            last_res = attributes["multiscales"]["layout"][-1]
+            # NOTE: assume the last layout is the lowest resolution
+            last_res = self.input.attrs["multiscales"]["layout"][-1]
+
+            # NOTE: assume `spatial:shape` and `spatial:transform` are provided
+            # at the layout level (if not present at group level)
             shape = last_res.get("spatial:shape")
             transform = _get_transform(last_res)
+
             if all([transform, shape]):
                 return _get_zoom(
                     tms=self.tms,
@@ -1185,15 +1188,16 @@ class GeoZarrReader(AsyncBaseReader):
     @property
     def maxzoom(self) -> int:
         """Return dataset maxzoom."""
-        attributes = cast(dict[str, Any], self.input.attrs)
-        conventions: list[dict] = attributes.get("zarr_conventions", [])
-
+        conventions: list[dict] = self.input.attrs.get("zarr_conventions", [])
         if _has_multiscales(conventions):
-            attributes = cast(dict[str, Any], self.input.attrs)
-            # assume the last layout is the highest resolution
-            first_res = attributes["multiscales"]["layout"][0]
+            # NOTE: assume the last layout is the highest resolution
+            first_res = self.input.attrs["multiscales"]["layout"][0]
+
+            # NOTE: assume `spatial:shape` and `spatial:transform` are provided
+            # at the layout level (if not present at group level)
             shape = first_res.get("spatial:shape")
             transform = _get_transform(first_res)
+
             if all([transform, shape]):
                 return _get_zoom(
                     tms=self.tms,
@@ -1382,6 +1386,9 @@ class GeoZarrReader(AsyncBaseReader):
             return self._groups[group]
 
         g = self.input if group == "root" else await self.input.getitem(group)
+        assert isinstance(g, zarr.AsyncGroup), (
+            f"Group '{group}' not found in the Zarr store."
+        )
 
         arrays: dict[str, list[ArrayMetadata]] = {}
 
@@ -1389,135 +1396,101 @@ class GeoZarrReader(AsyncBaseReader):
         root_transform: Affine | None = None
         root_bbox: BBox | None = None
 
-        # NOTE: root is an Array
-        if isinstance(g, zarr.AsyncArray):
-            attributes = cast(dict[str, Any], g.attrs)
-            conventions = attributes.get("zarr_conventions", [])
-            if _has_proj(conventions):
-                root_crs = _get_proj_crs(attributes)
+        conventions = g.attrs.get("zarr_conventions", [])
+        # Top Level spatial/geo metadata
+        # 1. Group level metadata (crs, transform)
+        if _has_proj(conventions):
+            root_crs = _get_proj_crs(g.attrs)
 
-            if _has_spatial(conventions):
-                root_transform = _get_transform(attributes)
-                root_bbox = attributes.get("spatial:bbox")
+        if _has_spatial(conventions):
+            root_transform = _get_transform(g.attrs)
+            root_bbox = g.attrs.get("spatial:bbox")
 
-            # TODO: is this always true ?
-            height, width = g.shape[-2:]
+        group_is_multiscale = _has_multiscales(conventions)
+        if group_is_multiscale:
+            # NOTE: We assume a group with multiscale should have geo-proj convention
+            assert root_crs, (
+                f"`proj:code` missing for multiscales group '{g.name}' metadata"
+            )
 
-            if all([root_crs, root_transform]):
-                arrays["/"] = [
-                    {
-                        "array": g,
-                        "crs": root_crs,
-                        "height": height,
-                        "width": width,
-                        "transform": root_transform,
-                    }
-                ]
+            # 1. Multiscales metadata
+            ms_group: dict[str, dict[str, Any]] = {}
+            for layout in g.attrs["multiscales"]["layout"]:
+                ms_group[layout["asset"]] = {
+                    "transform": _get_transform(layout),
+                }
 
-            self._groups[group] = {
-                "crs": root_crs,
-                "bbox": root_bbox,
-                "transform": root_transform,
-                "arrays": arrays,
-                "multiscale": False,
-            }
+            # 2. list all arrays for each layout
+            for group_name, meta in ms_group.items():
+                msgroup = await g.getitem(group_name)
 
-        else:
-            conventions = g.attrs.get("zarr_conventions", [])
-            # Top Level spatial/geo metadata
-            # 1. Group level metadata (crs, transform)
-            if _has_proj(conventions):
-                root_crs = _get_proj_crs(g.attrs)
-
-            if _has_spatial(conventions):
-                root_transform = _get_transform(g.attrs)
-                root_bbox = g.attrs.get("spatial:bbox")
-
-            group_is_multiscale = _has_multiscales(conventions)
-            if group_is_multiscale:
-                # NOTE: We assume a group with multiscale should have geo-proj convention
-                assert root_crs, (
-                    f"`proj:code` missing for multiscales group '{g.name}' metadata"
-                )
-
-                # 1. Multiscales metadata
-                ms_group: dict[str, dict[str, Any]] = {}
-                for layout in g.attrs["multiscales"]["layout"]:
-                    ms_group[layout["asset"]] = {
-                        "transform": _get_transform(layout),
-                    }
-
-                # 2. list all arrays for each layout
-                for group_name, meta in ms_group.items():
-                    msgroup = await g.getitem(group_name)
-
-                    # NOTE: `ms_group` reference group names so we know `getitem` return a group
-                    msgroup = cast(zarr.AsyncGroup, msgroup)
-                    async for array in msgroup.array_values():
-                        # NOTE: skip non-data arrays
-                        # TODO: be smarter
-                        if array.ndim < 2:
-                            continue
-
-                        variable_name = array.name.split("/")[-1]
-                        if variable_name not in arrays:
-                            arrays[variable_name] = []
-
-                        # NOTE: Transform from the array or the multiscale layout
-                        transform = _get_transform(array.attrs) or meta["transform"]
-                        assert transform, (
-                            f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
-                        )
-
-                        # TODO: is this always true ?
-                        height, width = array.shape[-2:]
-
-                        arrays[variable_name].append(
-                            {
-                                "array": array,
-                                "crs": root_crs,
-                                "height": height,
-                                "width": width,
-                                "transform": transform,
-                            }
-                        )
-
-            else:
-                # List arrays in group
-                async for array in g.array_values():
-                    array_crs: CRS | None = None
-                    array_transform: Affine | None = None
-
+                # NOTE: `ms_group` reference group names so we know `getitem` return a group
+                msgroup = cast(zarr.AsyncGroup, msgroup)
+                async for array in msgroup.array_values():
                     # NOTE: skip non-data arrays
                     # TODO: be smarter
                     if array.ndim < 2:
                         continue
 
-                    attributes = cast(dict[str, Any], array.attrs)
-                    conventions = attributes.get("zarr_conventions", [])
-                    if _has_proj(conventions):
-                        array_crs = _get_proj_crs(attributes)
+                    variable_name = array.name.split("/")[-1]
+                    if variable_name not in arrays:
+                        arrays[variable_name] = []
 
-                    if _has_spatial(conventions):
-                        array_transform = _get_transform(attributes)
-
-                    array_crs = array_crs or root_crs
-                    array_transform = array_transform or root_transform
+                    # NOTE: Transform from the array or the multiscale layout
+                    transform = _get_transform(array.attrs) or meta["transform"]
+                    assert transform, (
+                        f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
+                    )
 
                     # TODO: is this always true ?
                     height, width = array.shape[-2:]
 
-                    if all([array_crs, array_transform]):
-                        array_name = array.name.replace(f"{g.name}/", "")
-                        arrays[array_name] = [
-                            {
-                                "array": array,
-                                "crs": array_crs,
-                                "height": height,
-                                "width": width,
-                                "transform": array_transform,
-                            }
-                        ]
+                    arrays[variable_name].append(
+                        {
+                            "array": array,
+                            "crs": root_crs,
+                            "height": height,
+                            "width": width,
+                            "transform": transform,
+                        }
+                    )
+
+        else:
+            # List arrays in group
+            async for array in g.array_values():
+                array_crs: CRS | None = None
+                array_transform: Affine | None = None
+
+                # NOTE: skip non-data arrays
+                # TODO: be smarter
+                if array.ndim < 2:
+                    continue
+
+                attributes = cast(dict[str, Any], array.attrs)
+                conventions = attributes.get("zarr_conventions", [])
+                if _has_proj(conventions):
+                    array_crs = _get_proj_crs(attributes)
+
+                if _has_spatial(conventions):
+                    array_transform = _get_transform(attributes)
+
+                array_crs = array_crs or root_crs
+                array_transform = array_transform or root_transform
+
+                # TODO: is this always true ?
+                height, width = array.shape[-2:]
+
+                if all([array_crs, array_transform]):
+                    array_name = array.name.replace(f"{g.name}/", "")
+                    arrays[array_name] = [
+                        {
+                            "array": array,
+                            "crs": array_crs,
+                            "height": height,
+                            "width": width,
+                            "transform": array_transform,
+                        }
+                    ]
 
             self._groups[group] = {
                 "crs": root_crs,
