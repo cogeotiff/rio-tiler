@@ -1084,8 +1084,8 @@ class GeoZarrReader(AsyncBaseReader):
     transform: Affine = attr.ib(init=False)
 
     # Group shape
-    height: int = attr.ib(init=False)
-    width: int = attr.ib(init=False)
+    height: int = attr.ib(init=False, default=None)
+    width: int = attr.ib(init=False, default=None)
 
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
