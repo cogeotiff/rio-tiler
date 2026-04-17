@@ -21,6 +21,10 @@ class PointOutsideBounds(RioTilerError):
     """Point is outside image bounds."""
 
 
+class InvalidBounds(RioTilerError):
+    """Requested BBOX does not intersect dataset bounds."""
+
+
 class InvalidBandName(RioTilerError):
     """Invalid band name."""
 

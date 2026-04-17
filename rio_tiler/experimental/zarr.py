@@ -27,6 +27,7 @@ from rio_tiler._warp import warp
 from rio_tiler.constants import MAX_ARRAY_SIZE, WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
+    InvalidBounds,
     MaxArraySizeError,
     PointOutsideBounds,
     TileOutsideBounds,
@@ -87,6 +88,21 @@ def _get_proj_crs(attributes: dict) -> CRS:
         )
     )
     return CRS.from_user_input(proj_string)
+
+
+def _get_transform(attributes: dict) -> Affine | None:
+    transform_type = attributes.get("spatial:transform_type") or "affine"
+    tr = attributes.get("spatial:transform")
+    if transform_type == "affine" and tr is not None:
+        if attributes.get("spatial:registration", "pixel") == "node":
+            # NOTE: If the registration is "node", we need to adjust the transform to
+            # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
+            tr[2] -= tr[0] / 2
+            tr[5] -= tr[4] / 2
+
+        return Affine(*tr)
+
+    return None
 
 
 @attr.s
@@ -150,16 +166,8 @@ class Reader(AsyncBaseReader):
 
         # Transform
         if not self.transform and _has_spatial(conventions):
-            transform_type = attributes.get("spatial:transform_type") or "affine"
-            tr = attributes.get("spatial:transform")
-            if transform_type == "affine" and tr is not None:
-                if attributes.get("spatial:registration", "pixel") == "node":
-                    # NOTE: If the registration is "node", we need to adjust the transform to
-                    # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
-                    tr[2] -= tr[0] / 2
-                    tr[5] -= tr[4] / 2
-
-                self.transform = Affine(*tr)
+            if tr := _get_transform(attributes):
+                self.transform = tr
 
         assert self.transform, (
             "Affine transform is required, either as an argument or in `spatial` zarr_conventions"
@@ -470,7 +478,7 @@ class Reader(AsyncBaseReader):
         col_end = min(self.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
         row_end = min(self.height, math.ceil(rasterio_win.row_off + rasterio_win.height))
         if col_off >= col_end or row_off >= row_end:
-            raise ValueError("Input BBOX and dataset bounds do not intersect")
+            raise InvalidBounds("Input BBOX and dataset bounds do not intersect")
 
         # Clamp window to array bounds
         clipped_col_off = max(0, col_off)
@@ -882,9 +890,19 @@ class ArrayMetadata(TypedDict):
 
     array: zarr.AsyncArray
     crs: CRS
+    transform: Affine
     height: int
     width: int
-    transform: Affine
+
+
+class GroupMetadata(TypedDict):
+    """Group Metadata."""
+
+    crs: CRS | None
+    bbox: BBox | None
+    transform: Affine | None
+    multiscale: bool
+    arrays: dict[str, list[ArrayMetadata]]
 
 
 def calculate_output_transform(
@@ -1041,7 +1059,6 @@ def get_multiscale_level(
 class GeoZarrInfo(Bounds):
     """GeoZarr Info."""
 
-    multiscales: bool
     variables: list[str]
     attributes: dict[str, Any]
 
@@ -1073,12 +1090,11 @@ class GeoZarrReader(AsyncBaseReader):
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    multiscales: bool = attr.ib(init=False)
-
     colormap: dict | None = attr.ib(default=None)
 
-    # list of availables arrays in the group
-    _variables: dict[str, list[ArrayMetadata]] = attr.ib(init=False, default=None)
+    # list of availables the groups with variables (used for cache)
+    _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
+    _variables: list[str] = attr.ib(init=False, default=None)
 
     async def __aenter__(self):
         """Support using with Context Managers."""
@@ -1094,111 +1110,97 @@ class GeoZarrReader(AsyncBaseReader):
         attributes = cast(dict[str, Any], self.input.attrs)
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
-        self.multiscales = _has_multiscales(conventions)
+        # Default CRS/Bounds for a Zarr Store
+        self.crs = WGS84_CRS
+        self.bounds = (-180.0, -90.0, 180.0, 90.0)
 
-        self.spatial = _has_spatial(conventions)
-        assert self.spatial, (
-            "GeoZarr convention requires 'spatial' convention to be present in zarr_conventions"
-        )
-
-        self.proj = _has_proj(conventions)
-        assert self.proj, (
-            "GeoZarr convention requires 'geo-proj' convention to be present in zarr_conventions"
-        )
-
-        # CRS
-        self.crs = _get_proj_crs(attributes)
-
-        if spatial_shape := attributes.get("spatial:shape"):
-            self.height = spatial_shape[0]
-            self.width = spatial_shape[1]
-
-        if bbox := attributes.get("spatial:bbox"):
-            self.bounds = bbox
-
-        # Transform
-        # Case 1: Transform at group level
-        tr = attributes.get("spatial:transform")
-        transform_type = attributes.get("spatial:transform_type", "affine")
-        if tr is not None and transform_type == "affine":
-            if attributes.get("spatial:registration", "pixel") == "node":
-                # NOTE: If the registration is "node", we need to adjust the transform to
-                # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
-                tr[2] -= tr[0] / 2
-                tr[5] -= tr[4] / 2
-
-            self.transform = Affine(*tr)
-
-        # Case 2: check multiscales for transform and shape
-        if self.multiscales:
-            # assume the first layout is the highest resolution
-            first_res = attributes["multiscales"]["layout"][0]
-
-            if spatial_shape := attributes.get("spatial:shape"):
-                self.height = self.height or spatial_shape[0]
-                self.width = self.width or spatial_shape[1]
+        transform: Affine | None = None
+        height: int | None = None
+        width: int | None = None
+        bounds: BBox | None = None
+        if _has_spatial(conventions) and _has_proj(conventions):
+            # CRS
+            crs = _get_proj_crs(attributes)
 
             if bbox := attributes.get("spatial:bbox"):
-                self.bounds = self.bounds or bbox
+                bounds = bbox
 
-            tr = first_res.get("spatial:transform")
-            transform_type = first_res.get("spatial:transform_type", "affine")
-            if tr is not None and transform_type == "affine":
-                if first_res.get("spatial:registration", "pixel") == "node":
-                    # NOTE: If the registration is "node", we need to adjust the transform to
-                    # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
-                    tr[2] -= tr[0] / 2
-                    tr[5] -= tr[4] / 2
+            # Transform
+            # Case 1: Transform at group level
+            transform = _get_transform(attributes)
 
-            self.transform = self.transform or Affine(*tr)
+            if spatial_shape := attributes.get("spatial:shape"):
+                height = spatial_shape[0]
+                width = spatial_shape[1]
 
-        assert self.transform, (
-            "spatial:transform is required either at group level or in the first layout of multiscales convention"
-        )
+            # Case 2: check multiscales for transform and shape
+            if _has_multiscales(conventions):
+                # assume the first layout is the highest resolution
+                first_res = attributes["multiscales"]["layout"][0]
 
-        if not self.bounds and all([self.width, self.height]):
-            self.bounds = array_bounds(self.height, self.width, self.transform)
+                if bbox := attributes.get("spatial:bbox"):
+                    bounds = bounds or bbox
 
-        assert self.bounds, (
-            "spatial:bbox or spatial:shape is required either at group level or in the first layout of multiscales convention"
-        )
+                transform = transform or _get_transform(first_res)
+
+                if spatial_shape := attributes.get("spatial:shape"):
+                    height = height or spatial_shape[0]
+                    width = width or spatial_shape[1]
+
+            if not bounds and all([width, height, transform]):
+                bounds = array_bounds(height, width, transform)
+
+            if all([transform, bounds]):
+                self.crs = crs
+                self.transform = transform
+                self.bounds = bounds
+
+            if all([height, width]):
+                self.height = height
+                self.width = width
 
     @property
-    def minzoom(self):
+    def minzoom(self) -> int:
         """Return dataset minzoom."""
-        if self.multiscales:
+        attributes = cast(dict[str, Any], self.input.attrs)
+        conventions: list[dict] = attributes.get("zarr_conventions", [])
+
+        if _has_multiscales(conventions):
             attributes = cast(dict[str, Any], self.input.attrs)
             # assume the last layout is the lowest resolution
             last_res = attributes["multiscales"]["layout"][-1]
             shape = last_res.get("spatial:shape")
-            transform = last_res.get("spatial:transform")
+            transform = _get_transform(last_res)
             if all([transform, shape]):
                 return _get_zoom(
                     tms=self.tms,
                     crs=self.crs,
                     width=shape[1],
                     height=shape[0],
-                    bounds=array_bounds(shape[0], shape[1], Affine(*transform)),
+                    bounds=array_bounds(shape[0], shape[1], transform),
                 )
 
         return self.maxzoom
 
     @property
-    def maxzoom(self):
+    def maxzoom(self) -> int:
         """Return dataset maxzoom."""
-        if self.multiscales:
+        attributes = cast(dict[str, Any], self.input.attrs)
+        conventions: list[dict] = attributes.get("zarr_conventions", [])
+
+        if _has_multiscales(conventions):
             attributes = cast(dict[str, Any], self.input.attrs)
             # assume the last layout is the highest resolution
             first_res = attributes["multiscales"]["layout"][0]
             shape = first_res.get("spatial:shape")
-            transform = first_res.get("spatial:transform")
+            transform = _get_transform(first_res)
             if all([transform, shape]):
                 return _get_zoom(
                     tms=self.tms,
                     crs=self.crs,
                     width=shape[1],
                     height=shape[0],
-                    bounds=array_bounds(shape[0], shape[1], Affine(*transform)),
+                    bounds=array_bounds(shape[0], shape[1], transform),
                 )
 
         if not all([self.bounds, self.width, self.height]):
@@ -1217,124 +1219,239 @@ class GeoZarrReader(AsyncBaseReader):
 
         return self._maxzoom
 
-    @property
-    async def variables(self) -> dict[str, list[ArrayMetadata]]:  # noqa: C901
-        """Return list of variables (arrays) with their geospatial metadata."""
-        if self._variables:
+    async def get_bounds(
+        self,
+        *,
+        variables: Sequence[str] | str,
+        crs: CRS = WGS84_CRS,
+    ) -> BBox:  # noqa: C901
+        """Get BBox for variables."""
+        variables = cast_to_sequence(variables)
+
+        async def _get_bounds(variable: str) -> BBox:
+            group_name = "root"
+            if ":" in variable:
+                group_name, variable = variable.split(":", 1)
+
+            group_metadata = await self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            bounds_crs = group_metadata["crs"]
+            bbox = group_metadata["bbox"]
+            if not bounds_crs or not bbox:
+                array_metadata = self.select_variable(array)
+                bbox = array_bounds(
+                    array_metadata["height"],
+                    array_metadata["width"],
+                    array_metadata["transform"],
+                )
+                bounds_crs = array_metadata["crs"]
+
+            if bounds_crs != crs:
+                return cast(
+                    BBox, transform_bounds(bounds_crs, crs, *bbox, densify_pts=21)
+                )
+
+            return bbox
+
+        bounds = await asyncio.gather(*(_get_bounds(variable) for variable in variables))
+        minx, miny, maxx, maxy = zip(*bounds)
+        return (min(minx), min(miny), max(maxx), max(maxy))
+
+    async def list_variables(self) -> list[str]:
+        """List variables in the Zarr store."""
+        if self._variables is not None:
             return self._variables
 
-        variables: dict[str, list[ArrayMetadata]] = {}
-        if self.multiscales:
-            attributes = cast(dict[str, Any], self.input.attrs)
-            conventions: list[dict] = attributes.get("zarr_conventions", [])
+        ms_groups = []
+        variables: list[str] = []
 
-            crs = _get_proj_crs(attributes) if _has_proj(conventions) else self.crs
+        group = "root"
+        group_metadata = await self.get_group_metadata(group)
 
-            # 1. Get MS groups + geospatial metadata (crs, transform)
-            ms_group: dict[str, dict[str, Any]] = {}
-            for layout in attributes["multiscales"]["layout"]:
-                transform_type = layout.get("spatial:transform_type") or "affine"
-                tr = layout.get("spatial:transform")
-                if transform_type == "affine" and tr is not None:
-                    if layout.get("spatial:registration", "pixel") == "node":
-                        # NOTE: If the registration is "node", we need to adjust the transform to
-                        # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
-                        tr[2] -= tr[0] / 2
-                        tr[5] -= tr[4] / 2
+        # Zarr store is a multiscale group
+        if group_metadata["multiscale"]:
+            ms_groups.append(group)
 
-                ms_group[layout["asset"]] = {
-                    "crs": crs,
-                    "transform": tr,
-                }
+        # Zarr Store has top level arrays
+        if vars := group_metadata["arrays"].keys():
+            variables.extend(vars)
 
-            # 2. list all arrays for each layout
-            for group_name, meta in ms_group.items():
-                group = await self.input.getitem(group_name)
+        # Check sub-groups
+        else:
+            async for name, member in self.input.members(max_depth=10):
+                if any(name.startswith(msg) for msg in ms_groups):
+                    continue
 
-                # NOTE: `ms_group` reference group names so we know `getitem` return a group
-                group = cast(zarr.AsyncGroup, group)
-                async for array in group.array_values():
+                # Check Group for variables
+                if isinstance(member, zarr.AsyncGroup):
+                    group_metadata = await self.get_group_metadata(name)
+                    if group_metadata["multiscale"]:
+                        ms_groups.append(name)
+
+                    if vars := group_metadata["arrays"].keys():
+                        variables.extend([f"{name}:{v}" for v in vars])
+
+        self._variables = sorted(set(variables))
+        return self._variables
+
+    async def get_group_metadata(  # noqa: C901
+        self,
+        group: str,
+    ) -> GroupMetadata:
+        """Find arrays in a Zarr store and extract spatial metadata."""
+        if group in self._groups:
+            return self._groups[group]
+
+        g = self.input if group == "root" else await self.input.getitem(group)
+
+        arrays: dict[str, list[ArrayMetadata]] = {}
+
+        root_crs: CRS | None = None
+        root_transform: Affine | None = None
+        root_bbox: BBox | None = None
+
+        # NOTE: root is an Array
+        if isinstance(g, zarr.AsyncArray):
+            conventions = g.attrs.get("zarr_conventions", [])
+            if _has_proj(conventions):
+                root_crs = _get_proj_crs(g.attrs)
+
+            if _has_spatial(conventions):
+                root_transform = _get_transform(g.attrs)
+                root_bbox = g.attrs.get("spatial:bbox")
+
+            # TODO: is this always true ?
+            height, width = g.shape[-2:]
+
+            if all([root_crs, root_transform]):
+                arrays["/"] = [
+                    {
+                        "array": g,
+                        "crs": root_crs,
+                        "height": height,
+                        "width": width,
+                        "transform": root_transform,
+                    }
+                ]
+
+            self._groups[group] = {
+                "crs": root_crs,
+                "bbox": root_bbox,
+                "transform": root_transform,
+                "arrays": arrays,
+                "multiscale": False,
+            }
+
+        else:
+            conventions = g.attrs.get("zarr_conventions", [])
+            # Top Level spatial/geo metadata
+            # 1. Group level metadata (crs, transform)
+            if _has_proj(conventions):
+                root_crs = _get_proj_crs(g.attrs)
+
+            if _has_spatial(conventions):
+                root_transform = _get_transform(g.attrs)
+                root_bbox = g.attrs.get("spatial:bbox")
+
+            group_is_multiscale = _has_multiscales(conventions)
+            if group_is_multiscale:
+                # NOTE: We assume a group with multiscale should have geo-proj convention
+                assert root_crs, (
+                    f"`proj:code` missing for multiscales group '{g.name}' metadata"
+                )
+
+                # 1. Multiscales metadata
+                ms_group: dict[str, dict[str, Any]] = {}
+                for layout in g.attrs["multiscales"]["layout"]:
+                    ms_group[layout["asset"]] = {
+                        "transform": _get_transform(layout),
+                    }
+
+                # 2. list all arrays for each layout
+                for group_name, meta in ms_group.items():
+                    msgroup = await g.getitem(group_name)
+
+                    # NOTE: `ms_group` reference group names so we know `getitem` return a group
+                    msgroup = cast(zarr.AsyncGroup, msgroup)
+                    async for array in msgroup.array_values():
+                        # NOTE: skip non-data arrays
+                        # TODO: be smarter
+                        if array.ndim < 2:
+                            continue
+
+                        variable_name = array.name.split("/")[-1]
+                        if variable_name not in arrays:
+                            arrays[variable_name] = []
+
+                        # NOTE: Transform from the array or the multiscale layout
+                        transform = _get_transform(array.attrs) or meta["transform"]
+                        assert transform, (
+                            f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
+                        )
+
+                        # TODO: is this always true ?
+                        height, width = array.shape[-2:]
+
+                        arrays[variable_name].append(
+                            {
+                                "array": array,
+                                "crs": root_crs,
+                                "height": height,
+                                "width": width,
+                                "transform": transform,
+                            }
+                        )
+
+            else:
+                # List arrays in group
+                async for array in g.array_values():
+                    array_crs: CRS | None = None
+                    array_transform: Affine | None = None
+
                     # NOTE: skip non-data arrays
                     # TODO: be smarter
                     if array.ndim < 2:
                         continue
 
-                    attributes = cast(dict[str, Any], array.attrs)
-                    variable_name = array.name.replace(f"/{group_name}/", "")
-                    if variable_name not in variables:
-                        variables[variable_name] = []
+                    conventions = array.attrs.get("zarr_conventions", [])
+                    if _has_proj(conventions):
+                        array_crs = _get_proj_crs(array.attrs)
 
-                    transform = attributes.get("spatial:transform")
-                    transform_type = attributes.get("spatial:transform_type") or "affine"
-                    if transform_type == "affine" and transform is not None:
-                        if attributes.get("spatial:registration", "pixel") == "node":
-                            # NOTE: If the registration is "node", we need to adjust the transform to
-                            # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
-                            transform[2] -= transform[0] / 2
-                            transform[5] -= transform[4] / 2
+                    if _has_spatial(conventions):
+                        array_transform = _get_transform(array.attrs)
 
-                    transform = transform or meta["transform"]
-                    assert transform, (
-                        f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
-                    )
+                    array_crs = array_crs or root_crs
+                    array_transform = array_transform or root_transform
 
-                    # TODO: is this always true
+                    # TODO: is this always true ?
                     height, width = array.shape[-2:]
 
-                    variables[variable_name].append(
-                        {
-                            "array": array,
-                            "crs": meta["crs"],
-                            "height": height,
-                            "width": width,
-                            "transform": Affine(*transform),
-                        }
-                    )
+                    if all([array_crs, array_transform]):
+                        array_name = array.name.replace(f"{g.name}/", "")
+                        arrays[array_name] = [
+                            {
+                                "array": array,
+                                "crs": array_crs,
+                                "height": height,
+                                "width": width,
+                                "transform": array_transform,
+                            }
+                        ]
 
-        else:
-            group_name = self.input.name
-            async for array in self.input.array_values():
-                # NOTE: skip non-data arrays
-                # TODO: be smarter
-                if array.ndim < 2:
-                    continue
+            self._groups[group] = {
+                "crs": root_crs,
+                "bbox": root_bbox,
+                "transform": root_transform,
+                "multiscale": group_is_multiscale,
+                "arrays": arrays,
+            }
 
-                attributes = cast(dict[str, Any], array.attrs)
-                variable_name = array.name.replace(f"{group_name}/", "")
-
-                transform = attributes.get("spatial:transform")
-                transform_type = attributes.get("spatial:transform_type") or "affine"
-                if transform_type == "affine" and transform is not None:
-                    if attributes.get("spatial:registration", "pixel") == "node":
-                        # NOTE: If the registration is "node", we need to adjust the transform to
-                        # account for the fact that the coordinates refer to the center of the pixel rather than the edge.
-                        transform[2] -= transform[0] / 2
-                        transform[5] -= transform[4] / 2
-
-                transform = transform or self.transform
-                assert transform, (
-                    f"`spatial:transform` missing for array {variable_name} (path: '{array.name}')"
-                )
-
-                # TODO: is this always true
-                height, width = array.shape[-2:]
-
-                variables[variable_name] = [
-                    {
-                        "array": array,
-                        "crs": self.crs,
-                        "height": height,
-                        "width": width,
-                        "transform": Affine(*transform),
-                    }
-                ]
-
-        if not variables:
-            raise ValueError("No variables (data arrays) found in the dataset.")
-
-        self._variables = variables
-
-        return self._variables
+        return self._groups[group]
 
     def select_variable(
         self,
@@ -1392,7 +1509,7 @@ class GeoZarrReader(AsyncBaseReader):
             GeoZarrInfo: Dataset info.
 
         """
-        availables_variables = await self.variables
+        availables_variables = await self.list_variables()
 
         attrs: dict[str, Any] = self.input.attrs or {}
 
@@ -1400,9 +1517,8 @@ class GeoZarrReader(AsyncBaseReader):
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             # additional info (not in default model)
-            "driver": "GeoZarr",
-            "multiscales": self.multiscales,
-            "variables": list(availables_variables.keys()),
+            "driver": "GeoZARR",
+            "variables": availables_variables,
             "attributes": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
                 for k, v in attrs.items()
@@ -1411,10 +1527,10 @@ class GeoZarrReader(AsyncBaseReader):
 
         return GeoZarrInfo.model_validate(meta)
 
-    async def statistics(
+    async def statistics(  # type: ignore[override]
         self,
         *,
-        variables: Sequence[str] | str | None = None,
+        variables: Sequence[str] | str,
         expression: str | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
@@ -1440,16 +1556,6 @@ class GeoZarrReader(AsyncBaseReader):
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        availables_variables = await self.variables
-
-        variables = variables or list(availables_variables.keys())
-
-        variables = cast_to_sequence(variables)
-        if vars := set(variables).difference(availables_variables.keys()):
-            raise ValueError(
-                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
-            )
-
         img = await self.preview(
             variables=variables,
             expression=expression,
@@ -1489,6 +1595,7 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
 
         """
+        # NOTE: if the top level bbox doesn't exist this, should always return False
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
@@ -1539,23 +1646,27 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        availables_variables = await self.variables
-
         variables = cast_to_sequence(variables)
-        if vars := set(variables).difference(availables_variables.keys()):
-            raise ValueError(
-                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
-            )
 
         async def _part(variable: str) -> ImageData:
+            group_name = "root"
+            if ":" in variable:
+                group_name, variable = variable.split(":", 1)
+
+            group_metadata = await self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
             array_metadata = self.select_variable(
-                availables_variables[variable],
+                array,
                 max_size=max_size,
                 height=height,
                 width=width,
                 dst_crs=dst_crs,
             )
-
             async with Reader(
                 input=array_metadata["array"],
                 transform=array_metadata["transform"],
@@ -1602,23 +1713,27 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        availables_variables = await self.variables
-
         variables = cast_to_sequence(variables)
-        if vars := set(variables).difference(availables_variables.keys()):
-            raise ValueError(
-                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
-            )
 
         async def _preview(variable: str) -> ImageData:
+            group_name = "root"
+            if ":" in variable:
+                group_name, variable = variable.split(":", 1)
+
+            group_metadata = await self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
             array_metadata = self.select_variable(
-                availables_variables[variable],
+                array,
                 max_size=max_size,
                 height=height,
                 width=width,
                 dst_crs=dst_crs,
             )
-
             async with Reader(
                 input=array_metadata["array"],
                 transform=array_metadata["transform"],
@@ -1666,16 +1781,21 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.PointData: PointData instance with data, mask and spatial info.
 
         """
-        availables_variables = await self.variables
-
         variables = cast_to_sequence(variables)
-        if vars := set(variables).difference(availables_variables.keys()):
-            raise ValueError(
-                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
-            )
 
         async def _point(variable: str) -> PointData:
-            array_metadata = self.select_variable(availables_variables[variable])
+            group_name = "root"
+            if ":" in variable:
+                group_name, variable = variable.split(":", 1)
+
+            group_metadata = await self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            array_metadata = self.select_variable(array)
             async with Reader(
                 input=array_metadata["array"],
                 transform=array_metadata["transform"],
@@ -1722,14 +1842,6 @@ class GeoZarrReader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        availables_variables = await self.variables
-
-        variables = cast_to_sequence(variables)
-        if vars := set(variables).difference(availables_variables.keys()):
-            raise ValueError(
-                f"Variables {vars} not found in the dataset. Available variables: {list(availables_variables.keys())}"
-            )
-
         shape = _validate_shape_input(shape)
 
         if not dst_crs:
