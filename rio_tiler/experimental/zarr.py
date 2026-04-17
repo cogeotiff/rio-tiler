@@ -1081,7 +1081,7 @@ class GeoZarrReader(AsyncBaseReader):
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
     crs: CRS = attr.ib(init=False)
-    transform: Affine = attr.ib(init=False)
+    transform: Affine = attr.ib(init=False, default=None)
 
     # Group shape
     height: int = attr.ib(init=False, default=None)
