@@ -1262,6 +1262,80 @@ class GeoZarrReader(AsyncBaseReader):
         minx, miny, maxx, maxy = zip(*bounds)
         return (min(minx), min(miny), max(maxx), max(maxy))
 
+    async def get_minzoom(
+        self,
+        *,
+        variables: Sequence[str] | str,
+    ) -> int:
+        """Get minzoom for variables."""
+        variables = cast_to_sequence(variables)
+
+        async def _get_minzoom(variable: str) -> int:
+            group_name = "root"
+            if ":" in variable:
+                group_name, variable = variable.split(":", 1)
+
+            group_metadata = await self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            # Assume the last array is the lowest resolution
+            array_metadata = array[-1]
+            return _get_zoom(
+                tms=self.tms,
+                crs=array_metadata["crs"],
+                width=array_metadata["width"],
+                height=array_metadata["height"],
+                bounds=array_bounds(
+                    array_metadata["height"],
+                    array_metadata["width"],
+                    array_metadata["transform"],
+                ),
+            )
+
+        zooms = await asyncio.gather(*(_get_minzoom(variable) for variable in variables))
+        return min(zooms)
+
+    async def get_maxzoom(
+        self,
+        *,
+        variables: Sequence[str] | str,
+    ) -> int:
+        """Get maxzoom for variables."""
+        variables = cast_to_sequence(variables)
+
+        async def _get_maxzoom(variable: str) -> int:
+            group_name = "root"
+            if ":" in variable:
+                group_name, variable = variable.split(":", 1)
+
+            group_metadata = await self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            # Assume the first array is the highest resolution
+            array_metadata = array[0]
+            return _get_zoom(
+                tms=self.tms,
+                crs=array_metadata["crs"],
+                width=array_metadata["width"],
+                height=array_metadata["height"],
+                bounds=array_bounds(
+                    array_metadata["height"],
+                    array_metadata["width"],
+                    array_metadata["transform"],
+                ),
+            )
+
+        zooms = await asyncio.gather(*(_get_maxzoom(variable) for variable in variables))
+        return max(zooms)
+
     async def list_variables(self) -> list[str]:
         """List variables in the Zarr store."""
         if self._variables is not None:
