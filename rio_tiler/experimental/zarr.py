@@ -1317,13 +1317,14 @@ class GeoZarrReader(AsyncBaseReader):
 
         # NOTE: root is an Array
         if isinstance(g, zarr.AsyncArray):
-            conventions = g.attrs.get("zarr_conventions", [])
+            attributes = cast(dict[str, Any], g.attrs)
+            conventions = attributes.get("zarr_conventions", [])
             if _has_proj(conventions):
-                root_crs = _get_proj_crs(g.attrs)
+                root_crs = _get_proj_crs(attributes)
 
             if _has_spatial(conventions):
-                root_transform = _get_transform(g.attrs)
-                root_bbox = g.attrs.get("spatial:bbox")
+                root_transform = _get_transform(attributes)
+                root_bbox = attributes.get("spatial:bbox")
 
             # TODO: is this always true ?
             height, width = g.shape[-2:]
@@ -1418,12 +1419,13 @@ class GeoZarrReader(AsyncBaseReader):
                     if array.ndim < 2:
                         continue
 
-                    conventions = array.attrs.get("zarr_conventions", [])
+                    attributes = cast(dict[str, Any], array.attrs)
+                    conventions = attributes.get("zarr_conventions", [])
                     if _has_proj(conventions):
-                        array_crs = _get_proj_crs(array.attrs)
+                        array_crs = _get_proj_crs(attributes)
 
                     if _has_spatial(conventions):
-                        array_transform = _get_transform(array.attrs)
+                        array_transform = _get_transform(attributes)
 
                     array_crs = array_crs or root_crs
                     array_transform = array_transform or root_transform
