@@ -101,18 +101,6 @@
          <lastmod>2026-04-20</lastmod>
     </url>
     <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/9.0.6/api/rio_tiler/experimental/geotiff/</loc>
-         <lastmod>2026-04-20</lastmod>
-    </url>
-    <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/9.0.6/api/rio_tiler/experimental/vsifile/</loc>
-         <lastmod>2026-04-20</lastmod>
-    </url>
-    <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/9.0.6/api/rio_tiler/experimental/zarr/</loc>
-         <lastmod>2026-04-20</lastmod>
-    </url>
-    <url>
          <loc>https://cogeotiff.github.io/rio-tiler/9.0.6/api/rio_tiler/io/base/</loc>
          <lastmod>2026-04-20</lastmod>
     </url>
