@@ -72,6 +72,7 @@ docs = [
     "griffe-inherited-docstrings>=1.0.0",
     "mkdocstrings[python]>=0.25.1",
     "pygments",
+    "mike~=2.0",
 ]
 deploy = [
     "hatch",

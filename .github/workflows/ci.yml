@@ -60,16 +60,15 @@ jobs:
         uses: astral-sh/setup-uv@cec208311dfd045dd5311c1add060b2062131d57 # v8.0.0
         with:
           version: "0.9.*" 
-          enable-cache: true
           python-version: ${{ env.LATEST_PY_VERSION }}
 
       - name: Install dependencies
         run: |
-          uv sync
+          uv sync --group performance --frozen
 
       - name: Run Benchmark
         run: |
-          uv run --group performance --frozen pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
+          uv run pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
 
       - name: Store and Compare benchmark result
         uses: benchmark-action/github-action-benchmark@a60cea5bc7b49e15c1f58f411161f99e0df48372 # v1
@@ -86,6 +85,7 @@ jobs:
           # Make a commit on `gh-pages` only if main
           auto-push: ${{ github.ref == 'refs/heads/main' }}
           benchmark-data-dir-path: dev/benchmarks
+          max-items-in-chart: 100
 
   benchmark-requests:
     needs: [tests]
@@ -102,7 +102,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync
+          uv sync --group performance
 
       - name: Run Benchmark
-        run: uv run --group performance pytest tests/benchmarks/requests.py -s -vv
+        run: uv run pytest tests/benchmarks/requests.py -s -vv

@@ -20,6 +20,9 @@ extra:
       link: 'https://twitter.com/cogeotiff'
     - icon: 'fontawesome/solid/globe'
       link: 'https://www.cogeo.org/'
+  version:
+    provider: mike
+    default: latest
 
 # Layout
 nav:
@@ -31,7 +34,7 @@ nav:
     - Mosaic: 'mosaic.md'
     - Colormaps: 'colormap.md'
     - Supported file formats: 'supported_format.md'
-    - Experimental: experimental.md
+    - Experimental: 'experimental.md'
   - Advanced Topics:
     - Base classes and custom readers: 'advanced/custom_readers.md'
     - Mosaic Backend: 'advanced/mosaic_backend.md'
@@ -55,11 +58,6 @@ nav:
     - v6.0 -> v7.0: 'migrations/v7_migration.md'
     - v8.0 -> v9.0: 'migrations/v9_migration.md'
   - API:
-    - rio_tiler.colormap: api/rio_tiler/colormap.md
-    - rio_tiler.constants: api/rio_tiler/constants.md
-    - rio_tiler.errors: api/rio_tiler/errors.md
-    - rio_tiler.expression: api/rio_tiler/expression.md
-    - rio_tiler.models: api/rio_tiler/models.md
     - rio_tiler.io:
       - rio_tiler.io.base: api/rio_tiler/io/base.md
       - rio_tiler.io.rasterio: api/rio_tiler/io/rasterio.md
@@ -70,6 +68,15 @@ nav:
       - rio_tiler.mosaic.methods:
         - rio_tiler.mosaic.methods.base: api/rio_tiler/mosaic/methods/base.md
         - rio_tiler.mosaic.methods.defaults: api/rio_tiler/mosaic/methods/defaults.md
+    - rio_tiler.experimental:
+      - rio_tiler.experimental.zarr: api/rio_tiler/experimental/zarr.md
+      - rio_tiler.experimental.geotiff: api/rio_tiler/experimental/geotiff.md
+      - rio_tiler.experimental.vsifile: api/rio_tiler/experimental/vsifile.md
+    - rio_tiler.colormap: api/rio_tiler/colormap.md
+    - rio_tiler.constants: api/rio_tiler/constants.md
+    - rio_tiler.errors: api/rio_tiler/errors.md
+    - rio_tiler.expression: api/rio_tiler/expression.md
+    - rio_tiler.models: api/rio_tiler/models.md
     - rio_tiler.profiles: api/rio_tiler/profiles.md
     - rio_tiler.reader: api/rio_tiler/reader.md
     - rio_tiler.tasks: api/rio_tiler/tasks.md

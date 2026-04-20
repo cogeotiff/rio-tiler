@@ -4,6 +4,8 @@ on:
   push:
     branches:
       - main
+    tags:
+      - '*'
     paths:
       # Only rebuild website when docs or python files have changed
       - 'README.md'
@@ -11,6 +13,7 @@ on:
       - 'CONTRIBUTING.md'
       - 'docs/**'
       - 'rio_tiler/**.py'
+      - .github/workflows/deploy_mkdocs.yml
 
 jobs:
   build:
@@ -26,5 +29,28 @@ jobs:
           version: "0.9.*" 
           enable-cache: true
 
-      - name: Deploy docs
-        run: uv run --group docs mkdocs gh-deploy --force -f docs/mkdocs.yml
+      - name: Install dependencies
+        run: |
+          uv sync --group docs
+
+      - name: Set module version
+        id: module
+        run: |
+          echo version=$(uv run python -c'import rio_tiler; print(rio_tiler.__version__)') >> $GITHUB_OUTPUT
+
+      - name: Configure Git user
+        run: |
+          git config user.name github-actions
+          git config user.email github-actions@github.com
+
+      - name: Fetch gh-pages repository
+        run: |
+          git fetch origin gh-pages --depth=1
+
+      - name: Deploy documentation (main → latest alias)
+        if: github.ref_type == 'branch'
+        run: uv run mike deploy latest --update-aliases --push --config-file docs/mkdocs.yml
+
+      - name: Deploy documentation (tag → version only)
+        if: github.ref_type == 'tag'
+        run: uv run mike deploy ${{ steps.module.outputs.version }} --push --config-file docs/mkdocs.yml
