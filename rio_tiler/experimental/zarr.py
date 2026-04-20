@@ -1193,21 +1193,25 @@ class GeoZarrReader(AsyncBaseReader):
                     bounds=array_bounds(shape[0], shape[1], transform),
                 )
 
-        if not all([self.bounds, self.width, self.height]):
+        # NOTE: By construction we know that if `self.transform` is set
+        # self.bounds and self.crs are also comming from the zarr attributes.
+        if self.transform:
+            w = self.width or 1
+            h = self.height or 1
             dst_affine = self.transform
             tms_crs = self.tms.rasterio_crs
             if self.crs != tms_crs:
                 dst_affine, _, _ = calculate_default_transform(
                     self.crs,
                     self.tms.rasterio_crs,
-                    1,
-                    1,
+                    w,
+                    h,
                     *self.bounds,
                 )
             resolution = max(abs(dst_affine[0]), abs(dst_affine[4]))
             return self.tms.zoom_for_res(resolution)
 
-        return self._maxzoom
+        return self.tms.maxzoom
 
     def parse_variable(self, variable: str) -> tuple[str, str, Any | None]:
         """Parse variable name into group, variable and options."""
