@@ -44,36 +44,28 @@ from rio_tiler.utils import (
     cast_to_sequence,
 )
 
+MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
+SPATIAL_CONVENTION_UUID = "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
+PROJ_CONVENTION_UUID = "f17cb550-5864-4468-aeb7-f3180cfb622f"
+
 
 def _has_multiscales(conventions: list[dict]) -> bool:
     return next(
-        (
-            True
-            for c in conventions
-            if c["uuid"] == "d35379db-88df-4056-af3a-620245f8e347"
-        ),
+        (True for c in conventions if c["uuid"] == MULTISCALE_CONVENTION_UUID),
         False,
     )
 
 
 def _has_spatial(conventions: list[dict]) -> bool:
     return next(
-        (
-            True
-            for c in conventions
-            if c["uuid"] == "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
-        ),
+        (True for c in conventions if c["uuid"] == SPATIAL_CONVENTION_UUID),
         False,
     )
 
 
 def _has_proj(conventions: list[dict]) -> bool:
     return next(
-        (
-            True
-            for c in conventions
-            if c["uuid"] == "f17cb550-5864-4468-aeb7-f3180cfb622f"
-        ),
+        (True for c in conventions if c["uuid"] == PROJ_CONVENTION_UUID),
         False,
     )
 
@@ -117,7 +109,6 @@ class Reader(AsyncBaseReader):
         crs: Coordinate reference system.
         transform: Affine transform.
         tms: TileMatrixSet for tile operations.
-        colormap: Optional colormap dictionary.
 
     Note:
         For 3D arrays, expects bands-first layout (bands, height, width).
@@ -142,8 +133,6 @@ class Reader(AsyncBaseReader):
 
     # List of names for the first dimension (e.g time, bands, etc)
     band_names: list[str] | None = attr.ib(default=None)
-
-    colormap: dict | None = attr.ib(default=None)
 
     async def __aenter__(self):
         """Support using with Context Managers."""
@@ -1072,7 +1061,6 @@ class GeoZarrReader(AsyncBaseReader):
     Attributes:
         input: zarr AsyncGroup
         tms: TileMatrixSet for tile operations.
-        colormap: Optional colormap dictionary.
 
     """
 
@@ -1089,8 +1077,6 @@ class GeoZarrReader(AsyncBaseReader):
 
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
-
-    colormap: dict | None = attr.ib(default=None)
 
     # list of availables the groups with variables (used for cache)
     _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
@@ -1190,7 +1176,7 @@ class GeoZarrReader(AsyncBaseReader):
         """Return dataset maxzoom."""
         conventions: list[dict] = self.input.attrs.get("zarr_conventions", [])
         if _has_multiscales(conventions):
-            # NOTE: assume the last layout is the highest resolution
+            # NOTE: assume the first layout is the highest resolution
             first_res = self.input.attrs["multiscales"]["layout"][0]
 
             # NOTE: assume `spatial:shape` and `spatial:transform` are provided
@@ -1223,6 +1209,14 @@ class GeoZarrReader(AsyncBaseReader):
 
         return self._maxzoom
 
+    def parse_variable(self, variable: str) -> tuple[str, str, Any | None]:
+        """Parse variable name into group, variable and options."""
+        group_name = "root"
+        if ":" in variable:
+            group_name, variable = variable.split(":")[0:2]
+
+        return group_name, variable, None
+
     async def get_bounds(
         self,
         *,
@@ -1233,9 +1227,7 @@ class GeoZarrReader(AsyncBaseReader):
         variables = cast_to_sequence(variables)
 
         async def _get_bounds(variable: str) -> BBox:
-            group_name = "root"
-            if ":" in variable:
-                group_name, variable = variable.split(":", 1)
+            group_name, variable, _ = self.parse_variable(variable)
 
             group_metadata = await self.get_group_metadata(group_name)
             array = group_metadata["arrays"].get(variable)
@@ -1275,10 +1267,7 @@ class GeoZarrReader(AsyncBaseReader):
         variables = cast_to_sequence(variables)
 
         async def _get_minzoom(variable: str) -> int:
-            group_name = "root"
-            if ":" in variable:
-                group_name, variable = variable.split(":", 1)
-
+            group_name, variable, _ = self.parse_variable(variable)
             group_metadata = await self.get_group_metadata(group_name)
             array = group_metadata["arrays"].get(variable)
             if not array:
@@ -1312,10 +1301,7 @@ class GeoZarrReader(AsyncBaseReader):
         variables = cast_to_sequence(variables)
 
         async def _get_maxzoom(variable: str) -> int:
-            group_name = "root"
-            if ":" in variable:
-                group_name, variable = variable.split(":", 1)
-
+            group_name, variable, _ = self.parse_variable(variable)
             group_metadata = await self.get_group_metadata(group_name)
             array = group_metadata["arrays"].get(variable)
             if not array:
@@ -1698,10 +1684,7 @@ class GeoZarrReader(AsyncBaseReader):
         variables = cast_to_sequence(variables)
 
         async def _part(variable: str) -> ImageData:
-            group_name = "root"
-            if ":" in variable:
-                group_name, variable = variable.split(":", 1)
-
+            group_name, variable, _ = self.parse_variable(variable)
             group_metadata = await self.get_group_metadata(group_name)
             array = group_metadata["arrays"].get(variable)
             if not array:
@@ -1765,10 +1748,7 @@ class GeoZarrReader(AsyncBaseReader):
         variables = cast_to_sequence(variables)
 
         async def _preview(variable: str) -> ImageData:
-            group_name = "root"
-            if ":" in variable:
-                group_name, variable = variable.split(":", 1)
-
+            group_name, variable, _ = self.parse_variable(variable)
             group_metadata = await self.get_group_metadata(group_name)
             array = group_metadata["arrays"].get(variable)
             if not array:
@@ -1833,10 +1813,7 @@ class GeoZarrReader(AsyncBaseReader):
         variables = cast_to_sequence(variables)
 
         async def _point(variable: str) -> PointData:
-            group_name = "root"
-            if ":" in variable:
-                group_name, variable = variable.split(":", 1)
-
+            group_name, variable, _ = self.parse_variable(variable)
             group_metadata = await self.get_group_metadata(group_name)
             array = group_metadata["arrays"].get(variable)
             if not array:
