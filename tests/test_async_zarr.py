@@ -16,6 +16,7 @@ from zarr.storage import ObjectStore
 
 from rio_tiler.errors import (
     ExpressionMixingWarning,
+    InvalidBounds,
     PointOutsideBounds,
     TileOutsideBounds,
 )
@@ -317,6 +318,10 @@ async def test_tile_outside_bounds(zarr_store):
     # Tile that doesn't intersect the dataset
     with pytest.raises(TileOutsideBounds):
         await reader.tile(tile_x=1000, tile_y=1000, tile_z=10)
+
+    with pytest.raises(InvalidBounds):
+        bounds = reader.tms.xy_bounds(1000, 1000, 10)
+        await reader.part(bounds, bounds_crs=reader.tms.rasterio_crs)
 
 
 async def test_preview(zarr_store):
