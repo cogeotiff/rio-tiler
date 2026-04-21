@@ -615,10 +615,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#geotiffreader" class="md-nav__link">
+  <a href="#geotiff-reader" class="md-nav__link">
     <span class="md-ellipsis">
       
-        geotiff.Reader
+        GeoTIFF Reader
       
     </span>
   </a>
@@ -626,13 +626,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#zarrreader" class="md-nav__link">
+  <a href="#zarr-reader-array" class="md-nav__link">
     <span class="md-ellipsis">
       
-        zarr.Reader
+        ZARR Reader (Array)
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geozarr-reader-group-geozarr-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeoZARR Reader (Group + GeoZARR conventions)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoZARR Reader (Group + GeoZARR conventions)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#open-top-level-group-in-the-zarr-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Top level group in the Zarr store
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#open-a-specific-zarr-group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open a specific Zarr Group
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2410,10 +2449,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#geotiffreader" class="md-nav__link">
+  <a href="#geotiff-reader" class="md-nav__link">
     <span class="md-ellipsis">
       
-        geotiff.Reader
+        GeoTIFF Reader
       
     </span>
   </a>
@@ -2421,13 +2460,52 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#zarrreader" class="md-nav__link">
+  <a href="#zarr-reader-array" class="md-nav__link">
     <span class="md-ellipsis">
       
-        zarr.Reader
+        ZARR Reader (Array)
       
     </span>
   </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#geozarr-reader-group-geozarr-conventions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeoZARR Reader (Group + GeoZARR conventions)
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="GeoZARR Reader (Group + GeoZARR conventions)">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#open-top-level-group-in-the-zarr-store" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open Top level group in the Zarr store
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#open-a-specific-zarr-group" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Open a specific Zarr Group
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
       
@@ -2483,7 +2561,7 @@
 <li><a class="magiclink magiclink-github magiclink-pull" href="https://github.com/OSGeo/gdal/pull/1289" title="GitHub Pull Request: OSGeo/gdal #1289">OSGeo/gdal!1289</a></li>
 <li><a class="magiclink magiclink-github magiclink-pull" href="https://github.com/rasterio/rasterio/pull/2141" title="GitHub Pull Request: rasterio/rasterio #2141">rasterio/rasterio!2141</a></li>
 </ul>
-<h2 id="geotiffreader">geotiff.Reader<a class="headerlink" href="#geotiffreader" title="Permanent link">&para;</a></h2>
+<h2 id="geotiff-reader">GeoTIFF Reader<a class="headerlink" href="#geotiff-reader" title="Permanent link">&para;</a></h2>
 <p>A asynchronous rio-tiler reader built on top <a href="https://github.com/developmentseed/async-geotiff"><code>async-geotiff</code></a>. This reader is considered experimental because the API might evolve in the future and the <code>part()</code> method might be refactored to avoid using <code>rasterio.warp.reproject</code>.</p>
 <p>Required dependencies:
 - <code>async-geotiff&gt;=0.3,&lt;0.4</code>
@@ -2503,8 +2581,8 @@
 <span class="k">await</span> <span class="k">with</span> <span class="n">GeoTIFFReader</span><span class="p">(</span><span class="n">geotiff</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">493</span><span class="p">,</span> <span class="mi">741</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
 </code></pre></div>
-<h2 id="zarrreader">zarr.Reader<a class="headerlink" href="#zarrreader" title="Permanent link">&para;</a></h2>
-<p>A asynchronous rio-tiler reader built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a>.</p>
+<h2 id="zarr-reader-array">ZARR Reader (Array)<a class="headerlink" href="#zarr-reader-array" title="Permanent link">&para;</a></h2>
+<p>A asynchronous rio-tiler reader built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a> that can read single array.</p>
 <p>Required dependencies:
 - <code>zarr&gt;=3.0</code>
 - <code>obstore</code> </p>
@@ -2567,6 +2645,87 @@
     <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">time_arrray</span><span class="o">.</span><span class="n">tolist</span><span class="p">()],</span>
 <span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ds</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+</code></pre></div>
+<h2 id="geozarr-reader-group-geozarr-conventions">GeoZARR Reader (Group + GeoZARR conventions)<a class="headerlink" href="#geozarr-reader-group-geozarr-conventions" title="Permanent link">&para;</a></h2>
+<p>A asynchronous rio-tiler reader built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a> that can read Groups of arrays.</p>
+<p>Required dependencies:
+- <code>zarr&gt;=3.0</code>
+- <code>obstore</code> </p>
+<h4 id="open-top-level-group-in-the-zarr-store">Open Top level group in the Zarr store<a class="headerlink" href="#open-top-level-group-in-the-zarr-store" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoZarrReader</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imshow</span>
+
+<span class="c1"># Create Obstore Store</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">HTTPStore</span><span class="p">(</span><span class="s2">&quot;https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr&quot;</span><span class="p">)</span>
+<span class="n">zarr_store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">geozarr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">zarr</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">asynchronous</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">zarr_store</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+
+<span class="c1"># Initiate the reader</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="n">geozarr</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+<span class="c1"># the top level zarr store doesn&#39;t have spatial:bbox attributes</span>
+<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
+
+<span class="c1"># List available variables (arrays with group or array Geo/Spatial conventions)</span>
+<span class="n">variables</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">list_variables</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;measurements/reflectance:b01&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b02&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b03&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b04&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b05&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b06&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b07&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b08&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b09&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b11&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b12&#39;</span><span class="p">,</span> <span class="s1">&#39;measurements/reflectance:b8a&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/atmosphere/r10m:aot&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/atmosphere/r10m:wvp&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/atmosphere/r20m:aot&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/atmosphere/r20m:wvp&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/atmosphere/r60m:aot&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/atmosphere/r60m:wvp&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r10m:b02&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r10m:b03&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r10m:b04&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r10m:b08&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r20m:b05&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r20m:b06&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r20m:b07&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r20m:b11&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r20m:b12&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r20m:b8a&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r60m:b01&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r60m:b09&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/mask/r60m:b10&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/probability/r20m:cld&#39;</span><span class="p">,</span> <span class="s1">&#39;quality/probability/r20m:snw&#39;</span><span class="p">]</span>
+
+<span class="c1"># Get the preview for a specific variable</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;measurements/reflectance:b02&quot;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+
+<span class="c1"># Get Bounds for a specific set of variables (The root store can have multiple spatial extents)</span>
+<span class="n">bounds</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_bounds</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;measurements/reflectance:b02&quot;</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">)</span>
+
+<span class="c1"># Get Minzoom for a specific set of variables (The root store doesn&#39;t have transform/shape)</span>
+<span class="n">minzoom</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_minzoom</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;measurements/reflectance:b02&quot;</span><span class="p">])</span>
+
+<span class="c1"># Get Time image</span>
+<span class="n">tile</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">minzoomminzoom</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">dreaders</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;measurements/reflectance:b04&quot;</span><span class="p">,</span> <span class="s2">&quot;measurements/reflectance:b03&quot;</span><span class="p">,</span> <span class="s2">&quot;measurements/reflectance:b02&quot;</span><span class="p">))</span>
+</code></pre></div>
+<h4 id="open-a-specific-zarr-group">Open a specific Zarr Group<a class="headerlink" href="#open-a-specific-zarr-group" title="Permanent link">&para;</a></h4>
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoZarrReader</span>
+
+<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imshow</span>
+
+<span class="c1"># Create Obstore Store</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">HTTPStore</span><span class="p">(</span><span class="s2">&quot;https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr/measurements/reflectance/&quot;</span><span class="p">)</span>
+<span class="n">zarr_store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">geozarr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">zarr</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">asynchronous</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">zarr_store</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">&quot;r&quot;</span><span class="p">)</span>
+
+<span class="c1"># Initiate the reader</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="n">geozarr</span><span class="p">)</span>
+
+<span class="c1"># The `/measurements/reflectance` group has spatial/geo conventions</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mf">600005.0</span><span class="p">,</span> <span class="mf">7890245.0</span><span class="p">,</span> <span class="mf">709795.0</span><span class="p">,</span> <span class="mf">8000035.0</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">32625</span><span class="p">)</span>
+
+<span class="c1"># List available variables (arrays with group or array Geo/Spatial conventions)</span>
+<span class="n">variables</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">list_variables</span><span class="p">()</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;b01&#39;</span><span class="p">,</span> <span class="s1">&#39;b02&#39;</span><span class="p">,</span> <span class="s1">&#39;b03&#39;</span><span class="p">,</span> <span class="s1">&#39;b04&#39;</span><span class="p">,</span> <span class="s1">&#39;b05&#39;</span><span class="p">,</span> <span class="s1">&#39;b06&#39;</span><span class="p">,</span> <span class="s1">&#39;b07&#39;</span><span class="p">,</span> <span class="s1">&#39;b08&#39;</span><span class="p">,</span> <span class="s1">&#39;b09&#39;</span><span class="p">,</span> <span class="s1">&#39;b11&#39;</span><span class="p">,</span> <span class="s1">&#39;b12&#39;</span><span class="p">,</span> <span class="s1">&#39;b8a&#39;</span><span class="p">]</span>
+
+<span class="c1"># Get the preview for a specific variable</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;b02&quot;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+
+<span class="n">bounds</span> <span class="o">=</span> 
+<span class="c1"># Get Time image</span>
+<span class="n">tile</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reader</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;b04&quot;</span><span class="p">,</span> <span class="s2">&quot;b03&quot;</span><span class="p">,</span> <span class="s2">&quot;b02&quot;</span><span class="p">))</span>
 </code></pre></div>
 
 

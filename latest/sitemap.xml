@@ -2,194 +2,194 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/colormap/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/contributing/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/experimental/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/intro/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/models/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/mosaic/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/readers/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/release-notes/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/supported_format/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/advanced/custom_readers/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/advanced/dynamic_tiler/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/advanced/feature/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/advanced/mosaic_backend/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/advanced/statistics/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/advanced/tms/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/colormap/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/constants/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/errors/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/expression/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/models/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/profiles/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/reader/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/tasks/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/utils/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/experimental/geotiff/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/experimental/vsifile/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/experimental/zarr/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/base/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/rasterio/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/stac/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/xarray/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/mosaic/reader/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/mosaic/methods/base/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/mosaic/methods/defaults/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/examples/STAC_datacube_support/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/examples/Using-nonEarth-dataset/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/examples/Using-rio-tiler-STACReader/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/examples/Using-rio-tiler-XarrayReader/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/examples/Using-rio-tiler-mosaic/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/examples/Using-rio-tiler/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/examples/Using-tms/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/migrations/v2_migration/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/migrations/v3_migration/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/migrations/v4_migration/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/migrations/v5_migration/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/migrations/v7_migration/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/migrations/v9_migration/</loc>
-         <lastmod>2026-04-20</lastmod>
+         <lastmod>2026-04-21</lastmod>
     </url>
 </urlset>
