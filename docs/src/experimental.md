@@ -44,7 +44,7 @@ with VSIReader("https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a
 - https://github.com/rasterio/rasterio/pull/2141
 
 
-## geotiff.Reader
+## GeoTIFF Reader
 
 A asynchronous rio-tiler reader built on top [`async-geotiff`](https://github.com/developmentseed/async-geotiff). This reader is considered experimental because the API might evolve in the future and the `part()` method might be refactored to avoid using `rasterio.warp.reproject`.
 
@@ -70,9 +70,9 @@ await with GeoTIFFReader(geotiff) as src:
     img = await src.tile(493, 741, 11)
 ```
 
-## zarr.Reader
+## ZARR Reader (Array)
 
-A asynchronous rio-tiler reader built on top [`zarr-python`](https://zarr.readthedocs.io/).
+A asynchronous rio-tiler reader built on top [`zarr-python`](https://zarr.readthedocs.io/) that can read single array.
 
 Required dependencies:
 - `zarr>=3.0`
@@ -139,4 +139,95 @@ ds = ZarrReader(
     band_names=[str(d) for d in time_arrray.tolist()],
 )
 img = await ds.tile(9, 10, 5, indexes=10)
+```
+
+## GeoZARR Reader (Group + GeoZARR conventions)
+
+A asynchronous rio-tiler reader built on top [`zarr-python`](https://zarr.readthedocs.io/) that can read Groups of arrays.
+
+Required dependencies:
+- `zarr>=3.0`
+- `obstore` 
+
+
+#### Open Top level group in the Zarr store
+
+```python
+from obstore.store import HTTPStore
+import zarr
+from zarr.storage import ObjectStore
+
+from rio_tiler.experimental.zarr import GeoZarrReader
+
+from matplotlib.pyplot import imshow
+
+# Create Obstore Store
+store = HTTPStore("https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr")
+zarr_store = ObjectStore(store=store, read_only=True)
+geozarr = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
+
+# Initiate the reader
+reader = GeoZarrReader(geozarr)
+
+print(reader.bounds)
+# the top level zarr store doesn't have spatial:bbox attributes
+>> (-180, -90, 180, 90)
+
+# List available variables (arrays with group or array Geo/Spatial conventions)
+variables = await reader.list_variables()
+print(variables)
+>>> ['measurements/reflectance:b01', 'measurements/reflectance:b02', 'measurements/reflectance:b03', 'measurements/reflectance:b04', 'measurements/reflectance:b05', 'measurements/reflectance:b06', 'measurements/reflectance:b07', 'measurements/reflectance:b08', 'measurements/reflectance:b09', 'measurements/reflectance:b11', 'measurements/reflectance:b12', 'measurements/reflectance:b8a', 'quality/atmosphere/r10m:aot', 'quality/atmosphere/r10m:wvp', 'quality/atmosphere/r20m:aot', 'quality/atmosphere/r20m:wvp', 'quality/atmosphere/r60m:aot', 'quality/atmosphere/r60m:wvp', 'quality/mask/r10m:b02', 'quality/mask/r10m:b03', 'quality/mask/r10m:b04', 'quality/mask/r10m:b08', 'quality/mask/r20m:b05', 'quality/mask/r20m:b06', 'quality/mask/r20m:b07', 'quality/mask/r20m:b11', 'quality/mask/r20m:b12', 'quality/mask/r20m:b8a', 'quality/mask/r60m:b01', 'quality/mask/r60m:b09', 'quality/mask/r60m:b10', 'quality/probability/r20m:cld', 'quality/probability/r20m:snw']
+
+# Get the preview for a specific variable
+img = await reader.preview(variables=["measurements/reflectance:b02"], max_size=128)
+
+# Get Bounds for a specific set of variables (The root store can have multiple spatial extents)
+bounds = await reader.get_bounds(variables=["measurements/reflectance:b02"], crs="EPSG:4326")
+
+# Get Minzoom for a specific set of variables (The root store doesn't have transform/shape)
+minzoom = await reader.get_minzoom(variables=["measurements/reflectance:b02"])
+
+# Get Time image
+tile = reader.tms.tile(bounds[0], bounds[1], minzoomminzoom)
+img = await dreaders.tile(tile.x, tile.y, tile.z, variables=("measurements/reflectance:b04", "measurements/reflectance:b03", "measurements/reflectance:b02"))
+```
+
+#### Open a specific Zarr Group
+
+```python
+from obstore.store import HTTPStore
+import zarr
+from zarr.storage import ObjectStore
+
+from rio_tiler.experimental.zarr import GeoZarrReader
+
+from matplotlib.pyplot import imshow
+
+# Create Obstore Store
+store = HTTPStore("https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr/measurements/reflectance/")
+zarr_store = ObjectStore(store=store, read_only=True)
+geozarr = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
+
+# Initiate the reader
+reader = GeoZarrReader(geozarr)
+
+# The `/measurements/reflectance` group has spatial/geo conventions
+print(reader.bounds)
+>> (600005.0, 7890245.0, 709795.0, 8000035.0)
+
+print(reader.crs)
+>> CRS.from_epsg(32625)
+
+# List available variables (arrays with group or array Geo/Spatial conventions)
+variables = await reader.list_variables()
+print(variables)
+>>> ['b01', 'b02', 'b03', 'b04', 'b05', 'b06', 'b07', 'b08', 'b09', 'b11', 'b12', 'b8a']
+
+# Get the preview for a specific variable
+img = await reader.preview(variables=["b02"], max_size=128)
+
+bounds = 
+# Get Time image
+tile = reader.tms.tile(bounds[0], bounds[1], reader.minzoom)
+img = await reader.tile(tile.x, tile.y, tile.z, variables=("b04", "b03", "b02"))
 ```
