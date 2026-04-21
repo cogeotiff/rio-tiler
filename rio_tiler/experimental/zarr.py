@@ -240,7 +240,7 @@ class Reader(AsyncBaseReader):
             "nodata_type": nodata_type,
             "colorinterp": None,
             # additional info (not in default model)
-            "driver": "Zarr",
+            "driver": "Zarr-Python",
             "count": self.nbands,
             "width": self.width,
             "height": self.height,
@@ -1048,6 +1048,7 @@ def get_multiscale_level(
 class GeoZarrInfo(Bounds):
     """GeoZarr Info."""
 
+    driver: str
     variables: list[str]
     attributes: dict[str, Any]
 
@@ -1110,15 +1111,14 @@ class GeoZarrReader(AsyncBaseReader):
             crs = _get_proj_crs(attributes)
 
             if bbox := attributes.get("spatial:bbox"):
-                bounds = bbox
+                bounds = tuple(bbox)
 
             # Transform
             # Case 1: Transform at group level
             transform = _get_transform(attributes)
 
             if spatial_shape := attributes.get("spatial:shape"):
-                height = spatial_shape[0]
-                width = spatial_shape[1]
+                height, width = spatial_shape[-2:]
 
             # Case 2: check multiscales for transform and shape
             if _has_multiscales(conventions):
@@ -1131,8 +1131,9 @@ class GeoZarrReader(AsyncBaseReader):
                 transform = transform or _get_transform(first_res)
 
                 if spatial_shape := first_res.get("spatial:shape"):
-                    height = height or spatial_shape[0]
-                    width = width or spatial_shape[1]
+                    h, w = spatial_shape[-2:]
+                    height = height or h
+                    width = width or w
 
             if not bounds and all([width, height, transform]):
                 bounds = array_bounds(height, width, transform)
@@ -1157,17 +1158,19 @@ class GeoZarrReader(AsyncBaseReader):
 
             # NOTE: assume `spatial:shape` and `spatial:transform` are provided
             # at the layout level (if not present at group level)
-            shape = last_res.get("spatial:shape")
             transform = _get_transform(last_res)
-
-            if all([transform, shape]):
+            if transform and (spatial_shape := last_res.get("spatial:shape")):
+                height, width = spatial_shape[-2:]
                 return _get_zoom(
                     tms=self.tms,
                     crs=self.crs,
-                    width=shape[1],
-                    height=shape[0],
-                    bounds=array_bounds(shape[0], shape[1], transform),
+                    width=width,
+                    height=height,
+                    bounds=array_bounds(height, width, transform),
                 )
+
+        if not self.transform:
+            return self.tms.minzoom
 
         return self.maxzoom
 
@@ -1181,16 +1184,15 @@ class GeoZarrReader(AsyncBaseReader):
 
             # NOTE: assume `spatial:shape` and `spatial:transform` are provided
             # at the layout level (if not present at group level)
-            shape = first_res.get("spatial:shape")
             transform = _get_transform(first_res)
-
-            if all([transform, shape]):
+            if transform and (spatial_shape := first_res.get("spatial:shape")):
+                height, width = spatial_shape[-2:]
                 return _get_zoom(
                     tms=self.tms,
                     crs=self.crs,
-                    width=shape[1],
-                    height=shape[0],
-                    bounds=array_bounds(shape[0], shape[1], transform),
+                    width=width,
+                    height=height,
+                    bounds=array_bounds(height, width, transform),
                 )
 
         # NOTE: By construction we know that if `self.transform` is set
@@ -1482,13 +1484,13 @@ class GeoZarrReader(AsyncBaseReader):
                         }
                     ]
 
-            self._groups[group] = {
-                "crs": root_crs,
-                "bbox": root_bbox,
-                "transform": root_transform,
-                "multiscale": group_is_multiscale,
-                "arrays": arrays,
-            }
+        self._groups[group] = {
+            "crs": root_crs,
+            "bbox": root_bbox,
+            "transform": root_transform,
+            "multiscale": group_is_multiscale,
+            "arrays": arrays,
+        }
 
         return self._groups[group]
 
@@ -1556,7 +1558,7 @@ class GeoZarrReader(AsyncBaseReader):
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             # additional info (not in default model)
-            "driver": "GeoZARR",
+            "driver": "Zarr-Python",
             "variables": availables_variables,
             "attributes": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)

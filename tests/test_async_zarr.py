@@ -123,7 +123,7 @@ async def test_async_zarr_reader(zarr_store):
     # Test info method
     info = await reader.info()
     assert info.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
-    assert info.driver == "Zarr"
+    assert info.driver == "Zarr-Python"
     assert info.count == 3
     assert info.model_dump()
 
@@ -147,7 +147,7 @@ async def test_2d_array(zarr_store_2d):
     # Test info method
     info = await reader.info()
     assert info.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
-    assert info.driver == "Zarr"
+    assert info.driver == "Zarr-Python"
     assert info.count == 1
     assert info.model_dump()
 
