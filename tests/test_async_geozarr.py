@@ -304,3 +304,105 @@ async def test_geozarr_root():
 
     bbox = await geozarrds.get_bounds(variables="data:b01", crs=CRS.from_epsg(32633))
     assert bbox == (500000, 4190000, 510000, 4200000)
+
+
+async def test_geozarr_root_with_arrays():
+    """Test GeoZarrReader
+
+    - root zarr store without any attribute:
+        - bounds should be (-180, -90, 180, 90)
+        - CRS should be EPSG:4326
+        - minzoom should be 0 (TMS)
+        - maxzoom should be 24 (TMS)
+
+    """
+    store = zarr.storage.MemoryStore()
+
+    attributes = {
+        "zarr_conventions": [
+            spatial_conventions,
+            proj_conventions,
+        ],
+        "spatial:dimensions": ["y", "x"],
+        "spatial:bbox": [500000, 4190000, 510000, 4200000],
+        "proj:code": "EPSG:32633",
+        "spatial:transform": list(
+            Affine.translation(500000, 4200000) * Affine.scale(10, -10)
+        ),
+    }
+    root = zarr.open_group(store, mode="w", zarr_format=3, attributes=attributes)
+
+    # Layout 0
+    arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
+    arr[0:50, 0:50] = 0
+
+    b01 = root.create_array(
+        "b01",
+        shape=arr.shape,
+        chunks=(64, 64),
+        dtype="float32",
+        fill_value=0,
+        dimension_names=["y", "x"],
+        attributes={},
+    )
+    b01[:] = arr
+
+    b02 = root.create_array(
+        "b02",
+        shape=arr.shape,
+        chunks=(64, 64),
+        dtype="float32",
+        fill_value=0,
+        dimension_names=["y", "x"],
+        attributes={},
+    )
+    b02[:] = arr
+
+    # Write consolidated metadata
+    zarr.consolidate_metadata(root.store)
+
+    ###########################################################################
+    group = await zarr.api.asynchronous.open_group(store=store, mode="r")
+
+    geozarrds = GeoZarrReader(input=group)
+    assert geozarrds.crs == CRS.from_epsg(32633)
+    assert geozarrds.bounds == (500000, 4190000, 510000, 4200000)
+    assert geozarrds.transform
+    assert geozarrds.minzoom == 14
+    assert geozarrds.maxzoom == 14
+
+    info = await geozarrds.info()
+    assert info.driver == "Zarr-Python"
+    assert info.variables == ["b01", "b02"]
+
+    vars = await geozarrds.list_variables()
+    assert vars == ["b01", "b02"]
+
+    meta = await geozarrds.get_group_metadata("root")
+    assert meta["crs"] == CRS.from_epsg(32633)
+    assert meta["bbox"] == [500000, 4190000, 510000, 4200000]
+    assert len(meta["arrays"]["b01"]) == 1
+    assert len(meta["arrays"]["b02"]) == 1
+    assert meta["arrays"]["b01"][0]["width"] == 1000
+    assert meta["arrays"]["b02"][0]["width"] == 1000
+
+    # No Multiscale
+    z = await geozarrds.get_minzoom(variables="b01")
+    assert z == 14
+    z = await geozarrds.get_maxzoom(variables="b01")
+    assert z == 14
+
+    array = meta["arrays"].get("b01")
+    selected = geozarrds.select_variable(array)
+    assert selected["width"] == 1000
+
+    bbox = await geozarrds.get_bounds(variables="b01")
+    assert bbox == (
+        14.999999999999982,
+        37.857404200399316,
+        15.113817624024337,
+        37.94758957178317,
+    )
+
+    bbox = await geozarrds.get_bounds(variables="b01", crs=CRS.from_epsg(32633))
+    assert bbox == (500000, 4190000, 510000, 4200000)

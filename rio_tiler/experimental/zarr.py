@@ -1198,8 +1198,12 @@ class GeoZarrReader(AsyncBaseReader):
         # NOTE: By construction we know that if `self.transform` is set
         # self.bounds and self.crs are also comming from the zarr attributes.
         if self.transform:
-            w = self.width or 1
-            h = self.height or 1
+            w = self.width
+            h = self.height
+            if not self.width or not self.height:
+                w = round((self.bounds[2] - self.bounds[0]) / abs(self.transform.a))
+                h = round((self.bounds[3] - self.bounds[1]) / abs(self.transform.e))
+
             dst_affine = self.transform
             tms_crs = self.tms.rasterio_crs
             if self.crs != tms_crs:
@@ -1473,7 +1477,7 @@ class GeoZarrReader(AsyncBaseReader):
                 height, width = array.shape[-2:]
 
                 if all([array_crs, array_transform]):
-                    array_name = array.name.replace(f"{g.name}/", "")
+                    array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
                     arrays[array_name] = [
                         {
                             "array": array,
