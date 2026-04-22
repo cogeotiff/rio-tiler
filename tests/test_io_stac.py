@@ -835,6 +835,7 @@ class CustomReader(Reader):
         super().__attrs_post_init__()
 
 
+@patch("rio_tiler.io.rasterio.rasterio")
 def test_gdal_env_setting(rio):
     """Test Env settings."""
     rio.open = mock_rasterio_open
