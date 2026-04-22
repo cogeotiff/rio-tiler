@@ -127,7 +127,6 @@ async def async_multi_arrays(
     asset_list: Sequence,
     reader: Callable[..., Coroutine[Any, Any, ImageData]],
     *args: Any,
-    threads: int = MAX_THREADS,
     allowed_exceptions: tuple | None = None,
     **kwargs: Any,
 ) -> ImageData:
@@ -146,7 +145,6 @@ async def async_multi_points(
     asset_list: Sequence,
     reader: Callable[..., Coroutine[Any, Any, PointData]],
     *args: Any,
-    threads: int = MAX_THREADS,
     allowed_exceptions: tuple | None = None,
     **kwargs: Any,
 ) -> PointData:
@@ -165,7 +163,6 @@ async def async_multi_values_list(
     asset_list: Sequence,
     reader: Callable[..., Coroutine[Any, Any, Any]],
     *args: Any,
-    threads: int = MAX_THREADS,
     allowed_exceptions: tuple | None = None,
     **kwargs: Any,
 ) -> list[tuple[Any, Any]]:
