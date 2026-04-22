@@ -49,17 +49,17 @@
     ],
     "assets": {
       "red": {
-        "href": "red.tif",
+        "href": "http://somewhere-over-the-rainbow.io/red.tif",
         "title": "red",
         "file:header_size": 50000
       },
       "green": {
-          "href": "green.tif",
+          "href": "http://somewhere-over-the-rainbow.io/green.tif",
           "title": "green",
           "file:header_size": 50000
         },
       "blue": {
-          "href": "blue.tif",
+          "href": "http://somewhere-over-the-rainbow.io/blue.tif",
           "title": "blue",
           "file:header_size": 50000
       }
