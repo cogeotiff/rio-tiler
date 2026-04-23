@@ -546,6 +546,7 @@ class AsyncSTACReader(AsyncMultiBaseReader):
 
     Attributes:
         input (dict or pystac.Item, STAC): Stac Item.
+        reader (rio_tiler.io.BaseReader): rio-tiler Reader.
         tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
         minzoom (int, optional): Set minzoom for the tiles.
         maxzoom (int, optional): Set maxzoom for the tiles.
@@ -554,9 +555,7 @@ class AsyncSTACReader(AsyncMultiBaseReader):
         include_asset_types (set of string, optional): Only include some assets base on their type.
         exclude_asset_types (set of string, optional): Exclude some assets base on their type.
         default_assets (list of string or dict, optional): Default assets to use if none are defined.
-        reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.Reader`.
         reader_options (dict, optional): Additional option to forward to the Reader. Defaults to `{}`.
-        fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`.
 
     Examples:
         >>> from obstore.store import from_url
@@ -575,10 +574,8 @@ class AsyncSTACReader(AsyncMultiBaseReader):
                 async with GeoTIFFReader(geotiff, *args, **kwargs) as src:
                     yield src
 
-
             async with AsyncSTACReader(input=item, reader=reader) as stac:
                 await stac.tile(...)
-
 
     """
 
@@ -595,20 +592,21 @@ class AsyncSTACReader(AsyncMultiBaseReader):
     include_asset_types: set[str] = attr.ib(default=DEFAULT_VALID_TYPE)
     exclude_asset_types: set[str] | None = attr.ib(default=None)
 
-    assets: Sequence[str] = attr.ib(init=False)
     default_assets: Sequence[AssetType] | None = attr.ib(default=None)
 
     reader_options: dict = attr.ib(factory=dict)
 
-    fetch_options: dict = attr.ib(factory=dict)
+    item: Any = attr.ib(init=False)
+    assets: Sequence[str] = attr.ib(init=False)
 
     def __attrs_post_init__(self):
         """Fetch STAC Item and get list of valid assets."""
+        self.item = self.input
         self.assets = self.get_asset_list()
         if not self.assets:
             raise MissingAssets("No valid asset found. Asset's media types not supported")
 
-        if proj := _extract_proj_info(self.input, assets=self.assets):
+        if proj := _extract_proj_info(self.item, assets=self.assets):
             self.height = proj["height"]
             self.width = proj["width"]
             self.bounds = proj["bounds"]
@@ -616,9 +614,9 @@ class AsyncSTACReader(AsyncMultiBaseReader):
             self.crs = proj["crs"]
         else:
             self.bounds = (
-                tuple(self.input.bbox)
-                if self.input.bbox
-                else featureBounds(self.input.geometry)
+                tuple(self.item.bbox)
+                if self.item.bbox
+                else featureBounds(self.item.geometry)
             )
             self.crs = WGS84_CRS
 
@@ -629,7 +627,7 @@ class AsyncSTACReader(AsyncMultiBaseReader):
         """Get valid asset list"""
         return list(
             _get_assets(
-                self.input,
+                self.item,
                 include=self.include_assets,
                 exclude=self.exclude_assets,
                 include_asset_types=self.include_asset_types,
@@ -704,7 +702,7 @@ class AsyncSTACReader(AsyncMultiBaseReader):
                 f"'{asset_name}' is not valid, should be one of {self.assets}"
             )
 
-        asset_info = self.input.assets[asset_name]
+        asset_info = self.item.assets[asset_name]
 
         reader_options, method_options = self._get_options(asset, asset_info)
 
