@@ -1,14 +1,17 @@
 
 # Unreleased
 
-* changed: `rio_tiler.experimental.zarr.ZarrReader` -> `rio_tiler.experimental._zarr.ZarrReader` 
-* changed: `rio_tiler.experimental._async` -> `rio_tiler.experimental.geotiff` 
-* changed: `rio_tiler.experimental._async.AsyncBaseReader` -> `rio_tiler.io.base.AsyncBaseReader`
-* changed: `rio_tiler.experimental._async.warp` -> `rio_tiler._warp.warp`
-* changed: `rio_tiler.io.xarray.MAX_ARRAY_SIZE` -> `rio_tiler.constant.MAX_ARRAY_SIZE` 
-* changed: `async` -> `geotiff` optional-dependencies
+* change: `rio_tiler.experimental.zarr.ZarrReader` -> `rio_tiler.experimental._zarr.ZarrReader` 
+* change: `rio_tiler.experimental._async` -> `rio_tiler.experimental.geotiff` 
+* change: `rio_tiler.experimental._async.AsyncBaseReader` -> `rio_tiler.io.base.AsyncBaseReader`
+* change: `rio_tiler.experimental._async.warp` -> `rio_tiler._warp.warp`
+* change: `rio_tiler.io.xarray.MAX_ARRAY_SIZE` -> `rio_tiler.constant.MAX_ARRAY_SIZE` 
+* change: `async` -> `geotiff` optional-dependencies
+* change: `rio_tiler.io.stac.STAC_ALTERNATE_KEY` -> `rio_tiler.constant.STAC_ALTERNATE_KEY` 
 * add: `rio_tiler.experimental.zarr.Reader` (async zarr-python reader)
 * add: `rio_tiler.experimental.zarr.GeoZarrReader`  (async zarr-python reader for GeoZAR/EOPF product)
+* add: `rio_tiler.io.base.AsyncMultiBaseReader` abc class
+* add: `rio_tiler.experimental.async_stac.AsyncSTACReader`
 
 ## 9.0.6 (2026-04-08)
 

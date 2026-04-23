@@ -14,8 +14,8 @@ from obstore.store import LocalStore
 from rasterio.crs import CRS
 
 from rio_tiler.errors import InvalidAssetName, MissingAssets, TileOutsideBounds
+from rio_tiler.experimental.async_stac import AsyncSTACReader as STACReader
 from rio_tiler.experimental.geotiff import Reader as GeoTIFFReader
-from rio_tiler.io.stac import AsyncSTACReader as STACReader
 from rio_tiler.models import BandStatistics
 from rio_tiler.types import AssetWithOptions
 
