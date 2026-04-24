@@ -1,7 +1,8 @@
 """rio_tiler.mosaic: create tile from multiple assets."""
 
+import asyncio
 import warnings
-from collections.abc import Callable, Sequence
+from collections.abc import Callable, Coroutine, Sequence
 from inspect import isclass
 from typing import Any, cast
 
@@ -272,6 +273,145 @@ def mosaic_point_reader(
             assets=assets_used,
             crs=crs,
             coordinates=coordinates,
+            band_names=band_names,
+            band_descriptions=band_descriptions,
+            metadata={
+                "mosaic_method": pixel_selection.__class__.__name__,
+                "mosaic_assets_count": len(mosaic_assets),
+                "mosaic_assets_used": len(assets_used),
+            },
+        ),
+        assets_used,
+    )
+
+
+async def async_mosaic_reader(  # noqa: C901
+    mosaic_assets: Sequence,
+    reader: Callable[..., Coroutine[Any, Any, ImageData]],
+    *args: Any,
+    pixel_selection: type[MosaicMethodBase] | MosaicMethodBase = FirstMethod,
+    chunk_size: int | None = None,
+    allowed_exceptions: tuple = (TileOutsideBounds,),
+    **kwargs,
+) -> tuple[ImageData, list]:
+    """Merge multiple assets.
+
+    Args:
+
+        mosaic_assets (sequence): List of assets.
+        reader (callable): Reader function. The function MUST take `(asset, *args, **kwargs)` as arguments, and MUST return an ImageData.
+        args (Any): Argument to forward to the reader function.
+        pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. Defaults to `rio_tiler.mosaic.methods.defaults.FirstMethod`.
+        chunk_size (int, optional): Control the number of asset to process per loop.
+        allowed_exceptions (tuple, optional): List of exceptions which will be ignored. Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions. Defaults to `(TileOutsideBounds, )`.
+        kwargs (optional): Reader callable's keywords options.
+
+    Returns:
+        tuple: ImageData and assets (list).
+
+    Examples:
+        >>> async def reader(asset: str, *args, **kwargs) -> ImageData:
+                async with AsyncReader(asset) as src:
+                    return await src.tile(*args, **kwargs)
+
+            x, y, z = 10, 10, 4
+            img = await async_mosaic_reader(["cog.tif", "cog2.tif"], reader, x, y, z)
+
+    """
+    if isclass(pixel_selection):
+        pixel_selection = cast(type[MosaicMethodBase], pixel_selection)
+
+        if issubclass(pixel_selection, MosaicMethodBase):
+            pixel_selection = pixel_selection()
+
+    if not isinstance(pixel_selection, MosaicMethodBase):
+        raise InvalidMosaicMethod(
+            "Mosaic filling algorithm should be an instance of "
+            "'rio_tiler.mosaic.methods.base.MosaicMethodBase'"
+        )
+
+    chunk_size = chunk_size or len(mosaic_assets)
+
+    assets_used: list = []
+    crs: CRS | None
+    bounds: BBox | None
+    band_names: list[str]
+
+    for chunks in _chunks(mosaic_assets, chunk_size):
+        futures = await asyncio.gather(
+            *[reader(asset, *args, **kwargs) for asset in chunks],
+            return_exceptions=True,
+        )
+        tasks = [(v, chunks[ix]) for ix, v in enumerate(futures)]
+        for img, asset in filter_tasks(
+            tasks,
+            allowed_exceptions=allowed_exceptions,
+        ):
+            # On the first Image we set the properties
+            if len(assets_used) == 0:
+                crs = img.crs
+                bounds = img.bounds
+                band_names = img.band_names
+                band_descriptions = img.band_descriptions
+                pixel_selection.cutline_mask = img.cutline_mask
+                pixel_selection.width = img.width
+                pixel_selection.height = img.height
+                pixel_selection.count = img.count
+
+            assert img.count == pixel_selection.count, (
+                "Assets HAVE TO have the same number of bands"
+            )
+            if any(
+                [
+                    img.width != pixel_selection.width,
+                    img.height != pixel_selection.height,
+                ]
+            ):
+                warnings.warn(
+                    "Cannot concatenate images with different sizes. Will resize using first asset's width/height.",
+                    UserWarning,
+                )
+                h = pixel_selection.height
+                w = pixel_selection.width
+                pixel_selection.feed(
+                    numpy.ma.MaskedArray(
+                        resize_array(img.array.data, h, w),
+                        mask=resize_array(img.array.mask * 1, h, w).astype("bool"),
+                    )
+                )
+
+            else:
+                pixel_selection.feed(img.array)
+
+            assets_used.append(asset)
+
+            if pixel_selection.is_done and pixel_selection.data is not None:
+                return (
+                    ImageData(
+                        pixel_selection.data,
+                        assets=assets_used,
+                        crs=crs,
+                        bounds=bounds,
+                        band_names=band_names,
+                        band_descriptions=band_descriptions,
+                        metadata={
+                            "mosaic_method": pixel_selection.__class__.__name__,
+                            "mosaic_assets_count": len(mosaic_assets),
+                            "mosaic_assets_used": len(assets_used),
+                        },
+                    ),
+                    assets_used,
+                )
+
+    if pixel_selection.data is None:
+        raise EmptyMosaicError("Method returned an empty array")
+
+    return (
+        ImageData(
+            pixel_selection.data,
+            assets=assets_used,
+            crs=crs,
+            bounds=bounds,
             band_names=band_names,
             band_descriptions=band_descriptions,
             metadata={
