@@ -25,7 +25,7 @@ from rio_tiler.io import (
     Reader,
 )
 from rio_tiler.models import BandStatistics, ImageData, PointData
-from rio_tiler.mosaic import async_mosaic_reader, mosaic_reader
+from rio_tiler.mosaic.reader import async_mosaic_reader, mosaic_reader
 from rio_tiler.tasks import async_multi_values_list, multi_values_list
 from rio_tiler.types import BBox
 from rio_tiler.utils import (
