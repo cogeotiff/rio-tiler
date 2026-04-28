@@ -4,11 +4,11 @@
 </p>
 
 The [`rio-tiler-mosaic`](https://github.com/cogeotiff/rio-tiler-mosaic) library has been moved into `rio-tiler`. The goal of the
-`rio_tiler.mosaic` module is to create a mercator tile from **_multiple_**
-observations. This is useful when a source image doesn't fill the entire
-mercator tile of interest.
+`rio_tiler.mosaic` module is to create a images from **_multiple_**
+observations. This is useful when a source images don't fill the entire
+area of interest (e.g tile).
 
-Often when creating a mercator tile from multiple assets, there will be portions
+Often when creating a tile from multiple assets, there will be portions
 of overlap where a pixel could be chosen from multiple datasets. To handle this,
 the `rio-tiler.mosaic` module provides _pixel selection methods_ which define
 how to handle these cases for each pixel:
@@ -24,22 +24,28 @@ how to handle these cases for each pixel:
 
 ## API
 
+rio-tiler provides mosaic functions to create `ImageData` or `PointData` from list of assets by applying a configurable compositing strategy (_pixel selection methods_). 
+The functions iterate over the provided assets in parallel chunks — using a thread pool by default — and feeds each result into a *pixel-selection method* (e.g. first-valid-pixel, median, highest) that progressively fills the output array. 
+
+Assets that raise an allowed exception (typically `TileOutsideBounds`) are silently skipped, and iteration short-circuits early once the pixel-selection method reports the canvas as complete.
+
 ### Image
+
 ```python
 rio_tiler.mosaic.mosaic_reader(
-    mosaic_assets: Sequence[str],
+    mosaic_assets: Sequence,
     reader: Callable[..., ImageData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
-    chunk_size: Optional[int] = None,
+    chunk_size: int | None = None,
     threads: int = MAX_THREADS,
-    allowed_exceptions: Tuple = (TileOutsideBounds,),
+    allowed_exceptions: tuple = (TileOutsideBounds,),
     **kwargs,
-)
+) -> tuple[ImageData, list]
 ```
 Inputs:
 
-- **mosaic_assets** : list, tuple of rio-tiler compatible assets (url or sceneid)
+- **mosaic_assets**: Sequence of assets (e.g COG url)
 - **reader**: Callable that returns a `ImageData` instance or a tuple of `numpy.array`
 - **\*args**: arguments to be forwarded to the callable.
 - **pixel_selection** : optional **pixel selection** algorithm (default: "first").
@@ -49,7 +55,8 @@ Inputs:
 - **\*\*kwargs**: tiler specific keyword arguments.
 
 Returns:
-- img, assets_used : tuple of ImageData and list of used assets to construct the output data.
+
+- **img, assets_used** : tuple of ImageData and list of used assets to construct the output data.
 
 ##### Examples
 
@@ -86,21 +93,23 @@ img, _ = mosaic_reader(
 ```
 
 ### Point
+
 ```python
 rio_tiler.mosaic.mosaic_point_reader(
-    mosaic_assets: Sequence[str],
+    mosaic_assets: Sequence,
     reader: Callable[..., PointData],
     *args: Any,
     pixel_selection: Union[Type[MosaicMethodBase], MosaicMethodBase] = FirstMethod,
-    chunk_size: Optional[int] = None,
+    chunk_size: int | None = None,
     threads: int = MAX_THREADS,
     allowed_exceptions: Tuple = (TileOutsideBounds,),
     **kwargs,
-)
+) -> tuple[PointData, list]
 ```
+
 Inputs:
 
-- **mosaic_assets** : list, tuple of rio-tiler compatible assets (url or sceneid)
+- **mosaic_assets**: Sequence of assets (e.g COG url)
 - **reader**: Callable that returns a `PointData` instance
 - **\*args**: arguments to be forwarded to the callable.
 - **pixel_selection** : optional **pixel selection** algorithm (default: "first").
@@ -110,7 +119,8 @@ Inputs:
 - **\*\*kwargs**: tiler specific keyword arguments.
 
 Returns:
-- point, assets_used : tuple of PointData and list of used assets to construct the output data.
+
+- **point, assets_used** : tuple of PointData and list of used assets to construct the output data.
 
 ##### Examples
 
@@ -143,27 +153,6 @@ img, _ = mosaic_point_reader(
 )
 ```
 
-## The `MosaicMethod` interface
-
-the `rio_tiler.mosaic.methods.base.MosaicMethodBase` abstract base class defines an interface for all `pixel selection` methods allowed by `rio_tiler.mosaic.mosaic_reader`. its methods and properties are:
-
-#### Properties
-
-- **is_done**: returns a boolean indicating if the process is done filling the array
-- **data**: returns the output mosaic array (numpy.masked.array)
-
-#### Methods
-
-- **feed(array: numpy.ma.ndarray)**: update the tile and mask
-
-#### Writing your own Pixel Selection method
-
-The rules for writing your own `pixel selection algorithm` class are as follows:
-
-- Must inherit from `MosaicMethodBase`
-- Must provide concrete implementations of all the above methods.
-
-See [`rio_tiler.mosaic.methods.defaults`](https://github.com/cogeotiff/rio-tiler/blob/main/rio_tiler/mosaic/methods/defaults.py) classes for examples.
 
 ### Smart Multi-Threading
 
@@ -186,9 +175,11 @@ By default the chunk_size is equal to the number or threads (or the number of as
 The number of threads used can be set in the function call with the `threads=` options. By default it will be equal to `multiprocessing.cpu_count() * 5` or to the `RIO_TILER_MAX_THREADS` environment variable.
 In some case, threading can slow down your application. You can set threads to `0` or `1` to run the tiler in a loop without using a ThreadPool (ref: [#207](https://github.com/cogeotiff/rio-tiler/issues/207)).
 
+<details>
+
 Benchmark:
 ```
---------------------------------- benchmark '1images': 6 tests ---------------------------------
+--------------------------------- benchmark '1 image': 6 tests ---------------------------------
 Name (time in ms)         Min                Max               Mean             Median
 ------------------------------------------------------------------------------------------------
 1images-0threads      64.3108 (1.0)      66.9192 (1.0)      65.0202 (1.0)      64.9370 (1.0)
@@ -199,7 +190,7 @@ Name (time in ms)         Min                Max               Mean             
 1images-2threads      69.9258 (1.09)     73.8798 (1.10)     70.8861 (1.09)     70.3682 (1.08)
 ------------------------------------------------------------------------------------------------
 
------------------------------------ benchmark '5images': 6 tests -----------------------------------
+----------------------------------- benchmark '5 images': 6 tests -----------------------------------
 Name (time in ms)          Min                 Max                Mean              Median
 ----------------------------------------------------------------------------------------------------
 5images-5threads      104.1609 (1.0)      123.4442 (1.0)      110.4130 (1.0)      110.0683 (1.0)
@@ -212,3 +203,26 @@ Name (time in ms)          Min                 Max                Mean          
 ```
 ref: https://github.com/cogeotiff/rio-tiler/issues/207#issuecomment-665958838
 
+</details>
+
+## The `MosaicMethod` interface (Pixel Selection)
+
+the `rio_tiler.mosaic.methods.base.MosaicMethodBase` abstract base class defines an interface for all `pixel selection` methods allowed by `rio_tiler.mosaic.mosaic_reader`. its methods and properties are:
+
+#### Properties
+
+- **is_done**: returns a boolean indicating if the process is done filling the array
+- **data**: returns the output mosaic array (numpy.masked.array)
+
+#### Methods
+
+- **feed(array: numpy.ma.ndarray)**: update the tile and mask
+
+#### Writing your own Pixel Selection method
+
+The rules for writing your own `pixel selection algorithm` class are as follows:
+
+- Must inherit from `MosaicMethodBase`
+- Must provide concrete implementations of all the above methods.
+
+See [`rio_tiler.mosaic.methods.defaults`](https://github.com/cogeotiff/rio-tiler/blob/main/rio_tiler/mosaic/methods/defaults.py) classes for examples.
