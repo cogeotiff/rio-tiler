@@ -407,6 +407,7 @@ class Reader(AsyncBaseReader):
             dst_width=width,
             dst_height=height,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
 
         if expression:
