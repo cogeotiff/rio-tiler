@@ -835,8 +835,11 @@ class CustomReader(Reader):
         super().__attrs_post_init__()
 
 
-def test_gdal_env_setting():
+@patch("rio_tiler.io.rasterio.rasterio")
+def test_gdal_env_setting(rio):
     """Test Env settings."""
+    rio.open = mock_rasterio_open
+
     with STACReader(STAC_GDAL_PATH, reader=CustomReader) as stac:
         assert not get_gdal_config("GDAL_INGESTED_BYTES_AT_OPEN") == 50000
         assert stac.preview(assets=["red", "green", "blue"])

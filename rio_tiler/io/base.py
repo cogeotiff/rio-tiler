@@ -16,6 +16,7 @@ from rasterio.crs import CRS
 from rasterio.rio.overview import get_maximum_overview_level
 from rasterio.warp import calculate_default_transform, transform_bounds
 
+from rio_tiler import tasks
 from rio_tiler.constants import WEB_MERCATOR_TMS
 from rio_tiler.errors import (
     AssetAsBandError,
@@ -26,7 +27,6 @@ from rio_tiler.errors import (
     TileOutsideBounds,
 )
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
-from rio_tiler.tasks import multi_arrays, multi_points, multi_values, multi_values_list
 from rio_tiler.types import AssetInfo, AssetType, AssetWithOptions, BBox, Indexes
 from rio_tiler.utils import (
     CRS_to_uri,
@@ -516,7 +516,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
                     return src.info(**method_options)
 
-        infos = multi_values_list(assets, _reader, **kwargs)
+        infos = tasks.multi_values_list(assets, _reader, **kwargs)
 
         def _dict_to_str(asset: AssetWithOptions):
             name = asset["name"]
@@ -559,7 +559,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
                 with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
                     return src.statistics(*args, **method_options)
 
-        stats = multi_values_list(assets, _reader, **kwargs)
+        stats = tasks.multi_values_list(assets, _reader, **kwargs)
 
         def _dict_to_str(asset: AssetWithOptions):
             name = asset["name"]
@@ -702,7 +702,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     return data
 
-        img = multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs)
+        img = tasks.multi_arrays(assets, _reader, tile_x, tile_y, tile_z, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             return img.apply_expression(expression)
@@ -784,7 +784,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     return data
 
-        img = multi_arrays(assets, _reader, bbox, **kwargs)
+        img = tasks.multi_arrays(assets, _reader, bbox, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             return img.apply_expression(expression)
@@ -864,7 +864,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     return data
 
-        img = multi_arrays(assets, _reader, **kwargs)
+        img = tasks.multi_arrays(assets, _reader, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             return img.apply_expression(expression)
@@ -942,7 +942,7 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     return data
 
-        data = multi_points(assets, _reader, lon, lat, **kwargs)
+        data = tasks.multi_points(assets, _reader, lon, lat, **kwargs)
         data.band_names = [f"b{ix + 1}" for ix in range(data.count)]
         if expression:
             return data.apply_expression(expression)
@@ -1023,7 +1023,604 @@ class MultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
 
                     return data
 
-        img = multi_arrays(assets, _reader, shape, **kwargs)
+        img = tasks.multi_arrays(assets, _reader, shape, **kwargs)
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+
+@attr.s
+class AsyncMultiBaseReader(SpatialMixin, metaclass=abc.ABCMeta):
+    """AsyncMultiBaseReader Reader.
+
+    This Abstract Base Class Reader is suited for dataset that are composed of multiple assets (e.g. STAC).
+
+    Attributes:
+        input (any): input data.
+        tms (morecantile.TileMatrixSet, optional): TileMatrixSet grid definition. Defaults to `WebMercatorQuad`.
+        minzoom (int, optional): Set dataset's minzoom.
+        maxzoom (int, optional): Set dataset's maxzoom.
+        reader_options (dict, option): options to forward to the reader. Defaults to `{}`.
+
+    """
+
+    input: Any = attr.ib()
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    minzoom: int | None = attr.ib(default=None)
+    maxzoom: int | None = attr.ib(default=None)
+
+    reader: type[AsyncBaseReader] = attr.ib(init=False)
+    reader_options: dict = attr.ib(factory=dict)
+
+    assets: Sequence[str] = attr.ib(init=False)
+    default_assets: Sequence[AssetType] | None = attr.ib(init=False, default=None)
+
+    async def __aenter__(self):
+        """Support using with Context Managers."""
+        return self
+
+    async def __aexit__(self, exc_type, exc_value, traceback):
+        """Support using with Context Managers."""
+        pass
+
+    @abc.abstractmethod
+    def _get_asset_info(self, asset: AssetType) -> AssetInfo:
+        """Validate asset name and construct url."""
+        ...
+
+    def _get_reader(self, asset_info: AssetInfo) -> type[AsyncBaseReader]:
+        """Get Asset Reader and options."""
+        return self.reader
+
+    def _update_statistics(
+        self,
+        img: ImageData,
+        indexes: Indexes | None = None,
+        statistics: Sequence[tuple[float, float]] | None = None,
+    ):
+        """Update ImageData Statistics from AssetInfo."""
+        indexes = cast_to_sequence(indexes)
+
+        if indexes is None:
+            indexes = tuple(range(1, img.count + 1))
+
+        if not img.dataset_statistics and statistics:
+            if max(indexes) > len(statistics):  # type: ignore
+                return
+
+            img.dataset_statistics = [statistics[bidx - 1] for bidx in indexes]
+
+    async def info(
+        self,
+        assets: Sequence[AssetType] | AssetType | None = None,
+        **kwargs: Any,
+    ) -> dict[str, Info]:
+        """Return metadata from multiple assets.
+
+        Args:
+            assets (sequence of str or str, optional): assets to fetch info from. Required keyword argument.
+
+        Returns:
+            dict: Multiple assets info in form of {"asset1": rio_tile.models.Info}.
+
+        """
+        if not assets:
+            warnings.warn(
+                "No `assets` option passed, will fetch info for all available assets.",
+                UserWarning,
+            )
+        assets = cast_to_sequence(assets or self.assets)
+
+        async def _reader(asset: AssetType, **kwargs: Any) -> Info:
+            asset_info = self._get_asset_info(asset)
+            reader = self._get_reader(asset_info)
+            reader_options = {**self.reader_options, **asset_info["reader_options"]}
+            method_options = {**asset_info["method_options"], **kwargs}
+
+            async with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
+                return await src.info(**method_options)
+
+        infos = await tasks.async_multi_values_list(assets, _reader, **kwargs)
+
+        def _dict_to_str(asset: AssetWithOptions):
+            name = asset["name"]
+            opts = [
+                f"{k}={str(v).replace(' ', '')}" for k, v in asset.items() if k != "name"
+            ]
+            return f"{name}|{'&'.join(opts)}"
+
+        return {k if isinstance(k, str) else _dict_to_str(k): v for k, v in infos}
+
+    async def statistics(
+        self, assets: Sequence[AssetType] | AssetType | None = None, **kwargs: Any
+    ) -> dict[str, dict[str, BandStatistics]]:
+        """Return array statistics for multiple assets.
+
+        Args:
+            assets (sequence of str or str): assets to fetch info from.
+            kwargs (optional): Options to forward to the `self.reader.statistics` method.
+
+        Returns:
+            dict: Multiple assets statistics in form of {"asset1": {"1": rio_tiler.models.BandStatistics, ...}}.
+
+        """
+        if not assets:
+            warnings.warn(
+                "No `assets` option passed, will fetch statistics for all available assets.",
+                UserWarning,
+            )
+
+        assets = cast_to_sequence(assets or self.assets)
+
+        async def _reader(asset: AssetType, *args: Any, **kwargs: Any) -> dict:
+            asset_info = self._get_asset_info(asset)
+            reader = self._get_reader(asset_info)
+            reader_options = {**self.reader_options, **asset_info["reader_options"]}
+            method_options = {**asset_info["method_options"], **kwargs}
+
+            async with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
+                return await src.statistics(*args, **method_options)
+
+        stats = await tasks.async_multi_values_list(assets, _reader, **kwargs)
+
+        def _dict_to_str(asset: AssetWithOptions):
+            name = asset["name"]
+            opts = [
+                f"{k}={str(v).replace(' ', '')}" for k, v in asset.items() if k != "name"
+            ]
+            return f"{name}|{'&'.join(opts)}"
+
+        return {k if isinstance(k, str) else _dict_to_str(k): v for k, v in stats}
+
+    async def merged_statistics(
+        self,
+        assets: Sequence[AssetType] | AssetType | None = None,
+        expression: str | None = None,
+        categorical: bool = False,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
+        max_size: int = 1024,
+        **kwargs: Any,
+    ) -> dict[str, BandStatistics]:
+        """Return array statistics for multiple assets.
+
+        Args:
+            assets (sequence of str or str): assets to fetch info from.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of categories to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            kwargs (optional): Options to forward to the `self.preview` method.
+
+
+        Returns:
+            Dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        if not assets:
+            warnings.warn(
+                "No `assets` option passed, will fetch statistics for all available assets.",
+                UserWarning,
+            )
+        assets = cast_to_sequence(assets or self.assets)
+
+        data = await self.preview(
+            assets=assets,
+            expression=expression,
+            max_size=max_size,
+            **kwargs,
+        )
+        return data.statistics(
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            hist_options=hist_options,
+        )
+
+    async def tile(
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        assets: Sequence[AssetType] | AssetType | None = None,
+        expression: str | None = None,
+        asset_as_band: bool = False,
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read and merge Wep Map tiles from multiple assets.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            asset_as_band (bool, optional): treat each asset as a separate band. Defaults to False.
+            kwargs (optional): Options to forward to the `self.reader.tile` method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        if kwargs.pop("asset_indexes", None):
+            warnings.warn(
+                "`asset_indexes` parameter is deprecated in `tile` method and will be ignored.",
+                DeprecationWarning,
+            )
+
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
+            )
+
+        assets = cast_to_sequence(assets)
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
+        if not assets:
+            raise MissingAssets(
+                "No Asset defined by `assets` option or class-level `default_assets`."
+            )
+
+        async def _reader(asset: AssetType, *args: Any, **kwargs: Any) -> ImageData:
+            asset_info = self._get_asset_info(asset)
+            asset_name = asset_info["name"]
+            reader = self._get_reader(asset_info)
+            reader_options = {**self.reader_options, **asset_info["reader_options"]}
+            method_options = {**asset_info["method_options"], **kwargs}
+
+            async with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
+                data = await src.tile(*args, **method_options)
+
+                self._update_statistics(
+                    data,
+                    indexes=method_options.get("indexes"),
+                    statistics=asset_info.get("dataset_statistics"),
+                )
+
+                metadata = data.metadata or {}
+                if m := asset_info.get("metadata"):
+                    metadata.update(m)
+                data.metadata = {asset_name: metadata}
+
+                data.band_descriptions = [
+                    f"{asset_name}_{n}" for n in data.band_descriptions
+                ]
+                if asset_as_band:
+                    if len(data.band_names) > 1:
+                        raise AssetAsBandError(
+                            "Can't use `asset_as_band` for multibands asset"
+                        )
+                    data.band_descriptions = [asset_name]
+
+                return data
+
+        img = await tasks.async_multi_arrays(
+            assets, _reader, tile_x, tile_y, tile_z, **kwargs
+        )
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    async def part(
+        self,
+        bbox: BBox,
+        assets: Sequence[AssetType] | AssetType | None = None,
+        expression: str | None = None,
+        asset_as_band: bool = False,
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read and merge parts from multiple assets.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            asset_as_band (bool, optional): treat each asset as a separate band. Defaults to False.
+            kwargs (optional): Options to forward to the `self.reader.part` method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        if kwargs.pop("asset_indexes", None):
+            warnings.warn(
+                "`asset_indexes` parameter is deprecated in `tile` method and will be ignored.",
+                DeprecationWarning,
+            )
+
+        assets = cast_to_sequence(assets)
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
+        if not assets:
+            raise MissingAssets(
+                "No Asset defined by `assets` option or class-level `default_assets`."
+            )
+
+        async def _reader(asset: AssetType, *args: Any, **kwargs: Any) -> ImageData:
+            asset_info = self._get_asset_info(asset)
+            asset_name = asset_info["name"]
+            reader = self._get_reader(asset_info)
+            reader_options = {**self.reader_options, **asset_info["reader_options"]}
+            method_options = {**asset_info["method_options"], **kwargs}
+
+            async with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
+                data = await src.part(*args, **method_options)
+
+                self._update_statistics(
+                    data,
+                    indexes=method_options.get("indexes"),
+                    statistics=asset_info.get("dataset_statistics"),
+                )
+
+                metadata = data.metadata or {}
+                if m := asset_info.get("metadata"):
+                    metadata.update(m)
+                data.metadata = {asset_name: metadata}
+
+                data.band_descriptions = [
+                    f"{asset_name}_{n}" for n in data.band_descriptions
+                ]
+                if asset_as_band:
+                    if len(data.band_names) > 1:
+                        raise AssetAsBandError(
+                            "Can't use `asset_as_band` for multibands asset"
+                        )
+                    data.band_descriptions = [asset_name]
+
+                return data
+
+        img = await tasks.async_multi_arrays(assets, _reader, bbox, **kwargs)
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    async def preview(
+        self,
+        assets: Sequence[AssetType] | AssetType | None = None,
+        expression: str | None = None,
+        asset_as_band: bool = False,
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read and merge previews from multiple assets.
+
+        Args:
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            asset_as_band (bool, optional): treat each asset as a separate band. Defaults to False.
+            kwargs (optional): Options to forward to the `self.reader.preview` method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        if kwargs.pop("asset_indexes", None):
+            warnings.warn(
+                "`asset_indexes` parameter is deprecated in `tile` method and will be ignored.",
+                DeprecationWarning,
+            )
+
+        assets = cast_to_sequence(assets)
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
+        if not assets:
+            raise MissingAssets(
+                "No Asset defined by `assets` option or class-level `default_assets`."
+            )
+
+        async def _reader(asset: AssetType, **kwargs: Any) -> ImageData:
+            asset_info = self._get_asset_info(asset)
+            asset_name = asset_info["name"]
+            reader = self._get_reader(asset_info)
+            reader_options = {**self.reader_options, **asset_info["reader_options"]}
+            method_options = {**asset_info["method_options"], **kwargs}
+
+            async with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
+                data = await src.preview(**method_options)
+
+                self._update_statistics(
+                    data,
+                    indexes=method_options.get("indexes"),
+                    statistics=asset_info.get("dataset_statistics"),
+                )
+
+                metadata = data.metadata or {}
+                if m := asset_info.get("metadata"):
+                    metadata.update(m)
+                data.metadata = {asset_name: metadata}
+
+                data.band_descriptions = [
+                    f"{asset_name}_{n}" for n in data.band_descriptions
+                ]
+                if asset_as_band:
+                    if len(data.band_names) > 1:
+                        raise AssetAsBandError(
+                            "Can't use `asset_as_band` for multibands asset"
+                        )
+                    data.band_descriptions = [asset_name]
+
+                return data
+
+        img = await tasks.async_multi_arrays(assets, _reader, **kwargs)
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    async def point(
+        self,
+        lon: float,
+        lat: float,
+        assets: Sequence[AssetType] | AssetType | None = None,
+        expression: str | None = None,
+        asset_as_band: bool = False,
+        **kwargs: Any,
+    ) -> PointData:
+        """Read pixel value from multiple assets.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latitude.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            asset_as_band (bool, optional): treat each asset as a separate band. Defaults to False.
+            kwargs (optional): Options to forward to the `self.reader.point` method.
+
+        Returns:
+            PointData
+
+        """
+        if kwargs.pop("asset_indexes", None):
+            warnings.warn(
+                "`asset_indexes` parameter is deprecated in `tile` method and will be ignored.",
+                DeprecationWarning,
+            )
+
+        assets = cast_to_sequence(assets)
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
+        if not assets:
+            raise MissingAssets(
+                "No Asset defined by `assets` option or class-level `default_assets`."
+            )
+
+        async def _reader(asset: AssetType, *args: Any, **kwargs: Any) -> PointData:
+            asset_info = self._get_asset_info(asset)
+            asset_name = asset_info["name"]
+            reader = self._get_reader(asset_info)
+            reader_options = {**self.reader_options, **asset_info["reader_options"]}
+            method_options = {**asset_info["method_options"], **kwargs}
+
+            async with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
+                data = await src.point(*args, **method_options)
+
+                metadata = data.metadata or {}
+                if m := asset_info.get("metadata"):
+                    metadata.update(m)
+                data.metadata = {asset_name: metadata}
+
+                data.band_descriptions = [
+                    f"{asset_name}_{n}" for n in data.band_descriptions
+                ]
+                if asset_as_band:
+                    if len(data.band_names) > 1:
+                        raise AssetAsBandError(
+                            "Can't use `asset_as_band` for multibands asset"
+                        )
+                    data.band_descriptions = [asset_name]
+
+                return data
+
+        data = await tasks.async_multi_points(assets, _reader, lon, lat, **kwargs)
+        data.band_names = [f"b{ix + 1}" for ix in range(data.count)]
+        if expression:
+            return data.apply_expression(expression)
+
+        return data
+
+    async def feature(
+        self,
+        shape: dict,
+        assets: Sequence[AssetType] | AssetType | None = None,
+        expression: str | None = None,
+        asset_as_band: bool = False,
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read and merge parts defined by geojson feature from multiple assets.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+            assets (sequence of str or str, optional): assets to fetch info from.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            asset_as_band (bool, optional): treat each asset as a separate band. Defaults to False.
+            kwargs (optional): Options to forward to the `self.reader.feature` method.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        if kwargs.pop("asset_indexes", None):
+            warnings.warn(
+                "`asset_indexes` parameter is deprecated in `tile` method and will be ignored.",
+                DeprecationWarning,
+            )
+
+        assets = cast_to_sequence(assets)
+        if not assets and self.default_assets:
+            warnings.warn(
+                f"No assets/expression passed, defaults to {self.default_assets}",
+                UserWarning,
+            )
+            assets = self.default_assets
+
+        if not assets:
+            raise MissingAssets(
+                "No Asset defined by `assets` option or class-level `default_assets`."
+            )
+
+        async def _reader(asset: AssetType, *args: Any, **kwargs: Any) -> ImageData:
+            asset_info = self._get_asset_info(asset)
+            asset_name = asset_info["name"]
+            reader = self._get_reader(asset_info)
+            reader_options = {**self.reader_options, **asset_info["reader_options"]}
+            method_options = {**asset_info["method_options"], **kwargs}
+
+            async with reader(asset_info["url"], tms=self.tms, **reader_options) as src:
+                data = await src.feature(*args, **method_options)
+
+                self._update_statistics(
+                    data,
+                    statistics=asset_info.get("dataset_statistics"),
+                )
+
+                metadata = data.metadata or {}
+                if m := asset_info.get("metadata"):
+                    metadata.update(m)
+                data.metadata = {asset_name: metadata}
+
+                data.band_descriptions = [
+                    f"{asset_name}_{n}" for n in data.band_descriptions
+                ]
+                if asset_as_band:
+                    if len(data.band_names) > 1:
+                        raise AssetAsBandError(
+                            "Can't use `asset_as_band` for multibands asset"
+                        )
+                    data.band_descriptions = [asset_name]
+
+                return data
+
+        img = await tasks.async_multi_arrays(assets, _reader, shape, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             return img.apply_expression(expression)
@@ -1130,7 +1727,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
             with self.reader(url, tms=self.tms, **self.reader_options) as src:
                 return src.info()
 
-        bands_metadata = multi_values(bands, _reader, **kwargs)
+        bands_metadata = tasks.multi_values(bands, _reader, **kwargs)
 
         meta = {
             "bounds": self.bounds,
@@ -1263,7 +1860,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 data.band_descriptions = [band]
                 return data
 
-        img = multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
+        img = tasks.multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             expression = self._expression_to_bidx(img.band_descriptions, expression)
@@ -1324,7 +1921,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 data.band_descriptions = [band]
                 return data
 
-        img = multi_arrays(bands, _reader, bbox, **kwargs)
+        img = tasks.multi_arrays(bands, _reader, bbox, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             expression = self._expression_to_bidx(img.band_descriptions, expression)
@@ -1383,7 +1980,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 data.band_descriptions = [band]
                 return data
 
-        img = multi_arrays(bands, _reader, **kwargs)
+        img = tasks.multi_arrays(bands, _reader, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             expression = self._expression_to_bidx(img.band_descriptions, expression)
@@ -1446,7 +2043,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 data.band_descriptions = [band]
                 return data
 
-        data = multi_points(bands, _reader, lon, lat, **kwargs)
+        data = tasks.multi_points(bands, _reader, lon, lat, **kwargs)
         data.band_names = [f"b{ix + 1}" for ix in range(data.count)]
         if expression:
             expression = self._expression_to_bidx(data.band_descriptions, expression)
@@ -1507,7 +2104,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
                 data.band_descriptions = [band]
                 return data
 
-        img = multi_arrays(bands, _reader, shape, **kwargs)
+        img = tasks.multi_arrays(bands, _reader, shape, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
         if expression:
             expression = self._expression_to_bidx(img.band_descriptions, expression)

@@ -16,6 +16,7 @@ from zarr.storage import ObjectStore
 
 from rio_tiler.errors import (
     ExpressionMixingWarning,
+    InvalidBounds,
     PointOutsideBounds,
     TileOutsideBounds,
 )
@@ -97,7 +98,7 @@ async def test_async_zarr_reader(zarr_store):
         transform=transform,
     )
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
-    assert reader._dims == ["band"]
+    assert reader._dims == ["band", "y", "x"]
 
     # Test _read (full array)
     img = await reader._read()
@@ -122,7 +123,7 @@ async def test_async_zarr_reader(zarr_store):
     # Test info method
     info = await reader.info()
     assert info.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
-    assert info.driver == "Zarr"
+    assert info.driver == "Zarr-Python"
     assert info.count == 3
     assert info.model_dump()
 
@@ -138,7 +139,7 @@ async def test_2d_array(zarr_store_2d):
         transform=transform,
     )
     assert reader.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
-    assert reader._dims == []
+    assert reader._dims == ["y", "x"]
 
     img = await reader._read()
     assert img.array.shape == (1, 50, 50), f"Expected (1, 50, 50), got {img.array.shape}"
@@ -146,7 +147,7 @@ async def test_2d_array(zarr_store_2d):
     # Test info method
     info = await reader.info()
     assert info.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
-    assert info.driver == "Zarr"
+    assert info.driver == "Zarr-Python"
     assert info.count == 1
     assert info.model_dump()
 
@@ -317,6 +318,10 @@ async def test_tile_outside_bounds(zarr_store):
     # Tile that doesn't intersect the dataset
     with pytest.raises(TileOutsideBounds):
         await reader.tile(tile_x=1000, tile_y=1000, tile_z=10)
+
+    with pytest.raises(InvalidBounds):
+        bounds = reader.tms.xy_bounds(1000, 1000, 10)
+        await reader.part(bounds, bounds_crs=reader.tms.rasterio_crs)
 
 
 async def test_preview(zarr_store):

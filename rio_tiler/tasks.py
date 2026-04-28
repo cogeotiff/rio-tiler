@@ -1,6 +1,7 @@
 """rio_tiler.tasks: tools for handling rio-tiler's future tasks."""
 
-from collections.abc import Callable, Generator, Sequence
+import asyncio
+from collections.abc import Callable, Coroutine, Generator, Sequence
 from concurrent import futures
 from functools import partial
 from typing import Any
@@ -9,7 +10,7 @@ from rio_tiler.constants import MAX_THREADS
 from rio_tiler.logger import logger
 from rio_tiler.models import ImageData, PointData
 
-TaskType = Sequence[tuple[futures.Future | Callable, Any]]
+TaskType = Sequence[tuple[futures.Future | Callable | Any, Any]]
 
 
 def filter_tasks(
@@ -33,8 +34,12 @@ def filter_tasks(
         try:
             if isinstance(future, futures.Future):
                 yield future.result(), asset
-            else:
+            elif callable(future):
                 yield future(), asset
+            else:
+                if isinstance(future, BaseException):
+                    raise future
+                yield future, asset
         except allowed_exceptions as err:
             logger.info(err)
             pass
@@ -112,6 +117,61 @@ def multi_values_list(
 ) -> list[tuple[Any, Any]]:
     """Merge values returned from tasks."""
     tasks = create_tasks(reader, asset_list, threads, *args, **kwargs)
+    return [
+        (asset, val)
+        for val, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)
+    ]
+
+
+async def async_multi_arrays(
+    asset_list: Sequence,
+    reader: Callable[..., Coroutine[Any, Any, ImageData]],
+    *args: Any,
+    allowed_exceptions: tuple | None = None,
+    **kwargs: Any,
+) -> ImageData:
+    """Merge arrays returned from tasks."""
+    futures = await asyncio.gather(
+        *[reader(asset, *args, **kwargs) for asset in asset_list],
+        return_exceptions=True,
+    )
+    tasks = [(v, asset_list[ix]) for ix, v in enumerate(futures)]
+    return ImageData.create_from_list(
+        [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
+    )
+
+
+async def async_multi_points(
+    asset_list: Sequence,
+    reader: Callable[..., Coroutine[Any, Any, PointData]],
+    *args: Any,
+    allowed_exceptions: tuple | None = None,
+    **kwargs: Any,
+) -> PointData:
+    """Merge points returned from tasks."""
+    futures = await asyncio.gather(
+        *[reader(asset, *args, **kwargs) for asset in asset_list],
+        return_exceptions=True,
+    )
+    tasks = [(v, asset_list[ix]) for ix, v in enumerate(futures)]
+    return PointData.create_from_list(
+        [data for data, _ in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)]
+    )
+
+
+async def async_multi_values_list(
+    asset_list: Sequence,
+    reader: Callable[..., Coroutine[Any, Any, Any]],
+    *args: Any,
+    allowed_exceptions: tuple | None = None,
+    **kwargs: Any,
+) -> list[tuple[Any, Any]]:
+    """Merge values returned from tasks."""
+    futures = await asyncio.gather(
+        *[reader(asset, *args, **kwargs) for asset in asset_list],
+        return_exceptions=True,
+    )
+    tasks = [(v, asset_list[ix]) for ix, v in enumerate(futures)]
     return [
         (asset, val)
         for val, asset in filter_tasks(tasks, allowed_exceptions=allowed_exceptions)

@@ -1,6 +1,12 @@
 """rio-tiler.io"""
 
-from .base import AsyncBaseReader, BaseReader, MultiBandReader, MultiBaseReader
+from .base import (
+    AsyncBaseReader,
+    AsyncMultiBaseReader,
+    BaseReader,
+    MultiBandReader,
+    MultiBaseReader,
+)
 from .rasterio import ImageReader, Reader
 from .stac import STACReader
 from .xarray import XarrayReader
@@ -10,6 +16,7 @@ COGReader = Reader
 
 __all__ = [
     "AsyncBaseReader",
+    "AsyncMultiBaseReader",
     "BaseReader",
     "MultiBandReader",
     "MultiBaseReader",

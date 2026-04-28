@@ -17,3 +17,5 @@ WEB_MERCATOR_CRS = CRS.from_epsg(3857)
 WGS84_CRS = CRS.from_epsg(4326)
 
 WEB_MERCATOR_TMS = morecantile.tms.get("WebMercatorQuad")
+
+STAC_ALTERNATE_KEY = os.environ.get("RIO_TILER_STAC_ALTERNATE_KEY", None)
