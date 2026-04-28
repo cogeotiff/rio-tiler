@@ -12,6 +12,8 @@
 * add: `rio_tiler.experimental.zarr.GeoZarrReader`  (async zarr-python reader for GeoZAR/EOPF product)
 * add: `rio_tiler.io.base.AsyncMultiBaseReader` abc class
 * add: `rio_tiler.experimental.async_stac.AsyncSTACReader`
+* add: `rio_tiler.mosaic.reader.async_mosaic_reader`
+* add: `rio_tiler.mosaic.backend.AsyncBaseBackend`
 
 ## 9.0.6 (2026-04-08)
 
