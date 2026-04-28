@@ -63,6 +63,7 @@ dev = [
 
 performance = [
     "pytest-benchmark",
+    "pytest-async-benchmark",
     "tilebench",
 ]
 

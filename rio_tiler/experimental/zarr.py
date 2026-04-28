@@ -369,6 +369,7 @@ class Reader(AsyncBaseReader):
         width: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Part of a Dataset.
@@ -491,6 +492,7 @@ class Reader(AsyncBaseReader):
             dst_width=width,
             dst_height=height,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
 
         if expression:
