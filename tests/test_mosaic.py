@@ -6,12 +6,15 @@ from unittest.mock import patch
 import numpy
 import pytest
 import rasterio
+from async_geotiff import GeoTIFF
+from obstore.store import LocalStore
 from rasterio.crs import CRS
 from rasterio.warp import transform_bounds
 
 from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
+from rio_tiler.experimental.geotiff import Reader as GeoTIFFReader
 from rio_tiler.io import Reader, STACReader
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.mosaic.methods import PixelSelectionMethod, defaults
@@ -799,254 +802,209 @@ def test_mosaic_method_enums():
         _ = PixelSelectionMethod["yo"]
 
 
-# @pytest.mark.asyncio
-# async def test_async_mosaic_tiler():
-#     """Test mosaic tiler."""
-#     store = LocalStore(PREFIX)
+@pytest.mark.asyncio
+async def test_async_mosaic_tiler():
+    """Test mosaic tiler."""
+    store = LocalStore(PREFIX)
 
-#     async def _aread_tile(src_path: str, *args, **kwargs) -> ImageData:
-#         """Read tile from an asset"""
-#         geotiff = await GeoTIFF.open(os.path.basename(src_path), store=store)
-#         async with GeoTIFFReader(input=geotiff) as src:
-#             return await src.tile(*args, **kwargs)
+    async def _aread_tile(src_path: str, *args, **kwargs) -> ImageData:
+        """Read tile from an asset"""
+        geotiff = await GeoTIFF.open(os.path.basename(src_path), store=store)
+        async with GeoTIFFReader(input=geotiff) as src:
+            return await src.tile(*args, **kwargs)
 
-#     async def _aread_preview(src_path: str, *args, **kwargs) -> ImageData:
-#         """Read preview from an asset"""
-#         geotiff = await GeoTIFF.open(os.path.basename(src_path), store=store)
-#         async with GeoTIFFReader(input=geotiff) as src:
-#             return await src.preview(*args, **kwargs)
+    async def _aread_preview(src_path: str, *args, **kwargs) -> ImageData:
+        """Read preview from an asset"""
+        geotiff = await GeoTIFF.open(os.path.basename(src_path), store=store)
+        async with GeoTIFFReader(input=geotiff) as src:
+            return await src.preview(*args, **kwargs)
 
-#     # # test with default and full covered tile and default options
-#     img, assets_used = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z)
-#     assert img.array.shape == (3, 256, 256)
-#     assert img.array.all()
-#     # # Should only have value of 1
-#     assert numpy.ma.unique(img.array[0]).tolist() == [1]
-#     assert img.array.dtype == "uint16"
+    # # test with default and full covered tile and default options
+    img, assets_used = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z)
+    assert img.array.shape == (3, 256, 256)
+    assert img.array.all()
+    # # Should only have value of 1
+    assert numpy.ma.unique(img.array[0]).tolist() == [1]
+    assert img.array.dtype == "uint16"
 
-#     img, _ = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z)
-#     assert img.band_names == ["b1", "b2", "b3"]
+    img, _ = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z)
+    assert img.band_names == ["b1", "b2", "b3"]
 
-#     img, _ = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z, indexes=[1])
-#     assert img.band_names == ["b1"]
+    img, _ = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z, indexes=[1])
+    assert img.band_names == ["b1"]
 
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets, _aread_tile, x, y, z, expression="b1*3"
-#     )
-#     assert img.band_descriptions == ["b1*3"]
-#     # Should only have value of 1 but *3
-#     assert numpy.ma.unique(img.array[0]).tolist() == [3]
+    img, _ = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, x, y, z, expression="b1*3"
+    )
+    assert img.band_descriptions == ["b1*3"]
+    # Should only have value of 1 but *3
+    assert numpy.ma.unique(img.array[0]).tolist() == [3]
 
-#     # Test last pixel selection
-#     assetsr = list(reversed(assets))
-#     img, _ = await mosaic.async_mosaic_reader(assetsr, _aread_tile, x, y, z)
-#     assert img.array.shape == (3, 256, 256)
-#     assert img.array.all()
-#     # Should have values of 2 and 1 because the tile do not fully overlap mosaic_value_2 cog
-#     assert numpy.ma.unique(img.array[0]).tolist() == [1, 2]
-#     assert img.array.dtype == "uint16"
+    # Test last pixel selection
+    assetsr = list(reversed(assets))
+    img, _ = await mosaic.async_mosaic_reader(assetsr, _aread_tile, x, y, z)
+    assert img.array.shape == (3, 256, 256)
+    assert img.array.all()
+    # Should have values of 2 and 1 because the tile do not fully overlap mosaic_value_2 cog
+    assert numpy.ma.unique(img.array[0]).tolist() == [1, 2]
+    assert img.array.dtype == "uint16"
 
-#     img, _ = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z, indexes=1)
-#     t, m = img
-#     assert t.shape == (1, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert t.all()
-#     assert img._mask.all()
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    img, _ = await mosaic.async_mosaic_reader(assets, _aread_tile, x, y, z, indexes=1)
+    assert img.array.shape == (1, 256, 256)
+    assert img.array.all()
+    assert img._mask.all()
+    assert numpy.ma.unique(img.array[0]).tolist() == [1]
+    assert img.array.dtype == "uint16"
 
-#     # Test darkest pixel selection
-#     img, assets_used = await mosaic.async_mosaic_reader(
-#         assets, _aread_tile, x, y, z, pixel_selection=defaults.LowestMethod()
-#     )
-#     t, m = img
-#     assert len(assets_used) == 2
-#     assert img._mask.all()
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    # Test darkest pixel selection
+    img, assets_used = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, x, y, z, pixel_selection=defaults.LowestMethod()
+    )
+    assert len(assets_used) == 2
+    assert img._mask.all()
+    assert numpy.ma.unique(img.array[0]).tolist() == [1]
 
-#     imgo, _ = await mosaic.async_mosaic_reader(
-#         assets_order, _aread_tile, x, y, z, pixel_selection=defaults.LowestMethod()
-#     )
-#     (to, mo) = imgo
-#     numpy.testing.assert_array_equal(t[0, img._mask], to[0, imgo._mask])
-#     assert to.dtype == "uint16"
-#     assert mo.dtype == "uint16"
+    imgo, _ = await mosaic.async_mosaic_reader(
+        assets_order, _aread_tile, x, y, z, pixel_selection=defaults.LowestMethod()
+    )
+    numpy.testing.assert_array_equal(imgo.array, img.array)
 
-#     # Test brightest pixel selection
-#     # Should return both 1 and 2
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets, _aread_tile, x, y, z, pixel_selection=defaults.HighestMethod()
-#     )
-#     t, m = img
-#     assert img._mask.all()
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1, 2]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    # Test brightest pixel selection
+    # Should return both 1 and 2
+    img, _ = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, x, y, z, pixel_selection=defaults.HighestMethod()
+    )
+    assert img._mask.all()
+    assert numpy.ma.unique(img.array[0]).tolist() == [1, 2]
 
-#     imgo, _ = await mosaic.async_mosaic_reader(
-#         assets_order, _aread_tile, x, y, z, pixel_selection=defaults.HighestMethod()
-#     )
-#     (to, mo) = imgo
-#     numpy.testing.assert_array_equal(to, t)
-#     numpy.testing.assert_array_equal(mo, m)
-#     assert to.dtype == "uint16"
-#     assert mo.dtype == "uint16"
+    imgo, _ = await mosaic.async_mosaic_reader(
+        assets_order, _aread_tile, x, y, z, pixel_selection=defaults.HighestMethod()
+    )
+    numpy.testing.assert_array_equal(img.data, imgo.data)
+    numpy.testing.assert_array_equal(img.mask, imgo.mask)
 
-#     # test with default and partially covered tile
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets, _aread_tile, xp, yp, zp, pixel_selection=defaults.HighestMethod()
-#     )
-#     t, m = img
-#     assert t.any()
-#     assert not img._mask.all()
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    # test with default and partially covered tile
+    img, _ = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, xp, yp, zp, pixel_selection=defaults.HighestMethod()
+    )
+    assert img.array.any()
+    assert not img._mask.all()
 
-#     # test when tiler raise errors (outside bounds)
-#     with pytest.raises(EmptyMosaicError):
-#         await mosaic.async_mosaic_reader(assets, _aread_tile, 150, 300, 9)
+    # test when tiler raise errors (outside bounds)
+    with pytest.raises(EmptyMosaicError):
+        await mosaic.async_mosaic_reader(assets, _aread_tile, 150, 300, 9)
 
-#     # Test mean pixel selection
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets, _read_tile, x, y, z, pixel_selection=defaults.MeanMethod()
-#     )
-#     t, m = img
-#     assert t.shape == (3, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert img._mask.all()
-#     # This should return only 1 because we enforce data_type to be the same
-#     # as the initial data (uint16) so 1.5 will be casted to 1
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    # Test mean pixel selection
+    img, _ = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, x, y, z, pixel_selection=defaults.MeanMethod()
+    )
+    assert img.array.shape == (3, 256, 256)
+    assert img._mask.all()
+    # This should return only 1 because we enforce data_type to be the same
+    # as the initial data (uint16) so 1.5 will be casted to 1
+    assert numpy.ma.unique(img.array[0]).tolist() == [1]
 
-#     # Test mean pixel selection
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets,
-#         _aread_tile,
-#         x,
-#         y,
-#         z,
-#         pixel_selection=defaults.MeanMethod(enforce_data_type=False),
-#     )
-#     t, m = img
-#     assert img._mask.all()
-#     # We do not cast the data to Uint16 so we should get both 1 and 1.5
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1, 1.5]
-#     assert t.dtype == "float64"
-#     assert m.dtype == "float64"
+    # Test mean pixel selection
+    img, _ = await mosaic.async_mosaic_reader(
+        assets,
+        _aread_tile,
+        x,
+        y,
+        z,
+        pixel_selection=defaults.MeanMethod(enforce_data_type=False),
+    )
+    assert img._mask.all()
+    # We do not cast the data to Uint16 so we should get both 1 and 1.5
+    assert numpy.ma.unique(img.array[0]).tolist() == [1, 1.5]
+    assert img.array.dtype == "float64"
 
-#     # Test median pixel selection
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets, _aread_tile, x, y, z, pixel_selection=defaults.MedianMethod()
-#     )
-#     t, m = img
-#     assert t.shape == (3, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert img._mask.all()
-#     # This should return only 1 because we enforce data_type to be the same
-#     # as the initial data (uint16) so 1.5 will be casted to 1
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    # Test median pixel selection
+    img, _ = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, x, y, z, pixel_selection=defaults.MedianMethod()
+    )
+    assert img.array.shape == (3, 256, 256)
+    assert img._mask.all()
+    # This should return only 1 because we enforce data_type to be the same
+    # as the initial data (uint16) so 1.5 will be casted to 1
+    assert numpy.ma.unique(img.array[0]).tolist() == [1]
+    assert img.array.dtype == "uint16"
 
-#     # Test median pixel selection
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets,
-#         _aread_tile,
-#         x,
-#         y,
-#         z,
-#         pixel_selection=defaults.MedianMethod(enforce_data_type=False),
-#     )
-#     t, m = img
-#     assert img._mask.all()
-#     # We do not cast the data to Uint16 so we should get both 1 and 1.5
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1, 1.5]
-#     assert t.dtype == "float64"
-#     assert m.dtype == "float64"
+    # Test median pixel selection
+    img, _ = await mosaic.async_mosaic_reader(
+        assets,
+        _aread_tile,
+        x,
+        y,
+        z,
+        pixel_selection=defaults.MedianMethod(enforce_data_type=False),
+    )
 
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets_order,
-#         _aread_tile,
-#         x,
-#         y,
-#         z,
-#         pixel_selection=defaults.LastBandHighMethod(),
-#         indexes=(1, 2, 3, 1),
-#     )
-#     t, m = img
-#     assert t.shape == (3, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert img._mask.all()
-#     # The last band will be either 1 or 2
-#     # so we should get both 1 and 2
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1, 2]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    assert img._mask.all()
+    # We do not cast the data to Uint16 so we should get both 1 and 1.5
+    assert numpy.ma.unique(img.array[0]).tolist() == [1, 1.5]
+    assert img.array.dtype == "float64"
 
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets_order,
-#         _aread_tile,
-#         x,
-#         y,
-#         z,
-#         pixel_selection=defaults.LastBandLowMethod(),
-#         indexes=(1, 2, 3, 1),
-#     )
-#     t, m = img
-#     assert t.shape == (3, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert img._mask.all()
-#     # The last band will be either 1 or 2
-#     # but we only select where it's the lowest (1)
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    img, _ = await mosaic.async_mosaic_reader(
+        assets_order,
+        _aread_tile,
+        x,
+        y,
+        z,
+        pixel_selection=defaults.LastBandHighMethod(),
+        indexes=(1, 2, 3, 1),
+    )
 
-#     # Test pixel selection as _class_, not instance of class
-#     img, assets_used = await mosaic.async_mosaic_reader(
-#         assets, _aread_tile, x, y, z, pixel_selection=defaults.FirstMethod
-#     )
-#     t, m = img
-#     assert t.shape == (3, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert img._mask.all()
-#     assert numpy.unique(t[0, img._mask]).tolist() == [1]
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+    assert img.array.shape == (3, 256, 256)
+    assert img._mask.all()
+    # The last band will be either 1 or 2
+    # so we should get both 1 and 2
+    assert numpy.ma.unique(img.array[0]).tolist() == [1, 2]
 
-#     # Test invalid Pixel Selection class
-#     with pytest.raises(InvalidMosaicMethod):
+    img, _ = await mosaic.async_mosaic_reader(
+        assets_order,
+        _aread_tile,
+        x,
+        y,
+        z,
+        pixel_selection=defaults.LastBandLowMethod(),
+        indexes=(1, 2, 3, 1),
+    )
+    assert img.array.shape == (3, 256, 256)
+    assert img._mask.all()
+    # The last band will be either 1 or 2
+    # but we only select where it's the lowest (1)
+    assert numpy.ma.unique(img.array[0]).tolist() == [1]
 
-#         class aClass(object):
-#             pass
+    # Test pixel selection as _class_, not instance of class
+    img, assets_used = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, x, y, z, pixel_selection=defaults.FirstMethod
+    )
+    assert img._mask.all()
+    assert numpy.ma.unique(img.array[0]) == [1]
 
-#         await mosaic.async_mosaic_reader(
-#             assets, _aread_tile, x, y, z, pixel_selection=aClass()
-#         )
+    # Test invalid Pixel Selection class
+    with pytest.raises(InvalidMosaicMethod):
 
-#     # test with preview
-#     # NOTE: We need to have fix output width and height because each preview could have different size
-#     # Also because the 2 assets cover different bbox, getting the preview merged together doesn't make real sense
-#     (t, m), _ = await mosaic.async_mosaic_reader(
-#         assets, _aread_preview, width=256, height=256, max_size=None
-#     )
-#     assert t.shape == (3, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert t.dtype == "uint16"
-#     assert m.dtype == "uint16"
+        class aClass(object):
+            pass
 
-#     # Test count pixel selection
-#     img, _ = await mosaic.async_mosaic_reader(
-#         assets, _aread_tile, x, y, z, pixel_selection=defaults.CountMethod()
-#     )
-#     t, m = img
-#     assert t.shape == (1, 256, 256)
-#     assert m.shape == (256, 256)
-#     assert img._mask.all()
-#     assert t.dtype == "uint8"
-#     assert m.dtype == "uint8"
+        await mosaic.async_mosaic_reader(
+            assets, _aread_tile, x, y, z, pixel_selection=aClass()
+        )
+
+    # test with preview
+    # NOTE: We need to have fix output width and height because each preview could have different size
+    # Also because the 2 assets cover different bbox, getting the preview merged together doesn't make real sense
+    img, _ = await mosaic.async_mosaic_reader(
+        assets, _aread_preview, width=256, height=256, max_size=None
+    )
+    assert img.array.shape == (3, 256, 256)
+    assert img.array.dtype == "uint16"
+
+    # Test count pixel selection
+    img, _ = await mosaic.async_mosaic_reader(
+        assets, _aread_tile, x, y, z, pixel_selection=defaults.CountMethod()
+    )
+    assert img.array.shape == (1, 256, 256)
+    assert img._mask.all()
+    assert img.array.dtype == "uint8"
