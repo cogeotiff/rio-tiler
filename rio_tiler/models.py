@@ -765,6 +765,10 @@ class ImageData:
             *bbox, transform=self.transform
         ).toslices()
 
+        alpha_mask: numpy.ndarray | None = None
+        if self.alpha_mask is not None:
+            alpha_mask = self.alpha_mask[row_slice, col_slice].copy()
+
         return ImageData(
             self.array[:, row_slice, col_slice].copy(),
             assets=self.assets,
@@ -777,9 +781,7 @@ class ImageData:
             offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
-            alpha_mask=self.alpha_mask[row_slice, col_slice].copy()
-            if self.alpha_mask is not None
-            else None,
+            alpha_mask=alpha_mask,
         )
 
     def post_process(
