@@ -79,6 +79,34 @@ class LowestMethod(MosaicMethodBase):
 
 
 @dataclass
+class SumMethod(MosaicMethodBase):
+    """Stack the arrays and return the sum of pixel values."""
+
+    enforce_data_type: bool = True
+    stack: list[numpy.ma.MaskedArray] = field(default_factory=list, init=False)
+
+    def __repr__(self):
+        """Mosaic Method repr."""
+        return "<Mosaic: SumMethod>"
+
+    @property
+    def data(self) -> numpy.ma.MaskedArray | None:
+        """Return sum of the data stack."""
+        if self.stack:
+            array = numpy.ma.sum(numpy.ma.stack(self.stack, axis=0), axis=0)
+            if self.enforce_data_type:
+                array = array.astype(self.stack[0].dtype)
+
+            return array
+
+        return None
+
+    def feed(self, array: numpy.ma.MaskedArray):
+        """Add array to the stack."""
+        self.stack.append(array)
+
+
+@dataclass
 class MeanMethod(MosaicMethodBase):
     """Stack the arrays and return the Mean pixel value."""
 

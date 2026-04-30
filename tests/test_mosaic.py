@@ -389,6 +389,29 @@ def test_mosaic_tiler_Stdev():
     assert t[2][-1][-1] == numpy.std([tile1[2][-1][-1], tile2[2][-1][-1]])
 
 
+def test_mosaic_tiler_Sum():
+    """Test Sum mosaic methods."""
+    tile1, _ = _read_tile(assets[0], x, y, z)
+    tile2, _ = _read_tile(assets[1], x, y, z)
+
+    img, _ = mosaic.mosaic_reader(
+        assets, _read_tile, x, y, z, pixel_selection=defaults.SumMethod()
+    )
+    t, m = img
+    assert t.shape == (3, 256, 256)
+    assert m.shape == (256, 256)
+    # The mask should be fully valid because asset1 covers the whole tile
+    assert img._mask.all()
+    # Overlapping area: 1 + 2 = 3; asset1-only area: 1
+    assert numpy.unique(t[0, img._mask]).tolist() == [1, 3]
+    assert t.dtype == "uint16"
+    assert m.dtype == "uint16"
+    # Sanity-check a specific pixel against the raw tiles
+    assert t[0][-1][-1] == tile1[0][-1][-1] + tile2[0][-1][-1]
+    assert t[1][-1][-1] == tile1[1][-1][-1] + tile2[1][-1][-1]
+    assert t[2][-1][-1] == tile1[2][-1][-1] + tile2[2][-1][-1]
+
+
 def test_threads():
     """Test mosaic tiler."""
     assets = [asset2, asset1, asset1, asset2, asset1, asset2]
@@ -588,6 +611,7 @@ def test_mosaic_point():
         defaults.MeanMethod,
         defaults.MedianMethod,
         defaults.StdevMethod,
+        defaults.SumMethod,
     ],
 )
 def test_mosaic_all_methods(m):
