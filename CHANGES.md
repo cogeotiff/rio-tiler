@@ -14,6 +14,7 @@
 * add: `rio_tiler.experimental.async_stac.AsyncSTACReader`
 * add: `rio_tiler.mosaic.reader.async_mosaic_reader`
 * add: `rio_tiler.mosaic.backend.AsyncBaseBackend`
+* add: `SumMethod` to `rio_tiler.mosaic.methods.defaults`
 
 ## 9.0.6 (2026-04-08)
 
