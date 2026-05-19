@@ -129,7 +129,7 @@ wheels = [
 
 [[package]]
 name = "async-geotiff"
-version = "0.4.0"
+version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "affine" },
@@ -138,9 +138,9 @@ dependencies = [
     { name = "numpy" },
     { name = "pyproj" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/12/03/68a66597ef21b4e59ee284fbe75393fb84df5f11343d63ef6c0248f4db36/async_geotiff-0.4.0.tar.gz", hash = "sha256:2386cc72e1e66cb36fdb296c6ef3100ba4c5e086950f0ce691f1a86d164fda7b", size = 26058, upload-time = "2026-03-30T19:49:49.491Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/3d/09/743f720dfe358281eee9b24d9298226763fce772f85d0f11567a961e6afd/async_geotiff-0.5.0.tar.gz", hash = "sha256:6c51b7c2f6e92083431d81611cd12706178d65f17e204a48fa05566a2d3261cb", size = 26376, upload-time = "2026-05-08T15:47:20.82Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/f3/64/9b88762c3103d2749689ccd013715f03e7a578426973eb4ec24776c05018/async_geotiff-0.4.0-py3-none-any.whl", hash = "sha256:0cf262441775e48f6acabe45706dcf2a0268edcd7f52108c88dc2efb1eb76b2a", size = 33287, upload-time = "2026-03-30T19:49:48.21Z" },
+    { url = "https://files.pythonhosted.org/packages/38/6c/fd651dbc1029352246f7da6fde44787bb97b90ecf8c57373c79b50dc6a0a/async_geotiff-0.5.0-py3-none-any.whl", hash = "sha256:f596e91cb6da75ef28e8edc40d52ea53009e4d1bdc27123eed9d2a31a02adad2", size = 33717, upload-time = "2026-05-08T15:47:19.297Z" },
 ]
 
 [[package]]
@@ -3855,7 +3855,7 @@ performance = [
 
 [package.metadata]
 requires-dist = [
-    { name = "async-geotiff", marker = "extra == 'geotiff'", specifier = ">=0.3,<0.5" },
+    { name = "async-geotiff", marker = "extra == 'geotiff'", specifier = ">=0.3,<0.6" },
     { name = "attrs" },
     { name = "boto3", marker = "extra == 's3'" },
     { name = "cachetools" },
@@ -3879,7 +3879,7 @@ provides-extras = ["geotiff", "s3", "xarray", "zarr"]
 [package.metadata.requires-dev]
 deploy = [{ name = "hatch" }]
 dev = [
-    { name = "async-geotiff", specifier = ">=0.3,<0.5" },
+    { name = "async-geotiff", specifier = ">=0.3,<0.6" },
     { name = "boto3" },
     { name = "h5netcdf" },
     { name = "h5py" },
