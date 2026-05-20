@@ -445,14 +445,14 @@ def test_geoxarray_nodata():
         assert not img.array.mask[0, -1, -1]
 
 
-def test_geoxarray_zarr_nodata():
-    """Add Nodata metadata within a Zarr Array."""
+def test_geoxarray_zarr_fill_value():
+    """Interpret fill_value as Nodata within a Zarr Array."""
     store = zarr.storage.MemoryStore()
     dataset = zarr.create_group(store=store)
     zarrobj = dataset.create_array(
         "data",
-        shape=(100, 100),
-        chunks=(50, 50),
+        shape=(1800, 3600),
+        chunks=(100, 100),
         dtype="float32",
         fill_value=-9999.0,
         dimension_names=("y", "x"),
@@ -484,4 +484,52 @@ def test_geoxarray_zarr_nodata():
     img = geods.preview()
     assert numpy.ma.is_masked(img.array)
     assert img.array.mask[0, 0, 0]
+    assert not img.array.mask[0, -1, -1]
+
+
+def test_geoxarray_zarr_nodata():
+    """Merge both fill_value mask and nodata maske."""
+    store = zarr.storage.MemoryStore()
+    dataset = zarr.create_group(store=store)
+    zarrobj = dataset.create_array(
+        "data",
+        shape=(1800, 3600),
+        chunks=(100, 100),
+        dtype="float32",
+        fill_value=-9999.0,
+        dimension_names=("y", "x"),
+        attributes={
+            "_FillValue": FillValueCoder.encode(-9999.0, numpy.dtype("float32")),
+        },
+    )
+    zarrobj[:] = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1800, 3600)
+    zarrobj[0:50, 0:50] = -9999.0  # Add some nodata
+    zarrobj[50:100, 0:50] = 0.0  # Add secondary nodata value
+
+    zarr.consolidate_metadata(dataset.store)
+
+    ds = xarray.open_dataset(
+        store,  # type: ignore
+        decode_times=False,
+        decode_coords=False,
+        consolidated=True,
+        engine="zarr",
+    )
+
+    xarray_array = ds["data"]
+    geods = GeoArrayReader(
+        input=xarray_array,
+        crs=CRS.from_epsg(4326),
+        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        options={"nodata": 0.0},
+    )
+    # The FillValue is not a `nodata` value per say in Zarr V3 model
+    assert geods._nodata_value is None
+    # use max_size 3600 to return the full array without resampling
+    img = geods.preview(max_size=3600)
+    assert img.array.shape == (1, 1800, 3600)
+    assert numpy.ma.is_masked(img.array)
+    assert img.array.mask[0, 0, 0]
+    assert img.array.mask[0, 50, 0]
+    assert not img.array.mask[0, 100, 0]
     assert not img.array.mask[0, -1, -1]

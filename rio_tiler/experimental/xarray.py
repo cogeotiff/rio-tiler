@@ -680,14 +680,12 @@ class GeoArrayReader(XarrayReader):
 
         row_slice = row_slice or slice(0, self.height)
         col_slice = col_slice or slice(0, self.width)
+        read_height = row_slice.stop - row_slice.start
+        read_width = col_slice.stop - col_slice.start
 
         arr: numpy.ma.MaskedArray
         if len(da.shape) == 2:
             # 2D array: (height, width)
-
-            # Calculate array size in bytes
-            read_height = row_slice.stop - row_slice.start
-            read_width = col_slice.stop - col_slice.start
             nbytes = read_height * read_width * self.input.dtype.itemsize
             if nbytes > MAX_ARRAY_SIZE:
                 raise MaxArraySizeError(
@@ -699,15 +697,10 @@ class GeoArrayReader(XarrayReader):
 
         else:
             # 3D array: (bands, height, width)
-            nbands = da.shape[0]
-
-            # Calculate array size in bytes
-            read_height = row_slice.stop - row_slice.start
-            read_width = col_slice.stop - col_slice.start
-            nbytes = nbands * read_height * read_width * self.input.dtype.itemsize
+            nbytes = da.shape[0] * read_height * read_width * self.input.dtype.itemsize
             if nbytes > MAX_ARRAY_SIZE:
                 raise MaxArraySizeError(
-                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(nbands, read_height, read_width)} in memory."
+                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(da.shape[0], read_height, read_width)} in memory."
                 )
 
             arr = da[:, row_slice, col_slice].to_masked_array()
@@ -722,8 +715,6 @@ class GeoArrayReader(XarrayReader):
             arr.mask |= arr.data == nodata
 
         # Calculate bounds for the read window
-        read_height = row_slice.stop - row_slice.start
-        read_width = col_slice.stop - col_slice.start
         read_transform = self.transform * Affine.translation(
             col_slice.start, row_slice.start
         )
