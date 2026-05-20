@@ -15,6 +15,7 @@
 * add: `rio_tiler.mosaic.reader.async_mosaic_reader`
 * add: `rio_tiler.mosaic.backend.AsyncBaseBackend`
 * add: `SumMethod` to `rio_tiler.mosaic.methods.defaults`
+* add: `rio_tiler.experimental.xarray.GeoArrayReader` reader for geospatial xarray DataArray with Zarr conventions
 
 ## 9.0.6 (2026-04-08)
 
