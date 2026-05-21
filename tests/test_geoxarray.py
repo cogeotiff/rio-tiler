@@ -9,6 +9,7 @@ import xarray
 import zarr
 from affine import Affine
 from rasterio.crs import CRS
+from xarray.backends.zarr import FillValueCoder
 
 from rio_tiler.experimental.xarray import GeoArrayReader
 from rio_tiler.io import XarrayReader
@@ -456,9 +457,9 @@ def zarr_dataset():
         dtype="float32",
         fill_value=-9999.0,
         dimension_names=("y", "x"),
-        # attributes={
-        #     "_FillValue": FillValueCoder.encode(-9999.0, numpy.dtype("float32")),
-        # },
+        attributes={
+            "_FillValue": FillValueCoder.encode(-9999.0, numpy.dtype("float32")),
+        },
     )
     zarrobj[:] = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1800, 3600)
     zarrobj[0:50, 0:50] = -9999.0  # Add some nodata
