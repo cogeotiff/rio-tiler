@@ -9,7 +9,6 @@ import xarray
 import zarr
 from affine import Affine
 from rasterio.crs import CRS
-from xarray.backends.zarr import FillValueCoder
 
 from rio_tiler.experimental.xarray import GeoArrayReader
 from rio_tiler.io import XarrayReader
@@ -445,10 +444,11 @@ def test_geoxarray_nodata():
         assert not img.array.mask[0, -1, -1]
 
 
-def test_geoxarray_zarr_fill_value():
-    """Interpret fill_value as Nodata within a Zarr Array."""
+@pytest.fixture
+def zarr_dataset():
+    """Create Zarr fixture."""
     store = zarr.storage.MemoryStore()
-    dataset = zarr.create_group(store=store)
+    dataset = zarr.create_group(store=store, zarr_format=3)
     zarrobj = dataset.create_array(
         "data",
         shape=(1800, 3600),
@@ -456,20 +456,26 @@ def test_geoxarray_zarr_fill_value():
         dtype="float32",
         fill_value=-9999.0,
         dimension_names=("y", "x"),
-        attributes={
-            "_FillValue": FillValueCoder.encode(-9999.0, numpy.dtype("float32")),
-        },
+        # attributes={
+        #     "_FillValue": FillValueCoder.encode(-9999.0, numpy.dtype("float32")),
+        # },
     )
     zarrobj[:] = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1800, 3600)
     zarrobj[0:50, 0:50] = -9999.0  # Add some nodata
+    zarrobj[50:100, 0:50] = 0.0  # Add secondary nodata value
     zarr.consolidate_metadata(dataset.store)
+    return store
 
-    ds = xarray.open_dataset(
-        store,  # type: ignore
+
+def test_geoxarray_zarr_fill_value(zarr_dataset):
+    """Interpret fill_value as Nodata within a Zarr Array."""
+    ds = xarray.open_zarr(
+        zarr_dataset,
         decode_times=False,
         decode_coords=False,
         consolidated=True,
-        engine="zarr",
+        use_zarr_fill_value_as_mask=True,
+        zarr_format=3,
     )
 
     xarray_array = ds["data"]
@@ -486,37 +492,6 @@ def test_geoxarray_zarr_fill_value():
     assert img.array.mask[0, 0, 0]
     assert not img.array.mask[0, -1, -1]
 
-
-def test_geoxarray_zarr_nodata():
-    """Merge both fill_value mask and nodata maske."""
-    store = zarr.storage.MemoryStore()
-    dataset = zarr.create_group(store=store)
-    zarrobj = dataset.create_array(
-        "data",
-        shape=(1800, 3600),
-        chunks=(100, 100),
-        dtype="float32",
-        fill_value=-9999.0,
-        dimension_names=("y", "x"),
-        attributes={
-            "_FillValue": FillValueCoder.encode(-9999.0, numpy.dtype("float32")),
-        },
-    )
-    zarrobj[:] = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1800, 3600)
-    zarrobj[0:50, 0:50] = -9999.0  # Add some nodata
-    zarrobj[50:100, 0:50] = 0.0  # Add secondary nodata value
-
-    zarr.consolidate_metadata(dataset.store)
-
-    ds = xarray.open_dataset(
-        store,  # type: ignore
-        decode_times=False,
-        decode_coords=False,
-        consolidated=True,
-        engine="zarr",
-    )
-
-    xarray_array = ds["data"]
     geods = GeoArrayReader(
         input=xarray_array,
         crs=CRS.from_epsg(4326),
