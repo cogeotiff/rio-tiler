@@ -3855,7 +3855,7 @@ performance = [
 
 [package.metadata]
 requires-dist = [
-    { name = "async-geotiff", marker = "extra == 'geotiff'", specifier = ">=0.3,<0.6" },
+    { name = "async-geotiff", marker = "extra == 'geotiff'", specifier = ">=0.5,<0.6" },
     { name = "attrs" },
     { name = "boto3", marker = "extra == 's3'" },
     { name = "cachetools" },

@@ -93,7 +93,7 @@ zarr = [
     "obstore",
 ]
 geotiff = [
-    "async-geotiff>=0.3,<0.6",
+    "async-geotiff>=0.5,<0.6",
     "obstore",
 ]
 
