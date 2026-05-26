@@ -14,6 +14,8 @@ from xarray.backends.zarr import FillValueCoder
 from rio_tiler.experimental.xarray import GeoArrayReader
 from rio_tiler.io import XarrayReader
 
+from .conftest import requires_lt314
+
 
 def test_geoxarray_reader():
     """test XarrayReader."""
@@ -468,6 +470,7 @@ def zarr_dataset():
     return store
 
 
+@requires_lt314
 def test_geoxarray_zarr_fill_value(zarr_dataset):
     """Interpret fill_value as Nodata within a Zarr Array."""
     ds = xarray.open_zarr(
