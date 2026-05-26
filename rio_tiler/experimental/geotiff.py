@@ -126,7 +126,7 @@ class Reader(AsyncBaseReader):
             nodata_type = "Nodata"
         elif any(c == ColorInterp.ALPHA for c in self.input.colorinterp):
             nodata_type = "Alpha"
-        elif self.input._mask_ifd:
+        elif self.input.mask_ifd:
             nodata_type = "Mask"
         else:
             nodata_type = "None"
