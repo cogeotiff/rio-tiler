@@ -23,9 +23,6 @@ def test_geoxarray_reader():
     data = xarray.DataArray(
         arr,
         dims=("time", "y", "x"),
-        coords={
-            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
-        },
     )
     data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
 
@@ -33,15 +30,21 @@ def test_geoxarray_reader():
         input=data,
         crs=CRS.from_epsg(4326),
         transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        band_names=["2022-01-01T00:00:00.000000", "2022-01-02T00:00:00.000000"],
     ) as dst:
+        assert dst.band_descriptions == [
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
+        ]
+
         assert dst.crs == CRS.from_epsg(4326)
         assert dst.bounds == (-180.0, -90.0, 180.0, 90.0)
         assert dst.minzoom == dst.maxzoom == 0
         info = dst.info()
         assert info.band_metadata == [("b1", {}), ("b2", {})]
         assert info.band_descriptions == [
-            ("b1", "b1"),
-            ("b2", "b2"),
+            ("b1", "2022-01-01T00:00:00.000000"),
+            ("b2", "2022-01-02T00:00:00.000000"),
         ]
         assert info.height == 1800
         assert info.width == 3600
@@ -227,6 +230,79 @@ def test_geoxarray_reader():
 
         img = dst.feature(feat, width=50, height=45, indexes=1)
         assert img.array.shape == (1, 45, 50)
+
+
+def test_geoxarray_reader_coordinates():
+    """test XarrayReader."""
+    # 3D array with time coordinates
+    arr = numpy.arange(0.0, 3600 * 1800 * 2, dtype="float32").reshape(2, 1800, 3600)
+    data = xarray.DataArray(
+        arr,
+        dims=("time", "y", "x"),
+        coords={
+            "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        },
+    )
+
+    with GeoArrayReader(
+        input=data,
+        crs=CRS.from_epsg(4326),
+        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+    ) as dst:
+        assert dst.band_descriptions == [
+            "2022-01-01T00:00:00.000000",
+            "2022-01-02T00:00:00.000000",
+        ]
+        info = dst.info()
+        assert info.band_descriptions == [
+            ("b1", "2022-01-01T00:00:00.000000"),
+            ("b2", "2022-01-02T00:00:00.000000"),
+        ]
+
+    # 2D array without coordinates
+    arr = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1800, 3600)
+    data = xarray.DataArray(arr, dims=("y", "x"))
+
+    with GeoArrayReader(
+        input=data,
+        crs=CRS.from_epsg(4326),
+        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+    ) as dst:
+        assert dst.band_descriptions == ["b1"]
+        info = dst.info()
+        assert info.band_descriptions == [
+            ("b1", "b1"),
+        ]
+
+    # 2D array with name
+    arr = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1800, 3600)
+    data = xarray.DataArray(arr, dims=("y", "x"), name="data")
+
+    with GeoArrayReader(
+        input=data,
+        crs=CRS.from_epsg(4326),
+        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+    ) as dst:
+        assert dst.band_descriptions == ["data"]
+        info = dst.info()
+        assert info.band_descriptions == [
+            ("b1", "data"),
+        ]
+
+    # 2D array without dims and coordinates
+    arr = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1800, 3600)
+    data = xarray.DataArray(arr)
+
+    with GeoArrayReader(
+        input=data,
+        crs=CRS.from_epsg(4326),
+        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+    ) as dst:
+        assert dst.band_descriptions == ["b1"]
+        info = dst.info()
+        assert info.band_descriptions == [
+            ("b1", "b1"),
+        ]
 
 
 def test_geoxarray_reader_point():

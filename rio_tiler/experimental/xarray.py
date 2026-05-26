@@ -138,7 +138,7 @@ class GeoArrayReader(XarrayReader):
     # List of names for the first dimension (e.g time, bands, etc)
     band_names: list[str] | None = attr.ib(default=None)
 
-    _dims: list = attr.ib(init=False)
+    _dims: list = attr.ib(init=False, factory=list)
 
     @options.default
     def _options_default(self):
@@ -178,24 +178,25 @@ class GeoArrayReader(XarrayReader):
             "CRS is required, either as an argument or in `geo-proj` zarr_conventions"
         )
 
-        self._dims = [
-            d
-            for d in self.input.dims
-            if d not in ["x", "y", "spatial_ref", "crs_wkt", "grid_mapping"]
-        ]
-        assert len(self._dims) in [0, 1], "Can't handle >=4D DataArray"
+        if len(self.input.shape) > 2:
+            self._dims = [
+                d
+                for d in self.input.dims
+                if d not in ["x", "y", "spatial_ref", "crs_wkt", "grid_mapping"]
+            ]
 
         # NOTE: Assume shape of array is (bands, height, width) or (height, width)
         # and get height/width from the last 2 dimensions of the shape.
         shape = attributes.get("spatial:shape", self.input.shape)
         self.height, self.width = shape[-2], shape[-1]
 
+        assert len(self.input.shape) in [2, 3], "Can't handle 1D or >=4D DataArray"
         if len(self.input.shape) == 3:
             self.nbands = self.input.shape[0]
         else:
             self.nbands = 1
 
-        self.bounds = self.input.attrs.get("spatial:bounds")
+        self.bounds = attributes.get("spatial:bounds")
         if not self.bounds:
             self.bounds = array_bounds(self.height, self.width, self.transform)
 
@@ -224,7 +225,25 @@ class GeoArrayReader(XarrayReader):
         if self.band_names:
             return self.band_names
 
-        return [f"b{ix + 1}" for ix in range(self.nbands)]
+        if not self._dims:
+            coords_name = [
+                d
+                for d in self.input.coords
+                if d
+                not in [
+                    self.input.rio.x_dim,
+                    self.input.rio.y_dim,
+                    "spatial_ref",
+                    "crs_wkt",
+                    "grid_mapping",
+                ]
+            ]
+            if coords_name:
+                return [str(self.input.coords[coords_name[0]].data)]
+
+            return [self.input.name or "b1"]  # type: ignore
+
+        return [str(band) for d in self._dims for band in self.input[d].values]
 
     @property
     def minzoom(self):
