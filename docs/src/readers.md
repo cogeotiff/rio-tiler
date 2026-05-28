@@ -410,7 +410,7 @@ STACReader.__mro__
 - **default_assets** (sequence, optional): default assets to use for the reader if nothing else is provided.
 - **reader** (BaseReader, optional): Reader to use to read assets (defaults to rio_tiler.io.rasterio.Reader)
 - **reader_options** (dict, optional): Options to forward to the reader init
-- **fetch_options** (dict, optional): Options to pass to the `httpx.get` or `boto3` when fetching the STAC item
+- **fetch_options** (dict, optional): Options to pass to the `httpx2.get` or `boto3` when fetching the STAC item
 
 #### Properties
 

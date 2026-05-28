@@ -8,6 +8,7 @@
 * change: `rio_tiler.io.xarray.MAX_ARRAY_SIZE` -> `rio_tiler.constant.MAX_ARRAY_SIZE` 
 * change: `async` -> `geotiff` optional-dependencies
 * change: `rio_tiler.io.stac.STAC_ALTERNATE_KEY` -> `rio_tiler.constant.STAC_ALTERNATE_KEY` 
+* change: move from `httpx` to `httpx2`
 * add: `rio_tiler.experimental.zarr.Reader` (async zarr-python reader)
 * add: `rio_tiler.experimental.zarr.GeoZarrReader`  (async zarr-python reader for GeoZAR/EOPF product)
 * add: `rio_tiler.io.base.AsyncMultiBaseReader` abc class
