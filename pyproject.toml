@@ -22,7 +22,7 @@ dynamic = ["version"]
 dependencies = [
     "attrs",
     "cachetools",
-    "httpx",
+    "httpx2",
     "numexpr",
     "numpy",
     "morecantile>=5.0,<8.0",
@@ -57,6 +57,7 @@ dev = [
     "pre-commit",
     "IPython",
     "jupyter",
+    "ipyleaflet",
     "matplotlib",
     "pyinstrument",
 ]

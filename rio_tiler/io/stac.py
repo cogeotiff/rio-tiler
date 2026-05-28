@@ -10,7 +10,7 @@ from typing import Any, TypedDict
 from urllib.parse import urlparse
 
 import attr
-import httpx
+import httpx2 as httpx
 import pystac
 import rasterio
 from affine import Affine
