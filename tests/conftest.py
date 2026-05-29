@@ -1,5 +1,6 @@
 """``pytest`` configuration."""
 
+import sys
 from io import BytesIO
 from typing import Sequence
 
@@ -21,6 +22,10 @@ with rasterio.Env() as env:
 
 requires_webp = pytest.mark.skipif(
     "WEBP" not in drivers.keys(), reason="Only relevant if WEBP drivers is supported"
+)
+
+requires_lt314 = pytest.mark.skipif(
+    sys.version_info >= (3, 14), reason="Requires python3.13 or lower"
 )
 
 
