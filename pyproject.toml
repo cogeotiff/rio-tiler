@@ -22,7 +22,7 @@ dynamic = ["version"]
 dependencies = [
     "attrs",
     "cachetools",
-    "httpx",
+    "httpx2",
     "numexpr",
     "numpy",
     "morecantile>=5.0,<8.0",
@@ -52,11 +52,12 @@ dev = [
     "vsifile>=0.2",
     "zarr~=3.0",
     "obstore",
-    "async-geotiff>=0.3,<0.5",
+    "async-geotiff>=0.3,<0.6",
     "tilebench",
     "pre-commit",
     "IPython",
     "jupyter",
+    "ipyleaflet",
     "matplotlib",
     "pyinstrument",
 ]
@@ -93,7 +94,7 @@ zarr = [
     "obstore",
 ]
 geotiff = [
-    "async-geotiff>=0.3,<0.5",
+    "async-geotiff>=0.5,<0.6",
     "obstore",
 ]
 
