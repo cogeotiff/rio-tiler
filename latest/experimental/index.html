@@ -686,6 +686,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#geoarrayreader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeoArrayReader
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2531,6 +2542,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#geoarrayreader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        GeoArrayReader
+      
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2744,7 +2766,7 @@
 <span class="c1"># Get the preview for a specific variable</span>
 <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;b02&quot;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 
-<span class="n">bounds</span> <span class="o">=</span> 
+<span class="n">bounds</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">)</span>
 <span class="c1"># Get Time image</span>
 <span class="n">tile</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reader</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;b04&quot;</span><span class="p">,</span> <span class="s2">&quot;b03&quot;</span><span class="p">,</span> <span class="s2">&quot;b02&quot;</span><span class="p">))</span>
@@ -2792,6 +2814,62 @@
     <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;indexes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]})</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">statistics</span><span class="p">())</span>                      
     <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span><span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">10664.0</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">3308.9022180896536</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mf">66679.0</span><span class="p">,</span> <span class="nb">sum</span><span class="o">=</span><span class="mf">220634291.0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">2403.0317223160237</span><span class="p">,</span> <span class="n">median</span><span class="o">=</span><span class="mf">2767.0</span><span class="p">,</span> <span class="n">majority</span><span class="o">=</span><span class="mf">441.0</span><span class="p">,</span> <span class="n">minority</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="mf">9456.0</span><span class="p">,</span> <span class="n">histogram</span><span class="o">=</span><span class="p">[[</span><span class="mi">14203</span><span class="p">,</span> <span class="mi">12648</span><span class="p">,</span> <span class="mi">10254</span><span class="p">,</span> <span class="mi">8267</span><span class="p">,</span> <span class="mi">6805</span><span class="p">,</span> <span class="mi">5550</span><span class="p">,</span> <span class="mi">4288</span><span class="p">,</span> <span class="mi">2724</span><span class="p">,</span> <span class="mi">1573</span><span class="p">,</span> <span class="mi">367</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">1070.9</span><span class="p">,</span> <span class="mf">2136.8</span><span class="p">,</span> <span class="mf">3202.7000000000003</span><span class="p">,</span> <span class="mf">4268.6</span><span class="p">,</span> <span class="mf">5334.5</span><span class="p">,</span> <span class="mf">6400.400000000001</span><span class="p">,</span> <span class="mf">7466.300000000001</span><span class="p">,</span> <span class="mf">8532.2</span><span class="p">,</span> <span class="mf">9598.1</span><span class="p">,</span> <span class="mf">10664.0</span><span class="p">]],</span> <span class="n">valid_percent</span><span class="o">=</span><span class="mf">6.36</span><span class="p">,</span> <span class="n">masked_pixels</span><span class="o">=</span><span class="mf">981897.0</span><span class="p">,</span> <span class="n">valid_pixels</span><span class="o">=</span><span class="mf">66679.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">&#39;red_b0&#39;</span><span class="p">,</span> <span class="n">percentile_2</span><span class="o">=</span><span class="mf">294.0</span><span class="p">,</span> <span class="n">percentile_98</span><span class="o">=</span><span class="mf">8826.0</span><span class="p">)}</span>
+</code></pre></div>
+<h2 id="geoarrayreader">GeoArrayReader<a class="headerlink" href="#geoarrayreader" title="Permanent link">&para;</a></h2>
+<p>An experimental <em>Reader</em> built on top the <code>XarrayReader</code> but remove the usage of rioxarray and instead rely on the Geo/Spatial conventions (or user input CRS/Transform) for geospatial operations (e.g coordinates selection). This reader differs from the regular XarrayReader with:</p>
+<div class="codehilite"><pre><span></span><code>- allows`crs` and `transform` input parameters or relies on Zarr Geo/Spatial conventions attributes
+- do not read coordinates arrays
+- allows `band_names` input parameter to specify the 3d dimension names
+</code></pre></div>
+
+<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
+<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.crs</span><span class="w"> </span><span class="kn">import</span> <span class="n">CRS</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">affine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Affine</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoArrayReader</span>
+
+<span class="c1"># Create Obstore Store</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">HTTPStore</span><span class="p">(</span><span class="s2">&quot;https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr&quot;</span><span class="p">)</span>
+<span class="n">zarr_store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+
+<span class="n">ds</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_datatree</span><span class="p">(</span>
+    <span class="n">zarr_store</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
+    <span class="n">decode_times</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="n">create_default_indexes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
+    <span class="n">consolidated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
+    <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">,</span>
+<span class="p">)</span>
+<span class="n">group</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;/measurements/reflectance/r720m&quot;</span><span class="p">]</span>
+
+<span class="n">crs</span> <span class="o">=</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;proj:code&quot;</span><span class="p">])</span>
+<span class="n">transform</span> <span class="o">=</span> <span class="n">Affine</span><span class="p">(</span><span class="o">*</span><span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">&quot;spatial:transform&quot;</span><span class="p">])</span>
+
+<span class="c1"># Select an array (&quot;b02&quot;)</span>
+<span class="n">dataarray</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">&quot;b02&quot;</span><span class="p">]</span>
+
+<span class="c1"># Initiate the reader</span>
+<span class="n">reader</span> <span class="o">=</span> <span class="n">GeoArrayReader</span><span class="p">(</span>
+    <span class="nb">input</span><span class="o">=</span><span class="n">dataarray</span><span class="p">,</span>
+    <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
+    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
+<span class="p">)</span>
+
+<span class="c1"># The `/measurements/reflectance` group has spatial/geo conventions</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mf">600000.0</span><span class="p">,</span> <span class="mf">7890600.0</span><span class="p">,</span> <span class="mf">709440.0</span><span class="p">,</span> <span class="mf">8000040.0</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">32625</span><span class="p">)</span>
+
+<span class="c1"># info</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
+<span class="o">&gt;&gt;</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">600000.0</span><span class="p">,</span> <span class="mf">7890600.0</span><span class="p">,</span> <span class="mf">709440.0</span><span class="p">,</span> <span class="mf">8000040.0</span><span class="p">)</span> <span class="n">crs</span><span class="o">=</span><span class="s1">&#39;http://www.opengis.net/def/crs/EPSG/0/32625&#39;</span> <span class="n">band_metadata</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span> <span class="p">{})]</span> <span class="n">band_descriptions</span><span class="o">=</span><span class="p">[(</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span> <span class="s1">&#39;b1&#39;</span><span class="p">)]</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">&#39;float32&#39;</span> <span class="n">nodata_type</span><span class="o">=</span><span class="s1">&#39;None&#39;</span> <span class="n">colorinterp</span><span class="o">=</span><span class="kc">None</span> <span class="n">scales</span><span class="o">=</span><span class="kc">None</span> <span class="n">offsets</span><span class="o">=</span><span class="kc">None</span> <span class="n">colormap</span><span class="o">=</span><span class="kc">None</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;b02&#39;</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span> <span class="n">width</span><span class="o">=</span><span class="mi">152</span> <span class="n">height</span><span class="o">=</span><span class="mi">152</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">)</span> <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;_eopf_attrs&#39;</span><span class="p">:</span> <span class="p">{</span><span class="s1">&#39;add_offset&#39;</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="s1">&#39;coordinates&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="s1">&#39;dimensions&#39;</span><span class="p">:</span> <span class="p">[</span><span class="s1">&#39;y&#39;</span><span class="p">,</span> <span class="s1">&#39;x&#39;</span><span class="p">],</span> <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">,</span> <span class="s1">&#39;eopf_is_masked&#39;</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">&#39;eopf_target_dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;f8&#39;</span><span class="p">,</span> <span class="s1">&#39;fill_value&#39;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;BOA reflectance from MSI acquisition at spectral band 02 490 nm&#39;</span><span class="p">,</span> <span class="s1">&#39;scale_factor&#39;</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="s1">&#39;short_name&#39;</span><span class="p">:</span> <span class="s1">&#39;b02_60m&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;digital_counts&#39;</span><span class="p">,</span> <span class="s1">&#39;valid_max&#39;</span><span class="p">:</span> <span class="mi">65535</span><span class="p">,</span> <span class="s1">&#39;valid_min&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;&lt;u2&#39;</span><span class="p">,</span> <span class="s1">&#39;long_name&#39;</span><span class="p">:</span> <span class="s1">&#39;BOA reflectance from MSI acquisition at spectral band 02 490 nm&#39;</span><span class="p">,</span> <span class="s1">&#39;units&#39;</span><span class="p">:</span> <span class="s1">&#39;digital_counts&#39;</span><span class="p">}</span>
+
+<span class="c1"># Get the preview for a specific variable</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
 </code></pre></div>
 
 
