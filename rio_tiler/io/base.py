@@ -26,6 +26,7 @@ from rio_tiler.errors import (
     MissingBands,
     TileOutsideBounds,
 )
+from rio_tiler.expression import validate_expression
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import AssetInfo, AssetType, AssetWithOptions, BBox, Indexes
 from rio_tiler.utils import (
@@ -1678,8 +1679,7 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
     def parse_expression(self, expression: str) -> tuple:
         """Parse rio-tiler band math expression."""
-        if "eval(" in expression:
-            raise InvalidExpression("Invalid expression.")
+        expression = validate_expression(expression)
 
         input_bands = "|".join([rf"\b{band}\b" for band in self.bands])
         _re = re.compile(input_bands.replace("\\\\", "\\"))
