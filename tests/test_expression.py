@@ -169,3 +169,15 @@ def test_apply_expression():
         ["where((b1==1) | (b1 > 0.5),1,0)", "where(b2 > 5,1,0)"], ["b1", "b2"], data
     )
     assert d.shape == (2, 10, 10)
+
+
+def test_parse_expression():
+    """test parsing rio-tiler expression."""
+    assert sorted(parse_expression("b1*b11+b3;b1*b2+B4")) == [1, 2, 3, 4, 11]
+    assert sorted(parse_expression("b1*b11+b3;b1*b2+B4", cast=False)) == [
+        "1",
+        "11",
+        "2",
+        "3",
+        "4",
+    ]
