@@ -15,6 +15,10 @@ on:
       - 'rio_tiler/**.py'
       - .github/workflows/deploy_mkdocs.yml
 
+concurrency:
+  group: docs-gh-pages
+  cancel-in-progress: false
+
 jobs:
   build:
     name: Deploy docs
