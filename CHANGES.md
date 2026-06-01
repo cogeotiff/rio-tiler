@@ -1,6 +1,8 @@
 
 # Unreleased
 
+## 9.1.0 (2026-06-01)
+
 * change: `rio_tiler.experimental.zarr.ZarrReader` -> `rio_tiler.experimental._zarr.ZarrReader` 
 * change: `rio_tiler.experimental._async` -> `rio_tiler.experimental.geotiff` 
 * change: `rio_tiler.experimental._async.AsyncBaseReader` -> `rio_tiler.io.base.AsyncBaseReader`
