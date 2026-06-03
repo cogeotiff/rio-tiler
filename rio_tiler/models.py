@@ -996,9 +996,9 @@ class ImageData:
         )
         cover_array = cover_array.reshape(
             (self.height, cover_scale, self.width, cover_scale)
-        ).astype("float32")
+        )
 
-        return cover_array.sum(-1).sum(1) / (cover_scale**2)
+        return cover_array.sum(axis=(1, 3), dtype="float32") / (cover_scale**2)
 
     def reproject(
         self,
