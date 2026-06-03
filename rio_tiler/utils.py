@@ -669,10 +669,10 @@ def mapzen_elevation_rgb(data: numpy.ndarray) -> numpy.ndarray:
 
     """
     data = numpy.clip(data + 32768.0, 0.0, 65535.0)
-    r = data / 256
-    g = data % 256
-    b = (data * 256) % 256
-    return numpy.stack([r, g, b]).astype(numpy.uint8)
+    r = (data / 256).astype(numpy.uint8)
+    g = (data % 256).astype(numpy.uint8)
+    b = ((data * 256) % 256).astype(numpy.uint8)
+    return numpy.stack([r, g, b])
 
 
 def pansharpening_brovey(
@@ -696,7 +696,9 @@ def pansharpening_brovey(
 
     with numpy.errstate(invalid="ignore", divide="ignore"):
         ratio = _calculateRatio(rgb, pan, weight)
-        return numpy.clip(ratio * rgb, 0, numpy.iinfo(pan_dtype).max).astype(pan_dtype)
+        result = ratio * rgb
+        numpy.clip(result, 0, numpy.iinfo(pan_dtype).max, out=result)
+        return result.astype(pan_dtype)
 
 
 def _convert_to_raster_space(

@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.1.1 (2026-06-03)
+
+* fix: reduce memory usage in `ImageData.get_coverage_array` method
+
 ## 9.1.0 (2026-06-01)
 
 * change: `rio_tiler.experimental.zarr.ZarrReader` -> `rio_tiler.experimental._zarr.ZarrReader` 
