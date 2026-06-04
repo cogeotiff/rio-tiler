@@ -131,6 +131,22 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * add Mosaic Backend abstract base class
 * update morecantile requirements to `>=5.0,<8.0`
 
+## 7.9.6 (2026-06-04)
+
+* fix: better expression validation [backported from 9.1]
+
+## 7.9.5 (2026-03-24)
+
+* rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum [backported from 9.0.4]
+
+# 7.9.4 (2026-03-19)
+
+* fix: check for malicious eval in expression [backported from 9.0.2/9.0.3]
+
+# 7.9.3 (2026-02-12)
+
+* add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable  [backported from 8.0]
+
 # 7.9.2 (2025-10-09)
 
 * fix: bad code logic in XarrayReader
