@@ -234,6 +234,10 @@
         assert img.band_descriptions == ["Green*2"]
     ```
 
+## 8.0.9 (2026-06-04)
+
+* fix: better expression validation [backported from 9.1]
+
 ## 8.0.8 (2026-03-24)
 
 * rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum [backported from 9.0.4]
