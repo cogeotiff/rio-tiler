@@ -2461,6 +2461,7 @@
 <li>add: <code>rio_tiler.mosaic.backend.AsyncBaseBackend</code></li>
 <li>add: <code>SumMethod</code> to <code>rio_tiler.mosaic.methods.defaults</code></li>
 <li>add: <code>rio_tiler.experimental.xarray.GeoArrayReader</code> reader for geospatial xarray DataArray with Zarr conventions</li>
+<li>fix: better expression validation</li>
 </ul>
 <h2 id="906-2026-04-08">9.0.6 (2026-04-08)<a class="headerlink" href="#906-2026-04-08" title="Permanent link">&para;</a></h2>
 <ul>
@@ -2672,6 +2673,10 @@
 </code></pre></div>
 </li>
 </ul>
+<h2 id="808-2026-03-24">8.0.8 (2026-03-24)<a class="headerlink" href="#808-2026-03-24" title="Permanent link">&para;</a></h2>
+<ul>
+<li>rename <code>lastbandhight</code> -&gt; <code>lastbandhigh</code> value in <code>rio_tiler.mosaic.methods.PixelSelectionMethod</code> enum [backported from 9.0.4]</li>
+</ul>
 <h2 id="807-2026-03-19">8.0.7 (2026-03-19)<a class="headerlink" href="#807-2026-03-19" title="Permanent link">&para;</a></h2>
 <ul>
 <li>fix: add missing expression check in ImageData model and MultiBaseReader</li>
@@ -2808,6 +2813,18 @@
 <li>add upper memory limit for Xarray dataset. Controled with <code>RIO_TILER_MAX_ARRAY_SIZE</code> env variable.</li>
 <li>add Mosaic Backend abstract base class</li>
 <li>update morecantile requirements to <code>&gt;=5.0,&lt;8.0</code></li>
+</ul>
+<h2 id="796-2026-06-04">7.9.6 (2026-06-04)<a class="headerlink" href="#796-2026-06-04" title="Permanent link">&para;</a></h2>
+<ul>
+<li>fix: better expression validation [backported from 9.1]</li>
+</ul>
+<h2 id="795-2026-03-24">7.9.5 (2026-03-24)<a class="headerlink" href="#795-2026-03-24" title="Permanent link">&para;</a></h2>
+<ul>
+<li>rename <code>lastbandhight</code> -&gt; <code>lastbandhigh</code> value in <code>rio_tiler.mosaic.methods.PixelSelectionMethod</code> enum [backported from 9.0.4]</li>
+</ul>
+<h1 id="794-2026-03-19">7.9.4 (2026-03-19)<a class="headerlink" href="#794-2026-03-19" title="Permanent link">&para;</a></h1>
+<ul>
+<li>fix: check for malicious eval in expression [backported from 9.0.2/9.0.3]</li>
 </ul>
 <h1 id="793-2026-02-12">7.9.3 (2026-02-12)<a class="headerlink" href="#793-2026-02-12" title="Permanent link">&para;</a></h1>
 <ul>
