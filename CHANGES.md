@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 7.9.6 (2026-06-04)
+
+* fix: better expression validation [backported from 9.1]
+
 ## 7.9.5 (2026-03-24)
 
 * rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum [backported from 9.0.4]
