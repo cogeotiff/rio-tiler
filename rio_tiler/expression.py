@@ -1,12 +1,54 @@
 """rio-tiler.expression: Parse and Apply expression."""
 
+import ast
 import re
 from collections.abc import Sequence
 
 import numexpr
 import numpy
+from numexpr.expressions import functions as _ALLOWED_FUNCTIONS
 
 from rio_tiler.errors import InvalidExpression
+
+# fmt: off
+_ALLOWED_NODES = (
+    ast.Expression,
+    ast.BinOp,
+    ast.UnaryOp,
+    ast.BoolOp,
+    ast.Compare,
+    ast.IfExp,
+    ast.Constant,
+    ast.Name,
+    ast.Call,
+    ast.Load,
+    ast.Add, ast.Sub, ast.Mult, ast.Div, ast.Pow, ast.Mod, ast.FloorDiv,
+    ast.USub, ast.UAdd, ast.Not,
+    ast.And, ast.Or,
+    ast.Eq, ast.NotEq, ast.Lt, ast.LtE, ast.Gt, ast.GtE,
+    ast.BitAnd, ast.BitOr, ast.BitXor, ast.Invert,
+)
+# fmt: on
+
+
+def validate_expression(expr: str) -> str:
+    """Reject invalid/malicious expressions."""
+    for block in get_expression_blocks(expr):
+        try:
+            tree = ast.parse(block, mode="eval")
+        except SyntaxError as e:
+            raise InvalidExpression(f"Invalid expression syntax: {e}") from e
+
+        for node in ast.walk(tree):
+            if not isinstance(node, _ALLOWED_NODES):
+                raise InvalidExpression(f"disallowed expression: {type(node).__name__}")
+            if isinstance(node, ast.Call):
+                if not isinstance(node.func, ast.Name):
+                    raise InvalidExpression("disallowed expression: indirect call")
+                if node.func.id not in _ALLOWED_FUNCTIONS:
+                    raise InvalidExpression(f"disallowed function: {node.func.id!r}")
+
+    return expr
 
 
 def parse_expression(expression: str, cast: bool = True) -> tuple:
@@ -27,8 +69,7 @@ def parse_expression(expression: str, cast: bool = True) -> tuple:
             ('1', '2')
 
     """
-    if "eval(" in expression:
-        raise InvalidExpression("Invalid expression.")
+    expression = validate_expression(expression)
 
     bands = set(re.findall(r"\bb(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE))
     output_bands = tuple(map(int, bands)) if cast else tuple(bands)
