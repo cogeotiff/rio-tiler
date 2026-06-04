@@ -23,6 +23,7 @@
 * add: `rio_tiler.mosaic.backend.AsyncBaseBackend`
 * add: `SumMethod` to `rio_tiler.mosaic.methods.defaults`
 * add: `rio_tiler.experimental.xarray.GeoArrayReader` reader for geospatial xarray DataArray with Zarr conventions
+* fix: better expression validation
 
 ## 9.0.6 (2026-04-08)
 
@@ -233,6 +234,10 @@
         assert img.band_descriptions == ["Green*2"]
     ```
 
+## 8.0.8 (2026-03-24)
+
+* rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum [backported from 9.0.4]
+
 ## 8.0.7 (2026-03-19)
 
 * fix: add missing expression check in ImageData model and MultiBaseReader
@@ -358,6 +363,18 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 * add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable.
 * add Mosaic Backend abstract base class
 * update morecantile requirements to `>=5.0,<8.0`
+
+## 7.9.6 (2026-06-04)
+
+* fix: better expression validation [backported from 9.1]
+
+## 7.9.5 (2026-03-24)
+
+* rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum [backported from 9.0.4]
+
+# 7.9.4 (2026-03-19)
+
+* fix: check for malicious eval in expression [backported from 9.0.2/9.0.3]
 
 # 7.9.3 (2026-02-12)
 
