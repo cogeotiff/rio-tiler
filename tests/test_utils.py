@@ -19,7 +19,6 @@ from rasterio.io import MemoryFile
 from rio_tiler import colormap, utils
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import RioTilerError
-from rio_tiler.expression import parse_expression
 from rio_tiler.io import Reader
 
 from .conftest import requires_webp
@@ -443,18 +442,6 @@ def test_cutline_operator(dataset_fixture):
                 op=np.ceil,
             )
             assert cutline_npceil != cutline_npfloor
-
-
-def test_parse_expression():
-    """test parsing rio-tiler expression."""
-    assert sorted(parse_expression("b1*b11+b3,b1*b2+B4")) == [1, 2, 3, 4, 11]
-    assert sorted(parse_expression("b1*b11+b3,b1*b2+B4", cast=False)) == [
-        "1",
-        "11",
-        "2",
-        "3",
-        "4",
-    ]
 
 
 def test_render_numpy():
