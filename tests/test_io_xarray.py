@@ -48,7 +48,8 @@ def test_xarray_reader():
             "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    minv, maxv = float(arr.min()), float(arr.max())
+    data.attrs.update({"valid_min": minv, "valid_max": maxv})
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
@@ -66,6 +67,7 @@ def test_xarray_reader():
         assert info.width == 35
         assert info.count == 2
         assert info.attrs
+        assert info.minmax == [(minv, maxv), (minv, maxv)]
 
         stats = dst.statistics()
         assert list(stats) == [
@@ -313,8 +315,8 @@ def test_xarray_reader():
     )
     data.attrs.update(
         {
-            "valid_min": numpy.int16(0),
-            "valid_max": numpy.int8(10),
+            "valid_min": 0,
+            "valid_max": 10,
             "valid_range": numpy.array([arr.min(), arr.max()]),
         }
     )
@@ -346,7 +348,7 @@ def test_xarray_reader_external_nodata():
         },
     )
 
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
 
     data.rio.write_crs("epsg:4326", inplace=True)
     assert data.rio.nodata is None
@@ -510,7 +512,7 @@ def test_xarray_reader_resampling():
             "time": [datetime(2022, 1, 1)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
 
     data.rio.write_crs("epsg:4326", inplace=True)
 
@@ -563,7 +565,7 @@ def test_xarray_reader_no_crs():
             "time": [datetime(2022, 1, 1)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
     with pytest.raises(MissingCRS):
         with XarrayReader(data):
             pass
@@ -640,7 +642,7 @@ def test_xarray_reader_no_dims():
             "y": numpy.arange(-80, 85, 5),
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
@@ -785,7 +787,7 @@ def test_xarray_reader_Y_axis():
             "time": [datetime(2022, 1, 1)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
     data.rio.write_crs("epsg:4326", inplace=True)
 
     # make sure the data is NOT inverted
@@ -900,7 +902,7 @@ def test_xarray_partial_read():
             "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
         # Tests for auto_expand
@@ -961,7 +963,7 @@ def test_titiler_multidi_issue102():
             "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
@@ -1003,7 +1005,7 @@ def test_max_pixels():
             "time": [datetime(2022, 1, 1), datetime(2022, 1, 2), datetime(2022, 1, 3)],
         },
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
 
     data.rio.write_crs("epsg:4326", inplace=True)
 
@@ -1035,7 +1037,7 @@ def test_xarray_reader_nodata_option():
         },
     )
 
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    data.attrs.update({"valid_min": float(arr.min()), "valid_max": float(arr.max())})
 
     data.rio.write_crs("epsg:4326", inplace=True)
     assert data.rio.nodata is None

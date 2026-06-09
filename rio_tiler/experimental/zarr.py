@@ -251,6 +251,10 @@ class Reader(AsyncBaseReader):
             },
         }
 
+        minv, maxv = attrs.get("valid_min"), attrs.get("valid_max")
+        if minv is not None and maxv is not None:
+            meta["minmax"] = list(((minv, maxv),) * self.nbands)
+
         if nodata is not None:
             meta.update({"nodata_value": nodata.item()})
 

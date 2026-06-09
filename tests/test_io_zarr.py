@@ -34,11 +34,13 @@ def test_dataset_reader_variable():
             ("b1", "2022-01-01T00:00:00.000000000"),
             ("b2", "2023-01-01T00:00:00.000000000"),
         ]
+        assert info.minmax == [(0.0, 1000.0), (0.0, 1000.0)]
 
         info = ds.info(variable="dataset", sel=["time=2022-01-01T00:00:00.000000000"])
         assert info.band_descriptions == [
             ("b1", "2022-01-01T00:00:00.000000000"),
         ]
+        assert info.minmax == [(0.0, 1000.0)]
 
     with ZarrReader(ZARR_3D) as ds:
         stats = ds.statistics(variable="dataset")

@@ -286,6 +286,8 @@ class GeoArrayReader(XarrayReader):
             ],
             "dtype": str(self.input.dtype),
             "nodata_type": nodata_type,
+            # additional info (not in default model)
+            "driver": "Xarray",
             "name": self.input.name,
             "count": self.nbands,
             "width": self.width,
@@ -296,6 +298,9 @@ class GeoArrayReader(XarrayReader):
                 for k, v in self.input.attrs.items()
             },
         }
+        minv, maxv = self.input.attrs.get("valid_min"), self.input.attrs.get("valid_max")
+        if minv is not None and maxv is not None:
+            meta["minmax"] = list(((minv, maxv),) * self.nbands)
 
         return Info.model_validate(meta)
 

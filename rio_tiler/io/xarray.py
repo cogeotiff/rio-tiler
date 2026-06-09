@@ -195,6 +195,8 @@ class XarrayReader(BaseReader):
             ],
             "dtype": str(self.input.dtype),
             "nodata_type": nodata_type,
+            # additional info (not in default model)
+            "driver": "RioXarray",
             "name": self.input.name,
             "count": self.input.rio.count,
             "width": self.input.rio.width,
@@ -206,7 +208,11 @@ class XarrayReader(BaseReader):
             },
         }
 
-        return Info(**meta)
+        minv, maxv = self.input.attrs.get("valid_min"), self.input.attrs.get("valid_max")
+        if minv is not None and maxv is not None:
+            meta["minmax"] = list(((minv, maxv),) * self.input.rio.count)
+
+        return Info.model_validate(meta)
 
     def _sel_indexes(
         self,

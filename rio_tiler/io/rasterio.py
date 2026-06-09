@@ -210,6 +210,18 @@ class Reader(BaseReader):
         if nodata_type == "Nodata":
             meta.update({"nodata_value": self.options.get("nodata", self.dataset.nodata)})
 
+        stats = []
+        for _, m in meta["band_metadata"]:
+            if isinstance(m, dict) and (
+                m.get("STATISTICS_MINIMUM") is not None
+                and m.get("STATISTICS_MAXIMUM") is not None
+            ):
+                stat_min = float(m["STATISTICS_MINIMUM"])
+                stat_max = float(m["STATISTICS_MAXIMUM"])
+                stats.append((stat_min, stat_max))
+        if stats:
+            meta.update({"minmax": stats})
+
         return Info(**meta)
 
     def statistics(
