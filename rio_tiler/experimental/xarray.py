@@ -287,7 +287,6 @@ class GeoArrayReader(XarrayReader):
             "dtype": str(self.input.dtype),
             "nodata_type": nodata_type,
             # additional info (not in default model)
-            "driver": "Xarray",
             "name": self.input.name,
             "count": self.nbands,
             "width": self.width,

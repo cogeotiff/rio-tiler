@@ -196,7 +196,6 @@ class XarrayReader(BaseReader):
             "dtype": str(self.input.dtype),
             "nodata_type": nodata_type,
             # additional info (not in default model)
-            "driver": "RioXarray",
             "name": self.input.name,
             "count": self.input.rio.count,
             "width": self.input.rio.width,

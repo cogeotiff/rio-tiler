@@ -240,7 +240,7 @@ class Reader(AsyncBaseReader):
             "nodata_type": nodata_type,
             "colorinterp": None,
             # additional info (not in default model)
-            "driver": "Zarr-Python",
+            "driver": "Zarr",
             "count": self.nbands,
             "width": self.width,
             "height": self.height,
