@@ -1568,7 +1568,7 @@ class GeoZarrReader(AsyncBaseReader):
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
             # additional info (not in default model)
-            "driver": "Zarr-Python",
+            "driver": "GeoZarr",
             "variables": availables_variables,
             "attributes": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)

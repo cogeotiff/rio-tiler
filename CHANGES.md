@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.2.1 (2026-06-12)
+
+* fix: `GeoZarrReader.info()` returns `GeoZarr` driver instead of `Zarr-Python` driver
+
 ## 9.2.0 (2026-06-12)
 
 * add: `minmax` attribute in `info()` response to provide dataset's minimum and maximum values

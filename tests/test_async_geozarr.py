@@ -143,7 +143,7 @@ async def test_geozarr_reader():
     assert geozarrds.maxzoom == 14
 
     info = await geozarrds.info()
-    assert info.driver == "Zarr-Python"
+    assert info.driver == "GeoZarr"
     assert info.variables == ["b01", "b02"]
 
     vars = await geozarrds.list_variables()
@@ -260,7 +260,7 @@ async def test_geozarr_root():
     assert geozarrds.maxzoom == 24
 
     info = await geozarrds.info()
-    assert info.driver == "Zarr-Python"
+    assert info.driver == "GeoZarr"
     assert info.variables == ["data:b01", "data:b02"]
 
     vars = await geozarrds.list_variables()
@@ -372,7 +372,7 @@ async def test_geozarr_root_with_arrays():
     assert geozarrds.maxzoom == 14
 
     info = await geozarrds.info()
-    assert info.driver == "Zarr-Python"
+    assert info.driver == "GeoZarr"
     assert info.variables == ["b01", "b02"]
 
     vars = await geozarrds.list_variables()
