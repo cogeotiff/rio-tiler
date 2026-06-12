@@ -126,6 +126,7 @@ def test_info_valid():
         band_meta = meta.band_metadata[0]
         assert band_meta[0] == "b1"
         assert "STATISTICS_MAXIMUM" in band_meta[1]
+        assert meta.minmax == [(-894.0, 13413.0)]
 
     with Reader(COG_ALPHA) as src:
         meta = src.info()

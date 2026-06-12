@@ -550,3 +550,20 @@ async def test_async_reader_valid():
         }
         img = await src.feature(outside_mask_feature, max_size=1024)
         assert not img._mask.all()
+
+
+@pytest.mark.asyncio
+async def test_async_reader_info_minmax():
+    """Read preview."""
+    geotiff = await GeoTIFF.open("cog_tags.tif", store=store)
+    async with GeoTIFFReader(geotiff) as src:
+        meta = await src.info()
+        assert meta.crs
+        assert meta.band_descriptions
+        assert meta.dtype == "int16"
+        assert meta.colorinterp == ["GRAY"]
+        assert meta.nodata_type == "Nodata"
+        assert meta.scales
+        assert meta.offsets
+        assert meta.band_metadata
+        assert meta.minmax == [(-894.0, 13413.0)]
