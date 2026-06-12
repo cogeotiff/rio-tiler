@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.2.0 (2026-06-12)
+
+* add: `minmax` attribute in `info()` response to provide dataset's minimum and maximum values
+
 ## 9.1.1 (2026-06-03)
 
 * fix: reduce memory usage in `ImageData.get_coverage_array` method

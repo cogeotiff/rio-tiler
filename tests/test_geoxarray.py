@@ -24,7 +24,8 @@ def test_geoxarray_reader():
         arr,
         dims=("time", "y", "x"),
     )
-    data.attrs.update({"valid_min": arr.min(), "valid_max": arr.max()})
+    minv, maxv = float(arr.min()), float(arr.max())
+    data.attrs.update({"valid_min": minv, "valid_max": maxv})
 
     with GeoArrayReader(
         input=data,
@@ -51,6 +52,7 @@ def test_geoxarray_reader():
         assert info.count == 2
         assert info.attrs
         assert info.dimensions == ("time", "y", "x")
+        assert info.minmax == [(minv, maxv), (minv, maxv)]
 
     with GeoArrayReader(
         input=data,
