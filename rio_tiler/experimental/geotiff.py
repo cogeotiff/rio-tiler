@@ -163,6 +163,14 @@ class Reader(AsyncBaseReader):
         if nodata_type == "Nodata":
             meta.update({"nodata_value": self.input.nodata})
 
+        stats = []
+        band_stats = self.input.stored_stats or {}
+        for _, m in band_stats.items():
+            stats.append((m.min, m.max))
+
+        if stats:
+            meta.update({"minmax": stats})
+
         return Info.model_validate(meta)
 
     async def statistics(

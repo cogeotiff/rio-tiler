@@ -240,7 +240,7 @@ class Reader(AsyncBaseReader):
             "nodata_type": nodata_type,
             "colorinterp": None,
             # additional info (not in default model)
-            "driver": "Zarr-Python",
+            "driver": "Zarr",
             "count": self.nbands,
             "width": self.width,
             "height": self.height,
@@ -250,6 +250,10 @@ class Reader(AsyncBaseReader):
                 for k, v in attrs.items()
             },
         }
+
+        minv, maxv = attrs.get("valid_min"), attrs.get("valid_max")
+        if minv is not None and maxv is not None:
+            meta["minmax"] = list(((minv, maxv),) * self.nbands)
 
         if nodata is not None:
             meta.update({"nodata_value": nodata.item()})
