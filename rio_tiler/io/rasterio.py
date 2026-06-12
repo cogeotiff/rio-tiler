@@ -222,7 +222,7 @@ class Reader(BaseReader):
         if stats:
             meta.update({"minmax": stats})
 
-        return Info(**meta)
+        return Info.model_validate(meta)
 
     def statistics(
         self,
