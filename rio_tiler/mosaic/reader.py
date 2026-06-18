@@ -379,7 +379,7 @@ async def async_mosaic_reader(  # noqa: C901
             pixel_selection.feed(
                 numpy.ma.MaskedArray(
                     resize_array(img.array.data, h, w),
-                    mask=resize_array(img.array.mask * 1, h, w).astype("bool"),
+                    mask=resize_array(img.array.mask * 1, h, w).astype("bool"),  # type: ignore
                 )
             )
 
