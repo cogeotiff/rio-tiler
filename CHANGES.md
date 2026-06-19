@@ -1,6 +1,11 @@
 
 # Unreleased
 
+## 9.2.2 (2026-06-18)
+
+* fix: improve performance in `mosaic.async_mosaic_reader`
+* change: deprecate `chunk_size` parameter in `mosaic.async_mosaic_reader` function
+
 ## 9.2.1 (2026-06-12)
 
 * fix: `GeoZarrReader.info()` returns `GeoZarr` driver instead of `Zarr-Python` driver
