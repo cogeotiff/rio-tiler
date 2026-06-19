@@ -1,7 +1,7 @@
 
 # Unreleased
 
-## 9.2.2 (2026-06-18)
+## 9.3.0 (2026-06-19)
 
 * fix: improve performance in `mosaic.async_mosaic_reader`
 * change: deprecate `chunk_size` parameter in `mosaic.async_mosaic_reader` function
