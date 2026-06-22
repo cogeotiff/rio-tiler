@@ -1,6 +1,54 @@
 
 # Unreleased
 
+## Unreleased 
+
+* change: `_variables` attribute in `rio_tiler.experimental.zarr.GeoZarrReader` to be a list of dict instead of a list of string
+    
+    ```python
+    # before
+    with GeoZarrReader(input={zarr.AsyncGroup}) as src:
+        print(src._variables)
+        >> ["data:b1", "data:b2", "data:b3"]
+
+        await src.info()
+        >> {
+            "bounds": ...
+            "variables": ["data:b1", "data:b2", "data:b3"]
+        }
+
+    # now
+    with GeoZarrReader(input={zarr.AsyncGroup}) as src:
+        print(src._variables)
+        >> [
+            {"name": "b1", "group": "data", "long_name": "data:b1", "multiscale": False, "nbands": 1},
+            {"name": "b2", "group": "data", "long_name": "data:b2", "multiscale": False, "nbands": 1},
+            {"name": "b3", "group": "data", "long_name": "data:b3", "multiscale": False, "nbands": 1}
+        ]
+
+        await src.info()
+        >> {
+            "bounds": ...
+            "variables": [
+                {"name": "b1", "group": "data", "long_name": "data:b1", "multiscale": False, "nbands": 1},
+                {"name": "b2", "group": "data", "long_name": "data:b2", "multiscale": False, "nbands": 1},
+                {"name": "b3", "group": "data", "long_name": "data:b3", "multiscale": False, "nbands": 1}
+            ]
+        }
+    ```
+
+* change: change input for `rio_tiler.experimental.zarr.get_group_metadata` to accept no input `group` to get the metadata for the root group.
+
+    ```python
+    # before
+    with GeoZarrReader(input={zarr.AsyncGroup}) as src:
+        await src.get_group_metadata("root")
+
+    # now
+    with GeoZarrReader(input={zarr.AsyncGroup}) as src:
+        await src.get_group_metadata()
+    ```
+
 ## 9.3.0 (2026-06-19)
 
 * fix: improve performance in `mosaic.async_mosaic_reader`
