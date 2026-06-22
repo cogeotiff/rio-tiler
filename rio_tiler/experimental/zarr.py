@@ -1055,7 +1055,7 @@ class GeoZarrInfo(Bounds):
     """GeoZarr Info."""
 
     driver: str
-    variables: list[str]
+    variables: list[dict[str, Any]]
     attributes: dict[str, Any]
 
 
@@ -1087,7 +1087,9 @@ class GeoZarrReader(AsyncBaseReader):
 
     # list of availables the groups with variables (used for cache)
     _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
-    _variables: list[str] = attr.ib(init=False, default=None)
+    _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
+
+    _group_var_sep: str = ":"
 
     async def __aenter__(self):
         """Support using with Context Managers."""
@@ -1225,11 +1227,11 @@ class GeoZarrReader(AsyncBaseReader):
 
         return self.tms.maxzoom
 
-    def parse_variable(self, variable: str) -> tuple[str, str, Any | None]:
+    def parse_variable(self, variable: str) -> tuple[str | None, str, Any | None]:
         """Parse variable name into group, variable and options."""
-        group_name = "root"
-        if ":" in variable:
-            group_name, variable = variable.split(":")[0:2]
+        group_name: str | None = None
+        if self._group_var_sep in variable:
+            group_name, variable = variable.split(self._group_var_sep)[0:2]
 
         return group_name, variable, None
 
@@ -1342,52 +1344,81 @@ class GeoZarrReader(AsyncBaseReader):
         zooms = await asyncio.gather(*(_get_maxzoom(variable) for variable in variables))
         return max(zooms)
 
-    async def list_variables(self) -> list[str]:
+    async def list_variables(self) -> list[dict[str, Any]]:
         """List variables in the Zarr store."""
         if self._variables is not None:
             return self._variables
 
         ms_groups = []
-        variables: list[str] = []
+        variables: list[dict[str, Any]] = []
 
-        group = "root"
-        group_metadata = await self.get_group_metadata(group)
+        # 1. Check Root level group
+        group_metadata = await self.get_group_metadata()
 
         # Zarr store is a multiscale group
         if group_metadata["multiscale"]:
-            ms_groups.append(group)
+            ms_groups.append("__root__")
 
-        # Zarr Store has top level arrays
-        if vars := group_metadata["arrays"].keys():
-            variables.extend(vars)
+        # 2. Root has top level arrays
+        if arrays := group_metadata["arrays"]:
+            variables.extend(
+                [
+                    {
+                        "name": name,
+                        "group": None,
+                        "long_name": name,
+                        "multiscale": group_metadata["multiscale"],
+                        "nbands": array[0]["array"].shape[0]
+                        if len(array[0]["array"].shape) == 3
+                        else 1,
+                    }
+                    for name, array in arrays.items()
+                ]
+            )
 
-        # Check sub-groups
+        # 3. Check children groups
         else:
-            async for name, member in self.input.members(max_depth=10):
-                if any(name.startswith(msg) for msg in ms_groups):
+            async for group_name, member in self.input.members(max_depth=10):
+                if any(group_name.startswith(msg) for msg in ms_groups):
                     continue
 
                 # Check Group for variables
                 if isinstance(member, zarr.AsyncGroup):
-                    group_metadata = await self.get_group_metadata(name)
-                    if group_metadata["multiscale"]:
-                        ms_groups.append(name)
+                    group_metadata = await self.get_group_metadata(group_name)
+                    is_multiscale = group_metadata["multiscale"]
+                    if is_multiscale:
+                        ms_groups.append(group_name)
 
-                    if vars := group_metadata["arrays"].keys():
-                        variables.extend([f"{name}:{v}" for v in vars])
+                    if arrays := group_metadata["arrays"]:
+                        variables.extend(
+                            [
+                                {
+                                    "name": name,
+                                    "group": group_name,
+                                    "long_name": f"{group_name}{self._group_var_sep}{name}",
+                                    "multiscale": is_multiscale,
+                                    "nbands": array[0]["array"].shape[0]
+                                    if len(array[0]["array"].shape) == 3
+                                    else 1,
+                                }
+                                for name, array in arrays.items()
+                            ]
+                        )
 
-        self._variables = sorted(set(variables))
+        self._variables = variables
         return self._variables
 
     async def get_group_metadata(  # noqa: C901
         self,
-        group: str,
+        group: str | None = None,
     ) -> GroupMetadata:
         """Find arrays in a Zarr store and extract spatial metadata."""
+        group = group or "__root__"
+
         if group in self._groups:
             return self._groups[group]
 
-        g = self.input if group == "root" else await self.input.getitem(group)
+        g = self.input if group == "__root__" else await self.input.getitem(group)
         assert isinstance(g, zarr.AsyncGroup), (
             f"Group '{group}' not found in the Zarr store."
         )

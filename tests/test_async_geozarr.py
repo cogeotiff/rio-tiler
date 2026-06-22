@@ -2,6 +2,7 @@
 
 from typing import Any
 
+import attr
 import numpy
 import pytest
 import zarr
@@ -54,8 +55,11 @@ async def test_geozarr_reader():
         }
     )
 
+    # /
     root = zarr.open_group(store, mode="w", zarr_format=3, attributes=attributes)
 
+    # /0
+    # Layout 0 - b01 and b02 arrays
     highres_group = root.create_group(
         name="0",
         attributes={
@@ -72,7 +76,6 @@ async def test_geozarr_reader():
         },
     )
 
-    # Layout 0
     arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
     arr[0:50, 0:50] = 0
 
@@ -98,7 +101,8 @@ async def test_geozarr_reader():
     )
     highres_b02[:] = arr
 
-    # Layout 1
+    # /1
+    # Layout 1 - b02 array only
     arr = numpy.arange(0.0, 100 * 100, dtype="float32").reshape(100, 100)
     arr[0:5, 0:5] = 0
 
@@ -144,10 +148,40 @@ async def test_geozarr_reader():
 
     info = await geozarrds.info()
     assert info.driver == "GeoZarr"
-    assert info.variables == ["b01", "b02"]
+    assert info.variables == [
+        {
+            "nbands": 1,
+            "group": None,
+            "long_name": "b01",
+            "multiscale": True,
+            "name": "b01",
+        },
+        {
+            "nbands": 1,
+            "group": None,
+            "long_name": "b02",
+            "multiscale": True,
+            "name": "b02",
+        },
+    ]
 
     vars = await geozarrds.list_variables()
-    assert vars == ["b01", "b02"]
+    assert vars == [
+        {
+            "group": None,
+            "long_name": "b01",
+            "multiscale": True,
+            "name": "b01",
+            "nbands": 1,
+        },
+        {
+            "group": None,
+            "long_name": "b02",
+            "multiscale": True,
+            "name": "b02",
+            "nbands": 1,
+        },
+    ]
 
     # B01 has only one layout to minzoom 14, while b02 has two layouts with minzoom 10 and maxzoom 14
     z = await geozarrds.get_minzoom(variables="b01")
@@ -160,7 +194,7 @@ async def test_geozarr_reader():
     z = await geozarrds.get_maxzoom(variables="b02")
     assert z == 14
 
-    meta = await geozarrds.get_group_metadata("root")
+    meta = await geozarrds.get_group_metadata()
     assert meta["multiscale"]
     assert len(meta["arrays"]["b01"]) == 1
     assert len(meta["arrays"]["b02"]) == 2
@@ -202,8 +236,10 @@ async def test_geozarr_root():
     store = zarr.storage.MemoryStore()
 
     attributes: dict[str, Any] = {}
+    # /
     root = zarr.open_group(store, mode="w", zarr_format=3, attributes=attributes)
 
+    # /data
     group = root.create_group(
         name="data",
         attributes={
@@ -220,7 +256,6 @@ async def test_geozarr_root():
         },
     )
 
-    # Layout 0
     arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
     arr[0:50, 0:50] = 0
 
@@ -261,13 +296,43 @@ async def test_geozarr_root():
 
     info = await geozarrds.info()
     assert info.driver == "GeoZarr"
-    assert info.variables == ["data:b01", "data:b02"]
+    assert info.variables == [
+        {
+            "group": "data",
+            "long_name": "data:b01",
+            "multiscale": False,
+            "name": "b01",
+            "nbands": 1,
+        },
+        {
+            "group": "data",
+            "long_name": "data:b02",
+            "multiscale": False,
+            "name": "b02",
+            "nbands": 1,
+        },
+    ]
 
     vars = await geozarrds.list_variables()
-    assert vars == ["data:b01", "data:b02"]
+    assert vars == [
+        {
+            "group": "data",
+            "long_name": "data:b01",
+            "multiscale": False,
+            "name": "b01",
+            "nbands": 1,
+        },
+        {
+            "group": "data",
+            "long_name": "data:b02",
+            "multiscale": False,
+            "name": "b02",
+            "nbands": 1,
+        },
+    ]
 
     # No arrays/metadata at root level
-    meta = await geozarrds.get_group_metadata("root")
+    meta = await geozarrds.get_group_metadata()
     assert meta == {
         "crs": None,
         "bbox": None,
@@ -330,9 +395,9 @@ async def test_geozarr_root_with_arrays():
             Affine.translation(500000, 4200000) * Affine.scale(10, -10)
         ),
     }
+    # /
     root = zarr.open_group(store, mode="w", zarr_format=3, attributes=attributes)
 
-    # Layout 0
     arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
     arr[0:50, 0:50] = 0
 
@@ -373,12 +438,42 @@ async def test_geozarr_root_with_arrays():
 
     info = await geozarrds.info()
     assert info.driver == "GeoZarr"
-    assert info.variables == ["b01", "b02"]
+    assert info.variables == [
+        {
+            "group": None,
+            "long_name": "b01",
+            "multiscale": False,
+            "name": "b01",
+            "nbands": 1,
+        },
+        {
+            "group": None,
+            "long_name": "b02",
+            "multiscale": False,
+            "name": "b02",
+            "nbands": 1,
+        },
+    ]
 
     vars = await geozarrds.list_variables()
-    assert vars == ["b01", "b02"]
+    assert vars == [
+        {
+            "group": None,
+            "long_name": "b01",
+            "multiscale": False,
+            "name": "b01",
+            "nbands": 1,
+        },
+        {
+            "group": None,
+            "long_name": "b02",
+            "multiscale": False,
+            "name": "b02",
+            "nbands": 1,
+        },
+    ]
 
-    meta = await geozarrds.get_group_metadata("root")
+    meta = await geozarrds.get_group_metadata()
     assert meta["crs"] == CRS.from_epsg(32633)
     assert meta["bbox"] == [500000, 4190000, 510000, 4200000]
     assert len(meta["arrays"]["b01"]) == 1
@@ -406,3 +501,107 @@ async def test_geozarr_root_with_arrays():
 
     bbox = await geozarrds.get_bounds(variables="b01", crs=CRS.from_epsg(32633))
     assert bbox == (500000, 4190000, 510000, 4200000)
+
+
+async def test_custom_geozarr_root():
+    """Test Custom GeoZarrReader"""
+
+    @attr.s
+    class CGeoZarrReader(GeoZarrReader):
+        """Custom GeoZarrReader with custom group/variable separator."""
+
+        _group_var_sep: str = "::"
+
+    store = zarr.storage.MemoryStore()
+
+    attributes: dict[str, Any] = {}
+    # /
+    root = zarr.open_group(store, mode="w", zarr_format=3, attributes=attributes)
+
+    # /data
+    group = root.create_group(
+        name="data",
+        attributes={
+            "zarr_conventions": [
+                spatial_conventions,
+                proj_conventions,
+            ],
+            "spatial:dimensions": ["y", "x"],
+            "spatial:bbox": [500000, 4190000, 510000, 4200000],
+            "proj:code": "EPSG:32633",
+            "spatial:transform": list(
+                Affine.translation(500000, 4200000) * Affine.scale(10, -10)
+            ),
+        },
+    )
+
+    arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
+    arr[0:50, 0:50] = 0
+
+    b01 = group.create_array(
+        "b01",
+        shape=arr.shape,
+        chunks=(64, 64),
+        dtype="float32",
+        fill_value=0,
+        dimension_names=["y", "x"],
+        attributes={},
+    )
+    b01[:] = arr
+
+    b02 = group.create_array(
+        "b02",
+        shape=arr.shape,
+        chunks=(64, 64),
+        dtype="float32",
+        fill_value=0,
+        dimension_names=["y", "x"],
+        attributes={},
+    )
+    b02[:] = arr
+
+    # Write consolidated metadata
+    zarr.consolidate_metadata(root.store)
+
+    ###########################################################################
+    group = await zarr.api.asynchronous.open_group(store=store, mode="r")
+
+    geozarrds = CGeoZarrReader(input=group)
+    assert geozarrds.crs == CRS.from_epsg(4326)
+    assert geozarrds.bounds == (-180, -90, 180, 90)
+    assert not geozarrds.transform
+    assert geozarrds.minzoom == 0
+    assert geozarrds.maxzoom == 24
+
+    info = await geozarrds.info()
+    assert info.driver == "GeoZarr"
+    assert info.variables == [
+        {
+            "group": "data",
+            "long_name": "data::b01",
+            "multiscale": False,
+            "name": "b01",
+            "nbands": 1,
+        },
+        {
+            "group": "data",
+            "long_name": "data::b02",
+            "multiscale": False,
+            "name": "b02",
+            "nbands": 1,
+        },
+    ]
+
+    # No arrays/metadata at root level
+    meta = await geozarrds.get_group_metadata()
+    assert meta == {
+        "crs": None,
+        "bbox": None,
+        "transform": None,
+        "multiscale": False,
+        "arrays": {},
+    }
+
+    # No Multiscale
+    z = await geozarrds.get_minzoom(variables="data::b01")
+    assert z == 14
