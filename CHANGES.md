@@ -1,7 +1,7 @@
 
 # Unreleased
 
-## Unreleased 
+## 9.4.0 (2026-07-02)
 
 * change: `_variables` attribute in `rio_tiler.experimental.zarr.GeoZarrReader` to be a list of dict instead of a list of string
     
