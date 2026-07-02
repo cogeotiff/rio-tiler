@@ -124,7 +124,7 @@ def rescale_image(
 
     for bdx in range(nbands):
         array.data[bdx] = numpy.where(
-            ~array.mask[bdx],  # type: ignore [index]
+            ~array.mask[bdx],  # type: ignore [call-overload]
             linear_rescale(
                 array.data[bdx], in_range=in_range[bdx], out_range=out_range[bdx]
             ),
@@ -1015,9 +1015,8 @@ class ImageData:
             *self.bounds,
             resolution=resolution,
         )
-        destination = numpy.ma.masked_array(
-            numpy.zeros((self.count, h, w), dtype=self.array.dtype),
-        )
+
+        destination = numpy.ma.zeros((self.count, h, w), self.array.dtype)
 
         destination, _ = reproject(
             self.array,
