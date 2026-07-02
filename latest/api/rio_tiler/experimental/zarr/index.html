@@ -3704,7 +3704,7 @@
   </span>
 
 <a href="#rio_tiler.experimental.zarr.GeoZarrReader.get_group_metadata" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_group_metadata</span><span class="p">(</span><span class="n">group</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="GroupMetadata (rio_tiler.experimental.zarr.GroupMetadata)" href="#rio_tiler.experimental.zarr.GroupMetadata">GroupMetadata</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_group_metadata</span><span class="p">(</span><span class="n">group</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="GroupMetadata (rio_tiler.experimental.zarr.GroupMetadata)" href="#rio_tiler.experimental.zarr.GroupMetadata">GroupMetadata</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3812,7 +3812,7 @@
   </span>
 
 <a href="#rio_tiler.experimental.zarr.GeoZarrReader.list_variables" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">list_variables</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">list_variables</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3832,7 +3832,7 @@
 
 
 <a href="#rio_tiler.experimental.zarr.GeoZarrReader.parse_variable" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">parse_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">parse_variable</span><span class="p">(</span><span class="n">variable</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span> <span class="o">|</span> <span class="kc">None</span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
