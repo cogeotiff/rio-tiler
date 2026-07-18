@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* fix `rio_tiler.reader.read` misflagging an edge-aligned window as boundless, which broke point reads in the last row/column when `nodata` is set (routed through a WarpedVRT) (#966)
+
 ## 9.4.0 (2026-07-02)
 
 * change: `_variables` attribute in `rio_tiler.experimental.zarr.GeoZarrReader` to be a list of dict instead of a list of string
