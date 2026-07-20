@@ -145,7 +145,9 @@ def get_array_statistics(
         assert coverage.shape == (
             data.shape[1],
             data.shape[2],
-        ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
+        ), (
+            f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
+        )
 
     else:
         coverage = numpy.ones((data.shape[1], data.shape[2]))
