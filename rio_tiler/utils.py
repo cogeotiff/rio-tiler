@@ -66,11 +66,12 @@ def _missing_size(w: int | None = None, h: int | None = None):
 def _weighted_quantiles(
     values: NDArray[numpy.floating],
     weights: NDArray[numpy.floating],
-    quantiles: float = 0.5,
-) -> float:
+    quantiles: Sequence[float] = (0.5,),
+) -> list[float]:
     i = numpy.argsort(values)
     c = numpy.cumsum(weights[i])
-    return float(values[i[numpy.searchsorted(c, numpy.array(quantiles) * c[-1])]])
+    q = numpy.atleast_1d(quantiles) * c[-1]
+    return values[i[numpy.searchsorted(c, q)]].tolist()
 
 
 # Ref: https://stackoverflow.com/questions/2413522
@@ -161,19 +162,19 @@ def get_array_statistics(
 
         keys, counts = numpy.unique(data_comp, return_counts=True)
 
-        valid_pixels = float(numpy.ma.count(data[b]))
-        masked_pixels = float(numpy.ma.count_masked(data[b]))
+        valid_pixels = float(data_comp.size)
+        masked_pixels = float(data[b].size - data_comp.size)
         valid_percent = round(min(valid_pixels / coverage_pixels, 1) * 100, 2)
 
         if categorical:
-            out_dict = dict(zip(keys.tolist(), counts.tolist()))
-            h_keys = (
-                numpy.array(categories).astype(keys.dtype) if categories else keys
-            ).tolist()
-            histogram = [
-                [out_dict.get(x, 0) for x in h_keys],
-                h_keys,
-            ]
+            h_keys = numpy.array(categories).astype(keys.dtype) if categories else keys
+            # keys is sorted (from numpy.unique); map each requested category to its count
+            if counts.size:
+                pos = numpy.minimum(numpy.searchsorted(keys, h_keys), counts.size - 1)
+                h_counts = numpy.where(keys[pos] == h_keys, counts[pos], 0)
+            else:
+                h_counts = numpy.zeros(h_keys.shape, dtype=counts.dtype)
+            histogram = [h_counts.tolist(), h_keys.tolist()]
         else:
             h_counts, h_keys = numpy.histogram(data_comp, **kwargs)
             histogram = [h_counts.tolist(), h_keys.tolist()]
@@ -184,18 +185,22 @@ def get_array_statistics(
         masked_coverage = numpy.ma.MaskedArray(coverage, mask=data_cov.mask)
 
         if valid_pixels:
+            coverage_comp = masked_coverage.compressed()
             # TODO: when switching to numpy~=2.0
             # percentiles_values = numpy.percentile(
             #     data_comp, percentiles, weights=coverage.flatten()
             # ).tolist()
-            percentiles_values = [
-                _weighted_quantiles(data_comp, masked_coverage.compressed(), pp / 100.0)
-                for pp in percentiles
-            ]
-            majority = float(keys[counts.tolist().index(counts.max())].tolist())
-            minority = float(keys[counts.tolist().index(counts.min())].tolist())
-            std = _weighted_stdev(data_comp, masked_coverage.compressed())
-            med = _weighted_quantiles(data_comp, masked_coverage.compressed())
+            # Sort once for all weighted-quantile calculations (percentiles + median)
+            quantiles_values = _weighted_quantiles(
+                data_comp,
+                coverage_comp,
+                [pp / 100.0 for pp in percentiles] + [0.5],
+            )
+            percentiles_values = quantiles_values[:-1]
+            med = quantiles_values[-1]
+            majority = float(keys[counts.argmax()])
+            minority = float(keys[counts.argmin()])
+            std = _weighted_stdev(data_comp, coverage_comp)
             _min = float(data[b].min())
             _max = float(data[b].max())
             _mean = float(data_cov.sum() / masked_coverage.sum())
