@@ -109,3 +109,5 @@ tests/fixtures/mask*
 .vscode/settings.json
 
 dev_notebooks/*
+
+.DS_Store
