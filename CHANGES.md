@@ -2,11 +2,12 @@
 # Unreleased
 
 * fix `rio_tiler.reader.read` misflagging an edge-aligned window as boundless, which broke point reads in the last row/column when `nodata` is set (routed through a WarpedVRT) (#966)
+* fix `PointData.apply_expression` dropping the mask, so an expression over a nodata band is now masked instead of returning a fabricated value (#965)
 
 ## 9.4.0 (2026-07-02)
 
 * change: `_variables` attribute in `rio_tiler.experimental.zarr.GeoZarrReader` to be a list of dict instead of a list of string
-    
+
     ```python
     # before
     with GeoZarrReader(input={zarr.AsyncGroup}) as src:
@@ -70,13 +71,13 @@
 
 ## 9.1.0 (2026-06-01)
 
-* change: `rio_tiler.experimental.zarr.ZarrReader` -> `rio_tiler.experimental._zarr.ZarrReader` 
-* change: `rio_tiler.experimental._async` -> `rio_tiler.experimental.geotiff` 
+* change: `rio_tiler.experimental.zarr.ZarrReader` -> `rio_tiler.experimental._zarr.ZarrReader`
+* change: `rio_tiler.experimental._async` -> `rio_tiler.experimental.geotiff`
 * change: `rio_tiler.experimental._async.AsyncBaseReader` -> `rio_tiler.io.base.AsyncBaseReader`
 * change: `rio_tiler.experimental._async.warp` -> `rio_tiler._warp.warp`
-* change: `rio_tiler.io.xarray.MAX_ARRAY_SIZE` -> `rio_tiler.constant.MAX_ARRAY_SIZE` 
+* change: `rio_tiler.io.xarray.MAX_ARRAY_SIZE` -> `rio_tiler.constant.MAX_ARRAY_SIZE`
 * change: `async` -> `geotiff` optional-dependencies
-* change: `rio_tiler.io.stac.STAC_ALTERNATE_KEY` -> `rio_tiler.constant.STAC_ALTERNATE_KEY` 
+* change: `rio_tiler.io.stac.STAC_ALTERNATE_KEY` -> `rio_tiler.constant.STAC_ALTERNATE_KEY`
 * change: move from `httpx` to `httpx2`
 * add: `rio_tiler.experimental.zarr.Reader` (async zarr-python reader)
 * add: `rio_tiler.experimental.zarr.GeoZarrReader`  (async zarr-python reader for GeoZAR/EOPF product)
@@ -94,7 +95,7 @@
 
 ## 9.0.5 (2026-04-02)
 
-* fix: incorect default band descriptions expression 
+* fix: incorect default band descriptions expression
 
 ## 9.0.4 (2026-03-24)
 
@@ -104,32 +105,32 @@
 
 * fix: add missing expression check in PointData model
 
-# 9.0.2 (2026-03-19)
+## 9.0.2 (2026-03-19)
 
 * fix: check for malicious `eval` in expression
 
-# 9.0.1 (2026-03-18)
+## 9.0.1 (2026-03-18)
 
 * fix: set correct band names when reading a single dataset
 
-# 9.0.0 (2026-03-11)
+## 9.0.0 (2026-03-11)
 
 * No change since 9.0.0rc3
 
-# 9.0.0rc3 (2026-03-09)
+## 9.0.0rc3 (2026-03-09)
 
 * fix: reproject feature shape to dst_crs in mosaic backend
 
-# 9.0.0rc2 (2026-03-06)
+## 9.0.0rc2 (2026-03-06)
 
 * fix: window calculation for async `Reader.part()`
 * change: rename `_async.Reader` to `_async.AsyncReader`
 * change: improve partial alpha band support and internal mask for non-uint8 datatype
 
-# 9.0.0rc1 (2026-02-26)
+## 9.0.0rc1 (2026-02-26)
 
 * remove: support for `vrt://` notation in STACReader
-* fix: statistics from stac metadata when `bands` option is used 
+* fix: statistics from stac metadata when `bands` option is used
 * add: `STACReader._get_options()` method to extract reader/method options (used within `_get_asset_info` method)
 * add: experimental asynchronous `Reader` built on top `obstore` and `async-geotiff`
 
@@ -147,12 +148,12 @@
         img = await src.tile(21, 11, 6)
     ```
 
-# 9.0.0b2 (2026-02-26)
+## 9.0.0b2 (2026-02-26)
 
 * add: support for `bands` options in `STACReader._get_asset_info` methods to select band indexes based on band metadata
 * add: optional `indexes`, `expression` and `bands` keys to `AssetWithOptions` typedDict definition
 
-# 9.0.0b1 (2026-02-22)
+## 9.0.0b1 (2026-02-22)
 
 * add `AssetType = str | AssetWithOptions`, with `AssetWithOptions` beeing a typed dict with required `name` key
 * change: `assets` signature in `MultiBaseReader` method to be a union of `Sequence[AssetType] | AssetType`
@@ -161,9 +162,9 @@
     # 9.0.0a1
     with STACReader(stac.json) as stac:
         _ = stac.tile(
-            0, 
-            0, 
-            0, 
+            0,
+            0,
+            0,
             assets=[
                 "asset|indexes=1,2,3",
             ]
@@ -172,39 +173,39 @@
     # 9.0.0b1
     with STACReader(stac.json) as stac:
         _ = stac.tile(
-            0, 
-            0, 
-            0, 
+            0,
+            0,
+            0,
             assets=[
                 {"name": "asset", "indexes": [1, 2, 3]},
             ]
         )
     ```
 
-# 9.0.0a6 (2026-02-13)
+## 9.0.0a6 (2026-02-13)
 
 * add: wraps readers within the mosaic Backends with `inherit_rasterio_env` decorator.
 
-# 9.0.0a5 (2026-02-13)
+## 9.0.0a5 (2026-02-13)
 
 * add: reader's level options for XarrayReader
 
-# 9.0.0a4 (2026-02-11)
+## 9.0.0a4 (2026-02-11)
 
 * fix: type hint for ImageData/PointData methods
 * remove: `typing-extensions` from requirements
 
-# 9.0.0a3 (2026-02-05)
+## 9.0.0a3 (2026-02-05)
 
 * add: `inherit_rasterio_env` decorator to `utils` module for decorating functions that need to inherit rasterio env settings from a parent thread.
 * fix: automatically forward rasterio env settings to threads in multibase reader
 
-# 9.0.0a2 (2026-02-04)
+## 9.0.0a2 (2026-02-04)
 
 * change: `MultiReaderBase._get_reader` signature to only return `type[BaseReader]`
 * add: `reader_options` in `AssetInfo` model
 
-# 9.0.0a1 (2026-02-03)
+## 9.0.0a1 (2026-02-03)
 
 * remove: default tilesize option (`256`) for `tile()` methods and default to TMS tilematrix `tileHeight` and `tileWidth`
 * remove: `parse_expression` method in `MultiBaseReader`
@@ -309,31 +310,31 @@
 
 * fix: add missing expression check in ImageData model and MultiBaseReader
 
-# 8.0.6 (2026-03-19)
+## 8.0.6 (2026-03-19)
 
 * fix: check for malicious eval in expression [backported from 9.0.2]
 
-# 8.0.5 (2026-01-05)
+## 8.0.5 (2026-01-05)
 
 * improve type hints - part 2: change old Union and `typing.*` notations
 
-# 8.0.4 (2015-12-15)
+## 8.0.4 (2015-12-15)
 
 * add support for python 3.14
 
-# 8.0.3 (2015-12-15)
+## 8.0.3 (2015-12-15)
 
 * improve and fix type hints
 
-# 8.0.2 (2025-12-04)
+## 8.0.2 (2025-12-04)
 
 * add arguments to `rio_tiler.mosaic.BaseBackend`'s `statistics` and `preview` methods to avoid `unexpected keyword argument` errors
 
-# 8.0.1 (2025-11-21)
+## 8.0.1 (2025-11-21)
 
 * Better handle mask and alpha band from colormap when rendering images
 
-# 8.0.0 (2025-11-20)
+## 8.0.0 (2025-11-20)
 
 * remove python 3.9 and 3.10 support **breaking change**
 
@@ -439,48 +440,48 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
 * rename `lastbandhight` -> `lastbandhigh` value in `rio_tiler.mosaic.methods.PixelSelectionMethod` enum [backported from 9.0.4]
 
-# 7.9.4 (2026-03-19)
+## 7.9.4 (2026-03-19)
 
 * fix: check for malicious eval in expression [backported from 9.0.2/9.0.3]
 
-# 7.9.3 (2026-02-12)
+## 7.9.3 (2026-02-12)
 
 * add upper memory limit for Xarray dataset. Controled with `RIO_TILER_MAX_ARRAY_SIZE` env variable  **Backported**
 
-# 7.9.2 (2025-10-09)
+## 7.9.2 (2025-10-09)
 
 * fix: bad code logic in XarrayReader
 
-# 7.9.1 (2025-10-09)
+## 7.9.1 (2025-10-09)
 
 * fix: better handler inverted (SouthUp) dataset in XarrayReader
 
-# 7.9.0 (2025-10-07)
+## 7.9.0 (2025-10-07)
 
 * refactor XarrayReader.part method to better handle reprojection and re-usability (<https://github.com/cogeotiff/rio-tiler/pull/828>) **Backported**
 * move `_get_width_height` and `_missing_size` from `rio_tiler.reader` to `rio_tiler.utils` **Backported**
 
-# 7.8.1 (2025-06-16)
+## 7.8.1 (2025-06-16)
 
 * apply scale/offset to dataset statistics in ImageData object (used for automatic rescaling)
 
-# 7.8.0 (2025-06-03)
+## 7.8.0 (2025-06-03)
 
 * add `to_raster()` method to `ImageData` class
 
-# 7.7.4 (2025-05-29)
+## 7.7.4 (2025-05-29)
 
 * fix band names for Xarray DataArray
 
-# 7.7.3.post1 (2025-05-22)
+## 7.7.3.post1 (2025-05-22)
 
 * remove unwanted breaking change
 
-# 7.7.3 (2025-05-22) **YANKED**
+## 7.7.3 (2025-05-22) **YANKED**
 
 * fix Boundless `part` read when using GCPs dataset
 
-# 7.7.2 (2025-05-15)
+## 7.7.2 (2025-05-15)
 
 * add `repr` method to Mosaic Method classes
 * add metadata (pixel selection method, assets count, asset used count) on Image/Point object returned by `mosaic_reader`
@@ -504,20 +505,20 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
     >> {'mosaic_method': 'FirstMethod', 'mosaic_assets_count': 3, 'mosaic_assets_used': 1}
     ```
 
-# 7.7.1 (2025-05-13)
+## 7.7.1 (2025-05-13)
 
 * add `max`, `min`, `med`, `q1` and `q3` resampling methods to `WarpResampling` literal
 
-# 7.7.0 (2025-05-05)
+## 7.7.0 (2025-05-05)
 
 * fix size estimation when using `window` an `reader.read` method
 * add `width` or `height` estimation when passing only one size
 
-# 7.6.1 (2025-04-22)
+## 7.6.1 (2025-04-22)
 
 * fix Xarray indexes check when passing a list
 
-# 7.6.0 (2025-03-31)
+## 7.6.0 (2025-03-31)
 
 * add `interpolate=True/False` to `.point()` methods to allow interpolation of surrounding pixels
 
@@ -563,17 +564,17 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
 * update pystac dependency to `>=1.9,<2.0`
 
-# 7.5.1 (2025-03-19)
+## 7.5.1 (2025-03-19)
 
 * fix `utils.get_array_statistics` method to avoid `ZeroDivisionError` when there is no valid pixel
 * use `GDAL_MEM_ENABLE_OPEN=TRUE` when opening a numpy array with rasterio
 
-# 7.5.0 (2025-02-26)
+## 7.5.0 (2025-02-26)
 
 * add `rio_tiler.experimental` submodule
 * add `rio_tiler.experimental.vsifile.VSIReader` VSIFile based experimental reader
 
-# 7.4.0 (2025-01-28)
+## 7.4.0 (2025-01-28)
 
 * update rasterio dependency to `>=1.4.0`
 
@@ -653,32 +654,32 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
             >> ("b1", "array")
         ```
 
-# 7.3.1 (2025-01-23)
+## 7.3.1 (2025-01-23)
 
 * make sure `STACReader.transform` is an Affine object
 
-# 7.3.0 (2025-01-07)
+## 7.3.0 (2025-01-07)
 
 * drop python 3.8 support
 * add python 3.13 support
 * fix: use coverage array for calculation of valid_percent (author @MarcelCode, <https://github.com/cogeotiff/rio-tiler/pull/775>)
 
-# 7.2.2 (2024-11-18)
+## 7.2.2 (2024-11-18)
 
 * Catch and expand error message when GDAL cannot encode data using specified image driver (<https://github.com/cogeotiff/rio-tiler/pull/767>)
 
-# 7.2.1 (2024-11-14)
+## 7.2.1 (2024-11-14)
 
 * add official support for floating point values in ColorMap
 * cast data to `uint8` datatype when applying linear colormap
 
-# 7.2.0 (2024-11-05)
+## 7.2.0 (2024-11-05)
 
 * Ensure compatibility between XarrayReader and other Readers by adding `**kwargs` on class methods (<https://github.com/cogeotiff/rio-tiler/pull/762>)
 
 * add `STACReader.get_asset_list()` method to enable easier customization of the asset listing/validation (<https://github.com/cogeotiff/rio-tiler/pull/762>)
 
-# 7.1.0 (2024-10-29)
+## 7.1.0 (2024-10-29)
 
 * Add `preview()` and `statistics()` methods to XarrayReader (<https://github.com/cogeotiff/rio-tiler/pull/755>)
 
@@ -696,11 +697,11 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
 * Allow `op` parameter for `create_cutline` and `_convert_to_raster_space` functions to better control rasterio's `rowcol` behaviour (author @Martenz, <https://github.com/cogeotiff/rio-tiler/pull/759>)
 
-# 7.0.1 (2024-10-22)
+## 7.0.1 (2024-10-22)
 
 * Add `CRS_to_urn` method and update internals for `CRS_to_uri` (author @AndrewAnnex, <https://github.com/cogeotiff/rio-tiler/pull/752>)
 
-# 7.0.0 (2024-10-21)
+## 7.0.0 (2024-10-21)
 
 * Enable dynamic definition of Asset **reader** in `MultiBaseReader` (<https://github.com/cogeotiff/rio-tiler/pull/711/>, <https://github.com/cogeotiff/rio-tiler/pull/728>)
 
@@ -786,23 +787,23 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
 * fix `bounds` type information
 
-# 6.8.0 (2024-10-23)
+## 6.8.0 (2024-10-23)
 
 * Enable **Alternate** asset's HREF for STAC by using `RIO_TILER_STAC_ALTERNATE_KEY` environment variable [Backported from `7.0`]
 
 * Adding support for GDAL VRT Connection string for STAC Assets [Backported from `7.0`]
 
-# 6.7.0 (2024-09-05)
+## 6.7.0 (2024-09-05)
 
 * raise `MissingCRS` or `InvalidGeographicBounds` errors when Xarray datasets have wrong geographic metadata
 * better error message for `TileOutsideBounds` errors (author @abarciauskas-bgse, <https://github.com/cogeotiff/rio-tiler/pull/712>)
 * handle of inverted latitude in `reader.point` (author @georgespill, <https://github.com/cogeotiff/rio-tiler/pull/716>)
 
-# 6.6.1 (2024-05-17)
+## 6.6.1 (2024-05-17)
 
 * fix/support `scale/offset` indexes selection (author @jddeal, <https://github.com/cogeotiff/rio-tiler/pull/709>)
 
-# 6.6.0 (2024-05-16)
+## 6.6.0 (2024-05-16)
 
 * fix type hint for `ImageData.band_names` (author @n8sty, <https://github.com/cogeotiff/rio-tiler/pull/704>)
 * enable `per-band` scale/offset rescaling (co-author @jddeal, <https://github.com/cogeotiff/rio-tiler/pull/707>)
@@ -822,41 +823,41 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
     >> [0.0001, 0.001] [1000.0, 2000.0]
     ```
 
-# 6.5.0 (2024-05-03)
+## 6.5.0 (2024-05-03)
 
 * Revert [#648](https://github.com/cogeotiff/rio-tiler/pull/648) and refactor `get_vrt_transform` method to better handle over-zooming a dataset
 
-# 6.4.7 (2024-04-17)
+## 6.4.7 (2024-04-17)
 
 * Better handle dataset with inverted origin
 * make sure datatype is forwarded to the WarpedVRT
 
-# 6.4.6 (2024-04-09)
+## 6.4.6 (2024-04-09)
 
 * Ignore STAC statistics object when they contain invalid type (author @emmanuelmathot, <https://github.com/cogeotiff/rio-tiler/pull/695>)
 
-# 6.4.5 (2024-04-05)
+## 6.4.5 (2024-04-05)
 
 * add python 3.12 official support
 * change code formatter to `ruff-format`
 
-# 6.4.4 (2024-04-02)
+## 6.4.4 (2024-04-02)
 
 * better handler `NaN` nodata values for masking (author @cerolinx, <https://github.com/cogeotiff/rio-tiler/pull/691>)
 
-# 6.4.3 (2024-03-22)
+## 6.4.3 (2024-03-22)
 
 * make sure `scale` and `offset` are set in `Info` even when `offset=0.` or `scale=1.0` (<https://github.com/cogeotiff/rio-tiler/pull/687>)
 
-# 6.4.2 (2024-03-22)
+## 6.4.2 (2024-03-22)
 
 * better account for coverage in statistics (<https://github.com/cogeotiff/rio-tiler/pull/684>)
 
-# 6.4.1 (2024-02-19)
+## 6.4.1 (2024-02-19)
 
 * add `CountMethod` mosaic method (author @mccarthyryanc, <https://github.com/cogeotiff/rio-tiler/pull/676>)
 
-# 6.4.0 (2024-01-24)
+## 6.4.0 (2024-01-24)
 
 * deprecate `resampling_method` in `rio_tiler.io.xarray.XarrayReader` method and add `reproject_method` (to match the `rio_tiler.io.Reader` options)
 
@@ -870,11 +871,11 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
         img_cubic = dst.tile(0, 0, 1, reproject_method="cubic")
     ```
 
-# 6.3.1 (2024-01-22)
+## 6.3.1 (2024-01-22)
 
 * When overriding **nodata**, do not mix mask and only use the provided nodata value
 
-# 6.3.0 (2024-01-16)
+## 6.3.0 (2024-01-16)
 
 * do not use `warpedVRT` when overwriting the dataset nodata value
 
@@ -882,31 +883,31 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
     <img src="https://github.com/cogeotiff/rio-tiler/assets/10407788/0e340d3d-e5d9-4558-93f7-3f307c017510" style="max-width: 500px;">
 
-# 6.2.10 (2024-01-08)
+## 6.2.10 (2024-01-08)
 
 * remove default Endpoint URL in AWS S3 Client for STAC Reader
 
-# 6.2.9 (2023-12-21)
+## 6.2.9 (2023-12-21)
 
 * fix AWS endpoint credential for STAC `fetch` function, using same defaults as GDAL vsis3 configuration
 
-# 6.2.8 (2023-12-11)
+## 6.2.8 (2023-12-11)
 
 * apply `discrete` colormap when the provided colormap does not have 256 values
 
-# 6.2.7 (2023-11-29)
+## 6.2.7 (2023-11-29)
 
 * Adjusting dataset latitude for WarpedVRT parameters calculation when EPSG:4326 dataset latitudes overflows EPSG:3857 min/max latitude (<https://github.com/cogeotiff/rio-tiler/pull/660>)
 
-# 6.2.6 (2023-11-10)
+## 6.2.6 (2023-11-10)
 
 * validate `shape` in `ImageData.get_coverage_array` to avoid rasterio error when re-projecting the geometry
 
-# 6.2.5 (2023-11-06)
+## 6.2.5 (2023-11-06)
 
 * avoid `indexes` collision in `MultiBaseReader`
 
-# 6.2.4 (2023-10-19)
+## 6.2.4 (2023-10-19)
 
 * fix issue with `WarpedVRT` when doing re-projection (ref: <https://github.com/cogeotiff/rio-tiler/pull/648>)
 
@@ -914,26 +915,26 @@ with Reader("tests/fixtures/cog_tags.tif") as src:
 
 * add GET/HEAD request tests using tilebench (outside pytest suite) (ref: <https://github.com/cogeotiff/rio-tiler/pull/649>)
 
-# 6.2.3.post1 (2023-11-16)
+## 6.2.3.post1 (2023-11-16)
 
 * validate `shape` in `ImageData.get_coverage_array` to avoid rasterio error when re-projecting the geometry [Backported from 6.2.6]
 * avoid `indexes` collision in `MultiBaseReader` [Backported from 6.2.5]
 
 This release was made while we waited on a fix for <https://github.com/cogeotiff/rio-tiler/issues/654>
 
-# 6.2.3 (2023-10-11)
+## 6.2.3 (2023-10-11)
 
 * in `STACReader` use `href` if `get_absolute_href()` returns `None`
 
-# 6.2.2 (2023-10-05)
+## 6.2.2 (2023-10-05)
 
 * add list of assets in `InvalidAssetName` message in `STACReader`
 
-# 6.2.1 (2023-09-28)
+## 6.2.1 (2023-09-28)
 
 * allow GeoJSON `Feature` in `ImageData.get_coverage_array` method
 
-# 6.2.0 (2023-09-27)
+## 6.2.0 (2023-09-27)
 
 * allow area-weighted statistics by adding `coverage` option in `rio_tiler.utils.get_array_statistics`
 
@@ -981,44 +982,44 @@ This release was made while we waited on a fix for <https://github.com/cogeotiff
     cm = cmap.get("Greys")
     ```
 
-# 6.1.0 (2023-09-15)
+## 6.1.0 (2023-09-15)
 
 * add `width`, `height` and `count` properties in `MosaicMethodBase`
 * make sure we mosaic ImageData/PointData with same number of bands
 * resize `ImageData.array` to the first asset's width/height in `mosaic_reader`
 
-# 6.0.3 (2023-09-13)
+## 6.0.3 (2023-09-13)
 
 * return a 1x1 image when bbox is smaller than a single pixel (author @JackDunnNZ, <https://github.com/cogeotiff/rio-tiler/pull/637>)
 
-# 6.0.2 (2023-08-21)
+## 6.0.2 (2023-08-21)
 
 * Update `data_as_image` to return masked values (author @JackDunnNZ, <https://github.com/cogeotiff/rio-tiler/pull/635>)
 
-# 6.0.1 (2023-07-25)
+## 6.0.1 (2023-07-25)
 
 * fix `key` access for `Info` and `BandStatistics` models for `extra` attributes
 * update deprecation notice to `7.0`
 
-# 6.0.0 (2023-07-25)
+## 6.0.0 (2023-07-25)
 
 * update `morecantile` requirement to `>=5.0,<6.0`
 * delete `rio_tiler.models.NodataTypes` (replaced with Literal within the `Info` model)
 
-# 5.0.3 (2023-07-18)
+## 5.0.3 (2023-07-18)
 
 * Filter useless `NotGeoreferencedWarning` warnings in  `Reader.feature()` and `ImageData.from_bytes()` methods
 * Ensure that dataset is still open when reading tags (author @JackDunnNZ, <https://github.com/cogeotiff/rio-tiler/pull/628>)
 
-# 5.0.2 (2023-07-11)
+## 5.0.2 (2023-07-11)
 
 * fix `ImageData.apply_color_formula()` method
 
-# 5.0.1 (2023-06-22)
+## 5.0.1 (2023-06-22)
 
 * raise `InvalidExpression` when passing invalid `asset` or `band` in an expression
 
-# 5.0.0 (2023-06-01)
+## 5.0.0 (2023-06-01)
 
 * Fix potential issue when getting statistics for non-valid data
 
@@ -1137,46 +1138,46 @@ This release was made while we waited on a fix for <https://github.com/cogeotiff
 
 * add Deprecation warning for `ImageData.from_array`, `ImageData.as_masked`, `PointData.as_masked` methods
 
-# 4.1.13 (2023-06-22)
+## 4.1.13 (2023-06-22)
 
 * raise InvalidExpression when passing invalid asset or band in an expression (Backported from 5.0.1)
 
-# 4.1.12 (2023-06-16)
+## 4.1.12 (2023-06-16)
 
 * fix issue with `rio_tiler.utils.get_array_statistics` when passing data with no `valid` value
 
-# 4.1.11 (2023-05-18)
+## 4.1.11 (2023-05-18)
 
 * in `rio_tiler.io.XarrayReader`, add `auto_expand` options to avoid returning 1D array (incompatible with rio-tiler) (author @abarciauskas-bgse, <https://github.com/cogeotiff/rio-tiler/pull/608>)
 
-# 4.1.10 (2023-03-24)
+## 4.1.10 (2023-03-24)
 
 * enable `boundless` geometry for cutline (author @yellowcap, <https://github.com/cogeotiff/rio-tiler/pull/586>)
 
-# 4.1.9 (2023-02-28)
+## 4.1.9 (2023-02-28)
 
 * Automatically expand 2D numpy array to 3D when creating ImageData
 
-# 4.1.8 (2023-02-15)
+## 4.1.8 (2023-02-15)
 
 * Fix dtype issue when working with Mosaics Methods. Mask should always been of type `Uint8`.
 * Fix `ImageData.from_array` method when working with Masked array
 
-# 4.1.7 (2023-02-07)
+## 4.1.7 (2023-02-07)
 
 * add `from_array` and `from_bytes` ImageData creation methods
 * add `statistics` method to ImageData
 
-# 4.1.6 (2023-01-18)
+## 4.1.6 (2023-01-18)
 
 * add `apply_colormap` method to the ImageData class
 * fix potential datatype overflow when calculating the intersection of mask and alpha band when using Colormap
 
-# 4.1.5 (2022-12-20)
+## 4.1.5 (2022-12-20)
 
 * Fix inverted col/row check when doing window read of a non WarpedVRT dataset
 
-# 4.1.4 (2022-12-16)
+## 4.1.4 (2022-12-16)
 
 * add `rio_tiler.mosaic.mosaic_point_reader` function to create Point value from multiple observation
 
@@ -1188,19 +1189,19 @@ This release was made while we waited on a fix for <https://github.com/cogeotiff
     pt: PointData = mosaic_point_reader(["cog.tif", "cog2.tif"], reader, 0, 0)
     ```
 
-# 4.1.3 (2022-12-15)
+## 4.1.3 (2022-12-15)
 
 * fix invalid definition of `PointData.mask` when mask is not provided. Makes sure it's a one element array.
 
-# 4.1.2 (2022-12-15)
+## 4.1.2 (2022-12-15)
 
 * raise `InvalidPointDataError` error when trying to create PointData from an empty list in `PointData.create_from_list`
 
-# 4.1.1 (2022-12-12)
+## 4.1.1 (2022-12-12)
 
 * fix invalid coordinates slicing for `XArrayReader.point()` method (author @benjaminleighton, <https://github.com/cogeotiff/rio-tiler/pull/559>)
 
-# 4.1.0 (2022-11-24)
+## 4.1.0 (2022-11-24)
 
 * add `asset_as_band` option in `MultiBaseReader` tile, part, preview, feature and point methods
 
@@ -1223,13 +1224,13 @@ with STACReader(STAC_PATH) as stac:
     assert img.band_names == ["green/red"]
 ```
 
-# 4.0.0 (2022-11-21)
+## 4.0.0 (2022-11-21)
 
 * remove deprecated code
   * `asset_expression` in MultiBaseReader
   * `GCPCOGReader`
 
-# 4.0.0a2 (2022-11-15)
+## 4.0.0a2 (2022-11-15)
 
 * use of `file:header_size` extension in `STACReader` to set `GDAL_INGESTED_BYTES_AT_OPEN` environment variable
 
@@ -1237,14 +1238,14 @@ with STACReader(STAC_PATH) as stac:
 
 * renamed `MultiBaseReader._get_asset_url` to `MultiBaseReader._get_asset_info` and change the output to return a dictionary in form of `{"url": ..., "env": ...}`
 
-# 4.0.0a1 (2022-11-10)
+## 4.0.0a1 (2022-11-10)
 
 * assign ColorInterp.alpha to rendered image when we add the mask band
 * add `.clip(bbox: BBox)` and `.resize(height: int, width: int)` methods to ImageData object
 * add python 3.11 support
 * replace `rio-color` by `color-operations` module
 
-# 4.0.0a0 (2022-10-20)
+## 4.0.0a0 (2022-10-20)
 
 * add python 3.10 support
 * add `apply_expression` method in `rio_tiler.models.ImageData` class
@@ -1408,12 +1409,12 @@ with STACReader(STAC_PATH) as stac:
         data = cog.preview()
     ```
 
-# 3.1.6 (2022-07-22)
+## 3.1.6 (2022-07-22)
 
 * Hide `NotGeoreferencedWarning` warnings in `utils.render` and `utils.resize_array`
 * update `MultiBaseReader` and `MultiBandReader` `points` method to prepare for numpy changes.
 
-# 3.1.5 (2022-07-06)
+## 3.1.5 (2022-07-06)
 
 * Deprecate `rio_tiler.io.GCPCOGReader` and allow GPCS dataset to be opened by `rio_tiler.io.COGReader`
 
@@ -1430,24 +1431,24 @@ with COGReader("my.tif") as cog:
 * add `ImageData.rescale` to rescale the array in place
 * add `ImageData.apply_color_formula` to apply color formula in place
 
-# 3.1.4 (2022-04-14)
+## 3.1.4 (2022-04-14)
 
 * Fix cutline creation for MultiPolygon (author @Fernigithub, <https://github.com/cogeotiff/rio-tiler/pull/493>)
 
-# 3.1.3 (2022-04-08)
+## 3.1.3 (2022-04-08)
 
 * Switch to `pyproject.toml` and `flit` for packaging (<https://github.com/cogeotiff/rio-tiler/pull/490>)
 * Catch discrete colormap with negative values (<https://github.com/cogeotiff/rio-tiler/pull/492>)
 
-# 3.1.2 (2022-03-25)
+## 3.1.2 (2022-03-25)
 
 * avoid calculating statistics for non-finite values (<https://github.com/cogeotiff/rio-tiler/pull/489>)
 
-# 3.1.1 (2022-03-17)
+## 3.1.1 (2022-03-17)
 
 * forward `band names` to ImageData output in `mosaic_reader` (<https://github.com/cogeotiff/rio-tiler/pull/486>)
 
-# 3.1.0 (2022-02-21)
+## 3.1.0 (2022-02-21)
 
 * add support for setting the S3 endpoint url scheme via the `AWS_HTTPS` environment variables in `aws_get_object` function using boto3 (<https://github.com/cogeotiff/rio-tiler/pull/476>)
 * Add semicolon `;` support for multi-blocks expression (<https://github.com/cogeotiff/rio-tiler/pull/479>)
@@ -1470,24 +1471,24 @@ expression = "b1+b2;b2"
 
 * update morecantile requirement to `>=3.1,<4.0`. WebMercatorQuad TMS is now aligned with GDAL and Mercantile TMS definition.
 
-# 3.0.3 (2022-01-18)
+## 3.0.3 (2022-01-18)
 
 * make sure we raise an HTTP exception when using an invalid STAC url (<https://github.com/cogeotiff/rio-tiler/pull/475>)
 
-# 3.0.2 (2022-01-03)
+## 3.0.2 (2022-01-03)
 
 * switch from `functools.lru_cache` to `cachetools.LRUCache` to allow unashable options in `rio_tiler.io.stac.fetch` function (<https://github.com/cogeotiff/rio-tiler/pull/471>)
 
-# 3.0.1 (2021-12-03)
+## 3.0.1 (2021-12-03)
 
 * avoid useless call to `transform_bounds` if input/output CRS are equals (<https://github.com/cogeotiff/rio-tiler/pull/466>)
 * make sure `geographic_bounds` don't return inf or nan values (<https://github.com/cogeotiff/rio-tiler/pull/467>)
 
-# 3.0.0 (2021-11-29)
+## 3.0.0 (2021-11-29)
 
 * no change since `3.0.0a6`
 
-# 3.0.0a6 (2021-11-22)
+## 3.0.0a6 (2021-11-22)
 
 * add `rio_tiler.utils.resize_array` to resize array to a given width/height (<https://github.com/cogeotiff/rio-tiler/pull/463>)
 * use `resize_array` in `ImageData.create_from_list` to avoid trying merging array of different sizes (<https://github.com/cogeotiff/rio-tiler/pull/463>)
@@ -1497,7 +1498,7 @@ expression = "b1+b2;b2"
 * update `MultiBaseReader` and `MultiBandReader` to be their own abstract classes instead of being subclass of `BaseReader`.
 * put `reader` attribute outside of the `__init__` method for `MultiBaseReader` and `MultiBandReader`.
 
-# 3.0.0a5 (2021-11-18)
+## 3.0.0a5 (2021-11-18)
 
 * allow the definition of `geographic_crs` used in the `geographic_bounds` property (<https://github.com/cogeotiff/rio-tiler/pull/458>)
 * use `contextlib.ExitStack` to better manager opening/closing rasterio dataset (<https://github.com/cogeotiff/rio-tiler/pull/459>)
@@ -1505,19 +1506,19 @@ expression = "b1+b2;b2"
 * better types definition for ColorMap objects (<https://github.com/cogeotiff/rio-tiler/pull/460>)
 * fix some types issues (<https://github.com/cogeotiff/rio-tiler/pull/460>)
 
-# 3.0.0a4 (2021-11-10)
+## 3.0.0a4 (2021-11-10)
 
 * refactor `SpatialMixin.tile_exists` to compare the bounds in the dataset's coordinate system to avoid coordinates overflow (a TMS CRS bounds can be smaller than the dataset CRS bounds) (<https://github.com/cogeotiff/rio-tiler/pull/455>)
 
-# 3.0.0a3 (2021-11-03)
+## 3.0.0a3 (2021-11-03)
 
 * Reader's `info` and `statistics` methods to default to available `bands` or `assets` if not provided (<https://github.com/cogeotiff/rio-tiler/pull/451>)
 
-# 3.0.0a2 (2021-10-21)
+## 3.0.0a2 (2021-10-21)
 
 * Allow `rio_tiler.utils.get_array_statistics` to return `0` for unfound category, instead of raising an error (<https://github.com/cogeotiff/rio-tiler/pull/443>)
 
-# 3.0.0a1 (2021-10-20)
+## 3.0.0a1 (2021-10-20)
 
 **breaking changes**
 
@@ -1529,7 +1530,7 @@ expression = "b1+b2;b2"
 
 * * `rio_tiler.models.ImageStatistics` model
 
-# 3.0.0a0 (2021-10-19)
+## 3.0.0a0 (2021-10-19)
 
 * add `crs` property in `rio_tiler.io.base.SpatialMixin` (<https://github.com/cogeotiff/rio-tiler/pull/429>)
 * add `geographic_bounds` in `rio_tiler.io.base.SpatialMixin` to return bounds in WGS84 (<https://github.com/cogeotiff/rio-tiler/pull/429>)
@@ -1696,12 +1697,12 @@ with STACReader("mystac.json") as stac:
 * `rio_tiler.reader.metadata` function (<https://github.com/cogeotiff/rio-tiler/pull/440>)
 * `rio_tiler.utils._stats` function (<https://github.com/cogeotiff/rio-tiler/pull/440>)
 
-# 2.1.3 (2021-09-14)
+## 2.1.3 (2021-09-14)
 
 * Make sure output data is of type `Uint8` when applying a colormap (<https://github.com/cogeotiff/rio-tiler/pull/423>)
 * Do not auto-rescale data if there is a colormap (<https://github.com/cogeotiff/rio-tiler/pull/423>)
 
-# 2.1.2 (2021-08-10)
+## 2.1.2 (2021-08-10)
 
 * update type information for mosaics functions (<https://github.com/cogeotiff/rio-tiler/pull/409>)
 

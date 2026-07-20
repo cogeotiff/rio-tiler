@@ -152,6 +152,25 @@ def test_apply_expression():
     assert img2.height == 256
     assert img2.band_descriptions == ["b1+b2"]
 
+    # a masked (nodata) input band must propagate through the expression, so a
+    # result is masked when any contributing band is masked, for both
+    # ImageData and PointData (see #965)
+    masked_img = ImageData(
+        numpy.ma.MaskedArray(
+            numpy.zeros((2, 1, 1), dtype="int16"),
+            mask=[[[True]], [[False]]],
+        )
+    )
+    assert masked_img.apply_expression("b1+b2").array.mask.tolist() == [[[True]]]
+
+    masked_pt = PointData(
+        numpy.ma.MaskedArray(
+            numpy.array([0, 5], dtype="int16"),
+            mask=[True, False],
+        )
+    )
+    assert masked_pt.apply_expression("b1+b2").array.mask.tolist() == [True]
+
 
 def test_dataset_statistics():
     """Make statistics are preserved on expression"""
