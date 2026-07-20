@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* fix: Explicitly cast weighted quantile results to float so statistics (author @manand881, https://github.com/cogeotiff/rio-tiler/pull/969)
+
 ## 9.4.1 (2026-07-20)
 
 * fix `rio_tiler.reader.read` misflagging an edge-aligned window as boundless, which broke point reads in the last row/column when `nodata` is set (routed through a WarpedVRT) (#966)
