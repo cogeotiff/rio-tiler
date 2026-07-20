@@ -7194,6 +7194,7 @@
 <ul>
 <li>fix <code>rio_tiler.reader.read</code> misflagging an edge-aligned window as boundless, which broke point reads in the last row/column when <code>nodata</code> is set (routed through a WarpedVRT) (#966)</li>
 <li>fix <code>PointData.apply_expression</code> dropping the mask, so an expression over a nodata band is now masked instead of returning a fabricated value (#965)</li>
+<li>perf: optimize <code>utils.get_array_statistics</code> (author @manand881, <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/964" title="GitHub Pull Request: cogeotiff/rio-tiler #964">cogeotiff/rio-tiler!964</a>)</li>
 </ul>
 <h2 id="940-2026-07-02">9.4.0 (2026-07-02)<a class="headerlink" href="#940-2026-07-02" title="Permanent link">&para;</a></h2>
 <ul>
