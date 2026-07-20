@@ -686,14 +686,17 @@ def test_get_array_statistics_coverage():
     assert len(stats) == 1
     assert stats[0]["count"] == 4
     assert stats[0]["mean"] == 5
-    assert stats[0]["median"] == 5
+    assert stats[0]["median"] == 5.0
+    assert isinstance(stats[0]["median"], float)
     assert stats[0]["min"] == 1
     assert stats[0]["max"] == 9
     # exactextract takes coverage into account, we don't
     assert stats[0]["minority"] == 1  # 1 in exactextract
     assert stats[0]["majority"] == 1  # 5 in exactextract
-    assert stats[0]["percentile_25"] == 3
-    assert stats[0]["percentile_75"] == 6
+    assert stats[0]["percentile_25"] == 3.0
+    assert stats[0]["percentile_75"] == 6.0
+    assert isinstance(stats[0]["percentile_25"], float)
+    assert isinstance(stats[0]["percentile_75"], float)
     assert stats[0]["std"] == math.sqrt(5)
 
     # test correct calculation of valid percent with masked array and coverage array

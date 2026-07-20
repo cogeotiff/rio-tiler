@@ -71,7 +71,7 @@ def _weighted_quantiles(
     i = numpy.argsort(values)
     c = numpy.cumsum(weights[i])
     q = numpy.atleast_1d(quantiles) * c[-1]
-    return values[i[numpy.searchsorted(c, q)]].tolist()
+    return [float(value) for value in values[i[numpy.searchsorted(c, q)]]]
 
 
 # Ref: https://stackoverflow.com/questions/2413522
@@ -145,9 +145,7 @@ def get_array_statistics(
         assert coverage.shape == (
             data.shape[1],
             data.shape[2],
-        ), (
-            f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
-        )
+        ), f"Invalid shape ({coverage.shape}) for Coverage, expected {(data.shape[1], data.shape[2])}"
 
     else:
         coverage = numpy.ones((data.shape[1], data.shape[2]))
