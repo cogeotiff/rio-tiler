@@ -1,6 +1,8 @@
 
 # Unreleased
 
+## 9.4.2 (2026-07-20)
+
 * fix: Explicitly cast weighted quantile results to float so statistics (author @manand881, https://github.com/cogeotiff/rio-tiler/pull/969)
 
 ## 9.4.1 (2026-07-20)
