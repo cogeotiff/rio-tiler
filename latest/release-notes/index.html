@@ -7213,6 +7213,9 @@
 
 
 <h1 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h1>
+<ul>
+<li>fix: Explicitly cast weighted quantile results to float so statistics (author @manand881, <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/969" title="GitHub Pull Request: cogeotiff/rio-tiler #969">cogeotiff/rio-tiler!969</a>)</li>
+</ul>
 <h2 id="941-2026-07-20">9.4.1 (2026-07-20)<a class="headerlink" href="#941-2026-07-20" title="Permanent link">&para;</a></h2>
 <ul>
 <li>fix <code>rio_tiler.reader.read</code> misflagging an edge-aligned window as boundless, which broke point reads in the last row/column when <code>nodata</code> is set (routed through a WarpedVRT) (#966)</li>
