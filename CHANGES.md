@@ -1,6 +1,7 @@
 
 # Unreleased
 
+* fix `rio_tiler.reader.read` misflagging an edge-aligned window as boundless, which broke point reads in the last row/column when `nodata` is set (routed through a WarpedVRT) (#966)
 * fix `PointData.apply_expression` dropping the mask, so an expression over a nodata band is now masked instead of returning a fabricated value (#965)
 
 ## 9.4.0 (2026-07-02)

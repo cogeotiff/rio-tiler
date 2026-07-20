@@ -6,6 +6,8 @@ import numpy
 import pytest
 import rasterio
 from numpy.testing import assert_array_almost_equal
+from rasterio.io import MemoryFile
+from rasterio.transform import from_bounds
 from rasterio.warp import transform_bounds
 
 from rio_tiler import constants, reader
@@ -678,6 +680,40 @@ def test_point():
         # Test with COG + Alpha Band
         assert reader.point(src_dst, [-104.77519499, 38.95367054]).data[0]
         assert reader.point(src_dst, [-104.77519499, 38.95367054]).mask[0] == 0  # Masked
+
+
+def test_point_edge_aligned_window_with_nodata():
+    """A point in the last row/col must read fine under nodata (WarpedVRT). See #966."""
+    profile = {
+        "driver": "GTiff",
+        "width": 4,
+        "height": 4,
+        "count": 1,
+        "dtype": "int16",
+        "crs": "EPSG:4326",
+        "transform": from_bounds(0, 0, 4, 4, 4, 4),
+        "nodata": 0,
+    }
+
+    # [[[ 0,  1,  2,  3],
+    #   [ 4,  5,  6,  7],
+    #   [ 8,  9, 10, 11],
+    #   [12, 13, 14, 15]]]
+    arr = numpy.arange(16, dtype="int16").reshape(1, 4, 4)
+
+    with MemoryFile() as memfile:
+        with memfile.open(**profile) as dst:
+            dst.write(arr)
+
+        with memfile.open() as src_dst:
+            # Bottom-right cell center holds 15; nodata=0 must not change an in-bounds read
+            pt = reader.point(src_dst, (3.5, 0.5), coord_crs="epsg:4326", nodata=0)
+            assert pt.data.tolist() == [15]
+            assert not pt.array.mask.any()
+
+            # A middle cell still reads correctly (regression guard both directions)
+            pt = reader.point(src_dst, (1.5, 1.5), coord_crs="epsg:4326", nodata=0)
+            assert pt.data.tolist() == [9]
 
 
 def test_part_with_buffer():
