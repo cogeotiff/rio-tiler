@@ -297,8 +297,8 @@ class PointData:
         blocks = get_expression_blocks(expression)
 
         data = apply_expression(blocks, self.band_names, self.array)
-        # Using numexpr do not preserve mask info
-        data.mask = False
+        # NOTE: We use dataset mask when mixing bands
+        data.mask = numpy.logical_or.reduce(self.array.mask)
 
         mapexpr = {
             self.band_names[idx]: desc for idx, desc in enumerate(self.band_descriptions)
