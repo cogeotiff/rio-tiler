@@ -854,8 +854,8 @@ class ImageData:
             if "crs" not in kwargs and self.crs:
                 kwargs.update({"crs": self.crs})
 
-        array = self.array.copy()
-        mask = self.mask
+        array = self.array
+        mask = self.mask if add_mask else None
 
         datatype_range = self.dataset_statistics or (dtype_ranges[str(array.dtype)],)
 
@@ -872,7 +872,8 @@ class ImageData:
                     f"Invalid type: `{array.dtype}` for the `{img_format}` driver. Data will be rescaled using min/max type bounds or dataset_statistics.",
                     InvalidDatatypeWarning,
                 )
-                array = rescale_image(array, in_range=datatype_range)
+                # rescale_image mutates and may change dtype — copy first
+                array = rescale_image(array.copy(), in_range=datatype_range)
                 if mask is not None:
                     mask = linear_rescale(mask, in_range=dtype_ranges[str(array.dtype)])
 

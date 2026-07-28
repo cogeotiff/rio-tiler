@@ -55,6 +55,171 @@ def test_imageData_AutoRescaling():
         )
 
 
+def test_render_does_not_mutate_array():
+    """ImageData.render must not mutate the source array (uint8 or float)."""
+    data_u8 = numpy.arange(64, dtype="uint8").reshape(1, 8, 8).copy()
+    im = ImageData(data_u8.copy())
+    before = im.array.copy()
+    out = im.render(img_format="PNG")
+    assert out
+    numpy.testing.assert_array_equal(im.array, before)
+    assert im.array.dtype == before.dtype
+
+    data_f = numpy.full((1, 8, 8), 0.5, dtype="float32")
+    im = ImageData(data_f.copy())
+    before = im.array.copy()
+    with pytest.warns(InvalidDatatypeWarning):
+        out = im.render(img_format="PNG")
+    assert out
+    numpy.testing.assert_array_equal(im.array, before)
+    assert im.array.dtype == numpy.dtype("float32")
+
+
+def test_render_add_mask_false_uint8_png():
+    """add_mask=False omits alpha band for uint8 PNG."""
+    data = numpy.zeros((1, 16, 16), dtype="uint8") + 5
+    mask = numpy.zeros((1, 16, 16), dtype="bool")
+    mask[0, :4, :4] = True
+    im = ImageData(numpy.ma.MaskedArray(data, mask=mask))
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
+        with MemoryFile(im.render(img_format="PNG", add_mask=True)) as mem:
+            with mem.open() as src:
+                assert src.count == 2
+        with MemoryFile(im.render(img_format="PNG", add_mask=False)) as mem:
+            with mem.open() as src:
+                assert src.count == 1
+                assert src.read(1)[0, 0] == 5
+
+
+@pytest.mark.parametrize(
+    "img_format,dtype,add_mask",
+    [
+        ("PNG", "uint8", True),
+        ("PNG", "uint8", False),
+        ("JPEG", "uint8", True),
+        ("JPEG", "uint8", False),
+        ("WEBP", "uint8", True),
+        ("WEBP", "uint8", False),
+        ("GTIFF", "uint8", True),
+        ("NPY", "uint8", True),
+        ("NPZ", "uint8", True),
+        ("PNG", "float32", True),
+        ("PNG", "float32", False),
+        ("JPEG", "int16", True),
+        ("PNG", "int8", False),
+    ],
+)
+def test_render_does_not_mutate_across_formats(img_format, dtype, add_mask):
+    """Skipping the always-copy must not mutate caller data for common drivers."""
+    if dtype.startswith("float"):
+        data = numpy.full((1, 16, 16), 0.5, dtype=dtype)
+    else:
+        data = numpy.arange(16 * 16, dtype=dtype).reshape(1, 16, 16)
+    mask = numpy.zeros((1, 16, 16), dtype=bool)
+    mask[0, :2, :2] = True
+    im = ImageData(numpy.ma.MaskedArray(data.copy(), mask=mask.copy()))
+    before_data = im.array.data.copy()
+    before_mask = im.array.mask.copy()
+    before_dtype = im.array.dtype
+
+    with warnings.catch_warnings():
+        warnings.simplefilter("ignore", InvalidDatatypeWarning)
+        out = im.render(img_format=img_format, add_mask=add_mask)
+
+    assert out
+    numpy.testing.assert_array_equal(im.array.data, before_data)
+    numpy.testing.assert_array_equal(im.array.mask, before_mask)
+    assert im.array.dtype == before_dtype
+
+
+def test_render_does_not_mutate_alpha_mask():
+    """self.mask may return alpha_mask by reference; render must not write through it."""
+    data = numpy.zeros((1, 16, 16), dtype="uint8") + 10
+    alpha = numpy.zeros((16, 16), dtype="uint8") + 255
+    alpha[:4, :4] = 0
+    im = ImageData(data, alpha_mask=alpha.copy())
+    before_alpha = im.alpha_mask.copy()
+    before_data = im.array.copy()
+
+    out = im.render(img_format="PNG", add_mask=True)
+    assert out
+    numpy.testing.assert_array_equal(im.alpha_mask, before_alpha)
+    numpy.testing.assert_array_equal(im.array, before_data)
+
+    # uint16 PNG rescales mask in utils.render — still must not touch alpha_mask
+    alpha16 = numpy.zeros((16, 16), dtype="uint16") + 65535
+    alpha16[:4, :4] = 0
+    im16 = ImageData(
+        numpy.zeros((1, 16, 16), dtype="uint16") + 1000, alpha_mask=alpha16.copy()
+    )
+    before_alpha16 = im16.alpha_mask.copy()
+    im16.render(img_format="PNG", add_mask=True)
+    numpy.testing.assert_array_equal(im16.alpha_mask, before_alpha16)
+
+
+def test_render_does_not_mutate_with_colormap():
+    """Colormap path uses array.data without a defensive copy."""
+    data = numpy.zeros((1, 16, 16), dtype="uint8")
+    data[0, 0, 0] = 1
+    data[0, 1, 1] = 2
+    cm = {
+        0: (0, 0, 0, 255),
+        1: (255, 0, 0, 255),
+        2: (0, 255, 0, 200),
+    }
+    im = ImageData(data.copy())
+    before = im.array.copy()
+    out = im.render(img_format="PNG", colormap=cm, add_mask=True)
+    assert out
+    numpy.testing.assert_array_equal(im.array, before)
+
+    out_no_mask = im.render(img_format="PNG", colormap=cm, add_mask=False)
+    assert out_no_mask
+    numpy.testing.assert_array_equal(im.array, before)
+
+
+def test_render_repeated_is_stable():
+    """Identity path shares the array buffer; repeated renders must stay identical."""
+    data = numpy.arange(16 * 16, dtype="uint8").reshape(1, 16, 16)
+    mask = numpy.zeros((1, 16, 16), dtype=bool)
+    mask[0, :3, :3] = True
+    im = ImageData(numpy.ma.MaskedArray(data, mask=mask))
+    first = im.render(img_format="PNG", add_mask=True)
+    second = im.render(img_format="PNG", add_mask=True)
+    assert first == second
+    third = im.render(img_format="PNG", add_mask=False)
+    fourth = im.render(img_format="PNG", add_mask=False)
+    assert third == fourth
+
+
+def test_render_rescale_with_dataset_statistics_no_mutate():
+    """Rescale via dataset_statistics must copy before mutate."""
+    data = numpy.full((1, 16, 16), 0.25, dtype="float32")
+    im = ImageData(data.copy(), dataset_statistics=[(0.0, 0.5)])
+    before = im.array.copy()
+    with pytest.warns(InvalidDatatypeWarning):
+        out = im.render(img_format="PNG", add_mask=True)
+    assert out
+    numpy.testing.assert_array_equal(im.array, before)
+    assert im.array.dtype == numpy.dtype("float32")
+
+
+def test_render_webp_gray_expand_no_mutate():
+    """WEBP 1-band→3-band expand must not write back into ImageData."""
+    im = ImageData(numpy.zeros((1, 16, 16), dtype="uint8") + 7)
+    before = im.array.copy()
+    out = im.render(img_format="WEBP", add_mask=True)
+    assert out
+    numpy.testing.assert_array_equal(im.array, before)
+    assert im.array.shape == (1, 16, 16)
+
+
 @pytest.mark.parametrize(
     "dtype",
     ["uint8", "int8", "uint16", "int16", "uint32", "int32", "float32", "float64"],
