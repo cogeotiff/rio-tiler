@@ -21,8 +21,9 @@ from rasterio.io import MemoryFile
 
 from rio_tiler import colormap, utils
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
-from rio_tiler.errors import RioTilerError
+from rio_tiler.errors import InvalidFormat, RioTilerError
 from rio_tiler.io import Reader
+from rio_tiler.profiles import img_profiles
 
 from .conftest import requires_webp
 
@@ -863,3 +864,705 @@ def test_inherit_rasterio_env_not_empty_separate_thread(monkeypatch):
             (True, "FALSE"),
             (False, "something"),
         ]
+
+
+def _decode_raster(content: bytes):
+    """Decode image bytes with rasterio; return (data, profile, colorinterp)."""
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
+        with MemoryFile(content) as mem:
+            with mem.open() as dst:
+                return dst.read(), dst.profile, dst.colorinterp
+
+
+def test_render_png_roundtrip_uint8():
+    """Lossless PNG decode equals input (1-band, 3-band, +mask)."""
+    rng = np.random.default_rng(42)
+    gray = rng.integers(0, 256, size=(1, 64, 64), dtype=np.uint8)
+    rgb = rng.integers(0, 256, size=(3, 64, 64), dtype=np.uint8)
+    mask = np.full((64, 64), 255, dtype=np.uint8)
+    mask[:10, :10] = 0
+    mask[20:30, 20:30] = 128
+
+    data, profile, _ = _decode_raster(utils.render(gray, img_format="PNG"))
+    assert profile["driver"] == "PNG"
+    assert profile["count"] == 1
+    np.testing.assert_array_equal(data[0], gray[0])
+
+    data, profile, color = _decode_raster(utils.render(rgb, mask=mask, img_format="PNG"))
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+    np.testing.assert_array_equal(data[:3], rgb)
+    np.testing.assert_array_equal(data[3], mask)
+
+    data, profile, _ = _decode_raster(utils.render(rgb, img_format="PNG"))
+    assert profile["count"] == 3
+    np.testing.assert_array_equal(data, rgb)
+
+
+def test_render_jpeg_drops_mask_layout():
+    """JPEG always drops mask and keeps 3 bands."""
+    rgb = np.zeros((3, 32, 32), dtype=np.uint8) + 40
+    rgb[0] = 200
+    mask = np.zeros((32, 32), dtype=np.uint8)
+    data, profile, color = _decode_raster(utils.render(rgb, mask=mask, img_format="JPEG"))
+    assert profile["driver"] == "JPEG"
+    assert profile["count"] == 3
+    assert ColorInterp.alpha not in color
+    assert data.shape == (3, 32, 32)
+
+
+def test_render_jpeg_default_quality_is_gdal_75(monkeypatch):
+    """Bare JPEG uses QUALITY=75 (GDAL default), not img_profiles 85."""
+    monkeypatch.delenv("RIO_TILER_FAST_ENCODE", raising=False)
+    rng = np.random.default_rng(0)
+    rgb = rng.integers(0, 256, size=(3, 64, 64), dtype=np.uint8)
+    # GDAL path (default) and fast path both use 75 when QUALITY omitted
+    bare = utils.render(rgb, img_format="JPEG", fast_encode=False)
+    q75 = utils.render(rgb, img_format="JPEG", QUALITY=75, fast_encode=False)
+    q85 = utils.render(rgb, img_format="JPEG", QUALITY=85, fast_encode=False)
+    assert bare == q75
+    assert bare != q85
+
+    bare_fast = utils.render(rgb, img_format="JPEG", fast_encode=True)
+    q75_fast = utils.render(rgb, img_format="JPEG", QUALITY=75, fast_encode=True)
+    q85_fast = utils.render(rgb, img_format="JPEG", QUALITY=85, fast_encode=True)
+    assert bare_fast == q75_fast
+    assert bare_fast != q85_fast
+
+
+@requires_webp
+def test_render_webp_gray_expands_to_rgb():
+    """WEBP 1-band is expanded to RGB with equal channels."""
+    gray = np.full((1, 32, 32), 77, dtype=np.uint8)
+    data, profile, _ = _decode_raster(utils.render(gray, img_format="WEBP"))
+    assert profile["driver"] == "WEBP"
+    assert profile["count"] == 3
+    np.testing.assert_array_equal(data[0], data[1])
+    np.testing.assert_array_equal(data[1], data[2])
+
+
+def test_render_colormap_mask_band_count():
+    """Colormap without mask omits alpha; with mask includes alpha."""
+    arr = np.zeros((1, 16, 16), dtype=np.uint8) + 1
+    cm = {0: (0, 0, 0, 0), 1: (255, 0, 0, 255)}
+
+    data, profile, color = _decode_raster(utils.render(arr, colormap=cm))
+    assert profile["count"] == 3
+    assert ColorInterp.alpha not in color
+    np.testing.assert_array_equal(data[:, 0, 0], [255, 0, 0])
+
+    mask = np.full((16, 16), 255, dtype=np.uint8)
+    data, profile, color = _decode_raster(
+        utils.render(arr, mask=mask, colormap=cm, img_format="PNG")
+    )
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+    np.testing.assert_array_equal(data[:, 0, 0], [255, 0, 0, 255])
+
+
+def test_render_fast_encode_default_off(monkeypatch):
+    """Without opt-in, encode matches explicit fast_encode=False (GDAL path)."""
+    monkeypatch.delenv("RIO_TILER_FAST_ENCODE", raising=False)
+    rng = np.random.default_rng(1)
+    rgb = rng.integers(0, 256, size=(3, 32, 32), dtype=np.uint8)
+    bare = utils.render(rgb, img_format="PNG", ZLEVEL=6)
+    off = utils.render(rgb, img_format="PNG", ZLEVEL=6, fast_encode=False)
+    assert bare == off
+
+
+def test_render_fast_path_matches_gdal_png_decode():
+    """Fast encode path and GDAL path decode to the same PNG pixels."""
+    rng = np.random.default_rng(7)
+    rgb = rng.integers(0, 256, size=(3, 48, 48), dtype=np.uint8)
+    mask = np.full((48, 48), 255, dtype=np.uint8)
+    mask[:8, :8] = 0
+    mask[10:20, 10:20] = 100
+
+    for zlevel in (1, 6):
+        fast_bytes = utils.render(
+            rgb, mask=mask, img_format="PNG", ZLEVEL=zlevel, fast_encode=True
+        )
+        gdal_bytes = utils.render(
+            rgb, mask=mask, img_format="PNG", ZLEVEL=zlevel, fast_encode=False
+        )
+
+        # Raw codec bytes may differ; decoded pixels must match.
+        p_data, p_prof, p_ci = _decode_raster(fast_bytes)
+        g_data, g_prof, g_ci = _decode_raster(gdal_bytes)
+        assert p_prof["count"] == g_prof["count"] == 4
+        assert ColorInterp.alpha in p_ci and ColorInterp.alpha in g_ci
+        np.testing.assert_array_equal(p_data, g_data)
+
+
+@pytest.mark.parametrize("env_val", ["1", "true", "TRUE", "yes", "on"])
+def test_render_fast_encode_env(monkeypatch, env_val):
+    """RIO_TILER_FAST_ENCODE enables fast path; kwarg overrides env."""
+    rng = np.random.default_rng(3)
+    rgb = rng.integers(0, 256, size=(3, 24, 24), dtype=np.uint8)
+
+    monkeypatch.delenv("RIO_TILER_FAST_ENCODE", raising=False)
+    default_bytes = utils.render(rgb, img_format="PNG", ZLEVEL=6)
+    gdal_bytes = utils.render(rgb, img_format="PNG", ZLEVEL=6, fast_encode=False)
+    assert default_bytes == gdal_bytes
+
+    monkeypatch.setenv("RIO_TILER_FAST_ENCODE", env_val)
+    env_on = utils.render(rgb, img_format="PNG", ZLEVEL=6)
+    explicit_on = utils.render(rgb, img_format="PNG", ZLEVEL=6, fast_encode=True)
+    # Both should be fast path when backends exist; decode-equal either way
+    e_data, _, _ = _decode_raster(env_on)
+    x_data, _, _ = _decode_raster(explicit_on)
+    g_data, _, _ = _decode_raster(gdal_bytes)
+    np.testing.assert_array_equal(e_data, g_data)
+    np.testing.assert_array_equal(x_data, g_data)
+
+    # Explicit False wins over env
+    env_overridden = utils.render(rgb, img_format="PNG", ZLEVEL=6, fast_encode=False)
+    assert env_overridden == gdal_bytes
+
+
+def test_render_fast_encode_env_falsy_ignored(monkeypatch):
+    """Unrecognized / falsy env values keep the GDAL default path."""
+    rng = np.random.default_rng(4)
+    rgb = rng.integers(0, 256, size=(3, 16, 16), dtype=np.uint8)
+    gdal_bytes = utils.render(rgb, img_format="PNG", ZLEVEL=6, fast_encode=False)
+
+    for env_val in ["0", "false", "off", "", "maybe"]:
+        monkeypatch.setenv("RIO_TILER_FAST_ENCODE", env_val)
+        assert utils.render(rgb, img_format="PNG", ZLEVEL=6) == gdal_bytes
+
+
+def test_render_fast_encode_unsupported_options_use_gdal():
+    """Unknown creation options force GDAL instead of silently ignoring them."""
+    rng = np.random.default_rng(5)
+    rgb = rng.integers(0, 256, size=(3, 32, 32), dtype=np.uint8)
+
+    # WORLDFILE is a real GDAL option the fast path does not implement
+    gdal = utils.render(
+        rgb, img_format="PNG", ZLEVEL=6, WORLDFILE="YES", fast_encode=False
+    )
+    fast = utils.render(
+        rgb, img_format="PNG", ZLEVEL=6, WORLDFILE="YES", fast_encode=True
+    )
+    assert fast == gdal
+
+    # JPEG progressive not mapped by fast path
+    gdal_j = utils.render(
+        rgb, img_format="JPEG", QUALITY=75, PROGRESSIVE="ON", fast_encode=False
+    )
+    fast_j = utils.render(
+        rgb, img_format="JPEG", QUALITY=75, PROGRESSIVE="ON", fast_encode=True
+    )
+    assert fast_j == gdal_j
+
+
+def test_render_fast_encode_jpeg_layout():
+    """Fast JPEG: drop mask; gray stays 1-band; RGB stays 3-band."""
+    rgb = np.zeros((3, 32, 32), dtype=np.uint8) + 40
+    rgb[0] = 200
+    mask = np.zeros((32, 32), dtype=np.uint8)
+    data, profile, color = _decode_raster(
+        utils.render(rgb, mask=mask, img_format="JPEG", fast_encode=True)
+    )
+    assert profile["driver"] == "JPEG"
+    assert profile["count"] == 3
+    assert ColorInterp.alpha not in color
+    assert data.shape == (3, 32, 32)
+
+    gray = np.full((1, 32, 32), 90, dtype=np.uint8)
+    data, profile, _ = _decode_raster(
+        utils.render(gray, img_format="JPEG", fast_encode=True)
+    )
+    assert profile["count"] == 1
+    assert data.shape == (1, 32, 32)
+
+    # Gray + mask: JPEG drops mask, stays 1-band
+    mask = np.zeros((32, 32), dtype=np.uint8)
+    mask[:4, :4] = 0
+    data, profile, color = _decode_raster(
+        utils.render(gray, mask=mask, img_format="JPEG", fast_encode=True)
+    )
+    assert profile["count"] == 1
+    assert ColorInterp.alpha not in color
+    assert data.shape == (1, 32, 32)
+
+
+def test_render_fast_encode_jpeg_four_band_cmyk_parity():
+    """4-band JPEG must fall back to GDAL CMYK, byte-identical, in fast mode.
+
+    The fast path cannot emit GDAL's 4-band CMYK JPEG, so it must bail to
+    GDAL and produce byte-identical output. This locks the contract so a
+    future change cannot silently switch 4-band JPEG to 3-band RGB.
+    """
+    rgba = np.zeros((4, 32, 32), dtype=np.uint8)
+    rgba[0] = 200
+    rgba[3] = 255
+    gdal = utils.render(rgba, img_format="JPEG", fast_encode=False)
+    fast = utils.render(rgba, img_format="JPEG", fast_encode=True)
+    assert fast == gdal
+    data, profile, _ = _decode_raster(gdal)
+    assert profile["driver"] == "JPEG"
+
+
+@requires_webp
+def test_render_fast_encode_webp_layout():
+    """Fast WEBP: gray expands to RGB; mask becomes alpha (4 bands)."""
+    gray = np.full((1, 32, 32), 77, dtype=np.uint8)
+    data, profile, _ = _decode_raster(
+        utils.render(gray, img_format="WEBP", fast_encode=True)
+    )
+    assert profile["driver"] == "WEBP"
+    assert profile["count"] == 3
+    np.testing.assert_array_equal(data[0], data[1])
+    np.testing.assert_array_equal(data[1], data[2])
+
+    rgb = np.zeros((3, 32, 32), dtype=np.uint8) + 10
+    mask = np.full((32, 32), 255, dtype=np.uint8)
+    mask[:4, :4] = 0
+    data, profile, color = _decode_raster(
+        utils.render(rgb, mask=mask, img_format="WEBP", fast_encode=True)
+    )
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+
+    # 4-band RGBA without separate mask stays 4-band
+    rng = np.random.default_rng(18)
+    rgba = rng.integers(0, 256, size=(4, 32, 32), dtype=np.uint8)
+    data, profile, color = _decode_raster(
+        utils.render(rgba, img_format="WEBP", fast_encode=True)
+    )
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+
+
+def test_render_fast_encode_colormap_mask_band_count():
+    """Fast path keeps colormap ± mask band-count contract."""
+    arr = np.zeros((1, 16, 16), dtype=np.uint8) + 1
+    cm = {0: (0, 0, 0, 0), 1: (255, 0, 0, 255)}
+
+    data, profile, color = _decode_raster(
+        utils.render(arr, colormap=cm, fast_encode=True)
+    )
+    assert profile["count"] == 3
+    assert ColorInterp.alpha not in color
+    np.testing.assert_array_equal(data[:, 0, 0], [255, 0, 0])
+
+    mask = np.full((16, 16), 255, dtype=np.uint8)
+    data, profile, color = _decode_raster(
+        utils.render(arr, mask=mask, colormap=cm, img_format="PNG", fast_encode=True)
+    )
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+    np.testing.assert_array_equal(data[:, 0, 0], [255, 0, 0, 255])
+
+
+@requires_webp
+def test_render_fast_encode_colormap_webp():
+    """Fast path: colormap + WEBP keeps band-count contract (3 vs 4)."""
+    arr = np.zeros((1, 16, 16), dtype=np.uint8) + 1
+    cm = {0: (0, 0, 0, 0), 1: (255, 0, 0, 255)}
+
+    # Colormap without mask → 3-band (no alpha)
+    data, profile, color = _decode_raster(
+        utils.render(arr, colormap=cm, img_format="WEBP", fast_encode=True)
+    )
+    assert profile["driver"] == "WEBP"
+    assert profile["count"] == 3
+    assert ColorInterp.alpha not in color
+
+    # Colormap + partial mask (with transparent pixels) → 4-band
+    mask = np.full((16, 16), 255, dtype=np.uint8)
+    mask[:4, :4] = 0
+    data, profile, color = _decode_raster(
+        utils.render(arr, mask=mask, colormap=cm, img_format="WEBP", fast_encode=True)
+    )
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+
+    # Decode-equal to GDAL for both cases
+    for m in (None, mask):
+        f_data, _, _ = _decode_raster(
+            utils.render(arr, mask=m, colormap=cm, img_format="WEBP", fast_encode=True)
+        )
+        g_data, _, _ = _decode_raster(
+            utils.render(arr, mask=m, colormap=cm, img_format="WEBP", fast_encode=False)
+        )
+        np.testing.assert_array_equal(f_data, g_data)
+
+
+def test_render_fast_encode_img_profiles_honored():
+    """Explicit img_profiles options are honored on the fast path."""
+    rng = np.random.default_rng(8)
+    rgb = rng.integers(0, 256, size=(3, 48, 48), dtype=np.uint8)
+
+    jpeg_prof = img_profiles["jpeg"]  # quality 85
+    bare_fast = utils.render(rgb, img_format="JPEG", fast_encode=True)
+    profile_fast = utils.render(rgb, img_format="JPEG", fast_encode=True, **jpeg_prof)
+    assert bare_fast != profile_fast
+    assert profile_fast == utils.render(
+        rgb, img_format="JPEG", QUALITY=85, fast_encode=True
+    )
+
+    png_raw = img_profiles["pngraw"]  # zlevel 1
+    fast_z1 = utils.render(rgb, img_format="PNG", fast_encode=True, **png_raw)
+    gdal_z1 = utils.render(rgb, img_format="PNG", fast_encode=False, **png_raw)
+    f_data, _, _ = _decode_raster(fast_z1)
+    g_data, _, _ = _decode_raster(gdal_z1)
+    np.testing.assert_array_equal(f_data, g_data)
+
+
+def test_render_fast_encode_four_band_rgba_png():
+    """4-band uint8 without separate mask encodes as RGBA on fast path."""
+    rng = np.random.default_rng(9)
+    rgba = rng.integers(0, 256, size=(4, 24, 24), dtype=np.uint8)
+    fast = utils.render(rgba, img_format="PNG", fast_encode=True)
+    gdal = utils.render(rgba, img_format="PNG", fast_encode=False)
+    f_data, f_prof, _ = _decode_raster(fast)
+    g_data, g_prof, _ = _decode_raster(gdal)
+    assert f_prof["count"] == g_prof["count"] == 4
+    np.testing.assert_array_equal(f_data, g_data)
+
+
+def test_render_fast_encode_png_roundtrip_uint8():
+    """Fast-path lossless PNG decode equals input (1-band, 3-band, +mask)."""
+    rng = np.random.default_rng(42)
+    gray = rng.integers(0, 256, size=(1, 64, 64), dtype=np.uint8)
+    rgb = rng.integers(0, 256, size=(3, 64, 64), dtype=np.uint8)
+    mask = np.full((64, 64), 255, dtype=np.uint8)
+    mask[:10, :10] = 0
+    mask[20:30, 20:30] = 128
+
+    data, profile, _ = _decode_raster(
+        utils.render(gray, img_format="PNG", fast_encode=True)
+    )
+    assert profile["driver"] == "PNG"
+    assert profile["count"] == 1
+    np.testing.assert_array_equal(data[0], gray[0])
+
+    data, profile, color = _decode_raster(
+        utils.render(rgb, mask=mask, img_format="PNG", fast_encode=True)
+    )
+    assert profile["count"] == 4
+    assert ColorInterp.alpha in color
+    np.testing.assert_array_equal(data[:3], rgb)
+    np.testing.assert_array_equal(data[3], mask)
+
+    data, profile, _ = _decode_raster(
+        utils.render(rgb, img_format="PNG", fast_encode=True)
+    )
+    assert profile["count"] == 3
+    np.testing.assert_array_equal(data, rgb)
+
+
+def test_render_fast_encode_default_off_all_formats(monkeypatch):
+    """Bare render matches fast_encode=False for PNG/JPEG/WEBP (GDAL path)."""
+    monkeypatch.delenv("RIO_TILER_FAST_ENCODE", raising=False)
+    rng = np.random.default_rng(12)
+    rgb = rng.integers(0, 256, size=(3, 32, 32), dtype=np.uint8)
+    gray = rng.integers(0, 256, size=(1, 32, 32), dtype=np.uint8)
+
+    assert utils.render(rgb, img_format="PNG") == utils.render(
+        rgb, img_format="PNG", fast_encode=False
+    )
+    assert utils.render(rgb, img_format="JPEG") == utils.render(
+        rgb, img_format="JPEG", fast_encode=False
+    )
+    assert utils.render(gray, img_format="WEBP") == utils.render(
+        gray, img_format="WEBP", fast_encode=False
+    )
+
+
+def test_render_fast_encode_invalid_format_still_raises():
+    """Invalid shapes still raise InvalidFormat with fast_encode on or off."""
+    bad = np.zeros((5, 32, 32), dtype=np.uint8)
+    with pytest.raises(InvalidFormat):
+        utils.render(bad, img_format="PNG", fast_encode=False)
+    with pytest.raises(InvalidFormat):
+        utils.render(bad, img_format="PNG", fast_encode=True)
+
+    with pytest.raises(InvalidFormat):
+        utils.render(np.zeros((1, 8, 8), dtype=np.uint8), img_format="NOTADRIVER")
+
+
+def test_render_fast_encode_non_uint8_bails_to_gdal():
+    """Non-uint8 dtypes must bypass the fast path and use GDAL identically.
+
+    The fast path only handles uint8. For uint16/float32/etc. it must bail
+    out immediately (dtype check) so GDAL is used with zero overhead —
+    fast_encode=True must produce byte-identical output to fast_encode=False.
+    """
+    rng = np.random.default_rng(21)
+
+    # uint16 1-band PNG (stays uint16 through GDAL)
+    u16 = rng.integers(0, 65536, size=(1, 32, 32), dtype=np.uint16)
+    assert utils.render(u16, img_format="PNG", fast_encode=True) == utils.render(
+        u16, img_format="PNG", fast_encode=False
+    )
+
+    # uint16 1-band PNG + mask (mask rescaled to 0-65535)
+    mask = np.full((32, 32), 255, dtype=np.uint8)
+    mask[:4, :4] = 0
+    assert utils.render(
+        u16, mask=mask, img_format="PNG", fast_encode=True
+    ) == utils.render(u16, mask=mask, img_format="PNG", fast_encode=False)
+
+    # NPY accepts any dtype — fast path must bail, output identical
+    f32 = (rng.random((3, 16, 16), dtype=np.float32) * 1000).astype(np.float32)
+    assert utils.render(f32, img_format="NPY", fast_encode=True) == utils.render(
+        f32, img_format="NPY", fast_encode=False
+    )
+
+
+def test_render_fast_encode_without_backends(monkeypatch):
+    """fast_encode=True falls back to GDAL when imagecodecs is missing."""
+    import builtins
+
+    real_import = builtins.__import__
+
+    def _block_imagecodecs(name, globals=None, locals=None, fromlist=(), level=0):
+        if name == "imagecodecs" or name.startswith("imagecodecs."):
+            raise ImportError(f"blocked {name}")
+        return real_import(name, globals, locals, fromlist, level)
+
+    monkeypatch.setattr(builtins, "__import__", _block_imagecodecs)
+
+    rng = np.random.default_rng(13)
+    rgb = rng.integers(0, 256, size=(3, 24, 24), dtype=np.uint8)
+    gdal = utils.render(rgb, img_format="PNG", ZLEVEL=6, fast_encode=False)
+    fast = utils.render(rgb, img_format="PNG", ZLEVEL=6, fast_encode=True)
+    assert fast == gdal
+
+
+@requires_webp
+@pytest.mark.parametrize("lossless_val", ["TRUE", "true", "YES", "ON", "1", True])
+def test_render_fast_encode_webp_lossless_truthy(lossless_val):
+    """Fast WEBP honors GDAL-style truthy LOSSLESS strings as lossless."""
+    rng = np.random.default_rng(15)
+    rgb = rng.integers(0, 256, size=(3, 32, 32), dtype=np.uint8)
+
+    fast = utils.render(rgb, img_format="WEBP", LOSSLESS=lossless_val, fast_encode=True)
+    gdal = utils.render(rgb, img_format="WEBP", LOSSLESS=lossless_val, fast_encode=False)
+    # Lossless output is deterministic and backend-independent for the same
+    # pixels; decode-equal guards the contract even if raw bytes differ.
+    f_data, _, _ = _decode_raster(fast)
+    g_data, _, _ = _decode_raster(gdal)
+    np.testing.assert_array_equal(f_data, g_data)
+
+    # Lossless must not match lossy output for non-trivial input
+    lossy = utils.render(rgb, img_format="WEBP", LOSSLESS=False, fast_encode=True)
+    assert fast != lossy
+
+
+@requires_webp
+@pytest.mark.parametrize("lossless_val", ["FALSE", "false", "NO", "OFF", "0", False])
+def test_render_fast_encode_webp_lossless_falsy(lossless_val):
+    """Fast WEBP honors GDAL-style falsy LOSSLESS strings as lossy.
+
+    Regression: ``bool("FALSE")`` is ``True`` in Python, so string values must
+    be interpreted explicitly (not via ``bool()``).
+    """
+    rng = np.random.default_rng(16)
+    rgb = rng.integers(0, 256, size=(3, 32, 32), dtype=np.uint8)
+
+    fast = utils.render(rgb, img_format="WEBP", LOSSLESS=lossless_val, fast_encode=True)
+    gdal = utils.render(rgb, img_format="WEBP", LOSSLESS=lossless_val, fast_encode=False)
+    # Both should be lossy; decode-equal confirms the fast path did not
+    # accidentally produce lossless output.
+    f_data, _, _ = _decode_raster(fast)
+    g_data, _, _ = _decode_raster(gdal)
+    np.testing.assert_array_equal(f_data, g_data)
+
+    # Lossy must not match lossless output for non-trivial input
+    lossless = utils.render(rgb, img_format="WEBP", LOSSLESS=True, fast_encode=True)
+    assert fast != lossless
+
+
+@requires_webp
+def test_render_fast_encode_webp_img_profiles():
+    """img_profiles['webp'] (quality 75, lossless False) honored on fast path."""
+    rng = np.random.default_rng(17)
+    rgb = rng.integers(0, 256, size=(3, 32, 32), dtype=np.uint8)
+
+    webp_prof = img_profiles["webp"]  # quality 75, lossless False
+    fast = utils.render(rgb, img_format="WEBP", fast_encode=True, **webp_prof)
+    gdal = utils.render(rgb, img_format="WEBP", fast_encode=False, **webp_prof)
+    f_data, _, _ = _decode_raster(fast)
+    g_data, _, _ = _decode_raster(gdal)
+    np.testing.assert_array_equal(f_data, g_data)
+
+    # Explicit lossless via profile must differ from default lossy
+    lossless_prof = {**webp_prof, "lossless": True}
+    fast_lossless = utils.render(
+        rgb, img_format="WEBP", fast_encode=True, **lossless_prof
+    )
+    assert fast != fast_lossless
+
+
+def test_render_fast_encode_real_cog_png_jpeg():
+    """Real COG through ImageData.render: fast path decode-equals GDAL (PNG)
+    and matches layout (JPEG). Covers masked arrays, add_mask, and GTIFF bypass.
+    """
+    with Reader(COG_RGB) as src:
+        img = src.preview()
+
+    # PNG (lossless): decoded pixels must match exactly
+    png_off = img.render(img_format="PNG", ZLEVEL=6, fast_encode=False)
+    png_on = img.render(img_format="PNG", ZLEVEL=6, fast_encode=True)
+    p_off, p_prof_off, p_ci_off = _decode_raster(png_off)
+    p_on, p_prof_on, p_ci_on = _decode_raster(png_on)
+    assert p_prof_on["count"] == p_prof_off["count"] == 4
+    assert ColorInterp.alpha in p_ci_on and ColorInterp.alpha in p_ci_off
+    np.testing.assert_array_equal(p_on, p_off)
+
+    # JPEG (lossy): layout must match (count, shape, no alpha)
+    j_off, j_prof_off, j_ci_off = _decode_raster(
+        img.render(img_format="JPEG", fast_encode=False)
+    )
+    j_on, j_prof_on, j_ci_on = _decode_raster(
+        img.render(img_format="JPEG", fast_encode=True)
+    )
+    assert j_prof_on["count"] == j_prof_off["count"] == 3
+    assert ColorInterp.alpha not in j_ci_on and ColorInterp.alpha not in j_ci_off
+    assert j_on.shape == j_off.shape
+
+    # add_mask=False: no alpha band
+    nm_off, nm_prof_off, _ = _decode_raster(
+        img.render(img_format="PNG", add_mask=False, fast_encode=False)
+    )
+    nm_on, nm_prof_on, _ = _decode_raster(
+        img.render(img_format="PNG", add_mask=False, fast_encode=True)
+    )
+    assert nm_prof_on["count"] == nm_prof_off["count"] == 3
+    np.testing.assert_array_equal(nm_on, nm_off)
+
+    # GTIFF: fast path must bail (not PNG/JPEG/WEBP); byte-identical
+    assert img.render(img_format="GTIFF", fast_encode=True) == img.render(
+        img_format="GTIFF", fast_encode=False
+    )
+
+
+def test_render_fast_encode_rescaled_output_equality():
+    """uint16/int16 COG rescaled to uint8 in ImageData.render then fast-encoded.
+
+    This is the most common TiTiler path: non-byte data → rescale → encode.
+    The rescaled uint8 output must decode-equal between fast and GDAL paths.
+    """
+    # uint16 1-band (cog.tif) — rescaled to uint8 via dataset type bounds
+    with Reader(COGEO) as src:
+        img = src.preview(max_size=256)
+    assert img.array.dtype == np.uint16
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+        png_off = img.render(img_format="PNG", fast_encode=False)
+        png_on = img.render(img_format="PNG", fast_encode=True)
+    off_data, off_prof, _ = _decode_raster(png_off)
+    on_data, on_prof, _ = _decode_raster(png_on)
+    assert off_prof["count"] == on_prof["count"]
+    np.testing.assert_array_equal(on_data, off_data)
+
+    # int16 2-band (cog_scale.tif) with nodata — masked array + rescale
+    with Reader(
+        os.path.join(os.path.dirname(__file__), "fixtures", "cog_scale.tif")
+    ) as src:
+        img = src.preview()
+    assert img.array.dtype == np.int16
+    assert np.ma.is_masked(img.array)
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings("ignore", category=UserWarning)
+        png_off = img.render(img_format="PNG", fast_encode=False)
+        png_on = img.render(img_format="PNG", fast_encode=True)
+    off_data, off_prof, _ = _decode_raster(png_off)
+    on_data, on_prof, _ = _decode_raster(png_on)
+    assert off_prof["count"] == on_prof["count"]
+    np.testing.assert_array_equal(on_data, off_data)
+
+
+@pytest.mark.parametrize(
+    "fmt,option,bad_val,clamped_val",
+    [
+        ("JPEG", "QUALITY", 0, 1),
+        ("JPEG", "QUALITY", -5, 1),
+        ("JPEG", "QUALITY", 200, 100),
+        ("PNG", "ZLEVEL", -1, 0),
+        ("PNG", "ZLEVEL", 99, 9),
+    ],
+)
+def test_render_fast_encode_clamps_out_of_range_options(
+    fmt, option, bad_val, clamped_val
+):
+    """Fast path clamps out-of-range QUALITY/ZLEVEL instead of raising.
+
+    GDAL rejects these with InvalidFormat; the fast path clamps silently.
+    This is a deliberate divergence: clamped output must match the output
+    at the clamped (in-range) value.
+    """
+    rng = np.random.default_rng(22)
+    rgb = rng.integers(0, 256, size=(3, 16, 16), dtype=np.uint8)
+
+    bad = utils.render(rgb, img_format=fmt, **{option: bad_val}, fast_encode=True)
+    clamped = utils.render(rgb, img_format=fmt, **{option: clamped_val}, fast_encode=True)
+    assert bad == clamped
+
+
+def test_render_fast_encode_gtiff_bypass():
+    """GTIFF (and other non-PNG/JPEG/WEBP formats) bypass the fast path entirely."""
+    rng = np.random.default_rng(23)
+    rgb = rng.integers(0, 256, size=(3, 16, 16), dtype=np.uint8)
+
+    # GTIFF: not in {PNG, JPEG, WEBP} → _render_uint8_fast returns None
+    assert utils.render(rgb, img_format="GTIFF", fast_encode=True) == utils.render(
+        rgb, img_format="GTIFF", fast_encode=False
+    )
+
+    # NPY: not in {PNG, JPEG, WEBP} → bypass
+    assert utils.render(rgb, img_format="NPY", fast_encode=True) == utils.render(
+        rgb, img_format="NPY", fast_encode=False
+    )
+
+    # JP2OPENJPEG: not in {PNG, JPEG, WEBP} → bypass
+    assert utils.render(rgb, img_format="JP2OPENJPEG", fast_encode=True) == utils.render(
+        rgb, img_format="JP2OPENJPEG", fast_encode=False
+    )
+
+
+def test_render_fast_encode_thread_safety():
+    """Concurrent fast_encode renders from multiple threads must all succeed.
+
+    TiTiler runs threaded/async; the import-inside-function pattern and
+    imagecodecs/Pillow encoders must be safe under concurrent access.
+    """
+    import secrets
+    from concurrent.futures import ThreadPoolExecutor, as_completed
+
+    mask = np.full((64, 64), 255, dtype=np.uint8)
+    mask[:8, :8] = 0
+
+    def render_one(_):
+        rng = np.random.default_rng(int.from_bytes(secrets.token_bytes(8), "big"))
+        data = rng.integers(0, 256, size=(3, 64, 64), dtype=np.uint8)
+        return utils.render(data, mask=mask, img_format="PNG", ZLEVEL=6, fast_encode=True)
+
+    results = []
+    errors = []
+    with ThreadPoolExecutor(max_workers=8) as pool:
+        futures = [pool.submit(render_one, i) for i in range(64)]
+        for f in as_completed(futures):
+            try:
+                results.append(f.result())
+            except Exception as exc:
+                errors.append(exc)
+
+    assert not errors
+    assert len(results) == 64
+    # Spot-check a few outputs are valid 4-band PNGs
+    for b in results[:5]:
+        data, prof, ci = _decode_raster(b)
+        assert prof["driver"] == "PNG"
+        assert prof["count"] == 4
+        assert ColorInterp.alpha in ci

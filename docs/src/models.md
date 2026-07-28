@@ -289,6 +289,10 @@ print(ImageData(data))
 
 - **render()**: Render the data/mask to an image buffer (forward data and mask to rio_tiler.utils.render).
 
+    Optional `fast_encode=True` (or env `RIO_TILER_FAST_ENCODE=1`) uses
+    imagecodecs for uint8 PNG/JPEG/WEBP when installed via
+    `rio-tiler[fast-encode]`. Default is the GDAL path.
+
     ```python
     import numpy
     from rasterio.io import MemoryFile
@@ -305,6 +309,7 @@ print(ImageData(data))
 
     # create a PNG image
     buf = img.render(img_format="png")
+    # buf = img.render(img_format="png", fast_encode=True)
     print(get_meta(buf))
     >>> {
         'driver': 'PNG',

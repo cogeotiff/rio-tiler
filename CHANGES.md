@@ -1,6 +1,13 @@
 
 # Unreleased
 
+* perf: optional fast uint8 PNG/JPEG/WEBP encode path in `utils.render` / `ImageData.render` (author @manand881)
+    * **Opt-in only** (default remains GDAL): `fast_encode=True` or env `RIO_TILER_FAST_ENCODE=1` (`true`/`yes`/`on`). Explicit kwarg overrides env.
+    * Backends when enabled: **imagecodecs → GDAL** fallback. Install with `pip install "rio-tiler[fast-encode]"` (also in the `dev` dependency group).
+    * Omitting creation options uses **GDAL driver defaults** (JPEG quality **75**, PNG zlevel **6**, WEBP quality **75**, lossless false). `img_profiles` still apply when passed.
+    * Unsupported creation options (anything other than the mapped quality/zlevel/lossless keys) fall back to GDAL.
+    * Lossless **PNG** is decode-equal to GDAL (pixels/mask/layout). Lossy **JPEG/WEBP** may not be bit-identical to GDAL at the same quality.
+    * fix: WEBP `LOSSLESS` creation option with GDAL-style string values (`"FALSE"`, `"NO"`, `"OFF"`, `"0"`) was incorrectly treated as lossless on the fast path (`bool("FALSE")` is `True` in Python). String values are now interpreted explicitly.
 * fix: avoid unnecessary copy and mask work in ImageData.render (author @manand881, https://github.com/cogeotiff/rio-tiler/pull/974)
 
 ## 9.4.2 (2026-07-20)

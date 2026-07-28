@@ -27,8 +27,11 @@ your own API.
 Install with
 
 ```bash
-pip install fastapi uvicorn rio-tiler
+pip install fastapi uvicorn "rio-tiler[fast-encode]"
 ```
+
+For higher tile throughput, enable the optional fast uint8 encode path once
+(e.g. `export RIO_TILER_FAST_ENCODE=1`) or pass `fast_encode=True` to `render()`.
 
 ### `app.py`
 
@@ -72,7 +75,11 @@ def tile(
     with Reader(url) as cog:
         img = cog.tile(x, y, z, tilesize=tilesize)
 
-    content = img.render(img_format="PNG", **img_profiles.get("png"))
+    content = img.render(
+        img_format="PNG",
+        fast_encode=True,  # optional; or set RIO_TILER_FAST_ENCODE=1
+        **img_profiles.get("png"),
+    )
     return Response(content, media_type="image/png")
 
 

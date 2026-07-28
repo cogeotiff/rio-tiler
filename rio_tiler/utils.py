@@ -1,6 +1,7 @@
 """rio_tiler.utils: utility functions."""
 
 import math
+import os
 import time
 import warnings
 from collections.abc import Callable, Generator
@@ -28,6 +29,7 @@ from rasterio.warp import calculate_default_transform, transform_geom
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
 from rio_tiler.errors import InvalidFormat, RioTilerError
+from rio_tiler.logger import logger
 from rio_tiler.types import BBox, ColorMapType, IntervalTuple, RIOResampling
 
 _P = ParamSpec("_P")
@@ -551,45 +553,207 @@ def _requested_tile_aligned_with_internal_tile(
     return True
 
 
-def render(
-    data: numpy.ndarray,
-    mask: numpy.ndarray | None = None,
-    img_format: str = "PNG",
-    colormap: ColorMapType | None = None,
-    **creation_options: Any,
-) -> bytes:
-    """Translate numpy.ndarray to image bytes.
-
-    Args:
-        data (numpy.ndarray): Image array to encode.
-        mask (numpy.ndarray, optional): Mask array.
-        img_format (str, optional): Image format. See: for the list of supported format by GDAL: https://www.gdal.org/formats_list.html. Defaults to `PNG`.
-        colormap (dict or sequence, optional): RGBA Color Table dictionary or sequence.
-        creation_options (optional): Image driver creation options to forward to GDAL.
-
-    Returns
-        bytes: image body.
-
-    Examples:
-        >>> with Reader("my_tif.tif") as src:
-            img = src.preview()
-            with open('test.jpg', 'wb') as f:
-                f.write(render(img.data, img.mask, img_format="jpeg"))
+def _creation_option(options: dict, *keys: str, default: Any = None) -> Any:
+    """Return the first matching creation option (any key case)."""
+    if not options:
+        return default
+    lower_map = {str(k).lower(): v for k, v in options.items()}
+    for key in keys:
+        if key in options:
+            return options[key]
+        if key.lower() in lower_map:
+            return lower_map[key.lower()]
+    return default
 
 
+# GDAL-style truthy/falsy string values for boolean creation options.
+_GDAL_TRUTHY_STRINGS: frozenset[str] = frozenset({"1", "true", "yes", "on"})
+
+
+def _as_bool(value: Any) -> bool:
+    """Coerce a creation-option value to bool, honoring GDAL-style strings.
+
+    GDAL accepts ``TRUE``/``FALSE``/``ON``/``OFF``/``YES``/``NO``/``1``/``0``
+    (case-insensitive) for boolean options. ``bool("FALSE")`` is ``True`` in
+    Python, so string values must be interpreted explicitly.
     """
-    img_format = img_format.upper()
+    if isinstance(value, str):
+        return value.strip().lower() in _GDAL_TRUTHY_STRINGS
+    return bool(value)
 
+
+# Creation options the fast path can honor (lowercase). Any other key → GDAL.
+_FAST_ENCODE_OPTION_KEYS: dict[str, frozenset[str]] = {
+    "PNG": frozenset({"zlevel"}),
+    "JPEG": frozenset({"quality"}),
+    "WEBP": frozenset({"quality", "lossless"}),
+}
+
+
+def _fast_encode_options_supported(img_format: str, creation_options: dict) -> bool:
+    """Return True if all creation options are supported by the fast encoder."""
+    allowed = _FAST_ENCODE_OPTION_KEYS.get(img_format)
+    if allowed is None:
+        return False
+    for key in creation_options:
+        if str(key).lower() not in allowed:
+            return False
+    return True
+
+
+def _fast_encode_enabled(fast_encode: bool | None) -> bool:
+    """Resolve whether the optional fast encode path is enabled.
+
+    Explicit ``fast_encode`` wins. Otherwise ``RIO_TILER_FAST_ENCODE`` is read
+    (1/true/yes/on). Default is off so installs without opt-in stay on GDAL.
+    """
+    if fast_encode is not None:
+        return bool(fast_encode)
+    val = os.environ.get("RIO_TILER_FAST_ENCODE", "").strip().lower()
+    return val in {"1", "true", "yes", "on"}
+
+
+def _uint8_hwc(
+    data: numpy.ndarray,
+    mask: numpy.ndarray | None,
+) -> tuple[numpy.ndarray, str] | None:
+    """Build contiguous HWC uint8 image and imagecodecs mode string."""
+    count, height, width = data.shape
+
+    if mask is not None:
+        if count not in (1, 3):
+            return None
+        alpha = mask if mask.dtype == numpy.uint8 else mask.astype(numpy.uint8)
+        if alpha.shape != (height, width):
+            return None
+        if count == 1:
+            img_arr = numpy.empty((height, width, 2), dtype=numpy.uint8)
+            img_arr[:, :, 0] = data[0]
+            img_arr[:, :, 1] = alpha
+            return img_arr, "LA"
+        img_arr = numpy.empty((height, width, 4), dtype=numpy.uint8)
+        img_arr[:, :, 0] = data[0]
+        img_arr[:, :, 1] = data[1]
+        img_arr[:, :, 2] = data[2]
+        img_arr[:, :, 3] = alpha
+        return img_arr, "RGBA"
+
+    if count == 1:
+        return numpy.ascontiguousarray(data[0]), "L"
+    if count == 3:
+        img_arr = numpy.empty((height, width, 3), dtype=numpy.uint8)
+        img_arr[:, :, 0] = data[0]
+        img_arr[:, :, 1] = data[1]
+        img_arr[:, :, 2] = data[2]
+        return img_arr, "RGB"
+    if count == 4:
+        img_arr = numpy.empty((height, width, 4), dtype=numpy.uint8)
+        img_arr[:, :, 0] = data[0]
+        img_arr[:, :, 1] = data[1]
+        img_arr[:, :, 2] = data[2]
+        img_arr[:, :, 3] = data[3]
+        return img_arr, "RGBA"
+    return None
+
+
+def _render_uint8_imagecodecs(
+    img_arr: numpy.ndarray,
+    mode: str,
+    img_format: str,
+    creation_options: dict,
+) -> bytes | None:
+    """Encode via imagecodecs when installed."""
+    try:
+        import imagecodecs
+    except ImportError:  # pragma: no cover
+        return None
+
+    try:
+        if img_format == "PNG":
+            # GDAL PNG driver default ZLEVEL is 6
+            level = int(_creation_option(creation_options, "ZLEVEL", "zlevel", default=6))
+            level = max(0, min(level, 9))
+            return bytes(imagecodecs.png_encode(img_arr, level=level))
+
+        if img_format == "JPEG":
+            # GDAL JPEG driver default QUALITY is 75
+            quality = int(
+                _creation_option(creation_options, "QUALITY", "quality", default=75)
+            )
+            # JPEG has no alpha
+            if mode == "RGBA":
+                img_arr = img_arr[:, :, :3]
+            return bytes(
+                imagecodecs.jpeg_encode(img_arr, level=max(1, min(quality, 100)))
+            )
+
+        if img_format == "WEBP":
+            quality = int(
+                _creation_option(creation_options, "QUALITY", "quality", default=75)
+            )
+            lossless = _as_bool(
+                _creation_option(creation_options, "LOSSLESS", "lossless", default=False)
+            )
+            return bytes(
+                imagecodecs.webp_encode(
+                    img_arr,
+                    level=max(0, min(quality, 100)),
+                    lossless=lossless,
+                )
+            )
+    except Exception as exc:
+        logger.debug("imagecodecs %s encode failed: %s; falling back", img_format, exc)
+        return None
+    return None
+
+
+def _render_uint8_fast(
+    data: numpy.ndarray,
+    mask: numpy.ndarray | None,
+    img_format: str,
+    creation_options: dict,
+) -> bytes | None:
+    """Fast uint8 PNG/JPEG/WEBP encode (imagecodecs → GDAL fallback).
+
+    Returns None when imagecodecs cannot handle the request, including when
+    unsupported GDAL creation options are present (caller should use GDAL).
+    """
+    if data.dtype != numpy.uint8 or img_format not in {"PNG", "JPEG", "WEBP"}:
+        return None
+
+    if not _fast_encode_options_supported(img_format, creation_options):
+        return None
+
+    if img_format == "JPEG":
+        mask = None
+        # 4-band JPEG via GDAL is written as CMYK. imagecodecs has no CMYK
+        # JPEG mode (a contiguous RGB slice would emit 3-band RGB instead),
+        # so bail to GDAL to preserve the existing CMYK output exactly.
+        if data.shape[0] == 4:
+            return None
+
+    packed = _uint8_hwc(data, mask)
+    if packed is None:
+        return None
+    img_arr, mode = packed
+
+    return _render_uint8_imagecodecs(img_arr, mode, img_format, creation_options)
+
+
+def _prepare_render_inputs(
+    data: numpy.ndarray,
+    mask: numpy.ndarray | None,
+    img_format: str,
+    colormap: ColorMapType | None,
+) -> tuple[numpy.ndarray, numpy.ndarray | None]:
+    """Normalize array/mask for encoding (colormap, WEBP gray, PNG16, JPEG)."""
     if len(data.shape) < 3:
         data = numpy.expand_dims(data, axis=0)
 
     input_range = dtype_ranges[str(data.dtype)]
     if colormap:
         data, alpha = apply_cmap(data, colormap)
-
-        # We take both the input mask and the alpha from the colormap
-        # if input mask is not provided then we assume output is wanted without alpha band
-        # this can be seen as a bug but at the time of writing we assume it's a feature.
+        # Both input mask and colormap alpha; no mask → no alpha band (legacy).
         if mask is not None:
             output_range = dtype_ranges[str(data.dtype)]
             mask = numpy.where(mask != input_range[0], alpha, output_range[0]).astype(
@@ -603,31 +767,45 @@ def render(
     if img_format == "PNG" and data.dtype == "uint16" and mask is not None:
         # By rio-tiler design, mask should always be between 0 and 255
         mask = linear_rescale(mask, (0, 255), (0, 65535)).astype("uint16")
-
     elif img_format == "JPEG":
         mask = None
 
-    elif img_format == "NPY":
-        # If mask is not None we add it as the last band
+    return data, mask
+
+
+def _render_numpy_binary(
+    data: numpy.ndarray,
+    mask: numpy.ndarray | None,
+    img_format: str,
+) -> bytes | None:
+    """Encode NPY/NPZ; return None for other formats."""
+    if img_format == "NPY":
         if mask is not None:
             m = numpy.expand_dims(mask, axis=0)
             data = numpy.concatenate((data, m))
-
         with BytesIO() as bio:
             numpy.save(bio, data)
             return bio.getvalue()
 
-    elif img_format == "NPZ":
+    if img_format == "NPZ":
         with BytesIO() as bio:
             if mask is not None:
                 numpy.savez_compressed(bio, data=data, mask=mask)
             else:
                 numpy.savez_compressed(bio, data=data)
-
             return bio.getvalue()
 
-    count, height, width = data.shape
+    return None
 
+
+def _render_gdal(
+    data: numpy.ndarray,
+    mask: numpy.ndarray | None,
+    img_format: str,
+    creation_options: dict,
+) -> bytes:
+    """Encode via rasterio MemoryFile / GDAL drivers."""
+    count, height, width = data.shape
     output_profile = {
         "driver": img_format,
         "dtype": data.dtype,
@@ -636,7 +814,6 @@ def render(
         "width": width,
     }
     output_profile.update(creation_options)
-
     try:
         with warnings.catch_warnings():
             warnings.filterwarnings(
@@ -647,20 +824,67 @@ def render(
             with MemoryFile() as memfile:
                 with memfile.open(**output_profile) as dst:
                     dst.write(data, indexes=list(range(1, count + 1)))
-
-                    # Use Mask as an alpha band
                     if mask is not None:
                         if ColorInterp.alpha not in dst.colorinterp:
                             dst.colorinterp = *dst.colorinterp[:-1], ColorInterp.alpha
-
                         dst.write(mask.astype(data.dtype), indexes=count + 1)
-
                 return memfile.read()
-
     except Exception as e:
         raise InvalidFormat(
             f"Could not encode array of shape ({count},{height},{width}) and of datatype `{data.dtype}` using {img_format} driver"
         ) from e
+
+
+def render(
+    data: numpy.ndarray,
+    mask: numpy.ndarray | None = None,
+    img_format: str = "PNG",
+    colormap: ColorMapType | None = None,
+    fast_encode: bool | None = None,
+    **creation_options: Any,
+) -> bytes:
+    """Translate numpy.ndarray to image bytes.
+
+    Args:
+        data (numpy.ndarray): Image array to encode.
+        mask (numpy.ndarray, optional): Mask array.
+        img_format (str, optional): Image format. See: for the list of supported format by GDAL: https://www.gdal.org/formats_list.html. Defaults to `PNG`.
+        colormap (dict or sequence, optional): RGBA Color Table dictionary or sequence.
+        fast_encode (bool, optional): Use optional fast uint8 PNG/JPEG/WEBP
+            encoders (imagecodecs) when available. Defaults to ``False``
+            unless ``RIO_TILER_FAST_ENCODE`` is set to a truthy value
+            (``1``/``true``/``yes``/``on``). Explicit ``fast_encode`` overrides
+            the environment variable. When disabled or unavailable, encoding
+            uses GDAL via rasterio (default userspace behavior). Omitting
+            creation options uses GDAL driver defaults (JPEG quality 75, PNG
+            zlevel 6, WEBP quality 75). Lossless PNG is decode-equal to GDAL;
+            lossy JPEG/WEBP may not be bit-identical to GDAL at the same quality.
+        creation_options (optional): Image driver creation options to forward to GDAL.
+
+    Returns
+        bytes: image body.
+
+    Examples:
+        >>> with Reader("my_tif.tif") as src:
+            img = src.preview()
+            with open('test.jpg', 'wb') as f:
+                f.write(render(img.data, img.mask, img_format="jpeg"))
+
+    """
+    img_format = img_format.upper()
+    data, mask = _prepare_render_inputs(data, mask, img_format, colormap)
+
+    binary = _render_numpy_binary(data, mask, img_format)
+    if binary is not None:
+        return binary
+
+    # Opt-in fast path: uint8 PNG/JPEG/WEBP via imagecodecs → GDAL fallback.
+    if _fast_encode_enabled(fast_encode):
+        encoded = _render_uint8_fast(data, mask, img_format, creation_options)
+        if encoded is not None:
+            return encoded
+
+    return _render_gdal(data, mask, img_format, creation_options)
 
 
 def mapzen_elevation_rgb(data: numpy.ndarray) -> numpy.ndarray:

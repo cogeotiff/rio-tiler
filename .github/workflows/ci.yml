@@ -30,7 +30,8 @@ jobs:
 
       - name: Install dependencies
         run: |
-          uv sync
+          # dev group includes imagecodecs/pillow so fast_encode tests can run
+          uv sync --group dev
 
       - name: Run pre-commit and mypy
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
@@ -39,7 +40,16 @@ jobs:
           uv run --with mypy --with types-attrs --with types-cachetools mypy -p rio_tiler --ignore-missing-imports
 
       - name: Run tests
+        # Default: fast encode off (GDAL path) unless tests pass fast_encode=True
         run: uv run pytest --cov rio_tiler --cov-report xml --cov-report term-missing -s -vv
+
+      - name: Run render tests with fast encode enabled
+        # Env opt-in path (imagecodecs/Pillow) for uint8 PNG/JPEG/WEBP
+        if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}
+        env:
+          RIO_TILER_FAST_ENCODE: "1"
+        run: |
+          uv run pytest tests/test_utils.py tests/test_models.py -q --tb=short
 
       - name: Upload Results
         if: ${{ matrix.python-version == env.LATEST_PY_VERSION }}

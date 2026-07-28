@@ -1020,3 +1020,76 @@ def test_alpha_band():
     # no transparency
     assert not im_colormaped.array.mask[0, 100, 20]
     assert im_colormaped.mask[100, 20] == 255
+
+
+def test_render_fast_encode_passthrough(monkeypatch):
+    """ImageData.render forwards fast_encode; default stays GDAL-compatible."""
+    monkeypatch.delenv("RIO_TILER_FAST_ENCODE", raising=False)
+    rng = numpy.random.default_rng(11)
+    data = rng.integers(0, 256, size=(3, 32, 32), dtype="uint8")
+    im = ImageData(data)
+
+    bare = im.render(img_format="PNG", ZLEVEL=6)
+    off = im.render(img_format="PNG", ZLEVEL=6, fast_encode=False)
+    assert bare == off
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
+        with MemoryFile(im.render(img_format="PNG", ZLEVEL=6, fast_encode=True)) as mem:
+            with mem.open() as src_fast:
+                fast_arr = src_fast.read()
+        with MemoryFile(off) as mem:
+            with mem.open() as src_gdal:
+                gdal_arr = src_gdal.read()
+    numpy.testing.assert_array_equal(fast_arr, gdal_arr)
+
+
+def test_render_fast_encode_add_mask_and_invalidformat():
+    """fast_encode respects add_mask and still raises InvalidFormat."""
+    data = numpy.zeros((1, 16, 16), dtype="uint8") + 5
+    mask = numpy.zeros((1, 16, 16), dtype="bool")
+    mask[0, :4, :4] = True
+    im = ImageData(numpy.ma.MaskedArray(data, mask=mask))
+
+    with warnings.catch_warnings():
+        warnings.filterwarnings(
+            "ignore",
+            category=NotGeoreferencedWarning,
+            module="rasterio",
+        )
+        with MemoryFile(
+            im.render(img_format="PNG", add_mask=True, fast_encode=True)
+        ) as mem:
+            with mem.open() as src:
+                assert src.count == 2
+        with MemoryFile(
+            im.render(img_format="PNG", add_mask=False, fast_encode=True)
+        ) as mem:
+            with mem.open() as src:
+                assert src.count == 1
+
+    with pytest.raises(InvalidFormat):
+        ImageData(numpy.zeros((5, 32, 32), dtype="uint8")).render(
+            img_format="PNG", fast_encode=True
+        )
+
+
+def test_render_fast_encode_does_not_mutate():
+    """fast_encode path must not mutate ImageData.array."""
+    data = numpy.arange(16 * 16, dtype="uint8").reshape(1, 16, 16)
+    im = ImageData(data.copy())
+    before = im.array.copy()
+    assert im.render(img_format="PNG", fast_encode=True)
+    numpy.testing.assert_array_equal(im.array, before)
+
+    data_f = numpy.full((1, 16, 16), 0.25, dtype="float32")
+    im_f = ImageData(data_f.copy())
+    before_f = im_f.array.copy()
+    with pytest.warns(InvalidDatatypeWarning):
+        assert im_f.render(img_format="PNG", fast_encode=True)
+    numpy.testing.assert_array_equal(im_f.array, before_f)
+    assert im_f.array.dtype == numpy.dtype("float32")

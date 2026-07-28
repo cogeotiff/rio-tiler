@@ -832,6 +832,7 @@ class ImageData:
         add_mask: bool = True,
         img_format: str = "PNG",
         colormap: ColorMapType | None = None,
+        fast_encode: bool | None = None,
         **kwargs,
     ) -> bytes:
         """Render data to image blob.
@@ -840,6 +841,9 @@ class ImageData:
             add_mask (bool, optional): add mask to output image. Defaults to `True`.
             img_format (str, optional): output image format. Defaults to `PNG`.
             colormap (dict or sequence, optional): RGBA Color Table dictionary or sequence.
+            fast_encode (bool, optional): Forwarded to `rio_tiler.utils.render`.
+                Opt-in fast uint8 PNG/JPEG/WEBP encode. Defaults to off unless
+                ``RIO_TILER_FAST_ENCODE`` is set.
             kwargs (optional): keyword arguments to forward to `rio_tiler.utils.render`.
 
         Returns:
@@ -883,10 +887,17 @@ class ImageData:
                 mask,
                 img_format=img_format,
                 colormap=colormap,
+                fast_encode=fast_encode,
                 **kwargs,
             )
 
-        return render(array.data, img_format=img_format, colormap=colormap, **kwargs)
+        return render(
+            array.data,
+            img_format=img_format,
+            colormap=colormap,
+            fast_encode=fast_encode,
+            **kwargs,
+        )
 
     def to_raster(self, dst_path: str, *, driver: str = "GTIFF", **kwargs: Any) -> None:
         """Save ImageData array to file."""

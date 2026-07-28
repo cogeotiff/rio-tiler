@@ -173,6 +173,15 @@ python -m pip install -U pip
 python -m pip install -U rio-tiler
 ```
 
+Optional faster uint8 PNG/JPEG/WEBP encoding (for tile servers such as TiTiler):
+
+```bash
+python -m pip install "rio-tiler[fast-encode]"
+```
+
+Then enable per call (`img.render(..., fast_encode=True)`) or via env
+`RIO_TILER_FAST_ENCODE=1`. Default install stays on the GDAL encode path.
+
 or install from source:
 
 ```bash

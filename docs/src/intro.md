@@ -65,7 +65,21 @@ with Reader(
 
     # Encode the data in JPEG
     buff = img.render(img_format="JPEG")
+
+    # Optional: faster uint8 PNG/JPEG/WEBP encode (needs rio-tiler[fast-encode])
+    buff = img.render(img_format="PNG", fast_encode=True)
 ```
+
+Install encode backends and opt in (default remains GDAL):
+
+```bash
+python -m pip install "rio-tiler[fast-encode]"
+export RIO_TILER_FAST_ENCODE=1   # or pass fast_encode=True to render()
+```
+
+Lossless PNG is decode-equal to GDAL; lossy JPEG/WEBP may not be bit-identical
+to GDAL at the same quality. Omitting creation options uses GDAL driver defaults
+(JPEG quality 75, PNG zlevel 6, WEBP quality 75).
 
 ## Rescale non-byte data and/or apply colormap
 
