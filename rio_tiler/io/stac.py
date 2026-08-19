@@ -156,7 +156,8 @@ def _get_assets(
         str: valid STAC asset name.
 
     """
-    for asset, asset_info in stac_item.get_assets().items():
+    # `get_assets()` deep copies each asset and, via its owner ref, the whole item.
+    for asset, asset_info in stac_item.assets.items():
         _type = asset_info.media_type
 
         if exclude and asset in exclude:
