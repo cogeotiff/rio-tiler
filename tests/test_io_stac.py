@@ -153,6 +153,22 @@ def test_fetch_stac(httpx, s3_get):
     assert s3_get.call_args[0] == ("somewhereovertherainbow.io", "mystac.json")
 
 
+def test_asset_list_does_not_copy_the_item():
+    """The asset list is built from the item's assets in place, not via `get_assets()`."""
+    with open(STAC_PATH, "r") as f:
+        item = pystac.Item.from_dict(json.load(f))
+
+    def _fail(*args: Any, **kwargs: Any):
+        raise AssertionError("the asset list must not copy the item")
+
+    with patch.object(pystac.Item, "get_assets", _fail):
+        with STACReader(None, item=item) as stac:
+            assert stac.assets == ["red", "green", "blue", "lowres", "rgb"]
+
+    # the assets that were inspected are the item's own, not copies of them
+    assert all(item.assets[name].owner is item for name in stac.assets)
+
+
 @pytest.mark.skipif(sys.version_info < (3, 10), reason="requires python3.9 or higher")
 def test_projection_extension():
     """Test STAC with the projection extension."""
