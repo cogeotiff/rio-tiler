@@ -1,7 +1,10 @@
 
 # Unreleased
 
+## 9.4.3 (2026-08-20)
+
 * fix: avoid unnecessary copy and mask work in ImageData.render (author @manand881, https://github.com/cogeotiff/rio-tiler/pull/974)
+* fix: avoid unnecessary STAC deepcopy for asset listing (author @Astrareach, https://github.com/cogeotiff/rio-tiler/pull/988)
 
 ## 9.4.2 (2026-07-20)
 
