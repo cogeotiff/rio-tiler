@@ -1,0 +1,74 @@
+name: Benchmark
+
+on:
+  push:
+    branches:
+    - main
+    tags:
+    - '*'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  pull-requests: write
+
+env:
+  LATEST_PY_VERSION: '3.14'
+
+jobs:
+  benchmark:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.9.*" 
+          enable-cache: false
+          python-version: ${{ env.LATEST_PY_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          uv sync --group performance
+
+      - name: Run Benchmark
+        run: |
+          uv run pytest tests/benchmarks/benchmarks.py --benchmark-only --benchmark-columns 'min, max, mean, median' --benchmark-sort 'min' --benchmark-json output.json
+
+      - name: Store and Compare benchmark result
+        uses: benchmark-action/github-action-benchmark@52576c92bccf6ac60c8223ec7eb2565637cae9ba # v1
+        with:
+          name: rio-tiler Benchmarks
+          tool: 'pytest'
+          output-file-path: output.json
+          alert-threshold: '150%'
+          comment-on-alert: true
+          fail-on-alert: false
+          # GitHub API token to make a commit comment
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          gh-pages-branch: 'gh-benchmarks'
+          # Make a commit on `gh-pages` only if main
+          auto-push: ${{ github.ref == 'refs/heads/main' }}
+          benchmark-data-dir-path: dev/benchmarks
+          max-items-in-chart: 100
+
+  benchmark-requests:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      - name: Install uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          version: "0.9.*" 
+          enable-cache: false
+          python-version: ${{ env.LATEST_PY_VERSION }}
+
+      - name: Install dependencies
+        run: |
+          uv sync --group performance
+
+      - name: Run Benchmark
+        run: uv run pytest tests/benchmarks/requests.py -s -vv
