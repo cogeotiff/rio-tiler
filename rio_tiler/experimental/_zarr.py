@@ -17,7 +17,7 @@ from rasterio.crs import CRS
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import InvalidGeographicBounds
 from rio_tiler.io.base import BaseReader
-from rio_tiler.io.xarray import XarrayReader
+from rio_tiler.io.xarray import XarrayReader, _above, _below
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox
 
@@ -128,11 +128,14 @@ class ZarrReader(BaseReader):
         # adds half x/y resolution on each values
         # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634
         xres, yres = map(abs, self.dataset.rio.resolution())
+        # see the matching check in `rio_tiler.io.xarray`: `math.isclose` keeps
+        # the float residue of `numpy.arange` coordinates from rejecting a
+        # perfectly placed global grid.
         if self.crs == WGS84_CRS and (
-            self.bounds[0] + xres / 2 < -180
-            or self.bounds[1] + yres / 2 < -90
-            or self.bounds[2] - xres / 2 > 180
-            or self.bounds[3] - yres / 2 > 90
+            _below(self.bounds[0] + xres / 2, -180)
+            or _below(self.bounds[1] + yres / 2, -90)
+            or _above(self.bounds[2] - xres / 2, 180)
+            or _above(self.bounds[3] - yres / 2, 90)
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."

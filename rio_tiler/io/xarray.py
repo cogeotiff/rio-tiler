@@ -56,6 +56,16 @@ except ImportError:  # pragma: nocover
     rioxarray = None  # type: ignore
 
 
+def _below(value: float, limit: float) -> bool:
+    """Return True if value is under limit, ignoring float representation noise."""
+    return value < limit and not math.isclose(value, limit)
+
+
+def _above(value: float, limit: float) -> bool:
+    """Return True if value is over limit, ignoring float representation noise."""
+    return value > limit and not math.isclose(value, limit)
+
+
 class Options(TypedDict, total=False):
     """Reader Options."""
 
@@ -112,11 +122,15 @@ class XarrayReader(BaseReader):
         # adds half x/y resolution on each values
         # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634
         xres, yres = map(abs, self.input.rio.resolution())
+        # compare with `math.isclose` rather than exactly: coordinate arrays
+        # built with `numpy.arange`, as published data commonly is, carry a
+        # float residue that lands the outer cell centres a few ULP past the
+        # limit, which is enough to reject a perfectly placed global grid.
         if self.crs == WGS84_CRS and (
-            self.bounds[0] + xres / 2 < -180
-            or self.bounds[1] + yres / 2 < -90
-            or self.bounds[2] - xres / 2 > 180
-            or self.bounds[3] - yres / 2 > 90
+            _below(self.bounds[0] + xres / 2, -180)
+            or _below(self.bounds[1] + yres / 2, -90)
+            or _above(self.bounds[2] - xres / 2, 180)
+            or _above(self.bounds[3] - yres / 2, 90)
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
