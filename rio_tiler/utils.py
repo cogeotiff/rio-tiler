@@ -962,7 +962,7 @@ class Timer(object):
         return time.time() - self.start
 
 
-def _check_geographic_bounds(bounds: BBox, xres: float = 0.0, yres: float = 0.0) -> bool:
+def _check_geographic_bounds(bounds: BBox, xres: float, yres: float) -> bool:
     """Check if the bounds are within valid Geographic coordinates and tolerate float residue.
 
     Ref: https://github.com/cogeotiff/rio-tiler/pull/994

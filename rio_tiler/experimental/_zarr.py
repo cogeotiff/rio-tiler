@@ -133,7 +133,7 @@ class ZarrReader(BaseReader):
         # the float residue of `numpy.arange` coordinates from rejecting a
         # perfectly placed global grid.
         if self.crs == WGS84_CRS and not _check_geographic_bounds(
-            self.bounds, xres=xres, yres=yres
+            self.bounds, xres, yres
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
