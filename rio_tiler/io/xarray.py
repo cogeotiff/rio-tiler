@@ -38,6 +38,7 @@ from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
+    _check_geographic_bounds,
     _get_width_height,
     _missing_size,
     _validate_shape_input,
@@ -54,16 +55,6 @@ try:
     import rioxarray
 except ImportError:  # pragma: nocover
     rioxarray = None  # type: ignore
-
-
-def _below(value: float, limit: float) -> bool:
-    """Return True if value is under limit, ignoring float representation noise."""
-    return value < limit and not math.isclose(value, limit)
-
-
-def _above(value: float, limit: float) -> bool:
-    """Return True if value is over limit, ignoring float representation noise."""
-    return value > limit and not math.isclose(value, limit)
 
 
 class Options(TypedDict, total=False):
@@ -126,11 +117,8 @@ class XarrayReader(BaseReader):
         # built with `numpy.arange`, as published data commonly is, carry a
         # float residue that lands the outer cell centres a few ULP past the
         # limit, which is enough to reject a perfectly placed global grid.
-        if self.crs == WGS84_CRS and (
-            _below(self.bounds[0] + xres / 2, -180)
-            or _below(self.bounds[1] + yres / 2, -90)
-            or _above(self.bounds[2] - xres / 2, 180)
-            or _above(self.bounds[3] - yres / 2, 90)
+        if self.crs == WGS84_CRS and not _check_geographic_bounds(
+            self.bounds, xres=xres, yres=yres
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
