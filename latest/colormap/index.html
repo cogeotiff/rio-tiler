@@ -2452,10 +2452,10 @@ to <code>rio_tiler.utils.render</code>:</p>
 
 <span class="c1"># Get Colormap</span>
 <span class="c1"># You can list available colormap names with `cmap.list()`</span>
-<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;cfastie&quot;</span><span class="p">)</span>
+<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"cfastie"</span><span class="p">)</span>
 
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;https://sentinel-cogs.s3.amazonaws.com/sentinel-s2-l2a-cogs/29/R/KH/2020/2/S2A_29RKH_20200219_0_L2A/B01.tif&quot;</span><span class="p">,</span>
+  <span class="s2">"https://sentinel-cogs.s3.amazonaws.com/sentinel-s2-l2a-cogs/29/R/KH/2020/2/S2A_29RKH_20200219_0_L2A/B01.tif"</span><span class="p">,</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">239</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
 
@@ -2483,7 +2483,7 @@ to <code>rio_tiler.utils.render</code>:</p>
 
 <span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">register</span><span class="p">(</span>
     <span class="p">{</span>
-        <span class="s2">&quot;custom_classes&quot;</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"custom_classes"</span><span class="p">:</span> <span class="p">{</span>
           <span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span>
           <span class="mi">100</span><span class="p">:</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
           <span class="mi">200</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span>
@@ -2498,30 +2498,30 @@ to <code>rio_tiler.utils.render</code>:</p>
 <span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 
 <span class="n">ndvi</span> <span class="o">=</span> <span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span>
-    <span class="s1">&#39;ndvi&#39;</span><span class="p">,</span> <span class="p">[</span>
-        <span class="s1">&#39;#422112&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#724C01&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#CEA712&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#FFA904&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#FDFE00&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#E6EC06&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#BACF00&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#8BB001&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#72A002&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#5B8D03&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#448102&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#2C7001&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;#176100&#39;</span><span class="p">,</span>
+    <span class="s1">'ndvi'</span><span class="p">,</span> <span class="p">[</span>
+        <span class="s1">'#422112'</span><span class="p">,</span>
+        <span class="s1">'#724C01'</span><span class="p">,</span>
+        <span class="s1">'#CEA712'</span><span class="p">,</span>
+        <span class="s1">'#FFA904'</span><span class="p">,</span>
+        <span class="s1">'#FDFE00'</span><span class="p">,</span>
+        <span class="s1">'#E6EC06'</span><span class="p">,</span>
+        <span class="s1">'#BACF00'</span><span class="p">,</span>
+        <span class="s1">'#8BB001'</span><span class="p">,</span>
+        <span class="s1">'#72A002'</span><span class="p">,</span>
+        <span class="s1">'#5B8D03'</span><span class="p">,</span>
+        <span class="s1">'#448102'</span><span class="p">,</span>
+        <span class="s1">'#2C7001'</span><span class="p">,</span>
+        <span class="s1">'#176100'</span><span class="p">,</span>
     <span class="p">],</span>
     <span class="mi">256</span><span class="p">,</span>
 <span class="p">)</span>
 
 <span class="n">x</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
 <span class="n">cmap_vals</span> <span class="o">=</span> <span class="n">ndvi</span><span class="p">(</span><span class="n">x</span><span class="p">)[:,</span> <span class="p">:]</span>
-<span class="n">cmap_uint8</span> <span class="o">=</span> <span class="p">(</span><span class="n">cmap_vals</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">&#39;uint8&#39;</span><span class="p">)</span>
+<span class="n">cmap_uint8</span> <span class="o">=</span> <span class="p">(</span><span class="n">cmap_vals</span> <span class="o">*</span> <span class="mi">255</span><span class="p">)</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s1">'uint8'</span><span class="p">)</span>
 <span class="n">ndvi_dict</span> <span class="o">=</span> <span class="p">{</span><span class="n">idx</span><span class="p">:</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">value</span><span class="p">)</span> <span class="k">for</span> <span class="n">idx</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cmap_uint8</span><span class="p">)}</span>
 
-<span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">register</span><span class="p">({</span><span class="s2">&quot;ndvi&quot;</span><span class="p">:</span> <span class="n">ndvi_dict</span><span class="p">})</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">register</span><span class="p">({</span><span class="s2">"ndvi"</span><span class="p">:</span> <span class="n">ndvi_dict</span><span class="p">})</span>
 </code></pre></div>
 <h3 id="intervals-colormaps">Intervals colormaps<a class="headerlink" href="#intervals-colormaps" title="Permanent link">&para;</a></h3>
 <p>Starting with <code>rio-tiler</code> 3.0, <em>intervals</em> colormap support has been added. This is useful when you want to define color breaks for a given data.</p>

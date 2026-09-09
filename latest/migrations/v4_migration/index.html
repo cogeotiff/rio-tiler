@@ -2580,79 +2580,79 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <p>Band names are now prefixed with <code>b</code> (e.g <code>b1</code>, <code>b2</code>)</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span>
-  <span class="s2">&quot;http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif&quot;</span>
+  <span class="s2">"http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
    <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
-   <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>
+   <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"2"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">]</span>
 
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">band_metadata</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="p">{})]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"1"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"2"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"3"</span><span class="p">,</span> <span class="p">{})]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"2"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"3"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)]</span>
 
 <span class="c1"># now</span>
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif&quot;</span>
+  <span class="s2">"http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
 
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">band_metadata</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;b3&quot;</span><span class="p">,</span> <span class="p">{})]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"b1"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"b2"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"b3"</span><span class="p">,</span> <span class="p">{})]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;b3&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"b2"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"b3"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)]</span>
 </code></pre></div>
 <h2 id="multibasereader-_get_asset_url">MultiBaseReader <code>_get_asset_url</code><a class="headerlink" href="#multibasereader-_get_asset_url" title="Permanent link">&para;</a></h2>
 <p>We replaced <code>_get_asset_url</code> method in <code>MultibaseReader</code> by <code>_get_asset_info</code> which should return a dictionary in form of <code>{"url": ..., "env": ...}</code> (ref: <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/552" title="GitHub Pull Request: cogeotiff/rio-tiler #552">cogeotiff/rio-tiler!552</a>)</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;stac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">_get_asset_url</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">))</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="s2">&quot;green.tif&quot;</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"stac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">_get_asset_url</span><span class="p">(</span><span class="s2">"green"</span><span class="p">))</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="s2">"green.tif"</span>
 
 <span class="c1"># new</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;stac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">_get_asset_info</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">))</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span><span class="s2">&quot;url&quot;</span><span class="p">:</span> <span class="s2">&quot;green.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;env&quot;</span><span class="p">:</span> <span class="p">{}}</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"stac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">_get_asset_info</span><span class="p">(</span><span class="s2">"green"</span><span class="p">))</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span><span class="s2">"url"</span><span class="p">:</span> <span class="s2">"green.tif"</span><span class="p">,</span> <span class="s2">"env"</span><span class="p">:</span> <span class="p">{}}</span>
 </code></pre></div>
 <h2 id="multibasereader-expressions">MultiBaseReader <strong>Expressions</strong><a class="headerlink" href="#multibasereader-expressions" title="Permanent link">&para;</a></h2>
 <p>We updated the <code>expression</code> format for <code>MultiBaseReader</code> (e.g STAC) to include <strong>band names</strong> and not only the asset name</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;stac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;green/red&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"stac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"green/red"</span><span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;stac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;green_b1/red_b1&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"stac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"green_b1/red_b1"</span><span class="p">)</span>
 </code></pre></div>
 <p>In addition we also removed <code>asset_expression</code> option in <code>MultiBaseReader</code>. This can be achieved directly using expression.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">145</span><span class="p">,</span>
         <span class="mi">103</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
         <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">],</span>
         <span class="n">asset_expression</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;B01&quot;</span><span class="p">:</span> <span class="s2">&quot;b1+500&quot;</span><span class="p">,</span>  <span class="c1"># add 500 to the first band</span>
-            <span class="s2">&quot;B02&quot;</span><span class="p">:</span> <span class="s2">&quot;b1-100&quot;</span><span class="p">,</span>  <span class="c1"># substract 100 to the first band</span>
+            <span class="s2">"B01"</span><span class="p">:</span> <span class="s2">"b1+500"</span><span class="p">,</span>  <span class="c1"># add 500 to the first band</span>
+            <span class="s2">"B02"</span><span class="p">:</span> <span class="s2">"b1-100"</span><span class="p">,</span>  <span class="c1"># substract 100 to the first band</span>
         <span class="p">}</span>
     <span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">145</span><span class="p">,</span>
         <span class="mi">103</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
         <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-        <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;B01_b1+500;B02_b1-100&quot;</span><span class="p">,</span>
+        <span class="n">expression</span><span class="o">=</span><span class="s2">"B01_b1+500;B02_b1-100"</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div>
 <h2 id="no-more-gcpcogreader">No more GCPCOGReader<a class="headerlink" href="#no-more-gcpcogreader" title="Permanent link">&para;</a></h2>
@@ -2660,32 +2660,32 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">GCPCOGReader</span>
 
-<span class="k">with</span> <span class="n">GCPCOGReader</span><span class="p">(</span><span class="s2">&quot;my_tif_with_gcps.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">GCPCOGReader</span><span class="p">(</span><span class="s2">"my_tif_with_gcps.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="k">pass</span>
 
 <span class="c1"># now</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my_tif_with_gcps.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my_tif_with_gcps.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="k">pass</span>
 </code></pre></div>
 <h2 id="pointdata-object"><strong>PointData</strong> object<a class="headerlink" href="#pointdata-object" title="Permanent link">&para;</a></h2>
 <p>As for method returning <code>images</code>, methods returning point values (<code>Reader.point()</code>) now return a <code>PointData</code> object.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">42.0</span><span class="p">))</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">42.0</span><span class="p">))</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="n">PointData</span><span class="p">(</span>
         <span class="n">data</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">3744</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint16</span><span class="p">),</span>
         <span class="n">mask</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">255</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint8</span><span class="p">),</span>
-        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span>
+        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'b1'</span><span class="p">],</span>
         <span class="n">coordinates</span><span class="o">=</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mi">42</span><span class="p">),</span>
         <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">),</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cog.tif&#39;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">'cog.tif'</span><span class="p">],</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{}</span>
     <span class="p">)</span>
 </code></pre></div>
@@ -2695,14 +2695,14 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span><span class="p">,</span> <span class="n">PointData</span>
 
 <span class="c1"># before</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;image.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"image.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">data</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
     <span class="n">pts</span> <span class="o">=</span> <span class="n">point</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">42.0</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pts</span><span class="p">)</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;image.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"image.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">read</span><span class="p">(</span><span class="n">src</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
 
@@ -2712,21 +2712,21 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
     <span class="o">&gt;&gt;&gt;</span> <span class="n">PointData</span><span class="p">(</span>
         <span class="n">data</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">3744</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint16</span><span class="p">),</span>
         <span class="n">mask</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">255</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint8</span><span class="p">),</span>
-        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span>
+        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'b1'</span><span class="p">],</span>
         <span class="n">coordinates</span><span class="o">=</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mi">42</span><span class="p">),</span>
         <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">),</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cog.tif&#39;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">'cog.tif'</span><span class="p">],</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{}</span>
     <span class="p">)</span>
 </code></pre></div>
 <h2 id="reader-options"><strong>Reader</strong> options<a class="headerlink" href="#reader-options" title="Permanent link">&para;</a></h2>
 <p>We removed <code>nodata</code>, <code>unscale</code>, <code>resampling_method</code>, <code>vrt_options</code> and <code>post_process</code> options to <code>rio_tiler.io.Reader</code> init method and replaced with a global <code>options</code>:
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">COGEO</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;nodata&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;resampling_method&quot;</span><span class="p">:</span> <span class="s2">&quot;bilinear&quot;</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">COGEO</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"nodata"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"resampling_method"</span><span class="p">:</span> <span class="s2">"bilinear"</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
 </code></pre></div></p>
 <h2 id="base-classes-minzoom-and-maxzoom">Base classes <strong>minzoom</strong> and <strong>maxzoom</strong><a class="headerlink" href="#base-classes-minzoom-and-maxzoom" title="Permanent link">&para;</a></h2>
@@ -2734,7 +2734,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="nd">@attr</span><span class="o">.</span><span class="n">s</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BandFileReader</span><span class="p">(</span><span class="n">MultiBandReader</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test MultiBand&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test MultiBand"""</span>
 
     <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">tms</span><span class="p">:</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">TileMatrixSet</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">WEB_MERCATOR_TMS</span><span class="p">)</span>
@@ -2748,7 +2748,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <span class="c1"># now</span>
 <span class="nd">@attr</span><span class="o">.</span><span class="n">s</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">BandFileReader</span><span class="p">(</span><span class="n">MultiBandReader</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Test MultiBand&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Test MultiBand"""</span>
 
     <span class="nb">input</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">()</span>
     <span class="n">tms</span><span class="p">:</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">TileMatrixSet</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">WEB_MERCATOR_TMS</span><span class="p">)</span>
@@ -2773,7 +2773,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <h1 id="new-features">New Features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h1>
 <h2 id="non-geo-reader">Non-Geo reader<a class="headerlink" href="#non-geo-reader" title="Permanent link">&para;</a></h2>
 <p>Because not all raster are geo-referenced, we added <code>rio_tiler.io.ImageReader</code> to allow opening and reading non-geo images. All methods are returning data in the pixel coordinate system.</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
 
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
@@ -2794,14 +2794,14 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">XarrayReader</span>
 
 <span class="k">with</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
-    <span class="s2">&quot;https://ncsa.osn.xsede.org/Pangeo/pangeo-forge/noaa-coastwatch-geopolar-sst-feedstock/noaa-coastwatch-geopolar-sst.zarr&quot;</span><span class="p">,</span>
-    <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">,</span>
-    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">&quot;all&quot;</span>
+    <span class="s2">"https://ncsa.osn.xsede.org/Pangeo/pangeo-forge/noaa-coastwatch-geopolar-sst-feedstock/noaa-coastwatch-geopolar-sst.zarr"</span><span class="p">,</span>
+    <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span><span class="p">,</span>
+    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">"all"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">ds</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="s2">&quot;analysed_sst&quot;</span><span class="p">][:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="s2">"analysed_sst"</span><span class="p">][:</span><span class="mi">1</span><span class="p">]</span>
     <span class="c1"># the SST dataset do not have a CRS info</span>
     <span class="c1"># so we need to add it to `virtualy` within the Xarray DataArray</span>
-    <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">"epsg:4326"</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="nb">print</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
@@ -2812,18 +2812,18 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 4.0
 <p>Starting with rio-tiler 4.0, if the input dataset has <a href="https://gdal.org/user/raster_data_model.html#raster-band"><code>statistics</code></a> (e.g <code>STATISTICS_MINIMUM</code>, <code>STATISTICS_MAXIMUM</code>) within its metadata, rio-tiler will try to use it to rescale automatically the output image.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;https://data.geo.admin.ch/ch.swisstopo.swissalti3d/swissalti3d_2019_2573-1085/swissalti3d_2019_2573-1085_0.5_2056_5728.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"https://data.geo.admin.ch/ch.swisstopo.swissalti3d/swissalti3d_2019_2573-1085/swissalti3d_2019_2573-1085_0.5_2056_5728.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">band_metadata</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span>
-    <span class="p">{</span><span class="s1">&#39;STATISTICS_COVARIANCES&#39;</span><span class="p">:</span> <span class="s1">&#39;10685.98787505646&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;STATISTICS_EXCLUDEDVALUES&#39;</span><span class="p">:</span> <span class="s1">&#39;-9999&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;STATISTICS_MAXIMUM&#39;</span><span class="p">:</span> <span class="s1">&#39;2015.0944824219&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;STATISTICS_MEAN&#39;</span><span class="p">:</span> <span class="s1">&#39;1754.471184271&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;STATISTICS_MINIMUM&#39;</span><span class="p">:</span> <span class="s1">&#39;1615.8128662109&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;STATISTICS_SKIPFACTORX&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;STATISTICS_SKIPFACTORY&#39;</span><span class="p">:</span> <span class="s1">&#39;1&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;STATISTICS_STDDEV&#39;</span><span class="p">:</span> <span class="s1">&#39;103.37305197708&#39;</span><span class="p">})]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s1">'b1'</span><span class="p">,</span>
+    <span class="p">{</span><span class="s1">'STATISTICS_COVARIANCES'</span><span class="p">:</span> <span class="s1">'10685.98787505646'</span><span class="p">,</span>
+    <span class="s1">'STATISTICS_EXCLUDEDVALUES'</span><span class="p">:</span> <span class="s1">'-9999'</span><span class="p">,</span>
+    <span class="s1">'STATISTICS_MAXIMUM'</span><span class="p">:</span> <span class="s1">'2015.0944824219'</span><span class="p">,</span>
+    <span class="s1">'STATISTICS_MEAN'</span><span class="p">:</span> <span class="s1">'1754.471184271'</span><span class="p">,</span>
+    <span class="s1">'STATISTICS_MINIMUM'</span><span class="p">:</span> <span class="s1">'1615.8128662109'</span><span class="p">,</span>
+    <span class="s1">'STATISTICS_SKIPFACTORX'</span><span class="p">:</span> <span class="s1">'1'</span><span class="p">,</span>
+    <span class="s1">'STATISTICS_SKIPFACTORY'</span><span class="p">:</span> <span class="s1">'1'</span><span class="p">,</span>
+    <span class="s1">'STATISTICS_STDDEV'</span><span class="p">:</span> <span class="s1">'103.37305197708'</span><span class="p">})]</span>
 
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
     <span class="c1"># The min/max statistics are saved within every output image object</span>

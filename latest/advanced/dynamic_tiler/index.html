@@ -2431,7 +2431,7 @@ your own API.</p>
 <div class="highlight"><pre><span></span><code>pip<span class="w"> </span>install<span class="w"> </span>fastapi<span class="w"> </span>uvicorn<span class="w"> </span>rio-tiler
 </code></pre></div>
 <h3 id="apppy"><code>app.py</code><a class="headerlink" href="#apppy" title="Permanent link">&para;</a></h3>
-<div class="highlight"><pre><span></span><code><span class="sd">&quot;&quot;&quot;rio-tiler tile server.&quot;&quot;&quot;</span>
+<div class="highlight"><pre><span></span><code><span class="sd">"""rio-tiler tile server."""</span>
 
 <span class="kn">import</span><span class="w"> </span><span class="nn">os</span>
 
@@ -2444,55 +2444,55 @@ your own API.</p>
 
 
 <span class="n">app</span> <span class="o">=</span> <span class="n">FastAPI</span><span class="p">(</span>
-    <span class="n">title</span><span class="o">=</span><span class="s2">&quot;rio-tiler&quot;</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;A lightweight Cloud Optimized GeoTIFF tile server&quot;</span><span class="p">,</span>
+    <span class="n">title</span><span class="o">=</span><span class="s2">"rio-tiler"</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"A lightweight Cloud Optimized GeoTIFF tile server"</span><span class="p">,</span>
 <span class="p">)</span>
 
 
 <span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span>
-    <span class="sa">r</span><span class="s2">&quot;/</span><span class="si">{z}</span><span class="s2">/</span><span class="si">{x}</span><span class="s2">/</span><span class="si">{y}</span><span class="s2">.png&quot;</span><span class="p">,</span>
+    <span class="sa">r</span><span class="s2">"/</span><span class="si">{z}</span><span class="s2">/</span><span class="si">{x}</span><span class="s2">/</span><span class="si">{y}</span><span class="s2">.png"</span><span class="p">,</span>
     <span class="n">responses</span><span class="o">=</span><span class="p">{</span>
         <span class="mi">200</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;content&quot;</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;image/png&quot;</span><span class="p">:</span> <span class="p">{}},</span> <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Return an image.&quot;</span><span class="p">,</span>
+            <span class="s2">"content"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"image/png"</span><span class="p">:</span> <span class="p">{}},</span> <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Return an image."</span><span class="p">,</span>
         <span class="p">}</span>
     <span class="p">},</span>
     <span class="n">response_class</span><span class="o">=</span><span class="n">Response</span><span class="p">,</span>
-    <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Read COG and return a tile&quot;</span><span class="p">,</span>
+    <span class="n">description</span><span class="o">=</span><span class="s2">"Read COG and return a tile"</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">tile</span><span class="p">(</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cloud Optimized GeoTIFF URL.&quot;</span><span class="p">),</span>
-    <span class="n">tilesize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">none</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;TileSize&quot;</span><span class="p">),</span>
+    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Cloud Optimized GeoTIFF URL."</span><span class="p">),</span>
+    <span class="n">tilesize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">none</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"TileSize"</span><span class="p">),</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Handle tile requests.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Handle tile requests."""</span>
     <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
         <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="n">tilesize</span><span class="p">)</span>
 
-    <span class="n">content</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;PNG&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;png&quot;</span><span class="p">))</span>
-    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">media_type</span><span class="o">=</span><span class="s2">&quot;image/png&quot;</span><span class="p">)</span>
+    <span class="n">content</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">"PNG"</span><span class="p">,</span> <span class="o">**</span><span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"png"</span><span class="p">))</span>
+    <span class="k">return</span> <span class="n">Response</span><span class="p">(</span><span class="n">content</span><span class="p">,</span> <span class="n">media_type</span><span class="o">=</span><span class="s2">"image/png"</span><span class="p">)</span>
 
 
-<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;/tilejson.json&quot;</span><span class="p">,</span> <span class="n">responses</span><span class="o">=</span><span class="p">{</span><span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Return a tilejson&quot;</span><span class="p">}})</span>
+<span class="nd">@app</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"/tilejson.json"</span><span class="p">,</span> <span class="n">responses</span><span class="o">=</span><span class="p">{</span><span class="mi">200</span><span class="p">:</span> <span class="p">{</span><span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Return a tilejson"</span><span class="p">}})</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">tilejson</span><span class="p">(</span>
     <span class="n">request</span><span class="p">:</span> <span class="n">Request</span><span class="p">,</span>
-    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;Cloud Optimized GeoTIFF URL.&quot;</span><span class="p">),</span>
-    <span class="n">tilesize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">none</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">&quot;TileSize&quot;</span><span class="p">),</span>
+    <span class="n">url</span><span class="p">:</span> <span class="nb">str</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="o">...</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"Cloud Optimized GeoTIFF URL."</span><span class="p">),</span>
+    <span class="n">tilesize</span><span class="p">:</span> <span class="nb">int</span> <span class="o">|</span> <span class="n">none</span> <span class="o">=</span> <span class="n">Query</span><span class="p">(</span><span class="kc">None</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s2">"TileSize"</span><span class="p">),</span>
 <span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return TileJSON document for a COG.&quot;&quot;&quot;</span>
-    <span class="n">tile_url</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">url_for</span><span class="p">(</span><span class="s2">&quot;tile&quot;</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{z}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{x}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">&quot;</span><span class="si">{y}</span><span class="s2">&quot;</span><span class="p">))</span>
-    <span class="n">tile_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="n">tile_url</span><span class="si">}</span><span class="s2">?url=</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">&quot;</span>
+<span class="w">    </span><span class="sd">"""Return TileJSON document for a COG."""</span>
+    <span class="n">tile_url</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">request</span><span class="o">.</span><span class="n">url_for</span><span class="p">(</span><span class="s2">"tile"</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="s2">"</span><span class="si">{z}</span><span class="s2">"</span><span class="p">,</span> <span class="n">x</span><span class="o">=</span><span class="s2">"</span><span class="si">{x}</span><span class="s2">"</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="s2">"</span><span class="si">{y}</span><span class="s2">"</span><span class="p">))</span>
+    <span class="n">tile_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">tile_url</span><span class="si">}</span><span class="s2">?url=</span><span class="si">{</span><span class="n">url</span><span class="si">}</span><span class="s2">"</span>
     <span class="k">if</span> <span class="n">tilesize</span><span class="p">:</span>
-        <span class="n">tile_url</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">&quot;&amp;tilesize=</span><span class="si">{</span><span class="n">tilesize</span><span class="si">}</span><span class="s2">&quot;</span>
+        <span class="n">tile_url</span> <span class="o">+=</span> <span class="sa">f</span><span class="s2">"&amp;tilesize=</span><span class="si">{</span><span class="n">tilesize</span><span class="si">}</span><span class="s2">"</span>
 
     <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">url</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
         <span class="k">return</span> <span class="p">{</span>
-            <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="n">cog</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">rasterio_geographic_crs</span><span class="p">),</span>
-            <span class="s2">&quot;minzoom&quot;</span><span class="p">:</span> <span class="n">cog</span><span class="o">.</span><span class="n">minzoom</span><span class="p">,</span>
-            <span class="s2">&quot;maxzoom&quot;</span><span class="p">:</span> <span class="n">cog</span><span class="o">.</span><span class="n">maxzoom</span><span class="p">,</span>
-            <span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">url</span><span class="p">),</span>
-            <span class="s2">&quot;tiles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">tile_url</span><span class="p">],</span>
+            <span class="s2">"bounds"</span><span class="p">:</span> <span class="n">cog</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">rasterio_geographic_crs</span><span class="p">),</span>
+            <span class="s2">"minzoom"</span><span class="p">:</span> <span class="n">cog</span><span class="o">.</span><span class="n">minzoom</span><span class="p">,</span>
+            <span class="s2">"maxzoom"</span><span class="p">:</span> <span class="n">cog</span><span class="o">.</span><span class="n">maxzoom</span><span class="p">,</span>
+            <span class="s2">"name"</span><span class="p">:</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">url</span><span class="p">),</span>
+            <span class="s2">"tiles"</span><span class="p">:</span> <span class="p">[</span><span class="n">tile_url</span><span class="p">],</span>
         <span class="p">}</span>
 </code></pre></div>
 <h2 id="launch-example">Launch Example<a class="headerlink" href="#launch-example" title="Permanent link">&para;</a></h2>

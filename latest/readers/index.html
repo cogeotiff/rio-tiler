@@ -2782,7 +2782,7 @@
 </ul>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
@@ -2791,7 +2791,7 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">colormap</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;</span> <span class="o">&lt;</span><span class="nb">open</span> <span class="n">DatasetReader</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;myfile.tif&#39;</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="o">&gt;</span>
+<span class="o">&gt;&gt;</span> <span class="o">&lt;</span><span class="nb">open</span> <span class="n">DatasetReader</span> <span class="n">name</span><span class="o">=</span><span class="s1">'myfile.tif'</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'r'</span><span class="o">&gt;</span>
 <span class="n">WebMercatorQuad</span>
 <span class="mi">16</span>
 <span class="mi">22</span>
@@ -2805,8 +2805,8 @@
 <p><strong>get_geographic_bounds(crs: rasterio.crs.CRS)</strong>: Get dataset bounds in geographic projection</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="s2">&quot;EPSG:4326&quot;</span><span class="p">))</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="s2">"EPSG:4326"</span><span class="p">))</span>
 
 <span class="p">(</span><span class="o">-</span><span class="mf">61.287001876638215</span><span class="p">,</span> <span class="mf">15.537756794450583</span><span class="p">,</span> <span class="o">-</span><span class="mf">61.27877967704677</span><span class="p">,</span> <span class="mf">15.542486503997608</span><span class="p">)</span>
 </code></pre></div>
@@ -2816,26 +2816,26 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"myfile.tif"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">height</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># or src.read(indexes=(1,))</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"b1/b2"</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
@@ -2844,21 +2844,21 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># src.tile(tile_x, tile_y, tile_z, **kwargs)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">WEB_MERCATOR_CRS</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"myfile.tif"</span><span class="p">]</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;B1/B2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"B1/B2"</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
 
 <span class="c1"># Using buffer</span>
@@ -2866,7 +2866,7 @@
 <span class="c1"># ref:</span>
 <span class="c1"># - https://github.com/cogeotiff/rio-tiler/issues/365</span>
 <span class="c1"># - https://github.com/cogeotiff/rio-tiler/pull/405</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># add 0.5 pixel on each side of the tile</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="n">buffer</span><span class="o">=</span><span class="mf">0.5</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="mi">257</span>
@@ -2883,30 +2883,30 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># src.part((minx, miny, maxx, maxy), **kwargs)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">))</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">WGS84_CRS</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"myfile.tif"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">bounds</span> <span class="o">==</span> <span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">)</span>
 
 <span class="c1"># Pass bbox in WGS84 (default) but return data in the input dataset CRS</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">dst_crs</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
 
 <span class="c1"># Limit output size</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">20</span><span class="p">,</span> <span class="mi">20</span><span class="p">),</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -2916,11 +2916,11 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
 <span class="n">feat</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{},</span>
-    <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Feature"</span><span class="p">,</span>
+    <span class="s2">"properties"</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="s2">"geometry"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Polygon"</span><span class="p">,</span>
+        <span class="s2">"coordinates"</span><span class="p">:</span> <span class="p">[</span>
             <span class="p">[</span>
                 <span class="p">[</span><span class="o">-</span><span class="mf">54.45</span><span class="p">,</span> <span class="mf">73.05</span><span class="p">],</span>
                 <span class="p">[</span><span class="o">-</span><span class="mf">55.05</span><span class="p">,</span> <span class="mf">72.79</span><span class="p">],</span>
@@ -2932,34 +2932,34 @@
     <span class="p">},</span>
 <span class="p">}</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># src.part(geojson_feature, **kwargs)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">WGS84_CRS</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"myfile.tif"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">bounds</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="mf">55.61</span><span class="p">,</span> <span class="mf">72.36</span><span class="p">,</span> <span class="o">-</span><span class="mf">53.83</span><span class="p">,</span> <span class="mf">73.05</span><span class="p">)</span>  <span class="c1"># bbox of the input feature</span>
 
 <span class="c1"># Pass bbox in WGS84 (default) but return data in the input dataset CRS</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">dst_crs</span><span class="o">=</span><span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span>
 
 <span class="c1"># Limit output size</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">2000</span><span class="p">)</span>
 
 <span class="c1"># Read high resolution</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -2967,17 +2967,17 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2;b1*4&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2;b1*4"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -2985,20 +2985,20 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointData</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># src.point(lon, lat)</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">25</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">PointData</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2;b1*4&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="mi">25</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2;b1*4"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
 </code></pre></div>
@@ -3008,29 +3008,29 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Info</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">Info</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">373185.0</span><span class="p">,</span> <span class="mf">8019284.949381611</span><span class="p">,</span> <span class="mf">639014.9492102272</span><span class="p">,</span> <span class="mf">8286015.0</span><span class="p">],</span>
-    <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.opengis.net/def/crs/EPSG/0/32621&quot;</span>
-    <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="p">{}]],</span>
-    <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b1&quot;</span><span class="p">]],</span>
-    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;colorinterp&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Nodata&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+    <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">[</span><span class="mf">373185.0</span><span class="p">,</span> <span class="mf">8019284.949381611</span><span class="p">,</span> <span class="mf">639014.9492102272</span><span class="p">,</span> <span class="mf">8286015.0</span><span class="p">],</span>
+    <span class="s2">"crs"</span><span class="p">:</span> <span class="s2">"http://www.opengis.net/def/crs/EPSG/0/32621"</span>
+    <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="p">{}]],</span>
+    <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b1"</span><span class="p">]],</span>
+    <span class="s2">"dtype"</span><span class="p">:</span> <span class="s2">"int8"</span><span class="p">,</span>
+    <span class="s2">"colorinterp"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"palette"</span><span class="p">],</span>
+    <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="s2">"Nodata"</span><span class="p">,</span>
+    <span class="s2">"colormap"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"0"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="s2">"1"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
         <span class="o">...</span>
     <span class="p">},</span>
-    <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
-    <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">2000</span><span class="p">,</span>
-    <span class="s2">&quot;overviews&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"GTiff"</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"width"</span><span class="p">:</span> <span class="mi">1000</span><span class="p">,</span>
+    <span class="s2">"height"</span><span class="p">:</span> <span class="mi">2000</span><span class="p">,</span>
+    <span class="s2">"overviews"</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
 <span class="p">}</span>
 </code></pre></div>
 </li>
@@ -3038,55 +3038,55 @@
 <p><strong>statistics()</strong>: Return image statistics (Min/Max/Stdev)</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
 
-<span class="c1"># stats will be in form or {&quot;band&quot;: BandStatistics(), ...}</span>
+<span class="c1"># stats will be in form or {"band": BandStatistics(), ...}</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
-    <span class="s1">&#39;b2&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
-    <span class="s1">&#39;b3&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="s1">'b1'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="s1">'b2'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="s1">'b3'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">7872</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">2107.524612053134</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
-    <span class="s2">&quot;sum&quot;</span><span class="p">:</span> <span class="mi">2203425412</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">2271.0065537857326</span><span class="p">,</span>
-    <span class="s2">&quot;median&quot;</span><span class="p">:</span> <span class="mi">2800</span><span class="p">,</span>
-    <span class="s2">&quot;majority&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;minority&quot;</span><span class="p">:</span> <span class="mi">7072</span><span class="p">,</span>
-    <span class="s2">&quot;unique&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
-    <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"min"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"max"</span><span class="p">:</span> <span class="mi">7872</span><span class="p">,</span>
+    <span class="s2">"mean"</span><span class="p">:</span> <span class="mf">2107.524612053134</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
+    <span class="s2">"sum"</span><span class="p">:</span> <span class="mi">2203425412</span><span class="p">,</span>
+    <span class="s2">"std"</span><span class="p">:</span> <span class="mf">2271.0065537857326</span><span class="p">,</span>
+    <span class="s2">"median"</span><span class="p">:</span> <span class="mi">2800</span><span class="p">,</span>
+    <span class="s2">"majority"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"minority"</span><span class="p">:</span> <span class="mi">7072</span><span class="p">,</span>
+    <span class="s2">"unique"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="o">...</span><span class="p">],</span>
         <span class="p">[</span><span class="o">...</span><span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;valid_percent&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
-    <span class="s2">&quot;masked_pixels&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;valid_pixels&quot;</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_98&quot;</span><span class="p">:</span> <span class="mi">6896</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_2&quot;</span><span class="p">:</span> <span class="mi">1</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;b1&quot;</span><span class="p">,</span>
+    <span class="s2">"valid_percent"</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">"masked_pixels"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">"valid_pixels"</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
+    <span class="s2">"percentile_98"</span><span class="p">:</span> <span class="mi">6896</span><span class="p">,</span>
+    <span class="s2">"percentile_2"</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"b1"</span><span class="p">,</span>
 <span class="p">}</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;myfile_with_colormap.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"myfile_with_colormap.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">categorical</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">categories</span><span class="o">=</span><span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">])</span>  <span class="c1"># we limit the categories to 2 defined value (defaults to all dataset values)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="s1">'b1'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="p">}</span>
 <span class="c1"># For categorical data, the histogram will represent the density of EACH value.</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
     <span class="o">...</span>
-    <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span>
         <span class="p">[</span><span class="mi">100</span><span class="p">,</span> <span class="mi">20000</span><span class="p">]</span>
     <span class="p">],</span>
@@ -3105,12 +3105,12 @@
 <li><strong>reprojection_method</strong>: Set default <code>reprojection_method</code></li>
 <li><strong>post_process</strong>: Function to apply after the read operations</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my_cog.tif&quot;</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;nodata&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my_cog.tif"</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"nodata"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
    <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># is equivalent to</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my_cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my_cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="rio_tileriostacstacreader">rio_tiler.io.stac.STACReader<a class="headerlink" href="#rio_tileriostacstacreader" title="Permanent link">&para;</a></h2>
@@ -3153,8 +3153,8 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">STACReader</span>
 
 <span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span>
-    <span class="s2">&quot;https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A&quot;</span><span class="p">,</span>
-    <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">}</span>
+    <span class="s2">"https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A"</span><span class="p">,</span>
+    <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">}</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">item</span><span class="p">)</span>
@@ -3165,9 +3165,9 @@
     <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;&gt;</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="mi">1</span><span class="n">tqdbvsut9</span><span class="o">.</span><span class="n">execute</span><span class="o">-</span><span class="n">api</span><span class="o">.</span><span class="n">us</span><span class="o">-</span><span class="n">west</span><span class="o">-</span><span class="mf">2.</span><span class="n">amazonaws</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">v0</span><span class="o">/</span><span class="n">collections</span><span class="o">/</span><span class="n">sentinel</span><span class="o">-</span><span class="n">s2</span><span class="o">-</span><span class="n">l2a</span><span class="o">-</span><span class="n">cogs</span><span class="o">/</span><span class="n">items</span><span class="o">/</span><span class="n">S2A_34SGA_20200318_0_L2A</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="n">https</span><span class="p">:</span><span class="o">//</span><span class="mi">1</span><span class="n">tqdbvsut9</span><span class="o">.</span><span class="n">execute</span><span class="o">-</span><span class="n">api</span><span class="o">.</span><span class="n">us</span><span class="o">-</span><span class="n">west</span><span class="o">-</span><span class="mf">2.</span><span class="n">amazonaws</span><span class="o">.</span><span class="n">com</span><span class="o">/</span><span class="n">v0</span><span class="o">/</span><span class="n">collections</span><span class="o">/</span><span class="nb">sentinel</span><span class="o">-</span><span class="n">s2</span><span class="o">-</span><span class="n">l2a</span><span class="o">-</span><span class="n">cogs</span><span class="o">/</span><span class="n">items</span><span class="o">/</span><span class="n">S2A_34SGA_20200318_0_L2A</span>
 <span class="o">&lt;</span><span class="n">Item</span> <span class="nb">id</span><span class="o">=</span><span class="n">S2A_34SGA_20200318_0_L2A</span><span class="o">&gt;</span>
-<span class="p">[</span><span class="s1">&#39;overview&#39;</span><span class="p">,</span> <span class="s1">&#39;visual&#39;</span><span class="p">,</span> <span class="s1">&#39;B01&#39;</span><span class="p">,</span> <span class="s1">&#39;B02&#39;</span><span class="p">,</span> <span class="s1">&#39;B03&#39;</span><span class="p">,</span> <span class="s1">&#39;B04&#39;</span><span class="p">,</span> <span class="s1">&#39;B05&#39;</span><span class="p">,</span> <span class="s1">&#39;B06&#39;</span><span class="p">,</span> <span class="s1">&#39;B07&#39;</span><span class="p">,</span> <span class="s1">&#39;B08&#39;</span><span class="p">,</span> <span class="s1">&#39;B8A&#39;</span><span class="p">,</span> <span class="s1">&#39;B09&#39;</span><span class="p">,</span> <span class="s1">&#39;B11&#39;</span><span class="p">,</span> <span class="s1">&#39;B12&#39;</span><span class="p">,</span> <span class="s1">&#39;AOT&#39;</span><span class="p">,</span> <span class="s1">&#39;WVP&#39;</span><span class="p">,</span> <span class="s1">&#39;SCL&#39;</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'overview'</span><span class="p">,</span> <span class="s1">'visual'</span><span class="p">,</span> <span class="s1">'B01'</span><span class="p">,</span> <span class="s1">'B02'</span><span class="p">,</span> <span class="s1">'B03'</span><span class="p">,</span> <span class="s1">'B04'</span><span class="p">,</span> <span class="s1">'B05'</span><span class="p">,</span> <span class="s1">'B06'</span><span class="p">,</span> <span class="s1">'B07'</span><span class="p">,</span> <span class="s1">'B08'</span><span class="p">,</span> <span class="s1">'B8A'</span><span class="p">,</span> <span class="s1">'B09'</span><span class="p">,</span> <span class="s1">'B11'</span><span class="p">,</span> <span class="s1">'B12'</span><span class="p">,</span> <span class="s1">'AOT'</span><span class="p">,</span> <span class="s1">'WVP'</span><span class="p">,</span> <span class="s1">'SCL'</span><span class="p">]</span>
 <span class="n">WebMercatorQuad</span>
 <span class="mi">0</span>
 <span class="mi">24</span>
@@ -3187,99 +3187,99 @@
 <p><strong>tile()</strong>: Read map tile from a STAC Item</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">STACReader</span>
 
-<span class="n">stac_url</span> <span class="o">=</span> <span class="s2">&quot;https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A&quot;</span>
+<span class="n">stac_url</span> <span class="o">=</span> <span class="s2">"https://1tqdbvsut9.execute-api.us-west-2.amazonaws.com/v0/collections/sentinel-s2-l2a-cogs/items/S2A_34SGA_20200318_0_L2A"</span>
 
 <span class="c1"># Using `assets=`</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="c1"># stac.tile(x, y, z, assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">145</span><span class="p">,</span>
         <span class="mi">103</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
         <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">],</span>
     <span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># each assets have one band</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">assets</span><span class="p">)</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span>
-        <span class="s1">&#39;https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B01.tif&#39;</span><span class="p">,</span>
-        <span class="s1">&#39;https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B02.tif&#39;</span><span class="p">,</span>
+        <span class="s1">'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B01.tif'</span><span class="p">,</span>
+        <span class="s1">'https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/34/S/GA/2020/3/S2A_34SGA_20200318_0_L2A/B02.tif'</span><span class="p">,</span>
     <span class="p">]</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1&#39;</span><span class="p">,</span> <span class="s1">&#39;B02_b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1'</span><span class="p">,</span> <span class="s1">'B02_b1'</span><span class="p">]</span>
 
 <span class="c1"># Using `expression=`</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">})</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">})</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">145</span><span class="p">,</span>
         <span class="mi">103</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
         <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">],</span>
-        <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">,</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">],</span>
+        <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">,</span>
     <span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1/B02_b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1/B02_b1'</span><span class="p">]</span>
 
 <span class="c1"># Using `assets=` + `|indexes=` (select a specific index in an asset)</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">145</span><span class="p">,</span>
         <span class="mi">103</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
         <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01|indexes=1,1,1&quot;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01|indexes=1,1,1"</span><span class="p">],</span>
     <span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">3</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1&#39;</span><span class="p">,</span> <span class="s1">&#39;B01_b1&#39;</span><span class="p">,</span> <span class="s1">&#39;B01_b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1'</span><span class="p">,</span> <span class="s1">'B01_b1'</span><span class="p">,</span> <span class="s1">'B01_b1'</span><span class="p">]</span>
 
 <span class="c1"># Using `assets=` + `|expression=`</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">145</span><span class="p">,</span>
         <span class="mi">103</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
         <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01|expression=b1*2&quot;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01|expression=b1*2"</span><span class="p">],</span>
     <span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">3</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1*2&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1*2'</span><span class="p">]</span>
 
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">145</span><span class="p">,</span>
         <span class="mi">103</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
         <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01|expression=b1*2&quot;</span><span class="p">],</span>
-        <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/2&quot;</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01|expression=b1*2"</span><span class="p">],</span>
+        <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/2"</span>
     <span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">3</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1*2/2&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1*2/2'</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
 <p><strong>part()</strong>: Read a STAC item for a given bounding box (<code>bbox</code>). By default the bbox is considered to be in WGS84.</p>
 <div class="highlight"><pre><span></span><code><span class="n">bbox</span> <span class="o">=</span> <span class="p">(</span><span class="mf">23.8</span><span class="p">,</span> <span class="mf">31.9</span><span class="p">,</span> <span class="mf">24.1</span><span class="p">,</span> <span class="mf">32.2</span><span class="p">)</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="c1"># stac.part((minx, miny, maxx, maxy), assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># each assets have one band</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1&#39;</span><span class="p">,</span> <span class="s1">&#39;B02_b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1'</span><span class="p">,</span> <span class="s1">'B02_b1'</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
 <p><strong>feature()</strong>: Read a STAC item for a geojson feature. By default the feature is considered to be in WGS84.</p>
 <div class="highlight"><pre><span></span><code><span class="n">feat</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Feature"</span><span class="p">,</span>
+    <span class="s2">"geometry"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"coordinates"</span><span class="p">:</span> <span class="p">[</span>
             <span class="p">[</span>
                 <span class="p">[</span><span class="mf">23.8</span><span class="p">,</span> <span class="mf">32.2</span><span class="p">],</span>
                 <span class="p">[</span><span class="mf">23.8</span><span class="p">,</span> <span class="mf">31.9</span><span class="p">],</span>
@@ -3288,103 +3288,103 @@
                 <span class="p">[</span><span class="mf">23.8</span><span class="p">,</span> <span class="mf">32.2</span><span class="p">]</span>
             <span class="p">]</span>
         <span class="p">],</span>
-        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Polygon&quot;</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Polygon"</span>
     <span class="p">}</span>
 <span class="p">}</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="c1"># stac.feature(feature, assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># each assets have one band</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1&#39;</span><span class="p">,</span> <span class="s1">&#39;B02_b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1'</span><span class="p">,</span> <span class="s1">'B02_b1'</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
 <p><strong>preview()</strong>: Read a preview of STAC Item</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="c1"># stac.preview(assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">2</span>  <span class="c1"># each assets have one band</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1&#39;</span><span class="p">,</span> <span class="s1">&#39;B02_b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1'</span><span class="p">,</span> <span class="s1">'B02_b1'</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
 <p><strong>point()</strong>: Read the pixel values for assets for a given <code>lon, lat</code> coordinates. By default the coordinates are considered to be in WGS84.</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="c1"># stac.point(lon, lat, assets=?, expression=?, asset_expression=?, asset_indexes=?, **kwargs)</span>
-    <span class="n">data</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mf">24.1</span><span class="p">,</span> <span class="mf">31.9</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">])</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mf">24.1</span><span class="p">,</span> <span class="mf">31.9</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">])</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span>
         <span class="mi">3595</span><span class="p">,</span>  <span class="c1"># values for B01</span>
         <span class="mi">3198</span>  <span class="c1"># values for B02</span>
     <span class="p">]</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">data</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;B01_b1&#39;</span><span class="p">,</span> <span class="s1">&#39;B02_b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'B01_b1'</span><span class="p">,</span> <span class="s1">'B02_b1'</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
 <p><strong>info()</strong>: Return simple metadata about the assets</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="c1"># stac.info(assets=?, **kwargs)</span>
-    <span class="n">info</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">])</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">])</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">]</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">373185.0</span><span class="p">,</span> <span class="mf">8019284.949381611</span><span class="p">,</span> <span class="mf">639014.9492102272</span><span class="p">,</span> <span class="mf">8286015.0</span><span class="p">],</span>
-    <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.opengis.net/def/crs/EPSG/0/32621&quot;</span>
-    <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="p">{}]],</span>
-    <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span> <span class="s1">&#39;b1&#39;</span><span class="p">]],</span>
-    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;uint16&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Nodata&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;colorinterp&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;gray&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;nodata_value&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
-    <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">1830</span><span class="p">,</span>
-    <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">1830</span><span class="p">,</span>
-    <span class="s2">&quot;overviews&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">[</span><span class="mf">373185.0</span><span class="p">,</span> <span class="mf">8019284.949381611</span><span class="p">,</span> <span class="mf">639014.9492102272</span><span class="p">,</span> <span class="mf">8286015.0</span><span class="p">],</span>
+    <span class="s2">"crs"</span><span class="p">:</span> <span class="s2">"http://www.opengis.net/def/crs/EPSG/0/32621"</span>
+    <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="p">{}]],</span>
+    <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[[</span><span class="s1">'b1'</span><span class="p">,</span> <span class="s1">'b1'</span><span class="p">]],</span>
+    <span class="s2">"dtype"</span><span class="p">:</span> <span class="s2">"uint16"</span><span class="p">,</span>
+    <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="s2">"Nodata"</span><span class="p">,</span>
+    <span class="s2">"colorinterp"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"gray"</span><span class="p">],</span>
+    <span class="s2">"nodata_value"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span>
+    <span class="s2">"width"</span><span class="p">:</span> <span class="mi">1830</span><span class="p">,</span>
+    <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"GTiff"</span><span class="p">,</span>
+    <span class="s2">"height"</span><span class="p">:</span> <span class="mi">1830</span><span class="p">,</span>
+    <span class="s2">"overviews"</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1</span>
 <span class="p">}</span>
 </code></pre></div>
 </li>
 <li>
 <p><strong>statistics()</strong>: Return per assets statistics (Min/Max/Stdev)</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;thumbnail&quot;</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">stac_url</span><span class="p">,</span> <span class="n">exclude_assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"thumbnail"</span><span class="p">},)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="c1"># stac.statistics(assets=?, asset_expression=?, asset_indexes=?, **kwargs)</span>
-    <span class="n">stats</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
 
-<span class="c1"># stats will be in form or {&quot;asset&quot;: {&quot;band&quot;: BandStatistics(), ...}, ...}</span>
+<span class="c1"># stats will be in form or {"asset": {"band": BandStatistics(), ...}, ...}</span>
 <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">,</span> <span class="s2">&quot;B02&quot;</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"B01"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">]</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">]))</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span>  <span class="c1"># B01 has only one band entry &quot;1&quot;</span>
+<span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">]))</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span>  <span class="c1"># B01 has only one band entry "1"</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;B01&quot;</span><span class="p">][</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">&quot;json&quot;</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"B01"</span><span class="p">][</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">mode</span><span class="o">=</span><span class="s2">"json"</span><span class="p">,</span> <span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="p">{</span>
-    <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">283.0</span><span class="p">,</span>
-    <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">7734.0</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">1996.959687371452</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mf">12155.0</span><span class="p">,</span>
-    <span class="s2">&quot;sum&quot;</span><span class="p">:</span> <span class="mf">24273045.0</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">1218.4455268717047</span><span class="p">,</span>
-    <span class="s2">&quot;median&quot;</span><span class="p">:</span> <span class="mf">1866.0</span><span class="p">,</span>
-    <span class="s2">&quot;majority&quot;</span><span class="p">:</span> <span class="mf">322.0</span><span class="p">,</span>
-    <span class="s2">&quot;minority&quot;</span><span class="p">:</span> <span class="mf">283.0</span><span class="p">,</span>
-    <span class="s2">&quot;unique&quot;</span><span class="p">:</span> <span class="mf">4015.0</span><span class="p">,</span>
-    <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"min"</span><span class="p">:</span> <span class="mf">283.0</span><span class="p">,</span>
+    <span class="s2">"max"</span><span class="p">:</span> <span class="mf">7734.0</span><span class="p">,</span>
+    <span class="s2">"mean"</span><span class="p">:</span> <span class="mf">1996.959687371452</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mf">12155.0</span><span class="p">,</span>
+    <span class="s2">"sum"</span><span class="p">:</span> <span class="mf">24273045.0</span><span class="p">,</span>
+    <span class="s2">"std"</span><span class="p">:</span> <span class="mf">1218.4455268717047</span><span class="p">,</span>
+    <span class="s2">"median"</span><span class="p">:</span> <span class="mf">1866.0</span><span class="p">,</span>
+    <span class="s2">"majority"</span><span class="p">:</span> <span class="mf">322.0</span><span class="p">,</span>
+    <span class="s2">"minority"</span><span class="p">:</span> <span class="mf">283.0</span><span class="p">,</span>
+    <span class="s2">"unique"</span><span class="p">:</span> <span class="mf">4015.0</span><span class="p">,</span>
+    <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="mf">3257.0</span><span class="p">,</span> <span class="mf">2410.0</span><span class="p">,</span> <span class="mf">2804.0</span><span class="p">,</span> <span class="mf">1877.0</span><span class="p">,</span> <span class="mf">1050.0</span><span class="p">,</span> <span class="mf">423.0</span><span class="p">,</span> <span class="mf">199.0</span><span class="p">,</span> <span class="mf">93.0</span><span class="p">,</span> <span class="mf">31.0</span><span class="p">,</span> <span class="mf">11.0</span><span class="p">],</span>
         <span class="p">[</span><span class="mf">283.0</span><span class="p">,</span> <span class="mf">1028.1</span><span class="p">,</span> <span class="mf">1773.2</span><span class="p">,</span> <span class="mf">2518.3</span><span class="p">,</span> <span class="mf">3263.4</span><span class="p">,</span> <span class="mf">4008.5</span><span class="p">,</span> <span class="mf">4753.6</span><span class="p">,</span> <span class="mf">5498.7</span><span class="p">,</span> <span class="mf">6243.8</span><span class="p">,</span> <span class="mf">6988.900000000001</span><span class="p">,</span> <span class="mf">7734.0</span><span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;valid_percent&quot;</span><span class="p">:</span> <span class="mf">74.19</span><span class="p">,</span>
-    <span class="s2">&quot;masked_pixels&quot;</span><span class="p">:</span> <span class="mf">4229.0</span><span class="p">,</span>
-    <span class="s2">&quot;valid_pixels&quot;</span><span class="p">:</span> <span class="mf">12155.0</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_2&quot;</span><span class="p">:</span> <span class="mf">326.08000000000004</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_98&quot;</span><span class="p">:</span> <span class="mf">5026.76</span><span class="p">,</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;b1&quot;</span>
+    <span class="s2">"valid_percent"</span><span class="p">:</span> <span class="mf">74.19</span><span class="p">,</span>
+    <span class="s2">"masked_pixels"</span><span class="p">:</span> <span class="mf">4229.0</span><span class="p">,</span>
+    <span class="s2">"valid_pixels"</span><span class="p">:</span> <span class="mf">12155.0</span><span class="p">,</span>
+    <span class="s2">"percentile_2"</span><span class="p">:</span> <span class="mf">326.08000000000004</span><span class="p">,</span>
+    <span class="s2">"percentile_98"</span><span class="p">:</span> <span class="mf">5026.76</span><span class="p">,</span>
+    <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"b1"</span>
 <span class="p">}</span>
 </code></pre></div>
 </li>
@@ -3394,49 +3394,49 @@
 </ul>
 <p>The <code>merged_statistics</code> enable the use of <code>expression</code> to perform assets mixing (e.g <code>"asset1_b1/asset2_b2"</code>). The main difference with the <code>statistics</code> method is that we will first use the <code>self.preview</code> method to obtain a merged array and then calculate the statistics.</p>
 <div class="codehilite"><pre><span></span><code>```python
-with STACReader(stac_url, exclude_assets={&quot;thumbnail&quot;},) as stac:
+with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
     # stac.statistics(assets=?, asset_expression=?, asset_indexes=?, **kwargs)
-    stats = stac.merged_statistics(assets=[&quot;B01&quot;, &quot;B02&quot;], max_size=128)
+    stats = stac.merged_statistics(assets=["B01", "B02"], max_size=128)
 
-# stats will be in form or {&quot;band&quot;: BandStatistics(), ...}
+# stats will be in form or {"band": BandStatistics(), ...}
 print(list(stats))
-&gt;&gt;&gt; [&quot;b1&quot;, &quot;b2&quot;]
+&gt;&gt;&gt; ["b1", "b2"]
 
-assert isinstance(stats[&quot;b1&quot;], BandStatistics)
+assert isinstance(stats["b1"], BandStatistics)
 
-print(stats[&quot;b1&quot;].model_dump(mode=&quot;json&quot;, exclude_none=True))
+print(stats["b1"].model_dump(mode="json", exclude_none=True))
 {
-    &quot;min&quot;: 283.0,
-    &quot;max&quot;: 7734.0,
-    &quot;mean&quot;: 1996.959687371452,
-    &quot;count&quot;: 12155.0,
-    &quot;sum&quot;: 24273045.0,
-    &quot;std&quot;: 1218.4455268717047,
-    &quot;median&quot;: 1866.0,
-    &quot;majority&quot;: 322.0,
-    &quot;minority&quot;: 283.0,
-    &quot;unique&quot;: 4015.0,
-    &quot;histogram&quot;: [
+    "min": 283.0,
+    "max": 7734.0,
+    "mean": 1996.959687371452,
+    "count": 12155.0,
+    "sum": 24273045.0,
+    "std": 1218.4455268717047,
+    "median": 1866.0,
+    "majority": 322.0,
+    "minority": 283.0,
+    "unique": 4015.0,
+    "histogram": [
         [3257.0, 2410.0, 2804.0, 1877.0, 1050.0, 423.0, 199.0, 93.0, 31.0, 11.0],
         [283.0, 1028.1, 1773.2, 2518.3, 3263.4, 4008.5, 4753.6, 5498.7, 6243.8, 6988.900000000001, 7734.0]
     ],
-    &quot;valid_percent&quot;: 74.19,
-    &quot;masked_pixels&quot;: 4229.0,
-    &quot;valid_pixels&quot;: 12155.0,
-    &quot;percentile_2&quot;: 326.08000000000004,
-    &quot;percentile_98&quot;: 5026.76,
-    &quot;description&quot;: &quot;B01_b1&quot;
+    "valid_percent": 74.19,
+    "masked_pixels": 4229.0,
+    "valid_pixels": 12155.0,
+    "percentile_2": 326.08000000000004,
+    "percentile_98": 5026.76,
+    "description": "B01_b1"
 }
 
-with STACReader(stac_url, exclude_assets={&quot;thumbnail&quot;},) as stac:
+with STACReader(stac_url, exclude_assets={"thumbnail"},) as stac:
     # stac.statistics(assets=?, asset_expression=?, asset_indexes=?, **kwargs)
-    stats = stac.merged_statistics(assets=[&quot;B01&quot;, &quot;B02&quot;], expression=&quot;b1/b2&quot;, max_size=128)
+    stats = stac.merged_statistics(assets=["B01", "B02"], expression="b1/b2", max_size=128)
 
 print(list(stats))
-&gt;&gt;&gt; [&quot;b1&quot;]
+&gt;&gt;&gt; ["b1"]
 
-assert isinstance(stats[&quot;b1&quot;], BandStatistics)
-assert stats[&quot;b1&quot;].description == &quot;B01_b1/B02_b1&quot;
+assert isinstance(stats["b1"], BandStatistics)
+assert stats["b1"].description == "B01_b1/B02_b1"
 ```
 </code></pre></div>
 
@@ -3444,13 +3444,13 @@ assert stats[&quot;b1&quot;].description == &quot;B01_b1/B02_b1&quot;
 <p>in rio-tiler <code>4.1.0</code>, we've added <code>asset_as_band: bool</code> option to the data methods (tile, feature, part, preview, point) to tell the reader to treat each asset as a dataset band. This is specifically useful for <code>expression</code></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># For expression, without `asset_as_band` tag, users have to pass `_b{n}` suffix to indicate the band index</span>
 <span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">STAC_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;green_b1/red_b1&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"green"</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"green_b1/red_b1"</span><span class="p">]</span>
 
 <span class="c1"># With `asset_as_band=True`, expression can be the asset names</span>
 <span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">STAC_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">,</span> <span class="n">asset_as_band</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;green/red&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"green"</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">,</span> <span class="n">asset_as_band</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"green/red"</span><span class="p">]</span>
 </code></pre></div>
 <h2 id="rio_tileriorasterioimagereader">rio_tiler.io.rasterio.ImageReader<a class="headerlink" href="#rio_tileriorasterioimagereader" title="Permanent link">&para;</a></h2>
 <p>The <code>Reader</code> is designed to work with simple raster datasets in their pixel coordinates.</p>
@@ -3483,7 +3483,7 @@ assert stats[&quot;b1&quot;].description == &quot;B01_b1/B02_b1&quot;
 </ul>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">maxzoom</span><span class="p">)</span>
@@ -3491,7 +3491,7 @@ assert stats[&quot;b1&quot;].description == &quot;B01_b1/B02_b1&quot;
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">colormap</span><span class="p">)</span>
 
-<span class="o">&gt;&gt;</span> <span class="o">&lt;</span><span class="nb">open</span> <span class="n">DatasetReader</span> <span class="n">name</span><span class="o">=</span><span class="s1">&#39;image.jpeg&#39;</span> <span class="n">mode</span><span class="o">=</span><span class="s1">&#39;r&#39;</span><span class="o">&gt;</span>
+<span class="o">&gt;&gt;</span> <span class="o">&lt;</span><span class="nb">open</span> <span class="n">DatasetReader</span> <span class="n">name</span><span class="o">=</span><span class="s1">'image.jpeg'</span> <span class="n">mode</span><span class="o">=</span><span class="s1">'r'</span><span class="o">&gt;</span>
 <span class="mi">0</span>
 <span class="mi">3</span>
 <span class="n">Affine</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span>  <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
@@ -3505,26 +3505,26 @@ assert stats[&quot;b1&quot;].description == &quot;B01_b1/B02_b1&quot;
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
     <span class="k">assert</span> <span class="ow">not</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"image.jpeg"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">height</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">count</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>  <span class="c1"># or src.read(indexes=(1,))</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">1</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_description</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"b1/b2"</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
@@ -3536,7 +3536,7 @@ assert stats[&quot;b1&quot;].description == &quot;B01_b1/B02_b1&quot;
 from rio_tiler.io import ImageReader
 from rio_tiler.models import ImageData
 
-with ImageReader(&quot;image.jpeg&quot;) as src:
+with ImageReader("image.jpeg") as src:
     # src.tile(tile_x, tile_y, tile_z, **kwargs)
     img = src.tile(0, 0, src.maxzoom)
     assert isinstance(img, ImageData)
@@ -3549,13 +3549,13 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
     assert img.bounds[3] == 0
 
 # With indexes
-with ImageReader(&quot;image.jpeg&quot;) as src:
+with ImageReader("image.jpeg") as src:
     img = src.tile(1, 2, 3, tilesize=256, indexes=1)
     assert img.count == 1
 
 # With expression
-with ImageReader(&quot;image.jpeg&quot;) as src:
-    img = src.tile(1, 2, 3, tilesize=256, expression=&quot;B1/B2&quot;)
+with ImageReader("image.jpeg") as src:
+    img = src.tile(1, 2, 3, tilesize=256, expression="B1/B2")
     assert img.count == 1
 ```
 </code></pre></div>
@@ -3566,24 +3566,24 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># src.part((left, bottom, right, top), **kwargs)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># read the top-left 256x256 square of the image</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;myfile.tif&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"myfile.tif"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">bounds</span> <span class="o">==</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 
 <span class="c1"># Limit output size</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">50</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">0</span><span class="p">),</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -3592,7 +3592,7 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
 <span class="n">feat</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"coordinates"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span>
             <span class="p">[</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">],</span>
             <span class="p">[</span><span class="mf">1000.0</span><span class="p">,</span> <span class="mf">100.0</span><span class="p">],</span>
@@ -3601,31 +3601,31 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
             <span class="p">[</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">],</span>
         <span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">,</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Polygon"</span><span class="p">,</span>
 <span class="p">}</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># src.part(geojson_feature, **kwargs)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">assets</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"image.jpeg"</span><span class="p">]</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">bounds</span> <span class="o">==</span> <span class="p">(</span><span class="o">-</span><span class="mf">100.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="mf">1000.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">100.0</span><span class="p">)</span>  <span class="c1"># bbox of the input feature</span>
 
 <span class="c1"># Limit output size</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">100</span><span class="p">)</span>
 
 <span class="c1"># Read high resolution</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">feat</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -3633,17 +3633,17 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2;b1*4&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2;b1*4"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -3651,20 +3651,20 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointData</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># src.point(x, y)</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># pixel at the origin</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">pt</span><span class="p">,</span> <span class="n">PointData</span><span class="p">)</span>
 
 <span class="c1"># With indexes</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span><span class="mi">0</span> <span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">1</span><span class="p">]</span>
 
 <span class="c1"># With expression</span>
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2;b1*4&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2;b1*4"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">data</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">3</span><span class="p">,</span> <span class="mi">4</span><span class="p">]</span>
 </code></pre></div>
@@ -3674,28 +3674,28 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">Info</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="n">Info</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4000</span><span class="p">,</span> <span class="mi">4000</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-    <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="p">{}]],</span>
-    <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]],</span>
-    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;colorinterp&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Nodata&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+    <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">4000</span><span class="p">,</span> <span class="mi">4000</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+    <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="p">{}]],</span>
+    <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">""</span><span class="p">]],</span>
+    <span class="s2">"dtype"</span><span class="p">:</span> <span class="s2">"int8"</span><span class="p">,</span>
+    <span class="s2">"colorinterp"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"palette"</span><span class="p">],</span>
+    <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="s2">"Nodata"</span><span class="p">,</span>
+    <span class="s2">"colormap"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"0"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="s2">"1"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
         <span class="o">...</span>
     <span class="p">},</span>
-    <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">4000</span><span class="p">,</span>
-    <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">4000</span><span class="p">,</span>
-    <span class="s2">&quot;overviews&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
+    <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"GTiff"</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"width"</span><span class="p">:</span> <span class="mi">4000</span><span class="p">,</span>
+    <span class="s2">"height"</span><span class="p">:</span> <span class="mi">4000</span><span class="p">,</span>
+    <span class="s2">"overviews"</span><span class="p">:</span> <span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">],</span>
 <span class="p">}</span>
 </code></pre></div>
 </li>
@@ -3703,39 +3703,39 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <p><strong>statistics()</strong>: Return image statistics (Min/Max/Stdev)</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
 
-<span class="c1"># stats will be in form or {&quot;band&quot;: BandStatistics(), ...}</span>
+<span class="c1"># stats will be in form or {"band": BandStatistics(), ...}</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
-    <span class="s1">&#39;b2&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
-    <span class="s1">&#39;b3&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
+    <span class="s1">'b1'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="s1">'b2'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="s1">'b3'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">)</span>
 <span class="p">}</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">7872</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">2107.524612053134</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
-    <span class="s2">&quot;sum&quot;</span><span class="p">:</span> <span class="mi">2203425412</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">2271.0065537857326</span><span class="p">,</span>
-    <span class="s2">&quot;median&quot;</span><span class="p">:</span> <span class="mi">2800</span><span class="p">,</span>
-    <span class="s2">&quot;majority&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;minority&quot;</span><span class="p">:</span> <span class="mi">7072</span><span class="p">,</span>
-    <span class="s2">&quot;unique&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
-    <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"min"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"max"</span><span class="p">:</span> <span class="mi">7872</span><span class="p">,</span>
+    <span class="s2">"mean"</span><span class="p">:</span> <span class="mf">2107.524612053134</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
+    <span class="s2">"sum"</span><span class="p">:</span> <span class="mi">2203425412</span><span class="p">,</span>
+    <span class="s2">"std"</span><span class="p">:</span> <span class="mf">2271.0065537857326</span><span class="p">,</span>
+    <span class="s2">"median"</span><span class="p">:</span> <span class="mi">2800</span><span class="p">,</span>
+    <span class="s2">"majority"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"minority"</span><span class="p">:</span> <span class="mi">7072</span><span class="p">,</span>
+    <span class="s2">"unique"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="o">...</span><span class="p">],</span>
         <span class="p">[</span><span class="o">...</span><span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;valid_percent&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
-    <span class="s2">&quot;masked_pixels&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;valid_pixels&quot;</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_98&quot;</span><span class="p">:</span> <span class="mi">6896</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_2&quot;</span><span class="p">:</span> <span class="mi">1</span>
+    <span class="s2">"valid_percent"</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">"masked_pixels"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">"valid_pixels"</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
+    <span class="s2">"percentile_98"</span><span class="p">:</span> <span class="mi">6896</span><span class="p">,</span>
+    <span class="s2">"percentile_2"</span><span class="p">:</span> <span class="mi">1</span>
 <span class="p">}</span>
 </code></pre></div>
 </li>
@@ -3775,15 +3775,15 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randn</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="mi">35</span><span class="p">)</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
     <span class="n">arr</span><span class="p">,</span>
-    <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">),</span>
+    <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span>
     <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">170</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">10</span><span class="p">)),</span>
-        <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
-        <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
+        <span class="s2">"x"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">170</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">10</span><span class="p">)),</span>
+        <span class="s2">"y"</span><span class="p">:</span> <span class="nb">list</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">5</span><span class="p">)),</span>
+        <span class="s2">"time"</span><span class="p">:</span> <span class="p">[</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)],</span>
     <span class="p">},</span>
 <span class="p">)</span>
-<span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;valid_min&quot;</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="s2">&quot;valid_max&quot;</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
-<span class="n">data</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+<span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"valid_min"</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="s2">"valid_max"</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
+<span class="n">data</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">"epsg:4326"</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
 <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
@@ -3840,11 +3840,11 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
 <span class="n">feat</span> <span class="o">=</span> <span class="p">{</span>
-    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Feature&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{},</span>
-    <span class="s2">&quot;geometry&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;Polygon&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;coordinates&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Feature"</span><span class="p">,</span>
+    <span class="s2">"properties"</span><span class="p">:</span> <span class="p">{},</span>
+    <span class="s2">"geometry"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"Polygon"</span><span class="p">,</span>
+        <span class="s2">"coordinates"</span><span class="p">:</span> <span class="p">[</span>
             <span class="p">[</span>
                 <span class="p">[</span><span class="o">-</span><span class="mf">54.45</span><span class="p">,</span> <span class="mf">73.05</span><span class="p">],</span>
                 <span class="p">[</span><span class="o">-</span><span class="mf">55.05</span><span class="p">,</span> <span class="mf">72.79</span><span class="p">],</span>
@@ -3891,19 +3891,19 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
 
 <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">json</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">175.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">82.5</span><span class="p">,</span> <span class="mf">175.0</span><span class="p">,</span> <span class="mf">82.5</span><span class="p">],</span>
-    <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.opengis.net/def/crs/EPSG/0/4326&quot;</span>
-    <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="p">{}]],</span>
-    <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;2022-01-01T00:00:00.000000000&quot;</span><span class="p">]],</span>
-    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;float64&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="s2">&quot;None&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
-    <span class="s2">&quot;attrs&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;valid_min&quot;</span><span class="p">:</span> <span class="o">-</span><span class="mf">3.148671506292848</span><span class="p">,</span>
-        <span class="s2">&quot;valid_max&quot;</span><span class="p">:</span> <span class="mf">4.214148915352746</span>
+    <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">175.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">82.5</span><span class="p">,</span> <span class="mf">175.0</span><span class="p">,</span> <span class="mf">82.5</span><span class="p">],</span>
+    <span class="s2">"crs"</span><span class="p">:</span> <span class="s2">"http://www.opengis.net/def/crs/EPSG/0/4326"</span>
+    <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="p">{}]],</span>
+    <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"2022-01-01T00:00:00.000000000"</span><span class="p">]],</span>
+    <span class="s2">"dtype"</span><span class="p">:</span> <span class="s2">"float64"</span><span class="p">,</span>
+    <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="s2">"None"</span><span class="p">,</span>
+    <span class="s2">"width"</span><span class="p">:</span> <span class="mi">35</span><span class="p">,</span>
+    <span class="s2">"attrs"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"valid_min"</span><span class="p">:</span> <span class="o">-</span><span class="mf">3.148671506292848</span><span class="p">,</span>
+        <span class="s2">"valid_max"</span><span class="p">:</span> <span class="mf">4.214148915352746</span>
     <span class="p">},</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">33</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"height"</span><span class="p">:</span> <span class="mi">33</span>
 <span class="p">}</span>
 </code></pre></div>
 </li>
@@ -3937,34 +3937,34 @@ with ImageReader(&quot;image.jpeg&quot;) as src:
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
 
-<span class="c1"># stats will be in form or {&quot;band&quot;: BandStatistics(), ...}</span>
+<span class="c1"># stats will be in form or {"band": BandStatistics(), ...}</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s1">&#39;b1&#39;</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
+    <span class="s1">'b1'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="o">...</span><span class="p">),</span>
 <span class="p">}</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">7872</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">2107.524612053134</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
-    <span class="s2">&quot;sum&quot;</span><span class="p">:</span> <span class="mi">2203425412</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">2271.0065537857326</span><span class="p">,</span>
-    <span class="s2">&quot;median&quot;</span><span class="p">:</span> <span class="mi">2800</span><span class="p">,</span>
-    <span class="s2">&quot;majority&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;minority&quot;</span><span class="p">:</span> <span class="mi">7072</span><span class="p">,</span>
-    <span class="s2">&quot;unique&quot;</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
-    <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"min"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"max"</span><span class="p">:</span> <span class="mi">7872</span><span class="p">,</span>
+    <span class="s2">"mean"</span><span class="p">:</span> <span class="mf">2107.524612053134</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
+    <span class="s2">"sum"</span><span class="p">:</span> <span class="mi">2203425412</span><span class="p">,</span>
+    <span class="s2">"std"</span><span class="p">:</span> <span class="mf">2271.0065537857326</span><span class="p">,</span>
+    <span class="s2">"median"</span><span class="p">:</span> <span class="mi">2800</span><span class="p">,</span>
+    <span class="s2">"majority"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"minority"</span><span class="p">:</span> <span class="mi">7072</span><span class="p">,</span>
+    <span class="s2">"unique"</span><span class="p">:</span> <span class="mi">15</span><span class="p">,</span>
+    <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span><span class="o">...</span><span class="p">],</span>
         <span class="p">[</span><span class="o">...</span><span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;valid_percent&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
-    <span class="s2">&quot;masked_pixels&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;valid_pixels&quot;</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_98&quot;</span><span class="p">:</span> <span class="mi">6896</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_2&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;2022-01-01T00:00:00.000000000&quot;</span>
+    <span class="s2">"valid_percent"</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">"masked_pixels"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">"valid_pixels"</span><span class="p">:</span> <span class="mi">1045504</span><span class="p">,</span>
+    <span class="s2">"percentile_98"</span><span class="p">:</span> <span class="mi">6896</span><span class="p">,</span>
+    <span class="s2">"percentile_2"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+    <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"2022-01-01T00:00:00.000000000"</span>
 <span class="p">}</span>
 </code></pre></div>
 <div class="admonition warnings">

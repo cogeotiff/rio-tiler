@@ -2430,39 +2430,39 @@
 
 <h4 id="form-readers">Form <code>Readers</code><a class="headerlink" href="#form-readers" title="Permanent link">&para;</a></h4>
 <p><code>rio-tiler</code>'s Readers provide simple <code>.statistics</code> method to retrieve dataset global statistics</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
 
 <span class="c1"># Statistics result is in form of Dict[str, rio_tiler.models.BandStatistics]</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
 
 <span class="c1"># rio_tiler.models.BandStatistics is a pydantic model</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump</span><span class="p">()</span><span class="o">.</span><span class="n">keys</span><span class="p">())</span>
 <span class="p">[</span>
-    <span class="s2">&quot;min&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;max&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;median&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;majority&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;minority&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;unique&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;valid_percent&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;masked_pixels&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;valid_pixels&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">,</span>
+    <span class="s2">"min"</span><span class="p">,</span>
+    <span class="s2">"max"</span><span class="p">,</span>
+    <span class="s2">"mean"</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">,</span>
+    <span class="s2">"sum"</span><span class="p">,</span>
+    <span class="s2">"std"</span><span class="p">,</span>
+    <span class="s2">"median"</span><span class="p">,</span>
+    <span class="s2">"majority"</span><span class="p">,</span>
+    <span class="s2">"minority"</span><span class="p">,</span>
+    <span class="s2">"unique"</span><span class="p">,</span>
+    <span class="s2">"histogram"</span><span class="p">,</span>
+    <span class="s2">"valid_percent"</span><span class="p">,</span>
+    <span class="s2">"masked_pixels"</span><span class="p">,</span>
+    <span class="s2">"valid_pixels"</span><span class="p">,</span>
+    <span class="s2">"description"</span><span class="p">,</span>
     <span class="c1"># Percentile entries depend on user inputs</span>
-    <span class="s2">&quot;percentile_2&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_98&quot;</span><span class="p">,</span>
+    <span class="s2">"percentile_2"</span><span class="p">,</span>
+    <span class="s2">"percentile_98"</span><span class="p">,</span>
 <span class="p">]</span>
 </code></pre></div>
 <h4 id="imagedata">ImageData<a class="headerlink" href="#imagedata" title="Permanent link">&para;</a></h4>
 <p>You can get statistics from <code>ImageData</code> objects which are returned by all rio-tiler reader methods (e.g. <code>.tile()</code>, <code>.preview()</code>, <code>.part()</code>, ...)</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">image</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
 </code></pre></div>
@@ -2483,16 +2483,16 @@
 
 <span class="n">stats</span> <span class="o">=</span> <span class="n">get_array_statistics</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coverage</span><span class="o">=</span><span class="n">coverage</span><span class="p">)</span>
 <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;min&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"min"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"max"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
 <span class="k">assert</span> <span class="p">(</span>
-    <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">],</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="mf">2.5714</span>
+    <span class="nb">round</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"mean"</span><span class="p">],</span> <span class="mi">4</span><span class="p">)</span> <span class="o">==</span> <span class="mf">2.5714</span>
 <span class="p">)</span>  <span class="c1"># sum of weighted array / sum of weights | 4.5 / 1.75 = 2.57</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.75</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"count"</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.75</span>
 </code></pre></div>
 <h4 id="adjusting-geometry-align_bounds_with_datasettrue">Adjusting geometry <code>align_bounds_with_dataset=True</code><a class="headerlink" href="#adjusting-geometry-align_bounds_with_datasettrue" title="Permanent link">&para;</a></h4>
 <p>In rio-tiler <code>6.3,0</code> a new option has been introduced to reduce artifacts and produce more precise zonal statistics. This option is available in the low-level <code>reader.part()</code> method used in rio-tiler reader's <code>.feature()</code> and <code>.part()</code> methods.</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span>
         <span class="n">shape</span><span class="p">,</span>
         <span class="n">shape_crs</span><span class="o">=</span><span class="n">WGS84_CRS</span><span class="p">,</span>
@@ -2521,7 +2521,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">geojson_pydantic.geometries</span><span class="w"> </span><span class="kn">import</span> <span class="n">Polygon</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">Reader</span><span class="p">(</span><span class="n">io</span><span class="o">.</span><span class="n">Reader</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom Reader with zonal_statistics method.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Custom Reader with zonal_statistics method."""</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">zonal_statistics</span><span class="p">(</span>
         <span class="bp">self</span><span class="p">,</span>
@@ -2533,7 +2533,7 @@
         <span class="n">max_size</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span>
         <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>
     <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Union</span><span class="p">[</span><span class="n">FeatureCollection</span><span class="p">,</span> <span class="n">Feature</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return statistics from GeoJSON features.</span>
+<span class="w">        </span><span class="sd">"""Return statistics from GeoJSON features.</span>
 
 <span class="sd">        Args:</span>
 <span class="sd">            geojson (Feature or FeatureCollection): a GeoJSON Feature or FeatureCollection.</span>
@@ -2547,7 +2547,7 @@
 <span class="sd">        Returns:</span>
 <span class="sd">            Feature or FeatureCollection</span>
 
-<span class="sd">        &quot;&quot;&quot;</span>
+<span class="sd">        """</span>
         <span class="n">kwargs</span> <span class="o">=</span> <span class="p">{</span><span class="o">**</span><span class="bp">self</span><span class="o">.</span><span class="n">options</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">}</span>
 
         <span class="n">hist_options</span> <span class="o">=</span> <span class="n">hist_options</span> <span class="ow">or</span> <span class="p">{}</span>
@@ -2555,7 +2555,7 @@
         <span class="n">fc</span> <span class="o">=</span> <span class="n">geojson</span>
         <span class="c1"># We transform the input Feature to a FeatureCollection</span>
         <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">fc</span><span class="p">,</span> <span class="n">Feature</span><span class="p">):</span>
-            <span class="n">fc</span> <span class="o">=</span> <span class="n">FeatureCollection</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">&quot;FeatureCollection&quot;</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="n">geojson</span><span class="p">])</span>
+            <span class="n">fc</span> <span class="o">=</span> <span class="n">FeatureCollection</span><span class="p">(</span><span class="nb">type</span><span class="o">=</span><span class="s2">"FeatureCollection"</span><span class="p">,</span> <span class="n">features</span><span class="o">=</span><span class="p">[</span><span class="n">geojson</span><span class="p">])</span>
 
         <span class="k">for</span> <span class="n">feature</span> <span class="ow">in</span> <span class="n">fc</span><span class="p">:</span>
             <span class="n">geom</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">model_dump</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
@@ -2583,7 +2583,7 @@
 
             <span class="c1"># Update input feature properties and add the statistics</span>
             <span class="n">feature</span><span class="o">.</span><span class="n">properties</span> <span class="o">=</span> <span class="n">feature</span><span class="o">.</span><span class="n">properties</span> <span class="ow">or</span> <span class="p">{}</span>
-            <span class="n">feature</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;statistics&quot;</span><span class="p">:</span> <span class="n">stats</span><span class="p">})</span>
+            <span class="n">feature</span><span class="o">.</span><span class="n">properties</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"statistics"</span><span class="p">:</span> <span class="n">stats</span><span class="p">})</span>
 
         <span class="k">return</span> <span class="n">fc</span><span class="o">.</span><span class="n">features</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">geojson</span><span class="p">,</span> <span class="n">Feature</span><span class="p">)</span> <span class="k">else</span> <span class="n">fc</span>
 </code></pre></div>

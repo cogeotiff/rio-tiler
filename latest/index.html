@@ -2609,16 +2609,16 @@ etc.</p>
 <p>Read any dataset supported by GDAL/Rasterio</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span>  <span class="c1"># rasterio opened dataset</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>    <span class="c1"># similar to rasterio.open(&quot;my.tif&quot;).read() but returns a rio_tiler.models.ImageData object</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>    <span class="c1"># similar to rasterio.open("my.tif").read() but returns a rio_tiler.models.ImageData object</span>
 </code></pre></div>
 </li>
 <li>
 <p>User friendly <code>tile</code>, <code>part</code>, <code>feature</code>, <code>point</code> reading methods</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>            <span class="c1"># read mercator tile z-x-y</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">)</span>               <span class="c1"># read the data intersecting a bounding box</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">geojson_feature</span><span class="p">)</span> <span class="c1"># read the data intersecting a geojson feature</span>
@@ -2629,7 +2629,7 @@ etc.</p>
 <p>Enable property assignment (e.g nodata) on data reading</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">image</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=-</span><span class="mi">9999</span><span class="p">)</span> <span class="c1"># read mercator tile z-x-y</span>
 </code></pre></div>
 </li>
@@ -2637,14 +2637,14 @@ etc.</p>
 <p><a href="https://github.com/radiantearth/stac-spec">STAC</a> support</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">STACReader</span>
 
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">assets</span><span class="p">)</span>  <span class="c1"># available asset</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>  <span class="c1"># read tile for asset1 and indexes 1,2,3</span>
         <span class="n">x</span><span class="p">,</span>
         <span class="n">y</span><span class="p">,</span>
         <span class="n">z</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="s2">&quot;asset1&quot;</span><span class="p">,</span>
-        <span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>  <span class="c1"># same as asset_indexes={&quot;asset1&quot;: (1, 2, 3)},</span>
+        <span class="n">assets</span><span class="o">=</span><span class="s2">"asset1"</span><span class="p">,</span>
+        <span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">),</span>  <span class="c1"># same as asset_indexes={"asset1": (1, 2, 3)},</span>
     <span class="p">)</span>
 
     <span class="c1"># Merging data from different assets</span>
@@ -2652,8 +2652,8 @@ etc.</p>
         <span class="n">x</span><span class="p">,</span>
         <span class="n">y</span><span class="p">,</span>
         <span class="n">z</span><span class="p">,</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;asset1&quot;</span><span class="p">,</span> <span class="s2">&quot;asset2&quot;</span><span class="p">,</span> <span class="s2">&quot;asset3&quot;</span><span class="p">,),</span>
-        <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;asset1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;asset2&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;asset3&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"asset1"</span><span class="p">,</span> <span class="s2">"asset2"</span><span class="p">,</span> <span class="s2">"asset3"</span><span class="p">,),</span>
+        <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">"asset1"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"asset2"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"asset3"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
     <span class="p">)</span>
 </code></pre></div>
 </li>
@@ -2663,12 +2663,12 @@ etc.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">XarrayReader</span>
 
 <span class="n">ds</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
-    <span class="s2">&quot;https://pangeo.blob.core.windows.net/pangeo-public/daymet-rio-tiler/na-wgs84.zarr/&quot;</span><span class="p">,</span>
-    <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">,</span>
-    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">&quot;all&quot;</span><span class="p">,</span>
+    <span class="s2">"https://pangeo.blob.core.windows.net/pangeo-public/daymet-rio-tiler/na-wgs84.zarr/"</span><span class="p">,</span>
+    <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span><span class="p">,</span>
+    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">"all"</span><span class="p">,</span>
     <span class="n">consolidated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="n">da</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">&quot;tmax&quot;</span><span class="p">]</span>
+<span class="n">da</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"tmax"</span><span class="p">]</span>
 <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">da</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">dst</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -2679,7 +2679,7 @@ etc.</p>
 <p>Non-Geo Image support <strong>(&gt;=4.0)</strong></p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageReader</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpeg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpeg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">maxzoom</span><span class="p">)</span>  <span class="c1"># read top-left `tile`</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>  <span class="c1"># read top-left 100x100 pixels</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>  <span class="c1"># read pixel value</span>
@@ -2695,7 +2695,7 @@ etc.</p>
     <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">file</span><span class="p">)</span> <span class="k">as</span> <span class="n">image</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">image</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<span class="n">img</span><span class="p">,</span> <span class="n">assets</span> <span class="o">=</span> <span class="n">mosaic_reader</span><span class="p">([</span><span class="s2">&quot;image1.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;image2.tif&quot;</span><span class="p">],</span> <span class="n">reader</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="n">img</span><span class="p">,</span> <span class="n">assets</span> <span class="o">=</span> <span class="n">mosaic_reader</span><span class="p">([</span><span class="s2">"image1.tif"</span><span class="p">,</span> <span class="s2">"image2.tif"</span><span class="p">],</span> <span class="n">reader</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -2704,8 +2704,8 @@ etc.</p>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># Use EPSG:4326 (WGS84) grid</span>
-<span class="n">wgs84_grid</span> <span class="o">=</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;WorldCRS84Quad&quot;</span><span class="p">)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">,</span> <span class="n">tms</span><span class="o">=</span><span class="n">wgs84_grid</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="n">wgs84_grid</span> <span class="o">=</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"WorldCRS84Quad"</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">,</span> <span class="n">tms</span><span class="o">=</span><span class="n">wgs84_grid</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 </code></pre></div>
 </li>

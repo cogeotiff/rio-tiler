@@ -2467,7 +2467,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 5.0
 The <code>PER_DATASET</code> model suffers precision when dealing with datasets that use <code>nodata</code> value because combining all <code>band nodata mask</code> will exclude good data (see <a href="https://github.com/cogeotiff/rio-tiler/issues/579#issuecomment-1455223893">github.com/cogeotiff/rio-tiler/issues/579#issuecomment-1455223893</a>).</p>
 <p>To support the <code>PER_BAND</code> model, we updated the <code>ImageData</code> class to use <code>numpy.ma.MaskedArray</code> which will hold both the data and the mask with the same shape. The <code>image data</code> is now hosted in <code>.array</code> ImageData/PointData attribute.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
@@ -2476,14 +2476,14 @@ The <code>PER_DATASET</code> model suffers precision when dealing with datasets 
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
 </code></pre></div>
 <p>For compatibility reason we kept <code>data</code> and <code>mask</code> as <em>properties</em> in the <code>ImageData</code> class. <code>ImageData().mask</code> will represent the <code>PER_DATASET</code> mask.</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">)</span>
 
@@ -2494,7 +2494,7 @@ The <code>PER_DATASET</code> model suffers precision when dealing with datasets 
 <p>As explained, the <code>ImageData</code> and <code>PointData</code> classes now use <code>MaskedArray</code> as input.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
-<span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+<span class="n">mask</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">)</span>
 <span class="n">im</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">arr</span><span class="p">,</span> <span class="n">mask</span><span class="p">)</span>
 
 <span class="c1"># now</span>
@@ -2510,7 +2510,7 @@ The <code>PER_DATASET</code> model suffers precision when dealing with datasets 
     <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="mi">2</span>
     <span class="k">return</span> <span class="n">data</span><span class="p">,</span> <span class="n">mask</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">post_process</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
 
 <span class="c1"># now</span>
@@ -2518,14 +2518,14 @@ The <code>PER_DATASET</code> model suffers precision when dealing with datasets 
     <span class="n">data</span> <span class="o">=</span> <span class="n">data</span> <span class="o">*</span> <span class="mi">2</span>
     <span class="k">return</span> <span class="n">data</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">post_process</span><span class="o">=</span><span class="n">callback</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="mosaicmethod">MosaicMethod<a class="headerlink" href="#mosaicmethod" title="Permanent link">&para;</a></h2>
 <p>The <code>.data</code> property of <code>rio-tiler</code>'s MosaicMethods should now return <code>numpy.ma.MaskedArray</code>. This change should be almost non-breaking because the MosaicMethod where designed using MaskedArrays.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Tuple</span><span class="p">[</span><span class="n">Optional</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">],</span> <span class="n">Optional</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">]]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return data and mask.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return data and mask."""</span>
     <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">:</span>
         <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getdata</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="p">)</span>
         <span class="n">mask</span> <span class="o">=</span> <span class="o">~</span><span class="n">numpy</span><span class="o">.</span><span class="n">logical_or</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">getmaskarray</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">tile</span><span class="p">))</span>  <span class="c1"># create PER_DATASET Mask</span>
@@ -2537,25 +2537,25 @@ The <code>PER_DATASET</code> model suffers precision when dealing with datasets 
 <span class="c1"># now</span>
 <span class="nd">@property</span>
 <span class="k">def</span><span class="w"> </span><span class="nf">data</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Optional</span><span class="p">[</span><span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">]:</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Return data.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Return data."""</span>
     <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">mosaic</span>  <span class="c1"># `tile` has been renamed `array`</span>
 </code></pre></div>
 <h2 id="reprojection-and-resizing-resampling-methods">Reprojection and Resizing resampling methods<a class="headerlink" href="#reprojection-and-resizing-resampling-methods" title="Permanent link">&para;</a></h2>
 <p>With <code>rio-tiler &gt;=5.0</code>, you can now select with resampling method to use for the <code>reprojection</code> and <code>resizing</code> processes independently by using the <code>reproject_method</code> and <code>resampling_method</code> options in <code>rio_tiler.reader</code>'s function.</p>
 <p>The <code>resampling_method</code> option will control the <code>IO</code> resampling (e.g resizing) while the <code>reproject_method</code> will be using in the <code>WarpedVRT</code> for the reprojection.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span>
-        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>  <span class="c1"># use `bilinear` for both resizing and reprojection</span>
+        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">,</span>
+        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">,</span>  <span class="c1"># use `bilinear` for both resizing and reprojection</span>
     <span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span>
-        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;cubic&quot;</span><span class="p">,</span>  <span class="c1"># use `cubic` for resizing</span>
-        <span class="n">reproject_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>  <span class="c1"># use `bilinear` for reprojection</span>
+        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">,</span>
+        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"cubic"</span><span class="p">,</span>  <span class="c1"># use `cubic` for resizing</span>
+        <span class="n">reproject_method</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">,</span>  <span class="c1"># use `bilinear` for reprojection</span>
     <span class="p">)</span>
 </code></pre></div>
 <div class="admonition important">
@@ -2564,7 +2564,7 @@ The <code>PER_DATASET</code> model suffers precision when dealing with datasets 
 </div>
 <h2 id="boto3-optional-dependency">Boto3 Optional dependency<a class="headerlink" href="#boto3-optional-dependency" title="Permanent link">&para;</a></h2>
 <p>When needing to access STAC items using <code>s3://</code> urls, you'll need to have <code>boto3</code> installed in your python environment.</p>
-<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>rio-tiler<span class="o">[</span><span class="s2">&quot;s3&quot;</span><span class="o">]</span><span class="w">  </span><span class="c1"># or python -m pip install rio-tiler rasterio[&quot;s3&quot;]</span>
+<div class="highlight"><pre><span></span><code>python<span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>rio-tiler<span class="o">[</span><span class="s2">"s3"</span><span class="o">]</span><span class="w">  </span><span class="c1"># or python -m pip install rio-tiler rasterio["s3"]</span>
 </code></pre></div>
 <p>Note: if you want to access <code>s3://</code> raster dataset you'll also need <code>boto3</code> in your environment (<code>rasterio</code>'s dependency).</p>
 <h2 id="changes-in-methodfunctionvariable-names">changes in method/function/variable names<a class="headerlink" href="#changes-in-methodfunctionvariable-names" title="Permanent link">&para;</a></h2>

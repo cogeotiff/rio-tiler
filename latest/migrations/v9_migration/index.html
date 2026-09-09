@@ -2738,17 +2738,17 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># before (8.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># tiles were always 256x256 by default</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="mi">256</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="mi">256</span>
 
 <span class="c1"># now (9.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># tiles now use TMS tileMatrixSet dimensions (still 256x256 for WebMercatorQuad)</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
-    <span class="c1"># but for custom TMS, it will use that TMS&#39;s tile dimensions</span>
+    <span class="c1"># but for custom TMS, it will use that TMS's tile dimensions</span>
 
     <span class="c1"># To explicitly set 256x256:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
@@ -2758,16 +2758,16 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># before (8.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b1&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b1"</span><span class="p">]</span>
 
 <span class="c1"># now (9.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">]</span>
 </code></pre></div>
 <h2 id="multibandreader-deprecation">MultiBandReader Deprecation<a class="headerlink" href="#multibandreader-deprecation" title="Permanent link">&para;</a></h2>
 <p>The <code>MultiBandReader</code> class is deprecated. Use <code>MultiBaseReader</code> instead.</p>
@@ -2781,7 +2781,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io.base</span><span class="w"> </span><span class="kn">import</span> <span class="n">MultiBaseReader</span>
 
 <span class="k">class</span><span class="w"> </span><span class="nc">MyReader</span><span class="p">(</span><span class="n">MultiBaseReader</span><span class="p">):</span>
-    <span class="c1"># Adapt your implementation to use MultiBaseReader&#39;s interface</span>
+    <span class="c1"># Adapt your implementation to use MultiBaseReader's interface</span>
     <span class="o">...</span>
 </code></pre></div>
 <h2 id="multibasereader-expression-changes">MultiBaseReader Expression Changes<a class="headerlink" href="#multibasereader-expression-changes" title="Permanent link">&para;</a></h2>
@@ -2790,19 +2790,19 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io.stac</span><span class="w"> </span><span class="kn">import</span> <span class="n">STACReader</span>
 
 <span class="c1"># before (8.x) - expressions could reference asset-specific bands</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># Using asset-specific expressions was inconsistent</span>
-    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;asset1&quot;</span><span class="p">,</span> <span class="s2">&quot;asset2&quot;</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;asset1_b1+asset2_b1&quot;</span><span class="p">)</span>
+    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset1"</span><span class="p">,</span> <span class="s2">"asset2"</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"asset1_b1+asset2_b1"</span><span class="p">)</span>
 
 <span class="c1"># now (9.x) - expressions use merged ImageData band indexes</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># asset1 and asset2 are both 1-band datasets</span>
     <span class="c1"># After merging, the ImageData has bands b1 (from asset1) and b2 (from asset2)</span>
-    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;asset1&quot;</span><span class="p">,</span> <span class="s2">&quot;asset2&quot;</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+b2&quot;</span><span class="p">)</span>
+    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset1"</span><span class="p">,</span> <span class="s2">"asset2"</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1+b2"</span><span class="p">)</span>
 
     <span class="c1"># If asset1 has 1 band and asset3 has 2 bands:</span>
     <span class="c1"># After merging: b1 (from asset1), b2 (first band of asset3), b3 (second band of asset3)</span>
-    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;asset1&quot;</span><span class="p">,</span> <span class="s2">&quot;asset3&quot;</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+b2/b3&quot;</span><span class="p">)</span>
+    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset1"</span><span class="p">,</span> <span class="s2">"asset3"</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1+b2/b3"</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="removed-methods-and-parameters">Removed Methods and Parameters<a class="headerlink" href="#removed-methods-and-parameters" title="Permanent link">&para;</a></h3>
 <ul>
@@ -2810,18 +2810,18 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <li>The <code>asset_indexes</code> option has been <strong>removed</strong> from <code>MultiBaseReader</code> methods</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before (8.x)</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;visual&quot;</span><span class="p">],</span> <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;visual&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)})</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"visual"</span><span class="p">],</span> <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">"visual"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)})</span>
 
 <span class="c1"># now (9.x) - use asset option syntax instead</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="c1"># Use the new asset option syntax: {&quot;name&quot;: `asset_name`, &quot;indexes&quot;: [1], ...}</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="c1"># Use the new asset option syntax: {"name": `asset_name`, "indexes": [1], ...}</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
         <span class="mi">0</span><span class="p">,</span> 
         <span class="mi">0</span><span class="p">,</span> 
         <span class="mi">0</span><span class="p">,</span> 
         <span class="n">assets</span><span class="o">=</span><span class="p">[</span>
-            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;visual&quot;</span><span class="p">,</span> <span class="s2">&quot;indexes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}</span>
+            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"visual"</span><span class="p">,</span> <span class="s2">"indexes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}</span>
         <span class="p">]</span>
     <span class="p">)</span>
 </code></pre></div>
@@ -2830,16 +2830,16 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io.stac</span><span class="w"> </span><span class="kn">import</span> <span class="n">STACReader</span>
 
 <span class="c1"># before (8.x)</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;visual&quot;</span><span class="p">],</span> <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;visual&quot;</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)})</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"visual"</span><span class="p">],</span> <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">"visual"</span><span class="p">:</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">)})</span>
 
 <span class="c1"># now (9.x)</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># Specify indexes per asset using the pipe syntax</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;visual&quot;</span><span class="p">,</span> <span class="s2">&quot;indexes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}])</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"visual"</span><span class="p">,</span> <span class="s2">"indexes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]}])</span>
 
     <span class="c1"># Multiple options can be combined</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;visual&quot;</span><span class="p">,</span> <span class="s2">&quot;indexes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">&quot;expression&quot;</span><span class="p">:</span> <span class="s2">&quot;b1+b2-b3&quot;</span><span class="p">}])</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"visual"</span><span class="p">,</span> <span class="s2">"indexes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">],</span> <span class="s2">"expression"</span><span class="p">:</span> <span class="s2">"b1+b2-b3"</span><span class="p">}])</span>
 </code></pre></div>
 <p>Asset's options are distributed between <code>reader-options</code> and <code>method-options</code> in <code>_get_asset_info</code> method, which can be overridden for custom behavior.</p>
 <h2 id="statistics-key-names">Statistics Key Names<a class="headerlink" href="#statistics-key-names" title="Permanent link">&para;</a></h2>
@@ -2847,31 +2847,31 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># before (8.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
-    <span class="c1"># band_names could be descriptions like [&quot;red&quot;, &quot;green&quot;, &quot;blue&quot;]</span>
-    <span class="c1"># or empty strings [&quot;&quot;, &quot;&quot;, &quot;&quot;] if no band description</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
+    <span class="c1"># band_names could be descriptions like ["red", "green", "blue"]</span>
+    <span class="c1"># or empty strings ["", "", ""] if no band description</span>
 
-    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2&quot;</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1+2&quot;</span><span class="p">]</span>  <span class="c1"># Expression used as key</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1+2"</span><span class="p">]</span>  <span class="c1"># Expression used as key</span>
 
 <span class="c1"># now (9.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
-    <span class="c1"># band_names always use &quot;bN&quot; format</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
+    <span class="c1"># band_names always use "bN" format</span>
 
-    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2&quot;</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span>  <span class="c1"># Band name used as key</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span>  <span class="c1"># Band name used as key</span>
 
     <span class="c1"># The expression is now stored in the description field</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="s2">&quot;red+2&quot;</span>  <span class="c1"># or &quot;b1+2&quot; if no band description</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span> <span class="s2">"red+2"</span>  <span class="c1"># or "b1+2" if no band description</span>
 </code></pre></div>
 <h2 id="multibasereader_get_reader-method-signature">MultiBaseReader._get_reader Method Signature<a class="headerlink" href="#multibasereader_get_reader-method-signature" title="Permanent link">&para;</a></h2>
 <p>The <code>_get_reader</code> method signature has changed. It now only returns the reader class, not a tuple of <code>(reader, reader_options)</code>. Reader options should now be passed via the <code>AssetInfo["reader_options"]</code> field instead.</p>
@@ -2882,21 +2882,21 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <span class="c1"># before (8.x)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MyReader</span><span class="p">(</span><span class="n">MultiBaseReader</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_reader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset_info</span><span class="p">:</span> <span class="n">AssetInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">tuple</span><span class="p">[</span><span class="nb">type</span><span class="p">[</span><span class="n">Reader</span><span class="p">],</span> <span class="nb">dict</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Asset Reader and options.&quot;&quot;&quot;</span>
-        <span class="n">reader_options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;nodata&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+<span class="w">        </span><span class="sd">"""Get Asset Reader and options."""</span>
+        <span class="n">reader_options</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"nodata"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">Reader</span><span class="p">,</span> <span class="n">reader_options</span>
 
 <span class="c1"># now (9.x)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">MyReader</span><span class="p">(</span><span class="n">MultiBaseReader</span><span class="p">):</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_reader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset_info</span><span class="p">:</span> <span class="n">AssetInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="nb">type</span><span class="p">[</span><span class="n">Reader</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Asset Reader.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Get Asset Reader."""</span>
         <span class="k">return</span> <span class="n">Reader</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_asset_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetInfo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return asset info with reader options.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return asset info with reader options."""</span>
         <span class="o">...</span>
         <span class="c1"># Reader options are now passed via AssetInfo</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;reader_options&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">&quot;nodata&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"reader_options"</span><span class="p">]</span> <span class="o">=</span> <span class="p">{</span><span class="s2">"nodata"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">info</span>
 </code></pre></div>
 <h2 id="assetinfo-type-changes">AssetInfo Type Changes<a class="headerlink" href="#assetinfo-type-changes" title="Permanent link">&para;</a></h2>
@@ -2905,7 +2905,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 
 <span class="c1"># now (9.x)</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">AssetInfo</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Asset Reader Options.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Asset Reader Options."""</span>
 
     <span class="n">url</span><span class="p">:</span> <span class="n">Any</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -2922,37 +2922,37 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># now (9.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
 
-    <span class="c1"># Access the description for each band&#39;s statistics</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="s2">&quot;red&quot;</span>  <span class="c1"># The band&#39;s description (or &quot;b1&quot; if none)</span>
+    <span class="c1"># Access the description for each band's statistics</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span> <span class="s2">"red"</span>  <span class="c1"># The band's description (or "b1" if none)</span>
 </code></pre></div>
 <h2 id="expression-band-descriptions">Expression Band Descriptions<a class="headerlink" href="#expression-band-descriptions" title="Permanent link">&para;</a></h2>
 <p>The <code>ImageData.apply_expression()</code> method now infers band descriptions for expression results:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># before (8.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog_with_tags.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1*2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog_with_tags.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1*2"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span>  <span class="c1"># Empty description</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">""</span><span class="p">]</span>  <span class="c1"># Empty description</span>
 
 <span class="c1"># now (9.x)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog_with_tags.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1*2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog_with_tags.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1*2"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;Green*2&quot;</span><span class="p">]</span>  <span class="c1"># Description inferred from band description and expression</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"Green*2"</span><span class="p">]</span>  <span class="c1"># Description inferred from band description and expression</span>
 </code></pre></div>
 <h2 id="new-features">New Features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h2>
 <h3 id="method_options-in-assetinfo">method_options in AssetInfo<a class="headerlink" href="#method_options-in-assetinfo" title="Permanent link">&para;</a></h3>
 <p>The <code>method_options</code> attribute in <code>AssetInfo</code> allows passing method-specific options when reading assets in <code>MultiBaseReader</code>:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io.stac</span><span class="w"> </span><span class="kn">import</span> <span class="n">STACReader</span>
 
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># Using asset option syntax passes options via method_options</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;visual&quot;</span><span class="p">,</span> <span class="s2">&quot;indexes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]}])</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"visual"</span><span class="p">,</span> <span class="s2">"indexes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">]}])</span>
 </code></pre></div>
 <h3 id="reader_options-in-assetinfo">reader_options in AssetInfo<a class="headerlink" href="#reader_options-in-assetinfo" title="Permanent link">&para;</a></h3>
 <p>The <code>reader_options</code> attribute in <code>AssetInfo</code> allows passing reader-specific options when reading assets in <code>MultiBaseReader</code>:</p>
@@ -2974,46 +2974,46 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 9.0
 
             <span class="c1"># NOTE: if asset is a dict, the `asset name` should be stored in</span>
             <span class="c1"># the `name` key:val</span>
-            <span class="n">asset_name</span> <span class="o">=</span> <span class="n">asset</span><span class="p">[</span><span class="s2">&quot;name&quot;</span><span class="p">]</span>
+            <span class="n">asset_name</span> <span class="o">=</span> <span class="n">asset</span><span class="p">[</span><span class="s2">"name"</span><span class="p">]</span>
 
-            <span class="k">if</span> <span class="n">indexes</span> <span class="o">:=</span> <span class="n">asset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;indexes&quot;</span><span class="p">):</span>
-                <span class="n">method_options</span><span class="p">[</span><span class="s2">&quot;indexes&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">indexes</span>
-            <span class="k">if</span> <span class="n">expr</span> <span class="o">:=</span> <span class="n">asset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;expression&quot;</span><span class="p">):</span>
-                <span class="n">method_options</span><span class="p">[</span><span class="s2">&quot;expression&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">expr</span>
-            <span class="k">if</span> <span class="s2">&quot;nodata&quot;</span> <span class="ow">in</span> <span class="n">asset</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">indexes</span> <span class="o">:=</span> <span class="n">asset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"indexes"</span><span class="p">):</span>
+                <span class="n">method_options</span><span class="p">[</span><span class="s2">"indexes"</span><span class="p">]</span> <span class="o">=</span> <span class="n">indexes</span>
+            <span class="k">if</span> <span class="n">expr</span> <span class="o">:=</span> <span class="n">asset</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"expression"</span><span class="p">):</span>
+                <span class="n">method_options</span><span class="p">[</span><span class="s2">"expression"</span><span class="p">]</span> <span class="o">=</span> <span class="n">expr</span>
+            <span class="k">if</span> <span class="s2">"nodata"</span> <span class="ow">in</span> <span class="n">asset</span><span class="p">:</span>
                 <span class="c1"># NOTE: `nodata` can be a `Reader` Option</span>
-                <span class="n">reader_options</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">asset</span><span class="p">[</span><span class="s2">&quot;nodata&quot;</span><span class="p">])</span> <span class="c1"># cast nodata to float</span>
+                <span class="n">reader_options</span> <span class="o">=</span> <span class="nb">float</span><span class="p">(</span><span class="n">asset</span><span class="p">[</span><span class="s2">"nodata"</span><span class="p">])</span> <span class="c1"># cast nodata to float</span>
         <span class="k">else</span><span class="p">:</span>
             <span class="n">asset_name</span> <span class="o">=</span> <span class="n">asset</span>
 
         <span class="n">info</span> <span class="o">=</span> <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">_get_asset_info</span><span class="p">(</span><span class="n">asset_name</span><span class="p">)</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;reader_options&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">reader_options</span>
-        <span class="n">info</span><span class="p">[</span><span class="s2">&quot;method_options&quot;</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_options</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"reader_options"</span><span class="p">]</span> <span class="o">=</span> <span class="n">reader_options</span>
+        <span class="n">info</span><span class="p">[</span><span class="s2">"method_options"</span><span class="p">]</span> <span class="o">=</span> <span class="n">method_options</span>
         <span class="k">return</span> <span class="n">info</span>
 
-<span class="k">with</span> <span class="n">CustomSTACReader</span><span class="p">(</span><span class="s2">&quot;item.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">CustomSTACReader</span><span class="p">(</span><span class="s2">"item.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># indexes=1,2: method option</span>
     <span class="c1"># nodata=0: reader option</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;visual&quot;</span><span class="p">,</span> <span class="s2">&quot;indexes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="s2">&quot;nodata&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">}])</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"visual"</span><span class="p">,</span> <span class="s2">"indexes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">],</span> <span class="s2">"nodata"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}])</span>
 </code></pre></div>
 <h3 id="bandstatistics-description">BandStatistics description<a class="headerlink" href="#bandstatistics-description" title="Permanent link">&para;</a></h3>
 <p>Statistics now include a <code>description</code> field that provides context about what the statistic represents:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1+b2"</span><span class="p">)</span>
     <span class="c1"># The description shows the actual band descriptions used in the expression</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="inferred-expression-descriptions">Inferred Expression Descriptions<a class="headerlink" href="#inferred-expression-descriptions" title="Permanent link">&para;</a></h3>
 <p>When using expressions, the resulting <code>ImageData</code> now has meaningful band descriptions derived from the source bands:</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
     <span class="c1"># band_descriptions are inferred from the expression</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;red/green&quot;</span><span class="p">]</span>  <span class="c1"># Based on source band descriptions</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"red/green"</span><span class="p">]</span>  <span class="c1"># Based on source band descriptions</span>
 </code></pre></div>
 <h2 id="migration-checklist">Migration Checklist<a class="headerlink" href="#migration-checklist" title="Permanent link">&para;</a></h2>
 <ol>

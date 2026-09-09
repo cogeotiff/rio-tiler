@@ -2595,11 +2595,11 @@ custom readers.</p>
     <span class="n">maxzoom</span><span class="p">:</span> <span class="nb">int</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Parse Sceneid and get grid bounds.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Parse Sceneid and get grid bounds."""</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">assets</span> <span class="o">=</span> <span class="nb">sorted</span><span class="p">(</span>
-            <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;_&quot;</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;*</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="si">}</span><span class="s2">*.tif&quot;</span><span class="p">)]</span>
+            <span class="p">[</span><span class="n">p</span><span class="o">.</span><span class="n">stem</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">"_"</span><span class="p">)[</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span> <span class="n">p</span> <span class="ow">in</span> <span class="n">pathlib</span><span class="o">.</span><span class="n">Path</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">)</span><span class="o">.</span><span class="n">glob</span><span class="p">(</span><span class="sa">f</span><span class="s2">"*</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="si">}</span><span class="s2">*.tif"</span><span class="p">)]</span>
         <span class="p">)</span>
-        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_asset_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="s2">&quot;url&quot;</span><span class="p">])</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+        <span class="k">with</span> <span class="bp">self</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">_get_asset_info</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="s2">"url"</span><span class="p">])</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">bounds</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">bounds</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">crs</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">crs</span>
             <span class="bp">self</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">transform</span>
@@ -2612,71 +2612,71 @@ custom readers.</p>
                 <span class="bp">self</span><span class="o">.</span><span class="n">maxzoom</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">maxzoom</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_asset_info</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset</span><span class="p">:</span> <span class="nb">str</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">AssetInfo</span><span class="p">:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Validate band&#39;s name and return band&#39;s url.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Validate band's name and return band's url."""</span>
         <span class="k">if</span> <span class="n">asset</span> <span class="ow">not</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="p">:</span>
             <span class="k">raise</span> <span class="n">InvalidAssetName</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;&#39;</span><span class="si">{</span><span class="n">asset</span><span class="si">}</span><span class="s2">&#39; is not valid, should be one of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="si">}</span><span class="s2">&quot;</span>
+                <span class="sa">f</span><span class="s2">"'</span><span class="si">{</span><span class="n">asset</span><span class="si">}</span><span class="s2">' is not valid, should be one of </span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">assets</span><span class="si">}</span><span class="s2">"</span>
             <span class="p">)</span>
 
-        <span class="k">return</span> <span class="n">AssetInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="sa">f</span><span class="s2">&quot;</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="si">}{</span><span class="n">asset</span><span class="si">}</span><span class="s2">.tif&quot;</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">asset</span><span class="p">,</span> <span class="n">method_options</span><span class="o">=</span><span class="p">{})</span>
+        <span class="k">return</span> <span class="n">AssetInfo</span><span class="p">(</span><span class="n">url</span><span class="o">=</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="p">,</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="bp">self</span><span class="o">.</span><span class="n">prefix</span><span class="si">}{</span><span class="n">asset</span><span class="si">}</span><span class="s2">.tif"</span><span class="p">),</span> <span class="n">name</span><span class="o">=</span><span class="n">asset</span><span class="p">,</span> <span class="n">method_options</span><span class="o">=</span><span class="p">{})</span>
 
-<span class="c1"># we have a directoty with &quot;scene_b1.tif&quot;, &quot;scene_b2.tif&quot;</span>
-<span class="k">with</span> <span class="n">AssetFileReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s2">&quot;my_dir/&quot;</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">&quot;scene_&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cr</span><span class="p">:</span>
+<span class="c1"># we have a directoty with "scene_b1.tif", "scene_b2.tif"</span>
+<span class="k">with</span> <span class="n">AssetFileReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="s2">"my_dir/"</span><span class="p">,</span> <span class="n">prefix</span><span class="o">=</span><span class="s2">"scene_"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cr</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cr</span><span class="o">.</span><span class="n">assets</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;band1&#39;</span><span class="p">,</span> <span class="s1">&#39;band2&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'band1'</span><span class="p">,</span> <span class="s1">'band2'</span><span class="p">]</span>
 
-    <span class="n">info</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;band1&quot;</span><span class="p">,</span> <span class="s2">&quot;band2&quot;</span><span class="p">))</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"band1"</span><span class="p">,</span> <span class="s2">"band2"</span><span class="p">))</span>
     <span class="c1"># MultiBaseReader returns a Dict</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">,</span> <span class="nb">dict</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">info</span><span class="p">))</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;band1&#39;</span><span class="p">,</span> <span class="s1">&#39;band2&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'band1'</span><span class="p">,</span> <span class="s1">'band2'</span><span class="p">]</span>
 
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;band1&quot;</span><span class="p">],</span> <span class="n">Info</span><span class="p">)</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">&quot;band1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"band1"</span><span class="p">],</span> <span class="n">Info</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="p">[</span><span class="s2">"band1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-        <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">[</span>
             <span class="mi">199980</span><span class="p">,</span>
             <span class="mi">2690220</span><span class="p">,</span>
             <span class="mi">309780</span><span class="p">,</span>
             <span class="mi">2800020</span>
         <span class="p">],</span>
-        <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.opengis.net/def/crs/EPSG/0/32629&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"crs"</span><span class="p">:</span> <span class="s2">"http://www.opengis.net/def/crs/EPSG/0/32629"</span><span class="p">,</span>
+        <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">[</span>
             <span class="p">[</span>
-                <span class="s2">&quot;b1&quot;</span><span class="p">,</span>
+                <span class="s2">"b1"</span><span class="p">,</span>
                 <span class="p">{}</span>
             <span class="p">]</span>
         <span class="p">],</span>
-        <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[</span>
             <span class="p">[</span>
-                <span class="s2">&quot;b1&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;b1&quot;</span>
+                <span class="s2">"b1"</span><span class="p">,</span>
+                <span class="s2">"b1"</span>
             <span class="p">]</span>
         <span class="p">],</span>
-        <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;uint16&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Nodata&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;colorinterp&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="s2">&quot;gray&quot;</span>
+        <span class="s2">"dtype"</span><span class="p">:</span> <span class="s2">"uint16"</span><span class="p">,</span>
+        <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="s2">"Nodata"</span><span class="p">,</span>
+        <span class="s2">"colorinterp"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="s2">"gray"</span>
         <span class="p">],</span>
-        <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"scales"</span><span class="p">:</span> <span class="p">[</span>
             <span class="mi">1</span>
         <span class="p">],</span>
-        <span class="s2">&quot;offsets&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"offsets"</span><span class="p">:</span> <span class="p">[</span>
             <span class="mi">0</span>
         <span class="p">],</span>
-        <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-        <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">549</span><span class="p">,</span>
-        <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">549</span><span class="p">,</span>
-        <span class="s2">&quot;overviews&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"GTiff"</span><span class="p">,</span>
+        <span class="s2">"count"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+        <span class="s2">"width"</span><span class="p">:</span> <span class="mi">549</span><span class="p">,</span>
+        <span class="s2">"height"</span><span class="p">:</span> <span class="mi">549</span><span class="p">,</span>
+        <span class="s2">"overviews"</span><span class="p">:</span> <span class="p">[</span>
             <span class="mi">2</span>
         <span class="p">],</span>
-        <span class="s2">&quot;nodata_value&quot;</span><span class="p">:</span> <span class="mi">0</span>
+        <span class="s2">"nodata_value"</span><span class="p">:</span> <span class="mi">0</span>
     <span class="p">}</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">238</span><span class="p">,</span> <span class="mi">218</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;band1&quot;</span><span class="p">,</span> <span class="s2">&quot;band2&quot;</span><span class="p">))</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cr</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">238</span><span class="p">,</span> <span class="mi">218</span><span class="p">,</span> <span class="mi">9</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"band1"</span><span class="p">,</span> <span class="s2">"band2"</span><span class="p">))</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">assets</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;my_dir/scene_band1.tif&#39;</span><span class="p">,</span> <span class="s1">&#39;my_dir/scene_band2.tif&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'my_dir/scene_band1.tif'</span><span class="p">,</span> <span class="s1">'my_dir/scene_band2.tif'</span><span class="p">]</span>
 
     <span class="c1"># Each assets have 1 bands, so when combining each img we get a (2, 256, 256) array.</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
@@ -2694,16 +2694,16 @@ custom readers.</p>
 
 <span class="nd">@attr</span><span class="o">.</span><span class="n">s</span>
 <span class="k">class</span><span class="w"> </span><span class="nc">CustomSTACReader</span><span class="p">(</span><span class="n">Reader</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Custom Reader support.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Custom Reader support."""</span>
 
     <span class="c1"># This will keep the STAC item info within the instance</span>
     <span class="n">item</span><span class="p">:</span> <span class="n">pystac</span><span class="o">.</span><span class="n">Item</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span> <span class="n">init</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">__attrs_post_init__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Define _kwargs, open dataset and get info.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Define _kwargs, open dataset and get info."""</span>
         <span class="c1"># get STAC item URL and asset name</span>
-        <span class="n">asset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;:&quot;</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-        <span class="n">stac_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">&quot;:</span><span class="si">{</span><span class="n">asset</span><span class="si">}</span><span class="s2">&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)</span>
+        <span class="n">asset</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">":"</span><span class="p">)[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">stac_url</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">input</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="sa">f</span><span class="s2">":</span><span class="si">{</span><span class="n">asset</span><span class="si">}</span><span class="s2">"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)</span>
 
         <span class="c1"># Fetch the STAC item</span>
         <span class="bp">self</span><span class="o">.</span><span class="n">item</span> <span class="o">=</span> <span class="n">pystac</span><span class="o">.</span><span class="n">Item</span><span class="o">.</span><span class="n">from_dict</span><span class="p">(</span><span class="n">fetch</span><span class="p">(</span><span class="n">stac_url</span><span class="p">),</span> <span class="n">stac_url</span><span class="p">)</span>
@@ -2712,14 +2712,14 @@ custom readers.</p>
         <span class="bp">self</span><span class="o">.</span><span class="n">input</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">item</span><span class="o">.</span><span class="n">assets</span><span class="p">[</span><span class="n">asset</span><span class="p">]</span><span class="o">.</span><span class="n">get_absolute_href</span><span class="p">()</span>
         <span class="nb">super</span><span class="p">()</span><span class="o">.</span><span class="n">__attrs_post_init__</span><span class="p">()</span>
 
-<span class="k">with</span> <span class="n">CustomSTACReader</span><span class="p">(</span><span class="s2">&quot;https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/S5_11055_6057_20070622.json:pan&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">CustomSTACReader</span><span class="p">(</span><span class="s2">"https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/S5_11055_6057_20070622.json:pan"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">type</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">input</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">nodata</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">io</span><span class="o">.</span><span class="n">DatasetReader</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s2">&quot;https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/s5_11055_6057_20070622_p10_1_lcc00_cog.tif&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s2">"https://canada-spot-ortho.s3.amazonaws.com/canada_spot_orthoimages/canada_spot5_orthoimages/S5_2007/S5_11055_6057_20070622/s5_11055_6057_20070622_p10_1_lcc00_cog.tif"</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">0</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="o">-</span><span class="mf">869900.0</span><span class="p">,</span> <span class="mf">1370200.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">786360.0</span><span class="p">,</span> <span class="mf">1453180.0</span><span class="p">)</span>
 </code></pre></div>
@@ -2760,12 +2760,12 @@ custom readers.</p>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">minzoom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dataset minzoom.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return dataset minzoom."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_minzoom</span>
 
     <span class="nd">@property</span>
     <span class="k">def</span><span class="w"> </span><span class="nf">maxzoom</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Return dataset maxzoom.&quot;&quot;&quot;</span>
+<span class="w">        </span><span class="sd">"""Return dataset maxzoom."""</span>
         <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">_maxzoom</span>
 
     <span class="c1"># implement all mandatory methods</span>
@@ -2790,7 +2790,7 @@ custom readers.</p>
     <span class="k">def</span><span class="w"> </span><span class="nf">tile</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">tile_x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageData</span><span class="p">:</span>
         <span class="k">if</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">tile_exists</span><span class="p">(</span><span class="n">tile_x</span><span class="p">,</span> <span class="n">tile_y</span><span class="p">,</span> <span class="n">tile_z</span><span class="p">):</span>
             <span class="k">raise</span> <span class="n">TileOutsideBounds</span><span class="p">(</span>
-                <span class="sa">f</span><span class="s2">&quot;Tile </span><span class="si">{</span><span class="n">tile_z</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">tile_x</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">tile_y</span><span class="si">}</span><span class="s2"> is outside bounds&quot;</span>
+                <span class="sa">f</span><span class="s2">"Tile </span><span class="si">{</span><span class="n">tile_z</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">tile_x</span><span class="si">}</span><span class="s2">/</span><span class="si">{</span><span class="n">tile_y</span><span class="si">}</span><span class="s2"> is outside bounds"</span>
             <span class="p">)</span>
 
         <span class="n">tile_bounds</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">xy_bounds</span><span class="p">(</span><span class="n">Tile</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tile_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">tile_y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">tile_z</span><span class="p">))</span>
@@ -2806,7 +2806,7 @@ custom readers.</p>
         <span class="p">)</span>
 
 
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;file.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"file.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="k">with</span> <span class="n">SimpleReader</span><span class="p">(</span><span class="n">src</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
         <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
 </code></pre></div>

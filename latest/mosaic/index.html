@@ -2672,7 +2672,7 @@ Inputs:</p>
     <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">src_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mytif1.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;mytif2.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;mytif3.tif&quot;</span><span class="p">]</span>
+<span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"mytif1.tif"</span><span class="p">,</span> <span class="s2">"mytif2.tif"</span><span class="p">,</span> <span class="s2">"mytif3.tif"</span><span class="p">]</span>
 <span class="n">x</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">y</span> <span class="o">=</span> <span class="mi">1000</span>
 <span class="n">z</span> <span class="o">=</span> <span class="mi">9</span>
@@ -2730,7 +2730,7 @@ Inputs:</p>
     <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">src_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;mytif1.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;mytif2.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;mytif3.tif&quot;</span><span class="p">]</span>
+<span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"mytif1.tif"</span><span class="p">,</span> <span class="s2">"mytif2.tif"</span><span class="p">,</span> <span class="s2">"mytif3.tif"</span><span class="p">]</span>
 
 
 <span class="c1"># Use Default First value method</span>
@@ -2749,7 +2749,7 @@ Inputs:</p>
 </code></pre></div>
 <h3 id="smart-multi-threading">Smart Multi-Threading<a class="headerlink" href="#smart-multi-threading" title="Permanent link">&para;</a></h3>
 <p>When dealing with an important number of image, you might not want to process the whole stack, especially if the pixel selection method stops when the tile is filled. To allow better optimization, <code>rio_tiler.mosaic.mosaic_reader</code> is fetching the tiles in parallel (threads) but to limit the number of files we also embedded the fetching in a loop (creating 2 level of processing):</p>
-<p><div class="highlight"><pre><span></span><code><span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;1.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;2.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;3.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;4.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;5.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;6.tif&quot;</span><span class="p">]</span>
+<p><div class="highlight"><pre><span></span><code><span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"1.tif"</span><span class="p">,</span> <span class="s2">"2.tif"</span><span class="p">,</span> <span class="s2">"3.tif"</span><span class="p">,</span> <span class="s2">"4.tif"</span><span class="p">,</span> <span class="s2">"5.tif"</span><span class="p">,</span> <span class="s2">"6.tif"</span><span class="p">]</span>
 
 <span class="c1"># 1st level loop - Creates chunks of assets</span>
 <span class="k">for</span> <span class="n">chunks</span> <span class="ow">in</span> <span class="n">_chunks</span><span class="p">(</span><span class="n">mosaic_assets</span><span class="p">,</span> <span class="n">chunk_size</span><span class="p">):</span>
@@ -2765,7 +2765,7 @@ In some case, threading can slow down your application. You can set threads to <
 <details>
 
 Benchmark:
-<div class="highlight"><pre><span></span><code>--------------------------------- benchmark &#39;1 image&#39;: 6 tests ---------------------------------
+<div class="highlight"><pre><span></span><code>--------------------------------- benchmark '1 image': 6 tests ---------------------------------
 Name (time in ms)         Min                Max               Mean             Median
 ------------------------------------------------------------------------------------------------
 1images-0threads      64.3108 (1.0)      66.9192 (1.0)      65.0202 (1.0)      64.9370 (1.0)
@@ -2776,7 +2776,7 @@ Name (time in ms)         Min                Max               Mean             
 1images-2threads      69.9258 (1.09)     73.8798 (1.10)     70.8861 (1.09)     70.3682 (1.08)
 ------------------------------------------------------------------------------------------------
 
------------------------------------ benchmark &#39;5 images&#39;: 6 tests -----------------------------------
+----------------------------------- benchmark '5 images': 6 tests -----------------------------------
 Name (time in ms)          Min                 Max                Mean              Median
 ----------------------------------------------------------------------------------------------------
 5images-5threads      104.1609 (1.0)      123.4442 (1.0)      110.4130 (1.0)      110.0683 (1.0)

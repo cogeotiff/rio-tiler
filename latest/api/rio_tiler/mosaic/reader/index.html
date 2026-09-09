@@ -2481,7 +2481,7 @@ reader (callable): Reader function. The function MUST take `(asset, *args, **kwa
 args (Any): Argument to forward to the reader function.
 pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. Defaults to `rio_tiler.mosaic.methods.defaults.FirstMethod`.
 allowed_exceptions (tuple, optional): List of exceptions which will be ignored. Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions. Defaults to `(TileOutsideBounds, )`.
-kwargs (optional): Reader callable&#39;s keywords options.
+kwargs (optional): Reader callable's keywords options.
 </code></pre></div>
 
 
@@ -2503,7 +2503,7 @@ kwargs (optional): Reader callable&#39;s keywords options.
 <span class="go">            return await src.tile(*args, **kwargs)</span>
 </code></pre></div>
     <div class="codehilite"><pre><span></span><code>x, y, z = 10, 10, 4
-img = await async_mosaic_reader([&quot;cog.tif&quot;, &quot;cog2.tif&quot;], reader, x, y, z)
+img = await async_mosaic_reader(["cog.tif", "cog2.tif"], reader, x, y, z)
 </code></pre></div>
 
 
@@ -2548,7 +2548,7 @@ pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. De
 chunk_size (int, optional): Control the number of asset to process per loop.
 threads (int, optional): Number of threads to use. If &lt;= 1, runs single threaded without an event loop. By default reads from the MAX_THREADS environment variable, and if not found defaults to multiprocessing.cpu_count() * 5.
 allowed_exceptions (tuple, optional): List of exceptions which will be ignored. Note: `PointOutsideBounds` is likely to be raised and should be included in the allowed_exceptions. Defaults to `(TileOutsideBounds, )`.
-kwargs (optional): Reader callable&#39;s keywords options.
+kwargs (optional): Reader callable's keywords options.
 </code></pre></div>
 
 
@@ -2569,7 +2569,7 @@ kwargs (optional): Reader callable&#39;s keywords options.
 <span class="go">        with Reader(asset) as src:</span>
 <span class="go">            return src.point(*args, **kwargs)</span>
 </code></pre></div>
-    <div class="codehilite"><pre><span></span><code>pt = mosaic_point_reader([&quot;cog.tif&quot;, &quot;cog2.tif&quot;], reader, 0, 0)
+    <div class="codehilite"><pre><span></span><code>pt = mosaic_point_reader(["cog.tif", "cog2.tif"], reader, 0, 0)
 </code></pre></div>
 
 
@@ -2614,7 +2614,7 @@ pixel_selection (MosaicMethod, optional): Instance of MosaicMethodBase class. De
 chunk_size (int, optional): Control the number of asset to process per loop.
 threads (int, optional): Number of threads to use. If &lt;= 1, runs single threaded without an event loop. By default reads from the MAX_THREADS environment variable, and if not found defaults to multiprocessing.cpu_count() * 5.
 allowed_exceptions (tuple, optional): List of exceptions which will be ignored. Note: `TileOutsideBounds` is likely to be raised and should be included in the allowed_exceptions. Defaults to `(TileOutsideBounds, )`.
-kwargs (optional): Reader callable&#39;s keywords options.
+kwargs (optional): Reader callable's keywords options.
 </code></pre></div>
 
 
@@ -2636,13 +2636,13 @@ kwargs (optional): Reader callable&#39;s keywords options.
 <span class="go">            return src.tile(*args, **kwargs)</span>
 </code></pre></div>
     <div class="codehilite"><pre><span></span><code>x, y, z = 10, 10, 4
-img = mosaic_reader([&quot;cog.tif&quot;, &quot;cog2.tif&quot;], reader, x, y, z)
+img = mosaic_reader(["cog.tif", "cog2.tif"], reader, x, y, z)
 </code></pre></div>
     <div class="codehilite"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">def</span><span class="w"> </span><span class="nf">reader</span><span class="p">(</span><span class="n">asset</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageData</span><span class="p">:</span>
 <span class="go">        with Reader(asset) as src:</span>
 <span class="go">            return src.preview(*args, **kwargs)</span>
 </code></pre></div>
-    <div class="codehilite"><pre><span></span><code>img = mosaic_reader([&quot;cog.tif&quot;, &quot;cog2.tif&quot;], reader)
+    <div class="codehilite"><pre><span></span><code>img = mosaic_reader(["cog.tif", "cog2.tif"], reader)
 </code></pre></div>
 
 

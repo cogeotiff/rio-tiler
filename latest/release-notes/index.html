@@ -7257,6 +7257,9 @@
 
 
 <h1 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h1>
+<ul>
+<li>fix: compare with <code>math.isclose</code> in the WGS84 bounds check of <code>XarrayReader</code> and <code>ZarrReader</code>, so a global dataset whose coordinates carry a float residue is no longer rejected (#754)</li>
+</ul>
 <h2 id="943-2026-08-20">9.4.3 (2026-08-20)<a class="headerlink" href="#943-2026-08-20" title="Permanent link">&para;</a></h2>
 <ul>
 <li>fix: avoid unnecessary copy and mask work in ImageData.render (author @manand881, <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/974" title="GitHub Pull Request: cogeotiff/rio-tiler #974">cogeotiff/rio-tiler!974</a>)</li>
@@ -7279,30 +7282,30 @@
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="k">with</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">{</span><span class="n">zarr</span><span class="o">.</span><span class="n">AsyncGroup</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">_variables</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;data:b1&quot;</span><span class="p">,</span> <span class="s2">&quot;data:b2&quot;</span><span class="p">,</span> <span class="s2">&quot;data:b3&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"data:b1"</span><span class="p">,</span> <span class="s2">"data:b2"</span><span class="p">,</span> <span class="s2">"data:b3"</span><span class="p">]</span>
 
     <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="o">&gt;&gt;</span> <span class="p">{</span>
-        <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="o">...</span>
-        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;data:b1&quot;</span><span class="p">,</span> <span class="s2">&quot;data:b2&quot;</span><span class="p">,</span> <span class="s2">&quot;data:b3&quot;</span><span class="p">]</span>
+        <span class="s2">"bounds"</span><span class="p">:</span> <span class="o">...</span>
+        <span class="s2">"variables"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"data:b1"</span><span class="p">,</span> <span class="s2">"data:b2"</span><span class="p">,</span> <span class="s2">"data:b3"</span><span class="p">]</span>
     <span class="p">}</span>
 
 <span class="c1"># now</span>
 <span class="k">with</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">{</span><span class="n">zarr</span><span class="o">.</span><span class="n">AsyncGroup</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">_variables</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="p">[</span>
-        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;data:b1&quot;</span><span class="p">,</span> <span class="s2">&quot;multiscale&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;nbands&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
-        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;data:b2&quot;</span><span class="p">,</span> <span class="s2">&quot;multiscale&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;nbands&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
-        <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;b3&quot;</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;data:b3&quot;</span><span class="p">,</span> <span class="s2">&quot;multiscale&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;nbands&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"group"</span><span class="p">:</span> <span class="s2">"data"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"data:b1"</span><span class="p">,</span> <span class="s2">"multiscale"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"nbands"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"group"</span><span class="p">:</span> <span class="s2">"data"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"data:b2"</span><span class="p">,</span> <span class="s2">"multiscale"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"nbands"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+        <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"b3"</span><span class="p">,</span> <span class="s2">"group"</span><span class="p">:</span> <span class="s2">"data"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"data:b3"</span><span class="p">,</span> <span class="s2">"multiscale"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"nbands"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
     <span class="p">]</span>
 
     <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="o">&gt;&gt;</span> <span class="p">{</span>
-        <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="o">...</span>
-        <span class="s2">&quot;variables&quot;</span><span class="p">:</span> <span class="p">[</span>
-            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;data:b1&quot;</span><span class="p">,</span> <span class="s2">&quot;multiscale&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;nbands&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
-            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;data:b2&quot;</span><span class="p">,</span> <span class="s2">&quot;multiscale&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;nbands&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
-            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;b3&quot;</span><span class="p">,</span> <span class="s2">&quot;group&quot;</span><span class="p">:</span> <span class="s2">&quot;data&quot;</span><span class="p">,</span> <span class="s2">&quot;long_name&quot;</span><span class="p">:</span> <span class="s2">&quot;data:b3&quot;</span><span class="p">,</span> <span class="s2">&quot;multiscale&quot;</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">&quot;nbands&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+        <span class="s2">"bounds"</span><span class="p">:</span> <span class="o">...</span>
+        <span class="s2">"variables"</span><span class="p">:</span> <span class="p">[</span>
+            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"group"</span><span class="p">:</span> <span class="s2">"data"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"data:b1"</span><span class="p">,</span> <span class="s2">"multiscale"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"nbands"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"group"</span><span class="p">:</span> <span class="s2">"data"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"data:b2"</span><span class="p">,</span> <span class="s2">"multiscale"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"nbands"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"b3"</span><span class="p">,</span> <span class="s2">"group"</span><span class="p">:</span> <span class="s2">"data"</span><span class="p">,</span> <span class="s2">"long_name"</span><span class="p">:</span> <span class="s2">"data:b3"</span><span class="p">,</span> <span class="s2">"multiscale"</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span> <span class="s2">"nbands"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
         <span class="p">]</span>
     <span class="p">}</span>
 </code></pre></div>
@@ -7311,7 +7314,7 @@
 <p>change: change input for <code>rio_tiler.experimental.zarr.get_group_metadata</code> to accept no input <code>group</code> to get the metadata for the root group.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="k">with</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">{</span><span class="n">zarr</span><span class="o">.</span><span class="n">AsyncGroup</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">get_group_metadata</span><span class="p">(</span><span class="s2">&quot;root&quot;</span><span class="p">)</span>
+    <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">get_group_metadata</span><span class="p">(</span><span class="s2">"root"</span><span class="p">)</span>
 
 <span class="c1"># now</span>
 <span class="k">with</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="p">{</span><span class="n">zarr</span><span class="o">.</span><span class="n">AsyncGroup</span><span class="p">})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
@@ -7406,8 +7409,8 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">LocalStore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">async_geotiff</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoTIFF</span>
 
-<span class="n">store</span> <span class="o">=</span> <span class="n">LocalStore</span><span class="p">(</span><span class="s2">&quot;./tests/fixtures/&quot;</span><span class="p">)</span>
-<span class="n">path</span> <span class="o">=</span> <span class="s2">&quot;cog_nodata.tif&quot;</span>
+<span class="n">store</span> <span class="o">=</span> <span class="n">LocalStore</span><span class="p">(</span><span class="s2">"./tests/fixtures/"</span><span class="p">)</span>
+<span class="n">path</span> <span class="o">=</span> <span class="s2">"cog_nodata.tif"</span>
 
 <span class="n">geotiff</span> <span class="o">=</span> <span class="k">await</span> <span class="n">GeoTIFF</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
 <span class="k">async</span> <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">geotiff</span><span class="p">):</span>
@@ -7432,7 +7435,7 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">assets</span><span class="o">=</span><span class="p">[</span>
-            <span class="s2">&quot;asset|indexes=1,2,3&quot;</span><span class="p">,</span>
+            <span class="s2">"asset|indexes=1,2,3"</span><span class="p">,</span>
         <span class="p">]</span>
     <span class="p">)</span>
 
@@ -7443,7 +7446,7 @@
         <span class="mi">0</span><span class="p">,</span>
         <span class="mi">0</span><span class="p">,</span>
         <span class="n">assets</span><span class="o">=</span><span class="p">[</span>
-            <span class="p">{</span><span class="s2">&quot;name&quot;</span><span class="p">:</span> <span class="s2">&quot;asset&quot;</span><span class="p">,</span> <span class="s2">&quot;indexes&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]},</span>
+            <span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"asset"</span><span class="p">,</span> <span class="s2">"indexes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">]},</span>
         <span class="p">]</span>
     <span class="p">)</span>
 </code></pre></div></li>
@@ -7482,13 +7485,13 @@
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b1&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b1"</span><span class="p">]</span>
 
 <span class="c1"># now</span>
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">(</span><span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">,))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
@@ -7497,7 +7500,7 @@
 <li>
 <p>change: type informations for <code>AssetInfo</code> model</p>
 <div class="highlight"><pre><span></span><code><span class="k">class</span><span class="w"> </span><span class="nc">AssetInfo</span><span class="p">(</span><span class="n">TypedDict</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">&quot;&quot;&quot;Asset Reader Options.&quot;&quot;&quot;</span>
+<span class="w">    </span><span class="sd">"""Asset Reader Options."""</span>
 
     <span class="n">url</span><span class="p">:</span> <span class="n">Any</span>
     <span class="n">name</span><span class="p">:</span> <span class="nb">str</span>
@@ -7512,10 +7515,10 @@
 <p>change: in <code>MultiBaseReader</code>, expression are now in form of <code>b1/b2</code> indicating the band index within the ImageData object returned by the <code>read</code> method</p>
 <div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">MultiBaseReader</span><span class="p">(</span><span class="nb">input</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># asset1 and asset2 are both 1-band dataset</span>
-    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;asset1&quot;</span><span class="p">,</span> <span class="s2">&quot;asset2&quot;</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+b2&quot;</span><span class="p">)</span>
+    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset1"</span><span class="p">,</span> <span class="s2">"asset2"</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1+b2"</span><span class="p">)</span>
 
     <span class="c1"># asset1 has 1 band while asset3 has 2 bands</span>
-    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">&quot;asset1&quot;</span><span class="p">,</span> <span class="s2">&quot;asset3&quot;</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+b2/b3&quot;</span><span class="p">)</span>
+    <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"asset1"</span><span class="p">,</span> <span class="s2">"asset3"</span><span class="p">],</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1+b2/b3"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -7527,25 +7530,25 @@
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">]</span>  <span class="c1"># or [&quot;&quot;, &quot;&quot;, &quot;&quot;] if no band description</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"red"</span><span class="p">,</span> <span class="s2">"green"</span><span class="p">,</span> <span class="s2">"blue"</span><span class="p">]</span>  <span class="c1"># or ["", "", ""] if no band description</span>
 
-    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2&quot;</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
-    <span class="o">&gt;&gt;</span> <span class="s2">&quot;b1+2&quot;</span>
+    <span class="o">&gt;&gt;</span> <span class="s2">"b1+2"</span>
 
 <span class="c1"># now</span>
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">,</span> <span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;blue&quot;</span><span class="p">]</span>  <span class="c1"># or [&quot;b1&quot;, &quot;b2&quot;, &quot;b3&quot;] if no band description</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s2">"red"</span><span class="p">,</span> <span class="s2">"green"</span><span class="p">,</span> <span class="s2">"blue"</span><span class="p">]</span>  <span class="c1"># or ["b1", "b2", "b3"] if no band description</span>
 
-    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1+2&quot;</span><span class="p">)</span>
+    <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1+2"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">))</span>
-    <span class="o">&gt;&gt;</span> <span class="s2">&quot;b1&quot;</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="s2">&quot;red+2&quot;</span>  <span class="c1"># b1+2 if no band description</span>
+    <span class="o">&gt;&gt;</span> <span class="s2">"b1"</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">description</span><span class="p">)</span>
+    <span class="o">&gt;&gt;</span> <span class="s2">"red+2"</span>  <span class="c1"># b1+2 if no band description</span>
 </code></pre></div>
 </li>
 <li>
@@ -7556,13 +7559,13 @@
 <p>add: infer band description in <code>ImageData.apply_expression()</code> result's band_descriptions</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">COG_TAGS</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1*2&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1*2"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">""</span><span class="p">]</span>
 
 <span class="c1"># now</span>
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">COG_TAGS</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1*2&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;Green*2&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">expression</span><span class="o">=</span><span class="s2">"b1*2"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"Green*2"</span><span class="p">]</span>
 </code></pre></div>
 </li>
 </ul>
@@ -7611,71 +7614,71 @@
 <p>add <strong>band_descriptions</strong> in ImageData and PointData objects</p>
 </li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/cog_tags.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"tests/fixtures/cog_tags.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[(</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span> <span class="s1">&#39;Green&#39;</span><span class="p">)]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[(</span><span class="s1">'b1'</span><span class="p">,</span> <span class="s1">'Green'</span><span class="p">)]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'b1'</span><span class="p">]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">&#39;Green&#39;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'Green'</span><span class="p">]</span>
 </code></pre></div>
 <ul>
 <li>use <code>b{idx}</code> as band names in <code>XarrayReader</code> result (instead of band descriptions) <strong>breaking change</strong></li>
 </ul>
-<div class="highlight"><pre><span></span><code>    <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">33</span> <span class="o">*</span> <span class="mi">35</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="mi">35</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code>    <span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="mf">0.0</span><span class="p">,</span> <span class="mi">33</span> <span class="o">*</span> <span class="mi">35</span> <span class="o">*</span> <span class="mi">2</span><span class="p">,</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">33</span><span class="p">,</span> <span class="mi">35</span><span class="p">)</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">DataArray</span><span class="p">(</span>
         <span class="n">arr</span><span class="p">,</span>
-        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;time&quot;</span><span class="p">,</span> <span class="s2">&quot;y&quot;</span><span class="p">,</span> <span class="s2">&quot;x&quot;</span><span class="p">),</span>
+        <span class="n">dims</span><span class="o">=</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">),</span>
         <span class="n">coords</span><span class="o">=</span><span class="p">{</span>
-            <span class="s2">&quot;x&quot;</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">170</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
-            <span class="s2">&quot;y&quot;</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
-            <span class="s2">&quot;time&quot;</span><span class="p">:</span> <span class="p">[</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span>
+            <span class="s2">"x"</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">170</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">10</span><span class="p">),</span>
+            <span class="s2">"y"</span><span class="p">:</span> <span class="n">numpy</span><span class="o">.</span><span class="n">arange</span><span class="p">(</span><span class="o">-</span><span class="mi">80</span><span class="p">,</span> <span class="mi">85</span><span class="p">,</span> <span class="mi">5</span><span class="p">),</span>
+            <span class="s2">"time"</span><span class="p">:</span> <span class="p">[</span><span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">datetime</span><span class="p">(</span><span class="mi">2022</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)],</span>
         <span class="p">},</span>
     <span class="p">)</span>
-    <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">&quot;valid_min&quot;</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="s2">&quot;valid_max&quot;</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
-    <span class="n">data</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">attrs</span><span class="o">.</span><span class="n">update</span><span class="p">({</span><span class="s2">"valid_min"</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">min</span><span class="p">(),</span> <span class="s2">"valid_max"</span><span class="p">:</span> <span class="n">arr</span><span class="o">.</span><span class="n">max</span><span class="p">()})</span>
+    <span class="n">data</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">"epsg:4326"</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="c1"># Before</span>
     <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
-        <span class="k">assert</span> <span class="n">info</span><span class="o">.</span><span class="n">band_metadata</span> <span class="o">==</span> <span class="p">[(</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="p">{})]</span>
+        <span class="k">assert</span> <span class="n">info</span><span class="o">.</span><span class="n">band_metadata</span> <span class="o">==</span> <span class="p">[(</span><span class="s2">"b1"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"b2"</span><span class="p">,</span> <span class="p">{})]</span>
         <span class="k">assert</span> <span class="n">info</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span>
-            <span class="p">(</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;2022-01-01T00:00:00.000000000&quot;</span><span class="p">),</span>
-            <span class="p">(</span><span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;2022-01-02T00:00:00.000000000&quot;</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"2022-01-01T00:00:00.000000000"</span><span class="p">),</span>
+            <span class="p">(</span><span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"2022-01-02T00:00:00.000000000"</span><span class="p">),</span>
         <span class="p">]</span>
 
         <span class="n">stats</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
         <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span>
-            <span class="s2">&quot;2022-01-01T00:00:00.000000000&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;2022-01-02T00:00:00.000000000&quot;</span><span class="p">,</span>
+            <span class="s2">"2022-01-01T00:00:00.000000000"</span><span class="p">,</span>
+            <span class="s2">"2022-01-02T00:00:00.000000000"</span><span class="p">,</span>
         <span class="p">]</span>
 
         <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span>
-            <span class="s2">&quot;2022-01-01T00:00:00.000000000&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;2022-01-02T00:00:00.000000000&quot;</span><span class="p">,</span>
+            <span class="s2">"2022-01-01T00:00:00.000000000"</span><span class="p">,</span>
+            <span class="s2">"2022-01-02T00:00:00.000000000"</span><span class="p">,</span>
         <span class="p">]</span>
 
     <span class="c1"># Now</span>
     <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="n">stats</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
         <span class="k">assert</span> <span class="nb">list</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="o">==</span> <span class="p">[</span>
-            <span class="s2">&quot;b1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;b2&quot;</span><span class="p">,</span>
+            <span class="s2">"b1"</span><span class="p">,</span>
+            <span class="s2">"b2"</span><span class="p">,</span>
         <span class="p">]</span>
 
         <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
         <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span>
-            <span class="s2">&quot;b1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;b2&quot;</span><span class="p">,</span>
+            <span class="s2">"b1"</span><span class="p">,</span>
+            <span class="s2">"b2"</span><span class="p">,</span>
         <span class="p">]</span>
         <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span> <span class="o">==</span> <span class="p">[</span>
-            <span class="s2">&quot;2022-01-01T00:00:00.000000000&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;2022-01-02T00:00:00.000000000&quot;</span><span class="p">,</span>
+            <span class="s2">"2022-01-01T00:00:00.000000000"</span><span class="p">,</span>
+            <span class="s2">"2022-01-02T00:00:00.000000000"</span><span class="p">,</span>
         <span class="p">]</span>
 </code></pre></div>
 <ul>
@@ -7772,7 +7775,7 @@
     <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">src_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;tests/fixtures/mosaic_value_1.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;tests/fixtures/mosaic_value_1.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;tests/fixtures/mosaic_value_2.tif&quot;</span><span class="p">]</span>
+<span class="n">mosaic_assets</span> <span class="o">=</span> <span class="p">[</span><span class="s2">"tests/fixtures/mosaic_value_1.tif"</span><span class="p">,</span> <span class="s2">"tests/fixtures/mosaic_value_1.tif"</span><span class="p">,</span> <span class="s2">"tests/fixtures/mosaic_value_2.tif"</span><span class="p">]</span>
 <span class="n">x</span> <span class="o">=</span> <span class="mi">150</span>
 <span class="n">y</span> <span class="o">=</span> <span class="mi">182</span>
 <span class="n">z</span> <span class="o">=</span> <span class="mi">9</span>
@@ -7780,7 +7783,7 @@
 <span class="c1"># Use Default First value method</span>
 <span class="n">img</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">mosaic_reader</span><span class="p">(</span><span class="n">mosaic_assets</span><span class="p">,</span> <span class="n">tiler</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
-<span class="o">&gt;&gt;</span> <span class="p">{</span><span class="s1">&#39;mosaic_method&#39;</span><span class="p">:</span> <span class="s1">&#39;FirstMethod&#39;</span><span class="p">,</span> <span class="s1">&#39;mosaic_assets_count&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">&#39;mosaic_assets_used&#39;</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
+<span class="o">&gt;&gt;</span> <span class="p">{</span><span class="s1">'mosaic_method'</span><span class="p">:</span> <span class="s1">'FirstMethod'</span><span class="p">,</span> <span class="s1">'mosaic_assets_count'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span> <span class="s1">'mosaic_assets_used'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}</span>
 </code></pre></div>
 </li>
 </ul>
@@ -7801,24 +7804,24 @@
 <ul>
 <li>
 <p>add <code>interpolate=True/False</code> to <code>.point()</code> methods to allow interpolation of surrounding pixels</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"tests/fixtures/cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mf">57.566</span><span class="p">,</span> <span class="mf">73.68856</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="o">&gt;&gt;</span> <span class="mi">2800</span>
 
-    <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mf">57.566</span><span class="p">,</span> <span class="mf">73.68856</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">)</span>
+    <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mf">57.566</span><span class="p">,</span> <span class="mf">73.68856</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
     <span class="o">&gt;&gt;</span> <span class="mi">2819</span>
 </code></pre></div>
 </li>
 <li>
 <p>add <code>pixel_location</code> property to <code>PointData</code> model</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"tests/fixtures/cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mf">57.566</span><span class="p">,</span> <span class="mf">73.68856</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">pixel_location</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">1090</span><span class="p">,</span> <span class="mi">1086</span><span class="p">)</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"tests/fixtures/cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">pt</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">-</span><span class="mf">57.566</span><span class="p">,</span> <span class="mf">73.68856</span><span class="p">,</span> <span class="n">interpolate</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">pt</span><span class="o">.</span><span class="n">pixel_location</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mf">1090.5924744641266</span><span class="p">,</span> <span class="mf">1086.2541429827688</span><span class="p">)</span>
@@ -7828,12 +7831,12 @@
 <p>add <code>out_dtype</code> to reader's methods to allow user setting the output data type</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"tests/fixtures/cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="n">uint16</span>
 
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">out_dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">out_dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="n">float32</span>
 </code></pre></div>
@@ -7861,8 +7864,8 @@
 <p>add <code>reproject</code> method for <code>ImageData</code> objects (author @emmanuelmathot, <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/782" title="GitHub Pull Request: cogeotiff/rio-tiler #782">cogeotiff/rio-tiler!782</a>)</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">))</span>
-<span class="n">img_3857</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="s2">&quot;epsg:3857&quot;</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">))</span>
+<span class="n">img_3857</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="s2">"epsg:3857"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -7889,29 +7892,29 @@
 <div class="codehilite"><pre><span></span><code>```python
 data = xarray.DataArray(
     numpy.arange(0.0, 33 * 35 * 2).reshape(2, 33, 35),
-    dims=(&quot;time&quot;, &quot;y&quot;, &quot;x&quot;),
+    dims=("time", "y", "x"),
     coords={
-        &quot;x&quot;: numpy.arange(-170, 180, 10),
-        &quot;y&quot;: numpy.arange(-80, 85, 5),
-        &quot;time&quot;: [datetime(2022, 1, 1), datetime(2022, 1, 2)],
+        "x": numpy.arange(-170, 180, 10),
+        "y": numpy.arange(-80, 85, 5),
+        "time": [datetime(2022, 1, 1), datetime(2022, 1, 2)],
     },
 )
 da = data[0]
 
-print(da.coords[&quot;time&quot;].data)
-&gt;&gt; array(&#39;2022-01-01T00:00:00.000000000&#39;, dtype=&#39;datetime64[ns]&#39;))
+print(da.coords["time"].data)
+&gt;&gt; array('2022-01-01T00:00:00.000000000', dtype='datetime64[ns]'))
 
 # before
 with XarrayReader(data) as dst:
     img = dst.info()
     print(img.band_descriptions)[0]
-    &gt;&gt; (&quot;b1&quot;, &quot;value&quot;)
+    &gt;&gt; ("b1", "value")
 
 # now
 with XarrayReader(data) as dst:
     img = dst.info()
     print(img.band_descriptions)[0]
-    &gt;&gt; (&quot;b1&quot;, &quot;2022-01-01T00:00:00.000000000&quot;)
+    &gt;&gt; ("b1", "2022-01-01T00:00:00.000000000")
 ```
 </code></pre></div>
 
@@ -7925,13 +7928,13 @@ data = ... # DataArray of shape (x, y)
 with XarrayReader(data) as dst:
     img = dst.info()
     print(img.band_descriptions)[0]
-    &gt;&gt; (&quot;b1&quot;, &quot;value&quot;)
+    &gt;&gt; ("b1", "value")
 
 # now
 with XarrayReader(data) as dst:
     img = dst.info()
     print(img.band_descriptions)[0]
-    &gt;&gt; (&quot;b1&quot;, &quot;array&quot;)
+    &gt;&gt; ("b1", "array")
 ```
 </code></pre></div>
 
@@ -8042,10 +8045,10 @@ with XarrayReader(data) as dst:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.colormap</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmap</span>
 
 <span class="c1"># before</span>
-<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Viridis&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Viridis"</span><span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Viridis&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Viridis"</span><span class="p">)</span>
 <span class="o">&gt;&gt;</span> <span class="n">InvalidColorMapName</span><span class="p">:</span> <span class="n">Invalid</span> <span class="n">colormap</span> <span class="n">name</span><span class="p">:</span> <span class="n">Viridis</span>
 </code></pre></div>
 </li>
@@ -8061,11 +8064,11 @@ with XarrayReader(data) as dst:
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">,</span> <span class="n">geographic_crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">))</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">,</span> <span class="n">geographic_crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">))</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">bounds</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">geographic_bounds</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">bounds</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">))</span>
 </code></pre></div>
 </li>
@@ -8074,11 +8077,11 @@ with XarrayReader(data) as dst:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">geographic_bounds</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">bounds</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">bounds</span> <span class="o">==</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">bounds</span>
 </code></pre></div>
 </li>
@@ -8127,13 +8130,13 @@ with XarrayReader(data) as dst:
 <li>
 <p>replace <code>scale</code> and <code>offset</code> by <code>scales</code> and <code>offsets</code> in <code>rio_tiler.models.Info</code> model</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/cog_scale.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"tests/fixtures/cog_scale.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">scale</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">offset</span><span class="p">)</span>
 <span class="o">&gt;&gt;</span> <span class="mf">0.0001</span> <span class="mf">1000.0</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;tests/fixtures/cog_scale.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"tests/fixtures/cog_scale.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">scales</span><span class="p">,</span> <span class="n">info</span><span class="o">.</span><span class="n">offsets</span><span class="p">)</span>
 <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="mf">0.0001</span><span class="p">,</span> <span class="mf">0.001</span><span class="p">]</span> <span class="p">[</span><span class="mf">1000.0</span><span class="p">,</span> <span class="mf">2000.0</span><span class="p">]</span>
@@ -8180,11 +8183,11 @@ with XarrayReader(data) as dst:
 <p>deprecate <code>resampling_method</code> in <code>rio_tiler.io.xarray.XarrayReader</code> method and add <code>reproject_method</code> (to match the <code>rio_tiler.io.Reader</code> options)</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
 <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;cubic&quot;</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"cubic"</span><span class="p">)</span>
 
 <span class="c1"># now</span>
 <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">data</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
-    <span class="n">img_cubic</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">reproject_method</span><span class="o">=</span><span class="s2">&quot;cubic&quot;</span><span class="p">)</span>
+    <span class="n">img_cubic</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">reproject_method</span><span class="o">=</span><span class="s2">"cubic"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 </ul>
@@ -8272,17 +8275,17 @@ with XarrayReader(data) as dst:
 
 <span class="n">stats</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_array_statistics</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">coverage</span><span class="o">=</span><span class="n">coverage</span><span class="p">)</span>
 <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;min&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.125</span>  <span class="c1"># (1 * 0.5 + 2 * 0.0 + 3 * 1.0 + 4 * 0.25) / 4</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.75</span>  <span class="c1"># (0.5 + 0 + 1 + 0.25) sum of the coverage array</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"min"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"max"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"mean"</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.125</span>  <span class="c1"># (1 * 0.5 + 2 * 0.0 + 3 * 1.0 + 4 * 0.25) / 4</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"count"</span><span class="p">]</span> <span class="o">==</span> <span class="mf">1.75</span>  <span class="c1"># (0.5 + 0 + 1 + 0.25) sum of the coverage array</span>
 
 <span class="n">stats</span> <span class="o">=</span> <span class="n">utils</span><span class="o">.</span><span class="n">get_array_statistics</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="k">assert</span> <span class="nb">len</span><span class="p">(</span><span class="n">stats</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;min&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;max&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;mean&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mf">2.5</span>
-<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">&quot;count&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"min"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">1</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"max"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"mean"</span><span class="p">]</span> <span class="o">==</span> <span class="mf">2.5</span>
+<span class="k">assert</span> <span class="n">stats</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="s2">"count"</span><span class="p">]</span> <span class="o">==</span> <span class="mi">4</span>
 </code></pre></div>
 </li>
 <li>
@@ -8297,10 +8300,10 @@ with XarrayReader(data) as dst:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.colormap</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmap</span>
 
 <span class="c1"># Before</span>
-<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;greys&quot;</span><span class="p">)</span>
+<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"greys"</span><span class="p">)</span>
 
 <span class="c1"># Now</span>
-<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Greys&quot;</span><span class="p">)</span>
+<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Greys"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 </ul>
@@ -8380,13 +8383,13 @@ with XarrayReader(data) as dst:
 <li>
 <p>switch from PER-DATASET to PER-BAND mask (<a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/580" title="GitHub Pull Request: cogeotiff/rio-tiler #580">cogeotiff/rio-tiler!580</a>)</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">mask</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">width</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">128</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="kc">None</span><span class="p">)</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">128</span><span class="p">,</span> <span class="mi">128</span><span class="p">)</span>
@@ -8396,12 +8399,12 @@ with XarrayReader(data) as dst:
 <li>
 <p>use numpy masked array in ImageData and PointData to store the data</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint16&quot;</span><span class="p">)</span>
+<span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint16"</span><span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">isintance</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>  <span class="c1"># Attribute</span>
 
 <span class="c1"># now</span>
-<span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint16&quot;</span><span class="p">)</span>
+<span class="n">arr</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint16"</span><span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">arr</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">isintance</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">)</span>  <span class="c1"># Attribute</span>
 <span class="k">assert</span> <span class="n">isintance</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ndarray</span><span class="p">)</span>  <span class="c1"># property</span>
@@ -8423,18 +8426,18 @@ with XarrayReader(data) as dst:
 <li>
 <p>add <code>reproject_method</code> option in <code>rio_tiler.reader</code>'s method to select the <code>resampling</code> method used during reprojection</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span>
-        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>  <span class="c1"># use `bilinear` for both resizing and reprojection</span>
+        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">,</span>
+        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">,</span>  <span class="c1"># use `bilinear` for both resizing and reprojection</span>
     <span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span>
-        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;cubic&quot;</span><span class="p">,</span>  <span class="c1"># use `cubic` for resizing</span>
-        <span class="n">reproject_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">,</span>  <span class="c1"># use `bilinear` for reprojection</span>
+        <span class="n">dst_crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">,</span>
+        <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"cubic"</span><span class="p">,</span>  <span class="c1"># use `cubic` for resizing</span>
+        <span class="n">reproject_method</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">,</span>  <span class="c1"># use `bilinear` for reprojection</span>
     <span class="p">)</span>
 </code></pre></div>
 </li>
@@ -8465,15 +8468,15 @@ with XarrayReader(data) as dst:
 <li>
 <p>forward statistics from the <strong>raster STAC extension</strong> to the ImageData object</p>
 <div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">STAC_RASTER_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">info</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">_get_asset_info</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;dataset_statistics&quot;</span><span class="p">]</span> <span class="o">==</span> <span class="p">[(</span><span class="mi">6883</span><span class="p">,</span> <span class="mi">62785</span><span class="p">)]</span>
-    <span class="k">assert</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
-    <span class="k">assert</span> <span class="s2">&quot;raster:bands&quot;</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s2">&quot;metadata&quot;</span><span class="p">]</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">_get_asset_info</span><span class="p">(</span><span class="s2">"green"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">info</span><span class="p">[</span><span class="s2">"dataset_statistics"</span><span class="p">]</span> <span class="o">==</span> <span class="p">[(</span><span class="mi">6883</span><span class="p">,</span> <span class="mi">62785</span><span class="p">)]</span>
+    <span class="k">assert</span> <span class="n">info</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="s2">"raster:bands"</span> <span class="ow">in</span> <span class="n">info</span><span class="p">[</span><span class="s2">"metadata"</span><span class="p">]</span>
 
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">))</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"green"</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">))</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">dataset_statistics</span> <span class="o">==</span> <span class="p">[(</span><span class="mi">6883</span><span class="p">,</span> <span class="mi">62785</span><span class="p">),</span> <span class="p">(</span><span class="mi">6101</span><span class="p">,</span> <span class="mi">65035</span><span class="p">)]</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;green&quot;</span><span class="p">]</span>  <span class="c1"># extra_fields from the STAC assets (e.g `&quot;raster:bands&quot;`)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">&quot;red&quot;</span><span class="p">]</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"green"</span><span class="p">]</span>  <span class="c1"># extra_fields from the STAC assets (e.g `"raster:bands"`)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"red"</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
@@ -8527,7 +8530,7 @@ with XarrayReader(data) as dst:
     <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">asset</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
         <span class="k">return</span> <span class="n">src</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
 
-<span class="n">pt</span><span class="p">:</span> <span class="n">PointData</span> <span class="o">=</span> <span class="n">mosaic_point_reader</span><span class="p">([</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;cog2.tif&quot;</span><span class="p">],</span> <span class="n">reader</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
+<span class="n">pt</span><span class="p">:</span> <span class="n">PointData</span> <span class="o">=</span> <span class="n">mosaic_point_reader</span><span class="p">([</span><span class="s2">"cog.tif"</span><span class="p">,</span> <span class="s2">"cog2.tif"</span><span class="p">],</span> <span class="n">reader</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">)</span>
 </code></pre></div>
 </li>
 </ul>
@@ -8548,21 +8551,21 @@ with XarrayReader(data) as dst:
 <li>add <code>asset_as_band</code> option in <code>MultiBaseReader</code> tile, part, preview, feature and point methods</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">STAC_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;green_b1&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="s2">"green"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"green_b1"</span><span class="p">]</span>
 
 <span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">STAC_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="n">asset_as_band</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;green&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="s2">"green"</span><span class="p">,</span> <span class="n">asset_as_band</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"green"</span><span class="p">]</span>
 
 <span class="c1"># For expression, without `asset_as_band` tag, users have to pass `_b{n}` suffix to indicate the band index</span>
 <span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">STAC_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;green_b1/red_b1&quot;</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;green_b1/red_b1&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"green_b1/red_b1"</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"green_b1/red_b1"</span><span class="p">]</span>
 
 <span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="n">STAC_PATH</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;green/red&quot;</span><span class="p">,</span> <span class="n">asset_as_band</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">&quot;green/red&quot;</span><span class="p">]</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">71</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"green/red"</span><span class="p">,</span> <span class="n">asset_as_band</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span> <span class="o">==</span> <span class="p">[</span><span class="s2">"green/red"</span><span class="p">]</span>
 </code></pre></div>
 <h2 id="400-2022-11-21">4.0.0 (2022-11-21)<a class="headerlink" href="#400-2022-11-21" title="Permanent link">&para;</a></h2>
 <ul>
@@ -8592,10 +8595,10 @@ with XarrayReader(data) as dst:
 <li>update <code>rio-tiler.reader.read/part</code> to avoid using WarpedVRT when no <em>reprojection</em> or <em>nodata override</em> is needed</li>
 <li>
 <p>add <code>rio_tiler.io.rasterio.ImageReader</code> to work either with Non-geo or Geo images in a Non-geo manner (a.k.a: in the pixel coordinates system)</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">part</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">0</span><span class="p">))</span>
 
-<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">&quot;image.jpg&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">ImageReader</span><span class="p">(</span><span class="s2">"image.jpg"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">im</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="n">src</span><span class="o">.</span><span class="n">maxzoom</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">im</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
 
@@ -8608,12 +8611,12 @@ with XarrayReader(data) as dst:
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">XarrayReader</span>
 
 <span class="k">with</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_dataset</span><span class="p">(</span>
-    <span class="s2">&quot;https://ncsa.osn.xsede.org/Pangeo/pangeo-forge/noaa-coastwatch-geopolar-sst-feedstock/noaa-coastwatch-geopolar-sst.zarr&quot;</span><span class="p">,</span>
-    <span class="n">engine</span><span class="o">=</span><span class="s2">&quot;zarr&quot;</span><span class="p">,</span>
-    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">&quot;all&quot;</span>
+    <span class="s2">"https://ncsa.osn.xsede.org/Pangeo/pangeo-forge/noaa-coastwatch-geopolar-sst-feedstock/noaa-coastwatch-geopolar-sst.zarr"</span><span class="p">,</span>
+    <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span><span class="p">,</span>
+    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">"all"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">ds</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="s2">&quot;analysed_sst&quot;</span><span class="p">][:</span><span class="mi">1</span><span class="p">]</span>
-    <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
+    <span class="n">ds</span> <span class="o">=</span> <span class="n">src</span><span class="p">[</span><span class="s2">"analysed_sst"</span><span class="p">][:</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">ds</span><span class="o">.</span><span class="n">rio</span><span class="o">.</span><span class="n">write_crs</span><span class="p">(</span><span class="s2">"epsg:4326"</span><span class="p">,</span> <span class="n">inplace</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
     <span class="k">with</span> <span class="n">XarrayReader</span><span class="p">(</span><span class="n">ds</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
         <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">2</span><span class="p">)</span>
@@ -8645,38 +8648,38 @@ with XarrayReader(data) as dst:
 <li>
 <p>use <code>b</code> prefix for band names in <code>rio_tiler.models.ImageData</code> class (and in rio-tiler's readers)</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"2"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">band_metadata</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="p">{})]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"1"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"2"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"3"</span><span class="p">,</span> <span class="p">{})]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;3&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"2"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"3"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">statistics</span><span class="p">()))</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;2&quot;</span><span class="p">,</span> <span class="s2">&quot;3&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">"2"</span><span class="p">,</span> <span class="s2">"3"</span><span class="p">]</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">read</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">band_metadata</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">&quot;b3&quot;</span><span class="p">,</span> <span class="p">{})]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"b1"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"b2"</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s2">"b3"</span><span class="p">,</span> <span class="p">{})]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">info</span><span class="p">()</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">),</span> <span class="p">(</span><span class="s2">&quot;b3&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">)]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[(</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"b2"</span><span class="p">,</span> <span class="s2">""</span><span class="p">),</span> <span class="p">(</span><span class="s2">"b3"</span><span class="p">,</span> <span class="s2">""</span><span class="p">)]</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="nb">list</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">statistics</span><span class="p">()))</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>
 
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;stac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;green&quot;</span><span class="p">,</span> <span class="s2">&quot;red&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;green_b1&quot;</span><span class="p">,</span> <span class="s2">&quot;red_b1&quot;</span><span class="p">]</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"stac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"green"</span><span class="p">,</span> <span class="s2">"red"</span><span class="p">))</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"green_b1"</span><span class="p">,</span> <span class="s2">"red_b1"</span><span class="p">]</span>
 </code></pre></div>
 </li>
 <li>
@@ -8685,49 +8688,49 @@ with XarrayReader(data) as dst:
 <li>
 <p><code>expression</code> for MultiBaseReader must be in form of <code>{asset}_b{index}</code></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;stac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;green/red&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"stac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"green/red"</span><span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;stac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;green_b1/red_b1&quot;</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"stac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="n">stac</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">701</span><span class="p">,</span> <span class="mi">102</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"green_b1/red_b1"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
 <p><code>rio_tiler.reader.point()</code> (and all Reader's point methods) now return a <strong>rio_tiler.models.PointData</strong> object</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">::</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">::</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">42.0</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">42.0</span><span class="p">))</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">::</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">::</span>
     <span class="n">v</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="n">src</span><span class="p">,</span> <span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mi">42</span><span class="p">))</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">v</span><span class="p">)</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="n">PointData</span><span class="p">(</span>
         <span class="n">data</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">3744</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint16</span><span class="p">),</span>
         <span class="n">mask</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">255</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint8</span><span class="p">),</span>
-        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span>
+        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'b1'</span><span class="p">],</span>
         <span class="n">coordinates</span><span class="o">=</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mi">42</span><span class="p">),</span>
         <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">),</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cog.tif&#39;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">'cog.tif'</span><span class="p">],</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{}</span>
     <span class="p">)</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">point</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mf">42.0</span><span class="p">))</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="n">PointData</span><span class="p">(</span>
         <span class="n">data</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">3744</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint16</span><span class="p">),</span>
         <span class="n">mask</span><span class="o">=</span><span class="n">array</span><span class="p">([</span><span class="mi">255</span><span class="p">],</span> <span class="n">dtype</span><span class="o">=</span><span class="n">uint8</span><span class="p">),</span>
-        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">],</span>
+        <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'b1'</span><span class="p">],</span>
         <span class="n">coordinates</span><span class="o">=</span><span class="p">(</span><span class="mf">10.20</span><span class="p">,</span> <span class="o">-</span><span class="mi">42</span><span class="p">),</span>
         <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">),</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;cog.tif&#39;</span><span class="p">],</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s1">'cog.tif'</span><span class="p">],</span>
         <span class="n">metadata</span><span class="o">=</span><span class="p">{}</span>
     <span class="p">)</span>
 </code></pre></div>
@@ -8740,11 +8743,11 @@ with XarrayReader(data) as dst:
 <li>
 <p>remove <code>nodata</code>, <code>unscale</code>, <code>resampling_method</code>, <code>vrt_options</code> and <code>post_process</code> options to <code>Reader</code> init method and replaced with <code>options</code></p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">&quot;bilinear&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">,</span> <span class="n">nodata</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">resampling_method</span><span class="o">=</span><span class="s2">"bilinear"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">COGEO</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;nodata&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;resampling_method&quot;</span><span class="p">:</span> <span class="s2">&quot;bilinear&quot;</span><span class="p">})</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">COGEO</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{</span><span class="s2">"nodata"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"resampling_method"</span><span class="p">:</span> <span class="s2">"bilinear"</span><span class="p">})</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">data</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
 </code></pre></div>
 </li>
@@ -8759,11 +8762,11 @@ with XarrayReader(data) as dst:
 <li>Deprecate <code>rio_tiler.io.GCPCOGReader</code> and allow GPCS dataset to be opened by <code>rio_tiler.io.COGReader</code></li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">GCPCOGReader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">GCPCOGReader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="o">...</span>
 
 <span class="c1"># now, COGReader will find the gcps and create an internal WarpedVRT using the gpcs and crs</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="o">...</span>
 </code></pre></div>
 <ul>
@@ -8799,10 +8802,10 @@ with XarrayReader(data) as dst:
 <li>using a comma <code>,</code> in an expression to define multiple blocks will be replaced by semicolon <code>;</code></li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="n">expression</span> <span class="o">=</span> <span class="s2">&quot;b1+b2,b2&quot;</span>
+<span class="n">expression</span> <span class="o">=</span> <span class="s2">"b1+b2,b2"</span>
 
 <span class="c1"># new</span>
-<span class="n">expression</span> <span class="o">=</span> <span class="s2">&quot;b1+b2;b2&quot;</span>
+<span class="n">expression</span> <span class="o">=</span> <span class="s2">"b1+b2;b2"</span>
 </code></pre></div>
 <p><strong>breaking changes</strong></p>
 <ul>
@@ -8878,12 +8881,12 @@ with XarrayReader(data) as dst:
 </ul>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">COGReader</span>
 
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mf">373185.0</span><span class="p">,</span> <span class="mf">8019284.949381611</span><span class="p">,</span> <span class="mf">639014.9492102272</span><span class="p">,</span> <span class="mf">8286015.0</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
-    <span class="o">&gt;&gt;</span> <span class="s2">&quot;EPSG:32621&quot;</span>
+    <span class="o">&gt;&gt;</span> <span class="s2">"EPSG:32621"</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">geographic_bounds</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="p">(</span><span class="o">-</span><span class="mf">61.28762442711404</span><span class="p">,</span> <span class="mf">72.22979795551834</span><span class="p">,</span> <span class="o">-</span><span class="mf">52.301598718454485</span><span class="p">,</span> <span class="mf">74.66298001264106</span><span class="p">)</span>
@@ -8897,7 +8900,7 @@ with XarrayReader(data) as dst:
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">COGReader</span>
 
 <span class="c1"># For a non-earth dataset there is no available transformation from its own CRS and the default WebMercator TMS CRS.</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="o">&gt;&gt;</span> <span class="ne">UserWarning</span><span class="p">:</span> <span class="n">Cannot</span> <span class="n">determine</span> <span class="nb">min</span><span class="o">/</span><span class="nb">max</span> <span class="n">zoom</span> <span class="n">based</span> <span class="n">on</span> <span class="n">dataset</span> <span class="n">information</span><span class="p">,</span> <span class="n">will</span> <span class="n">default</span> <span class="n">to</span> <span class="n">TMS</span> <span class="nb">min</span><span class="o">/</span><span class="nb">max</span> <span class="n">zoom</span><span class="o">.</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
@@ -8906,15 +8909,15 @@ with XarrayReader(data) as dst:
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">maxzoom</span><span class="p">)</span>
     <span class="o">&gt;&gt;</span> <span class="mi">24</span>
 
-<span class="c1"># if we use a `compatible TMS` then we don&#39;t get warnings</span>
-<span class="n">europa_crs</span> <span class="o">=</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_authority</span><span class="p">(</span><span class="s2">&quot;ESRI&quot;</span><span class="p">,</span> <span class="mi">104915</span><span class="p">)</span>
+<span class="c1"># if we use a `compatible TMS` then we don't get warnings</span>
+<span class="n">europa_crs</span> <span class="o">=</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_authority</span><span class="p">(</span><span class="s2">"ESRI"</span><span class="p">,</span> <span class="mi">104915</span><span class="p">)</span>
 <span class="n">europa_tms</span> <span class="o">=</span> <span class="n">TileMatrixSet</span><span class="o">.</span><span class="n">custom</span><span class="p">(</span>
     <span class="n">crs</span><span class="o">=</span><span class="n">europa_crs</span><span class="p">,</span>
     <span class="n">extent</span><span class="o">=</span><span class="n">europa_crs</span><span class="o">.</span><span class="n">area_of_use</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span>
     <span class="n">matrix_scale</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1</span><span class="p">],</span>
 <span class="p">)</span>
 <span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span>
-    <span class="s2">&quot;https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif&quot;</span><span class="p">,</span>
+    <span class="s2">"https://rio-tiler-dev.s3.amazonaws.com/data/fixtures/cog_nonearth.tif"</span><span class="p">,</span>
     <span class="n">tms</span><span class="o">=</span><span class="n">europa_tms</span><span class="p">,</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
@@ -8951,14 +8954,14 @@ with XarrayReader(data) as dst:
 <li>remove <code>max_size</code> defaults for <code>COGReader.part</code> and <code>COGReader.feature</code>, which will now default to full resolution reading.</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="o">*</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">dst_crs</span><span class="o">=</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="o">=</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
     <span class="c1"># by default image should be max 1024x1024</span>
     <span class="k">assert</span> <span class="nb">max</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">width</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span> <span class="c1"># by default image should be max 1024x1024</span>
     <span class="k">assert</span> <span class="nb">max</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">height</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
 
 <span class="c1"># now (there is no more max_size default)</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="o">*</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">bounds</span><span class="p">,</span> <span class="n">dst_crs</span><span class="o">=</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="o">=</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">width</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">height</span> <span class="o">==</span> <span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="o">.</span><span class="n">height</span>
@@ -8975,12 +8978,12 @@ with XarrayReader(data) as dst:
 </li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="o">-</span><span class="mf">61.287001876638215</span><span class="p">,</span> <span class="mf">15.537756794450583</span><span class="p">,</span> <span class="o">-</span><span class="mf">61.27877967704677</span><span class="p">,</span> <span class="mf">15.542486503997608</span><span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
     <span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="mf">683715.3266400001</span><span class="p">,</span> <span class="mf">1718548.5702</span><span class="p">,</span> <span class="mf">684593.2680000002</span><span class="p">,</span> <span class="mf">1719064.90736</span><span class="p">)</span>
 
@@ -8996,34 +8999,34 @@ with XarrayReader(data) as dst:
 <li>change <code>asset_expression</code> input type from <code>str</code> to <code>Dict[str, str]</code> in <code>rio_tiler.io.base.MultiBaseReader</code> (<a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/434" title="GitHub Pull Request: cogeotiff/rio-tiler #434">cogeotiff/rio-tiler!434</a>)</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;mystac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"mystac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">),</span>
-        <span class="n">asset_expression</span><span class="o">=</span><span class="s2">&quot;b1*2&quot;</span><span class="p">,</span>  <span class="c1"># expression was applied to each asset</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"data1"</span><span class="p">,</span> <span class="s2">"data2"</span><span class="p">),</span>
+        <span class="n">asset_expression</span><span class="o">=</span><span class="s2">"b1*2"</span><span class="p">,</span>  <span class="c1"># expression was applied to each asset</span>
     <span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;mystac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"mystac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">),</span>
-        <span class="n">asset_expression</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data1&quot;</span><span class="p">:</span> <span class="s2">&quot;b1*2&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">:</span> <span class="s2">&quot;b2*100&quot;</span><span class="p">},</span>  <span class="c1"># we can now pass per asset expression</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"data1"</span><span class="p">,</span> <span class="s2">"data2"</span><span class="p">),</span>
+        <span class="n">asset_expression</span><span class="o">=</span><span class="p">{</span><span class="s2">"data1"</span><span class="p">:</span> <span class="s2">"b1*2"</span><span class="p">,</span> <span class="s2">"data2"</span><span class="p">:</span> <span class="s2">"b2*100"</span><span class="p">},</span>  <span class="c1"># we can now pass per asset expression</span>
     <span class="p">)</span>
 </code></pre></div>
 <ul>
 <li>add <code>asset_indexes</code> in <code>rio_tiler.io.base.MultiBaseReader</code>, which replaces <code>indexes</code>. (<a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/434" title="GitHub Pull Request: cogeotiff/rio-tiler #434">cogeotiff/rio-tiler!434</a>)</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;mystac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"mystac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">),</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"data1"</span><span class="p">,</span> <span class="s2">"data2"</span><span class="p">),</span>
         <span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,),</span>  <span class="c1"># indexes was applied to each asset</span>
     <span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;mystac.json&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"mystac.json"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
-        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">&quot;data1&quot;</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">),</span>
-        <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;data1&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">&quot;data2&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>  <span class="c1"># we can now pass per asset indexes</span>
+        <span class="n">assets</span><span class="o">=</span><span class="p">(</span><span class="s2">"data1"</span><span class="p">,</span> <span class="s2">"data2"</span><span class="p">),</span>
+        <span class="n">asset_indexes</span><span class="o">=</span><span class="p">{</span><span class="s2">"data1"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span> <span class="s2">"data2"</span><span class="p">:</span> <span class="mi">2</span><span class="p">},</span>  <span class="c1"># we can now pass per asset indexes</span>
     <span class="p">)</span>
 </code></pre></div>
 <p><strong>removed</strong></p>
@@ -9048,7 +9051,7 @@ with XarrayReader(data) as dst:
 <li>make <code>ImageStatistics.valid_percent</code> a value between 0 and 100 (instead of 0 and 1) (author @param-thakker, <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/400" title="GitHub Pull Request: cogeotiff/rio-tiler #400">cogeotiff/rio-tiler!400</a>)</li>
 <li>
 <p>add <code>fetch_options</code> to <code>STACReader</code> to allow custom configuration to the fetch client (<a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/404" title="GitHub Pull Request: cogeotiff/rio-tiler #404">cogeotiff/rio-tiler!404</a>)</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;s3://...&quot;</span><span class="p">,</span> <span class="n">fetch_options</span><span class="o">=</span><span class="p">{</span><span class="s2">&quot;request_pays&quot;</span><span class="p">:</span> <span class="kc">True</span><span class="p">}):</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"s3://..."</span><span class="p">,</span> <span class="n">fetch_options</span><span class="o">=</span><span class="p">{</span><span class="s2">"request_pays"</span><span class="p">:</span> <span class="kc">True</span><span class="p">}):</span>
     <span class="k">pass</span>
 </code></pre></div>
 </li>
@@ -9061,20 +9064,20 @@ with XarrayReader(data) as dst:
 <li>add auto-rescaling in <code>ImageData.render</code> method to avoid error when datatype is not supported by the output driver (<a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/391" title="GitHub Pull Request: cogeotiff/rio-tiler #391">cogeotiff/rio-tiler!391</a>)</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before - exit with error</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;img.png&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">ERROR</span><span class="p">)</span> <span class="n">CPLE_NotSupportedError</span><span class="p">:</span> <span class="s2">&quot;PNG driver doesn&#39;t support data type Float32. Only eight bit (Byte) and sixteen bit (UInt16) bands supported&quot;</span><span class="o">.</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"img.png"</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">))</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">ERROR</span><span class="p">)</span> <span class="n">CPLE_NotSupportedError</span><span class="p">:</span> <span class="s2">"PNG driver doesn't support data type Float32. Only eight bit (Byte) and sixteen bit (UInt16) bands supported"</span><span class="o">.</span>
 
 <span class="c1"># now - print a warning</span>
-<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;img.png&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
-    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;float32&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">WARNING</span><span class="p">)</span> <span class="n">InvalidDatatypeWarning</span><span class="p">:</span> <span class="s2">&quot;Invalid type: `float32` for the `PNG` driver. Data will be rescaled using min/max type bounds&quot;</span><span class="o">.</span>
+<span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"img.png"</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+    <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"float32"</span><span class="p">))</span><span class="o">.</span><span class="n">render</span><span class="p">())</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="n">WARNING</span><span class="p">)</span> <span class="n">InvalidDatatypeWarning</span><span class="p">:</span> <span class="s2">"Invalid type: `float32` for the `PNG` driver. Data will be rescaled using min/max type bounds"</span><span class="o">.</span>
 </code></pre></div>
 <p><strong>breaking changes</strong></p>
 <ul>
 <li>change type of <code>in_range</code> option in <code>ImageData.render</code> to <code>Sequence[Tuple[NumType, NumType]]</code> (<a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/391" title="GitHub Pull Request: cogeotiff/rio-tiler #391">cogeotiff/rio-tiler!391</a>)</li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint16&quot;</span><span class="p">))</span>
+<div class="highlight"><pre><span></span><code><span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint16"</span><span class="p">))</span>
 
 <span class="c1"># before - Tuple[NumType, NumType]</span>
 <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">in_range</span><span class="o">=</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1000</span><span class="p">))</span>
@@ -9107,8 +9110,8 @@ with XarrayReader(data) as dst:
 </ul>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">img_profiles</span>
 
-<span class="n">jpeg</span> <span class="o">=</span> <span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jpeg&quot;</span><span class="p">)</span>
-<span class="n">jpg</span> <span class="o">=</span> <span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;jpg&quot;</span><span class="p">)</span>
+<span class="n">jpeg</span> <span class="o">=</span> <span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jpeg"</span><span class="p">)</span>
+<span class="n">jpg</span> <span class="o">=</span> <span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"jpg"</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">jpeg</span> <span class="o">==</span> <span class="n">jpg</span>
 </code></pre></div>
 <h2 id="204-2021-03-09">2.0.4 (2021-03-09)<a class="headerlink" href="#204-2021-03-09" title="Permanent link">&para;</a></h2>
@@ -9195,7 +9198,7 @@ with XarrayReader(data) as dst:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">COGReader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;/Users/vincentsarago/S-2_20200422_COG.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"/Users/vincentsarago/S-2_20200422_COG.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">r</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
     <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">r</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
 
@@ -9212,28 +9215,28 @@ with XarrayReader(data) as dst:
 </li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># Before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;/Users/vincentsarago/S-2_20200422_COG.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"/Users/vincentsarago/S-2_20200422_COG.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">i</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s2">&quot;band_metadata&quot;</span><span class="p">])</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s2">&quot;band_descriptions&quot;</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s2">"band_metadata"</span><span class="p">])</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="p">[</span><span class="s2">"band_descriptions"</span><span class="p">])</span>
 
 <span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="p">{})]</span>
-<span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">&#39;band1&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;band2&#39;</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">&#39;band3&#39;</span><span class="p">)]</span>
+<span class="p">[(</span><span class="mi">1</span><span class="p">,</span> <span class="s1">'band1'</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">'band2'</span><span class="p">),</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="s1">'band3'</span><span class="p">)]</span>
 
 <span class="c1"># Now</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;/Users/vincentsarago/S-2_20200422_COG.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"/Users/vincentsarago/S-2_20200422_COG.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">i</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">band_metadata</span><span class="p">)</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">i</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
 
-<span class="p">[(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="p">{})]</span>
-<span class="p">[(</span><span class="s1">&#39;1&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;2&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">),</span> <span class="p">(</span><span class="s1">&#39;3&#39;</span><span class="p">,</span> <span class="s1">&#39;&#39;</span><span class="p">)]</span>
+<span class="p">[(</span><span class="s1">'1'</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s1">'2'</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s1">'3'</span><span class="p">,</span> <span class="p">{})]</span>
+<span class="p">[(</span><span class="s1">'1'</span><span class="p">,</span> <span class="s1">''</span><span class="p">),</span> <span class="p">(</span><span class="s1">'2'</span><span class="p">,</span> <span class="s1">''</span><span class="p">),</span> <span class="p">(</span><span class="s1">'3'</span><span class="p">,</span> <span class="s1">''</span><span class="p">)]</span>
 </code></pre></div>
 <ul>
 <li>change output form for <code>stats</code></li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># Before</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;/Users/vincentsarago/S-2_20200422_COG.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"/Users/vincentsarago/S-2_20200422_COG.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">stats</span><span class="p">())</span>
 <span class="p">{</span>
     <span class="mi">1</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
@@ -9242,20 +9245,20 @@ with XarrayReader(data) as dst:
 <span class="p">}</span>
 
 <span class="c1"># Now</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;/Users/vincentsarago/S-2_20200422_COG.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"/Users/vincentsarago/S-2_20200422_COG.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">stats</span><span class="p">())</span>
 <span class="p">{</span>
-    <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
-    <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
-    <span class="s2">&quot;3&quot;</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>
+    <span class="s2">"1"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
+    <span class="s2">"2"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">},</span>
+    <span class="s2">"3"</span><span class="p">:</span> <span class="p">{</span><span class="o">...</span><span class="p">}</span>
 <span class="p">}</span>
 </code></pre></div>
 <ul>
 <li>updated <code>rio_tiler.utils._stats</code> function to replace <code>pc</code> by <code>percentiles</code></li>
 </ul>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;/Users/vincentsarago/S-2_20200422_COG.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">stats</span><span class="p">()[</span><span class="s2">&quot;1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
-<span class="p">{</span><span class="s2">&quot;percentiles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mf">19.0</span><span class="p">,</span> <span class="mf">168.0</span><span class="p">],</span> <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mf">255.0</span><span class="p">,</span> <span class="o">...</span><span class="p">}</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"/Users/vincentsarago/S-2_20200422_COG.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">stats</span><span class="p">()[</span><span class="s2">"1"</span><span class="p">]</span><span class="o">.</span><span class="n">json</span><span class="p">())</span>
+<span class="p">{</span><span class="s2">"percentiles"</span><span class="p">:</span> <span class="p">[</span><span class="mf">19.0</span><span class="p">,</span> <span class="mf">168.0</span><span class="p">],</span> <span class="s2">"min"</span><span class="p">:</span> <span class="mf">0.0</span><span class="p">,</span> <span class="s2">"max"</span><span class="p">:</span> <span class="mf">255.0</span><span class="p">,</span> <span class="o">...</span><span class="p">}</span>
 </code></pre></div>
 <ul>
 <li>make <code>rio_tiler.colormap.ColorMap</code> object immutable. Registering a new colormap will new returns a now instance of ColorMap(<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/cogeotiff/rio-tiler/issues/289" title="GitHub Issue: cogeotiff/rio-tiler #289">cogeotiff/rio-tiler#289</a>).</li>
@@ -9264,10 +9267,10 @@ with XarrayReader(data) as dst:
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.colormap</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmap</span> <span class="c1"># default cmap</span>
 
 <span class="c1"># previous</span>
-<span class="n">cmap</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">&quot;acmap&quot;</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">...</span><span class="p">})</span>
+<span class="n">cmap</span><span class="o">.</span><span class="n">register</span><span class="p">(</span><span class="s2">"acmap"</span><span class="p">,</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">...</span><span class="p">})</span>
 
 <span class="c1"># Now</span>
-<span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">register</span><span class="p">({</span><span class="s2">&quot;acmap&quot;</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">...</span><span class="p">}})</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">register</span><span class="p">({</span><span class="s2">"acmap"</span><span class="p">:</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span> <span class="o">...</span><span class="p">}})</span>
 </code></pre></div>
 <ul>
 <li>

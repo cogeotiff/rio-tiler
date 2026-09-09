@@ -2267,6 +2267,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.utils._check_geographic_bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_check_geographic_bounds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.utils._chunks" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2712,6 +2723,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_array_gdal_name
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils._check_geographic_bounds" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_check_geographic_bounds
       
     </span>
   </a>
@@ -3198,6 +3220,27 @@
 <div class="doc doc-object doc-function">
 
 
+<h3 id="rio_tiler.utils._check_geographic_bounds" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_check_geographic_bounds</span>
+
+
+<a href="#rio_tiler.utils._check_geographic_bounds" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_check_geographic_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">xres</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">yres</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check if the bounds are within valid Geographic coordinates and tolerate float residue.</p>
+<p>Ref: <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/994" title="GitHub Pull Request: cogeotiff/rio-tiler #994">cogeotiff/rio-tiler!994</a></p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="rio_tiler.utils._chunks" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">_chunks</span>
 
@@ -3465,25 +3508,25 @@
 <span class="gp">&gt;&gt;&gt; </span><span class="n">get_array_statistics</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="go">[</span>
 <span class="go">    {</span>
-<span class="go">        &#39;min&#39;: 0.0,</span>
-<span class="go">        &#39;max&#39;: 0.0,</span>
-<span class="go">        &#39;mean&#39;: 0.0,</span>
-<span class="go">        &#39;count&#39;: 65536.0,</span>
-<span class="go">        &#39;sum&#39;: 0.0,</span>
-<span class="go">        &#39;std&#39;: 0.0,</span>
-<span class="go">        &#39;median&#39;: 0.0,</span>
-<span class="go">        &#39;majority&#39;: 0.0,</span>
-<span class="go">        &#39;minority&#39;: 0.0,</span>
-<span class="go">        &#39;unique&#39;: 1.0,</span>
-<span class="go">        &#39;percentile_2&#39;: 0.0,</span>
-<span class="go">        &#39;percentile_98&#39;: 0.0,</span>
-<span class="go">        &#39;histogram&#39;: [</span>
+<span class="go">        'min': 0.0,</span>
+<span class="go">        'max': 0.0,</span>
+<span class="go">        'mean': 0.0,</span>
+<span class="go">        'count': 65536.0,</span>
+<span class="go">        'sum': 0.0,</span>
+<span class="go">        'std': 0.0,</span>
+<span class="go">        'median': 0.0,</span>
+<span class="go">        'majority': 0.0,</span>
+<span class="go">        'minority': 0.0,</span>
+<span class="go">        'unique': 1.0,</span>
+<span class="go">        'percentile_2': 0.0,</span>
+<span class="go">        'percentile_98': 0.0,</span>
+<span class="go">        'histogram': [</span>
 <span class="go">            [0, 0, 0, 0, 0, 65536, 0, 0, 0, 0],</span>
 <span class="go">            [-0.5, -0.4, -0.3, -0.19999999999999996, -0.09999999999999998, 0.0, 0.10000000000000009, 0.20000000000000007, 0.30000000000000004, 0.4, 0.5]</span>
 <span class="go">        ],</span>
-<span class="go">        &#39;valid_pixels&#39;: 65536.0,</span>
-<span class="go">        &#39;masked_pixels&#39;: 0.0,</span>
-<span class="go">        &#39;valid_percent&#39;: 100.0</span>
+<span class="go">        'valid_pixels': 65536.0,</span>
+<span class="go">        'masked_pixels': 0.0,</span>
+<span class="go">        'valid_percent': 100.0</span>
 <span class="go">    }</span>
 <span class="go">]</span>
 </code></pre></div>
@@ -3932,7 +3975,7 @@ multispectral intensities.</p>
 
 
 <a href="#rio_tiler.utils.render" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">render</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">img_format</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">&#39;PNG&#39;</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.ColorMapType">ColorMapType</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">creation_options</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">render</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">img_format</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">'PNG'</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.ColorMapType">ColorMapType</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">creation_options</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3996,10 +4039,10 @@ multispectral intensities.</p>
 
 
 <p><span class="doc-section-title">Examples:</span></p>
-    <div class="codehilite"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+    <div class="codehilite"><pre><span></span><code><span class="gp">&gt;&gt;&gt; </span><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
 <span class="go">    img = src.preview()</span>
-<span class="go">    with open(&#39;test.jpg&#39;, &#39;wb&#39;) as f:</span>
-<span class="go">        f.write(render(img.data, img.mask, img_format=&quot;jpeg&quot;))</span>
+<span class="go">    with open('test.jpg', 'wb') as f:</span>
+<span class="go">        f.write(render(img.data, img.mask, img_format="jpeg"))</span>
 </code></pre></div>
 
 
@@ -4015,7 +4058,7 @@ multispectral intensities.</p>
 
 
 <a href="#rio_tiler.utils.resize_array" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">resize_array</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">&#39;nearest&#39;</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">resize_array</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">

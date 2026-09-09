@@ -2263,7 +2263,7 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my-tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my-tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="c1"># Read data for a given geojson polygon</span>
     <span class="n">img</span><span class="p">:</span> <span class="n">ImageData</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">feature</span><span class="p">(</span><span class="n">geojson_feature</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>  <span class="c1"># we limit the max_size to 1024</span>
 </code></pre></div>
@@ -2274,14 +2274,14 @@ function and the <code>.part()</code> method. The below process is roughly what 
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># Use Reader to open and read the dataset</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
 
     <span class="c1"># Get BBOX of the polygon</span>
     <span class="n">bbox</span> <span class="o">=</span> <span class="n">featureBounds</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
 
     <span class="c1"># Read part of the data overlapping with the geometry bbox</span>
     <span class="c1"># assuming that the geometry coordinates are in web mercator</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="o">=</span><span class="sa">f</span><span class="s2">&quot;EPSG:3857&quot;</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="o">=</span><span class="sa">f</span><span class="s2">"EPSG:3857"</span><span class="p">,</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">1024</span><span class="p">)</span>
 
     <span class="c1"># Rasterize geometry using the same geotransform parameters</span>
     <span class="n">cutline</span> <span class="o">=</span> <span class="n">rasterize</span><span class="p">(</span>
@@ -2301,19 +2301,19 @@ option with the .part(), .preview(), or .tile() methods:</p>
 <span class="n">bbox</span> <span class="o">=</span> <span class="n">featureBounds</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
 
 <span class="c1"># Use Reader to open and read the dataset</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="c1"># Create WTT Cutline</span>
-    <span class="n">cutline</span> <span class="o">=</span> <span class="n">create_cutline</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">geometry_crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">)</span>
+    <span class="n">cutline</span> <span class="o">=</span> <span class="n">create_cutline</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="p">,</span> <span class="n">feat</span><span class="p">,</span> <span class="n">geometry_crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">)</span>
 
     <span class="c1"># Get a part of the geotiff but use the cutline to mask the data</span>
     <span class="n">bbox</span> <span class="o">=</span> <span class="n">featureBounds</span><span class="p">(</span><span class="n">feat</span><span class="p">)</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">vrt_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cutline&#39;</span><span class="p">:</span> <span class="n">cutline</span><span class="p">})</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">,</span> <span class="n">vrt_options</span><span class="o">=</span><span class="p">{</span><span class="s1">'cutline'</span><span class="p">:</span> <span class="n">cutline</span><span class="p">})</span>
 
     <span class="c1"># Get a preview of the whole geotiff but use the cutline to mask the data</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">vrt_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cutline&#39;</span><span class="p">:</span> <span class="n">cutline</span><span class="p">})</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">vrt_options</span><span class="o">=</span><span class="p">{</span><span class="s1">'cutline'</span><span class="p">:</span> <span class="n">cutline</span><span class="p">})</span>
 
     <span class="c1"># Read a mercator tile and use the cutline to mask the data</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">vrt_options</span><span class="o">=</span><span class="p">{</span><span class="s1">&#39;cutline&#39;</span><span class="p">:</span> <span class="n">cutline</span><span class="p">})</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="n">vrt_options</span><span class="o">=</span><span class="p">{</span><span class="s1">'cutline'</span><span class="p">:</span> <span class="n">cutline</span><span class="p">})</span>
 </code></pre></div>
 
 

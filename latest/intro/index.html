@@ -2471,7 +2471,7 @@
 <span class="n">tile_zoom</span> <span class="o">=</span> <span class="mi">21</span>
 
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif&quot;</span>
+  <span class="s2">"http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="c1"># Read data for a slippy map tile</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">,</span> <span class="n">tile_y</span><span class="p">,</span> <span class="n">tile_zoom</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
@@ -2509,7 +2509,7 @@
 <p>The <code>rio_tiler.io.rasterio.Reader</code> class has other interesting features, please see <a href="../readers/">User Guide - Readers</a>.</p>
 <h2 id="render-the-data-as-an-image-pngjpeg">Render the data as an image (PNG/JPEG)<a class="headerlink" href="#render-the-data-as-an-image-pngjpeg" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif&quot;</span>
+  <span class="s2">"http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">691559</span><span class="p">,</span> <span class="mi">956905</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
 
@@ -2517,16 +2517,16 @@
     <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">()</span>
 
     <span class="c1"># Encode the data in JPEG</span>
-    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;JPEG&quot;</span><span class="p">)</span>
+    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">"JPEG"</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="rescale-non-byte-data-andor-apply-colormap">Rescale non-byte data and/or apply colormap<a class="headerlink" href="#rescale-non-byte-data-andor-apply-colormap" title="Permanent link">&para;</a></h2>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.colormap</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmap</span>
 
 <span class="c1"># Get Colormap</span>
-<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;viridis&quot;</span><span class="p">)</span>
+<span class="n">cm</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"viridis"</span><span class="p">)</span>
 
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;https://sentinel-cogs.s3.amazonaws.com/sentinel-s2-l2a-cogs/29/R/KH/2020/2/S2A_29RKH_20200219_0_L2A/B01.tif&quot;</span><span class="p">,</span>
+  <span class="s2">"https://sentinel-cogs.s3.amazonaws.com/sentinel-s2-l2a-cogs/29/R/KH/2020/2/S2A_29RKH_20200219_0_L2A/B01.tif"</span><span class="p">,</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">239</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
 
@@ -2543,36 +2543,36 @@
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.profiles</span><span class="w"> </span><span class="kn">import</span> <span class="n">img_profiles</span>
 
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif&quot;</span>
+  <span class="s2">"http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">691559</span><span class="p">,</span> <span class="mi">956905</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
 
-    <span class="n">options</span> <span class="o">=</span> <span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;webp&quot;</span><span class="p">)</span>
+    <span class="n">options</span> <span class="o">=</span> <span class="n">img_profiles</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"webp"</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">options</span><span class="p">)</span>
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span><span class="s1">&#39;quality&#39;</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span> <span class="s1">&#39;lossless&#39;</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+    <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span><span class="s1">'quality'</span><span class="p">:</span> <span class="mi">75</span><span class="p">,</span> <span class="s1">'lossless'</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
 
-    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;webp&quot;</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
+    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">"webp"</span><span class="p">,</span> <span class="o">**</span><span class="n">options</span><span class="p">)</span>
 </code></pre></div>
 <p>Note: Starting with <code>rio-tiler==2.1</code>, when the output datatype is not valid for a driver (e.g <code>float</code> for <code>PNG</code>),
 <code>rio-tiler</code> will automatically rescale the data using the <code>min/max</code> value for the datatype (ref: <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/391" title="GitHub Pull Request: cogeotiff/rio-tiler #391">cogeotiff/rio-tiler!391</a>).</p>
 <h2 id="write-image-to-file">Write image to file<a class="headerlink" href="#write-image-to-file" title="Permanent link">&para;</a></h2>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;my.png&quot;</span><span class="p">,</span> <span class="s2">&quot;wb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"my.png"</span><span class="p">,</span> <span class="s2">"wb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
   <span class="n">f</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">buff</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="numpytile">NumpyTile<a class="headerlink" href="#numpytile" title="Permanent link">&para;</a></h2>
 <p>You can also export image data to a numpy binary format (<code>NPY</code>).</p>
 <div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;https://sentinel-cogs.s3.amazonaws.com/sentinel-s2-l2a-cogs/29/R/KH/2020/2/S2A_29RKH_20200219_0_L2A/B01.tif&quot;</span><span class="p">,</span>
+  <span class="s2">"https://sentinel-cogs.s3.amazonaws.com/sentinel-s2-l2a-cogs/29/R/KH/2020/2/S2A_29RKH_20200219_0_L2A/B01.tif"</span><span class="p">,</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">239</span><span class="p">,</span> <span class="mi">220</span><span class="p">,</span> <span class="mi">9</span><span class="p">)</span>
 
-    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;npy&quot;</span><span class="p">)</span>
+    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">"npy"</span><span class="p">)</span>
 
     <span class="n">npy_tile</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">buff</span><span class="p">))</span>
     <span class="k">assert</span> <span class="n">npy_tile</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>  <span class="c1"># mask is added to the end of the data</span>
 
-    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;npy&quot;</span><span class="p">,</span> <span class="n">add_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
+    <span class="n">buff</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">"npy"</span><span class="p">,</span> <span class="n">add_mask</span><span class="o">=</span><span class="kc">False</span><span class="p">)</span>
 
     <span class="n">npy_tile</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="n">BytesIO</span><span class="p">(</span><span class="n">buff</span><span class="p">))</span>
     <span class="k">assert</span> <span class="n">npy_tile</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>

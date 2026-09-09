@@ -2265,13 +2265,13 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">pyproj</span><span class="w"> </span><span class="kn">import</span> <span class="n">CRS</span> <span class="k">as</span> <span class="n">projCRS</span>
 
 <span class="c1"># By default we use WebMercator TMS</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">3857</span><span class="p">)</span>  <span class="c1"># default image output is the TMS crs (WebMercator)</span>
 
 <span class="c1"># Print default grids</span>
 <span class="k">for</span> <span class="n">name</span> <span class="ow">in</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">list</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">&quot;-&quot;</span><span class="p">,</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">rasterio_crs</span><span class="p">)</span>
+    <span class="nb">print</span><span class="p">(</span><span class="n">name</span><span class="p">,</span> <span class="s2">"-"</span><span class="p">,</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="n">name</span><span class="p">)</span><span class="o">.</span><span class="n">rasterio_crs</span><span class="p">)</span>
 
 <span class="o">&gt;&gt;&gt;</span> <span class="n">CanadianNAD83_LCC</span> <span class="o">-</span> <span class="n">EPSG</span><span class="p">:</span><span class="mi">3978</span>
     <span class="n">EuropeanETRS89_LAEAQuad</span> <span class="o">-</span> <span class="n">EPSG</span><span class="p">:</span><span class="mi">3035</span>
@@ -2287,8 +2287,8 @@
 
 
 <span class="c1"># Use EPSG:4326 (WGS84) grid</span>
-<span class="n">wgs84_grid</span> <span class="o">=</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;WorldCRS84Quad&quot;</span><span class="p">)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">,</span> <span class="n">tms</span><span class="o">=</span><span class="n">wgs84_grid</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="n">wgs84_grid</span> <span class="o">=</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"WorldCRS84Quad"</span><span class="p">)</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">,</span> <span class="n">tms</span><span class="o">=</span><span class="n">wgs84_grid</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="mi">256</span>
@@ -2299,11 +2299,11 @@
 <span class="n">epsg3031TMS</span> <span class="o">=</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">TileMatrixSet</span><span class="o">.</span><span class="n">custom</span><span class="p">(</span>
     <span class="n">extent</span><span class="p">,</span> 
     <span class="n">projCRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">3031</span><span class="p">),</span> 
-    <span class="n">identifier</span><span class="o">=</span><span class="s2">&quot;MyCustomTmsEPSG3031&quot;</span><span class="p">,</span>
+    <span class="n">identifier</span><span class="o">=</span><span class="s2">"MyCustomTmsEPSG3031"</span><span class="p">,</span>
     <span class="n">tile_width</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
     <span class="n">tile_height</span><span class="o">=</span><span class="mi">512</span><span class="p">,</span>
 <span class="p">)</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;my.tif&quot;</span><span class="p">,</span> <span class="n">tms</span><span class="o">=</span><span class="n">epsg3031TMS</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"my.tif"</span><span class="p">,</span> <span class="n">tms</span><span class="o">=</span><span class="n">epsg3031TMS</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">crs</span> <span class="o">==</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">3031</span><span class="p">)</span>
     <span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">width</span> <span class="o">==</span> <span class="mi">512</span>

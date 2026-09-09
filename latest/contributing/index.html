@@ -2422,7 +2422,7 @@ uv<span class="w"> </span>sync
 <div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>pytest<span class="w"> </span>--cov<span class="w"> </span>rio_tiler<span class="w"> </span>--cov-report<span class="w"> </span>term-missing
 </code></pre></div>
 <h5 id="performance-tests">Performance tests<a class="headerlink" href="#performance-tests" title="Permanent link">&para;</a></h5>
-<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>performance<span class="w"> </span>pytest<span class="w"> </span>tests/benchmarks/benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-columns<span class="w"> </span><span class="s1">&#39;min, max, mean, median&#39;</span><span class="w"> </span>--benchmark-sort<span class="w"> </span><span class="s1">&#39;min&#39;</span>
+<div class="highlight"><pre><span></span><code>uv<span class="w"> </span>run<span class="w"> </span>--group<span class="w"> </span>performance<span class="w"> </span>pytest<span class="w"> </span>tests/benchmarks/benchmarks.py<span class="w"> </span>--benchmark-only<span class="w"> </span>--benchmark-columns<span class="w"> </span><span class="s1">'min, max, mean, median'</span><span class="w"> </span>--benchmark-sort<span class="w"> </span><span class="s1">'min'</span>
 </code></pre></div>
 <h3 id="pre-commit">pre-commit<a class="headerlink" href="#pre-commit" title="Permanent link">&para;</a></h3>
 <p>This repo is set to use <code>pre-commit</code> to run <em>isort</em>, <em>flake8</em>, <em>pydocstring</em>, <em>black</em> ("uncompromising Python code formatter") and mypy when committing new code.</p>

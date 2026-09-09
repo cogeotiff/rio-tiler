@@ -2457,12 +2457,12 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 7.0
 <h4 id="bounds">Bounds<a class="headerlink" href="#bounds" title="Permanent link">&para;</a></h4>
 <p>The <code>bounds</code> property was replaced from the <code>geographic bounds</code> to the dataset <code>bounds</code>, and the associated CRS was also added as a new property.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">geographic_bounds</span> <span class="o">==</span> <span class="n">info</span><span class="o">.</span><span class="n">bounds</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">bounds</span> <span class="o">==</span> <span class="n">info</span><span class="o">.</span><span class="n">bounds</span>
     <span class="k">assert</span> <span class="n">info</span><span class="o">.</span><span class="n">crs</span>
@@ -2470,14 +2470,14 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 7.0
 <h4 id="minmax-zooms">Min/Max zooms<a class="headerlink" href="#minmax-zooms" title="Permanent link">&para;</a></h4>
 <p>We removed the <code>minzoom</code> and <code>maxzoom</code> properties from the <code>rio_tiler.models.Info</code> (and removed the <code>SpatialInfo</code> model). We chose to removed any <code>external</code> geographic metadata to ease the use of the <code>info()</code> method.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
     <span class="k">assert</span> <span class="n">info</span><span class="o">.</span><span class="n">minzoom</span>
     <span class="k">assert</span> <span class="n">info</span><span class="o">.</span><span class="n">maxzoom</span>
 
 <span class="c1"># now</span>
-<span class="c1"># The min/max zooms are still Reader&#39;s properties</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="c1"># The min/max zooms are still Reader's properties</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">minzoom</span>
     <span class="k">assert</span> <span class="n">src</span><span class="o">.</span><span class="n">maxzoom</span>
 </code></pre></div>
@@ -2487,11 +2487,11 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 7.0
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 
 <span class="c1"># before</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">,</span> <span class="n">geographic_crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">))</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">,</span> <span class="n">geographic_crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">))</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">bounds</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">geographic_bounds</span>
 
 <span class="c1"># now</span>
-<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">&quot;cog.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="s2">"cog.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">bounds</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">))</span>
 </code></pre></div>
 <h2 id="colormaps">ColorMaps<a class="headerlink" href="#colormaps" title="Permanent link">&para;</a></h2>
@@ -2499,10 +2499,10 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 7.0
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.colormap</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmap</span>
 
 <span class="c1"># before</span>
-<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Viridis&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Viridis"</span><span class="p">)</span>
 
 <span class="c1"># now</span>
-<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;Viridis&quot;</span><span class="p">)</span>
+<span class="k">assert</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"Viridis"</span><span class="p">)</span>
 <span class="o">&gt;&gt;</span> <span class="n">InvalidColorMapName</span><span class="p">:</span> <span class="n">Invalid</span> <span class="n">colormap</span> <span class="n">name</span><span class="p">:</span> <span class="n">Viridis</span>
 </code></pre></div>
 <h2 id="new-features">New Features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h2>
@@ -2518,14 +2518,14 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 7.0
     <span class="n">include_asset_types</span><span class="p">:</span> <span class="n">Set</span><span class="p">[</span><span class="nb">str</span><span class="p">]</span> <span class="o">=</span> <span class="n">attr</span><span class="o">.</span><span class="n">ib</span><span class="p">(</span><span class="n">default</span><span class="o">=</span><span class="n">valid_types</span><span class="p">)</span>
 
     <span class="k">def</span><span class="w"> </span><span class="nf">_get_reader</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">asset_info</span><span class="p">:</span> <span class="n">AssetInfo</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n">Type</span><span class="p">[</span><span class="n">BaseReader</span><span class="p">]:</span>
-<span class="w">        </span><span class="sd">&quot;&quot;&quot;Get Asset Reader.&quot;&quot;&quot;</span>
-        <span class="n">asset_type</span> <span class="o">=</span> <span class="n">asset_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;type&quot;</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
+<span class="w">        </span><span class="sd">"""Get Asset Reader."""</span>
+        <span class="n">asset_type</span> <span class="o">=</span> <span class="n">asset_info</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"type"</span><span class="p">,</span> <span class="kc">None</span><span class="p">)</span>
 
         <span class="k">if</span> <span class="n">asset_type</span> <span class="ow">and</span> <span class="n">asset_type</span> <span class="ow">in</span> <span class="p">[</span>
-            <span class="s2">&quot;application/x-hdf5&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;application/x-hdf&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;application/vnd.zarr&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;application/x-netcdf&quot;</span><span class="p">,</span>
+            <span class="s2">"application/x-hdf5"</span><span class="p">,</span>
+            <span class="s2">"application/x-hdf"</span><span class="p">,</span>
+            <span class="s2">"application/vnd.zarr"</span><span class="p">,</span>
+            <span class="s2">"application/x-netcdf"</span><span class="p">,</span>
 
         <span class="p">]:</span>
             <span class="k">return</span> <span class="n">XarrayReader</span>
@@ -2550,8 +2550,8 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 7.0
 </li>
 <li>
 <p>add support for GDAL VRT Connection string for STAC Assets</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">&quot;file.grib&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="n">info</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="s2">&quot;vrt://asset?bands=1&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">STACReader</span><span class="p">(</span><span class="s2">"file.grib"</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
+    <span class="n">info</span> <span class="o">=</span> <span class="n">stac</span><span class="o">.</span><span class="n">info</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="s2">"vrt://asset?bands=1"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>

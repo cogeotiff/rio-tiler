@@ -2672,11 +2672,11 @@ development experience in editors and tools.</p>
 to enable accessing the source rasterio dataset.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.main</span><span class="w"> </span><span class="kn">import</span> <span class="n">tile</span> <span class="k">as</span> <span class="n">cogTiler</span>
-<span class="n">tile</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">cogTiler</span><span class="p">(</span><span class="s1">&#39;my_tif.tif&#39;</span><span class="p">,</span> <span class="mi">691559</span><span class="p">,</span> <span class="mi">956905</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
+<span class="n">tile</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">cogTiler</span><span class="p">(</span><span class="s1">'my_tif.tif'</span><span class="p">,</span> <span class="mi">691559</span><span class="p">,</span> <span class="mi">956905</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
 
 <span class="c1"># v2</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">COGReader</span>
-<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">691559</span><span class="p">,</span> <span class="mi">956905</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">tilesize</span><span class="o">=</span><span class="mi">256</span><span class="p">)</span>
 
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">dataset</span><span class="p">)</span> <span class="c1"># rasterio dataset (returned by rasterio.open())</span>
@@ -2685,8 +2685,8 @@ to enable accessing the source rasterio dataset.</p>
     <span class="nb">print</span><span class="p">(</span><span class="n">cog</span><span class="o">.</span><span class="n">colormap</span><span class="p">)</span>     <span class="c1"># internal colormap</span>
 </code></pre></div>
 <p>Expression support is now directly available in the <code>COGReader</code></p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
-    <span class="n">tile</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">691559</span><span class="p">,</span> <span class="mi">956905</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="n">COGReader</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">cog</span><span class="p">:</span>
+    <span class="n">tile</span><span class="p">,</span> <span class="n">mask</span> <span class="o">=</span> <span class="n">cog</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">691559</span><span class="p">,</span> <span class="mi">956905</span><span class="p">,</span> <span class="mi">21</span><span class="p">,</span> <span class="n">expression</span><span class="o">=</span><span class="s2">"b1/b2"</span><span class="p">)</span>
 </code></pre></div>
 <p>See <a href="../../readers/#cogreader"><code>COGReader</code></a> amd <a href="../../readers/#stacreader"><code>STACReader</code></a> for more info.</p>
 <h2 id="internal-api-rio_tilerreader">Internal API: <strong>rio_tiler.reader</strong><a class="headerlink" href="#internal-api-rio_tilerreader" title="Permanent link">&para;</a></h2>
@@ -2694,7 +2694,7 @@ to enable accessing the source rasterio dataset.</p>
 <h3 id="tile">tile<a class="headerlink" href="#tile" title="Permanent link">&para;</a></h3>
 <p>In <code>rio_tiler</code> v1 most of the magic was happening in <a href="https://github.com/cogeotiff/rio-tiler/blob/4286e55d43172040b4027575a845532e55a0fdf9/rio_tiler/utils.py#L337-L458"><code>rio_tiler.utils._tile_read</code></a>. In the version 2, this function is now split in two, <code>rio_tiler.reader.part</code> and <code>rio_tiler_reader.read</code>, to reduce code reutilisation and to make the code more robust. The <code>part</code> function now takes <code>height</code> and <code>width</code> instead of a unique <code>tilesize</code> to specify the output array size.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="c1"># get tile bounds and read raster</span>
     <span class="n">mercator_tile</span> <span class="o">=</span> <span class="n">mercantile</span><span class="o">.</span><span class="n">Tile</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tile_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">tile_y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">tile_z</span><span class="p">)</span>
     <span class="n">tile_bounds</span> <span class="o">=</span> <span class="n">mercantile</span><span class="o">.</span><span class="n">xy_bounds</span><span class="p">(</span><span class="n">mercator_tile</span><span class="p">)</span>
@@ -2702,7 +2702,7 @@ to enable accessing the source rasterio dataset.</p>
     <span class="n">t</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_tile_read</span><span class="p">(</span><span class="n">src_dst</span><span class="p">,</span> <span class="n">tile_bounds</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
 
 <span class="c1"># v2</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">t</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">src_dst</span><span class="p">,</span> <span class="n">tile_x</span><span class="p">,</span> <span class="n">tile_y</span><span class="p">,</span> <span class="n">tile_z</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span> <span class="c1"># Will check if tile is valid</span>
 
     <span class="c1"># Or</span>
@@ -2720,25 +2720,25 @@ to enable accessing the source rasterio dataset.</p>
 <li><code>post_process</code> (<strong>New</strong>): add post process callback to apply operation on the data and mask arrays.</li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">mercator_tile</span> <span class="o">=</span> <span class="n">mercantile</span><span class="o">.</span><span class="n">Tile</span><span class="p">(</span><span class="n">x</span><span class="o">=</span><span class="n">tile_x</span><span class="p">,</span> <span class="n">y</span><span class="o">=</span><span class="n">tile_y</span><span class="p">,</span> <span class="n">z</span><span class="o">=</span><span class="n">tile_z</span><span class="p">)</span>
     <span class="n">tile_bounds</span> <span class="o">=</span> <span class="n">mercantile</span><span class="o">.</span><span class="n">xy_bounds</span><span class="p">(</span><span class="n">mercator_tile</span><span class="p">)</span>
     <span class="n">t</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_tile_read</span><span class="p">(</span><span class="n">src_dst</span><span class="p">,</span> <span class="n">tile_bounds</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">tile_edge_padding</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">minimum_tile_cover</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 
 <span class="c1"># v2</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">t</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">src_dst</span><span class="p">,</span> <span class="n">tile_x</span><span class="p">,</span> <span class="n">tile_y</span><span class="p">,</span> <span class="n">tile_z</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">padding</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span> <span class="n">minimum_overlap</span><span class="o">=</span><span class="mf">0.3</span><span class="p">)</span>
 </code></pre></div>
 <h4 id="alpha-band">Alpha band<a class="headerlink" href="#alpha-band" title="Permanent link">&para;</a></h4>
 <p>Since the first version, <code>rio-tiler</code> returns a tuple of <strong>(data, mask)</strong> in most of the <code>reading</code> function. This design was made early and without thinking about datasets with an alpha channel, which resulted in issues like <a href="https://github.com/cogeotiff/rio-tiler/pull/126">#126</a>, where a user gets a 4 bands data array + a mask (instead of 3 bands + mask).</p>
 <p>In version 2, when no <code>indexes</code> options are passed, <strong>we remove the alpha channel from the output data array</strong>.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif_alpha.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif_alpha.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">t</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_tile_read</span><span class="p">(</span><span class="n">src_dst</span><span class="p">,</span> <span class="n">tile_bounds</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span><span class="mi">2</span><span class="p">,</span><span class="mi">3</span><span class="p">))</span>
 
 <span class="c1"># v2</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif_alpha.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
-    <span class="c1"># because rio-tiler will remove the alpha band we don&#39;t need to use the indexes option</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif_alpha.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+    <span class="c1"># because rio-tiler will remove the alpha band we don't need to use the indexes option</span>
     <span class="n">t</span><span class="p">,</span> <span class="n">m</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">src_dst</span><span class="p">,</span> <span class="n">tile_x</span><span class="p">,</span> <span class="n">tile_y</span><span class="p">,</span> <span class="n">tile_z</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
 </code></pre></div>
 <h3 id="metadata">metadata<a class="headerlink" href="#metadata" title="Permanent link">&para;</a></h3>
@@ -2746,11 +2746,11 @@ to enable accessing the source rasterio dataset.</p>
 <p>To limit the data transfer (with the idea of getting the metadata from the COG overviews) we use the <code>max_size</code> options, meaning the <code>overview_level</code> options have been removed.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">rio_tiler</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">meta</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_raster_get_stats</span><span class="p">(</span><span class="n">src_dst</span><span class="p">)</span>
 
 <span class="c1"># v2</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">meta</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">src_dst</span><span class="p">)</span>
 </code></pre></div>
 <p><em>Options changes</em></p>
@@ -2762,26 +2762,26 @@ to enable accessing the source rasterio dataset.</p>
 <p><em>Output</em></p>
 <p>The output has also been updated. The new <code>metadata</code> output doesn't return min/max zoom and bounds is return in WGS84 by default.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">_raster_get_stats</span><span class="p">(</span><span class="n">src_dst</span><span class="p">)</span>
 
 <span class="o">&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;value&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">119.05915661478785</span><span class="p">,</span> <span class="mf">13.102845359730287</span><span class="p">,</span> <span class="o">-</span><span class="mf">84.91821332299578</span><span class="p">,</span> <span class="mf">33.995073647795806</span><span class="p">],</span>
-        <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="s2">&quot;EPSG:4326&quot;</span>
+    <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"value"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">119.05915661478785</span><span class="p">,</span> <span class="mf">13.102845359730287</span><span class="p">,</span> <span class="o">-</span><span class="mf">84.91821332299578</span><span class="p">,</span> <span class="mf">33.995073647795806</span><span class="p">],</span>
+        <span class="s2">"crs"</span><span class="p">:</span> <span class="s2">"EPSG:4326"</span>
     <span class="p">},</span>
-    <span class="s2">&quot;minzoom&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-    <span class="s2">&quot;maxzoom&quot;</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
-    <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="p">[</span><span class="mi">1</span><span class="p">,</span>  <span class="s2">&quot;band1&quot;</span><span class="p">]</span>
+    <span class="s2">"minzoom"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"maxzoom"</span><span class="p">:</span> <span class="mi">12</span><span class="p">,</span>
+    <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="p">[</span><span class="mi">1</span><span class="p">,</span>  <span class="s2">"band1"</span><span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;statistics&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;pc&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">17</span><span class="p">],</span>
-            <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
-            <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">4.418616203143802</span><span class="p">,</span>
-            <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"statistics"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"1"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"pc"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">17</span><span class="p">],</span>
+            <span class="s2">"min"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">"max"</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+            <span class="s2">"std"</span><span class="p">:</span> <span class="mf">4.418616203143802</span><span class="p">,</span>
+            <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">[</span><span class="o">...</span><span class="p">],</span>
                 <span class="p">[</span><span class="o">...</span><span class="p">]</span>
             <span class="p">]</span>
@@ -2790,32 +2790,32 @@ to enable accessing the source rasterio dataset.</p>
 <span class="p">}</span>
 
 <span class="c1"># v2</span>
-<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">&quot;my_tif.tif&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">rasterio</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"my_tif.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src_dst</span><span class="p">:</span>
     <span class="n">rio_tiler</span><span class="o">.</span><span class="n">reader</span><span class="o">.</span><span class="n">metadata</span><span class="p">(</span><span class="n">src_dst</span><span class="p">)</span>
 
 <span class="o">&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">119.05915661478785</span><span class="p">,</span> <span class="mf">13.102845359730287</span><span class="p">,</span> <span class="o">-</span><span class="mf">84.91821332299578</span><span class="p">,</span> <span class="mf">33.995073647795806</span><span class="p">],</span>
-    <span class="s2">&quot;statistics&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;percentiles&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span>
-            <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
-            <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
-            <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">4.069636227214257</span><span class="p">,</span>
-            <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">[</span><span class="o">-</span><span class="mf">119.05915661478785</span><span class="p">,</span> <span class="mf">13.102845359730287</span><span class="p">,</span> <span class="o">-</span><span class="mf">84.91821332299578</span><span class="p">,</span> <span class="mf">33.995073647795806</span><span class="p">],</span>
+    <span class="s2">"statistics"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"1"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"percentiles"</span><span class="p">:</span> <span class="p">[</span><span class="mi">1</span><span class="p">,</span> <span class="mi">16</span><span class="p">],</span>
+            <span class="s2">"min"</span><span class="p">:</span> <span class="mi">1</span><span class="p">,</span>
+            <span class="s2">"max"</span><span class="p">:</span> <span class="mi">18</span><span class="p">,</span>
+            <span class="s2">"std"</span><span class="p">:</span> <span class="mf">4.069636227214257</span><span class="p">,</span>
+            <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">[</span><span class="o">...</span><span class="p">],</span>
                 <span class="p">[</span><span class="o">...</span><span class="p">]</span>
             <span class="p">]</span>
         <span class="p">}</span>
     <span class="p">},</span>
-    <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Nodata&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="p">{}]],</span>
-    <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[[</span><span class="s2">&quot;1&quot;</span><span class="p">,</span> <span class="s2">&quot;&quot;</span><span class="p">]],</span>
-    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;int8&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;colorinterp&quot;</span><span class="p">:</span> <span class="p">[</span><span class="s2">&quot;palette&quot;</span><span class="p">],</span>
-    <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;0&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
-        <span class="s2">&quot;1&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span> <span class="p">],</span>
-        <span class="s2">&quot;2&quot;</span><span class="p">:</span> <span class="p">[</span><span class="mi">148</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
+    <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="s2">"Nodata"</span><span class="p">,</span>
+    <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"1"</span><span class="p">,</span> <span class="p">{}]],</span>
+    <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[[</span><span class="s2">"1"</span><span class="p">,</span> <span class="s2">""</span><span class="p">]],</span>
+    <span class="s2">"dtype"</span><span class="p">:</span> <span class="s2">"int8"</span><span class="p">,</span>
+    <span class="s2">"colorinterp"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"palette"</span><span class="p">],</span>
+    <span class="s2">"colormap"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"0"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">],</span>
+        <span class="s2">"1"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">61</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span> <span class="p">],</span>
+        <span class="s2">"2"</span><span class="p">:</span> <span class="p">[</span><span class="mi">148</span><span class="p">,</span> <span class="mi">56</span><span class="p">,</span> <span class="mi">112</span><span class="p">,</span> <span class="mi">255</span><span class="p">],</span>
         <span class="o">...</span>
     <span class="p">}</span>
 <span class="p">}</span>
@@ -2824,24 +2824,24 @@ to enable accessing the source rasterio dataset.</p>
 <p>In addition to a new colormap specific submodule <code>rio_tiler.colormap</code>, and colormap holder <code>rio_tiler.colormap.cmap</code>, in version 2, colormaps are now RGBA values.</p>
 <p>We also removed <code>PIL</code> colormap compatibility.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
-<span class="n">cmap</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_colormap</span><span class="p">(</span><span class="s2">&quot;viridis&quot;</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">&quot;gdal&quot;</span><span class="p">)</span>
+<span class="n">cmap</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">get_colormap</span><span class="p">(</span><span class="s2">"viridis"</span><span class="p">,</span> <span class="nb">format</span><span class="o">=</span><span class="s2">"gdal"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">cmap</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="o">&gt;</span> <span class="p">[</span><span class="mi">68</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">84</span><span class="p">]</span>
 
 <span class="c1"># v2</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.colormap</span><span class="w"> </span><span class="kn">import</span> <span class="n">cmap</span>
 
-<span class="n">colormap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">&quot;viridis&quot;</span><span class="p">)</span>
+<span class="n">colormap</span> <span class="o">=</span> <span class="n">cmap</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"viridis"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">colormap</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
 <span class="o">&gt;</span> <span class="p">[</span><span class="mi">68</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="mi">84</span><span class="p">,</span> <span class="mi">255</span><span class="p">]</span>
 </code></pre></div>
 <h2 id="render">render<a class="headerlink" href="#render" title="Permanent link">&para;</a></h2>
 <p>In version 1, to create an image blob from an array we used the <code>rio_tiler.utils.array_to_image</code> function. We have renamed and slightly refactored the function but it works the same.</p>
 <div class="highlight"><pre><span></span><code><span class="c1"># v1</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">array_to_image</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;PNG&quot;</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">array_to_image</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">img_format</span><span class="o">=</span><span class="s2">"PNG"</span><span class="p">)</span>
 
 <span class="c1"># v2</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;PNG&quot;</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">rio_tiler</span><span class="o">.</span><span class="n">utils</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">tile</span><span class="p">,</span> <span class="n">mask</span><span class="p">,</span> <span class="n">img_format</span><span class="o">=</span><span class="s2">"PNG"</span><span class="p">)</span>
 </code></pre></div>
 <h2 id="pydantic-models">Pydantic models<a class="headerlink" href="#pydantic-models" title="Permanent link">&para;</a></h2>
 <p>The <code>.io</code> readers now returns pydantic models hosting the results. This enables easy API definition.</p>

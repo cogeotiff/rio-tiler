@@ -2648,7 +2648,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"bool"</span><span class="p">)</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>
 
@@ -2659,7 +2659,7 @@
     <span class="n">bounds</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">metadata</span><span class="o">=</span><span class="p">{},</span>
-    <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span> <span class="s1">&#39;b2&#39;</span><span class="p">,</span> <span class="s1">&#39;b3&#39;</span><span class="p">],</span>
+    <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'b1'</span><span class="p">,</span> <span class="s1">'b2'</span><span class="p">,</span> <span class="s1">'b3'</span><span class="p">],</span>
     <span class="n">dataset_statistics</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">cutline_mask</span><span class="o">=</span><span class="n">array</span><span class="p">(),</span>
 <span class="p">)</span>
@@ -2677,7 +2677,7 @@
 <ul>
 <li>
 <p><strong>from_bytes()</strong>: Create an ImageData instance from a Raster buffer</p>
-<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">&quot;img.tif&quot;</span><span class="p">,</span> <span class="s2">&quot;rb&quot;</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
+<div class="highlight"><pre><span></span><code><span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s2">"img.tif"</span><span class="p">,</span> <span class="s2">"rb"</span><span class="p">)</span> <span class="k">as</span> <span class="n">f</span><span class="p">:</span>
     <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="o">.</span><span class="n">from_bytes</span><span class="p">(</span><span class="n">f</span><span class="o">.</span><span class="n">read</span><span class="p">())</span>
 </code></pre></div>
 </li>
@@ -2699,7 +2699,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"bool"</span><span class="p">)</span>
 <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>
 
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
@@ -2719,8 +2719,8 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span>
 
 <span class="n">img_c</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">clip</span><span class="p">((</span><span class="o">-</span><span class="mi">100</span><span class="p">,</span> <span class="o">-</span><span class="mi">50</span><span class="p">,</span> <span class="mi">100</span><span class="p">,</span> <span class="mi">50</span><span class="p">))</span>
 <span class="k">assert</span> <span class="n">img_c</span><span class="o">.</span><span class="n">count</span> <span class="o">==</span> <span class="mi">3</span>
@@ -2735,7 +2735,7 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="n">img_r</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">resize</span><span class="p">(</span><span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
@@ -2746,9 +2746,9 @@
 </li>
 <li>
 <p><strong>reproject()</strong>: Reproject the ImageData to a user defined projection</p>
-<div class="highlight"><pre><span></span><code><span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="s2">&quot;epsg:4326&quot;</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">dst_crs</span><span class="o">=</span><span class="s2">&quot;epsg:3857&quot;</span><span class="p">)</span>
+<div class="highlight"><pre><span></span><code><span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">,</span> <span class="n">crs</span><span class="o">=</span><span class="s2">"epsg:4326"</span><span class="p">,</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">))</span>
+<span class="n">img</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">reproject</span><span class="p">(</span><span class="n">dst_crs</span><span class="o">=</span><span class="s2">"epsg:3857"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 <li>
@@ -2760,7 +2760,7 @@
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;int64&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'int64'</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">2999</span>
@@ -2775,7 +2775,7 @@
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;uint8&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'uint8'</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">image</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">254</span>
@@ -2783,7 +2783,7 @@
 <span class="c1"># rescale and apply color-operations formula</span>
 <span class="n">image</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">post_process</span><span class="p">(</span>
     <span class="n">in_range</span><span class="o">=</span><span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3000</span><span class="p">),),</span>
-    <span class="n">color_formula</span><span class="o">=</span><span class="s2">&quot;Gamma RGB 3.1&quot;</span><span class="p">,</span>
+    <span class="n">color_formula</span><span class="o">=</span><span class="s2">"Gamma RGB 3.1"</span><span class="p">,</span>
 <span class="p">)</span>
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">image</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
 </code></pre></div>
@@ -2796,25 +2796,25 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">)</span>
 <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">,</span> <span class="mi">0</span><span class="p">:</span><span class="mi">10</span><span class="p">]</span> <span class="o">=</span> <span class="mi">0</span>
 <span class="n">data</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span><span class="mi">11</span><span class="p">,</span> <span class="mi">10</span><span class="p">:</span><span class="mi">11</span><span class="p">]</span> <span class="o">=</span> <span class="mi">100</span>
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="n">stats</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">statistics</span><span class="p">(</span><span class="n">categorical</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">0</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">max</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">100</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">majority</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">majority</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">0</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">minority</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">minority</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">100</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">unique</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mf">2.0</span>
 </code></pre></div>
 </li>
@@ -2830,7 +2830,7 @@
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;int64&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'int64'</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">2999</span>
@@ -2841,7 +2841,7 @@
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">254</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;uint8&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'uint8'</span>
 </code></pre></div>
 </li>
 <li>
@@ -2852,15 +2852,15 @@
 <div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16000</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">&quot;uint16&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">16000</span><span class="p">,</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">))</span><span class="o">.</span><span class="n">astype</span><span class="p">(</span><span class="s2">"uint16"</span><span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;uint16&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'uint16'</span>
 
-<span class="n">img</span><span class="o">.</span><span class="n">apply_color_formula</span><span class="p">(</span><span class="s2">&quot;Gamma RGB 3.5&quot;</span><span class="p">)</span>
+<span class="n">img</span><span class="o">.</span><span class="n">apply_color_formula</span><span class="p">(</span><span class="s2">"Gamma RGB 3.5"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">dtype</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s1">&#39;uint8&#39;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s1">'uint8'</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">max</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">170</span>
@@ -2875,7 +2875,7 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
 
 <span class="n">cm</span> <span class="o">=</span> <span class="p">{</span><span class="mi">0</span><span class="p">:</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),</span> <span class="mi">1</span><span class="p">:</span> <span class="p">(</span><span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">,</span> <span class="mi">255</span><span class="p">)}</span>
-<span class="n">im</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">))</span><span class="o">.</span><span class="n">apply_colormap</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
+<span class="n">im</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">))</span><span class="o">.</span><span class="n">apply_colormap</span><span class="p">(</span><span class="n">cm</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">im</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span> <span class="o">==</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
 <span class="k">assert</span> <span class="n">im</span><span class="o">.</span><span class="n">data</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">tolist</span><span class="p">()</span> <span class="o">==</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span>
 <span class="k">assert</span> <span class="n">im</span><span class="o">.</span><span class="n">mask</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="mi">255</span>
@@ -2894,13 +2894,13 @@
 
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>  <span class="c1"># Defaults</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>  <span class="c1"># Defaults</span>
 
-<span class="n">ratio</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">apply_expression</span><span class="p">(</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>  <span class="c1"># Returns a new ImageData object</span>
+<span class="n">ratio</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">apply_expression</span><span class="p">(</span><span class="s2">"b1/b2"</span><span class="p">)</span>  <span class="c1"># Returns a new ImageData object</span>
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span> <span class="n">ImageData</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">ratio</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1/b2"</span><span class="p">]</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">ratio</span><span class="o">.</span><span class="n">data</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
@@ -2917,36 +2917,36 @@
         <span class="k">with</span> <span class="n">mem</span><span class="o">.</span><span class="n">open</span><span class="p">()</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
             <span class="k">return</span> <span class="n">dst</span><span class="o">.</span><span class="n">meta</span>
 
-<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;uint8&quot;</span><span class="p">)</span>
+<span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"uint8"</span><span class="p">)</span>
 
 <span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 
 <span class="c1"># create a PNG image</span>
-<span class="n">buf</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;png&quot;</span><span class="p">)</span>
+<span class="n">buf</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">"png"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">get_meta</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s1">&#39;driver&#39;</span><span class="p">:</span> <span class="s1">&#39;PNG&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;uint8&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;nodata&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-    <span class="s1">&#39;crs&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="s1">&#39;transform&#39;</span><span class="p">:</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="s1">'driver'</span><span class="p">:</span> <span class="s1">'PNG'</span><span class="p">,</span>
+    <span class="s1">'dtype'</span><span class="p">:</span> <span class="s1">'uint8'</span><span class="p">,</span>
+    <span class="s1">'nodata'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">'width'</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="s1">'height'</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="s1">'count'</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+    <span class="s1">'crs'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">'transform'</span><span class="p">:</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 <span class="p">}</span>
 
 <span class="c1"># create a JPEG image</span>
-<span class="n">buf</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">&quot;jpeg&quot;</span><span class="p">)</span>
+<span class="n">buf</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">render</span><span class="p">(</span><span class="n">img_format</span><span class="o">=</span><span class="s2">"jpeg"</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">get_meta</span><span class="p">(</span><span class="n">buf</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s1">&#39;driver&#39;</span><span class="p">:</span> <span class="s1">&#39;JPEG&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;dtype&#39;</span><span class="p">:</span> <span class="s1">&#39;uint8&#39;</span><span class="p">,</span>
-    <span class="s1">&#39;nodata&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="s1">&#39;width&#39;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="s1">&#39;height&#39;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="s1">&#39;count&#39;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-    <span class="s1">&#39;crs&#39;</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
-    <span class="s1">&#39;transform&#39;</span><span class="p">:</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
+    <span class="s1">'driver'</span><span class="p">:</span> <span class="s1">'JPEG'</span><span class="p">,</span>
+    <span class="s1">'dtype'</span><span class="p">:</span> <span class="s1">'uint8'</span><span class="p">,</span>
+    <span class="s1">'nodata'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">'width'</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="s1">'height'</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="s1">'count'</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s1">'crs'</span><span class="p">:</span> <span class="kc">None</span><span class="p">,</span>
+    <span class="s1">'transform'</span><span class="p">:</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">)</span>
 <span class="p">}</span>
 </code></pre></div>
 </li>
@@ -2957,7 +2957,7 @@
 <li>
 <p><strong>to_raster()</strong>: Save ImageData array to raster file</p>
 <div class="highlight"><pre><span></span><code><span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)))</span>
-<span class="n">img</span><span class="o">.</span><span class="n">to_raster</span><span class="p">(</span><span class="s2">&quot;img.tif&quot;</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">&quot;GTiff&quot;</span><span class="p">)</span>
+<span class="n">img</span><span class="o">.</span><span class="n">to_raster</span><span class="p">(</span><span class="s2">"img.tif"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"GTiff"</span><span class="p">)</span>
 </code></pre></div>
 </li>
 </ul>
@@ -2980,14 +2980,14 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">PointData</span>
 
 <span class="n">d</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">3</span><span class="p">))</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">&quot;bool&quot;</span><span class="p">)</span>
+<span class="n">m</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="s2">"bool"</span><span class="p">)</span>
 
 <span class="n">data</span> <span class="o">=</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">d</span><span class="p">,</span> <span class="n">mask</span><span class="o">=</span><span class="n">m</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">PointData</span><span class="p">(</span><span class="n">data</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="n">PointData</span><span class="p">(</span>
     <span class="n">array</span><span class="o">=</span><span class="n">masked_array</span><span class="p">(</span><span class="n">data</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">],</span> <span class="n">mask</span><span class="o">=</span><span class="p">[</span><span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="kc">False</span><span class="p">],</span> <span class="n">fill_value</span><span class="o">=</span><span class="mf">1e+20</span><span class="p">),</span>
-    <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">&#39;b1&#39;</span><span class="p">,</span> <span class="s1">&#39;b2&#39;</span><span class="p">,</span> <span class="s1">&#39;b3&#39;</span><span class="p">],</span>
+    <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s1">'b1'</span><span class="p">,</span> <span class="s1">'b2'</span><span class="p">,</span> <span class="s1">'b3'</span><span class="p">],</span>
     <span class="n">coordinates</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">crs</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
     <span class="n">assets</span><span class="o">=</span><span class="kc">None</span><span class="p">,</span>
@@ -3012,13 +3012,13 @@
 
 <span class="n">pts</span> <span class="o">=</span> <span class="n">PointData</span><span class="p">(</span><span class="n">data</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">pts</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">,</span> <span class="s2">&quot;b2&quot;</span><span class="p">,</span> <span class="s2">&quot;b3&quot;</span><span class="p">]</span>  <span class="c1"># Defaults</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1"</span><span class="p">,</span> <span class="s2">"b2"</span><span class="p">,</span> <span class="s2">"b3"</span><span class="p">]</span>  <span class="c1"># Defaults</span>
 
-<span class="n">ratio</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">apply_expression</span><span class="p">(</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">)</span>  <span class="c1"># Returns a new PointData object</span>
+<span class="n">ratio</span> <span class="o">=</span> <span class="n">pts</span><span class="o">.</span><span class="n">apply_expression</span><span class="p">(</span><span class="s2">"b1/b2"</span><span class="p">)</span>  <span class="c1"># Returns a new PointData object</span>
 <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">ratio</span><span class="p">,</span> <span class="n">PointData</span><span class="p">)</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">ratio</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">&quot;b1/b2&quot;</span><span class="p">]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"b1/b2"</span><span class="p">]</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">ratio</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">1</span>
@@ -3032,243 +3032,243 @@
 <span class="c1"># Schema</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">Info</span><span class="o">.</span><span class="n">schema</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;$defs&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;BoundingBox&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-            <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-            <span class="s2">&quot;prefixItems&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"$defs"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"BoundingBox"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"maxItems"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">"minItems"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+            <span class="s2">"prefixItems"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Left&quot;</span>
+                    <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Left"</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Bottom&quot;</span>
+                    <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Bottom"</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Right&quot;</span>
+                    <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Right"</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Top&quot;</span>
+                    <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Top"</span>
                 <span class="p">}</span>
             <span class="p">],</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
         <span class="p">}</span>
     <span class="p">},</span>
-    <span class="s2">&quot;additionalProperties&quot;</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Dataset Info.&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;$ref&quot;</span><span class="p">:</span> <span class="s2">&quot;#/$defs/BoundingBox&quot;</span>
+    <span class="s2">"additionalProperties"</span><span class="p">:</span> <span class="n">true</span><span class="p">,</span>
+    <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Dataset Info."</span><span class="p">,</span>
+    <span class="s2">"properties"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"$ref"</span><span class="p">:</span> <span class="s2">"#/$defs/BoundingBox"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Crs&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+        <span class="s2">"crs"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Crs"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="s2">&quot;prefixItems&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"items"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"maxItems"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">"minItems"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">"prefixItems"</span><span class="p">:</span> <span class="p">[</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span>
                     <span class="p">},</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"object"</span>
                     <span class="p">}</span>
                 <span class="p">],</span>
-                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
             <span class="p">},</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Band Metadata&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Band Metadata"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
-                <span class="s2">&quot;prefixItems&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"items"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"maxItems"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">"minItems"</span><span class="p">:</span> <span class="mi">2</span><span class="p">,</span>
+                <span class="s2">"prefixItems"</span><span class="p">:</span> <span class="p">[</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span>
                     <span class="p">},</span>
                     <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span>
                     <span class="p">}</span>
                 <span class="p">],</span>
-                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
             <span class="p">},</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Band Descriptions&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Band Descriptions"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Dtype&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+        <span class="s2">"dtype"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Dtype"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;enum&quot;</span><span class="p">:</span> <span class="p">[</span>
-                <span class="s2">&quot;Alpha&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Mask&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Internal&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;Nodata&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;None&quot;</span>
+        <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"enum"</span><span class="p">:</span> <span class="p">[</span>
+                <span class="s2">"Alpha"</span><span class="p">,</span>
+                <span class="s2">"Mask"</span><span class="p">,</span>
+                <span class="s2">"Internal"</span><span class="p">,</span>
+                <span class="s2">"Nodata"</span><span class="p">,</span>
+                <span class="s2">"None"</span>
             <span class="p">],</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Nodata Type&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Nodata Type"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;colorinterp&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"colorinterp"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"anyOf"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;string&quot;</span>
+                    <span class="s2">"items"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"string"</span>
                     <span class="p">},</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;null&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"null"</span>
                 <span class="p">}</span>
             <span class="p">],</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Colorinterp&quot;</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Colorinterp"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"scales"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"anyOf"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                    <span class="s2">"items"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
                     <span class="p">},</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;null&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"null"</span>
                 <span class="p">}</span>
             <span class="p">],</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Scales&quot;</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Scales"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;offsets&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"offsets"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"anyOf"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                    <span class="s2">"items"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
                     <span class="p">},</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;null&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"null"</span>
                 <span class="p">}</span>
             <span class="p">],</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Offsets&quot;</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Offsets"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;colormap&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"colormap"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"anyOf"</span><span class="p">:</span> <span class="p">[</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;additionalProperties&quot;</span><span class="p">:</span> <span class="p">{</span>
-                        <span class="s2">&quot;maxItems&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-                        <span class="s2">&quot;minItems&quot;</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
-                        <span class="s2">&quot;prefixItems&quot;</span><span class="p">:</span> <span class="p">[</span>
+                    <span class="s2">"additionalProperties"</span><span class="p">:</span> <span class="p">{</span>
+                        <span class="s2">"maxItems"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                        <span class="s2">"minItems"</span><span class="p">:</span> <span class="mi">4</span><span class="p">,</span>
+                        <span class="s2">"prefixItems"</span><span class="p">:</span> <span class="p">[</span>
                             <span class="p">{</span>
-                                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"integer"</span>
                             <span class="p">},</span>
                             <span class="p">{</span>
-                                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"integer"</span>
                             <span class="p">},</span>
                             <span class="p">{</span>
-                                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"integer"</span>
                             <span class="p">},</span>
                             <span class="p">{</span>
-                                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"integer"</span>
                             <span class="p">}</span>
                         <span class="p">],</span>
-                        <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span>
+                        <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span>
                     <span class="p">},</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"object"</span>
                 <span class="p">},</span>
                 <span class="p">{</span>
-                    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;null&quot;</span>
+                    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"null"</span>
                 <span class="p">}</span>
             <span class="p">],</span>
-            <span class="s2">&quot;default&quot;</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Colormap&quot;</span>
+            <span class="s2">"default"</span><span class="p">:</span> <span class="n">null</span><span class="p">,</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Colormap"</span>
         <span class="p">}</span>
     <span class="p">},</span>
-    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="s2">&quot;bounds&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;crs&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;band_metadata&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;band_descriptions&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;dtype&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;nodata_type&quot;</span>
+    <span class="s2">"required"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"bounds"</span><span class="p">,</span>
+        <span class="s2">"crs"</span><span class="p">,</span>
+        <span class="s2">"band_metadata"</span><span class="p">,</span>
+        <span class="s2">"band_descriptions"</span><span class="p">,</span>
+        <span class="s2">"dtype"</span><span class="p">,</span>
+        <span class="s2">"nodata_type"</span>
     <span class="p">],</span>
-    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Info&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span>
+    <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Info"</span><span class="p">,</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"object"</span>
 <span class="p">}</span>
 
 <span class="c1"># Example</span>
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif&quot;</span>
+  <span class="s2">"http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">info</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">()</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">nodata_type</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="s2">&quot;None&quot;</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="s2">"None"</span>
 
 <span class="nb">print</span><span class="p">(</span><span class="n">info</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;bounds&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"bounds"</span><span class="p">:</span> <span class="p">[</span>
         <span class="mf">683715.3266400001</span><span class="p">,</span>
         <span class="mf">1718548.5702</span><span class="p">,</span>
         <span class="mf">684593.2680000002</span><span class="p">,</span>
         <span class="mf">1719064.90736</span>
     <span class="p">],</span>
-    <span class="s2">&quot;crs&quot;</span><span class="p">:</span> <span class="s2">&quot;http://www.opengis.net/def/crs/EPSG/0/32620&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;band_metadata&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"crs"</span><span class="p">:</span> <span class="s2">"http://www.opengis.net/def/crs/EPSG/0/32620"</span><span class="p">,</span>
+    <span class="s2">"band_metadata"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span>
-            <span class="s2">&quot;b1&quot;</span><span class="p">,</span>
+            <span class="s2">"b1"</span><span class="p">,</span>
             <span class="p">{}</span>
         <span class="p">],</span>
         <span class="p">[</span>
-            <span class="s2">&quot;b2&quot;</span><span class="p">,</span>
+            <span class="s2">"b2"</span><span class="p">,</span>
             <span class="p">{}</span>
         <span class="p">],</span>
         <span class="p">[</span>
-            <span class="s2">&quot;b3&quot;</span><span class="p">,</span>
+            <span class="s2">"b3"</span><span class="p">,</span>
             <span class="p">{}</span>
         <span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;band_descriptions&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"band_descriptions"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span>
-            <span class="s2">&quot;b1&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;&quot;</span>
+            <span class="s2">"b1"</span><span class="p">,</span>
+            <span class="s2">""</span>
         <span class="p">],</span>
         <span class="p">[</span>
-            <span class="s2">&quot;b2&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;&quot;</span>
+            <span class="s2">"b2"</span><span class="p">,</span>
+            <span class="s2">""</span>
         <span class="p">],</span>
         <span class="p">[</span>
-            <span class="s2">&quot;b3&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;&quot;</span>
+            <span class="s2">"b3"</span><span class="p">,</span>
+            <span class="s2">""</span>
         <span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;dtype&quot;</span><span class="p">:</span> <span class="s2">&quot;uint8&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;nodata_type&quot;</span><span class="p">:</span> <span class="s2">&quot;Mask&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;colorinterp&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="s2">&quot;red&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;green&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;blue&quot;</span>
+    <span class="s2">"dtype"</span><span class="p">:</span> <span class="s2">"uint8"</span><span class="p">,</span>
+    <span class="s2">"nodata_type"</span><span class="p">:</span> <span class="s2">"Mask"</span><span class="p">,</span>
+    <span class="s2">"colorinterp"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"red"</span><span class="p">,</span>
+        <span class="s2">"green"</span><span class="p">,</span>
+        <span class="s2">"blue"</span>
     <span class="p">],</span>
-    <span class="s2">&quot;scales&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"scales"</span><span class="p">:</span> <span class="p">[</span>
         <span class="mi">1</span><span class="p">,</span>
         <span class="mi">1</span><span class="p">,</span>
         <span class="mi">1</span>
     <span class="p">],</span>
-    <span class="s2">&quot;offsets&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"offsets"</span><span class="p">:</span> <span class="p">[</span>
         <span class="mi">0</span><span class="p">,</span>
         <span class="mi">0</span><span class="p">,</span>
         <span class="mi">0</span>
     <span class="p">],</span>
-    <span class="s2">&quot;driver&quot;</span><span class="p">:</span> <span class="s2">&quot;GTiff&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
-    <span class="s2">&quot;width&quot;</span><span class="p">:</span> <span class="mi">19836</span><span class="p">,</span>
-    <span class="s2">&quot;height&quot;</span><span class="p">:</span> <span class="mi">11666</span><span class="p">,</span>
-    <span class="s2">&quot;overviews&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"driver"</span><span class="p">:</span> <span class="s2">"GTiff"</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">3</span><span class="p">,</span>
+    <span class="s2">"width"</span><span class="p">:</span> <span class="mi">19836</span><span class="p">,</span>
+    <span class="s2">"height"</span><span class="p">:</span> <span class="mi">11666</span><span class="p">,</span>
+    <span class="s2">"overviews"</span><span class="p">:</span> <span class="p">[</span>
         <span class="mi">2</span><span class="p">,</span>
         <span class="mi">4</span><span class="p">,</span>
         <span class="mi">8</span><span class="p">,</span>
@@ -3286,121 +3286,121 @@
 <span class="c1"># Schema</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">BandStatistics</span><span class="o">.</span><span class="n">schema</span><span class="p">())</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;BandStatistics&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;description&quot;</span><span class="p">:</span> <span class="s2">&quot;Image statistics&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;object&quot;</span><span class="p">,</span>
-    <span class="s2">&quot;properties&quot;</span><span class="p">:</span> <span class="p">{</span>
-        <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Min&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+    <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"BandStatistics"</span><span class="p">,</span>
+    <span class="s2">"description"</span><span class="p">:</span> <span class="s2">"Image statistics"</span><span class="p">,</span>
+    <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"object"</span><span class="p">,</span>
+    <span class="s2">"properties"</span><span class="p">:</span> <span class="p">{</span>
+        <span class="s2">"min"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Min"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Max&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"max"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Max"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Mean&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"mean"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Mean"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Count&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"count"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Count"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;sum&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Sum&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"sum"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Sum"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Std&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"std"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Std"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;median&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Median&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"median"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Median"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;majority&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Majority&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"majority"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Majority"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;minority&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Minority&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"minority"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Minority"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;unique&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Unique&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"unique"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Unique"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Histogram&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
-                <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;array&quot;</span><span class="p">,</span>
-                <span class="s2">&quot;items&quot;</span><span class="p">:</span> <span class="p">{</span>
-                    <span class="s2">&quot;anyOf&quot;</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Histogram"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span><span class="p">,</span>
+            <span class="s2">"items"</span><span class="p">:</span> <span class="p">{</span>
+                <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"array"</span><span class="p">,</span>
+                <span class="s2">"items"</span><span class="p">:</span> <span class="p">{</span>
+                    <span class="s2">"anyOf"</span><span class="p">:</span> <span class="p">[</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+                            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
                         <span class="p">},</span>
                         <span class="p">{</span>
-                            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;integer&quot;</span>
+                            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"integer"</span>
                         <span class="p">}</span>
                     <span class="p">]</span>
                 <span class="p">}</span>
             <span class="p">}</span>
         <span class="p">},</span>
-        <span class="s2">&quot;valid_percent&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Valid Percent&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"valid_percent"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Valid Percent"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;masked_pixels&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Masked Pixels&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"masked_pixels"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Masked Pixels"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">},</span>
-        <span class="s2">&quot;valid_pixels&quot;</span><span class="p">:</span> <span class="p">{</span>
-            <span class="s2">&quot;title&quot;</span><span class="p">:</span> <span class="s2">&quot;Valid Pixels&quot;</span><span class="p">,</span>
-            <span class="s2">&quot;type&quot;</span><span class="p">:</span> <span class="s2">&quot;number&quot;</span>
+        <span class="s2">"valid_pixels"</span><span class="p">:</span> <span class="p">{</span>
+            <span class="s2">"title"</span><span class="p">:</span> <span class="s2">"Valid Pixels"</span><span class="p">,</span>
+            <span class="s2">"type"</span><span class="p">:</span> <span class="s2">"number"</span>
         <span class="p">}</span>
     <span class="p">},</span>
-    <span class="s2">&quot;required&quot;</span><span class="p">:</span> <span class="p">[</span>
-        <span class="s2">&quot;min&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;max&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;mean&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;count&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;sum&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;std&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;median&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;majority&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;minority&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;unique&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;histogram&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;valid_percent&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;masked_pixels&quot;</span><span class="p">,</span>
-        <span class="s2">&quot;valid_pixels&quot;</span>
+    <span class="s2">"required"</span><span class="p">:</span> <span class="p">[</span>
+        <span class="s2">"min"</span><span class="p">,</span>
+        <span class="s2">"max"</span><span class="p">,</span>
+        <span class="s2">"mean"</span><span class="p">,</span>
+        <span class="s2">"count"</span><span class="p">,</span>
+        <span class="s2">"sum"</span><span class="p">,</span>
+        <span class="s2">"std"</span><span class="p">,</span>
+        <span class="s2">"median"</span><span class="p">,</span>
+        <span class="s2">"majority"</span><span class="p">,</span>
+        <span class="s2">"minority"</span><span class="p">,</span>
+        <span class="s2">"unique"</span><span class="p">,</span>
+        <span class="s2">"histogram"</span><span class="p">,</span>
+        <span class="s2">"valid_percent"</span><span class="p">,</span>
+        <span class="s2">"masked_pixels"</span><span class="p">,</span>
+        <span class="s2">"valid_pixels"</span>
     <span class="p">]</span>
 <span class="p">}</span>
 
 <span class="c1"># Example</span>
 <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span>
-  <span class="s2">&quot;http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif&quot;</span>
+  <span class="s2">"http://oin-hotosm.s3.amazonaws.com/5a95f32c2553e6000ce5ad2e/0/10edab38-1bdd-4c06-b83d-6e10ac532b7d.tif"</span>
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="n">stats</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">statistics</span><span class="p">()</span>
-    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">],</span> <span class="n">BandStatistics</span><span class="p">)</span>
+    <span class="k">assert</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">],</span> <span class="n">BandStatistics</span><span class="p">)</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">min</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mf">0.0</span>
 
-<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">&quot;b1&quot;</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">stats</span><span class="p">[</span><span class="s2">"b1"</span><span class="p">]</span><span class="o">.</span><span class="n">model_dump_json</span><span class="p">(</span><span class="n">exclude_none</span><span class="o">=</span><span class="kc">True</span><span class="p">))</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span>
-    <span class="s2">&quot;min&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;max&quot;</span><span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
-    <span class="s2">&quot;mean&quot;</span><span class="p">:</span> <span class="mf">93.16424226523633</span><span class="p">,</span>
-    <span class="s2">&quot;count&quot;</span><span class="p">:</span> <span class="mi">617472</span><span class="p">,</span>
-    <span class="s2">&quot;sum&quot;</span><span class="p">:</span> <span class="mi">57526311</span><span class="p">,</span>
-    <span class="s2">&quot;std&quot;</span><span class="p">:</span> <span class="mf">59.261322978176324</span><span class="p">,</span>
-    <span class="s2">&quot;median&quot;</span><span class="p">:</span> <span class="mi">94</span><span class="p">,</span>
-    <span class="s2">&quot;majority&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;minority&quot;</span><span class="p">:</span> <span class="mi">253</span><span class="p">,</span>
-    <span class="s2">&quot;unique&quot;</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
-    <span class="s2">&quot;histogram&quot;</span><span class="p">:</span> <span class="p">[</span>
+    <span class="s2">"min"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">"max"</span><span class="p">:</span> <span class="mi">255</span><span class="p">,</span>
+    <span class="s2">"mean"</span><span class="p">:</span> <span class="mf">93.16424226523633</span><span class="p">,</span>
+    <span class="s2">"count"</span><span class="p">:</span> <span class="mi">617472</span><span class="p">,</span>
+    <span class="s2">"sum"</span><span class="p">:</span> <span class="mi">57526311</span><span class="p">,</span>
+    <span class="s2">"std"</span><span class="p">:</span> <span class="mf">59.261322978176324</span><span class="p">,</span>
+    <span class="s2">"median"</span><span class="p">:</span> <span class="mi">94</span><span class="p">,</span>
+    <span class="s2">"majority"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">"minority"</span><span class="p">:</span> <span class="mi">253</span><span class="p">,</span>
+    <span class="s2">"unique"</span><span class="p">:</span> <span class="mi">256</span><span class="p">,</span>
+    <span class="s2">"histogram"</span><span class="p">:</span> <span class="p">[</span>
         <span class="p">[</span>
             <span class="mi">100540</span><span class="p">,</span>
             <span class="mi">43602</span><span class="p">,</span>
@@ -3427,11 +3427,11 @@
             <span class="mi">255</span>
         <span class="p">]</span>
     <span class="p">],</span>
-    <span class="s2">&quot;valid_percent&quot;</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
-    <span class="s2">&quot;masked_pixels&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;valid_pixels&quot;</span><span class="p">:</span> <span class="mi">617472</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_2&quot;</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
-    <span class="s2">&quot;percentile_98&quot;</span><span class="p">:</span> <span class="mi">228</span>
+    <span class="s2">"valid_percent"</span><span class="p">:</span> <span class="mi">100</span><span class="p">,</span>
+    <span class="s2">"masked_pixels"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">"valid_pixels"</span><span class="p">:</span> <span class="mi">617472</span><span class="p">,</span>
+    <span class="s2">"percentile_2"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span>
+    <span class="s2">"percentile_98"</span><span class="p">:</span> <span class="mi">228</span>
 <span class="p">}</span>
 </code></pre></div>
 <h2 id="links">Links<a class="headerlink" href="#links" title="Permanent link">&para;</a></h2>
