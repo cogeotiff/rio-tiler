@@ -960,3 +960,29 @@ class Timer(object):
     def from_start(self):
         """Return time elapsed from start."""
         return time.time() - self.start
+
+
+def _check_geographic_bounds(bounds: BBox, xres: float, yres: float) -> bool:
+    """Check if the bounds are within valid Geographic coordinates and tolerate float residue.
+
+    Ref: https://github.com/cogeotiff/rio-tiler/pull/994
+    """
+
+    def _below(value: float, limit: float) -> bool:
+        """Return True if value is under limit, ignoring float representation noise."""
+        return value < limit and not math.isclose(value, limit)
+
+    def _above(value: float, limit: float) -> bool:
+        """Return True if value is over limit, ignoring float representation noise."""
+        return value > limit and not math.isclose(value, limit)
+
+    minx, miny, maxx, maxy = bounds
+    if (
+        _below(minx + xres / 2, -180.0)
+        or _below(miny + yres / 2, -90.0)
+        or _above(maxx - xres / 2, 180.0)
+        or _above(maxy - yres / 2, 90.0)
+    ):
+        return False
+
+    return True

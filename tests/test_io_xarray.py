@@ -631,6 +631,49 @@ def test_xarray_reader_invalid_bounds_crs():
         pass
 
 
+def test_xarray_reader_global_bounds_float_precision():
+    """Should not raise InvalidGeographicBounds when the half-cell allowance misses by a float residue."""
+    # A 0.4 degree global grid has its outer cells centred on the poles and the
+    # antimeridian, so rioxarray reports bounds half a cell outside WGS84:
+    # (-180.2, -90.2, 180.2, 90.2). That is allowed. But coordinates built with
+    # `numpy.arange`, as data providers commonly write them, carry a float
+    # residue of a few 1e-12 degrees, and the allowance then misses by that much.
+    y = numpy.arange(90, -90.4, -0.4)
+    x = numpy.arange(-180, 180, 0.4)
+    data = xarray.DataArray(
+        numpy.zeros((len(y), len(x)), dtype="float32"),
+        dims=("y", "x"),
+        coords={"y": y, "x": x},
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    with XarrayReader(data) as dst:
+        assert dst.bounds[1] == pytest.approx(-90.2)
+        assert dst.bounds[3] == pytest.approx(90.2)
+
+
+def test_xarray_reader_global_bounds_float_precision_fine_grid():
+    """Should tolerate the larger residue a fine grid accumulates."""
+    # The residue grows with the number of steps, so a fixed epsilon does not
+    # hold: a 0.0001 degree grid puts its south cell centre on
+    # -90.00000000597538, six times past an absolute 1e-9. `math.isclose`
+    # scales with the magnitude of the coordinate, which is where the noise
+    # lives, and so covers this too. Only the y coordinate needs to be global
+    # here; a full x would make the array too large to build.
+    y = numpy.arange(90, -90.0001, -0.0001)
+    x = numpy.arange(-180, 180, 0.0001)[:2]
+    data = xarray.DataArray(
+        numpy.zeros((len(y), len(x)), dtype="float32"),
+        dims=("y", "x"),
+        coords={"y": y, "x": x},
+    )
+    data.rio.write_crs("epsg:4326", inplace=True)
+
+    with XarrayReader(data) as dst:
+        assert dst.bounds[1] == pytest.approx(-90.00005)
+        assert dst.bounds[3] == pytest.approx(90.00005)
+
+
 def test_xarray_reader_no_dims():
     """test XarrayReader with 2D dataset."""
     arr = numpy.arange(0.0, 33 * 35).reshape(33, 35)

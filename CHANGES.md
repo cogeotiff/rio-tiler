@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.4.4 (2026-09-09)
+
+* fix: compare with `math.isclose` in the WGS84 bounds check of `XarrayReader` and `ZarrReader`, so a global dataset whose coordinates carry a float residue is no longer rejected (#754)
+
 ## 9.4.3 (2026-08-20)
 
 * fix: avoid unnecessary copy and mask work in ImageData.render (author @manand881, https://github.com/cogeotiff/rio-tiler/pull/974)

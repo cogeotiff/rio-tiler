@@ -20,6 +20,7 @@ from rio_tiler.io.base import BaseReader
 from rio_tiler.io.xarray import XarrayReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox
+from rio_tiler.utils import _check_geographic_bounds
 
 try:
     import obstore
@@ -128,11 +129,11 @@ class ZarrReader(BaseReader):
         # adds half x/y resolution on each values
         # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634
         xres, yres = map(abs, self.dataset.rio.resolution())
-        if self.crs == WGS84_CRS and (
-            self.bounds[0] + xres / 2 < -180
-            or self.bounds[1] + yres / 2 < -90
-            or self.bounds[2] - xres / 2 > 180
-            or self.bounds[3] - yres / 2 > 90
+        # see the matching check in `rio_tiler.io.xarray`: `math.isclose` keeps
+        # the float residue of `numpy.arange` coordinates from rejecting a
+        # perfectly placed global grid.
+        if self.crs == WGS84_CRS and not _check_geographic_bounds(
+            self.bounds, xres, yres
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."

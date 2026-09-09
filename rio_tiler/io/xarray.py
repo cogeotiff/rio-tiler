@@ -38,6 +38,7 @@ from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
+    _check_geographic_bounds,
     _get_width_height,
     _missing_size,
     _validate_shape_input,
@@ -112,11 +113,12 @@ class XarrayReader(BaseReader):
         # adds half x/y resolution on each values
         # https://github.com/corteva/rioxarray/issues/645#issuecomment-1461070634
         xres, yres = map(abs, self.input.rio.resolution())
-        if self.crs == WGS84_CRS and (
-            self.bounds[0] + xres / 2 < -180
-            or self.bounds[1] + yres / 2 < -90
-            or self.bounds[2] - xres / 2 > 180
-            or self.bounds[3] - yres / 2 > 90
+        # compare with `math.isclose` rather than exactly: coordinate arrays
+        # built with `numpy.arange`, as published data commonly is, carry a
+        # float residue that lands the outer cell centres a few ULP past the
+        # limit, which is enough to reject a perfectly placed global grid.
+        if self.crs == WGS84_CRS and not _check_geographic_bounds(
+            self.bounds, xres, yres
         ):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
