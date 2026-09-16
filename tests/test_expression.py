@@ -38,6 +38,12 @@ from rio_tiler.expression import (
         "print(b1)",
         # subscript
         "b1[0] + b2",
+        # boolean operations
+        # ref: https://github.com/cogeotiff/rio-tiler/issues/998
+        "not b1",
+        "b1 and b2",
+        "b1 or b2",
+        "b1 if b1 else b2",
     ],
 )
 def test_parse_eval_invalid(expr):
