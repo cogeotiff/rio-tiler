@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.4.5 (2026-09-16)
+
+* fix: remove invalid ast nodes for boolean operations and conditional expressions (`and`, `or`, `not`, `if ... else ...`)
+
 ## 9.4.4 (2026-09-09)
 
 * fix: compare with `math.isclose` in the WGS84 bounds check of `XarrayReader` and `ZarrReader`, so a global dataset whose coordinates carry a float residue is no longer rejected (#754)
