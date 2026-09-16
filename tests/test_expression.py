@@ -187,3 +187,36 @@ def test_parse_expression():
         "3",
         "4",
     ]
+
+
+@pytest.mark.parametrize(
+    "expr,dtype",
+    [
+        # bitwise operators: valid on integer arrays, unsupported on floats
+        ("b1 & b2", "float32"),
+        ("b1 | b2", "float32"),
+        ("b1 ^ b2", "float32"),
+        ("~b1", "float32"),
+        # bitwise operator with a float constant, on an integer array
+        ("b1 & 1.5", "int32"),
+        # chained comparison
+        ("b1 < b2 < b1", "uint8"),
+        # wrong number of arguments to an allowed function
+        ("where(b1, b2)", "uint8"),
+        ("sqrt(b1, b2)", "uint8"),
+        # string operand
+        ('b1 + "a"', "uint8"),
+        # non-finite constant
+        ("b1 ** 1e400", "uint8"),
+        # block that evaluates to a scalar
+        ("b1;1", "uint8"),
+    ],
+)
+def test_apply_expression_invalid(expr, dtype):
+    """apply_expression should report invalid expressions as InvalidExpression.
+
+    ref: https://github.com/cogeotiff/rio-tiler/issues/1000
+    """
+    data = numpy.ma.MaskedArray(numpy.ones(shape=(2, 10, 10), dtype=dtype))
+    with pytest.raises(InvalidExpression):
+        apply_expression(get_expression_blocks(expr), ["b1", "b2"], data)
