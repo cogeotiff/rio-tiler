@@ -1,7 +1,7 @@
 
 # Unreleased
 
-## 9.4.5 (2026-09-17)
+## 9.4.6 (2026-09-17)
 
 * fix: add catch-all for exceptions in `apply_expression` to raise `InvalidExpression`
 
