@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.4.5 (2026-09-17)
+
+* fix: add catch-all for exceptions in `apply_expression` to raise `InvalidExpression`
+
 ## 9.4.5 (2026-09-16)
 
 * fix: remove invalid ast nodes for boolean operations and conditional expressions (`and`, `or`, `not`, `if ... else ...`)

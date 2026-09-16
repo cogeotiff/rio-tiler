@@ -127,5 +127,13 @@ def apply_expression(
                 if bloc
             ]
         )
-    except KeyError as e:
-        raise InvalidExpression(f"Invalid band/asset name {str(e)}") from e
+
+    # NOTE: MemoryError is re-raised because an allocation failure depends on the machine.
+    except MemoryError as e:
+        raise e
+
+    # NOTE: We could explicitly handle the other error types, rather than using the Exception catch-all,
+    # but that would require tracking the various types of exceptions that numexpr and numpy could raise,
+    # and numexpr doesn't even document the specific exceptions it can raise.
+    except Exception as e:
+        raise InvalidExpression(f"Invalid expression: {e}") from e
