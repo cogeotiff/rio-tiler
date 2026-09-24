@@ -217,7 +217,7 @@ class Reader(AsyncBaseReader):
                         step_duration = parse_duration(step)
                         if isinstance(step_duration, Duration):
                             self.band_names = [
-                                format_datetime(start_datetime + i * step_duration)
+                                format_datetime(start_datetime + i * step_duration)  # type: ignore
                                 for i in range(
                                     (
                                         (stop_datetime - start_datetime)
@@ -228,7 +228,7 @@ class Reader(AsyncBaseReader):
                             ]
                         else:
                             self.band_names = [
-                                format_datetime(start_datetime + i * step_duration)
+                                format_datetime(start_datetime + i * step_duration)  # type: ignore
                                 for i in range(
                                     ((stop_datetime - start_datetime) // step_duration)
                                     + 1
