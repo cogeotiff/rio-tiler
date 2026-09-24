@@ -28,6 +28,13 @@ multiscale_conventions = {
     "name": "multiscales",
     "description": "Multiscale layout of zarr datasets",
 }
+coordinates_conventions = {
+    "schema_url": "https://raw.githubusercontent.com/zarr-conventions/coords/refs/tags/v1/schema.json",
+    "spec_url": "https://github.com/zarr-conventions/coords/blob/v1/README.md",
+    "uuid": "6ca4454a-658a-4348-a667-b39ced0e58cb",
+    "name": "coords",
+    "description": "Domain-agnostic mapping between Zarr array index space and coordinate space.",
+}
 
 
 def create_zarr(path: str, geozarr: bool = False) -> None:
