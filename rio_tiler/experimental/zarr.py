@@ -1568,7 +1568,7 @@ class GeoZarrReader(AsyncBaseReader):
                         non_spatial_coords = next(
                             dim
                             for dim in list(coordinates.keys())
-                            if dim not in array_dims
+                            if dim not in array_dims  # type: ignore
                         )
                         band_coordinates = coordinates[non_spatial_coords]
 
@@ -1620,7 +1620,9 @@ class GeoZarrReader(AsyncBaseReader):
                 band_coordinates = None
                 if array_dims and coordinates:
                     non_spatial_coords = next(
-                        dim for dim in list(coordinates.keys()) if dim not in array_dims
+                        dim
+                        for dim in list(coordinates.keys())
+                        if dim not in array_dims  # type: ignore
                     )
                     band_coordinates = coordinates[non_spatial_coords]
 
