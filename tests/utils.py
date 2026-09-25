@@ -51,6 +51,7 @@ def create_zarr(path: str, geozarr: bool = False) -> None:
             spatial_conventions,
             proj_conventions,
             multiscale_conventions,
+            coordinates_conventions,
         ]
         attributes.update(
             {
@@ -62,6 +63,14 @@ def create_zarr(path: str, geozarr: bool = False) -> None:
                 "proj:code": "EPSG:4326",
             }
         )
+        attributes["coords:coordinates"] = {
+            "time": {
+                "type": "inline",
+                "values": ["2022-01-01T00:00:00Z", "2022-01-02T00:00:00Z"],
+            },
+            "y": {"type": "reference", "convention": "spatial"},
+            "x": {"type": "reference", "convention": "spatial"},
+        }
 
     root = zarr.open_group(path, mode="w", zarr_format=3, attributes=attributes)
 
