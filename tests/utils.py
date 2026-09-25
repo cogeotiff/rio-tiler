@@ -28,6 +28,13 @@ multiscale_conventions = {
     "name": "multiscales",
     "description": "Multiscale layout of zarr datasets",
 }
+coordinates_conventions = {
+    "schema_url": "https://raw.githubusercontent.com/zarr-conventions/coords/refs/tags/v1/schema.json",
+    "spec_url": "https://github.com/zarr-conventions/coords/blob/v1/README.md",
+    "uuid": "6ca4454a-658a-4348-a667-b39ced0e58cb",
+    "name": "coords",
+    "description": "Domain-agnostic mapping between Zarr array index space and coordinate space.",
+}
 
 
 def create_zarr(path: str, geozarr: bool = False) -> None:
@@ -44,6 +51,7 @@ def create_zarr(path: str, geozarr: bool = False) -> None:
             spatial_conventions,
             proj_conventions,
             multiscale_conventions,
+            coordinates_conventions,
         ]
         attributes.update(
             {
@@ -55,6 +63,14 @@ def create_zarr(path: str, geozarr: bool = False) -> None:
                 "proj:code": "EPSG:4326",
             }
         )
+        attributes["coords:coordinates"] = {
+            "time": {
+                "type": "inline",
+                "values": ["2022-01-01T00:00:00Z", "2022-01-02T00:00:00Z"],
+            },
+            "y": {"type": "reference", "convention": "spatial"},
+            "x": {"type": "reference", "convention": "spatial"},
+        }
 
     root = zarr.open_group(path, mode="w", zarr_format=3, attributes=attributes)
 

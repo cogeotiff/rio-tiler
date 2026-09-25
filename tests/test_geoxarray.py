@@ -15,6 +15,7 @@ from rio_tiler.experimental.xarray import GeoArrayReader
 from rio_tiler.io import XarrayReader
 
 from .conftest import requires_lt314
+from .utils import coordinates_conventions
 
 
 def test_geoxarray_reader():
@@ -590,3 +591,49 @@ def test_geoxarray_zarr_fill_value(zarr_dataset):
     assert img.array.mask[0, 50, 0]
     assert not img.array.mask[0, 100, 0]
     assert not img.array.mask[0, -1, -1]
+
+
+def test_geoxarray_reader_coords():
+    """Test GeoArrayReader with coordinates convention."""
+    store = zarr.storage.MemoryStore()
+    dataset = zarr.create_group(store=store, zarr_format=3)
+    zarrobj = dataset.create_array(
+        "data",
+        shape=(1, 1800, 3600),
+        chunks=(1, 100, 100),
+        dtype="float32",
+        dimension_names=("time", "y", "x"),
+        attributes={
+            "zarr_conventions": [
+                coordinates_conventions,
+            ],
+            "coords:coordinates": {
+                "time": {"type": "inline", "values": ["2024-01-01T00:00:00Z"]},
+            },
+        },
+    )
+    zarrobj[:] = numpy.arange(0.0, 3600 * 1800, dtype="float32").reshape(1, 1800, 3600)
+    zarrobj[:, 0:50, 0:50] = -9999.0  # Add some nodata
+    zarrobj[:, 50:100, 0:50] = 0.0  # Add secondary nodata value
+    zarr.consolidate_metadata(dataset.store)
+
+    ds = xarray.open_zarr(
+        store,
+        decode_times=False,
+        decode_coords=False,
+        consolidated=True,
+        use_zarr_fill_value_as_mask=True,
+        zarr_format=3,
+    )
+
+    xarray_array = ds["data"]
+    geods = GeoArrayReader(
+        input=xarray_array,
+        crs=CRS.from_epsg(4326),
+        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        options={},
+    )
+    assert geods.band_names == ["2024-01-01T00:00:00Z"]
+
+    img = geods.preview()
+    assert img.band_descriptions == ["2024-01-01T00:00:00Z"]

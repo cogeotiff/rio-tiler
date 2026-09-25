@@ -23,7 +23,12 @@ from rio_tiler.errors import (
 from rio_tiler.experimental.zarr import Reader as AsyncZarrReader
 from rio_tiler.io.xarray import XarrayReader
 
-from .utils import create_zarr
+from .utils import (
+    coordinates_conventions,
+    create_zarr,
+    proj_conventions,
+    spatial_conventions,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -595,10 +600,15 @@ async def test_geozarr(geozarr_dataset):
     )
     assert zarrds.crs == CRS.from_epsg(4326)
     assert zarrds.bounds == (-180.0, -90.0, 180.0, 90.0)
+    assert zarrds.band_names == ["2022-01-01", "2022-01-02"]
 
     img = await zarrds.preview(indexes=1)
     assert img.crs == CRS.from_epsg(4326)
     assert img.bounds == (-180.0, -90.0, 180.0, 90.0)
+
+    # bands names from coords convention
+    zarrds = AsyncZarrReader(input=array)
+    assert zarrds.band_names == ["2022-01-01T00:00:00Z", "2022-01-02T00:00:00Z"]
 
 
 async def test_compat_xarray(zarr_dataset):
@@ -763,3 +773,182 @@ async def test_compat_xarray(zarr_dataset):
     assert zarr_img.array.dtype == numpy.float32
     assert zarr_img.array.shape == (2, 56, 100)
     numpy.testing.assert_allclose(img.array, zarr_img.array, rtol=0.5)
+
+
+async def test_coords_conventions():
+    """Test Coordinates convention support."""
+    store = zarr.storage.MemoryStore()
+
+    attributes = {}
+    attributes["zarr_conventions"] = [
+        spatial_conventions,
+        proj_conventions,
+        coordinates_conventions,
+    ]
+
+    # add spatial and projection metadata
+    attributes.update(
+        {
+            "spatial:dimensions": ["y", "x"],
+            "spatial:transform": list(
+                Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+            ),
+            "spatial:bbox": [500000.0, 4000000.0, 500100.0, 4000100.0],
+            "proj:code": "EPSG:32618",
+        }
+    )
+
+    # add coordinates metadata
+    attributes["coords:coordinates"] = {
+        "time": {"type": "inline", "values": ["t1", "t2", "t3"]},
+        "y": {"type": "reference", "convention": "spatial"},
+        "x": {"type": "reference", "convention": "spatial"},
+    }
+    arr_sync = zarr.create(
+        store=store,
+        shape=(3, 100, 100),
+        chunks=(1, 50, 50),
+        dtype="float32",
+        fill_value=-9999.0,
+        dimension_names=("time", "y", "x"),
+        attributes=attributes,
+    )
+    arr_sync[:] = numpy.random.rand(3, 100, 100).astype("float32")
+    arr_sync[0, 10:20, 10:20] = -9999.0  # Add some nodata
+
+    arr = await zarr.api.asynchronous.open_array(store=store, mode="r")
+    reader = AsyncZarrReader(input=arr)
+    assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert reader._dims == ["time", "y", "x"]
+
+    assert reader.coordinates == {"type": "inline", "values": ["t1", "t2", "t3"]}
+    assert reader.band_names == ["t1", "t2", "t3"]
+
+    info = await reader.info()
+    assert info.coordinates == {"type": "inline", "values": ["t1", "t2", "t3"]}
+
+    img = await reader._read()
+    assert img.array.shape == (3, 100, 100)
+    assert img.band_names == ["b1", "b2", "b3"]
+    assert img.band_descriptions == ["t1", "t2", "t3"]
+
+    # Interval
+    reader = AsyncZarrReader(
+        input=arr,
+        coordinates={"type": "interval", "start": 1000, "stop": 3000, "step": 1000},
+    )
+    assert reader.coordinates == {
+        "type": "interval",
+        "start": 1000,
+        "stop": 3000,
+        "step": 1000,
+    }
+    assert reader.band_names == ["1000", "2000", "3000"]
+
+    info = await reader.info()
+    assert info.coordinates == {
+        "type": "interval",
+        "start": 1000,
+        "stop": 3000,
+        "step": 1000,
+    }
+
+    img = await reader._read()
+    assert img.array.shape == (3, 100, 100)
+    assert img.band_names == ["b1", "b2", "b3"]
+    assert img.band_descriptions == ["1000", "2000", "3000"]
+
+    # Date Interval
+    reader = AsyncZarrReader(
+        input=arr,
+        coordinates={
+            "type": "interval",
+            "start": "2024-01-01T00:00:00Z",
+            "stop": "2024-01-03T00:00:00Z",
+            "step": "P1D",
+        },
+    )
+    assert reader.coordinates == {
+        "type": "interval",
+        "start": "2024-01-01T00:00:00Z",
+        "stop": "2024-01-03T00:00:00Z",
+        "step": "P1D",
+    }
+    assert reader.band_names == [
+        "2024-01-01T00:00:00Z",
+        "2024-01-02T00:00:00Z",
+        "2024-01-03T00:00:00Z",
+    ]
+
+    info = await reader.info()
+    assert info.coordinates == {
+        "type": "interval",
+        "start": "2024-01-01T00:00:00Z",
+        "stop": "2024-01-03T00:00:00Z",
+        "step": "P1D",
+    }
+
+    img = await reader._read()
+    assert img.band_descriptions == [
+        "2024-01-01T00:00:00Z",
+        "2024-01-02T00:00:00Z",
+        "2024-01-03T00:00:00Z",
+    ]
+
+    # Date Interval - hours
+    reader = AsyncZarrReader(
+        input=arr,
+        coordinates={
+            "type": "interval",
+            "start": "2024-01-01T00:00:00Z",
+            "stop": "2024-01-01T02:00:00Z",
+            "step": "PT1H",
+        },
+    )
+    assert reader.coordinates == {
+        "type": "interval",
+        "start": "2024-01-01T00:00:00Z",
+        "stop": "2024-01-01T02:00:00Z",
+        "step": "PT1H",
+    }
+    assert reader.band_names == [
+        "2024-01-01T00:00:00Z",
+        "2024-01-01T01:00:00Z",
+        "2024-01-01T02:00:00Z",
+    ]
+
+    info = await reader.info()
+    assert info.coordinates == {
+        "type": "interval",
+        "start": "2024-01-01T00:00:00Z",
+        "stop": "2024-01-01T02:00:00Z",
+        "step": "PT1H",
+    }
+
+    img = await reader._read()
+    assert img.band_descriptions == [
+        "2024-01-01T00:00:00Z",
+        "2024-01-01T01:00:00Z",
+        "2024-01-01T02:00:00Z",
+    ]
+
+    with pytest.warns(UserWarning):
+        reader = AsyncZarrReader(
+            input=arr,
+            coordinates={
+                "type": "interval",
+                "start": 1000,
+                "stop": 2000,
+                "step": 1000,
+            },
+        )
+    # More coordinates than bands
+    reader = AsyncZarrReader(
+        input=arr,
+        coordinates={"type": "inline", "values": [1000, 2000, 3000, 4000]},
+    )
+    assert reader.coordinates == {"type": "inline", "values": [1000, 2000, 3000, 4000]}
+    assert not reader.band_names
+
+    img = await reader._read()
+    assert img.band_descriptions == ["b1", "b2", "b3"]

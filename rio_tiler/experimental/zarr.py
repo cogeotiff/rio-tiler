@@ -12,6 +12,7 @@ import attr
 import numpy
 import zarr
 from affine import Affine
+from isochron import Duration, format_datetime, parse_datetime, parse_duration
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
@@ -47,25 +48,13 @@ from rio_tiler.utils import (
 MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
 SPATIAL_CONVENTION_UUID = "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
 PROJ_CONVENTION_UUID = "f17cb550-5864-4468-aeb7-f3180cfb622f"
+COORDS_CONVENTION_UUID = "6ca4454a-658a-4348-a667-b39ced0e58cb"
 
 
-def _has_multiscales(conventions: list[dict]) -> bool:
+def find_convention(conventions: list[dict], uuid: str) -> bool:
+    """Check if a specific convention is present in the list of conventions."""
     return next(
-        (True for c in conventions if c["uuid"] == MULTISCALE_CONVENTION_UUID),
-        False,
-    )
-
-
-def _has_spatial(conventions: list[dict]) -> bool:
-    return next(
-        (True for c in conventions if c["uuid"] == SPATIAL_CONVENTION_UUID),
-        False,
-    )
-
-
-def _has_proj(conventions: list[dict]) -> bool:
-    return next(
-        (True for c in conventions if c["uuid"] == PROJ_CONVENTION_UUID),
+        (True for c in conventions if c["uuid"] == uuid),
         False,
     )
 
@@ -97,6 +86,58 @@ def _get_transform(attributes: dict) -> Affine | None:
     return None
 
 
+def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
+    """Return band names from coordinates convention.
+
+    Derive band names from coordinates
+    Supports for 2 types:
+    - Inline coordinate values — short value vectors embedded directly in the metadata
+        (for example, a 4-band spectral axis where allocating a separate array would be wasteful).
+    - Implicit regularly spaced values — a compact start / end / step descriptor for axes that are uniformly spaced,
+        covering both numeric domains (angles, distances, frequencies, levels) and ISO 8601 time intervals, without enumerating every value.
+
+    """
+    if coordinates["type"] == "interval":
+        step: str | int | float = coordinates["step"]
+        # Handle numeric interval
+        if isinstance(step, (int, float)):
+            start: int = coordinates["start"]
+            stop: int = coordinates["stop"]
+            return list(map(str, range(start, stop + step, step)))  # type: ignore
+
+        # Handle ISO 8601 (temporal) interval
+        elif isinstance(step, str):
+            start_datetime = parse_datetime(coordinates["start"])
+            stop_datetime = parse_datetime(coordinates["stop"])
+            step_duration = parse_duration(step)
+            if isinstance(step_duration, Duration):
+                return [
+                    format_datetime(start_datetime + i * step_duration)  # type: ignore
+                    for i in range(
+                        (
+                            (stop_datetime - start_datetime)
+                            // step_duration.to_timedelta(start_datetime)
+                            + 1
+                        )
+                    )
+                ]
+            else:
+                return [
+                    format_datetime(start_datetime + i * step_duration)  # type: ignore
+                    for i in range(
+                        ((stop_datetime - start_datetime) // step_duration) + 1
+                    )
+                ]
+
+    elif coordinates["type"] == "inline":
+        return list(map(str, coordinates["values"]))
+
+    else:
+        warnings.warn(f"Unsupported coordinate type '{coordinates['type']}'", UserWarning)
+
+    return None
+
+
 @attr.s
 class Reader(AsyncBaseReader):
     """Rio-tiler Zarr.AsyncArray Reader.
@@ -120,6 +161,7 @@ class Reader(AsyncBaseReader):
 
     crs: CRS | None = attr.ib(default=None)
     transform: Affine | None = attr.ib(default=None)
+    coordinates: dict | None = attr.ib(default=None)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
@@ -134,6 +176,8 @@ class Reader(AsyncBaseReader):
     # List of names for the first dimension (e.g time, bands, etc)
     band_names: list[str] | None = attr.ib(default=None)
 
+    _dims: list[str] = attr.ib(init=False, factory=list)
+
     async def __aenter__(self):
         """Support using with Context Managers."""
         return self
@@ -142,7 +186,7 @@ class Reader(AsyncBaseReader):
         """Support using with Context Managers."""
         pass
 
-    def __attrs_post_init__(self) -> None:
+    def __attrs_post_init__(self) -> None:  # noqa: C901
         """Post init: derive height, width, count from array shape."""
         if self.input.ndim not in (2, 3):
             raise ValueError(
@@ -154,7 +198,8 @@ class Reader(AsyncBaseReader):
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
         # Transform
-        if not self.transform and _has_spatial(conventions):
+        _has_spatial = find_convention(conventions, SPATIAL_CONVENTION_UUID)
+        if not self.transform and _has_spatial:
             if tr := _get_transform(attributes):
                 self.transform = tr
 
@@ -163,7 +208,8 @@ class Reader(AsyncBaseReader):
         )
 
         # CRS
-        if not self.crs and _has_proj(conventions):
+        _has_proj = find_convention(conventions, PROJ_CONVENTION_UUID)
+        if not self.crs and _has_proj:
             self.crs = _get_proj_crs(attributes)
 
         assert self.crs, (
@@ -179,10 +225,35 @@ class Reader(AsyncBaseReader):
             self.nbands = shape[0]
             self.height = shape[1]
             self.width = shape[2]
+        else:
+            raise ValueError(f"Unexpected array shape {shape}, expected 2D or 3D array")
 
         self.bounds = array_bounds(self.height, self.width, self.transform)
 
         self._dims = list(getattr(self.input.metadata, "dimension_names", []))
+
+        _has_coords = find_convention(conventions, COORDS_CONVENTION_UUID)
+        if not self.coordinates and _has_coords:
+            coordinates = attributes.get("coords:coordinates", {})
+            _coords = list(coordinates.keys())
+            if _has_spatial:
+                non_spatial_coords = next(
+                    dim
+                    for dim in _coords
+                    if dim not in attributes.get("spatial:dimensions", [])
+                )
+                self.coordinates = coordinates[non_spatial_coords]
+
+        if not self.band_names and self.coordinates:
+            if band_names := _get_bnames_from_coordinates(self.coordinates):
+                if len(band_names) == self.nbands:
+                    self.band_names = band_names
+                else:
+                    warnings.warn(
+                        f"Number of band names derived from coordinates ({len(band_names)}) "
+                        f"does not match number of bands in the array ({self.nbands})",
+                        UserWarning,
+                    )
 
         if self.band_names:
             assert len(self.band_names) == self.nbands, (
@@ -245,6 +316,7 @@ class Reader(AsyncBaseReader):
             "width": self.width,
             "height": self.height,
             "dimensions": self._dims,
+            "coordinates": self.coordinates,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
                 for k, v in attrs.items()
@@ -888,6 +960,7 @@ class ArrayMetadata(TypedDict):
     transform: Affine
     height: int
     width: int
+    coordinates: dict[str, Any] | None
 
 
 class GroupMetadata(TypedDict):
@@ -1114,7 +1187,9 @@ class GeoZarrReader(AsyncBaseReader):
         height: int | None = None
         width: int | None = None
         bounds: BBox | None = None
-        if _has_spatial(conventions) and _has_proj(conventions):
+        if find_convention(conventions, SPATIAL_CONVENTION_UUID) and find_convention(
+            conventions, PROJ_CONVENTION_UUID
+        ):
             # CRS
             crs = _get_proj_crs(attributes)
 
@@ -1129,7 +1204,7 @@ class GeoZarrReader(AsyncBaseReader):
                 height, width = spatial_shape[-2:]
 
             # Case 2: check multiscales for transform and shape
-            if _has_multiscales(conventions):
+            if find_convention(conventions, MULTISCALE_CONVENTION_UUID):
                 # assume the first layout is the highest resolution
                 first_res = attributes["multiscales"]["layout"][0]
 
@@ -1160,7 +1235,7 @@ class GeoZarrReader(AsyncBaseReader):
     def minzoom(self) -> int:
         """Return dataset minzoom."""
         conventions: list[dict] = self.input.attrs.get("zarr_conventions", [])
-        if _has_multiscales(conventions):
+        if find_convention(conventions, MULTISCALE_CONVENTION_UUID):
             # NOTE: assume the last layout is the lowest resolution
             last_res = self.input.attrs["multiscales"]["layout"][-1]
 
@@ -1186,7 +1261,7 @@ class GeoZarrReader(AsyncBaseReader):
     def maxzoom(self) -> int:
         """Return dataset maxzoom."""
         conventions: list[dict] = self.input.attrs.get("zarr_conventions", [])
-        if _has_multiscales(conventions):
+        if find_convention(conventions, MULTISCALE_CONVENTION_UUID):
             # NOTE: assume the first layout is the highest resolution
             first_res = self.input.attrs["multiscales"]["layout"][0]
 
@@ -1428,18 +1503,25 @@ class GeoZarrReader(AsyncBaseReader):
         root_crs: CRS | None = None
         root_transform: Affine | None = None
         root_bbox: BBox | None = None
+        coordinates: dict[str, Any] | None = None
+        band_coordinates: dict[str, Any] | None = None
+        spatial_dims: list[str] | None = None
 
         conventions = g.attrs.get("zarr_conventions", [])
         # Top Level spatial/geo metadata
         # 1. Group level metadata (crs, transform)
-        if _has_proj(conventions):
+        if find_convention(conventions, PROJ_CONVENTION_UUID):
             root_crs = _get_proj_crs(g.attrs)
 
-        if _has_spatial(conventions):
+        if find_convention(conventions, SPATIAL_CONVENTION_UUID):
+            spatial_dims = g.attrs["spatial:dimensions"]
             root_transform = _get_transform(g.attrs)
             root_bbox = g.attrs.get("spatial:bbox")
 
-        group_is_multiscale = _has_multiscales(conventions)
+        if find_convention(conventions, COORDS_CONVENTION_UUID):
+            coordinates = g.attrs["coords:coordinates"]
+
+        group_is_multiscale = find_convention(conventions, MULTISCALE_CONVENTION_UUID)
         if group_is_multiscale:
             # NOTE: We assume a group with multiscale should have geo-proj convention
             assert root_crs, (
@@ -1475,8 +1557,28 @@ class GeoZarrReader(AsyncBaseReader):
                         f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
                     )
 
+                    array_dims = array.attrs.get("spatial:dimensions") or spatial_dims
+
+                    # NOTE: We assume the last two dimensions are spatial (height, width)
                     # TODO: is this always true ?
                     height, width = array.shape[-2:]
+
+                    if find_convention(
+                        array.attrs.get("zarr_conventions", []),  # type: ignore
+                        MULTISCALE_CONVENTION_UUID,
+                    ):
+                        coordinates = cast(
+                            dict[str, Any], array.attrs["coords:coordinates"]
+                        )
+
+                    band_coordinates = None
+                    if array_dims and coordinates:
+                        non_spatial_coords = next(
+                            dim
+                            for dim in list(coordinates.keys())
+                            if dim not in array_dims  # type: ignore
+                        )
+                        band_coordinates = coordinates[non_spatial_coords]
 
                     arrays[variable_name].append(
                         {
@@ -1485,6 +1587,7 @@ class GeoZarrReader(AsyncBaseReader):
                             "height": height,
                             "width": width,
                             "transform": transform,
+                            "coordinates": band_coordinates,
                         }
                     )
 
@@ -1493,6 +1596,7 @@ class GeoZarrReader(AsyncBaseReader):
             async for array in g.array_values():
                 array_crs: CRS | None = None
                 array_transform: Affine | None = None
+                band_coordinates = None
 
                 # NOTE: skip non-data arrays
                 # TODO: be smarter
@@ -1501,17 +1605,34 @@ class GeoZarrReader(AsyncBaseReader):
 
                 attributes = cast(dict[str, Any], array.attrs)
                 conventions = attributes.get("zarr_conventions", [])
-                if _has_proj(conventions):
+                if find_convention(conventions, PROJ_CONVENTION_UUID):
                     array_crs = _get_proj_crs(attributes)
 
-                if _has_spatial(conventions):
+                if find_convention(conventions, SPATIAL_CONVENTION_UUID):
                     array_transform = _get_transform(attributes)
 
                 array_crs = array_crs or root_crs
-                array_transform = array_transform or root_transform
+                array_transform = _get_transform(attributes) or root_transform
+                array_dims = array.attrs.get("spatial:dimensions") or spatial_dims
 
+                # NOTE: We assume the last two dimensions are spatial (height, width)
                 # TODO: is this always true ?
                 height, width = array.shape[-2:]
+
+                if find_convention(
+                    array.attrs.get("zarr_conventions", []),  # type: ignore
+                    MULTISCALE_CONVENTION_UUID,
+                ):
+                    coordinates = cast(dict[str, Any], array.attrs["coords:coordinates"])
+
+                band_coordinates = None
+                if array_dims and coordinates:
+                    non_spatial_coords = next(
+                        dim
+                        for dim in list(coordinates.keys())
+                        if dim not in array_dims  # type: ignore
+                    )
+                    band_coordinates = coordinates[non_spatial_coords]
 
                 if all([array_crs, array_transform]):
                     array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
@@ -1522,6 +1643,7 @@ class GeoZarrReader(AsyncBaseReader):
                             "height": height,
                             "width": width,
                             "transform": array_transform,
+                            "coordinates": band_coordinates,
                         }
                     ]
 
@@ -1750,6 +1872,7 @@ class GeoZarrReader(AsyncBaseReader):
                 input=array_metadata["array"],
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
+                coordinates=array_metadata["coordinates"],
                 tms=self.tms,
             ) as src:
                 return await src.part(
@@ -1814,6 +1937,7 @@ class GeoZarrReader(AsyncBaseReader):
                 input=array_metadata["array"],
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
+                coordinates=array_metadata["coordinates"],
                 tms=self.tms,
             ) as src:
                 return await src.preview(
@@ -1873,6 +1997,7 @@ class GeoZarrReader(AsyncBaseReader):
                 input=array_metadata["array"],
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
+                coordinates=array_metadata["coordinates"],
                 tms=self.tms,
             ) as src:
                 return await src.point(

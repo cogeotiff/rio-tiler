@@ -11,7 +11,12 @@ from rasterio.crs import CRS
 
 from rio_tiler.experimental.zarr import GeoZarrReader
 
-from .utils import multiscale_conventions, proj_conventions, spatial_conventions
+from .utils import (
+    coordinates_conventions,
+    multiscale_conventions,
+    proj_conventions,
+    spatial_conventions,
+)
 
 pytestmark = pytest.mark.asyncio
 
@@ -26,6 +31,7 @@ async def test_geozarr_reader():
         spatial_conventions,
         proj_conventions,
         multiscale_conventions,
+        coordinates_conventions,
     ]
     attributes.update(
         {
@@ -51,6 +57,11 @@ async def test_geozarr_reader():
                         ),
                     },
                 ]
+            },
+            "coords:coordinates": {
+                "time": {"type": "inline", "values": ["2022-01-01T00:00:00Z"]},
+                "y": {"type": "reference", "convention": "spatial"},
+                "x": {"type": "reference", "convention": "spatial"},
             },
         }
     )
@@ -201,10 +212,22 @@ async def test_geozarr_reader():
     assert meta["arrays"]["b01"][0]["width"] == 1000
     assert meta["arrays"]["b02"][0]["width"] == 1000
     assert meta["arrays"]["b02"][1]["width"] == 100
+    assert meta["arrays"]["b01"][0]["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
+    assert meta["arrays"]["b02"][0]["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
 
     array = meta["arrays"].get("b02")
     selected = geozarrds.select_variable(array)
     assert selected["width"] == 1000
+    assert selected["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
 
     selected = geozarrds.select_variable(array, max_size=900)
     assert selected["width"] == 1000
@@ -221,6 +244,9 @@ async def test_geozarr_reader():
 
     selected = geozarrds.select_variable(array, max_size=50)
     assert selected["width"] == 1000
+
+    img = await geozarrds.preview(variables=["b01", "b02"])
+    assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
 
 
 async def test_geozarr_root():
@@ -246,6 +272,7 @@ async def test_geozarr_root():
             "zarr_conventions": [
                 spatial_conventions,
                 proj_conventions,
+                coordinates_conventions,
             ],
             "spatial:dimensions": ["y", "x"],
             "spatial:bbox": [500000, 4190000, 510000, 4200000],
@@ -253,6 +280,11 @@ async def test_geozarr_root():
             "spatial:transform": list(
                 Affine.translation(500000, 4200000) * Affine.scale(10, -10)
             ),
+            "coords:coordinates": {
+                "time": {"type": "inline", "values": ["2022-01-01T00:00:00Z"]},
+                "y": {"type": "reference", "convention": "spatial"},
+                "x": {"type": "reference", "convention": "spatial"},
+            },
         },
     )
 
@@ -348,6 +380,14 @@ async def test_geozarr_root():
     assert len(meta["arrays"]["b02"]) == 1
     assert meta["arrays"]["b01"][0]["width"] == 1000
     assert meta["arrays"]["b02"][0]["width"] == 1000
+    assert meta["arrays"]["b01"][0]["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
+    assert meta["arrays"]["b02"][0]["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
 
     # No Multiscale
     z = await geozarrds.get_minzoom(variables="data:b01")
@@ -358,6 +398,10 @@ async def test_geozarr_root():
     array = meta["arrays"].get("b01")
     selected = geozarrds.select_variable(array)
     assert selected["width"] == 1000
+    assert selected["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
 
     bbox = await geozarrds.get_bounds(variables="data:b01")
     assert bbox == (
@@ -369,6 +413,9 @@ async def test_geozarr_root():
 
     bbox = await geozarrds.get_bounds(variables="data:b01", crs=CRS.from_epsg(32633))
     assert bbox == (500000, 4190000, 510000, 4200000)
+
+    img = await geozarrds.preview(variables=["data:b01", "data:b02"])
+    assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
 
 
 async def test_geozarr_root_with_arrays():
@@ -387,6 +434,7 @@ async def test_geozarr_root_with_arrays():
         "zarr_conventions": [
             spatial_conventions,
             proj_conventions,
+            coordinates_conventions,
         ],
         "spatial:dimensions": ["y", "x"],
         "spatial:bbox": [500000, 4190000, 510000, 4200000],
@@ -394,6 +442,11 @@ async def test_geozarr_root_with_arrays():
         "spatial:transform": list(
             Affine.translation(500000, 4200000) * Affine.scale(10, -10)
         ),
+        "coords:coordinates": {
+            "time": {"type": "inline", "values": ["2022-01-01T00:00:00Z"]},
+            "y": {"type": "reference", "convention": "spatial"},
+            "x": {"type": "reference", "convention": "spatial"},
+        },
     }
     # /
     root = zarr.open_group(store, mode="w", zarr_format=3, attributes=attributes)
@@ -480,6 +533,14 @@ async def test_geozarr_root_with_arrays():
     assert len(meta["arrays"]["b02"]) == 1
     assert meta["arrays"]["b01"][0]["width"] == 1000
     assert meta["arrays"]["b02"][0]["width"] == 1000
+    assert meta["arrays"]["b01"][0]["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
+    assert meta["arrays"]["b02"][0]["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
 
     # No Multiscale
     z = await geozarrds.get_minzoom(variables="b01")
@@ -490,6 +551,10 @@ async def test_geozarr_root_with_arrays():
     array = meta["arrays"].get("b01")
     selected = geozarrds.select_variable(array)
     assert selected["width"] == 1000
+    assert selected["coordinates"] == {
+        "type": "inline",
+        "values": ["2022-01-01T00:00:00Z"],
+    }
 
     bbox = await geozarrds.get_bounds(variables="b01")
     assert bbox == (
@@ -501,6 +566,9 @@ async def test_geozarr_root_with_arrays():
 
     bbox = await geozarrds.get_bounds(variables="b01", crs=CRS.from_epsg(32633))
     assert bbox == (500000, 4190000, 510000, 4200000)
+
+    img = await geozarrds.preview(variables=["b01", "b02"])
+    assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
 
 
 async def test_custom_geozarr_root():
