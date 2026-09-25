@@ -245,7 +245,15 @@ class Reader(AsyncBaseReader):
                 self.coordinates = coordinates[non_spatial_coords]
 
         if not self.band_names and self.coordinates:
-            self.band_names = _get_bnames_from_coordinates(self.coordinates)
+            if band_names := _get_bnames_from_coordinates(self.coordinates):
+                if len(band_names) == self.nbands:
+                    self.band_names = band_names
+                else:
+                    warnings.warn(
+                        f"Number of band names derived from coordinates ({len(band_names)}) "
+                        f"does not match number of bands in the array ({self.nbands})",
+                        UserWarning,
+                    )
 
         if self.band_names:
             assert len(self.band_names) == self.nbands, (

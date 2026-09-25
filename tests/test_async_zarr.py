@@ -931,3 +931,24 @@ async def test_coords_conventions():
         "2024-01-01T01:00:00Z",
         "2024-01-01T02:00:00Z",
     ]
+
+    with pytest.warns(UserWarning):
+        reader = AsyncZarrReader(
+            input=arr,
+            coordinates={
+                "type": "interval",
+                "start": 1000,
+                "stop": 2000,
+                "step": 1000,
+            },
+        )
+    # More coordinates than bands
+    reader = AsyncZarrReader(
+        input=arr,
+        coordinates={"type": "inline", "values": [1000, 2000, 3000, 4000]},
+    )
+    assert reader.coordinates == {"type": "inline", "values": [1000, 2000, 3000, 4000]}
+    assert not reader.band_names
+
+    img = await reader._read()
+    assert img.band_descriptions == ["b1", "b2", "b3"]
