@@ -491,8 +491,6 @@ class Reader(BaseReader):
         # Get BBOX of the polygon
         bbox = featureBounds(shape)
 
-        vrt_options = kwargs.pop("vrt_options", {})
-
         img = self.part(
             bbox,
             dst_crs=dst_crs,
@@ -502,7 +500,6 @@ class Reader(BaseReader):
             max_size=max_size,
             width=width,
             height=height,
-            vrt_options=vrt_options,
             buffer=buffer,
             **kwargs,
         )
