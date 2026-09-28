@@ -1253,3 +1253,26 @@ def test_expression_order():
         arr = src.preview().array
         numpy.testing.assert_array_equal(arr[1] + 1, img.array[0])
         numpy.testing.assert_array_equal(arr[0] + 2, img.array[1])
+
+
+def test_feature_reader_vrt_options():
+    """Should apply reader-level `vrt_options` to `feature` like per-call ones.
+
+    Ref: https://github.com/cogeotiff/rio-tiler/issues/1005
+    """
+    # cutline in pixel coordinates: the top-left quarter of the dataset
+    vrt_options = {"cutline": "POLYGON ((0 0, 1329 0, 1329 1333, 0 1333, 0 0))"}
+    shape = {
+        "type": "Polygon",
+        "coordinates": [
+            [[-61.0, 72.5], [-52.5, 72.5], [-52.5, 74.5], [-61.0, 74.5], [-61.0, 72.5]]
+        ],
+    }
+
+    with Reader(input=COGEO, options={}) as src:
+        expected = src.feature(shape, max_size=256, vrt_options=vrt_options)
+
+    with Reader(input=COGEO, options={"vrt_options": vrt_options}) as src:
+        img = src.feature(shape, max_size=256)
+
+    numpy.testing.assert_array_equal(img.mask, expected.mask)
