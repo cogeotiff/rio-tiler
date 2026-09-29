@@ -35,10 +35,10 @@ from rio_tiler.models import BandStatistics, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
-    _get_width_height,
-    _missing_size,
     _validate_shape_input,
     cast_to_sequence,
+    estimate_output,
+    output_size,
 )
 
 if TYPE_CHECKING:
@@ -300,71 +300,32 @@ class Reader(AsyncBaseReader):
 
         indexes = cast_to_sequence(indexes)
 
-        if max_size and (width or height):
-            warnings.warn(
-                "'max_size' will be ignored with with 'height' or 'width' set.",
-                UserWarning,
-            )
-            max_size = None
-
         dst_crs = dst_crs or bounds_crs
 
-        # Transform bbox from bounds_crs → dst_crs
+        # 1. Transform output bbox from bounds_crs → output_crs
         if bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
 
-        # 1. Estimate `max` output dimensions
-        if dst_crs != self.crs:
-            # Case 1: Reprojection needed
-            # - reproject bbox to dataset CRS
-            # - compute native output shape in dataset resolution/CRS
-            # - compute output shape in output CRS
-            dst_bounds = transform_bounds(dst_crs, self.crs, *bbox, densify_pts=21)
-            native_src_w = max(
-                1, round((dst_bounds[2] - dst_bounds[0]) / abs(self.input.transform.a))
-            )
-            native_src_h = max(
-                1, round((dst_bounds[3] - dst_bounds[1]) / abs(self.input.transform.e))
-            )
-            _, dst_width, dst_height = calculate_default_transform(
-                self.crs, dst_crs, native_src_w, native_src_h, *dst_bounds
-            )
-
-        else:
-            # Case 2: No reprojection needed
-            # - keep output dataset bbox as input bbox
-            # - compute output shape in dataset resolution/CRS
-            dst_bounds = bbox
-            dst_width = max(1, round((bbox[2] - bbox[0]) / abs(self.input.transform.a)))
-            dst_height = max(1, round((bbox[3] - bbox[1]) / abs(self.input.transform.e)))
-
-        # Case 1: `max_size` is set,
-        # compute output shape based on it,
-        # respecting aspect ratio of the output bbox (dst_width/dst_height)
-        if max_size:
-            height, width = _get_width_height(max_size, dst_height, dst_width)
-
-        # Case 2: One of width/height is missing,
-        # compute it but keep the aspect ratio from the max output bbox (dst_width/dst_height)
-        elif _missing_size(width, height):
-            ratio = dst_height / dst_width
-            if width:
-                height = math.ceil(width * ratio)
-            else:
-                width = math.ceil(height / ratio)
-
-        # 2. Output shape (in the output CRS)
-        height = cast(int, height or dst_height)
-        width = cast(int, width or dst_width)
+        # 2. Estimate output shape and bounds
+        height, width, dst_bounds = estimate_output(
+            dataset_crs=self.crs,
+            dataset_transform=self.transform,  # type: ignore
+            output_bounds=bbox,
+            output_crs=dst_crs,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
 
         # 3. Select IFD based on output resolution in dataset CRS
+        w, s, e, n = bbox
         if dst_crs != self.crs:
             # Get Transform from output shape and bbox
             transform, _, _ = calculate_default_transform(
-                dst_crs, self.crs, width, height, *bbox
+                dst_crs, self.crs, width, height, w, s, e, n
             )
         else:
-            transform = from_bounds(*bbox, width, height)
+            transform = from_bounds(w, s, e, n, width, height)
 
         target_res = min(abs(transform.a), abs(transform.e))
 
@@ -372,42 +333,41 @@ class Reader(AsyncBaseReader):
         if level := self._get_overview_level(target_res):
             dataset = self.input.overviews[level - 1]
 
-        # 4. Build pixel window, clamped to dataset bounds
-        rasterio_win = window_from_bounds(*dst_bounds, transform=dataset.transform)
-        row_off = math.floor(rasterio_win.row_off)
-        col_off = math.floor(rasterio_win.col_off)
-        win_width = math.ceil(rasterio_win.width) + 1
-        win_height = math.ceil(rasterio_win.height) + 1
+        # 4. Build pixel window from bounds in dataset CRS
+        window = window_from_bounds(*dst_bounds, transform=dataset.transform)
+
+        # 5. Validate window intersection
+        row_off = math.floor(window.row_off)
+        col_off = math.floor(window.col_off)
+        win_width = math.ceil(window.width) + 1
+        win_height = math.ceil(window.height) + 1
 
         # TODO: add `minimum_overlap` like in reader.part method
-        col_end = min(dataset.width, math.ceil(rasterio_win.col_off + rasterio_win.width))
-        row_end = min(
-            dataset.height, math.ceil(rasterio_win.row_off + rasterio_win.height)
-        )
+        col_end = min(dataset.width, math.ceil(window.col_off + window.width))
+        row_end = min(dataset.height, math.ceil(window.row_off + window.height))
         if col_off >= col_end or row_off >= row_end:
             raise ValueError("Input BBOX and dataset's bounds do not intersect")
 
+        # 6. Clamp window to array bounds
         clipped_col_off = max(0, col_off)
         clipped_row_off = max(0, row_off)
         clipped_col_stop = min(dataset.width, col_off + win_width)
         clipped_row_stop = min(dataset.height, row_off + win_height)
-        clipped_width = clipped_col_stop - clipped_col_off
-        clipped_height = clipped_row_stop - clipped_row_off
 
-        # 5. Read GeotTIFF/Overview dataset with input window in dataset CRS
+        # 7. Read GeotTIFF/Overview dataset with input window in dataset CRS
         img = await self._read(
             dataset,
             indexes=indexes,
             window=Window(
                 col_off=clipped_col_off,
                 row_off=clipped_row_off,
-                width=clipped_width,
-                height=clipped_height,
+                width=clipped_col_stop - clipped_col_off,
+                height=clipped_row_stop - clipped_row_off,
             ),
             unscale=unscale,
         )
 
-        # 6. Reproject/resample using rasterio.warp.reproject
+        # 8. Reproject/resample using rasterio.warp.reproject
         img = warp(
             img,
             dst_crs=dst_crs,
@@ -441,6 +401,7 @@ class Reader(AsyncBaseReader):
         Args:
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
@@ -452,6 +413,8 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
+        dst_crs = dst_crs or self.crs
+
         if indexes and expression:
             warnings.warn(
                 "Both expression and indexes passed; expression will overwrite indexes parameter.",
@@ -463,40 +426,27 @@ class Reader(AsyncBaseReader):
 
         indexes = cast_to_sequence(indexes)
 
-        if max_size and (width or height):
-            warnings.warn(
-                "'max_size' will be ignored with with 'height' or 'width' set.",
-                UserWarning,
-            )
-            max_size = None
-
         # 1. Determine output shape
         # get height/width of the dataset in the output CRS
-        dst_width = self.input.width
-        dst_height = self.input.height
-        if dst_crs and dst_crs != self.crs:
+        dst_width: int = self.input.width
+        dst_height: int = self.input.height
+        if dst_crs != self.crs:
             # Get shape of the dataset in the output CRS
-            _, dst_width, dst_height = calculate_default_transform(
+            _, dst_width, dst_height = calculate_default_transform(  # type: ignore
                 self.crs, dst_crs, self.width, self.height, *self.bounds
             )
 
-        if max_size:
-            height, width = _get_width_height(max_size, dst_height, dst_width)
-
-        elif _missing_size(width, height):
-            ratio = dst_height / dst_width
-            if width:
-                height = math.ceil(width * ratio)
-            else:
-                width = math.ceil(height / ratio)
-
-        # Shape in the output CRS
-        height = height or dst_height
-        width = width or dst_width
+        height, width = output_size(
+            dataset_height=dst_height,
+            dataset_width=dst_width,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
 
         # 2. determine overview level to read
         # Output dataset `transform` in the output CRS
-        if dst_crs and dst_crs != self.crs:
+        if dst_crs != self.crs:
             proj_bbox = transform_bounds(
                 self.crs, dst_crs, *self.input.bounds, densify_pts=21
             )
@@ -522,7 +472,7 @@ class Reader(AsyncBaseReader):
             img = img.apply_expression(expression)
 
         # 5. Reproject if needed
-        if dst_crs and dst_crs != self.crs:
+        if dst_crs != self.crs:
             img = img.reproject(
                 dst_crs=dst_crs,
                 reproject_method=reproject_method,
