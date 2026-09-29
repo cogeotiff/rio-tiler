@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.4.7 (2026-09-28)
+
+* fix: do not ignore vrt_options passed through the reader options when calling `feature` method
+
 ## 9.4.6 (2026-09-17)
 
 * fix: add catch-all for exceptions in `apply_expression` to raise `InvalidExpression`
