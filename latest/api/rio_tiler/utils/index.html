@@ -2300,17 +2300,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.utils._missing_size" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_missing_size
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2348,6 +2337,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;create_cutline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.estimate_output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;estimate_output
       
     </span>
   </a>
@@ -2410,6 +2410,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_width_or_height" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_width_or_height
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.utils.inherit_rasterio_env" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2458,6 +2469,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;normalize_bounds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.output_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;output_size
       
     </span>
   </a>
@@ -2763,17 +2785,6 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.utils._missing_size" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_missing_size
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
   <a href="#rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2811,6 +2822,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;create_cutline
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.estimate_output" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;estimate_output
       
     </span>
   </a>
@@ -2873,6 +2895,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_width_or_height" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_width_or_height
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.utils.inherit_rasterio_env" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2921,6 +2954,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;normalize_bounds
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.output_size" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;output_size
       
     </span>
   </a>
@@ -3281,26 +3325,6 @@
 <div class="doc doc-object doc-function">
 
 
-<h3 id="rio_tiler.utils._missing_size" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">_missing_size</span>
-
-
-<a href="#rio_tiler.utils._missing_size" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_missing_size</span><span class="p">(</span><span class="n">w</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Check if one and only one size (width, height) is valid.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
 <h3 id="rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">_requested_tile_aligned_with_internal_tile</span>
 
@@ -3406,6 +3430,26 @@
     </ul>
         <p>Returns:
     str: WKT geometry in form of `POLYGON ((x y, x y, ...)))</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.estimate_output" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">estimate_output</span>
+
+
+<a href="#rio_tiler.utils.estimate_output" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">estimate_output</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dataset_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">dataset_transform</span><span class="p">:</span> <span class="n"><span title="affine.Affine">Affine</span></span><span class="p">,</span> <span class="n">output_bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">output_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">output_height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">output_width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Estimate output shape and bounds.</p>
 
 
     </div>
@@ -3752,6 +3796,26 @@
 <div class="doc doc-object doc-function">
 
 
+<h3 id="rio_tiler.utils.has_width_or_height" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">has_width_or_height</span>
+
+
+<a href="#rio_tiler.utils.has_width_or_height" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">has_width_or_height</span><span class="p">(</span><span class="n">w</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">h</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check if one and only one size (width, height) is valid.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="rio_tiler.utils.inherit_rasterio_env" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">inherit_rasterio_env</span>
 
@@ -3936,6 +4000,26 @@ function is called.</p>
     <div class="doc doc-contents ">
 
         <p>Return BBox in correct minx, miny, maxx, maxy order.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.output_size" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">output_size</span>
+
+
+<a href="#rio_tiler.utils.output_size" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">output_size</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dataset_height</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">|</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">dataset_width</span><span class="p">:</span> <span class="n"><span title="float">float</span></span> <span class="o">|</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">output_height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">output_width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Output height and width.</p>
 
 
     </div>
