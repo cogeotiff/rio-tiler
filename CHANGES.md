@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.4.8 (2026-09-30)
+
+* add: utility functions to calculate output image size (for part/feature/preview) methods
+
 ## 9.4.7 (2026-09-28)
 
 * fix: do not ignore vrt_options passed through the reader options when calling `feature` method
