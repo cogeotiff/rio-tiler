@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import math
 import warnings
 from typing import Any, TypedDict, cast
 
@@ -39,11 +38,10 @@ from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
     _check_geographic_bounds,
-    _get_width_height,
-    _missing_size,
     _validate_shape_input,
     cast_to_sequence,
     get_array_statistics,
+    output_size,
 )
 
 try:
@@ -366,13 +364,6 @@ class XarrayReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        if max_size and (width or height):
-            warnings.warn(
-                "'max_size' will be ignored with with 'height' or 'width' set.",
-                UserWarning,
-            )
-            max_size = None
-
         dst_crs = dst_crs or bounds_crs
 
         da, band_descriptions = self._sel_indexes(indexes)
@@ -452,18 +443,14 @@ class XarrayReader(BaseReader):
         dst_width = max(1, round((e - w) / dst_transform.a))
         dst_height = max(1, round((s - n) / dst_transform.e))
 
-        if max_size:
-            height, width = _get_width_height(max_size, dst_height, dst_width)
+        height, width = output_size(
+            dataset_height=dst_height,
+            dataset_width=dst_width,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
 
-        elif _missing_size(height, width):
-            ratio = dst_height / dst_width
-            if width:
-                height = math.ceil(width * ratio)
-            else:
-                width = math.ceil(height / ratio)
-
-        height = height or dst_height
-        width = width or dst_width
         da = da.rio.reproject(
             dst_crs,
             shape=(height, width),
@@ -519,13 +506,6 @@ class XarrayReader(BaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        if max_size and (width or height):
-            warnings.warn(
-                "'max_size' will be ignored with with 'height' or 'width' set.",
-                UserWarning,
-            )
-            max_size = None
-
         da, band_descriptions = self._sel_indexes(indexes)
 
         if da.nbytes > MAX_ARRAY_SIZE:
@@ -622,17 +602,15 @@ class XarrayReader(BaseReader):
             nodata=da.rio.nodata,
         )
 
-        if max_size:
-            height, width = _get_width_height(max_size, img.height, img.width)
+        height, width = output_size(
+            dataset_height=img.height,
+            dataset_width=img.width,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
 
-        elif _missing_size(height, width):
-            ratio = img.height / img.width
-            if width:
-                height = math.ceil(width * ratio)
-            else:
-                width = math.ceil(height / ratio)
-
-        if (height and width) and (height != da.rio.height or width != da.rio.width):
+        if (height and width) and (height != img.height or width != img.width):
             img = img.resize(height, width, resampling_method=resampling_method)
 
         return img

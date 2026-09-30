@@ -1,7 +1,6 @@
 """rio-tiler.reader: low level reader."""
 
 import contextlib
-import math
 import warnings
 from collections.abc import Callable
 from typing import TypedDict, cast
@@ -22,10 +21,6 @@ from rio_tiler.constants import WGS84_CRS
 from rio_tiler.errors import InvalidBufferSize, PointOutsideBounds, TileOutsideBounds
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
-from rio_tiler.utils import (
-    _get_width_height,
-    _missing_size,
-)
 from rio_tiler.utils import _requested_tile_aligned_with_internal_tile as is_aligned
 from rio_tiler.utils import (
     _round_window,
@@ -33,6 +28,7 @@ from rio_tiler.utils import (
     get_vrt_transform,
     has_alpha_band,
     non_alpha_indexes,
+    output_size,
 )
 
 
@@ -111,13 +107,6 @@ def read(
     """
     indexes = cast_to_sequence(indexes)
 
-    if max_size and (width or height):
-        warnings.warn(
-            "'max_size' will be ignored with with 'height' or 'width' set.",
-            UserWarning,
-        )
-        max_size = None
-
     io_resampling = Resampling[resampling_method]
     warp_resampling = Resampling[reproject_method]
 
@@ -177,15 +166,13 @@ def read(
 
             max_height, max_width = window.height, window.width
 
-        if max_size:
-            height, width = _get_width_height(max_size, max_height, max_width)
-
-        elif _missing_size(width, height):
-            ratio = max_height / max_width
-            if width:
-                height = math.ceil(width * ratio)
-            else:
-                width = math.ceil(height / ratio)
+        height, width = output_size(
+            dataset_height=max_height,
+            dataset_width=max_width,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
 
         src_colorinterp = src_dst.colorinterp
         dst_colorinterp = dataset.colorinterp
@@ -202,9 +189,7 @@ def read(
                 values = dataset.read(
                     indexes=indexes,
                     window=window,
-                    out_shape=(
-                        (len(indexes), height, width) if height and width else None
-                    ),
+                    out_shape=((len(indexes), height, width)),
                     resampling=io_resampling,
                     boundless=boundless,
                     out_dtype=out_dtype,
@@ -212,7 +197,7 @@ def read(
                 alpha_mask = dataset.read(
                     indexes=alpha_idx,
                     window=window,
-                    out_shape=(height, width) if height and width else None,
+                    out_shape=(height, width),
                     resampling=io_resampling,
                     boundless=boundless,
                     out_dtype=out_dtype,
@@ -223,7 +208,7 @@ def read(
                 values = dataset.read(
                     indexes=idx,
                     window=window,
-                    out_shape=(len(idx), height, width) if height and width else None,
+                    out_shape=(len(idx), height, width),
                     resampling=io_resampling,
                     boundless=boundless,
                     out_dtype=out_dtype,
@@ -250,7 +235,7 @@ def read(
             data = dataset.read(
                 indexes=indexes,
                 window=window,
-                out_shape=(len(indexes), height, width) if height and width else None,
+                out_shape=(len(indexes), height, width),
                 resampling=io_resampling,
                 boundless=boundless,
                 masked=True,
@@ -379,13 +364,6 @@ def part(
         ImageData
 
     """
-    if max_size and (width or height):
-        warnings.warn(
-            "'max_size' will be ignored with with 'height' or 'width' set.",
-            UserWarning,
-        )
-        max_size = None
-
     if buffer and buffer % 0.5:
         raise InvalidBufferSize(
             "`buffer` must be a multiple of `0.5` (e.g: 0.5, 1, 1.5, ...)."
@@ -424,18 +402,14 @@ def part(
         )
         bounds = array_bounds(vrt_height, vrt_width, vrt_transform)
 
-        if max_size:
-            height, width = _get_width_height(max_size, vrt_height, vrt_width)
+        height, width = output_size(
+            dataset_height=vrt_height,
+            dataset_width=vrt_width,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
 
-        elif _missing_size(width, height):
-            ratio = vrt_height / vrt_width
-            if width:
-                height = math.ceil(width * ratio)
-            else:
-                width = math.ceil(height / ratio)
-
-        height = height or vrt_height
-        width = width or vrt_width
         if buffer:
             bounds, height, width = _apply_buffer(buffer, bounds, height, width)
 
@@ -489,20 +463,13 @@ def part(
         window = _round_window(window)
         bounds = windows.bounds(window, src_dst.transform)
 
-    if max_size:
-        height, width = _get_width_height(
-            max_size, round(window.height), round(window.width)
-        )
-
-    elif _missing_size(width, height):
-        ratio = window.height / window.width
-        if width:
-            height = math.ceil(width * ratio)
-        else:
-            width = math.ceil(height / ratio)
-
-    height = height or max(1, round(window.height))
-    width = width or max(1, round(window.width))
+    height, width = output_size(
+        dataset_height=window.height,
+        dataset_width=window.width,
+        output_height=height,
+        output_width=width,
+        max_size=max_size,
+    )
 
     if buffer:
         bounds, height, width = _apply_buffer(buffer, bounds, height, width)
