@@ -1304,6 +1304,8 @@
       
         
       
+        
+      
     
     
     
@@ -2639,6 +2641,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tio_tiler.types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../utils/" class="md-nav__link">
         
   
@@ -3753,7 +3783,12 @@
 
 
 <a href="#rio_tiler.models.ImageData.apply_colormap" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">apply_colormap</span><span class="p">(</span><span class="n">colormap</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.ColorMapType">ColorMapType</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">apply_colormap</span><span class="p">(</span><span class="n">colormap</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="ColorMapType
+
+
+  
+      module-attribute
+   (rio_tiler.types.ColorMapType)" href="../types/#rio_tiler.types.ColorMapType">ColorMapType</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3793,7 +3828,12 @@
 
 
 <a href="#rio_tiler.models.ImageData.clip" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">clip</span><span class="p">(</span><span class="n">bbox</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">clip</span><span class="p">(</span><span class="n">bbox</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3983,7 +4023,12 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 
 <a href="#rio_tiler.models.ImageData.post_process" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">post_process</span><span class="p">(</span><span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.number">number</span></span> <span class="o">=</span> <span class="s1">'uint8'</span><span class="p">,</span> <span class="n">color_formula</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">post_process</span><span class="p">(</span><span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="IntervalTuple
+
+
+  
+      module-attribute
+   (rio_tiler.types.IntervalTuple)" href="../types/#rio_tiler.types.IntervalTuple">IntervalTuple</a></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.number">number</span></span> <span class="o">=</span> <span class="s1">'uint8'</span><span class="p">,</span> <span class="n">color_formula</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4067,7 +4112,12 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 
 <a href="#rio_tiler.models.ImageData.render" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">render</span><span class="p">(</span><span class="n">add_mask</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">img_format</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">'PNG'</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.ColorMapType">ColorMapType</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">render</span><span class="p">(</span><span class="n">add_mask</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">img_format</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">'PNG'</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="ColorMapType
+
+
+  
+      module-attribute
+   (rio_tiler.types.ColorMapType)" href="../types/#rio_tiler.types.ColorMapType">ColorMapType</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4144,7 +4194,12 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 
 <a href="#rio_tiler.models.ImageData.reproject" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">reproject</span><span class="p">(</span><span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.WarpResampling">WarpResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">reproject</span><span class="p">(</span><span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">resolution</span><span class="p">:</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4164,7 +4219,17 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 
 <a href="#rio_tiler.models.ImageData.rescale" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">rescale</span><span class="p">(</span><span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span><span class="p">],</span> <span class="n">out_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),),</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.number">number</span></span> <span class="o">=</span> <span class="s1">'uint8'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.Self">Self</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">rescale</span><span class="p">(</span><span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="IntervalTuple
+
+
+  
+      module-attribute
+   (rio_tiler.types.IntervalTuple)" href="../types/#rio_tiler.types.IntervalTuple">IntervalTuple</a></span><span class="p">],</span> <span class="n">out_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="IntervalTuple
+
+
+  
+      module-attribute
+   (rio_tiler.types.IntervalTuple)" href="../types/#rio_tiler.types.IntervalTuple">IntervalTuple</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),),</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.number">number</span></span> <span class="o">=</span> <span class="s1">'uint8'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="typing.Self">Self</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4184,7 +4249,12 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 
 <a href="#rio_tiler.models.ImageData.resize" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">resize</span><span class="p">(</span><span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">resize</span><span class="p">(</span><span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4633,7 +4703,17 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 
 <a href="#rio_tiler.models.rescale_image" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">rescale_image</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">,</span> <span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span><span class="p">],</span> <span class="n">out_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),),</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.number">number</span></span> <span class="o">=</span> <span class="s1">'uint8'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">rescale_image</span><span class="p">(</span><span class="n">array</span><span class="p">:</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">,</span> <span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="IntervalTuple
+
+
+  
+      module-attribute
+   (rio_tiler.types.IntervalTuple)" href="../types/#rio_tiler.types.IntervalTuple">IntervalTuple</a></span><span class="p">],</span> <span class="n">out_range</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="IntervalTuple
+
+
+  
+      module-attribute
+   (rio_tiler.types.IntervalTuple)" href="../types/#rio_tiler.types.IntervalTuple">IntervalTuple</a></span><span class="p">]</span> <span class="o">=</span> <span class="p">((</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">),),</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.number">number</span></span> <span class="o">=</span> <span class="s1">'uint8'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">

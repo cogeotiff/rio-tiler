@@ -13,7 +13,7 @@
         <link rel="canonical" href="https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/utils/">
       
       
-        <link rel="prev" href="../tasks/">
+        <link rel="prev" href="../types/">
       
       
         <link rel="next" href="../../../advanced/benchmark.html">
@@ -1304,6 +1304,8 @@
       
         
       
+        
+      
     
     
     
@@ -2085,6 +2087,34 @@
     
   
     rio_tiler.tasks
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tio_tiler.types
   
 
     
@@ -3269,7 +3299,12 @@
 
 
 <a href="#rio_tiler.utils._check_geographic_bounds" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_check_geographic_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">xres</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">yres</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_check_geographic_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="n">xres</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">yres</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3330,7 +3365,12 @@
 
 
 <a href="#rio_tiler.utils._requested_tile_aligned_with_internal_tile" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_requested_tile_aligned_with_internal_tile</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_requested_tile_aligned_with_internal_tile</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3444,7 +3484,17 @@
 
 
 <a href="#rio_tiler.utils.estimate_output" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">estimate_output</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dataset_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">dataset_transform</span><span class="p">:</span> <span class="n"><span title="affine.Affine">Affine</span></span><span class="p">,</span> <span class="n">output_bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">output_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">output_height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">output_width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">estimate_output</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">dataset_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">dataset_transform</span><span class="p">:</span> <span class="n"><span title="affine.Affine">Affine</span></span><span class="p">,</span> <span class="n">output_bounds</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="n">output_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span><span class="p">,</span> <span class="n">output_height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">output_width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3588,7 +3638,12 @@
 
 
 <a href="#rio_tiler.utils.get_overview_level" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_overview_level</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="int">int</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_overview_level</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="int">int</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3668,7 +3723,12 @@
 
 
 <a href="#rio_tiler.utils.get_vrt_transform" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_vrt_transform</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">,</span> <span class="n">window_precision</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">align_bounds_with_dataset</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="affine.Affine">Affine</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_vrt_transform</span><span class="p">(</span><span class="n">src_dst</span><span class="p">:</span> <span class="n"><span title="rasterio.io.DatasetReader">DatasetReader</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.io.DatasetWriter">DatasetWriter</span></span> <span class="o">|</span> <span class="n"><span title="rasterio.vrt.WarpedVRT">WarpedVRT</span></span><span class="p">,</span> <span class="n">bounds</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WEB_MERCATOR_CRS">WEB_MERCATOR_CRS</span></span><span class="p">,</span> <span class="n">window_precision</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">6</span><span class="p">,</span> <span class="n">align_bounds_with_dataset</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="affine.Affine">Affine</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n"><span title="int">int</span></span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3876,7 +3936,17 @@ function is called.</p>
 
 
 <a href="#rio_tiler.utils.linear_rescale" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">linear_rescale</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">in_range</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span><span class="p">,</span> <span class="n">out_range</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.IntervalTuple">IntervalTuple</span></span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">linear_rescale</span><span class="p">(</span><span class="n">image</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">in_range</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="IntervalTuple
+
+
+  
+      module-attribute
+   (rio_tiler.types.IntervalTuple)" href="../types/#rio_tiler.types.IntervalTuple">IntervalTuple</a></span><span class="p">,</span> <span class="n">out_range</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="IntervalTuple
+
+
+  
+      module-attribute
+   (rio_tiler.types.IntervalTuple)" href="../types/#rio_tiler.types.IntervalTuple">IntervalTuple</a></span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">255</span><span class="p">))</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3994,7 +4064,17 @@ function is called.</p>
 
 
 <a href="#rio_tiler.utils.normalize_bounds" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">normalize_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">normalize_bounds</span><span class="p">(</span><span class="n">bounds</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../types/#rio_tiler.types.BBox">BBox</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4059,7 +4139,12 @@ multispectral intensities.</p>
 
 
 <a href="#rio_tiler.utils.render" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">render</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">img_format</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">'PNG'</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.ColorMapType">ColorMapType</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">creation_options</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">render</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">mask</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">img_format</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">'PNG'</span><span class="p">,</span> <span class="n">colormap</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="ColorMapType
+
+
+  
+      module-attribute
+   (rio_tiler.types.ColorMapType)" href="../types/#rio_tiler.types.ColorMapType">ColorMapType</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">creation_options</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bytes">bytes</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4142,7 +4227,12 @@ multispectral intensities.</p>
 
 
 <a href="#rio_tiler.utils.resize_array" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">resize_array</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">resize_array</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">

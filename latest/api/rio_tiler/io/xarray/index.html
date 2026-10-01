@@ -1304,6 +1304,8 @@
       
         
       
+        
+      
     
     
     
@@ -2327,6 +2329,34 @@
   
   
     <li class="md-nav__item">
+      <a href="../../types/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    tio_tiler.types
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="../../utils/" class="md-nav__link">
         
   
@@ -2919,7 +2949,12 @@
 
 
 <a href="#rio_tiler.io.xarray.XarrayReader._sel_indexes" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_sel_indexes</span><span class="p">(</span><span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.Indexes">Indexes</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="xarray.DataArray">DataArray</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_sel_indexes</span><span class="p">(</span><span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
+
+
+  
+      module-attribute
+   (rio_tiler.types.Indexes)" href="../../types/#rio_tiler.types.Indexes">Indexes</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="xarray.DataArray">DataArray</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2939,7 +2974,27 @@
 
 
 <a href="#rio_tiler.io.xarray.XarrayReader.feature" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">feature</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.WarpResampling">WarpResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">auto_expand</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.NoData">NoData</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.Indexes">Indexes</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">feature</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">auto_expand</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
+
+
+  
+      module-attribute
+   (rio_tiler.types.Indexes)" href="../../types/#rio_tiler.types.Indexes">Indexes</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2979,7 +3034,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>reproject_method</code></b>
-              (<code><span title="rio_tiler.types.WarpResampling">WarpResampling</span></code>, default:
+              (<code><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></code>, default:
                   <code>&#39;nearest&#39;</code>
 )
           –
@@ -3039,7 +3099,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>resampling_method</code></b>
-              (<code><span title="rio_tiler.types.RIOResampling">RIOResampling</span></code>, default:
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
                   <code>&#39;nearest&#39;</code>
 )
           –
@@ -3094,7 +3159,32 @@
 
 
 <a href="#rio_tiler.io.xarray.XarrayReader.part" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.BBox">BBox</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.WarpResampling">WarpResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">auto_expand</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.NoData">NoData</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.Indexes">Indexes</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
+
+
+  
+      module-attribute
+   (rio_tiler.types.BBox)" href="../../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">auto_expand</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
+
+
+  
+      module-attribute
+   (rio_tiler.types.Indexes)" href="../../types/#rio_tiler.types.Indexes">Indexes</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3134,7 +3224,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>reproject_method</code></b>
-              (<code><span title="rio_tiler.types.WarpResampling">WarpResampling</span></code>, default:
+              (<code><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></code>, default:
                   <code>&#39;nearest&#39;</code>
 )
           –
@@ -3194,7 +3289,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>resampling_method</code></b>
-              (<code><span title="rio_tiler.types.RIOResampling">RIOResampling</span></code>, default:
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
                   <code>&#39;nearest&#39;</code>
 )
           –
@@ -3229,7 +3329,17 @@
 
 
 <a href="#rio_tiler.io.xarray.XarrayReader.point" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">point</span><span class="p">(</span><span class="n">lon</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">coord_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.NoData">NoData</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.Indexes">Indexes</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="../../models/#rio_tiler.models.PointData">PointData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">point</span><span class="p">(</span><span class="n">lon</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">coord_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
+
+
+  
+      module-attribute
+   (rio_tiler.types.Indexes)" href="../../types/#rio_tiler.types.Indexes">Indexes</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="../../models/#rio_tiler.models.PointData">PointData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3302,7 +3412,27 @@
 
 
 <a href="#rio_tiler.io.xarray.XarrayReader.preview" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">preview</span><span class="p">(</span><span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.NoData">NoData</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.Indexes">Indexes</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.WarpResampling">WarpResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.RIOResampling">RIOResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">preview</span><span class="p">(</span><span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
+
+
+  
+      module-attribute
+   (rio_tiler.types.Indexes)" href="../../types/#rio_tiler.types.Indexes">Indexes</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3364,7 +3494,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>reproject_method</code></b>
-              (<code><span title="rio_tiler.types.WarpResampling">WarpResampling</span></code>, default:
+              (<code><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></code>, default:
                   <code>&#39;nearest&#39;</code>
 )
           –
@@ -3374,7 +3509,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>resampling_method</code></b>
-              (<code><span title="rio_tiler.types.RIOResampling">RIOResampling</span></code>, default:
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
                   <code>&#39;nearest&#39;</code>
 )
           –
@@ -3409,7 +3549,17 @@
 
 
 <a href="#rio_tiler.io.xarray.XarrayReader.statistics" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">statistics</span><span class="p">(</span><span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hist_options</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.NoData">NoData</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.Indexes">Indexes</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="BandStatistics (rio_tiler.models.BandStatistics)" href="../../models/#rio_tiler.models.BandStatistics">BandStatistics</a></span><span class="p">]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">statistics</span><span class="p">(</span><span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hist_options</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
+
+
+  
+      module-attribute
+   (rio_tiler.types.Indexes)" href="../../types/#rio_tiler.types.Indexes">Indexes</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><a class="autorefs autorefs-internal" title="BandStatistics (rio_tiler.models.BandStatistics)" href="../../models/#rio_tiler.models.BandStatistics">BandStatistics</a></span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3429,7 +3579,22 @@
 
 
 <a href="#rio_tiler.io.xarray.XarrayReader.tile" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tilesize</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.WarpResampling">WarpResampling</span></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">auto_expand</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.NoData">NoData</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="rio_tiler.types.Indexes">Indexes</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tilesize</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">auto_expand</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
+
+
+  
+      module-attribute
+   (rio_tiler.types.Indexes)" href="../../types/#rio_tiler.types.Indexes">Indexes</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">out_dtype</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="n"><span title="numpy.dtype">dtype</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -3475,7 +3640,12 @@
         </li>
         <li class="doc-section-item field-body">
             <b><code>reproject_method</code></b>
-              (<code><span title="rio_tiler.types.WarpResampling">WarpResampling</span></code>, default:
+              (<code><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></code>, default:
                   <code>&#39;nearest&#39;</code>
 )
           –
