@@ -24,7 +24,9 @@ ColorTuple = tuple[int, int, int, int]  # (red, green, blue, alpha)
 IntervalTuple = tuple[NumType, NumType]  # (0, 100)
 
 GDALColorMapType = dict[int, ColorTuple]
-"""ColorMap Dict.
+"""Continuous ColorMap Dict.
+
+Expects 255 values, or it will be interpreted as a DiscreteColorMap.
 
 Example:
     `{1: (0, 0, 0, 255), ...}`
@@ -32,7 +34,9 @@ Example:
 
 
 DiscreteColorMapType = dict[NumType, ColorTuple]
-"""Discrete Colormap, like GDALColorMapType but accept Float.
+"""Discrete ColorMap, like GDALColorMapType but accept Float.
+
+Matches only exact values for categorical data.
 
 Example:
     `{0.1: (0, 0, 0, 255), ...}`
