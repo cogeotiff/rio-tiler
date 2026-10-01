@@ -6,7 +6,7 @@ import warnings
 from collections.abc import Callable, Generator
 from functools import wraps
 from io import BytesIO
-from typing import Any, ParamSpec, Sequence, TypeVar
+from typing import Any, ParamSpec, Sequence, TypeVar, cast
 
 import numpy
 import rasterio
@@ -23,7 +23,7 @@ from rasterio.io import DatasetReader, DatasetWriter, MemoryFile
 from rasterio.rio.helpers import coords
 from rasterio.transform import from_bounds, rowcol
 from rasterio.vrt import WarpedVRT
-from rasterio.warp import calculate_default_transform, transform_geom
+from rasterio.warp import calculate_default_transform, transform_bounds, transform_geom
 
 from rio_tiler.colormap import apply_cmap
 from rio_tiler.constants import WEB_MERCATOR_CRS, WGS84_CRS
@@ -56,10 +56,18 @@ def _get_width_height(max_size, dataset_height, dataset_width) -> tuple[int, int
     return height, width
 
 
-def _missing_size(w: int | None = None, h: int | None = None):
+def has_width_or_height(
+    w: int | None = None,
+    h: int | None = None,
+):
     """Check if one and only one size (width, height) is valid."""
     iterator = iter([w, h])
     return any(iterator) and not any(iterator)
+
+
+# TODO: deprecate _missing_size in favor of has_width_or_height
+# remove in 10.0
+_missing_size = has_width_or_height
 
 
 # Ref: https://stackoverflow.com/posts/73905572
@@ -986,3 +994,101 @@ def _check_geographic_bounds(bounds: BBox, xres: float, yres: float) -> bool:
         return False
 
     return True
+
+
+def output_size(
+    *,
+    dataset_height: float | int,
+    dataset_width: float | int,
+    output_height: int | None = None,
+    output_width: int | None = None,
+    max_size: int | None = None,
+) -> tuple[int, int]:
+    """Output height and width."""
+    if max_size and (output_height or output_width):
+        warnings.warn(
+            "'max_size' will be ignored with with 'height' or 'width' set.",
+            UserWarning,
+        )
+        max_size = None
+
+    # Case 1: `max_size` is set,
+    # compute output shape based on it,
+    # respecting aspect ratio of the dataset shape
+    if max_size:
+        output_height, output_width = _get_width_height(
+            max_size,
+            round(dataset_height),
+            round(dataset_width),
+        )
+
+    # Case 2: One of output width/height is missing,
+    # compute it but keep the aspect ratio from the dataset shape
+    elif has_width_or_height(output_width, output_height):
+        ratio = dataset_height / dataset_width
+        if output_width:
+            output_height = math.ceil(output_width * ratio)
+        else:
+            output_width = math.ceil(output_height / ratio)
+
+    # Case 3: max_size is not set and both output_height and output_width are provided,
+    # keep them as is.
+    output_height = cast(int, output_height or round(dataset_height))
+    output_width = cast(int, output_width or round(dataset_width))
+
+    return max(1, output_height), max(1, output_width)
+
+
+def estimate_output(
+    *,
+    dataset_crs: CRS,
+    dataset_transform: Affine,
+    output_bounds: BBox,
+    output_crs: CRS,
+    output_height: int | None = None,
+    output_width: int | None = None,
+    max_size: int | None = None,
+) -> tuple[int, int, BBox]:
+    """Estimate output shape and bounds."""
+    # 1. Estimate output dimensions
+    # Reprojection needed
+    if output_crs != dataset_crs:
+        # Reproject output bbox to dataset CRS
+        output_bounds = transform_bounds(
+            output_crs, dataset_crs, *output_bounds, densify_pts=21
+        )
+
+        # Compute native output shape in dataset resolution/CRS
+        native_src_w = max(
+            1,
+            round((output_bounds[2] - output_bounds[0]) / abs(dataset_transform.a)),
+        )
+        native_src_h = max(
+            1,
+            round((output_bounds[3] - output_bounds[1]) / abs(dataset_transform.e)),
+        )
+
+        # Compute output shape in output CRS
+        _, width, height = calculate_default_transform(
+            dataset_crs, output_crs, native_src_w, native_src_h, *output_bounds
+        )
+
+    # No reprojection needed
+    else:
+        # Compute output shape in dataset resolution/CRS
+        width = max(
+            1, round((output_bounds[2] - output_bounds[0]) / abs(dataset_transform.a))
+        )
+        height = max(
+            1, round((output_bounds[3] - output_bounds[1]) / abs(dataset_transform.e))
+        )
+
+    output_height, output_width = output_size(
+        dataset_height=height,
+        dataset_width=width,
+        output_height=output_height,
+        output_width=output_width,
+        max_size=max_size,
+    )
+
+    return output_height, output_width, output_bounds
