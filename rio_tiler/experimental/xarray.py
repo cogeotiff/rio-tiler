@@ -9,6 +9,7 @@ from typing import Any, cast
 import attr
 import numpy
 from affine import Affine
+from isochron import Duration, format_datetime, parse_datetime, parse_duration
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.transform import array_bounds, rowcol
@@ -49,25 +50,13 @@ except ImportError:  # pragma: nocover
 MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
 SPATIAL_CONVENTION_UUID = "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
 PROJ_CONVENTION_UUID = "f17cb550-5864-4468-aeb7-f3180cfb622f"
+COORDS_CONVENTION_UUID = "6ca4454a-658a-4348-a667-b39ced0e58cb"
 
 
-def _has_multiscales(conventions: list[dict]) -> bool:
+def find_convention(conventions: list[dict], uuid: str) -> bool:
+    """Check if a specific convention is present in the list of conventions."""
     return next(
-        (True for c in conventions if c["uuid"] == MULTISCALE_CONVENTION_UUID),
-        False,
-    )
-
-
-def _has_spatial(conventions: list[dict]) -> bool:
-    return next(
-        (True for c in conventions if c["uuid"] == SPATIAL_CONVENTION_UUID),
-        False,
-    )
-
-
-def _has_proj(conventions: list[dict]) -> bool:
-    return next(
-        (True for c in conventions if c["uuid"] == PROJ_CONVENTION_UUID),
+        (True for c in conventions if c["uuid"] == uuid),
         False,
     )
 
@@ -82,6 +71,58 @@ def _get_proj_crs(attributes: dict) -> CRS:
         )
     )
     return CRS.from_user_input(proj_string)
+
+
+def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
+    """Return band names from coordinates convention.
+
+    Derive band names from coordinates
+    Supports for 2 types:
+    - Inline coordinate values — short value vectors embedded directly in the metadata
+        (for example, a 4-band spectral axis where allocating a separate array would be wasteful).
+    - Implicit regularly spaced values — a compact start / end / step descriptor for axes that are uniformly spaced,
+        covering both numeric domains (angles, distances, frequencies, levels) and ISO 8601 time intervals, without enumerating every value.
+
+    """
+    if coordinates["type"] == "interval":
+        step: str | int | float = coordinates["step"]
+        # Handle numeric interval
+        if isinstance(step, (int, float)):
+            start: int = coordinates["start"]
+            stop: int = coordinates["stop"]
+            return list(map(str, range(start, stop + step, step)))  # type: ignore
+
+        # Handle ISO 8601 (temporal) interval
+        elif isinstance(step, str):
+            start_datetime = parse_datetime(coordinates["start"])
+            stop_datetime = parse_datetime(coordinates["stop"])
+            step_duration = parse_duration(step)
+            if isinstance(step_duration, Duration):
+                return [
+                    format_datetime(start_datetime + i * step_duration)  # type: ignore
+                    for i in range(
+                        (
+                            (stop_datetime - start_datetime)
+                            // step_duration.to_timedelta(start_datetime)
+                            + 1
+                        )
+                    )
+                ]
+            else:
+                return [
+                    format_datetime(start_datetime + i * step_duration)  # type: ignore
+                    for i in range(
+                        ((stop_datetime - start_datetime) // step_duration) + 1
+                    )
+                ]
+
+    elif coordinates["type"] == "inline":
+        return list(map(str, coordinates["values"]))
+
+    else:
+        warnings.warn(f"Unsupported coordinate type '{coordinates['type']}'", UserWarning)
+
+    return None
 
 
 @attr.s
@@ -154,7 +195,8 @@ class GeoArrayReader(XarrayReader):
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
         # Transform
-        if not self.transform and _has_spatial(conventions):
+        _has_spatial = find_convention(conventions, SPATIAL_CONVENTION_UUID)
+        if not self.transform and _has_spatial:
             transform_type = attributes.get("spatial:transform_type") or "affine"
             tr = attributes.get("spatial:transform")
             if transform_type == "affine" and tr is not None:
@@ -171,7 +213,8 @@ class GeoArrayReader(XarrayReader):
         )
 
         # CRS
-        if not self.crs and _has_proj(conventions):
+        _has_proj = find_convention(conventions, PROJ_CONVENTION_UUID)
+        if not self.crs and _has_proj:
             self.crs = _get_proj_crs(attributes)
 
         assert self.crs, (
@@ -209,6 +252,26 @@ class GeoArrayReader(XarrayReader):
             raise InvalidGeographicBounds(
                 f"Invalid geographic bounds: {self.bounds}. Must be within (-180, -90, 180, 90)."
             )
+
+        _has_coords = find_convention(conventions, COORDS_CONVENTION_UUID)
+        if not self.band_names and _has_coords:
+            coordinates = attributes.get("coords:coordinates", {})
+            _coords = list(coordinates.keys())
+            non_spatial_coords = next(
+                dim
+                for dim in _coords
+                if dim not in ["x", "y", "spatial_ref", "crs_wkt", "grid_mapping"]
+            )
+            band_coordinates = coordinates[non_spatial_coords]
+            if band_names := _get_bnames_from_coordinates(band_coordinates):
+                if len(band_names) == self.nbands:
+                    self.band_names = band_names
+                else:
+                    warnings.warn(
+                        f"Number of band names derived from coordinates ({len(band_names)}) "
+                        f"does not match number of bands in the array ({self.nbands})",
+                        UserWarning,
+                    )
 
         if self.band_names:
             assert len(self.band_names) == self.nbands, (
