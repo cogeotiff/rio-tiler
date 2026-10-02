@@ -2291,6 +2291,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr._get_bnames_from_coordinates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_bnames_from_coordinates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr._get_proj_crs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2317,6 +2328,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;calculate_output_transform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.find_convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;find_convention
       
     </span>
   </a>
@@ -3258,6 +3280,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr._get_bnames_from_coordinates" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_bnames_from_coordinates
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr._get_proj_crs" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3284,6 +3317,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;calculate_output_transform
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.find_convention" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;find_convention
       
     </span>
   </a>
@@ -5565,6 +5609,32 @@ For 2D arrays, treats as single-band (height, width).</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="rio_tiler.experimental.zarr._get_bnames_from_coordinates" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_get_bnames_from_coordinates</span>
+
+
+<a href="#rio_tiler.experimental.zarr._get_bnames_from_coordinates" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_bnames_from_coordinates</span><span class="p">(</span><span class="n">coordinates</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return band names from coordinates convention.</p>
+<p>Derive band names from coordinates
+Supports for 2 types:
+- Inline coordinate values — short value vectors embedded directly in the metadata
+    (for example, a 4-band spectral axis where allocating a separate array would be wasteful).
+- Implicit regularly spaced values — a compact start / end / step descriptor for axes that are uniformly spaced,
+    covering both numeric domains (angles, distances, frequencies, levels) and ISO 8601 time intervals, without enumerating every value.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="rio_tiler.experimental.zarr._get_proj_crs" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">_get_proj_crs</span>
 
@@ -5631,6 +5701,26 @@ For 2D arrays, treats as single-band (height, width).</p>
     <div class="doc doc-contents ">
 
         <p>Calculate Reprojected Dataset transform.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.experimental.zarr.find_convention" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">find_convention</span>
+
+
+<a href="#rio_tiler.experimental.zarr.find_convention" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">find_convention</span><span class="p">(</span><span class="n">conventions</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="dict">dict</span></span><span class="p">],</span> <span class="n">uuid</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check if a specific convention is present in the list of conventions.</p>
 
 
     </div>
