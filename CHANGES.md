@@ -2,6 +2,7 @@
 # Unreleased
 
 * add: support for coordinates zarr-conventions within experimental xarray.GeoArrayReader and zarr.Reader/GeoZarrReader (https://github.com/cogeotiff/rio-tiler/pull/1004)
+* fix: missing `bbox` for multiscale variable selection in GeoZarrReader
 
 ## 9.4.8 (2026-09-30)
 

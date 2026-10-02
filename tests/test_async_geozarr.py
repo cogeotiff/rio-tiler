@@ -87,7 +87,7 @@ async def test_geozarr_reader():
         },
     )
 
-    arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
+    arr = numpy.zeros((1000, 1000), dtype="float32") + 1
     arr[0:50, 0:50] = 0
 
     highres_b01 = highres_group.create_array(
@@ -114,7 +114,7 @@ async def test_geozarr_reader():
 
     # /1
     # Layout 1 - b02 array only
-    arr = numpy.arange(0.0, 100 * 100, dtype="float32").reshape(100, 100)
+    arr = numpy.zeros((100, 100), dtype="float32") + 2
     arr[0:5, 0:5] = 0
 
     lowres_group = root.create_group(
@@ -247,6 +247,50 @@ async def test_geozarr_reader():
 
     img = await geozarrds.preview(variables=["b01", "b02"])
     assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+    # max-size=1024 so we select the highest resolution (ones)
+    assert numpy.ma.unique(img.array[0]).tolist() == [1.0, None]
+    assert numpy.ma.unique(img.array[1]).tolist() == [1.0, None]
+
+    img = await geozarrds.preview(variables=["b01", "b02"], max_size=100)
+    assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+    # b01 has only one array (ones)
+    assert numpy.ma.unique(img.array[0]).tolist() == [1.0, None]
+    # b02 has two arrays (ones: (1000x1000), twos: (100x100))
+    assert numpy.ma.unique(img.array[1]).tolist() == [2.0, None]
+
+    stats = await geozarrds.statistics(variables=["b01", "b02"], max_size=1024)
+    assert stats["b1"].min == 1.0
+    assert stats["b1"].max == 1.0
+    assert stats["b2"].min == 1.0
+    assert stats["b2"].max == 1.0
+
+    stats = await geozarrds.statistics(variables=["b01", "b02"], max_size=100)
+    assert stats["b1"].min == 1.0
+    assert stats["b1"].max == 1.0
+    assert stats["b2"].min == 2.0
+    assert stats["b2"].max == 2.0
+
+    pt = await geozarrds.point(
+        505000, 4195000, variables=["b01", "b02"], coord_crs="EPSG:32633"
+    )
+    # select the highest resolution
+    assert pt.data.tolist() == [1.0, 1.0]
+    assert pt.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+
+    bounds = geozarrds.get_geographic_bounds("epsg:4326")
+    center = ((bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2)
+    z10_tile = geozarrds.tms.tile(center[0], center[1], 10)
+    z14_tile = geozarrds.tms.tile(center[0], center[1], 14)
+
+    # low res
+    img = await geozarrds.tile(*z10_tile, variables=["b01", "b02"])
+    assert img.statistics()["b1"].min == 1.0
+    assert img.statistics()["b2"].min == 2.0
+
+    # high res
+    img = await geozarrds.tile(*z14_tile, variables=["b01", "b02"])
+    assert img.statistics()["b1"].min == 1.0
+    assert img.statistics()["b2"].min == 1.0
 
 
 async def test_geozarr_root():
