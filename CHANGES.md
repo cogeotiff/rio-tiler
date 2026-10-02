@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* add: support for coordinates zarr-conventions within experimental xarray.GeoArrayReader and zarr.Reader/GeoZarrReader (https://github.com/cogeotiff/rio-tiler/pull/1004)
+
 ## 9.4.8 (2026-09-30)
 
 * add: utility functions to calculate output image size (for part/feature/preview) methods
