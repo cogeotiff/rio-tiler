@@ -23,19 +23,34 @@ DataMaskType = tuple[numpy.ndarray, numpy.ndarray]
 ColorTuple = tuple[int, int, int, int]  # (red, green, blue, alpha)
 IntervalTuple = tuple[NumType, NumType]  # (0, 100)
 
-# ColorMap Dict: {1: (0, 0, 0, 255), ...}
 GDALColorMapType = dict[int, ColorTuple]
+"""Continuous ColorMap Dict.
 
-# Discrete Colormap, like GDALColorMapType but accept Float: {0.1: (0, 0, 0, 255), ...}
+Expects 255 values, or it will be interpreted as a DiscreteColorMap.
+
+Example:
+    `{1: (0, 0, 0, 255), ...}`
+"""
+
+
 DiscreteColorMapType = dict[NumType, ColorTuple]
+"""Discrete ColorMap, like GDALColorMapType but accept Float.
 
-# Intervals ColorMap: [((0, 1), (0, 0, 0, 0)), ...]
+Matches only exact values for categorical data.
+
+Example:
+    `{0.1: (0, 0, 0, 255), ...}`
+"""
+
 IntervalColorMapType = Sequence[tuple[IntervalTuple, ColorTuple]]
+"""Intervals ColorMap.
+
+Example:
+    `[((0, 1), (0, 0, 0, 0)), ...]`
+"""
 
 ColorMapType = GDALColorMapType | DiscreteColorMapType | IntervalColorMapType
 
-# RasterIO() resampling method.
-# ref: https://gdal.org/api/raster_c_api.html#_CPPv418GDALRIOResampleAlg
 RIOResampling = Literal[
     "nearest",
     "bilinear",
@@ -47,9 +62,11 @@ RIOResampling = Literal[
     "gauss",
     "rms",
 ]
+"""RasterIO() resampling method.
 
-# WarpKernel resampling method.
-# ref: https://gdal.org/en/stable/api/gdalwarp_cpp.html#_CPPv415GDALResampleAlg
+ref: <https://gdal.org/api/raster_c_api.html#_CPPv418GDALRIOResampleAlg>
+"""
+
 WarpResampling = Literal[
     "nearest",
     "bilinear",
@@ -66,6 +83,10 @@ WarpResampling = Literal[
     "sum",
     "rms",
 ]
+"""WarpKernel resampling method.
+
+ref: <https://gdal.org/en/stable/api/gdalwarp_cpp.html#_CPPv415GDALResampleAlg>
+"""
 
 
 class AssetWithOptions(TypedDict, extra_items=True):  # type: ignore[call-arg]

@@ -80,6 +80,7 @@ nav:
     - rio_tiler.profiles: api/rio_tiler/profiles.md
     - rio_tiler.reader: api/rio_tiler/reader.md
     - rio_tiler.tasks: api/rio_tiler/tasks.md
+    - tio_tiler.types: api/rio_tiler/types.md
     - rio_tiler.utils: api/rio_tiler/utils.md
   - Benchmarking: advanced/benchmark.html
   - Development - Contributing: 'contributing.md'
