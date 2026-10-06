@@ -1854,6 +1854,12 @@ class GeoZarrReader(AsyncBaseReader, GroupMixin):
         """
         variables = cast_to_sequence(variables)
 
+        dst_crs = dst_crs or bounds_crs
+
+        # 1. Transform output bbox from bounds_crs → output_crs
+        if bounds_crs != dst_crs:
+            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
         async def _part(variable: str) -> ImageData:
             group_name, variable, _ = self.parse_variable(variable)
             group_metadata = await self.get_group_metadata(group_name)
@@ -1865,6 +1871,7 @@ class GeoZarrReader(AsyncBaseReader, GroupMixin):
 
             array_metadata = self.select_variable(
                 array,
+                bounds=bbox,
                 max_size=max_size,
                 height=height,
                 width=width,
