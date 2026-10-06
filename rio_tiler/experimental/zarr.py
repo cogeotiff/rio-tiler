@@ -34,7 +34,8 @@ from rio_tiler.errors import (
     TileOutsideBounds,
 )
 from rio_tiler.expression import parse_expression
-from rio_tiler.io import AsyncBaseReader
+from rio_tiler.io import AsyncBaseReader, BaseReader
+from rio_tiler.io.base import SpatialMixin
 from rio_tiler.models import BandStatistics, Bounds, ImageData, Info, PointData
 from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
@@ -141,25 +142,10 @@ def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
 
 
 @attr.s
-class Reader(AsyncBaseReader):
-    """Rio-tiler Zarr.AsyncArray Reader.
+class ArrayMixin(SpatialMixin):
+    """Shared attributes/methods for Async/Sync Array Readers."""
 
-    A pure zarr-python async reader that accepts a zarr AsyncArray
-    plus geospatial metadata (transform, crs) as input.
-
-    Attributes:
-        input: zarr AsyncArray (2D or 3D with bands-first layout).
-        crs: Coordinate reference system.
-        transform: Affine transform.
-        tms: TileMatrixSet for tile operations.
-
-    Note:
-        For 3D arrays, expects bands-first layout (bands, height, width).
-        For 2D arrays, treats as single-band (height, width).
-
-    """
-
-    input: zarr.AsyncArray = attr.ib()
+    input: zarr.AsyncArray | zarr.Array = attr.ib()
 
     crs: CRS | None = attr.ib(default=None)
     transform: Affine | None = attr.ib(default=None)
@@ -179,14 +165,6 @@ class Reader(AsyncBaseReader):
     band_names: list[str] | None = attr.ib(default=None)
 
     _dims: list[str] = attr.ib(init=False, factory=list)
-
-    async def __aenter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
 
     def __attrs_post_init__(self) -> None:  # noqa: C901
         """Post init: derive height, width, count from array shape."""
@@ -287,7 +265,7 @@ class Reader(AsyncBaseReader):
 
         return [f"b{ix + 1}" for ix in range(self.nbands)]
 
-    async def info(self) -> Info:
+    def _info(self) -> Info:
         """Return Dataset's info.
 
         Returns:
@@ -300,7 +278,7 @@ class Reader(AsyncBaseReader):
         else:
             nodata_type = "None"
 
-        attrs: dict[str, Any] = self.input.attrs or {}
+        attrs: dict[str, Any] = cast(dict[str, Any], self.input.attrs or {})
 
         meta: dict[str, Any] = {
             "bounds": self.bounds,
@@ -333,6 +311,59 @@ class Reader(AsyncBaseReader):
             meta.update({"nodata_value": nodata.item()})
 
         return Info.model_validate(meta)
+
+
+###############################################################################
+#           AsyncArrayReader class for reading zarr AsyncArray                #
+###############################################################################
+@attr.s
+class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
+    """Rio-tiler Zarr.AsyncArray Reader.
+
+    A pure zarr-python async reader that accepts a zarr AsyncArray
+    plus geospatial metadata (transform, crs) as input.
+
+    Attributes:
+        input: zarr AsyncArray (2D or 3D with bands-first layout).
+        crs: Coordinate reference system.
+        transform: Affine transform.
+        tms: TileMatrixSet for tile operations.
+
+    Note:
+        For 3D arrays, expects bands-first layout (bands, height, width).
+        For 2D arrays, treats as single-band (height, width).
+
+    """
+
+    input: zarr.AsyncArray = attr.ib()
+
+    crs: CRS | None = attr.ib(default=None)
+    transform: Affine | None = attr.ib(default=None)
+    coordinates: dict | None = attr.ib(default=None)
+
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    # Array shape
+    nbands: int = attr.ib(init=False)
+    height: int = attr.ib(init=False)
+    width: int = attr.ib(init=False)
+
+    # Array bounds (calculated from shape + transform)
+    bounds: BBox = attr.ib(init=False)
+
+    # List of names for the first dimension (e.g time, bands, etc)
+    band_names: list[str] | None = attr.ib(default=None)
+
+    _dims: list[str] = attr.ib(init=False, factory=list)
+
+    async def info(self) -> Info:
+        """Return Dataset's info.
+
+        Returns:
+            rio_tiler.models.Info: Dataset info.
+
+        """
+        return self._info()
 
     async def statistics(
         self,
@@ -881,6 +912,605 @@ class Reader(AsyncBaseReader):
         )
 
 
+###############################################################################
+#                 ArrayReader class for reading zarr Array                    #
+###############################################################################
+@attr.s
+class ArrayReader(BaseReader, ArrayMixin):
+    """Rio-tiler Zarr.Array Reader.
+
+    A pure zarr-python sync reader that accepts a zarr.Array
+    plus geospatial metadata (transform, crs) as input.
+
+    Attributes:
+        input: zarr Array (2D or 3D with bands-first layout).
+        crs: Coordinate reference system.
+        transform: Affine transform.
+        tms: TileMatrixSet for tile operations.
+
+    Note:
+        For 3D arrays, expects bands-first layout (bands, height, width).
+        For 2D arrays, treats as single-band (height, width).
+
+    """
+
+    input: zarr.Array = attr.ib()
+
+    crs: CRS | None = attr.ib(default=None)
+    transform: Affine | None = attr.ib(default=None)
+    coordinates: dict | None = attr.ib(default=None)
+
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    # Array shape
+    nbands: int = attr.ib(init=False)
+    height: int = attr.ib(init=False)
+    width: int = attr.ib(init=False)
+
+    # Array bounds (calculated from shape + transform)
+    bounds: BBox = attr.ib(init=False)
+
+    # List of names for the first dimension (e.g time, bands, etc)
+    band_names: list[str] | None = attr.ib(default=None)
+
+    _dims: list[str] = attr.ib(init=False, factory=list)
+
+    def info(self) -> Info:
+        """Return Dataset's info.
+
+        Returns:
+            rio_tiler.models.Info: Dataset info.
+
+        """
+        return self._info()
+
+    def statistics(
+        self,
+        categorical: bool = False,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> dict[str, BandStatistics]:
+        """Return bands statistics from a dataset.
+
+        Args:
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of categories to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            indexes (int or sequence of int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to `self.preview`.
+
+        Returns:
+            dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        img = self._read(indexes=indexes, nodata=nodata)
+        if expression:
+            img = img.apply_expression(expression)
+
+        return img.statistics(
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            hist_options=hist_options,
+        )
+
+    def tile(
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        tilesize: int | None = None,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Map tile from the Dataset.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+            tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
+            )
+
+        matrix = self.tms.matrix(tile_z)
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
+        return self.part(
+            bbox,
+            dst_crs=self.tms.rasterio_crs,
+            bounds_crs=self.tms.rasterio_crs,
+            indexes=indexes,
+            expression=expression,
+            max_size=None,
+            height=tilesize or matrix.tileHeight,
+            width=tilesize or matrix.tileWidth,
+            nodata=nodata,
+            reproject_method=reproject_method,
+        )
+
+    def part(  # noqa: C901
+        self,
+        bbox: BBox,
+        dst_crs: CRS | None = None,
+        bounds_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Part of a Dataset.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
+            bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        dst_crs = dst_crs or bounds_crs
+
+        # 1. Transform output bbox from bounds_crs → output_crs
+        if bounds_crs != dst_crs:
+            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        # 2. Estimate output shape and read window
+        height, width, dst_bounds = estimate_output(
+            dataset_crs=self.crs,
+            dataset_transform=self.transform,  # type: ignore
+            output_bounds=bbox,
+            output_crs=dst_crs,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
+
+        # 3. Build pixel window from bounds in dataset CRS
+        window = window_from_bounds(*dst_bounds, transform=self.transform)
+
+        # 4. Validate window intersection
+        row_off = math.floor(window.row_off)
+        col_off = math.floor(window.col_off)
+        win_width = math.ceil(window.width) + 1
+        win_height = math.ceil(window.height) + 1
+
+        col_end = min(self.width, math.ceil(window.col_off + window.width))
+        row_end = min(self.height, math.ceil(window.row_off + window.height))
+        if col_off >= col_end or row_off >= row_end:
+            raise InvalidBounds("Input BBOX and dataset bounds do not intersect")
+
+        # 5. Clamp window to array bounds
+        clipped_col_off = max(0, col_off)
+        clipped_row_off = max(0, row_off)
+        clipped_col_stop = min(self.width, col_off + win_width)
+        clipped_row_stop = min(self.height, row_off + win_height)
+
+        # 6. Read data from zarr array
+        img = self._read(
+            indexes=indexes,
+            row_slice=slice(clipped_row_off, clipped_row_stop),
+            col_slice=slice(clipped_col_off, clipped_col_stop),
+            nodata=nodata,
+        )
+
+        # 7. Reproject/resample to output CRS and dimensions
+        img = warp(
+            img,
+            dst_crs=dst_crs,
+            dst_bounds=bbox,
+            dst_width=width,
+            dst_height=height,
+            reproject_method=reproject_method,
+            resampling_method=resampling_method,
+        )
+
+        if expression:
+            img = img.apply_expression(expression)
+
+        return img
+
+    def preview(
+        self,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        dst_crs: CRS | None = None,
+        max_size: int | None = 1024,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        resampling_method: RIOResampling = "nearest",
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a preview of a Dataset.
+
+        Args:
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
+            reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        dst_crs = dst_crs or self.crs
+
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        # 1. Determine output shape
+        # get height/width of the dataset in the output CRS
+        dst_width: int = self.width
+        dst_height: int = self.height
+        if dst_crs != self.crs:
+            # Get shape of the dataset in the output CRS
+            _, dst_width, dst_height = calculate_default_transform(  # type: ignore
+                self.crs, dst_crs, self.width, self.height, *self.bounds
+            )
+
+        height, width = output_size(
+            dataset_height=dst_height,
+            dataset_width=dst_width,
+            output_height=height,
+            output_width=width,
+            max_size=max_size,
+        )
+
+        # 2. Read data
+        img = self._read(indexes=indexes, nodata=nodata)
+        if expression:
+            img = img.apply_expression(expression)
+
+        # 3. Reproject if needed
+        if dst_crs != self.crs:
+            img = img.reproject(
+                dst_crs=dst_crs,
+                reproject_method=reproject_method,
+            )
+
+        # 4. Resize
+        if width != img.width or height != img.height:
+            img = img.resize(
+                width=width,
+                height=height,
+                resampling_method=resampling_method,
+            )
+
+        return img
+
+    def point(
+        self,
+        lon: float,
+        lat: float,
+        coord_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> PointData:
+        """Read a value from a Dataset.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latitude.
+            coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
+            nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
+
+        Returns:
+            PointData: Pixel value per bands/assets.
+
+        """
+        if indexes and expression:
+            warnings.warn(
+                "Both expression and indexes passed; expression will overwrite indexes parameter.",
+                ExpressionMixingWarning,
+            )
+
+        if expression:
+            indexes = parse_expression(expression)
+
+        indexes = cast_to_sequence(indexes)
+
+        coordinates = (lon, lat)
+        if coord_crs != self.crs:
+            xs, ys = transform_coords(coord_crs, self.crs, [lon], [lat])
+            lon, lat = xs[0], ys[0]
+
+        dataset_min_lon, dataset_min_lat, dataset_max_lon, dataset_max_lat = self.bounds
+        # check if latitude is inverted
+        if dataset_min_lat > dataset_max_lat:
+            warnings.warn(
+                "BoundingBox of the dataset is inverted (minLat > maxLat).",
+                UserWarning,
+            )
+
+        dataset_min_lat, dataset_max_lat = (
+            min(dataset_min_lat, dataset_max_lat),
+            max(dataset_min_lat, dataset_max_lat),
+        )
+        if not (
+            (dataset_min_lon < lon < dataset_max_lon)
+            and (dataset_min_lat < lat < dataset_max_lat)
+        ):
+            raise PointOutsideBounds("Point is outside dataset bounds")
+
+        y, x = rowcol(self.transform, lon, lat)
+
+        img = self._read(
+            row_slice=slice(y, y + 1),
+            col_slice=slice(x, x + 1),
+            indexes=indexes,
+            nodata=nodata,
+        )
+
+        pt = PointData(
+            img.array[:, 0, 0],
+            band_names=img.band_names,
+            band_descriptions=img.band_descriptions,
+            coordinates=coordinates,
+            crs=coord_crs,
+            pixel_location=(x, y),
+            nodata=img.nodata,
+            scales=img.scales,
+            offsets=img.offsets,
+            metadata=img.metadata,
+        )
+        if expression:
+            pt = pt.apply_expression(expression)
+
+        return pt
+
+    def feature(
+        self,
+        shape: dict,
+        dst_crs: CRS | None = None,
+        shape_crs: CRS = WGS84_CRS,
+        indexes: Indexes | None = None,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Dataset for a GeoJSON feature.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+            dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
+            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            indexes (sequence of int or int, optional): Band indexes.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        shape = _validate_shape_input(shape)
+
+        if not dst_crs:
+            dst_crs = shape_crs
+
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
+
+        img = self.part(
+            bbox,
+            dst_crs=dst_crs,
+            bounds_crs=shape_crs,
+            indexes=indexes,
+            expression=expression,
+            max_size=max_size,
+            height=height,
+            width=width,
+            nodata=nodata,
+            reproject_method=reproject_method,
+        )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            cutline_mask = rasterize(
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            ).astype("bool")
+
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
+
+    def _read(
+        self,
+        indexes: Sequence[int] | None = None,
+        row_slice: slice | None = None,
+        col_slice: slice | None = None,
+        nodata: NoData | None = None,
+    ) -> ImageData:
+        """Read data from zarr Array.
+
+        Args:
+            indexes: Band indexes (1-based). If None, reads all bands.
+            row_slice: Row slice for windowed read.
+            col_slice: Column slice for windowed read.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+
+        Returns:
+            ImageData: Image data with mask and spatial info.
+
+        """
+        row_slice = row_slice or slice(0, self.height)
+        col_slice = col_slice or slice(0, self.width)
+
+        if len(self.input.shape) == 2:
+            # 2D array: (height, width)
+            selection = (row_slice, col_slice)
+            if indexes is None:
+                indexes = [1]  # Single band
+
+            # Calculate array size in bytes
+            read_height = row_slice.stop - row_slice.start
+            read_width = col_slice.stop - col_slice.start
+            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
+            if nbytes > MAX_ARRAY_SIZE:
+                raise MaxArraySizeError(
+                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
+                )
+
+            data = self.input[selection]
+
+            # Ensure 3D shape (bands, height, width)
+            data = numpy.expand_dims(data, axis=0)  # type: ignore[assignment]
+
+        else:
+            # 3D array: (bands, height, width)
+            if indexes is None:
+                indexes = list(range(1, self.nbands + 1))
+
+            # Calculate array size in bytes
+            read_height = row_slice.stop - row_slice.start
+            read_width = col_slice.stop - col_slice.start
+            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
+            if nbytes > MAX_ARRAY_SIZE:
+                raise MaxArraySizeError(
+                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
+                )
+
+            band_indices = [ix - 1 for ix in indexes]
+
+            data = self.input.get_orthogonal_selection(
+                (band_indices, row_slice, col_slice),  # type: ignore[arg-type]
+            )
+
+        masked_data = numpy.ma.MaskedArray(data)
+
+        # if data has Nodata then we simply make sure the mask == the nodata
+        nodata = (
+            nodata
+            if nodata is not None
+            else getattr(self.input.metadata, "fill_value", None)
+        )
+        if nodata is not None:
+            if numpy.isnan(nodata):
+                masked_data.mask = numpy.isnan(masked_data.data)
+            else:
+                masked_data.mask = masked_data.data == nodata
+
+        # Calculate bounds for the read window
+        read_height = row_slice.stop - row_slice.start
+        read_width = col_slice.stop - col_slice.start
+        read_transform = self.transform * Affine.translation(
+            col_slice.start, row_slice.start
+        )
+        read_bounds = array_bounds(read_height, read_width, read_transform)
+
+        bdescr = self.band_descriptions
+        band_descriptions = [bdescr[ix - 1] for ix in indexes]
+
+        return ImageData(
+            masked_data,
+            bounds=read_bounds,
+            crs=self.crs,
+            band_names=[f"b{idx}" for idx in indexes],
+            band_descriptions=band_descriptions,
+            nodata=nodata,
+        )
+
+
 def _get_zoom(
     tms: TileMatrixSet,
     crs: CRS,
@@ -908,7 +1538,7 @@ def _get_zoom(
 class ArrayMetadata(TypedDict):
     """Array Metadata."""
 
-    array: zarr.AsyncArray
+    array: zarr.AsyncArray | zarr.Array
     crs: CRS
     transform: Affine
     height: int
@@ -1086,18 +1716,10 @@ class GeoZarrInfo(Bounds):
 
 
 @attr.s
-class GeoZarrReader(AsyncBaseReader):
-    """Rio-tiler GeoZarr Reader.
+class GroupMixin(SpatialMixin):
+    """Shared attributes/methods for Async/Sync Group Readers."""
 
-    A pure zarr-python async reader that accepts a zarr AsyncGroup (GeoZarr)
-
-    Attributes:
-        input: zarr AsyncGroup
-        tms: TileMatrixSet for tile operations.
-
-    """
-
-    input: zarr.AsyncGroup = attr.ib()
+    input: zarr.AsyncGroup | zarr.Group = attr.ib()
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
 
@@ -1117,19 +1739,9 @@ class GeoZarrReader(AsyncBaseReader):
 
     _group_var_sep: str = ":"
 
-    async def __aenter__(self):
-        """Support using with Context Managers."""
-        return self
-
-    async def __aexit__(self, exc_type, exc_value, traceback):
-        """Support using with Context Managers."""
-        pass
-
     def __attrs_post_init__(self) -> None:
         """Post init: derive height, width, count from array shape."""
-        assert isinstance(self.input, zarr.AsyncGroup), "Input must be a zarr AsyncGroup"
-
-        attributes = self.input.attrs
+        attributes = cast(dict[str, Any], self.input.attrs)
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
         # Default CRS/Bounds for a Zarr Store
@@ -1187,10 +1799,12 @@ class GeoZarrReader(AsyncBaseReader):
     @property
     def minzoom(self) -> int:
         """Return dataset minzoom."""
-        conventions: list[dict] = self.input.attrs.get("zarr_conventions", [])
+        attributes = cast(dict[str, Any], self.input.attrs)
+
+        conventions: list[dict] = attributes.get("zarr_conventions", [])
         if find_convention(conventions, MULTISCALE_CONVENTION_UUID):
             # NOTE: assume the last layout is the lowest resolution
-            last_res = self.input.attrs["multiscales"]["layout"][-1]
+            last_res = attributes["multiscales"]["layout"][-1]
 
             # NOTE: assume `spatial:shape` and `spatial:transform` are provided
             # at the layout level (if not present at group level)
@@ -1213,10 +1827,12 @@ class GeoZarrReader(AsyncBaseReader):
     @property
     def maxzoom(self) -> int:
         """Return dataset maxzoom."""
-        conventions: list[dict] = self.input.attrs.get("zarr_conventions", [])
+        attributes = cast(dict[str, Any], self.input.attrs)
+
+        conventions: list[dict] = attributes.get("zarr_conventions", [])
         if find_convention(conventions, MULTISCALE_CONVENTION_UUID):
             # NOTE: assume the first layout is the highest resolution
-            first_res = self.input.attrs["multiscales"]["layout"][0]
+            first_res = attributes["multiscales"]["layout"][0]
 
             # NOTE: assume `spatial:shape` and `spatial:transform` are provided
             # at the layout level (if not present at group level)
@@ -1262,6 +1878,91 @@ class GeoZarrReader(AsyncBaseReader):
             group_name, variable = variable.split(self._group_var_sep)[0:2]
 
         return group_name, variable, None
+
+    def select_variable(
+        self,
+        variable_metadata: list[ArrayMetadata],
+        *,
+        # MultiScale Selection
+        bounds: BBox | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        max_size: int | None = None,
+        dst_crs: CRS | None = None,
+    ) -> ArrayMetadata:
+        """Get DataArray from xarray Dataset."""
+        if max_size and (width or height):
+            warnings.warn(
+                "'max_size' will be ignored with with 'height' and 'width' set.",
+                UserWarning,
+                stacklevel=2,
+            )
+            max_size = None
+
+        # Default variable is the first one (hihhest resolution)
+        variable = variable_metadata[0]
+        if len(variable_metadata) == 1:
+            # NOTE: Only one variable, return it
+            return variable
+
+        # NOTE: Select a Multiscale Layer based on output resolution
+        if any([height, width, max_size]):
+            transform = variable["transform"]
+            layout_height = variable["height"]
+            layout_width = variable["width"]
+            crs = variable["crs"]
+
+            target_res = get_target_resolution(
+                input_crs=crs,
+                output_crs=dst_crs,
+                input_height=layout_height,
+                input_width=layout_width,
+                input_transform=transform,
+                output_bounds=bounds,
+                output_max_size=max_size,
+                output_height=height,
+                output_width=width,
+            )
+
+            variable = get_multiscale_level(variable_metadata, target_res)
+
+        return variable
+
+
+###############################################################################
+#          AsyncGroupReader class for reading zarr AsyncGroup                 #
+###############################################################################
+@attr.s
+class AsyncGroupReader(AsyncBaseReader, GroupMixin):
+    """Rio-tiler GeoZarr Reader.
+
+    A pure zarr-python async reader that accepts a zarr AsyncGroup (GeoZarr)
+
+    Attributes:
+        input: zarr AsyncGroup
+        tms: TileMatrixSet for tile operations.
+
+    """
+
+    input: zarr.AsyncGroup = attr.ib()
+
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    crs: CRS = attr.ib(init=False)
+    transform: Affine = attr.ib(init=False, default=None)
+
+    # Group shape
+    height: int = attr.ib(init=False, default=None)
+    width: int = attr.ib(init=False, default=None)
+
+    # Group bounds (calculated from shape + transform)
+    bounds: BBox = attr.ib(init=False)
+
+    # list of availables the groups with variables (used for cache)
+    _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
+    _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
+
+    _group_var_sep: str = ":"
 
     async def get_bounds(
         self,
@@ -1610,55 +2311,6 @@ class GeoZarrReader(AsyncBaseReader):
 
         return self._groups[group]
 
-    def select_variable(
-        self,
-        variable_metadata: list[ArrayMetadata],
-        *,
-        # MultiScale Selection
-        bounds: BBox | None = None,
-        height: int | None = None,
-        width: int | None = None,
-        max_size: int | None = None,
-        dst_crs: CRS | None = None,
-    ) -> ArrayMetadata:
-        """Get DataArray from xarray Dataset."""
-        if max_size and (width or height):
-            warnings.warn(
-                "'max_size' will be ignored with with 'height' and 'width' set.",
-                UserWarning,
-                stacklevel=2,
-            )
-            max_size = None
-
-        # Default variable is the first one (hihhest resolution)
-        variable = variable_metadata[0]
-        if len(variable_metadata) == 1:
-            # NOTE: Only one variable, return it
-            return variable
-
-        # NOTE: Select a Multiscale Layer based on output resolution
-        if any([height, width, max_size]):
-            transform = variable["transform"]
-            layout_height = variable["height"]
-            layout_width = variable["width"]
-            crs = variable["crs"]
-
-            target_res = get_target_resolution(
-                input_crs=crs,
-                output_crs=dst_crs,
-                input_height=layout_height,
-                input_width=layout_width,
-                input_transform=transform,
-                output_bounds=bounds,
-                output_max_size=max_size,
-                output_height=height,
-                output_width=width,
-            )
-
-            variable = get_multiscale_level(variable_metadata, target_res)
-
-        return variable
-
     async def info(self) -> GeoZarrInfo:  # type: ignore[override]
         """Return Dataset's info.
 
@@ -1807,7 +2459,6 @@ class GeoZarrReader(AsyncBaseReader):
 
         dst_crs = dst_crs or bounds_crs
 
-        # 1. Transform output bbox from bounds_crs → output_crs
         if bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
 
@@ -1828,8 +2479,8 @@ class GeoZarrReader(AsyncBaseReader):
                 width=width,
                 dst_crs=dst_crs,
             )
-            async with Reader(
-                input=array_metadata["array"],
+            async with AsyncArrayReader(
+                input=cast(zarr.AsyncArray, array_metadata["array"]),
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
@@ -1838,7 +2489,7 @@ class GeoZarrReader(AsyncBaseReader):
                 return await src.part(
                     bbox,
                     dst_crs=dst_crs,
-                    bounds_crs=bounds_crs,
+                    bounds_crs=dst_crs,
                     max_size=max_size,
                     height=height,
                     width=width,
@@ -1893,8 +2544,8 @@ class GeoZarrReader(AsyncBaseReader):
                 width=width,
                 dst_crs=dst_crs,
             )
-            async with Reader(
-                input=array_metadata["array"],
+            async with AsyncArrayReader(
+                input=cast(zarr.AsyncArray, array_metadata["array"]),
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
@@ -1953,8 +2604,8 @@ class GeoZarrReader(AsyncBaseReader):
                 )
 
             array_metadata = self.select_variable(array)
-            async with Reader(
-                input=array_metadata["array"],
+            async with AsyncArrayReader(
+                input=cast(zarr.AsyncArray, array_metadata["array"]),
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
@@ -2044,3 +2695,772 @@ class GeoZarrReader(AsyncBaseReader):
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
 
         return img
+
+
+###############################################################################
+#                 GroupReader class for reading zarr Group                   #
+###############################################################################
+@attr.s
+class GroupReader(BaseReader, GroupMixin):
+    """Rio-tiler Zarr.Group Reader.
+
+    A pure zarr-python sync reader that accepts a zarr.Group (GeoZarr)
+
+    Attributes:
+        input: zarr Group
+        tms: TileMatrixSet for tile operations.
+
+    """
+
+    input: zarr.Group = attr.ib()
+
+    tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    crs: CRS = attr.ib(init=False)
+    transform: Affine = attr.ib(init=False, default=None)
+
+    # Group shape
+    height: int = attr.ib(init=False, default=None)
+    width: int = attr.ib(init=False, default=None)
+
+    # Group bounds (calculated from shape + transform)
+    bounds: BBox = attr.ib(init=False)
+
+    # list of availables the groups with variables (used for cache)
+    _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
+    _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
+
+    _group_var_sep: str = ":"
+
+    def get_bounds(
+        self,
+        *,
+        variables: Sequence[str] | str,
+        crs: CRS = WGS84_CRS,
+    ) -> BBox:  # noqa: C901
+        """Get BBox for variables."""
+        variables = cast_to_sequence(variables)
+
+        def _get_bounds(variable: str) -> BBox:
+            group_name, variable, _ = self.parse_variable(variable)
+
+            group_metadata = self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            bounds_crs = group_metadata["crs"]
+            bbox = group_metadata["bbox"]
+            if not bounds_crs or not bbox:
+                array_metadata = self.select_variable(array)
+                bbox = array_bounds(
+                    array_metadata["height"],
+                    array_metadata["width"],
+                    array_metadata["transform"],
+                )
+                bounds_crs = array_metadata["crs"]
+
+            if bounds_crs != crs:
+                return cast(
+                    BBox, transform_bounds(bounds_crs, crs, *bbox, densify_pts=21)
+                )
+
+            return bbox
+
+        bounds = [_get_bounds(variable) for variable in variables]
+        minx, miny, maxx, maxy = zip(*bounds)
+        return (min(minx), min(miny), max(maxx), max(maxy))
+
+    def get_minzoom(
+        self,
+        *,
+        variables: Sequence[str] | str,
+    ) -> int:
+        """Get minzoom for variables."""
+        variables = cast_to_sequence(variables)
+
+        def _get_minzoom(variable: str) -> int:
+            group_name, variable, _ = self.parse_variable(variable)
+            group_metadata = self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            # Assume the last array is the lowest resolution
+            array_metadata = array[-1]
+            return _get_zoom(
+                tms=self.tms,
+                crs=array_metadata["crs"],
+                width=array_metadata["width"],
+                height=array_metadata["height"],
+                bounds=array_bounds(
+                    array_metadata["height"],
+                    array_metadata["width"],
+                    array_metadata["transform"],
+                ),
+            )
+
+        zooms = [_get_minzoom(variable) for variable in variables]
+        return min(zooms)
+
+    def get_maxzoom(
+        self,
+        *,
+        variables: Sequence[str] | str,
+    ) -> int:
+        """Get maxzoom for variables."""
+        variables = cast_to_sequence(variables)
+
+        def _get_maxzoom(variable: str) -> int:
+            group_name, variable, _ = self.parse_variable(variable)
+            group_metadata = self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            # Assume the first array is the highest resolution
+            array_metadata = array[0]
+            return _get_zoom(
+                tms=self.tms,
+                crs=array_metadata["crs"],
+                width=array_metadata["width"],
+                height=array_metadata["height"],
+                bounds=array_bounds(
+                    array_metadata["height"],
+                    array_metadata["width"],
+                    array_metadata["transform"],
+                ),
+            )
+
+        zooms = [_get_maxzoom(variable) for variable in variables]
+        return max(zooms)
+
+    def list_variables(self) -> list[dict[str, Any]]:
+        """List variables in the Zarr store."""
+        if self._variables is not None:
+            return self._variables
+
+        ms_groups = []
+        variables: list[dict[str, Any]] = []
+
+        # 1. Check Root level group
+        group_metadata = self.get_group_metadata()
+
+        # Zarr store is a multiscale group
+        if group_metadata["multiscale"]:
+            ms_groups.append("__root__")
+
+        # 2. Root has top level arrays
+        if arrays := group_metadata["arrays"]:
+            variables.extend(
+                [
+                    {
+                        "name": name,
+                        "group": None,
+                        "long_name": name,
+                        "multiscale": group_metadata["multiscale"],
+                        "nbands": array[0]["array"].shape[0]
+                        if len(array[0]["array"].shape) == 3
+                        else 1,
+                    }
+                    for name, array in arrays.items()
+                ]
+            )
+
+        # 3. Check children groups
+        else:
+            for group_name, member in self.input.members(max_depth=10):
+                if any(group_name.startswith(msg) for msg in ms_groups):
+                    continue
+
+                # Check Group for variables
+                if isinstance(member, zarr.Group):
+                    group_metadata = self.get_group_metadata(group_name)
+                    is_multiscale = group_metadata["multiscale"]
+                    if is_multiscale:
+                        ms_groups.append(group_name)
+
+                    if arrays := group_metadata["arrays"]:
+                        variables.extend(
+                            [
+                                {
+                                    "name": name,
+                                    "group": group_name,
+                                    "long_name": f"{group_name}{self._group_var_sep}{name}",
+                                    "multiscale": is_multiscale,
+                                    "nbands": array[0]["array"].shape[0]
+                                    if len(array[0]["array"].shape) == 3
+                                    else 1,
+                                }
+                                for name, array in arrays.items()
+                            ]
+                        )
+
+        self._variables = variables
+        return self._variables
+
+    def get_group_metadata(  # noqa: C901
+        self,
+        group: str | None = None,
+    ) -> GroupMetadata:
+        """Find arrays in a Zarr store and extract spatial metadata."""
+        group = group or "__root__"
+
+        if group in self._groups:
+            return self._groups[group]
+
+        g = self.input if group == "__root__" else self.input[group]
+        assert isinstance(g, zarr.Group), f"Group '{group}' not found in the Zarr store."
+
+        arrays: dict[str, list[ArrayMetadata]] = {}
+
+        root_crs: CRS | None = None
+        root_transform: Affine | None = None
+        root_bbox: BBox | None = None
+        coordinates: dict[str, Any] | None = None
+        band_coordinates: dict[str, Any] | None = None
+        spatial_dims: list[str] | None = None
+
+        group_attributes = cast(dict[str, Any], g.attrs)
+        conventions = group_attributes.get("zarr_conventions", [])
+        # Top Level spatial/geo metadata
+        # 1. Group level metadata (crs, transform)
+        if find_convention(conventions, PROJ_CONVENTION_UUID):
+            root_crs = _get_proj_crs(group_attributes)
+
+        if find_convention(conventions, SPATIAL_CONVENTION_UUID):
+            spatial_dims = group_attributes["spatial:dimensions"]
+            root_transform = _get_transform(group_attributes)
+            root_bbox = group_attributes.get("spatial:bbox")
+
+        if find_convention(conventions, COORDS_CONVENTION_UUID):
+            coordinates = group_attributes["coords:coordinates"]
+
+        group_is_multiscale = find_convention(conventions, MULTISCALE_CONVENTION_UUID)
+        if group_is_multiscale:
+            # NOTE: We assume a group with multiscale should have geo-proj convention
+            assert root_crs, (
+                f"`proj:code` missing for multiscales group '{g.name}' metadata"
+            )
+
+            # 1. Multiscales metadata
+            ms_group: dict[str, dict[str, Any]] = {}
+            for layout in group_attributes["multiscales"]["layout"]:
+                ms_group[layout["asset"]] = {
+                    "transform": _get_transform(layout),
+                }
+
+            # 2. list all arrays for each layout
+            for group_name, meta in ms_group.items():
+                msgroup = g[group_name]
+
+                # NOTE: `ms_group` reference group names so we know `getitem` return a group
+                msgroup = cast(zarr.Group, msgroup)
+                for array in msgroup.array_values():
+                    # NOTE: skip non-data arrays
+                    # TODO: be smarter
+                    if array.ndim < 2:
+                        continue
+
+                    variable_name = array.name.split("/")[-1]
+                    if variable_name not in arrays:
+                        arrays[variable_name] = []
+
+                    array_attributes = cast(dict[str, Any], array.attrs)
+                    # NOTE: Transform from the array or the multiscale layout
+                    transform = _get_transform(array_attributes) or meta["transform"]
+                    assert transform, (
+                        f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
+                    )
+
+                    array_dims = (
+                        array_attributes.get("spatial:dimensions") or spatial_dims
+                    )
+
+                    # NOTE: We assume the last two dimensions are spatial (height, width)
+                    # TODO: is this always true ?
+                    height, width = array.shape[-2:]
+
+                    if find_convention(
+                        array_attributes.get("zarr_conventions", []),  # type: ignore
+                        MULTISCALE_CONVENTION_UUID,
+                    ):
+                        coordinates = cast(
+                            dict[str, Any], array_attributes["coords:coordinates"]
+                        )
+
+                    band_coordinates = None
+                    if array_dims and coordinates:
+                        non_spatial_coords = next(
+                            dim
+                            for dim in list(coordinates.keys())
+                            if dim not in array_dims  # type: ignore
+                        )
+                        band_coordinates = coordinates[non_spatial_coords]
+
+                    arrays[variable_name].append(
+                        {
+                            "array": array,
+                            "crs": root_crs,
+                            "height": height,
+                            "width": width,
+                            "transform": transform,
+                            "coordinates": band_coordinates,
+                        }
+                    )
+
+        else:
+            # List arrays in group
+            for array in g.array_values():
+                array_crs: CRS | None = None
+                array_transform: Affine | None = None
+                band_coordinates = None
+
+                # NOTE: skip non-data arrays
+                # TODO: be smarter
+                if array.ndim < 2:
+                    continue
+
+                attributes = cast(dict[str, Any], array.attrs)
+                conventions = attributes.get("zarr_conventions", [])
+                if find_convention(conventions, PROJ_CONVENTION_UUID):
+                    array_crs = _get_proj_crs(attributes)
+
+                if find_convention(conventions, SPATIAL_CONVENTION_UUID):
+                    array_transform = _get_transform(attributes)
+
+                array_crs = array_crs or root_crs
+                array_transform = _get_transform(attributes) or root_transform
+                array_dims = array.attrs.get("spatial:dimensions") or spatial_dims
+
+                # NOTE: We assume the last two dimensions are spatial (height, width)
+                # TODO: is this always true ?
+                height, width = array.shape[-2:]
+
+                if find_convention(
+                    array.attrs.get("zarr_conventions", []),  # type: ignore
+                    MULTISCALE_CONVENTION_UUID,
+                ):
+                    coordinates = cast(dict[str, Any], array.attrs["coords:coordinates"])
+
+                band_coordinates = None
+                if array_dims and coordinates:
+                    non_spatial_coords = next(
+                        dim
+                        for dim in list(coordinates.keys())
+                        if dim not in array_dims  # type: ignore
+                    )
+                    band_coordinates = coordinates[non_spatial_coords]
+
+                if all([array_crs, array_transform]):
+                    array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
+                    arrays[array_name] = [
+                        {
+                            "array": array,
+                            "crs": array_crs,
+                            "height": height,
+                            "width": width,
+                            "transform": array_transform,
+                            "coordinates": band_coordinates,
+                        }
+                    ]
+
+        self._groups[group] = {
+            "crs": root_crs,
+            "bbox": root_bbox,
+            "transform": root_transform,
+            "multiscale": group_is_multiscale,
+            "arrays": arrays,
+        }
+
+        return self._groups[group]
+
+    def info(self) -> GeoZarrInfo:  # type: ignore[override]
+        """Return Dataset's info.
+
+        Returns:
+            GeoZarrInfo: Dataset info.
+
+        """
+        availables_variables = self.list_variables()
+
+        attrs: dict[str, Any] = cast(dict[str, Any], self.input.attrs or {})
+
+        meta: dict[str, Any] = {
+            "bounds": self.bounds,
+            "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
+            # additional info (not in default model)
+            "driver": "GeoZarr",
+            "variables": availables_variables,
+            "attributes": {
+                k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
+                for k, v in attrs.items()
+            },
+        }
+
+        return GeoZarrInfo.model_validate(meta)
+
+    def statistics(  # type: ignore[override]
+        self,
+        *,
+        variables: Sequence[str] | str,
+        expression: str | None = None,
+        categorical: bool = False,
+        categories: list[float] | None = None,
+        percentiles: list[int] | None = None,
+        hist_options: dict | None = None,
+        max_size: int | None = 1024,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> dict[str, BandStatistics]:
+        """Return bands statistics from a dataset.
+
+        Args:
+            variables (list of str or str, optional): list of variables to return value for. Defaults to all variables.
+            categorical (bool): treat input data as categorical data. Defaults to False.
+            categories (list of numbers, optional): list of categories to return value for.
+            percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
+            hist_options (dict, optional): Options to forward to numpy.histogram function.
+            max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            kwargs (optional): Options to forward to `self.preview`.
+
+        Returns:
+            dict[str, rio_tiler.models.BandStatistics]: bands statistics.
+
+        """
+        img = self.preview(
+            variables=variables,
+            expression=expression,
+            max_size=max_size,
+            nodata=nodata,
+            **kwargs,
+        )
+
+        return img.statistics(
+            categorical=categorical,
+            categories=categories,
+            percentiles=percentiles,
+            hist_options=hist_options,
+        )
+
+    def tile(  # type: ignore[override]
+        self,
+        tile_x: int,
+        tile_y: int,
+        tile_z: int,
+        *,
+        variables: Sequence[str] | str,
+        expression: str | None = None,
+        tilesize: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Map tile from the Dataset.
+
+        Args:
+            tile_x (int): Tile's horizontal index.
+            tile_y (int): Tile's vertical index.
+            tile_z (int): Tile's zoom level index.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
+
+        """
+        # NOTE: if the top level bbox doesn't exist this, should always return False
+        if not self.tile_exists(tile_x, tile_y, tile_z):
+            raise TileOutsideBounds(
+                f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
+            )
+
+        matrix = self.tms.matrix(tile_z)
+        bbox = cast(
+            BBox,
+            self.tms.xy_bounds(Tile(x=tile_x, y=tile_y, z=tile_z)),
+        )
+
+        return self.part(
+            bbox,
+            variables=variables,
+            expression=expression,
+            dst_crs=self.tms.rasterio_crs,
+            bounds_crs=self.tms.rasterio_crs,
+            max_size=None,
+            height=tilesize or matrix.tileHeight,
+            width=tilesize or matrix.tileWidth,
+            nodata=nodata,
+            reproject_method=reproject_method,
+            **kwargs,
+        )
+
+    def part(  # type: ignore[override]
+        self,
+        bbox: BBox,
+        *,
+        variables: Sequence[str] | str,
+        expression: str | None = None,
+        dst_crs: CRS | None = None,
+        bounds_crs: CRS = WGS84_CRS,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Part of a Dataset.
+
+        Args:
+            bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
+            variables (list of str or str): list of variables to return value for.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        variables = cast_to_sequence(variables)
+
+        dst_crs = dst_crs or bounds_crs
+
+        if bounds_crs != dst_crs:
+            bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        def _part(variable: str) -> ImageData:
+            group_name, variable, _ = self.parse_variable(variable)
+            group_metadata = self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            array_metadata = self.select_variable(
+                array,
+                bounds=bbox,
+                max_size=max_size,
+                height=height,
+                width=width,
+                dst_crs=dst_crs,
+            )
+            with ArrayReader(
+                input=cast(zarr.Array, array_metadata["array"]),
+                transform=array_metadata["transform"],
+                crs=array_metadata["crs"],
+                coordinates=array_metadata["coordinates"],
+                tms=self.tms,
+            ) as src:
+                return src.part(
+                    bbox,
+                    dst_crs=dst_crs,
+                    bounds_crs=dst_crs,
+                    max_size=max_size,
+                    height=height,
+                    width=width,
+                    nodata=nodata,
+                    reproject_method=reproject_method,
+                )
+
+        img = ImageData.create_from_list([_part(variable) for variable in variables])
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    def preview(  # type: ignore[override]
+        self,
+        *,
+        variables: Sequence[str] | str,
+        expression: str | None = None,
+        dst_crs: CRS | None = None,
+        max_size: int | None = 1024,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        resampling_method: RIOResampling = "nearest",
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a preview of a Dataset.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        variables = cast_to_sequence(variables)
+
+        def _preview(variable: str) -> ImageData:
+            group_name, variable, _ = self.parse_variable(variable)
+            group_metadata = self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            array_metadata = self.select_variable(
+                array,
+                max_size=max_size,
+                height=height,
+                width=width,
+                dst_crs=dst_crs,
+            )
+            with ArrayReader(
+                input=cast(zarr.Array, array_metadata["array"]),
+                transform=array_metadata["transform"],
+                crs=array_metadata["crs"],
+                coordinates=array_metadata["coordinates"],
+                tms=self.tms,
+            ) as src:
+                return src.preview(
+                    max_size=max_size,
+                    height=height,
+                    width=width,
+                    dst_crs=dst_crs,
+                    nodata=nodata,
+                    resampling_method=resampling_method,
+                    reproject_method=reproject_method,
+                    **kwargs,
+                )
+
+        img = ImageData.create_from_list([_preview(variable) for variable in variables])
+        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if expression:
+            return img.apply_expression(expression)
+
+        return img
+
+    def point(  # type: ignore[override]
+        self,
+        lon: float,
+        lat: float,
+        *,
+        variables: Sequence[str] | str,
+        expression: str | None = None,
+        coord_crs: CRS = WGS84_CRS,
+        nodata: NoData | None = None,
+        **kwargs: Any,
+    ) -> PointData:
+        """Read a value from a Dataset.
+
+        Args:
+            lon (float): Longitude.
+            lat (float): Latitude.
+
+        Returns:
+            rio_tiler.models.PointData: PointData instance with data, mask and spatial info.
+
+        """
+        variables = cast_to_sequence(variables)
+
+        def _point(variable: str) -> PointData:
+            group_name, variable, _ = self.parse_variable(variable)
+            group_metadata = self.get_group_metadata(group_name)
+            array = group_metadata["arrays"].get(variable)
+            if not array:
+                raise ValueError(
+                    f"Variable '{variable}' not found in '{group_name}' group."
+                )
+
+            array_metadata = self.select_variable(array)
+            with ArrayReader(
+                input=cast(zarr.Array, array_metadata["array"]),
+                transform=array_metadata["transform"],
+                crs=array_metadata["crs"],
+                coordinates=array_metadata["coordinates"],
+                tms=self.tms,
+            ) as src:
+                return src.point(
+                    lon,
+                    lat,
+                    coord_crs=coord_crs,
+                    nodata=nodata,
+                )
+
+        pt = PointData.create_from_list([_point(variable) for variable in variables])
+        pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+        if expression:
+            return pt.apply_expression(expression)
+
+        return pt
+
+    def feature(  # type: ignore[override]
+        self,
+        shape: dict,
+        *,
+        variables: Sequence[str] | str,
+        dst_crs: CRS | None = None,
+        shape_crs: CRS = WGS84_CRS,
+        expression: str | None = None,
+        max_size: int | None = None,
+        height: int | None = None,
+        width: int | None = None,
+        nodata: NoData | None = None,
+        reproject_method: WarpResampling = "nearest",
+        **kwargs: Any,
+    ) -> ImageData:
+        """Read a Dataset for a GeoJSON feature.
+
+        Args:
+            shape (dict): Valid GeoJSON feature.
+
+        Returns:
+            rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
+
+        """
+        shape = _validate_shape_input(shape)
+
+        if not dst_crs:
+            dst_crs = shape_crs
+
+        # Get BBOX of the polygon
+        bbox = featureBounds(shape)
+
+        img = self.part(
+            bbox,
+            variables=variables,
+            dst_crs=dst_crs,
+            bounds_crs=shape_crs,
+            expression=expression,
+            max_size=max_size,
+            height=height,
+            width=width,
+            nodata=nodata,
+            reproject_method=reproject_method,
+        )
+
+        if dst_crs != shape_crs:
+            shape = transform_geom(shape_crs, dst_crs, shape)
+
+        with warnings.catch_warnings():
+            warnings.filterwarnings(
+                "ignore",
+                category=NotGeoreferencedWarning,
+                module="rasterio",
+            )
+            cutline_mask = rasterize(
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            ).astype("bool")
+
+        img.cutline_mask = cutline_mask
+        img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
+
+        return img
+
+
+# TODO: remove in 10.0
+Reader = AsyncArrayReader
+GeoZarrReader = AsyncGroupReader
