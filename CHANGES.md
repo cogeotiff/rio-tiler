@@ -1,6 +1,13 @@
 
 # Unreleased
 
+## 9.4.10 (2026-10-04)
+
+* fix: bounds-crs/dst-crs for `part` methods in experimental zarr readers
+* rename: `rio_tiler.experimental.zarr.Reader` -> `rio_tiler.experimental.zarr.AsyncArrayReader`
+* rename: `rio_tiler.experimental.zarr.GeoZarrReader` -> `rio_tiler.experimental.zarr.AsyncGroupReader`
+* add: pure zarr-python sync `rio_tiler.experimental.zarr.ArrayReader` and `rio_tiler.experimental.zarr.GroupReader`
+
 ## 9.4.9 (2026-10-02)
 
 * add: support for coordinates zarr-conventions within experimental xarray.GeoArrayReader and zarr.Reader/GeoZarrReader (https://github.com/cogeotiff/rio-tiler/pull/1004)
