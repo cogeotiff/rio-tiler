@@ -1741,7 +1741,7 @@ class GroupMixin(SpatialMixin):
 
     def __attrs_post_init__(self) -> None:
         """Post init: derive height, width, count from array shape."""
-        attributes = self.input.attrs
+        attributes = cast(dict[str, Any], self.input.attrs)
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
         # Default CRS/Bounds for a Zarr Store
