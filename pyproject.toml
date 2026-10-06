@@ -173,7 +173,7 @@ exclude = [
 max-complexity = 14
 
 [tool.bumpversion]
-current_version = "9.4.9"
+current_version = "9.4.10"
 parse = """(?x)
     (?P<major>\\d+)\\.
     (?P<minor>\\d+)\\.
