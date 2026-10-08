@@ -50,6 +50,7 @@ def test_xarray_reader():
     )
     minv, maxv = float(arr.min()), float(arr.max())
     data.attrs.update({"valid_min": minv, "valid_max": maxv})
+    data.time.attrs["standard_name"] = "time"
 
     data.rio.write_crs("epsg:4326", inplace=True)
     with XarrayReader(data) as dst:
@@ -58,7 +59,10 @@ def test_xarray_reader():
         assert info.bounds == dst.bounds
         crs = info.crs
         assert rioCRS.from_user_input(crs) == dst.crs
-        assert info.band_metadata == [("b1", {}), ("b2", {})]
+        assert info.band_metadata == [
+            ("b1", {"standard_name": "time"}),
+            ("b2", {"standard_name": "time"}),
+        ]
         assert info.band_descriptions == [
             ("b1", "2022-01-01T00:00:00.000000"),
             ("b2", "2022-01-02T00:00:00.000000"),
