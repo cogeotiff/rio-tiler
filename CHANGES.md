@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* fix: improve performance of `XarrayReader.info()` for long time series
+
 ## 9.4.10 (2026-10-04)
 
 * fix: bounds-crs/dst-crs for `part` methods in experimental zarr readers
