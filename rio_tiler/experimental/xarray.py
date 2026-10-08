@@ -333,7 +333,11 @@ class GeoArrayReader(XarrayReader):
 
     def info(self) -> Info:
         """Return xarray.DataArray info."""
-        metadata = [band.attrs for d in self._dims for band in self.input[d]] or [{}]
+        metadata = [
+            attrs
+            for d in self._dims
+            for attrs in [self.input[d].attrs] * self.input.sizes[d]
+        ] or [{}]
 
         nodata_type = "None"
         if self.options.get("nodata", self._nodata_value) is not None:

@@ -1,6 +1,8 @@
 
 # Unreleased
 
+## 9.4.11 (2026-10-08)
+
 * fix: improve performance of `XarrayReader.info()` for long time series
 
 ## 9.4.10 (2026-10-04)
