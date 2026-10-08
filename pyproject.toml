@@ -52,7 +52,7 @@ dev = [
     "vsifile>=0.2",
     "zarr~=3.0",
     "obstore",
-    "rio-tiler[geozarr]",
+    "isochron",
     "async-geotiff>=0.3,<0.6",
     "tilebench",
     "pre-commit",
@@ -90,11 +90,16 @@ xarray = [
     "xarray",
     "rioxarray",
 ]
+# for experimental.zarr Readers
 zarr = [
     "zarr~=3.0",
     "obstore",
+    "isochron",
 ]
-geozarr = [
+# for experimental.xarray Readers
+geoarray = [
+    "xarray",
+    "rioxarray",
     "isochron",
 ]
 geotiff = [
