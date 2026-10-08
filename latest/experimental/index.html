@@ -2659,7 +2659,8 @@
 <p>A asynchronous rio-tiler reader built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a> that can read single array.</p>
 <p>Required dependencies:
 - <code>zarr&gt;=3.0</code>
-- <code>obstore</code> </p>
+- <code>obstore</code> 
+- <code>isochron</code></p>
 <p>You can install the dependencies with `python -m pip install "rio-tiler[zarr]".</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">affine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Affine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3Store</span>
@@ -2852,6 +2853,7 @@
 - allows `band_names` input parameter to specify the 3d dimension names
 </code></pre></div>
 
+<p>You can install the dependencies with <code>python -m pip install "rio-tiler[geoarray]"</code>.</p>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
