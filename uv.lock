@@ -4269,7 +4269,6 @@ dependencies = [
     { name = "cachetools" },
     { name = "color-operations" },
     { name = "httpx2" },
-    { name = "isochron" },
     { name = "morecantile" },
     { name = "numexpr" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -4282,6 +4281,12 @@ dependencies = [
 ]
 
 [package.optional-dependencies]
+geoarray = [
+    { name = "isochron" },
+    { name = "rioxarray", version = "0.19.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
+    { name = "rioxarray", version = "0.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+    { name = "xarray" },
+]
 geotiff = [
     { name = "async-geotiff" },
     { name = "obstore" },
@@ -4295,6 +4300,7 @@ xarray = [
     { name = "xarray" },
 ]
 zarr = [
+    { name = "isochron" },
     { name = "obstore" },
     { name = "zarr", version = "3.1.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "zarr", version = "3.2.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
@@ -4311,6 +4317,7 @@ dev = [
     { name = "h5py" },
     { name = "ipyleaflet" },
     { name = "ipython" },
+    { name = "isochron" },
     { name = "jupyter" },
     { name = "matplotlib" },
     { name = "morecantile" },
@@ -4352,7 +4359,8 @@ requires-dist = [
     { name = "cachetools" },
     { name = "color-operations" },
     { name = "httpx2" },
-    { name = "isochron" },
+    { name = "isochron", marker = "extra == 'geoarray'" },
+    { name = "isochron", marker = "extra == 'zarr'" },
     { name = "morecantile", specifier = ">=5.0,<8.0" },
     { name = "numexpr" },
     { name = "numpy" },
@@ -4361,12 +4369,14 @@ requires-dist = [
     { name = "pydantic", specifier = "~=2.0" },
     { name = "pystac", specifier = ">=1.9,<2.0" },
     { name = "rasterio", specifier = ">=1.4.0" },
+    { name = "rioxarray", marker = "extra == 'geoarray'" },
     { name = "rioxarray", marker = "extra == 'xarray'" },
     { name = "typing-extensions", marker = "python_full_version < '3.15'", specifier = ">=4.10.0" },
+    { name = "xarray", marker = "extra == 'geoarray'" },
     { name = "xarray", marker = "extra == 'xarray'" },
     { name = "zarr", marker = "extra == 'zarr'", specifier = "~=3.0" },
 ]
-provides-extras = ["geotiff", "s3", "xarray", "zarr"]
+provides-extras = ["geoarray", "geotiff", "s3", "xarray", "zarr"]
 
 [package.metadata.requires-dev]
 deploy = [{ name = "hatch" }]
@@ -4377,6 +4387,7 @@ dev = [
     { name = "h5py" },
     { name = "ipyleaflet" },
     { name = "ipython" },
+    { name = "isochron" },
     { name = "jupyter" },
     { name = "matplotlib" },
     { name = "morecantile", specifier = ">=6.0,<8.0" },

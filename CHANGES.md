@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* fix: make `isochron` an optional dependency, required by the `rio_tiler.experimental.zarr` (`zarr` extra) and `rio_tiler.experimental.xarray` (new `geoarray` extra) readers
+
 ## 9.4.11 (2026-10-08)
 
 * fix: improve performance of `XarrayReader.info()` for long time series

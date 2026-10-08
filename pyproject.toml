@@ -30,7 +30,6 @@ dependencies = [
     "pystac>=1.9,<2.0",
     "rasterio>=1.4.0",
     "color-operations",
-    "isochron",
     "typing-extensions>=4.10.0; python_version < '3.15'",
 ]
 
@@ -53,6 +52,7 @@ dev = [
     "vsifile>=0.2",
     "zarr~=3.0",
     "obstore",
+    "isochron",
     "async-geotiff>=0.3,<0.6",
     "tilebench",
     "pre-commit",
@@ -90,9 +90,17 @@ xarray = [
     "xarray",
     "rioxarray",
 ]
+# for experimental.zarr Readers
 zarr = [
     "zarr~=3.0",
     "obstore",
+    "isochron",
+]
+# for experimental.xarray Readers
+geoarray = [
+    "xarray",
+    "rioxarray",
+    "isochron",
 ]
 geotiff = [
     "async-geotiff>=0.5,<0.6",
