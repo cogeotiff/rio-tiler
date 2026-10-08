@@ -1,6 +1,8 @@
 
 # Unreleased
 
+## 9.4.12 (2026-10-08)
+
 * fix: make `isochron` an optional dependency, required by the `rio_tiler.experimental.zarr` (`zarr` extra) and `rio_tiler.experimental.xarray` (new `geoarray` extra) readers
 
 ## 9.4.11 (2026-10-08)
