@@ -80,6 +80,8 @@ Required dependencies:
 
 You can install the dependencies with `python -m pip install "rio-tiler[zarr]".
 
+Decoding ISO 8601 interval coordinates (zarr `coordinates` convention) also requires `isochron`: `python -m pip install "rio-tiler[zarr,geozarr]"`.
+
 ```python
 from affine import Affine
 from obstore.store import S3Store

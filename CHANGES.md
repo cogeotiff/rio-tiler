@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* fix: make `isochron` an optional dependency, installed with the new `geozarr` extra (only needed to decode ISO 8601 interval coordinates in `rio_tiler.experimental` readers)
+
 ## 9.4.11 (2026-10-08)
 
 * fix: improve performance of `XarrayReader.info()` for long time series

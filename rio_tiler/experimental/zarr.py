@@ -12,7 +12,6 @@ import attr
 import numpy
 import zarr
 from affine import Affine
-from isochron import Duration, format_datetime, parse_datetime, parse_duration
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
@@ -47,6 +46,12 @@ from rio_tiler.utils import (
     has_width_or_height,
     output_size,
 )
+
+try:
+    import isochron
+except ImportError:  # pragma: nocover
+    isochron = None  # type: ignore
+
 
 MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
 SPATIAL_CONVENTION_UUID = "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
@@ -110,12 +115,17 @@ def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
 
         # Handle ISO 8601 (temporal) interval
         elif isinstance(step, str):
-            start_datetime = parse_datetime(coordinates["start"])
-            stop_datetime = parse_datetime(coordinates["stop"])
-            step_duration = parse_duration(step)
-            if isinstance(step_duration, Duration):
+            if isochron is None:
+                raise ImportError(
+                    "isochron must be installed to decode ISO 8601 interval coordinates: "
+                    "pip install 'rio-tiler[geozarr]'"
+                )
+            start_datetime = isochron.parse_datetime(coordinates["start"])
+            stop_datetime = isochron.parse_datetime(coordinates["stop"])
+            step_duration = isochron.parse_duration(step)
+            if isinstance(step_duration, isochron.Duration):
                 return [
-                    format_datetime(start_datetime + i * step_duration)  # type: ignore
+                    isochron.format_datetime(start_datetime + i * step_duration)  # type: ignore
                     for i in range(
                         (
                             (stop_datetime - start_datetime)
@@ -126,7 +136,7 @@ def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
                 ]
             else:
                 return [
-                    format_datetime(start_datetime + i * step_duration)  # type: ignore
+                    isochron.format_datetime(start_datetime + i * step_duration)  # type: ignore
                     for i in range(
                         ((stop_datetime - start_datetime) // step_duration) + 1
                     )

@@ -4269,7 +4269,6 @@ dependencies = [
     { name = "cachetools" },
     { name = "color-operations" },
     { name = "httpx2" },
-    { name = "isochron" },
     { name = "morecantile" },
     { name = "numexpr" },
     { name = "numpy", version = "2.4.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
@@ -4285,6 +4284,9 @@ dependencies = [
 geotiff = [
     { name = "async-geotiff" },
     { name = "obstore" },
+]
+geozarr = [
+    { name = "isochron" },
 ]
 s3 = [
     { name = "boto3" },
@@ -4321,6 +4323,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
+    { name = "rio-tiler", extra = ["geozarr"] },
     { name = "rioxarray", version = "0.19.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.12'" },
     { name = "rioxarray", version = "0.23.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
     { name = "tilebench" },
@@ -4352,7 +4355,7 @@ requires-dist = [
     { name = "cachetools" },
     { name = "color-operations" },
     { name = "httpx2" },
-    { name = "isochron" },
+    { name = "isochron", marker = "extra == 'geozarr'" },
     { name = "morecantile", specifier = ">=5.0,<8.0" },
     { name = "numexpr" },
     { name = "numpy" },
@@ -4366,7 +4369,7 @@ requires-dist = [
     { name = "xarray", marker = "extra == 'xarray'" },
     { name = "zarr", marker = "extra == 'zarr'", specifier = "~=3.0" },
 ]
-provides-extras = ["geotiff", "s3", "xarray", "zarr"]
+provides-extras = ["geotiff", "geozarr", "s3", "xarray", "zarr"]
 
 [package.metadata.requires-dev]
 deploy = [{ name = "hatch" }]
@@ -4387,6 +4390,7 @@ dev = [
     { name = "pytest-asyncio" },
     { name = "pytest-benchmark" },
     { name = "pytest-cov" },
+    { name = "rio-tiler", extras = ["geozarr"] },
     { name = "rioxarray" },
     { name = "tilebench" },
     { name = "vsifile", specifier = ">=0.2" },
