@@ -1,7 +1,7 @@
 
 # Unreleased
 
-* fix: make `isochron` an optional dependency, installed with the new `geozarr` extra (only needed to decode ISO 8601 interval coordinates in `rio_tiler.experimental` readers)
+* fix: make `isochron` an optional dependency, installed with the new `geozarr` extra (required by the `rio_tiler.experimental.xarray` and `rio_tiler.experimental.zarr` readers)
 
 ## 9.4.11 (2026-10-08)
 

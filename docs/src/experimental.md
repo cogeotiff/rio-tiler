@@ -77,10 +77,9 @@ A asynchronous rio-tiler reader built on top [`zarr-python`](https://zarr.readth
 Required dependencies:
 - `zarr>=3.0`
 - `obstore` 
+- `isochron`
 
-You can install the dependencies with `python -m pip install "rio-tiler[zarr]".
-
-Decoding ISO 8601 interval coordinates (zarr `coordinates` convention) also requires `isochron`: `python -m pip install "rio-tiler[zarr,geozarr]"`.
+You can install the dependencies with `python -m pip install "rio-tiler[zarr,geozarr]".
 
 ```python
 from affine import Affine
@@ -290,6 +289,7 @@ An experimental *Reader* built on top the `XarrayReader` but remove the usage of
     - do not read coordinates arrays
     - allows `band_names` input parameter to specify the 3d dimension names
 
+You can install the dependencies with `python -m pip install "rio-tiler[xarray,geozarr]"`.
 
 ```python
 from obstore.store import HTTPStore
