@@ -1,6 +1,11 @@
 
 # Unreleased
 
+* breaking: remove python 3.11 support (rasterio 1.5 requires python >=3.12)
+* update: require `rasterio>=1.5.1` and `affine>=3.0`
+* fix: use masked array reprojection in `rio_tiler._warp.warp` (fix mask warping with GDAL >= 3.11)
+* fix: use `@` instead of `*` for affine matrix multiplication
+
 ## 9.4.12 (2026-10-08)
 
 * fix: make `isochron` an optional dependency, required by the `rio_tiler.experimental.zarr` (`zarr` extra) and `rio_tiler.experimental.xarray` (new `geoarray` extra) readers

@@ -2,7 +2,7 @@
 name = "rio-tiler"
 description = "User friendly Rasterio plugin to read raster datasets."
 readme = "README.md"
-requires-python = ">=3.11"
+requires-python = ">=3.12"
 license = {file = "LICENSE"}
 authors = [
     {name = "Vincent Sarago", email = "vincent@developmentseed.com"},
@@ -12,7 +12,6 @@ classifiers = [
     "Intended Audience :: Information Technology",
     "Intended Audience :: Science/Research",
     "License :: OSI Approved :: BSD License",
-    "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
     "Programming Language :: Python :: 3.13",
     "Programming Language :: Python :: 3.14",
@@ -20,6 +19,7 @@ classifiers = [
 ]
 dynamic = ["version"]
 dependencies = [
+    "affine>=3.0",
     "attrs",
     "cachetools",
     "httpx2",
@@ -28,7 +28,7 @@ dependencies = [
     "morecantile>=5.0,<8.0",
     "pydantic~=2.0",
     "pystac>=1.9,<2.0",
-    "rasterio>=1.4.0",
+    "rasterio>=1.5.1",
     "color-operations",
     "typing-extensions>=4.10.0; python_version < '3.15'",
 ]
@@ -215,4 +215,7 @@ replace = '__version__ = "{new_version}"'
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::rio_tiler.errors.RioTilerExperimentalWarning",
+    # affine>=3 deprecates `*` for matrix multiplication; still used by
+    # third-party dependencies (async-geotiff, rioxarray)
+    "ignore:Use `@` matmul:PendingDeprecationWarning",
 ]

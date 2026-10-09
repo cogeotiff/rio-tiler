@@ -31,7 +31,7 @@ def test_geoxarray_reader():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         band_names=["2022-01-01T00:00:00.000000", "2022-01-02T00:00:00.000000"],
     ) as dst:
         assert dst.band_descriptions == [
@@ -58,7 +58,7 @@ def test_geoxarray_reader():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         band_names=["2022-01-01T00:00:00.000000", "2022-01-02T00:00:00.000000"],
     ) as dst:
         info = dst.info()
@@ -250,7 +250,7 @@ def test_geoxarray_reader_coordinates():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
     ) as dst:
         assert dst.band_descriptions == [
             "2022-01-01T00:00:00.000000",
@@ -269,7 +269,7 @@ def test_geoxarray_reader_coordinates():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
     ) as dst:
         assert dst.band_descriptions == ["b1"]
         info = dst.info()
@@ -284,7 +284,7 @@ def test_geoxarray_reader_coordinates():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
     ) as dst:
         assert dst.band_descriptions == ["data"]
         info = dst.info()
@@ -299,7 +299,7 @@ def test_geoxarray_reader_coordinates():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
     ) as dst:
         assert dst.band_descriptions == ["b1"]
         info = dst.info()
@@ -325,7 +325,7 @@ def test_geoxarray_reader_point():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         band_names=["2022-01-01T00:00:00.000000", "2022-01-02T00:00:00.000000"],
     ) as dst:
         pt = dst.point(0, 0)
@@ -395,7 +395,7 @@ def test_geoxarray_reader_compat():
     geo_dst = GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         band_names=["2022-01-01T00:00:00.000000", "2022-01-02T00:00:00.000000"],
     )
 
@@ -444,7 +444,7 @@ def test_geoxarray_nodata():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         options={},
     ) as dst:
         info = dst.info()
@@ -467,7 +467,7 @@ def test_geoxarray_nodata():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         options={},
     ) as dst:
         info = dst.info()
@@ -490,7 +490,7 @@ def test_geoxarray_nodata():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         options={},
     ) as dst:
         info = dst.info()
@@ -514,7 +514,7 @@ def test_geoxarray_nodata():
     with GeoArrayReader(
         input=data,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         options={},
     ) as dst:
         info = dst.info()
@@ -565,7 +565,7 @@ def test_geoxarray_zarr_fill_value(zarr_dataset):
     geods = GeoArrayReader(
         input=xarray_array,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         options={},
     )
     # The FillValue is not a `nodata` value per say in Zarr V3 model
@@ -578,7 +578,7 @@ def test_geoxarray_zarr_fill_value(zarr_dataset):
     geods = GeoArrayReader(
         input=xarray_array,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         options={"nodata": 0.0},
     )
     # The FillValue is not a `nodata` value per say in Zarr V3 model
@@ -630,7 +630,7 @@ def test_geoxarray_reader_coords():
     geods = GeoArrayReader(
         input=xarray_array,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         options={},
     )
     assert geods.band_names == ["2024-01-01T00:00:00Z"]

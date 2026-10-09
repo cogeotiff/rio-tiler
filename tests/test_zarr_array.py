@@ -95,7 +95,7 @@ async def test_zarr_reader_async(zarr_store):
     # Create reader with geospatial metadata
     # Use a proper north-up transform (pixel 0,0 at top-left)
     # Bounds in UTM: 500000, 4000000 to 500100, 4000100 (100x100m area, 1m pixels)
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -139,7 +139,7 @@ def test_zarr_reader_sync(zarr_store):
     # Create reader with geospatial metadata
     # Use a proper north-up transform (pixel 0,0 at top-left)
     # Bounds in UTM: 500000, 4000000 to 500100, 4000100 (100x100m area, 1m pixels)
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -181,7 +181,7 @@ async def test_2d_array_async(zarr_store_2d):
     """Test with a 2D array (single band)."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -207,7 +207,7 @@ def test_2d_array_sync(zarr_store_2d):
     """Test with a 2D array (single band)."""
     arr = zarr.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -234,7 +234,7 @@ async def test_part_same_crs_async(zarr_store):
     """Test part() method with same CRS as dataset."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -255,7 +255,7 @@ def test_part_same_crs(zarr_store):
     """Test part() method with same CRS as dataset."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -277,7 +277,7 @@ async def test_part_with_explicit_size_async(zarr_store):
     """Test part() method with explicit width/height."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -298,7 +298,7 @@ def test_part_with_explicit_size(zarr_store):
     """Test part() method with explicit width/height."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -320,7 +320,7 @@ async def test_part_with_max_size_async(zarr_store):
     """Test part() method with max_size constraint."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -340,7 +340,7 @@ def test_part_with_max_size(zarr_store):
     """Test part() method with max_size constraint."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -361,7 +361,7 @@ async def test_part_with_indexes_async(zarr_store):
     """Test part() method with band selection."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -392,7 +392,7 @@ def test_part_with_indexes(zarr_store):
     """Test part() method with band selection."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -424,7 +424,7 @@ async def test_tile_async(zarr_store):
     """Test tile() method."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -460,7 +460,7 @@ def test_tile(zarr_store):
     """Test tile() method."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -495,7 +495,7 @@ async def test_preview_async(zarr_store):
     """Test preview method."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -557,7 +557,7 @@ def test_preview(zarr_store):
     """Test preview method."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -620,7 +620,7 @@ async def test_preview_2d_async(zarr_store_2d):
     """Test preview() with a 2D (single-band) array."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -634,7 +634,7 @@ def test_preview_2d(zarr_store_2d):
     """Test preview() with a 2D (single-band) array."""
     arr = zarr.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -649,7 +649,7 @@ async def test_statistics_async(zarr_store):
     """Test statistics() method returns BandStatistics for each band."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -700,7 +700,7 @@ def test_statistics(zarr_store):
     """Test statistics() method returns BandStatistics for each band."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -752,7 +752,7 @@ async def test_statistics_2d_async(zarr_store_2d):
     """Test statistics() with a 2D (single-band) array."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -768,7 +768,7 @@ def test_statistics_2d(zarr_store_2d):
     """Test statistics() with a 2D (single-band) array."""
     arr = zarr.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -785,7 +785,7 @@ async def test_point_async(zarr_store):
     """Test point() method reads a single pixel value."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -838,7 +838,7 @@ def test_point(zarr_store):
     """Test point() method reads a single pixel value."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
-    transform = Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -892,7 +892,7 @@ async def test_point_2d_async(zarr_store_2d):
     """Test point() with a 2D (single-band) array."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     async with AsyncArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -911,7 +911,7 @@ def test_point_2d(zarr_store_2d):
     """Test point() with a 2D (single-band) array."""
     arr = zarr.open_array(store=zarr_store_2d, mode="r")
 
-    transform = Affine.translation(500000, 4000050) * Affine.scale(1, -1)
+    transform = Affine.translation(500000, 4000050) @ Affine.scale(1, -1)
     with ArrayReader(
         input=arr,
         crs=CRS.from_epsg(32618),
@@ -942,7 +942,7 @@ async def test_band_descriptions_async(zarr_dataset):
     async with AsyncArrayReader(
         input=array,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         band_names=[str(d) for d in time_arrray.tolist()],
     ) as reader:
         assert reader.band_descriptions == ["2022-01-01", "2022-01-02"]
@@ -972,7 +972,7 @@ def test_band_descriptions(zarr_dataset):
     with ArrayReader(
         input=array,
         crs=CRS.from_epsg(4326),
-        transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         band_names=[str(d) for d in time_arrray.tolist()],
     ) as reader:
         assert reader.band_descriptions == ["2022-01-01", "2022-01-02"]
@@ -1073,7 +1073,7 @@ async def test_compat_xarray_async(zarr_dataset):
         crs=CRS.from_epsg(4326),
         # Ref: https://github.com/cogeotiff/rio-tiler/issues/905
         # Use the same transform as xarray to ensure the same bounds and pixel alignment
-        # transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        # transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         transform=transform,
     )
 
@@ -1238,7 +1238,7 @@ def test_compat_xarray(zarr_dataset):
         crs=CRS.from_epsg(4326),
         # Ref: https://github.com/cogeotiff/rio-tiler/issues/905
         # Use the same transform as xarray to ensure the same bounds and pixel alignment
-        # transform=Affine.translation(-180, 90) * Affine.scale(0.1, -0.1),
+        # transform=Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1),
         transform=transform,
     )
 
@@ -1392,7 +1392,7 @@ async def test_coords_conventions_async():
         {
             "spatial:dimensions": ["y", "x"],
             "spatial:transform": list(
-                Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+                Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
             ),
             "spatial:bbox": [500000.0, 4000000.0, 500100.0, 4000100.0],
             "proj:code": "EPSG:32618",
@@ -1571,7 +1571,7 @@ def test_coords_conventions():
         {
             "spatial:dimensions": ["y", "x"],
             "spatial:transform": list(
-                Affine.translation(500000, 4000100) * Affine.scale(1, -1)
+                Affine.translation(500000, 4000100) @ Affine.scale(1, -1)
             ),
             "spatial:bbox": [500000.0, 4000000.0, 500100.0, 4000100.0],
             "proj:code": "EPSG:32618",

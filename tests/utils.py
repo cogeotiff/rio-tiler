@@ -57,7 +57,7 @@ def create_zarr(path: str, geozarr: bool = False) -> None:
             {
                 "spatial:dimensions": ["y", "x"],
                 "spatial:transform": list(
-                    Affine.translation(-180, 90) * Affine.scale(0.1, -0.1)
+                    Affine.translation(-180, 90) @ Affine.scale(0.1, -0.1)
                 ),
                 "spatial:bbox": [-180.0, -90.0, 180.0, 90.0],
                 "proj:code": "EPSG:4326",

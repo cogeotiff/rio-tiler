@@ -646,7 +646,10 @@ def render(
     output_profile.update(creation_options)
 
     try:
-        with warnings.catch_warnings():
+        # NOTE: rasterio datasets enter a GDAL env in `__enter__` but won't exit
+        # it if `close()` raises (e.g. PNG driver errors raised at CreateCopy time),
+        # which would leak a global env. We make sure an env exists beforehand.
+        with warnings.catch_warnings(), rasterio.env.env_ctx_if_needed():
             warnings.filterwarnings(
                 "ignore",
                 category=NotGeoreferencedWarning,

@@ -44,7 +44,7 @@ def geozarr_store():
                         "spatial:dimensions": ["y", "x"],
                         "spatial:shape": [1000, 1000],
                         "spatial:transform": list(
-                            Affine.translation(500000, 4200000) * Affine.scale(10, -10)
+                            Affine.translation(500000, 4200000) @ Affine.scale(10, -10)
                         ),
                     },
                     {
@@ -52,7 +52,7 @@ def geozarr_store():
                         "spatial:dimensions": ["y", "x"],
                         "spatial:shape": [100, 100],
                         "spatial:transform": list(
-                            Affine.translation(500000, 4200000) * Affine.scale(100, -100)
+                            Affine.translation(500000, 4200000) @ Affine.scale(100, -100)
                         ),
                     },
                 ]
@@ -81,7 +81,7 @@ def geozarr_store():
             "spatial:bbox": [500000, 4190000, 510000, 4200000],
             "proj:code": "EPSG:32633",
             "spatial:transform": list(
-                Affine.translation(500000, 4200000) * Affine.scale(10, -10)
+                Affine.translation(500000, 4200000) @ Affine.scale(10, -10)
             ),
         },
     )
@@ -127,7 +127,7 @@ def geozarr_store():
             "spatial:bbox": [500000, 4190000, 510000, 4200000],
             "proj:code": "EPSG:32633",
             "spatial:transform": list(
-                Affine.translation(500000, 4200000) * Affine.scale(100, -100)
+                Affine.translation(500000, 4200000) @ Affine.scale(100, -100)
             ),
         },
     )
@@ -171,7 +171,7 @@ def geozarr_root_store():
             "spatial:bbox": [500000, 4190000, 510000, 4200000],
             "proj:code": "EPSG:32633",
             "spatial:transform": list(
-                Affine.translation(500000, 4200000) * Affine.scale(10, -10)
+                Affine.translation(500000, 4200000) @ Affine.scale(10, -10)
             ),
             "coords:coordinates": {
                 "time": {"type": "inline", "values": ["2022-01-01T00:00:00Z"]},
@@ -226,7 +226,7 @@ def geozarr_root_array_store():
         "spatial:bbox": [500000, 4190000, 510000, 4200000],
         "proj:code": "EPSG:32633",
         "spatial:transform": list(
-            Affine.translation(500000, 4200000) * Affine.scale(10, -10)
+            Affine.translation(500000, 4200000) @ Affine.scale(10, -10)
         ),
         "coords:coordinates": {
             "time": {"type": "inline", "values": ["2022-01-01T00:00:00Z"]},
@@ -1062,7 +1062,7 @@ async def test_custom_geozarr_separator_async():
             "spatial:bbox": [500000, 4190000, 510000, 4200000],
             "proj:code": "EPSG:32633",
             "spatial:transform": list(
-                Affine.translation(500000, 4200000) * Affine.scale(10, -10)
+                Affine.translation(500000, 4200000) @ Affine.scale(10, -10)
             ),
         },
     )
