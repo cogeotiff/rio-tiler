@@ -754,7 +754,7 @@ class GeoArrayReader(XarrayReader):
             arr.mask |= arr.data == nodata
 
         # Calculate bounds for the read window
-        read_transform = self.transform * Affine.translation(
+        read_transform = self.transform @ Affine.translation(
             col_slice.start, row_slice.start
         )
         read_bounds = array_bounds(read_height, read_width, read_transform)

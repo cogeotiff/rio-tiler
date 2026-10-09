@@ -894,7 +894,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         # Calculate bounds for the read window
         read_height = row_slice.stop - row_slice.start
         read_width = col_slice.stop - col_slice.start
-        read_transform = self.transform * Affine.translation(
+        read_transform = self.transform @ Affine.translation(
             col_slice.start, row_slice.start
         )
         read_bounds = array_bounds(read_height, read_width, read_transform)
@@ -1493,7 +1493,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         # Calculate bounds for the read window
         read_height = row_slice.stop - row_slice.start
         read_width = col_slice.stop - col_slice.start
-        read_transform = self.transform * Affine.translation(
+        read_transform = self.transform @ Affine.translation(
             col_slice.start, row_slice.start
         )
         read_bounds = array_bounds(read_height, read_width, read_transform)

@@ -990,7 +990,7 @@ class ImageData:
         cover_array = rasterize(
             [(shape, 1)],
             out_shape=(self.height * cover_scale, self.width * cover_scale),
-            transform=self.transform * Affine.scale(1 / cover_scale),
+            transform=self.transform @ Affine.scale(1 / cover_scale),
             all_touched=True,
             fill=0,
             dtype="uint8",

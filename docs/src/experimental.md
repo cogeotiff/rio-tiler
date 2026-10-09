@@ -136,7 +136,7 @@ array = await group.getitem("analysed_sst")
 ds = ZarrReader(
     input=array,
     crs=CRS.from_epsg(4326),
-    transform=Affine.translation(xmin, ymax) * Affine.scale(xres, -yres),
+    transform=Affine.translation(xmin, ymax) @ Affine.scale(xres, -yres),
     band_names=[str(d) for d in time_arrray.tolist()],
 )
 img = await ds.tile(9, 10, 5, indexes=10)

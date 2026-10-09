@@ -63,9 +63,6 @@ def warp(
             (dst_height, dst_width), dtype=img.alpha_mask.dtype
         )
 
-    # Pre-compute mask (255 = valid, 0 = masked) from the source masked array
-    src_mask = (~img.array.mask * numpy.uint8(255)).astype(numpy.uint8)
-
     # Iterate over output tiles
     for dst_row in range(0, dst_height, _TILE_SIZE):
         for dst_col in range(0, dst_width, _TILE_SIZE):
@@ -97,29 +94,25 @@ def warp(
             )
 
             # Step 1: reproject source → intermediate chunk
-            chunk_data = numpy.zeros((img.count, chunk_h, chunk_w), dtype=img.array.dtype)
-            chunk_data, _ = reproject(
-                img.array.data,
-                chunk_data,
+            # Destination must start fully masked: GDAL skips chunks with no
+            # source pixels, leaving the initial alpha (mask) untouched.
+            data = numpy.ma.masked_array(
+                numpy.zeros((img.count, chunk_h, chunk_w), dtype=img.array.dtype),
+                mask=True,
+            )
+            data, _ = reproject(
+                img.array,
+                data,
                 src_transform=img.transform,
                 src_crs=img.crs,
-                src_nodata=img.nodata,
                 dst_crs=dst_crs,
                 dst_transform=chunk_transform,
-                dst_nodata=img.nodata,
                 resampling=Resampling[reproject_method],
             )
 
-            chunk_mask = numpy.zeros((img.count, chunk_h, chunk_w), dtype=numpy.uint8)
-            chunk_mask, _ = reproject(
-                src_mask,
-                chunk_mask,
-                src_transform=img.transform,
-                src_crs=img.crs,
-                dst_transform=chunk_transform,
-                dst_crs=dst_crs,
-                resampling=Resampling["nearest"],
-                dst_nodata=0,
+            chunk_data = data.data
+            chunk_mask = (~numpy.ma.getmaskarray(data) * numpy.uint8(255)).astype(
+                numpy.uint8
             )
 
             # Step 2: resample intermediate chunk → output tile

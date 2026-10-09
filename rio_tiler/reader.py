@@ -425,7 +425,7 @@ def part(
             bounds = array_bounds(vrt_height, vrt_width, vrt_transform)
 
         if padding > 0 and not is_aligned(src_dst, bounds, bounds_crs=dst_crs):
-            vrt_transform = vrt_transform * Affine.translation(-padding, -padding)
+            vrt_transform = vrt_transform @ Affine.translation(-padding, -padding)
             window = windows.Window(
                 col_off=padding, row_off=padding, width=vrt_width, height=vrt_height
             )
