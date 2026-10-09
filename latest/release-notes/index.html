@@ -7485,6 +7485,12 @@
 
 
 <h1 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h1>
+<ul>
+<li>breaking: remove python 3.11 support (rasterio 1.5 requires python &gt;=3.12)</li>
+<li>update: require <code>rasterio&gt;=1.5.1</code> and <code>affine&gt;=3.0</code></li>
+<li>fix: use masked array reprojection in <code>rio_tiler._warp.warp</code> (fix mask warping with GDAL &gt;= 3.11)</li>
+<li>fix: use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
+</ul>
 <h2 id="9412-2026-10-08">9.4.12 (2026-10-08)<a class="headerlink" href="#9412-2026-10-08" title="Permanent link">&para;</a></h2>
 <ul>
 <li>fix: make <code>isochron</code> an optional dependency, required by the <code>rio_tiler.experimental.zarr</code> (<code>zarr</code> extra) and <code>rio_tiler.experimental.xarray</code> (new <code>geoarray</code> extra) readers</li>
