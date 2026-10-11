@@ -6,6 +6,7 @@ import asyncio
 import math
 import warnings
 from collections.abc import Sequence
+from functools import cached_property
 from typing import Any, Literal, TypedDict, cast
 
 import attr
@@ -147,11 +148,27 @@ class ArrayMixin(SpatialMixin):
 
     input: zarr.AsyncArray | zarr.Array = attr.ib()
 
-    crs: CRS | None = attr.ib(default=None)
-    transform: Affine | None = attr.ib(default=None)
-    coordinates: dict | None = attr.ib(default=None)
+    crs: CRS = attr.ib(default=None)
+    transform: Affine = attr.ib(default=None)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    # Array dimension
+    # Example: ["time", "x", "y"]
+    dimensions: list[str] = attr.ib(default=None)
+
+    # Dimension
+    # https://github.com/zarr-conventions/spatial#spatialdimensions
+    # The list in spatial:dimensions itself is ordered by axis role: the first entry
+    # names the dimension carrying the logical Y axis; the second entry
+    # names the dimension carrying the logical X axis.
+    # Example: ["y", "x"]
+    spatial_dims: list[str] = attr.ib(default=None)
+
+    # Coordinates
+    # https://github.com/christophenoel/zarr-coords
+    # Example: {"bands": {"type": "inline", "values": ["b01", "b02"]}}
+    coordinates: dict[str, Any] | None = attr.ib(default=None)
 
     # Array shape
     nbands: int = attr.ib(init=False)
@@ -161,84 +178,96 @@ class ArrayMixin(SpatialMixin):
     # Array bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    # List of names for the first dimension (e.g time, bands, etc)
-    band_names: list[str] | None = attr.ib(default=None)
-
-    _dims: list[str] = attr.ib(init=False, factory=list)
-
     def __attrs_post_init__(self) -> None:  # noqa: C901
         """Post init: derive height, width, count from array shape."""
         if self.input.ndim not in (2, 3):
             raise ValueError(
-                f"Expected 2D or 3D array, got {self.input.ndim}D with shape {self.input.shape}"
+                f"Expected >2D array, got {self.input.ndim}D with shape {self.input.shape}"
             )
+
+        self.dimensions = self.dimensions or list(
+            getattr(self.input.metadata, "dimension_names", [])
+        )
+        assert self.dimensions, (
+            "Array dimensions are required, either as an argument or from zarr metadata."
+        )
+        assert len(self.dimensions) == self.input.ndim, (
+            f"Dimensions metadata {len(self.dimensions)} does not match input array dimensions {self.input.ndim}"
+        )
 
         # NOTE: zarr-python says attrs is of type dict[str, JSON]
         attributes = cast(dict[str, Any], self.input.attrs)
         conventions: list[dict] = attributes.get("zarr_conventions", [])
 
-        # Transform
+        # Spatial
+        # NOTE: The transform is independent of the array's physical axis order:
+        # a reader locates the X and Y array positions via dimension_names and
+        # supplies the corresponding indices.
+        # ref: https://github.com/zarr-conventions/spatial#spatialtransform
         _has_spatial = find_convention(conventions, SPATIAL_CONVENTION_UUID)
-        if not self.transform and _has_spatial:
-            if tr := _get_transform(attributes):
-                self.transform = tr
+        if _has_spatial:
+            self.spatial_dims = self.spatial_dims or attributes["spatial:dimensions"]
+            self.transform = self.transform or _get_transform(attributes)
 
         assert self.transform, (
-            "Affine transform is required, either as an argument or in `spatial` zarr_conventions"
+            "Affine transform is required, either as an argument or from `spatial` zarr_conventions."
+        )
+        assert self.spatial_dims, (
+            "Spatial dimensions are required, either as an argument or from `spatial` zarr_conventions."
+        )
+        assert set(self.spatial_dims).intersection(set(self.dimensions)), (
+            f"Incompatible spatial dimension {self.spatial_dims} and array dimensions {self.dimensions}"
         )
 
-        # CRS
+        # Proj
         _has_proj = find_convention(conventions, PROJ_CONVENTION_UUID)
-        if not self.crs and _has_proj:
-            self.crs = _get_proj_crs(attributes)
+        if _has_proj:
+            self.crs = self.crs or _get_proj_crs(attributes)
 
         assert self.crs, (
-            "CRS is required, either as an argument or in `geo-proj` zarr_conventions"
+            "CRS is required, either as an argument or from `proj` zarr_conventions."
         )
 
+        y_index = self.dimensions.index(self.spatial_dims[0])
+        x_index = self.dimensions.index(self.spatial_dims[1])
         shape = self.input.shape
+        self.height = shape[y_index]
+        self.width = shape[x_index]
+
         if len(shape) == 2:
             self.nbands = 1
-            self.height = shape[0]
-            self.width = shape[1]
-        elif len(shape) == 3:
-            self.nbands = shape[0]
-            self.height = shape[1]
-            self.width = shape[2]
-        else:
-            raise ValueError(f"Unexpected array shape {shape}, expected 2D or 3D array")
 
+        elif len(shape) >= 2:
+            # TODO: for now we default to the first non-spatial dimension
+            non_spatial_dim = next(
+                dim for dim in self.dimensions if dim not in self.spatial_dims
+            )
+            band_index = self.dimensions.index(non_spatial_dim)
+            self.nbands = shape[band_index]
+
+        # [xmin, ymin, xmax, ymax]
         self.bounds = array_bounds(self.height, self.width, self.transform)
 
-        self._dims = list(getattr(self.input.metadata, "dimension_names", []))
-
+        # Coordinates
         _has_coords = find_convention(conventions, COORDS_CONVENTION_UUID)
-        if not self.coordinates and _has_coords:
-            coordinates = attributes.get("coords:coordinates", {})
-            _coords = list(coordinates.keys())
-            if _has_spatial:
-                non_spatial_coords = next(
-                    dim
-                    for dim in _coords
-                    if dim not in attributes.get("spatial:dimensions", [])
-                )
-                self.coordinates = coordinates[non_spatial_coords]
+        if _has_coords:
+            self.coordinates = self.coordinates or attributes["coords:coordinates"]
 
-        if not self.band_names and self.coordinates:
-            if band_names := _get_bnames_from_coordinates(self.coordinates):
-                if len(band_names) == self.nbands:
-                    self.band_names = band_names
-                else:
-                    warnings.warn(
-                        f"Number of band names derived from coordinates ({len(band_names)}) "
-                        f"does not match number of bands in the array ({self.nbands})",
-                        UserWarning,
-                    )
-
-        if self.band_names:
-            assert len(self.band_names) == self.nbands, (
-                "Length of band_names must match number of bands in the array"
+        if self.coordinates:
+            assert set(self.coordinates.keys()).intersection(set(self.dimensions)), (
+                f"Incompatible coordinates {list(self.coordinates.keys())} and array dimensions {self.dimensions}"
             )
+            non_spatial_coords = [
+                coord for coord in self.coordinates if coord not in self.spatial_dims
+            ]
+            non_spatial_dims = [
+                dim for dim in self.dimensions if dim not in self.spatial_dims
+            ]
+            assert len(non_spatial_dims) == len(non_spatial_coords), (
+                f"Number of non-spatial coordinates ({len(non_spatial_coords)}) does not match non-spatial dimensions ({non_spatial_dims})"
+            )
+
+            # TODO: check that coordinates match the dimensions they are supposed to represent
 
     @property
     def minzoom(self):
@@ -253,15 +282,24 @@ class ArrayMixin(SpatialMixin):
         """Return dataset maxzoom."""
         return self._maxzoom
 
-    @property
+    @cached_property
     def band_descriptions(self) -> list[str]:
         """
         Return list of `band descriptions` in DataArray.
 
         `Bands` are all dimensions not defined as spatial dims by rioxarray.
         """
-        if self.band_names:
-            return self.band_names
+        if len(self.dimensions) > 2:
+            # TODO: for now we default to the first non-spatial dimension
+            non_spatial_dim = next(
+                dim for dim in self.dimensions if dim not in self.spatial_dims
+            )
+            band_descr = [f"{non_spatial_dim}{ix + 1}" for ix in range(self.nbands)]
+            if self.coordinates:
+                coords = self.coordinates[non_spatial_dim]
+                return _get_bnames_from_coordinates(coords) or band_descr
+
+            return band_descr
 
         return [f"b{ix + 1}" for ix in range(self.nbands)]
 
@@ -295,7 +333,7 @@ class ArrayMixin(SpatialMixin):
             "count": self.nbands,
             "width": self.width,
             "height": self.height,
-            "dimensions": self._dims,
+            "dimensions": self.dimensions,
             "coordinates": self.coordinates,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
@@ -337,11 +375,27 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
     input: zarr.AsyncArray = attr.ib()
 
-    crs: CRS | None = attr.ib(default=None)
-    transform: Affine | None = attr.ib(default=None)
-    coordinates: dict | None = attr.ib(default=None)
+    crs: CRS = attr.ib(default=None)
+    transform: Affine = attr.ib(default=None)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    # Array dimension
+    # Example: ["time", "x", "y"]
+    dimensions: list[str] = attr.ib(default=None)
+
+    # Dimension
+    # https://github.com/zarr-conventions/spatial#spatialdimensions
+    # The list in spatial:dimensions itself is ordered by axis role: the first entry
+    # names the dimension carrying the logical Y axis; the second entry
+    # names the dimension carrying the logical X axis.
+    # Example: ["y", "x"]
+    spatial_dims: list[str] = attr.ib(default=None)
+
+    # Coordinates
+    # https://github.com/christophenoel/zarr-coords
+    # Example: {"bands": {"type": "inline", "values": ["b01", "b02"]}}
+    coordinates: dict[str, Any] | None = attr.ib(default=None)
 
     # Array shape
     nbands: int = attr.ib(init=False)
@@ -350,11 +404,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
     # Array bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
-
-    # List of names for the first dimension (e.g time, bands, etc)
-    band_names: list[str] | None = attr.ib(default=None)
-
-    _dims: list[str] = attr.ib(init=False, factory=list)
 
     async def info(self) -> Info:
         """Return Dataset's info.
@@ -424,6 +473,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         expression: str | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Map tile from the Dataset.
@@ -464,6 +514,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             width=tilesize or matrix.tileWidth,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
 
     async def part(  # noqa: C901
@@ -549,9 +600,9 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
         # 6. Read data from zarr array
         img = await self._read(
+            y_slice=slice(clipped_row_off, clipped_row_stop),
+            x_slice=slice(clipped_col_off, clipped_col_stop),
             indexes=indexes,
-            row_slice=slice(clipped_row_off, clipped_row_stop),
-            col_slice=slice(clipped_col_off, clipped_col_stop),
             nodata=nodata,
         )
 
@@ -715,8 +766,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         y, x = rowcol(self.transform, lon, lat)
 
         img = await self._read(
-            row_slice=slice(y, y + 1),
-            col_slice=slice(x, x + 1),
+            y_slice=slice(y, y + 1),
+            x_slice=slice(x, x + 1),
             indexes=indexes,
             nodata=nodata,
         )
@@ -750,6 +801,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         width: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
@@ -789,6 +841,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             width=width,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
 
         if dst_crs != shape_crs:
@@ -817,64 +870,97 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
     async def _read(
         self,
+        *,
+        y_slice: slice | None = None,
+        x_slice: slice | None = None,
         indexes: Sequence[int] | None = None,
-        row_slice: slice | None = None,
-        col_slice: slice | None = None,
         nodata: NoData | None = None,
     ) -> ImageData:
         """Read data from zarr AsyncArray.
 
         Args:
+            y_slice: index along the Y-axis dimension (named in self.spatial_dim[0]).
+            x_slice: index along the X-axis dimension (named in self.spatial_dim[1])
             indexes: Band indexes (1-based). If None, reads all bands.
-            row_slice: Row slice for windowed read.
-            col_slice: Column slice for windowed read.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
             ImageData: Image data with mask and spatial info.
 
         """
-        row_slice = row_slice or slice(0, self.height)
-        col_slice = col_slice or slice(0, self.width)
+        y_slice = y_slice or slice(None)
+        x_slice = x_slice or slice(None)
 
+        coordinates: dict[str, slice | Sequence[int]] = {
+            dim: slice(None) for dim in self.dimensions
+        }
+        coordinates[self.spatial_dims[0]] = y_slice
+        coordinates[self.spatial_dims[1]] = x_slice
+
+        if indexes is None:
+            indexes = list(range(1, self.nbands + 1))
+
+        # Calculate array size in bytes
+        read_height = len(range(*y_slice.indices(self.height)))
+        read_width = len(range(*x_slice.indices(self.width)))
+
+        # NOTE: For now we only accept 2 or 3d arrays so
+        # additional_pix should default to `1.0`
+        # Calculate the number of additional dimensions:
+        # - Exclude spatial dimensions
+        # - Exclude the first dimension (band dimension)
+        dims = [
+            shape
+            for shape, dim in zip(self.input.shape, self.dimensions)
+            if dim not in self.spatial_dims
+        ]
+        additional_pix = numpy.prod(dims[-1:])
+
+        nbytes = (
+            additional_pix
+            * len(indexes)
+            * read_height
+            * read_width
+            * self.input.dtype.itemsize
+        )
+        if nbytes > MAX_ARRAY_SIZE:
+            raise MaxArraySizeError(
+                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
+            )
+
+        y_index = self.dimensions.index(self.spatial_dims[0])
+        x_index = self.dimensions.index(self.spatial_dims[1])
+
+        # 2D array: (height, width)
         if len(self.input.shape) == 2:
-            # 2D array: (height, width)
-            selection = (row_slice, col_slice)
-            if indexes is None:
-                indexes = [1]  # Single band
+            data = await self.input.get_orthogonal_selection(
+                tuple(v for _, v in coordinates.items())
+            )
 
-            # Calculate array size in bytes
-            read_height = row_slice.stop - row_slice.start
-            read_width = col_slice.stop - col_slice.start
-            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
-            if nbytes > MAX_ARRAY_SIZE:
-                raise MaxArraySizeError(
-                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
-                )
+            # Make sure data is in form of (height, width)
+            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[assignment]
 
-            data = await self.input.getitem(selection)
+            # Ensure 3D shape
+            data = numpy.expand_dims(data, axis=0)
 
-            # Ensure 3D shape (bands, height, width)
-            data = numpy.expand_dims(data, axis=0)  # type: ignore[assignment]
-
+        # 3D array: (bands, height, width)
         else:
-            # 3D array: (bands, height, width)
-            if indexes is None:
-                indexes = list(range(1, self.nbands + 1))
-
-            # Calculate array size in bytes
-            read_height = row_slice.stop - row_slice.start
-            read_width = col_slice.stop - col_slice.start
-            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
-            if nbytes > MAX_ARRAY_SIZE:
-                raise MaxArraySizeError(
-                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
-                )
-
-            band_indices = [ix - 1 for ix in indexes]
+            # TODO: for now we default to the first non-spatial dimension
+            non_spatial_dim = next(
+                dim for dim in self.dimensions if dim not in self.spatial_dims
+            )
+            band_index = self.dimensions.index(non_spatial_dim)
+            coordinates[non_spatial_dim] = [bidx - 1 for bidx in indexes]
 
             data = await self.input.get_orthogonal_selection(
-                (band_indices, row_slice, col_slice),  # type: ignore[arg-type]
+                tuple(v for _, v in coordinates.items())
+            )
+
+            # Make sure data is in form of (*, bands, height, width)
+            data = numpy.moveaxis(
+                data,  # type: ignore[assignment]
+                [band_index, y_index, x_index],
+                [-3, -2, -1],
             )
 
         masked_data = numpy.ma.MaskedArray(data)
@@ -892,22 +978,17 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
                 masked_data.mask = masked_data.data == nodata
 
         # Calculate bounds for the read window
-        read_height = row_slice.stop - row_slice.start
-        read_width = col_slice.stop - col_slice.start
-        read_transform = self.transform @ Affine.translation(
-            col_slice.start, row_slice.start
-        )
+        y_start, _, _ = y_slice.indices(self.height)
+        x_start, _, _ = x_slice.indices(self.width)
+        read_transform = self.transform @ Affine.translation(x_start, y_start)
         read_bounds = array_bounds(read_height, read_width, read_transform)
 
-        bdescr = self.band_descriptions
-        band_descriptions = [bdescr[ix - 1] for ix in indexes]
-
-        return ImageData(
+        return ImageData(  # type: ignore
             masked_data,
             bounds=read_bounds,
             crs=self.crs,
             band_names=[f"b{idx}" for idx in indexes],
-            band_descriptions=band_descriptions,
+            band_descriptions=[self.band_descriptions[ix - 1] for ix in indexes],
             nodata=nodata,
         )
 
@@ -936,11 +1017,27 @@ class ArrayReader(BaseReader, ArrayMixin):
 
     input: zarr.Array = attr.ib()
 
-    crs: CRS | None = attr.ib(default=None)
-    transform: Affine | None = attr.ib(default=None)
-    coordinates: dict | None = attr.ib(default=None)
+    crs: CRS = attr.ib(default=None)
+    transform: Affine = attr.ib(default=None)
 
     tms: TileMatrixSet = attr.ib(default=WEB_MERCATOR_TMS)
+
+    # Array dimension
+    # Example: ["time", "x", "y"]
+    dimensions: list[str] = attr.ib(default=None)
+
+    # Dimension
+    # https://github.com/zarr-conventions/spatial#spatialdimensions
+    # The list in spatial:dimensions itself is ordered by axis role: the first entry
+    # names the dimension carrying the logical Y axis; the second entry
+    # names the dimension carrying the logical X axis.
+    # Example: ["y", "x"]
+    spatial_dims: list[str] = attr.ib(default=None)
+
+    # Coordinates
+    # https://github.com/christophenoel/zarr-coords
+    # Example: {"bands": {"type": "inline", "values": ["b01", "b02"]}}
+    coordinates: dict[str, Any] | None = attr.ib(default=None)
 
     # Array shape
     nbands: int = attr.ib(init=False)
@@ -949,11 +1046,6 @@ class ArrayReader(BaseReader, ArrayMixin):
 
     # Array bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
-
-    # List of names for the first dimension (e.g time, bands, etc)
-    band_names: list[str] | None = attr.ib(default=None)
-
-    _dims: list[str] = attr.ib(init=False, factory=list)
 
     def info(self) -> Info:
         """Return Dataset's info.
@@ -1149,8 +1241,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         # 6. Read data from zarr array
         img = self._read(
             indexes=indexes,
-            row_slice=slice(clipped_row_off, clipped_row_stop),
-            col_slice=slice(clipped_col_off, clipped_col_stop),
+            y_slice=slice(clipped_row_off, clipped_row_stop),
+            x_slice=slice(clipped_col_off, clipped_col_stop),
             nodata=nodata,
         )
 
@@ -1314,8 +1406,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         y, x = rowcol(self.transform, lon, lat)
 
         img = self._read(
-            row_slice=slice(y, y + 1),
-            col_slice=slice(x, x + 1),
+            y_slice=slice(y, y + 1),
+            x_slice=slice(x, x + 1),
             indexes=indexes,
             nodata=nodata,
         )
@@ -1416,64 +1508,98 @@ class ArrayReader(BaseReader, ArrayMixin):
 
     def _read(
         self,
+        *,
+        y_slice: slice | None = None,
+        x_slice: slice | None = None,
         indexes: Sequence[int] | None = None,
-        row_slice: slice | None = None,
-        col_slice: slice | None = None,
         nodata: NoData | None = None,
     ) -> ImageData:
         """Read data from zarr Array.
 
         Args:
+            y_slice: index along the Y-axis dimension (named in self.spatial_dim[0]).
+            x_slice: index along the X-axis dimension (named in self.spatial_dim[1])
             indexes: Band indexes (1-based). If None, reads all bands.
-            row_slice: Row slice for windowed read.
-            col_slice: Column slice for windowed read.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
             ImageData: Image data with mask and spatial info.
 
         """
-        row_slice = row_slice or slice(0, self.height)
-        col_slice = col_slice or slice(0, self.width)
+        y_slice = y_slice or slice(None)
+        x_slice = x_slice or slice(None)
 
+        coordinates: dict[str, slice | Sequence[int]] = {
+            dim: slice(None) for dim in self.dimensions
+        }
+        coordinates[self.spatial_dims[0]] = y_slice
+        coordinates[self.spatial_dims[1]] = x_slice
+
+        if indexes is None:
+            indexes = list(range(1, self.nbands + 1))
+
+        # Calculate array size in bytes
+        read_height = len(range(*y_slice.indices(self.height)))
+        read_width = len(range(*x_slice.indices(self.width)))
+
+        # NOTE: For now we only accept 2 or 3d arrays so
+        # additional_pix should default to `1.0`
+        # Calculate the number of additional dimensions:
+        # - Exclude spatial dimensions
+        # - Exclude the first dimension (band dimension)
+        dims = [
+            shape
+            for shape, dim in zip(self.input.shape, self.dimensions)
+            if dim not in self.spatial_dims
+        ]
+        additional_pix = numpy.prod(dims[-1:])
+
+        nbytes = (
+            additional_pix
+            * len(indexes)
+            * read_height
+            * read_width
+            * self.input.dtype.itemsize
+        )
+        if nbytes > MAX_ARRAY_SIZE:
+            raise MaxArraySizeError(
+                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
+            )
+
+        y_index = self.dimensions.index(self.spatial_dims[0])
+        x_index = self.dimensions.index(self.spatial_dims[1])
+
+        # 2D array: (height, width)
         if len(self.input.shape) == 2:
+            data = self.input.get_orthogonal_selection(
+                tuple(v for _, v in coordinates.items())
+            )
+
             # 2D array: (height, width)
-            selection = (row_slice, col_slice)
-            if indexes is None:
-                indexes = [1]  # Single band
+            # Make sure data is in form of (height, width)
+            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[assignment]
 
-            # Calculate array size in bytes
-            read_height = row_slice.stop - row_slice.start
-            read_width = col_slice.stop - col_slice.start
-            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
-            if nbytes > MAX_ARRAY_SIZE:
-                raise MaxArraySizeError(
-                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
-                )
+            # Ensure 3D shape
+            data = numpy.expand_dims(data, axis=0)
 
-            data = self.input[selection]
-
-            # Ensure 3D shape (bands, height, width)
-            data = numpy.expand_dims(data, axis=0)  # type: ignore[assignment]
-
+        # 3D array: (bands, height, width)
         else:
-            # 3D array: (bands, height, width)
-            if indexes is None:
-                indexes = list(range(1, self.nbands + 1))
-
-            # Calculate array size in bytes
-            read_height = row_slice.stop - row_slice.start
-            read_width = col_slice.stop - col_slice.start
-            nbytes = len(indexes) * read_height * read_width * self.input.dtype.itemsize
-            if nbytes > MAX_ARRAY_SIZE:
-                raise MaxArraySizeError(
-                    f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
-                )
-
-            band_indices = [ix - 1 for ix in indexes]
+            # TODO: for now we default to the first non-spatial dimension
+            non_spatial_dim = next(
+                dim for dim in self.dimensions if dim not in self.spatial_dims
+            )
+            band_index = self.dimensions.index(non_spatial_dim)
+            coordinates[non_spatial_dim] = [bidx - 1 for bidx in indexes]
 
             data = self.input.get_orthogonal_selection(
-                (band_indices, row_slice, col_slice),  # type: ignore[arg-type]
+                tuple(v for _, v in coordinates.items())
+            )
+
+            # Make sure data is in form of (*, bands, height, width)
+            data = numpy.moveaxis(
+                data,  # type: ignore[assignment]
+                [band_index, y_index, x_index],
+                [-3, -2, -1],
             )
 
         masked_data = numpy.ma.MaskedArray(data)
@@ -1491,22 +1617,17 @@ class ArrayReader(BaseReader, ArrayMixin):
                 masked_data.mask = masked_data.data == nodata
 
         # Calculate bounds for the read window
-        read_height = row_slice.stop - row_slice.start
-        read_width = col_slice.stop - col_slice.start
-        read_transform = self.transform @ Affine.translation(
-            col_slice.start, row_slice.start
-        )
+        y_start, _, _ = y_slice.indices(self.height)
+        x_start, _, _ = x_slice.indices(self.width)
+        read_transform = self.transform @ Affine.translation(x_start, y_start)
         read_bounds = array_bounds(read_height, read_width, read_transform)
-
-        bdescr = self.band_descriptions
-        band_descriptions = [bdescr[ix - 1] for ix in indexes]
 
         return ImageData(
             masked_data,
             bounds=read_bounds,
             crs=self.crs,
             band_names=[f"b{idx}" for idx in indexes],
-            band_descriptions=band_descriptions,
+            band_descriptions=[self.band_descriptions[ix - 1] for ix in indexes],
             nodata=nodata,
         )
 
@@ -1543,6 +1664,7 @@ class ArrayMetadata(TypedDict):
     transform: Affine
     height: int
     width: int
+    spatial_dims: list[str]
     coordinates: dict[str, Any] | None
 
 
@@ -2097,9 +2219,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         "multiscale": group_metadata["multiscale"],
-                        "nbands": array[0]["array"].shape[0]
-                        if len(array[0]["array"].shape) == 3
-                        else 1,
+                        # "nbands": array[0]["array"].shape[0]
+                        # if len(array[0]["array"].shape) == 3
+                        # else 1,
                     }
                     for name, array in arrays.items()
                 ]
@@ -2126,9 +2248,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     "multiscale": is_multiscale,
-                                    "nbands": array[0]["array"].shape[0]
-                                    if len(array[0]["array"].shape) == 3
-                                    else 1,
+                                    # "nbands": array[0]["array"].shape[0]
+                                    # if len(array[0]["array"].shape) == 3
+                                    # else 1,
                                 }
                                 for name, array in arrays.items()
                             ]
@@ -2158,22 +2280,22 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         root_transform: Affine | None = None
         root_bbox: BBox | None = None
         coordinates: dict[str, Any] | None = None
-        band_coordinates: dict[str, Any] | None = None
         spatial_dims: list[str] | None = None
 
-        conventions = g.attrs.get("zarr_conventions", [])
+        attributes = cast(dict[str, Any], g.attrs)
+        conventions = attributes.get("zarr_conventions", [])
         # Top Level spatial/geo metadata
         # 1. Group level metadata (crs, transform)
         if find_convention(conventions, PROJ_CONVENTION_UUID):
-            root_crs = _get_proj_crs(g.attrs)
+            root_crs = _get_proj_crs(attributes)
 
         if find_convention(conventions, SPATIAL_CONVENTION_UUID):
-            spatial_dims = g.attrs["spatial:dimensions"]
-            root_transform = _get_transform(g.attrs)
-            root_bbox = g.attrs.get("spatial:bbox")
+            spatial_dims = attributes["spatial:dimensions"]
+            root_transform = _get_transform(attributes)
+            root_bbox = attributes.get("spatial:bbox")
 
         if find_convention(conventions, COORDS_CONVENTION_UUID):
-            coordinates = g.attrs["coords:coordinates"]
+            coordinates = attributes["coords:coordinates"]
 
         group_is_multiscale = find_convention(conventions, MULTISCALE_CONVENTION_UUID)
         if group_is_multiscale:
@@ -2184,7 +2306,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
             # 1. Multiscales metadata
             ms_group: dict[str, dict[str, Any]] = {}
-            for layout in g.attrs["multiscales"]["layout"]:
+            for layout in attributes["multiscales"]["layout"]:
                 ms_group[layout["asset"]] = {
                     "transform": _get_transform(layout),
                 }
@@ -2201,38 +2323,38 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     if array.ndim < 2:
                         continue
 
+                    array_attributes = cast(dict[str, Any], array.attrs)
+                    array_conventions = array_attributes.get("zarr_conventions", [])
+
                     variable_name = array.name.split("/")[-1]
                     if variable_name not in arrays:
                         arrays[variable_name] = []
 
                     # NOTE: Transform from the array or the multiscale layout
-                    transform = _get_transform(array.attrs) or meta["transform"]
+                    transform = _get_transform(array_attributes) or meta["transform"]
                     assert transform, (
                         f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
                     )
 
-                    array_dims = array.attrs.get("spatial:dimensions") or spatial_dims
+                    array_spatial_dims = (
+                        array_attributes.get("spatial:dimensions") or spatial_dims
+                    )
 
-                    # NOTE: We assume the last two dimensions are spatial (height, width)
-                    # TODO: is this always true ?
-                    height, width = array.shape[-2:]
+                    dims = getattr(array.metadata, "dimension_names", [])
+                    if dims:
+                        y_dim_pos = dims.index(array_spatial_dims[0])
+                        x_dim_pos = dims.index(array_spatial_dims[1])
+                        height = array.shape[y_dim_pos]
+                        width = array.shape[x_dim_pos]
+                    else:
+                        # TODO: raise warning when dimension_names is not set
+                        height, width = array.shape[-2:]
 
-                    if find_convention(
-                        array.attrs.get("zarr_conventions", []),  # type: ignore
-                        MULTISCALE_CONVENTION_UUID,
-                    ):
-                        coordinates = cast(
-                            dict[str, Any], array.attrs["coords:coordinates"]
+                    array_coordinates = coordinates
+                    if find_convention(array_conventions, COORDS_CONVENTION_UUID):
+                        array_coordinates = cast(
+                            dict[str, Any], array_attributes["coords:coordinates"]
                         )
-
-                    band_coordinates = None
-                    if array_dims and coordinates:
-                        non_spatial_coords = next(
-                            dim
-                            for dim in list(coordinates.keys())
-                            if dim not in array_dims  # type: ignore
-                        )
-                        band_coordinates = coordinates[non_spatial_coords]
 
                     arrays[variable_name].append(
                         {
@@ -2241,7 +2363,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": transform,
-                            "coordinates": band_coordinates,
+                            "spatial_dims": array_spatial_dims,
+                            "coordinates": array_coordinates,
                         }
                     )
 
@@ -2250,43 +2373,41 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             async for array in g.array_values():
                 array_crs: CRS | None = None
                 array_transform: Affine | None = None
-                band_coordinates = None
 
                 # NOTE: skip non-data arrays
                 # TODO: be smarter
                 if array.ndim < 2:
                     continue
 
-                attributes = cast(dict[str, Any], array.attrs)
-                conventions = attributes.get("zarr_conventions", [])
-                if find_convention(conventions, PROJ_CONVENTION_UUID):
-                    array_crs = _get_proj_crs(attributes)
+                array_attributes = cast(dict[str, Any], array.attrs)
+                array_conventions = array_attributes.get("zarr_conventions", [])
+                if find_convention(array_conventions, PROJ_CONVENTION_UUID):
+                    array_crs = _get_proj_crs(array_attributes)
 
-                if find_convention(conventions, SPATIAL_CONVENTION_UUID):
-                    array_transform = _get_transform(attributes)
+                if find_convention(array_conventions, SPATIAL_CONVENTION_UUID):
+                    array_transform = _get_transform(array_attributes)
 
                 array_crs = array_crs or root_crs
-                array_transform = _get_transform(attributes) or root_transform
-                array_dims = array.attrs.get("spatial:dimensions") or spatial_dims
+                array_transform = _get_transform(array_attributes) or root_transform
+                array_spatial_dims = (
+                    array_attributes.get("spatial:dimensions") or spatial_dims
+                )
 
-                # NOTE: We assume the last two dimensions are spatial (height, width)
-                # TODO: is this always true ?
-                height, width = array.shape[-2:]
+                dims = getattr(array.metadata, "dimension_names", [])
+                if dims:
+                    y_dim_pos = dims.index(array_spatial_dims[0])
+                    x_dim_pos = dims.index(array_spatial_dims[1])
+                    height = array.shape[y_dim_pos]
+                    width = array.shape[x_dim_pos]
+                else:
+                    # TODO: raise warning when dimension_names is not set
+                    height, width = array.shape[-2:]
 
-                if find_convention(
-                    array.attrs.get("zarr_conventions", []),  # type: ignore
-                    MULTISCALE_CONVENTION_UUID,
-                ):
-                    coordinates = cast(dict[str, Any], array.attrs["coords:coordinates"])
-
-                band_coordinates = None
-                if array_dims and coordinates:
-                    non_spatial_coords = next(
-                        dim
-                        for dim in list(coordinates.keys())
-                        if dim not in array_dims  # type: ignore
+                array_coordinates = coordinates
+                if find_convention(array_conventions, COORDS_CONVENTION_UUID):
+                    array_coordinates = cast(
+                        dict[str, Any], array_attributes["coords:coordinates"]
                     )
-                    band_coordinates = coordinates[non_spatial_coords]
 
                 if all([array_crs, array_transform]):
                     array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
@@ -2297,7 +2418,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": array_transform,
-                            "coordinates": band_coordinates,
+                            "spatial_dims": array_spatial_dims,
+                            "coordinates": array_coordinates,
                         }
                     ]
 
@@ -2484,6 +2606,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
+                spatial_dims=array_metadata["spatial_dims"],
                 tms=self.tms,
             ) as src:
                 return await src.part(
@@ -2549,6 +2672,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
+                spatial_dims=array_metadata["spatial_dims"],
                 tms=self.tms,
             ) as src:
                 return await src.preview(
@@ -2609,6 +2733,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
+                spatial_dims=array_metadata["spatial_dims"],
                 tms=self.tms,
             ) as src:
                 return await src.point(
@@ -2865,9 +2990,9 @@ class GroupReader(BaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         "multiscale": group_metadata["multiscale"],
-                        "nbands": array[0]["array"].shape[0]
-                        if len(array[0]["array"].shape) == 3
-                        else 1,
+                        # "nbands": array[0]["array"].shape[0]
+                        # if len(array[0]["array"].shape) == 3
+                        # else 1,
                     }
                     for name, array in arrays.items()
                 ]
@@ -2894,9 +3019,9 @@ class GroupReader(BaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     "multiscale": is_multiscale,
-                                    "nbands": array[0]["array"].shape[0]
-                                    if len(array[0]["array"].shape) == 3
-                                    else 1,
+                                    # "nbands": array[0]["array"].shape[0]
+                                    # if len(array[0]["array"].shape) == 3
+                                    # else 1,
                                 }
                                 for name, array in arrays.items()
                             ]
@@ -2924,25 +3049,27 @@ class GroupReader(BaseReader, GroupMixin):
         root_transform: Affine | None = None
         root_bbox: BBox | None = None
         coordinates: dict[str, Any] | None = None
-        band_coordinates: dict[str, Any] | None = None
         spatial_dims: list[str] | None = None
 
         group_attributes = cast(dict[str, Any], g.attrs)
-        conventions = group_attributes.get("zarr_conventions", [])
+        group_conventions = cast(list[dict], group_attributes.get("zarr_conventions", []))
+
         # Top Level spatial/geo metadata
         # 1. Group level metadata (crs, transform)
-        if find_convention(conventions, PROJ_CONVENTION_UUID):
+        if find_convention(group_conventions, PROJ_CONVENTION_UUID):
             root_crs = _get_proj_crs(group_attributes)
 
-        if find_convention(conventions, SPATIAL_CONVENTION_UUID):
+        if find_convention(group_conventions, SPATIAL_CONVENTION_UUID):
             spatial_dims = group_attributes["spatial:dimensions"]
             root_transform = _get_transform(group_attributes)
             root_bbox = group_attributes.get("spatial:bbox")
 
-        if find_convention(conventions, COORDS_CONVENTION_UUID):
+        if find_convention(group_conventions, COORDS_CONVENTION_UUID):
             coordinates = group_attributes["coords:coordinates"]
 
-        group_is_multiscale = find_convention(conventions, MULTISCALE_CONVENTION_UUID)
+        group_is_multiscale = find_convention(
+            group_conventions, MULTISCALE_CONVENTION_UUID
+        )
         if group_is_multiscale:
             # NOTE: We assume a group with multiscale should have geo-proj convention
             assert root_crs, (
@@ -2973,36 +3100,33 @@ class GroupReader(BaseReader, GroupMixin):
                         arrays[variable_name] = []
 
                     array_attributes = cast(dict[str, Any], array.attrs)
+                    array_conventions = array_attributes.get("zarr_conventions", [])
                     # NOTE: Transform from the array or the multiscale layout
                     transform = _get_transform(array_attributes) or meta["transform"]
                     assert transform, (
                         f"`spatial:transform` missing for multiscales layout {group_name} (path: '{array.name}')"
                     )
 
-                    array_dims = (
+                    array_spatial_dims = (
                         array_attributes.get("spatial:dimensions") or spatial_dims
                     )
 
-                    # NOTE: We assume the last two dimensions are spatial (height, width)
-                    # TODO: is this always true ?
-                    height, width = array.shape[-2:]
+                    dims = getattr(array.metadata, "dimension_names", [])
+                    if dims:
+                        y_dim_pos = dims.index(array_spatial_dims[0])
+                        x_dim_pos = dims.index(array_spatial_dims[1])
+                        height = array.shape[y_dim_pos]
+                        width = array.shape[x_dim_pos]
 
-                    if find_convention(
-                        array_attributes.get("zarr_conventions", []),  # type: ignore
-                        MULTISCALE_CONVENTION_UUID,
-                    ):
-                        coordinates = cast(
+                    else:
+                        # TODO: raise warning when dimension_names is not set
+                        height, width = array.shape[-2:]
+
+                    array_coordinates = coordinates
+                    if find_convention(array_conventions, COORDS_CONVENTION_UUID):
+                        array_coordinates = cast(
                             dict[str, Any], array_attributes["coords:coordinates"]
                         )
-
-                    band_coordinates = None
-                    if array_dims and coordinates:
-                        non_spatial_coords = next(
-                            dim
-                            for dim in list(coordinates.keys())
-                            if dim not in array_dims  # type: ignore
-                        )
-                        band_coordinates = coordinates[non_spatial_coords]
 
                     arrays[variable_name].append(
                         {
@@ -3011,7 +3135,8 @@ class GroupReader(BaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": transform,
-                            "coordinates": band_coordinates,
+                            "spatial_dims": array_spatial_dims,
+                            "coordinates": array_coordinates,
                         }
                     )
 
@@ -3020,43 +3145,42 @@ class GroupReader(BaseReader, GroupMixin):
             for array in g.array_values():
                 array_crs: CRS | None = None
                 array_transform: Affine | None = None
-                band_coordinates = None
 
                 # NOTE: skip non-data arrays
                 # TODO: be smarter
                 if array.ndim < 2:
                     continue
 
-                attributes = cast(dict[str, Any], array.attrs)
-                conventions = attributes.get("zarr_conventions", [])
-                if find_convention(conventions, PROJ_CONVENTION_UUID):
-                    array_crs = _get_proj_crs(attributes)
+                array_attributes = cast(dict[str, Any], array.attrs)
+                array_conventions = array_attributes.get("zarr_conventions", [])
 
-                if find_convention(conventions, SPATIAL_CONVENTION_UUID):
-                    array_transform = _get_transform(attributes)
+                if find_convention(array_conventions, PROJ_CONVENTION_UUID):
+                    array_crs = _get_proj_crs(array_attributes)
+
+                if find_convention(array_conventions, SPATIAL_CONVENTION_UUID):
+                    array_transform = _get_transform(array_attributes)
 
                 array_crs = array_crs or root_crs
-                array_transform = _get_transform(attributes) or root_transform
-                array_dims = array.attrs.get("spatial:dimensions") or spatial_dims
+                array_transform = _get_transform(array_attributes) or root_transform
+                array_spatial_dims = (
+                    array_attributes.get("spatial:dimensions") or spatial_dims
+                )
 
-                # NOTE: We assume the last two dimensions are spatial (height, width)
-                # TODO: is this always true ?
-                height, width = array.shape[-2:]
+                dims = getattr(array.metadata, "dimension_names", [])
+                if dims:
+                    y_dim_pos = dims.index(array_spatial_dims[0])
+                    x_dim_pos = dims.index(array_spatial_dims[1])
+                    height = array.shape[y_dim_pos]
+                    width = array.shape[x_dim_pos]
+                else:
+                    # TODO: raise warning when dimension_names is not set
+                    height, width = array.shape[-2:]
 
-                if find_convention(
-                    array.attrs.get("zarr_conventions", []),  # type: ignore
-                    MULTISCALE_CONVENTION_UUID,
-                ):
-                    coordinates = cast(dict[str, Any], array.attrs["coords:coordinates"])
-
-                band_coordinates = None
-                if array_dims and coordinates:
-                    non_spatial_coords = next(
-                        dim
-                        for dim in list(coordinates.keys())
-                        if dim not in array_dims  # type: ignore
+                array_coordinates = coordinates
+                if find_convention(array_conventions, COORDS_CONVENTION_UUID):
+                    array_coordinates = cast(
+                        dict[str, Any], array_attributes["coords:coordinates"]
                     )
-                    band_coordinates = coordinates[non_spatial_coords]
 
                 if all([array_crs, array_transform]):
                     array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
@@ -3067,7 +3191,8 @@ class GroupReader(BaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": array_transform,
-                            "coordinates": band_coordinates,
+                            "spatial_dims": array_spatial_dims,
+                            "coordinates": array_coordinates,
                         }
                     ]
 
@@ -3254,6 +3379,7 @@ class GroupReader(BaseReader, GroupMixin):
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
+                spatial_dims=array_metadata["spatial_dims"],
                 tms=self.tms,
             ) as src:
                 return src.part(
@@ -3317,6 +3443,7 @@ class GroupReader(BaseReader, GroupMixin):
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
+                spatial_dims=array_metadata["spatial_dims"],
                 tms=self.tms,
             ) as src:
                 return src.preview(
@@ -3375,6 +3502,7 @@ class GroupReader(BaseReader, GroupMixin):
                 transform=array_metadata["transform"],
                 crs=array_metadata["crs"],
                 coordinates=array_metadata["coordinates"],
+                spatial_dims=array_metadata["spatial_dims"],
                 tms=self.tms,
             ) as src:
                 return src.point(
