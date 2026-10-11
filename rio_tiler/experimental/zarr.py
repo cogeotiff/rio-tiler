@@ -891,7 +891,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        coordinates: dict[str, slice | Sequence[int]] = {
+        coordinates: dict[str, slice | numpy.ndarray] = {
             dim: slice(None) for dim in self.dimensions
         }
         coordinates[self.spatial_dims[0]] = y_slice
@@ -938,7 +938,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             )
 
             # Make sure data is in form of (height, width)
-            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[assignment]
+            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[type-var]
 
             # Ensure 3D shape
             data = numpy.expand_dims(data, axis=0)
@@ -950,7 +950,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
                 dim for dim in self.dimensions if dim not in self.spatial_dims
             )
             band_index = self.dimensions.index(non_spatial_dim)
-            coordinates[non_spatial_dim] = [bidx - 1 for bidx in indexes]
+            coordinates[non_spatial_dim] = numpy.array([bidx - 1 for bidx in indexes])
 
             data = await self.input.get_orthogonal_selection(
                 tuple(v for _, v in coordinates.items())
@@ -958,7 +958,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
             # Make sure data is in form of (*, bands, height, width)
             data = numpy.moveaxis(
-                data,  # type: ignore[assignment]
+                data,  # type: ignore[type-var]
                 [band_index, y_index, x_index],
                 [-3, -2, -1],
             )
@@ -1529,7 +1529,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        coordinates: dict[str, slice | Sequence[int]] = {
+        coordinates: dict[str, slice | numpy.ndarray] = {
             dim: slice(None) for dim in self.dimensions
         }
         coordinates[self.spatial_dims[0]] = y_slice
@@ -1577,7 +1577,7 @@ class ArrayReader(BaseReader, ArrayMixin):
 
             # 2D array: (height, width)
             # Make sure data is in form of (height, width)
-            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[assignment]
+            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[type-var]
 
             # Ensure 3D shape
             data = numpy.expand_dims(data, axis=0)
@@ -1589,7 +1589,7 @@ class ArrayReader(BaseReader, ArrayMixin):
                 dim for dim in self.dimensions if dim not in self.spatial_dims
             )
             band_index = self.dimensions.index(non_spatial_dim)
-            coordinates[non_spatial_dim] = [bidx - 1 for bidx in indexes]
+            coordinates[non_spatial_dim] = numpy.array([bidx - 1 for bidx in indexes])
 
             data = self.input.get_orthogonal_selection(
                 tuple(v for _, v in coordinates.items())
@@ -1597,7 +1597,7 @@ class ArrayReader(BaseReader, ArrayMixin):
 
             # Make sure data is in form of (*, bands, height, width)
             data = numpy.moveaxis(
-                data,  # type: ignore[assignment]
+                data,  # type: ignore[type-var]
                 [band_index, y_index, x_index],
                 [-3, -2, -1],
             )
