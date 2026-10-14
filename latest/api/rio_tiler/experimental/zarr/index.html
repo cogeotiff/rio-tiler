@@ -502,9 +502,37 @@
   
   
   
-    <li class="md-nav__item">
-      <a href="../../../../experimental/" class="md-nav__link">
+    
+    
+      
         
+          
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../../../../experimental/" class="md-nav__link ">
+              
   
   
   <span class="md-ellipsis">
@@ -518,7 +546,171 @@
   
   
 
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experimental
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../experimental/async-geotiff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async-GeoTIFF
+  
+
+    
+  </span>
+  
+  
+
       </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../experimental/async-stac/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async-STAC
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../experimental/geozarr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async/Sync GeoZarr
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../experimental/geoxarray/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeoXarray
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../experimental/vsifile/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    VSIFile
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
     </li>
   
 
@@ -4023,6 +4215,7 @@
 
 
   <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-cached"><code>cached</code></small>
       <small class="doc doc-label doc-label-property"><code>property</code></small>
   </span>
 
@@ -4185,7 +4378,7 @@ plus geospatial metadata (transform, crs) as input.</p>
         </li>
         <li class="doc-section-item field-body">
           <b><code><span title="rio_tiler.experimental.zarr.ArrayReader.crs">crs</span></code></b>
-              (<code><span title="rasterio.crs.CRS">CRS</span> | None</code>)
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>)
           –
           <div class="doc-md-description">
             <p>Coordinate reference system.</p>
@@ -4193,7 +4386,7 @@ plus geospatial metadata (transform, crs) as input.</p>
         </li>
         <li class="doc-section-item field-body">
           <b><code><span title="rio_tiler.experimental.zarr.ArrayReader.transform">transform</span></code></b>
-              (<code><span title="affine.Affine">Affine</span> | None</code>)
+              (<code><span title="affine.Affine">Affine</span></code>)
           –
           <div class="doc-md-description">
             <p>Affine transform.</p>
@@ -4244,7 +4437,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 
 <a href="#rio_tiler.experimental.zarr.ArrayReader._read" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_read</span><span class="p">(</span><span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">row_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">col_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_read</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">y_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">x_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -4260,6 +4453,26 @@ For 2D arrays, treats as single-band (height, width).</p>
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
+            <b><code>y_slice</code></b>
+              (<code><span title="slice">slice</span> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>index along the Y-axis dimension (named in self.spatial_dim[0]).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>x_slice</code></b>
+              (<code><span title="slice">slice</span> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>index along the X-axis dimension (named in self.spatial_dim[1])</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
             <b><code>indexes</code></b>
               (<code><span title="collections.abc.Sequence">Sequence</span>[<span title="int">int</span>] | None</code>, default:
                   <code>None</code>
@@ -4267,26 +4480,6 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>Band indexes (1-based). If None, reads all bands.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>row_slice</code></b>
-              (<code><span title="slice">slice</span> | None</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Row slice for windowed read.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>col_slice</code></b>
-              (<code><span title="slice">slice</span> | None</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Column slice for windowed read.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -5218,7 +5411,7 @@ plus geospatial metadata (transform, crs) as input.</p>
         </li>
         <li class="doc-section-item field-body">
           <b><code><span title="rio_tiler.experimental.zarr.AsyncArrayReader.crs">crs</span></code></b>
-              (<code><span title="rasterio.crs.CRS">CRS</span> | None</code>)
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>)
           –
           <div class="doc-md-description">
             <p>Coordinate reference system.</p>
@@ -5226,7 +5419,7 @@ plus geospatial metadata (transform, crs) as input.</p>
         </li>
         <li class="doc-section-item field-body">
           <b><code><span title="rio_tiler.experimental.zarr.AsyncArrayReader.transform">transform</span></code></b>
-              (<code><span title="affine.Affine">Affine</span> | None</code>)
+              (<code><span title="affine.Affine">Affine</span></code>)
           –
           <div class="doc-md-description">
             <p>Affine transform.</p>
@@ -5281,7 +5474,7 @@ For 2D arrays, treats as single-band (height, width).</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.AsyncArrayReader._read" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_read</span><span class="p">(</span><span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">row_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">col_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_read</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">y_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">x_slice</span><span class="p">:</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -5297,6 +5490,26 @@ For 2D arrays, treats as single-band (height, width).</p>
 <p><span class="doc-section-title">Parameters:</span></p>
     <ul>
         <li class="doc-section-item field-body">
+            <b><code>y_slice</code></b>
+              (<code><span title="slice">slice</span> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>index along the Y-axis dimension (named in self.spatial_dim[0]).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>x_slice</code></b>
+              (<code><span title="slice">slice</span> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>index along the X-axis dimension (named in self.spatial_dim[1])</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
             <b><code>indexes</code></b>
               (<code><span title="collections.abc.Sequence">Sequence</span>[<span title="int">int</span>] | None</code>, default:
                   <code>None</code>
@@ -5304,26 +5517,6 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>Band indexes (1-based). If None, reads all bands.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>row_slice</code></b>
-              (<code><span title="slice">slice</span> | None</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Row slice for windowed read.</p>
-          </div>
-        </li>
-        <li class="doc-section-item field-body">
-            <b><code>col_slice</code></b>
-              (<code><span title="slice">slice</span> | None</code>, default:
-                  <code>None</code>
-)
-          –
-          <div class="doc-md-description">
-            <p>Column slice for windowed read.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -5382,7 +5575,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -6133,7 +6331,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">

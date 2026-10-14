@@ -16,7 +16,7 @@
         <link rel="prev" href="../supported_format/">
       
       
-        <link rel="next" href="../advanced/custom_readers/">
+        <link rel="next" href="async-geotiff/">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Experimental - rio-tiler</title>
+        <title>Experimental Features - rio-tiler</title>
       
     
     
@@ -118,7 +118,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Experimental
+              Experimental Features
             
           </span>
         </div>
@@ -506,16 +506,37 @@
   
   
   
-    <li class="md-nav__item md-nav__item--active">
+    
+    
       
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
+        
+          
+        
       
         
       
+        
       
-        <label class="md-nav__link md-nav__link--active" for="__toc">
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" checked>
+        
           
+          <div class="md-nav__link md-nav__container">
+            <a href="./" class="md-nav__link md-nav__link--active">
+              
   
   
   <span class="md-ellipsis">
@@ -529,17 +550,43 @@
   
   
 
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
+            </a>
+            
+              
+              <label class="md-nav__link md-nav__link--active" for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_2_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experimental
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="async-geotiff/" class="md-nav__link">
         
   
   
   <span class="md-ellipsis">
     
   
-    Experimental
+    Async-GeoTIFF
   
 
     
@@ -548,158 +595,125 @@
   
 
       </a>
-      
-        
+    </li>
+  
 
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+              
+            
+              
+                
   
   
   
+  
+    <li class="md-nav__item">
+      <a href="async-stac/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
     
   
+    Async-STAC
   
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#feedback" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Feedback
-      
-    </span>
-  </a>
+
+    
+  </span>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#warnings-on-import" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Warnings on Import
-      
-    </span>
-  </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#vsifile-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        VSIFile Reader
-      
-    </span>
-  </a>
+
+      </a>
+    </li>
   
-    <nav class="md-nav" aria-label="VSIFile Reader">
-      <ul class="md-nav__list">
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="geozarr/" class="md-nav__link">
         
-          <li class="md-nav__item">
-  <a href="#links" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Links
-      
-    </span>
-  </a>
   
-</li>
+  
+  <span class="md-ellipsis">
+    
+  
+    Async/Sync GeoZarr
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="geoxarray/" class="md-nav__link">
         
-      </ul>
-    </nav>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geotiff-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GeoTIFF Reader
-      
-    </span>
-  </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#zarr-reader-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ZARR Reader (Array)
-      
-    </span>
-  </a>
+  <span class="md-ellipsis">
+    
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geozarr-reader-group-geozarr-conventions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GeoZARR Reader (Group + GeoZARR conventions)
-      
-    </span>
-  </a>
+    GeoXarray
   
-    <nav class="md-nav" aria-label="GeoZARR Reader (Group + GeoZARR conventions)">
-      <ul class="md-nav__list">
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="vsifile/" class="md-nav__link">
         
-          <li class="md-nav__item">
-  <a href="#open-top-level-group-in-the-zarr-store" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Open Top level group in the Zarr store
-      
-    </span>
-  </a>
   
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#open-a-specific-zarr-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Open a specific Zarr Group
-      
-    </span>
-  </a>
   
-</li>
-        
-      </ul>
-    </nav>
+  <span class="md-ellipsis">
+    
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#asyncstacreader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AsyncSTACReader
-      
-    </span>
-  </a>
+    VSIFile
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geoarrayreader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GeoArrayReader
-      
-    </span>
-  </a>
+
+    
+  </span>
   
-</li>
-      
-    </ul>
   
-</nav>
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
       
     </li>
   
@@ -2472,117 +2486,6 @@
   
 </li>
       
-        <li class="md-nav__item">
-  <a href="#vsifile-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        VSIFile Reader
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="VSIFile Reader">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#links" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Links
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geotiff-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GeoTIFF Reader
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#zarr-reader-array" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        ZARR Reader (Array)
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geozarr-reader-group-geozarr-conventions" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GeoZARR Reader (Group + GeoZARR conventions)
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="GeoZARR Reader (Group + GeoZARR conventions)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#open-top-level-group-in-the-zarr-store" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Open Top level group in the Zarr store
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#open-a-specific-zarr-group" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Open a specific Zarr Group
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#asyncstacreader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        AsyncSTACReader
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#geoarrayreader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        GeoArrayReader
-      
-    </span>
-  </a>
-  
-</li>
-      
     </ul>
   
 </nav>
@@ -2617,291 +2520,6 @@
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.errors</span><span class="w"> </span><span class="kn">import</span> <span class="n">RioTilerExperimentalWarning</span>
 
 <span class="n">warnings</span><span class="o">.</span><span class="n">filterwarnings</span><span class="p">(</span><span class="s1">'ignore'</span><span class="p">,</span> <span class="n">category</span><span class="o">=</span><span class="n">RioTilerExperimentalWarning</span><span class="p">)</span>
-</code></pre></div>
-<h2 id="vsifile-reader">VSIFile Reader<a class="headerlink" href="#vsifile-reader" title="Permanent link">&para;</a></h2>
-<p>Required dependencies:
-- <code>vsifile&gt;=0.2</code></p>
-<p>A rio-tiler Reader using VSIFile/Obstore as file system handler. Starting with GDAL&gt;=3.0, <strong>VSI plugin</strong> was added in order to enable users to provide their own file system handler (class handling the file requests).</p>
-<p>The reader is considered experimental because <a href="https://github.com/vincentsarago/vsifile"><code>VSIFile</code></a> is still under development. Users should also note that changes available in GDAL&gt;=3.10 will drastically improve the performance of this reader (<a href="https://github.com/vincentsarago/vsifile/issues/13#issuecomment-2683310594">github.com/vincentsarago/vsifile/issues/13#issuecomment-2683310594</a>)</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.vsifile</span><span class="w"> </span><span class="kn">import</span> <span class="n">VSIReader</span>
-
-<span class="k">with</span> <span class="n">VSIReader</span><span class="p">(</span><span class="s2">"https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/15/T/VK/2023/10/S2B_15TVK_20231008_0_L2A/TCI.tif"</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">src</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
-
-<span class="o">&gt;&gt;&gt;</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">399960.0</span><span class="p">,</span> <span class="mf">4890240.0</span><span class="p">,</span> <span class="mf">509760.0</span><span class="p">,</span> <span class="mf">5000040.0</span><span class="p">)</span> <span class="n">crs</span><span class="o">=</span><span class="s1">'http://www.opengis.net/def/crs/EPSG/0/32615'</span> <span class="n">band_metadata</span><span class="o">=</span><span class="p">[(</span><span class="s1">'b1'</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s1">'b2'</span><span class="p">,</span> <span class="p">{}),</span> <span class="p">(</span><span class="s1">'b3'</span><span class="p">,</span> <span class="p">{})]</span> <span class="n">band_descriptions</span><span class="o">=</span><span class="p">[(</span><span class="s1">'b1'</span><span class="p">,</span> <span class="s1">''</span><span class="p">),</span> <span class="p">(</span><span class="s1">'b2'</span><span class="p">,</span> <span class="s1">''</span><span class="p">),</span> <span class="p">(</span><span class="s1">'b3'</span><span class="p">,</span> <span class="s1">''</span><span class="p">)]</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'uint8'</span> <span class="n">nodata_type</span><span class="o">=</span><span class="s1">'Nodata'</span> <span class="n">colorinterp</span><span class="o">=</span><span class="p">[</span><span class="s1">'red'</span><span class="p">,</span> <span class="s1">'green'</span><span class="p">,</span> <span class="s1">'blue'</span><span class="p">]</span> <span class="n">scales</span><span class="o">=</span><span class="p">[</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">]</span> <span class="n">offsets</span><span class="o">=</span><span class="p">[</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">]</span> <span class="n">colormap</span><span class="o">=</span><span class="kc">None</span> <span class="n">driver</span><span class="o">=</span><span class="s1">'GTiff'</span> <span class="n">count</span><span class="o">=</span><span class="mi">3</span> <span class="n">width</span><span class="o">=</span><span class="mi">10980</span> <span class="n">height</span><span class="o">=</span><span class="mi">10980</span> <span class="n">overviews</span><span class="o">=</span><span class="p">[</span><span class="mi">2</span><span class="p">,</span> <span class="mi">4</span><span class="p">,</span> <span class="mi">8</span><span class="p">,</span> <span class="mi">16</span><span class="p">]</span> <span class="n">nodata_value</span><span class="o">=</span><span class="mf">0.0</span>
-</code></pre></div>
-<h4 id="links">Links<a class="headerlink" href="#links" title="Permanent link">&para;</a></h4>
-<ul>
-<li><a class="magiclink magiclink-github magiclink-pull" href="https://github.com/OSGeo/gdal/pull/1289" title="GitHub Pull Request: OSGeo/gdal #1289">OSGeo/gdal!1289</a></li>
-<li><a class="magiclink magiclink-github magiclink-pull" href="https://github.com/rasterio/rasterio/pull/2141" title="GitHub Pull Request: rasterio/rasterio #2141">rasterio/rasterio!2141</a></li>
-</ul>
-<h2 id="geotiff-reader">GeoTIFF Reader<a class="headerlink" href="#geotiff-reader" title="Permanent link">&para;</a></h2>
-<p>A asynchronous rio-tiler reader built on top <a href="https://github.com/developmentseed/async-geotiff"><code>async-geotiff</code></a>. This reader is considered experimental because the API might evolve in the future and the <code>part()</code> method might be refactored to avoid using <code>rasterio.warp.reproject</code>.</p>
-<p>Required dependencies:
-- <code>async-geotiff&gt;=0.3,&lt;0.4</code>
-- <code>obstore</code> </p>
-<p>You can install the dependencies with `python -m pip install "rio-tiler[geotiff]".</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3Store</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">async_geotiff</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoTIFF</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.geotiff</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span> <span class="k">as</span> <span class="n">GeoTIFFReader</span>
-
-<span class="c1"># Create Obstore Store</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">S3Store</span><span class="p">(</span><span class="s2">"sentinel-cogs"</span><span class="p">,</span> <span class="n">skip_signature</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s2">"us-west-2"</span><span class="p">)</span>
-
-<span class="c1"># Creage GeoTIFF instance</span>
-<span class="n">geotiff</span> <span class="o">=</span> <span class="k">await</span> <span class="n">GeoTIFF</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"sentinel-s2-l2a-cogs/15/T/VK/2023/10/S2B_15TVK_20231008_0_L2A/TCI.tif"</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
-
-<span class="c1"># Get Tile</span>
-<span class="k">await</span> <span class="k">with</span> <span class="n">GeoTIFFReader</span><span class="p">(</span><span class="n">geotiff</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">493</span><span class="p">,</span> <span class="mi">741</span><span class="p">,</span> <span class="mi">11</span><span class="p">)</span>
-</code></pre></div>
-<h2 id="zarr-reader-array">ZARR Reader (Array)<a class="headerlink" href="#zarr-reader-array" title="Permanent link">&para;</a></h2>
-<p>A asynchronous rio-tiler reader built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a> that can read single array.</p>
-<p>Required dependencies:
-- <code>zarr&gt;=3.0</code>
-- <code>obstore</code> 
-- <code>isochron</code></p>
-<p>You can install the dependencies with `python -m pip install "rio-tiler[zarr]".</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">affine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Affine</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3Store</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span> <span class="k">as</span> <span class="n">ZarrReader</span>
-
-<span class="c1"># Create Obstore Store</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">S3Store</span><span class="p">(</span><span class="s2">"mur-sst/zarr-v1"</span><span class="p">,</span> <span class="n">skip_signature</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s2">"us-west-2"</span><span class="p">)</span>
-<span class="n">zarr_store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="c1"># Get Group and Array</span>
-<span class="n">group</span> <span class="o">=</span> <span class="k">await</span> <span class="n">zarr</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">asynchronous</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">zarr_store</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
-
-<span class="c1"># List Arrays</span>
-<span class="k">async</span> <span class="k">for</span> <span class="n">key</span> <span class="ow">in</span> <span class="n">group</span><span class="o">.</span><span class="n">keys</span><span class="p">():</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">key</span><span class="p">)</span>
-
-<span class="o">&gt;&gt;</span> <span class="n">analysed_sst</span>
-<span class="n">analysis_error</span>
-<span class="n">lat</span>
-<span class="n">lon</span>
-<span class="n">mask</span>
-<span class="n">sea_ice_fraction</span>
-<span class="n">time</span>
-
-<span class="c1"># Fetch time coordinate for `band_names`</span>
-<span class="n">time</span> <span class="o">=</span> <span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="s2">"time"</span><span class="p">)</span>
-<span class="n">time_arrray</span> <span class="o">=</span> <span class="k">await</span> <span class="n">time</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
-
-<span class="c1"># Fetch Lon/Lat coordinates</span>
-<span class="n">lon</span> <span class="o">=</span> <span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="s2">"lon"</span><span class="p">)</span>
-<span class="n">lon_arrray</span> <span class="o">=</span> <span class="k">await</span> <span class="n">lon</span><span class="o">.</span><span class="n">get_coordinate_selection</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-<span class="n">lat</span> <span class="o">=</span> <span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="s2">"lat"</span><span class="p">)</span>
-<span class="n">lat_arrray</span> <span class="o">=</span> <span class="k">await</span> <span class="n">lat</span><span class="o">.</span><span class="n">get_coordinate_selection</span><span class="p">([</span><span class="mi">0</span><span class="p">,</span> <span class="o">-</span><span class="mi">1</span><span class="p">])</span>
-
-<span class="c1"># Get Min/Max Coordinates</span>
-<span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">=</span> <span class="n">lon_arrray</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lon_arrray</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-<span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">lat_arrray</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">lat_arrray</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
-
-<span class="c1"># Calculate resolution</span>
-<span class="n">xres</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="n">lon</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-<span class="n">yres</span> <span class="o">=</span> <span class="p">(</span><span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">/</span> <span class="n">lat</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
-
-<span class="c1"># Adjust coordinates to match pixel edges</span>
-<span class="n">xmin</span> <span class="o">=</span> <span class="n">xmin</span> <span class="o">-</span> <span class="n">xres</span>
-<span class="n">ymax</span> <span class="o">=</span> <span class="n">ymax</span> <span class="o">+</span> <span class="n">yres</span>
-
-<span class="c1"># Select an array ("analysed_sst")</span>
-<span class="n">array</span> <span class="o">=</span> <span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="s2">"analysed_sst"</span><span class="p">)</span>
-
-<span class="n">ds</span> <span class="o">=</span> <span class="n">ZarrReader</span><span class="p">(</span>
-    <span class="nb">input</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>
-    <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">4326</span><span class="p">),</span>
-    <span class="n">transform</span><span class="o">=</span><span class="n">Affine</span><span class="o">.</span><span class="n">translation</span><span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">)</span> <span class="o">@</span> <span class="n">Affine</span><span class="o">.</span><span class="n">scale</span><span class="p">(</span><span class="n">xres</span><span class="p">,</span> <span class="o">-</span><span class="n">yres</span><span class="p">),</span>
-    <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="nb">str</span><span class="p">(</span><span class="n">d</span><span class="p">)</span> <span class="k">for</span> <span class="n">d</span> <span class="ow">in</span> <span class="n">time_arrray</span><span class="o">.</span><span class="n">tolist</span><span class="p">()],</span>
-<span class="p">)</span>
-<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ds</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
-</code></pre></div>
-<h2 id="geozarr-reader-group-geozarr-conventions">GeoZARR Reader (Group + GeoZARR conventions)<a class="headerlink" href="#geozarr-reader-group-geozarr-conventions" title="Permanent link">&para;</a></h2>
-<p>A asynchronous rio-tiler reader built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a> that can read Groups of arrays.</p>
-<p>Required dependencies:
-- <code>zarr&gt;=3.0</code>
-- <code>obstore</code> </p>
-<h4 id="open-top-level-group-in-the-zarr-store">Open Top level group in the Zarr store<a class="headerlink" href="#open-top-level-group-in-the-zarr-store" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoZarrReader</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imshow</span>
-
-<span class="c1"># Create Obstore Store</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">HTTPStore</span><span class="p">(</span><span class="s2">"https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr"</span><span class="p">)</span>
-<span class="n">zarr_store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">geozarr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">zarr</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">asynchronous</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">zarr_store</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
-
-<span class="c1"># Initiate the reader</span>
-<span class="n">reader</span> <span class="o">=</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="n">geozarr</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
-<span class="c1"># the top level zarr store doesn't have spatial:bbox attributes</span>
-<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="o">-</span><span class="mi">180</span><span class="p">,</span> <span class="o">-</span><span class="mi">90</span><span class="p">,</span> <span class="mi">180</span><span class="p">,</span> <span class="mi">90</span><span class="p">)</span>
-
-<span class="c1"># List available variables (arrays with group or array Geo/Spatial conventions)</span>
-<span class="n">variables</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">list_variables</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'measurements/reflectance:b01'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b02'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b03'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b04'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b05'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b06'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b07'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b08'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b09'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b11'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b12'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b8a'</span><span class="p">,</span> <span class="s1">'quality/atmosphere/r10m:aot'</span><span class="p">,</span> <span class="s1">'quality/atmosphere/r10m:wvp'</span><span class="p">,</span> <span class="s1">'quality/atmosphere/r20m:aot'</span><span class="p">,</span> <span class="s1">'quality/atmosphere/r20m:wvp'</span><span class="p">,</span> <span class="s1">'quality/atmosphere/r60m:aot'</span><span class="p">,</span> <span class="s1">'quality/atmosphere/r60m:wvp'</span><span class="p">,</span> <span class="s1">'quality/mask/r10m:b02'</span><span class="p">,</span> <span class="s1">'quality/mask/r10m:b03'</span><span class="p">,</span> <span class="s1">'quality/mask/r10m:b04'</span><span class="p">,</span> <span class="s1">'quality/mask/r10m:b08'</span><span class="p">,</span> <span class="s1">'quality/mask/r20m:b05'</span><span class="p">,</span> <span class="s1">'quality/mask/r20m:b06'</span><span class="p">,</span> <span class="s1">'quality/mask/r20m:b07'</span><span class="p">,</span> <span class="s1">'quality/mask/r20m:b11'</span><span class="p">,</span> <span class="s1">'quality/mask/r20m:b12'</span><span class="p">,</span> <span class="s1">'quality/mask/r20m:b8a'</span><span class="p">,</span> <span class="s1">'quality/mask/r60m:b01'</span><span class="p">,</span> <span class="s1">'quality/mask/r60m:b09'</span><span class="p">,</span> <span class="s1">'quality/mask/r60m:b10'</span><span class="p">,</span> <span class="s1">'quality/probability/r20m:cld'</span><span class="p">,</span> <span class="s1">'quality/probability/r20m:snw'</span><span class="p">]</span>
-
-<span class="c1"># Get the preview for a specific variable</span>
-<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"measurements/reflectance:b02"</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
-
-<span class="c1"># Get Bounds for a specific set of variables (The root store can have multiple spatial extents)</span>
-<span class="n">bounds</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_bounds</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"measurements/reflectance:b02"</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="s2">"EPSG:4326"</span><span class="p">)</span>
-
-<span class="c1"># Get Minzoom for a specific set of variables (The root store doesn't have transform/shape)</span>
-<span class="n">minzoom</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_minzoom</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"measurements/reflectance:b02"</span><span class="p">])</span>
-
-<span class="c1"># Get Time image</span>
-<span class="n">tile</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">minzoomminzoom</span><span class="p">)</span>
-<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">dreaders</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">"measurements/reflectance:b04"</span><span class="p">,</span> <span class="s2">"measurements/reflectance:b03"</span><span class="p">,</span> <span class="s2">"measurements/reflectance:b02"</span><span class="p">))</span>
-</code></pre></div>
-<h4 id="open-a-specific-zarr-group">Open a specific Zarr Group<a class="headerlink" href="#open-a-specific-zarr-group" title="Permanent link">&para;</a></h4>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoZarrReader</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imshow</span>
-
-<span class="c1"># Create Obstore Store</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">HTTPStore</span><span class="p">(</span><span class="s2">"https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr/measurements/reflectance/"</span><span class="p">)</span>
-<span class="n">zarr_store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-<span class="n">geozarr</span> <span class="o">=</span> <span class="k">await</span> <span class="n">zarr</span><span class="o">.</span><span class="n">api</span><span class="o">.</span><span class="n">asynchronous</span><span class="o">.</span><span class="n">open_group</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">zarr_store</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s2">"r"</span><span class="p">)</span>
-
-<span class="c1"># Initiate the reader</span>
-<span class="n">reader</span> <span class="o">=</span> <span class="n">GeoZarrReader</span><span class="p">(</span><span class="n">geozarr</span><span class="p">)</span>
-
-<span class="c1"># The `/measurements/reflectance` group has spatial/geo conventions</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
-<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mf">600005.0</span><span class="p">,</span> <span class="mf">7890245.0</span><span class="p">,</span> <span class="mf">709795.0</span><span class="p">,</span> <span class="mf">8000035.0</span><span class="p">)</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
-<span class="o">&gt;&gt;</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">32625</span><span class="p">)</span>
-
-<span class="c1"># List available variables (arrays with group or array Geo/Spatial conventions)</span>
-<span class="n">variables</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">list_variables</span><span class="p">()</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'b01'</span><span class="p">,</span> <span class="s1">'b02'</span><span class="p">,</span> <span class="s1">'b03'</span><span class="p">,</span> <span class="s1">'b04'</span><span class="p">,</span> <span class="s1">'b05'</span><span class="p">,</span> <span class="s1">'b06'</span><span class="p">,</span> <span class="s1">'b07'</span><span class="p">,</span> <span class="s1">'b08'</span><span class="p">,</span> <span class="s1">'b09'</span><span class="p">,</span> <span class="s1">'b11'</span><span class="p">,</span> <span class="s1">'b12'</span><span class="p">,</span> <span class="s1">'b8a'</span><span class="p">]</span>
-
-<span class="c1"># Get the preview for a specific variable</span>
-<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"b02"</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">128</span><span class="p">)</span>
-
-<span class="n">bounds</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="s2">"epsg:4326"</span><span class="p">)</span>
-<span class="c1"># Get Time image</span>
-<span class="n">tile</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reader</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
-<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">"b04"</span><span class="p">,</span> <span class="s2">"b03"</span><span class="p">,</span> <span class="s2">"b02"</span><span class="p">))</span>
-</code></pre></div>
-<h2 id="asyncstacreader">AsyncSTACReader<a class="headerlink" href="#asyncstacreader" title="Permanent link">&para;</a></h2>
-<p>An experimental <em>Reader</em> built on top the <code>AsyncMultiReaderBase</code> abstract base class. This reader differs from the regular STACReader with:</p>
-<div class="codehilite"><pre><span></span><code>- takes a `pystac.Item` as input (not a URL)
-- `reader: AsyncBaseReader = ...` is a required argument (no default async reader exist outside the experimental ones)
-</code></pre></div>
-
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">typing</span><span class="w"> </span><span class="kn">import</span> <span class="n">Any</span>
-
-<span class="kn">import</span><span class="w"> </span><span class="nn">posixpath</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">contextlib</span><span class="w"> </span><span class="kn">import</span> <span class="n">asynccontextmanager</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">urllib.parse</span><span class="w"> </span><span class="kn">import</span> <span class="n">urlparse</span>
-
-<span class="kn">from</span><span class="w"> </span><span class="nn">async_geotiff</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoTIFF</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">from_url</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.geotiff</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span> <span class="k">as</span> <span class="n">GeoTIFFReader</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.async_stac</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncSTACReader</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">pystac</span> 
-
-<span class="nd">@asynccontextmanager</span>
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">reader</span><span class="p">(</span><span class="n">url</span><span class="p">:</span> <span class="nb">str</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n">Any</span><span class="p">,</span>  <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n">Any</span><span class="p">):</span>
-<span class="w">    </span><span class="sd">"""Custom Async Reader using obstore+async-geotiff"""</span>
-    <span class="n">parsed</span> <span class="o">=</span> <span class="n">urlparse</span><span class="p">(</span><span class="n">url</span><span class="p">)</span>
-
-    <span class="n">directory</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
-    <span class="n">store_url</span> <span class="o">=</span> <span class="sa">f</span><span class="s2">"</span><span class="si">{</span><span class="n">parsed</span><span class="o">.</span><span class="n">scheme</span><span class="si">}</span><span class="s2">://</span><span class="si">{</span><span class="n">parsed</span><span class="o">.</span><span class="n">netloc</span><span class="si">}{</span><span class="n">directory</span><span class="si">}</span><span class="s2">"</span>
-    <span class="n">store</span> <span class="o">=</span> <span class="n">from_url</span><span class="p">(</span><span class="n">store_url</span><span class="p">,</span> <span class="n">skip_signature</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-    <span class="n">filename</span> <span class="o">=</span> <span class="n">posixpath</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">parsed</span><span class="o">.</span><span class="n">path</span><span class="p">)</span>
-    <span class="n">geotiff</span> <span class="o">=</span> <span class="k">await</span> <span class="n">GeoTIFF</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">GeoTIFFReader</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-        <span class="k">yield</span> <span class="n">src</span>
-
-<span class="n">item</span> <span class="o">=</span> <span class="n">pystac</span><span class="o">.</span><span class="n">Item</span><span class="o">.</span><span class="n">from_file</span><span class="p">(</span><span class="s2">"https://earth-search.aws.element84.com/v1/collections/sentinel-2-l2a/items/S2B_35LQL_20260423_0_L2A"</span><span class="p">)</span>
-<span class="k">async</span> <span class="k">with</span> <span class="n">AsyncSTACReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="n">reader</span><span class="o">=</span><span class="n">reader</span><span class="p">)</span> <span class="k">as</span> <span class="n">stac</span><span class="p">:</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">stac</span><span class="p">)</span>
-
-    <span class="o">&gt;&gt;&gt;</span> <span class="n">AsyncSTACReader</span><span class="p">(</span><span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">699960.0</span><span class="p">,</span> <span class="mf">8990200.0</span><span class="p">,</span> <span class="mf">809760.0</span><span class="p">,</span> <span class="mf">9100000.0</span><span class="p">),</span> <span class="n">crs</span><span class="o">=</span><span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">32735</span><span class="p">),</span> <span class="n">transform</span><span class="o">=</span><span class="n">Affine</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">699960.0</span><span class="p">,</span>
-        <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">9100000.0</span><span class="p">),</span> <span class="n">height</span><span class="o">=</span><span class="mi">10980</span><span class="p">,</span> <span class="n">width</span><span class="o">=</span><span class="mi">10980</span><span class="p">,</span> <span class="nb">input</span><span class="o">=&lt;</span><span class="n">Item</span> <span class="nb">id</span><span class="o">=</span><span class="n">S2B_35LQL_20260423_0_L2A</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">reader</span><span class="o">=&lt;</span><span class="n">function</span> <span class="n">reader</span> <span class="n">at</span> <span class="mh">0x1668721f0</span><span class="o">&gt;</span><span class="p">,</span> <span class="n">tms</span><span class="o">=&lt;</span><span class="n">TileMatrixSet</span> <span class="n">title</span><span class="o">=</span><span class="s1">'Google Maps Compatible for the World'</span> <span class="nb">id</span><span class="o">=</span><span class="s1">'WebMercatorQuad'</span> <span class="n">crs</span><span class="o">=</span><span class="s1">'http://www.opengis.net/def/crs/EPSG/0/3857&gt;, minzoom=8, maxzoom=14, include_assets=None, exclude_assets=None, include_asset_types={'</span><span class="n">image</span><span class="o">/</span><span class="n">tiff</span><span class="s1">', '</span><span class="n">image</span><span class="o">/</span><span class="n">x</span><span class="o">.</span><span class="n">geotiff</span><span class="s1">', '</span><span class="n">application</span><span class="o">/</span><span class="n">x</span><span class="o">-</span><span class="n">hdf5</span><span class="s1">', '</span><span class="n">image</span><span class="o">/</span><span class="n">tiff</span><span class="p">;</span> <span class="n">application</span><span class="o">=</span><span class="n">geotiff</span><span class="p">;</span> <span class="n">profile</span><span class="o">=</span><span class="n">cloud</span><span class="o">-</span><span class="n">optimized</span><span class="s1">', '</span><span class="n">image</span><span class="o">/</span><span class="n">tiff</span><span class="p">;</span> <span class="n">profile</span><span class="o">=</span><span class="n">cloud</span><span class="o">-</span><span class="n">optimized</span><span class="p">;</span> <span class="n">application</span><span class="o">=</span><span class="n">geotiff</span><span class="s1">', '</span><span class="n">image</span><span class="o">/</span><span class="n">tiff</span><span class="p">;</span> <span class="n">application</span><span class="o">=</span><span class="n">geotiff</span><span class="s1">', '</span><span class="n">application</span><span class="o">/</span><span class="n">x</span><span class="o">-</span><span class="n">hdf</span><span class="s1">', '</span><span class="n">image</span><span class="o">/</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">image</span><span class="o">/</span><span class="n">vnd</span><span class="o">.</span><span class="n">stac</span><span class="o">.</span><span class="n">geotiff</span><span class="p">;</span> <span class="n">cloud</span><span class="o">-</span><span class="n">optimized</span><span class="o">=</span><span class="n">true</span><span class="s1">'}, exclude_asset_types=None, default_assets=None, reader_options=</span><span class="si">{}</span><span class="s1">, item=&lt;Item id=S2B_35LQL_20260423_0_L2A&gt;, assets=['</span><span class="n">aot</span><span class="s1">', '</span><span class="n">blue</span><span class="s1">', '</span><span class="n">cloud</span><span class="s1">', '</span><span class="n">coastal</span><span class="s1">', '</span><span class="n">green</span><span class="s1">', '</span><span class="n">nir</span><span class="s1">', '</span><span class="n">nir08</span><span class="s1">', '</span><span class="n">nir09</span><span class="s1">', '</span><span class="n">red</span><span class="s1">', '</span><span class="n">rededge1</span><span class="s1">', '</span><span class="n">rededge2</span><span class="s1">', '</span><span class="n">rededge3</span><span class="s1">', '</span><span class="n">scl</span><span class="s1">', '</span><span class="n">snow</span><span class="s1">', '</span><span class="n">swir16</span><span class="s1">', '</span><span class="n">swir22</span><span class="s1">', '</span><span class="n">visual</span><span class="s1">', '</span><span class="n">wvp</span><span class="s1">', '</span><span class="n">aot</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">blue</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">coastal</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">green</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">nir</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">nir08</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">nir09</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">red</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">rededge1</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">rededge2</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">rededge3</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">scl</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">swir16</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">swir22</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">visual</span><span class="o">-</span><span class="n">jp2</span><span class="s1">', '</span><span class="n">wvp</span><span class="o">-</span><span class="n">jp2</span><span class="s1">'])</span>
-
-
-    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">stac</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">assets</span><span class="o">=</span><span class="p">{</span><span class="s2">"name"</span><span class="p">:</span> <span class="s2">"red"</span><span class="p">,</span> <span class="s2">"indexes"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">]})</span>
-    <span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">statistics</span><span class="p">())</span>                      
-    <span class="o">&gt;&gt;&gt;</span> <span class="p">{</span><span class="s1">'b1'</span><span class="p">:</span> <span class="n">BandStatistics</span><span class="p">(</span><span class="nb">min</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="nb">max</span><span class="o">=</span><span class="mf">10664.0</span><span class="p">,</span> <span class="n">mean</span><span class="o">=</span><span class="mf">3308.9022180896536</span><span class="p">,</span> <span class="n">count</span><span class="o">=</span><span class="mf">66679.0</span><span class="p">,</span> <span class="nb">sum</span><span class="o">=</span><span class="mf">220634291.0</span><span class="p">,</span> <span class="n">std</span><span class="o">=</span><span class="mf">2403.0317223160237</span><span class="p">,</span> <span class="n">median</span><span class="o">=</span><span class="mf">2767.0</span><span class="p">,</span> <span class="n">majority</span><span class="o">=</span><span class="mf">441.0</span><span class="p">,</span> <span class="n">minority</span><span class="o">=</span><span class="mf">5.0</span><span class="p">,</span> <span class="n">unique</span><span class="o">=</span><span class="mf">9456.0</span><span class="p">,</span> <span class="n">histogram</span><span class="o">=</span><span class="p">[[</span><span class="mi">14203</span><span class="p">,</span> <span class="mi">12648</span><span class="p">,</span> <span class="mi">10254</span><span class="p">,</span> <span class="mi">8267</span><span class="p">,</span> <span class="mi">6805</span><span class="p">,</span> <span class="mi">5550</span><span class="p">,</span> <span class="mi">4288</span><span class="p">,</span> <span class="mi">2724</span><span class="p">,</span> <span class="mi">1573</span><span class="p">,</span> <span class="mi">367</span><span class="p">],</span> <span class="p">[</span><span class="mf">5.0</span><span class="p">,</span> <span class="mf">1070.9</span><span class="p">,</span> <span class="mf">2136.8</span><span class="p">,</span> <span class="mf">3202.7000000000003</span><span class="p">,</span> <span class="mf">4268.6</span><span class="p">,</span> <span class="mf">5334.5</span><span class="p">,</span> <span class="mf">6400.400000000001</span><span class="p">,</span> <span class="mf">7466.300000000001</span><span class="p">,</span> <span class="mf">8532.2</span><span class="p">,</span> <span class="mf">9598.1</span><span class="p">,</span> <span class="mf">10664.0</span><span class="p">]],</span> <span class="n">valid_percent</span><span class="o">=</span><span class="mf">6.36</span><span class="p">,</span> <span class="n">masked_pixels</span><span class="o">=</span><span class="mf">981897.0</span><span class="p">,</span> <span class="n">valid_pixels</span><span class="o">=</span><span class="mf">66679.0</span><span class="p">,</span> <span class="n">description</span><span class="o">=</span><span class="s1">'red_b0'</span><span class="p">,</span> <span class="n">percentile_2</span><span class="o">=</span><span class="mf">294.0</span><span class="p">,</span> <span class="n">percentile_98</span><span class="o">=</span><span class="mf">8826.0</span><span class="p">)}</span>
-</code></pre></div>
-<h2 id="geoarrayreader">GeoArrayReader<a class="headerlink" href="#geoarrayreader" title="Permanent link">&para;</a></h2>
-<p>An experimental <em>Reader</em> built on top the <code>XarrayReader</code> but remove the usage of rioxarray and instead rely on the Geo/Spatial conventions (or user input CRS/Transform) for geospatial operations (e.g coordinates selection). This reader differs from the regular XarrayReader with:</p>
-<div class="codehilite"><pre><span></span><code>- allows`crs` and `transform` input parameters or relies on Zarr Geo/Spatial conventions attributes
-- do not read coordinates arrays
-- allows `band_names` input parameter to specify the 3d dimension names
-</code></pre></div>
-
-<p>You can install the dependencies with <code>python -m pip install "rio-tiler[geoarray]"</code>.</p>
-<div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
-<span class="kn">import</span><span class="w"> </span><span class="nn">xarray</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.crs</span><span class="w"> </span><span class="kn">import</span> <span class="n">CRS</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">affine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Affine</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.xarray</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoArrayReader</span>
-
-<span class="c1"># Create Obstore Store</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">HTTPStore</span><span class="p">(</span><span class="s2">"https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2B_MSIL2A_20260216T142149_N0512_R096_T25WFV_20260216T165051.zarr"</span><span class="p">)</span>
-<span class="n">zarr_store</span> <span class="o">=</span> <span class="n">ObjectStore</span><span class="p">(</span><span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">,</span> <span class="n">read_only</span><span class="o">=</span><span class="kc">True</span><span class="p">)</span>
-
-<span class="n">ds</span> <span class="o">=</span> <span class="n">xarray</span><span class="o">.</span><span class="n">open_datatree</span><span class="p">(</span>
-    <span class="n">zarr_store</span><span class="p">,</span>  <span class="c1"># type: ignore</span>
-    <span class="n">decode_times</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">decode_coords</span><span class="o">=</span><span class="s2">"all"</span><span class="p">,</span>
-    <span class="n">create_default_indexes</span><span class="o">=</span><span class="kc">False</span><span class="p">,</span>
-    <span class="n">consolidated</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span>
-    <span class="n">engine</span><span class="o">=</span><span class="s2">"zarr"</span><span class="p">,</span>
-<span class="p">)</span>
-<span class="n">group</span> <span class="o">=</span> <span class="n">ds</span><span class="p">[</span><span class="s2">"/measurements/reflectance/r720m"</span><span class="p">]</span>
-
-<span class="n">crs</span> <span class="o">=</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_user_input</span><span class="p">(</span><span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"proj:code"</span><span class="p">])</span>
-<span class="n">transform</span> <span class="o">=</span> <span class="n">Affine</span><span class="p">(</span><span class="o">*</span><span class="n">group</span><span class="o">.</span><span class="n">attrs</span><span class="p">[</span><span class="s2">"spatial:transform"</span><span class="p">])</span>
-
-<span class="c1"># Select an array ("b02")</span>
-<span class="n">dataarray</span> <span class="o">=</span> <span class="n">group</span><span class="p">[</span><span class="s2">"b02"</span><span class="p">]</span>
-
-<span class="c1"># Initiate the reader</span>
-<span class="n">reader</span> <span class="o">=</span> <span class="n">GeoArrayReader</span><span class="p">(</span>
-    <span class="nb">input</span><span class="o">=</span><span class="n">dataarray</span><span class="p">,</span>
-    <span class="n">crs</span><span class="o">=</span><span class="n">crs</span><span class="p">,</span>
-    <span class="n">transform</span><span class="o">=</span><span class="n">transform</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># The `/measurements/reflectance` group has spatial/geo conventions</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">bounds</span><span class="p">)</span>
-<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mf">600000.0</span><span class="p">,</span> <span class="mf">7890600.0</span><span class="p">,</span> <span class="mf">709440.0</span><span class="p">,</span> <span class="mf">8000040.0</span>
-
-<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">crs</span><span class="p">)</span>
-<span class="o">&gt;&gt;</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">32625</span><span class="p">)</span>
-
-<span class="c1"># info</span>
-<span class="nb">print</span><span class="p">(</span><span class="n">reader</span><span class="o">.</span><span class="n">info</span><span class="p">())</span>
-<span class="o">&gt;&gt;</span> <span class="n">bounds</span><span class="o">=</span><span class="p">(</span><span class="mf">600000.0</span><span class="p">,</span> <span class="mf">7890600.0</span><span class="p">,</span> <span class="mf">709440.0</span><span class="p">,</span> <span class="mf">8000040.0</span><span class="p">)</span> <span class="n">crs</span><span class="o">=</span><span class="s1">'http://www.opengis.net/def/crs/EPSG/0/32625'</span> <span class="n">band_metadata</span><span class="o">=</span><span class="p">[(</span><span class="s1">'b1'</span><span class="p">,</span> <span class="p">{})]</span> <span class="n">band_descriptions</span><span class="o">=</span><span class="p">[(</span><span class="s1">'b1'</span><span class="p">,</span> <span class="s1">'b1'</span><span class="p">)]</span> <span class="n">dtype</span><span class="o">=</span><span class="s1">'float32'</span> <span class="n">nodata_type</span><span class="o">=</span><span class="s1">'None'</span> <span class="n">colorinterp</span><span class="o">=</span><span class="kc">None</span> <span class="n">scales</span><span class="o">=</span><span class="kc">None</span> <span class="n">offsets</span><span class="o">=</span><span class="kc">None</span> <span class="n">colormap</span><span class="o">=</span><span class="kc">None</span> <span class="n">name</span><span class="o">=</span><span class="s1">'b02'</span> <span class="n">count</span><span class="o">=</span><span class="mi">1</span> <span class="n">width</span><span class="o">=</span><span class="mi">152</span> <span class="n">height</span><span class="o">=</span><span class="mi">152</span> <span class="n">dimensions</span><span class="o">=</span><span class="p">(</span><span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">)</span> <span class="n">attrs</span><span class="o">=</span><span class="p">{</span><span class="s1">'_eopf_attrs'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'add_offset'</span><span class="p">:</span> <span class="o">-</span><span class="mf">0.1</span><span class="p">,</span> <span class="s1">'coordinates'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">],</span> <span class="s1">'dimensions'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">],</span> <span class="s1">'dtype'</span><span class="p">:</span> <span class="s1">'&lt;u2'</span><span class="p">,</span> <span class="s1">'eopf_is_masked'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span> <span class="s1">'eopf_target_dtype'</span><span class="p">:</span> <span class="s1">'&lt;f8'</span><span class="p">,</span> <span class="s1">'fill_value'</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'BOA reflectance from MSI acquisition at spectral band 02 490 nm'</span><span class="p">,</span> <span class="s1">'scale_factor'</span><span class="p">:</span> <span class="mf">0.0001</span><span class="p">,</span> <span class="s1">'short_name'</span><span class="p">:</span> <span class="s1">'b02_60m'</span><span class="p">,</span> <span class="s1">'units'</span><span class="p">:</span> <span class="s1">'digital_counts'</span><span class="p">,</span> <span class="s1">'valid_max'</span><span class="p">:</span> <span class="mi">65535</span><span class="p">,</span> <span class="s1">'valid_min'</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span> <span class="s1">'dtype'</span><span class="p">:</span> <span class="s1">'&lt;u2'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'BOA reflectance from MSI acquisition at spectral band 02 490 nm'</span><span class="p">,</span> <span class="s1">'units'</span><span class="p">:</span> <span class="s1">'digital_counts'</span><span class="p">}</span>
-
-<span class="c1"># Get the preview for a specific variable</span>
-<span class="n">img</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">()</span>
 </code></pre></div>
 
 
