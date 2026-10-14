@@ -37,17 +37,15 @@ from rasterio.windows import from_bounds as window_from_bounds
 from rio_tiler._warp import warp
 from rio_tiler.constants import MAX_ARRAY_SIZE, WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
-    ExpressionMixingWarning,
     InvalidBounds,
     MaxArraySizeError,
     PointOutsideBounds,
     TileOutsideBounds,
 )
-from rio_tiler.expression import parse_expression
 from rio_tiler.io import AsyncBaseReader, BaseReader
 from rio_tiler.io.base import SpatialMixin
 from rio_tiler.models import BandStatistics, Bounds, ImageData, Info, PointData
-from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
+from rio_tiler.types import BBox, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     CRS_to_uri,
     _get_width_height,
@@ -349,9 +347,9 @@ class ArrayMixin(SpatialMixin):
 
     def __attrs_post_init__(self) -> None:  # noqa: C901
         """Post init: derive height, width, count from array shape."""
-        if self.input.ndim not in (2, 3):
+        if self.input.ndim < 2:
             raise ValueError(
-                f"Expected >2D array, got {self.input.ndim}D with shape {self.input.shape}"
+                f"Expected >=2D array, got {self.input.ndim}D with shape {self.input.shape}"
             )
 
         self.dimensions = self.dimensions or list(
@@ -403,16 +401,16 @@ class ArrayMixin(SpatialMixin):
         self.height = shape[y_index]
         self.width = shape[x_index]
 
-        if len(shape) == 2:
-            self.nbands = 1
-
-        elif len(shape) >= 2:
-            # TODO: for now we default to the first non-spatial dimension
-            non_spatial_dim = next(
-                dim for dim in self.dimensions if dim not in self.spatial_dims
+        # NOTE: number of `bands` is the product of all the non-spatial dimensions
+        self.nbands = int(
+            numpy.prod(
+                [
+                    size
+                    for size, dim in zip(shape, self.dimensions)
+                    if dim not in self.spatial_dims
+                ]
             )
-            band_index = self.dimensions.index(non_spatial_dim)
-            self.nbands = shape[band_index]
+        )
 
         # [xmin, ymin, xmax, ymax]
         self.bounds = array_bounds(self.height, self.width, self.transform)
@@ -422,21 +420,12 @@ class ArrayMixin(SpatialMixin):
         if _has_coords:
             self.coordinates = self.coordinates or attributes["coords:coordinates"]
 
+        # NOTE: coordinates are optional for non-spatial dimensions, if missing
+        # we use the positions as coordinates values.
         if self.coordinates:
             assert set(self.coordinates.keys()).intersection(set(self.dimensions)), (
                 f"Incompatible coordinates {list(self.coordinates.keys())} and array dimensions {self.dimensions}"
             )
-            non_spatial_coords = [
-                coord for coord in self.coordinates if coord not in self.spatial_dims
-            ]
-            non_spatial_dims = [
-                dim for dim in self.dimensions if dim not in self.spatial_dims
-            ]
-            assert len(non_spatial_dims) == len(non_spatial_coords), (
-                f"Number of non-spatial coordinates ({len(non_spatial_coords)}) does not match non-spatial dimensions ({non_spatial_dims})"
-            )
-
-            # TODO: check that coordinates match the dimensions they are supposed to represent
 
     @property
     def minzoom(self):
@@ -452,26 +441,167 @@ class ArrayMixin(SpatialMixin):
         return self._maxzoom
 
     @cached_property
-    def band_descriptions(self) -> list[str]:
-        """
-        Return list of `band descriptions` in DataArray.
+    def non_spatial_dims(self) -> list[str]:
+        """Return the non-spatial dimensions (in array order)."""
+        return [dim for dim in self.dimensions if dim not in self.spatial_dims]
 
-        `Bands` are all dimensions not defined as spatial dims by rioxarray.
+    @cached_property
+    def coordinate_values(self) -> dict[str, numpy.ndarray]:
+        """Return coordinate values for each non-spatial dimension.
+
+        Values are derived from the `coordinates` (inline or interval), and default
+        to the array positions (`0, 1, ..., n - 1`) when not available.
         """
-        if len(self.dimensions) > 2:
-            # TODO: for now we default to the first non-spatial dimension
-            non_spatial_dim = next(
-                dim for dim in self.dimensions if dim not in self.spatial_dims
+        coordinates = self.coordinates or {}
+
+        values: dict[str, numpy.ndarray] = {}
+        for dim in self.non_spatial_dims:
+            size = self.input.shape[self.dimensions.index(dim)]
+
+            coords: numpy.ndarray | None = None
+            if dim in coordinates:
+                coords = _get_coordinate_values(coordinates[dim])
+                if coords is not None and len(coords) != size:
+                    warnings.warn(
+                        f"Number of '{dim}' coordinates ({len(coords)}) does not match the dimension size ({size}), using positions.",
+                        UserWarning,
+                    )
+                    coords = None
+
+            values[dim] = coords if coords is not None else numpy.arange(size)
+
+        return values
+
+    @cached_property
+    def band_descriptions(self) -> dict[str, list[Any]]:
+        """Return coordinate values (labels) for each non-spatial dimension."""
+        return {
+            dim: _format_coordinate_values(values)
+            for dim, values in self.coordinate_values.items()
+        }
+
+    def _get_selection(
+        self,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
+    ) -> tuple[
+        dict[str, int | numpy.ndarray | slice], dict[str, list[Any]], dict[str, Any]
+    ]:
+        """Convert label based selection to positional selection for non-spatial dimensions.
+
+        Args:
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
+
+        Returns:
+            tuple: positional selection per dimension, labels of the kept dimensions and labels of the scalar selection (dropped dimensions).
+
+        """
+        sel = sel or {}
+        if invalid := [dim for dim in sel if dim not in self.non_spatial_dims]:
+            raise ValueError(
+                f"Invalid selection dimension(s) {invalid}, should be one of {self.non_spatial_dims}"
             )
-            band_descr = [f"{non_spatial_dim}{ix + 1}" for ix in range(self.nbands)]
-            if self.coordinates:
-                values = _get_coordinate_values(self.coordinates[non_spatial_dim])
-                if values is not None:
-                    return list(map(str, _format_coordinate_values(values)))
 
-            return band_descr
+        selection: dict[str, int | numpy.ndarray | slice] = {}
+        kept: dict[str, list[Any]] = {}
+        scalars: dict[str, Any] = {}
+        for dim, values in self.coordinate_values.items():
+            idx: int | numpy.ndarray | slice = (
+                _sel_indexer(values, sel[dim], sel_method, dim)
+                if dim in sel
+                else slice(None)
+            )
+            selection[dim] = idx
+            if isinstance(idx, int):
+                scalars[dim] = _format_coordinate_values(values[idx : idx + 1])[0]
+            else:
+                kept[dim] = _format_coordinate_values(values[idx])
 
-        return [f"b{ix + 1}" for ix in range(self.nbands)]
+        return selection, kept, scalars
+
+    def _get_read_selection(
+        self,
+        *,
+        y_slice: slice,
+        x_slice: slice,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
+    ) -> tuple[
+        tuple[int | numpy.ndarray | slice, ...], dict[str, list[Any]], dict[str, Any]
+    ]:
+        """Build the orthogonal selection for a read and check the output size."""
+        selection, kept, scalars = self._get_selection(sel, sel_method)
+
+        read_height = len(range(*y_slice.indices(self.height)))
+        read_width = len(range(*x_slice.indices(self.width)))
+        shape = (*[len(labels) for labels in kept.values()], read_height, read_width)
+
+        nbytes = int(numpy.prod(shape)) * self.input.dtype.itemsize
+        if nbytes > MAX_ARRAY_SIZE:
+            raise MaxArraySizeError(
+                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {shape} in memory."
+            )
+
+        selection[self.spatial_dims[0]] = y_slice
+        selection[self.spatial_dims[1]] = x_slice
+
+        return tuple(selection[dim] for dim in self.dimensions), kept, scalars
+
+    def _to_image(
+        self,
+        data: numpy.ndarray,
+        *,
+        y_slice: slice,
+        x_slice: slice,
+        kept: dict[str, list[Any]],
+        scalars: dict[str, Any],
+        nodata: NoData | None = None,
+    ) -> ImageData:
+        """Create ImageData from an orthogonal selection result."""
+        # Dimensions selected with a scalar are dropped by the orthogonal selection
+        dims = [dim for dim in self.dimensions if dim not in scalars]
+
+        # Make sure data is in form of (*non-spatial dimensions, height, width)
+        data = numpy.moveaxis(
+            data,
+            [dims.index(self.spatial_dims[0]), dims.index(self.spatial_dims[1])],
+            [-2, -1],
+        )
+
+        # Ensure at least 3D shape
+        if data.ndim == 2:
+            data = numpy.expand_dims(data, axis=0)
+
+        masked_data = numpy.ma.MaskedArray(data)
+
+        # if data has Nodata then we simply make sure the mask == the nodata
+        nodata = (
+            nodata
+            if nodata is not None
+            else getattr(self.input.metadata, "fill_value", None)
+        )
+        if nodata is not None:
+            if numpy.isnan(nodata):
+                masked_data.mask = numpy.isnan(masked_data.data)
+            else:
+                masked_data.mask = masked_data.data == nodata
+
+        # Calculate bounds for the read window
+        read_height, read_width = data.shape[-2:]
+        y_start, _, _ = y_slice.indices(self.height)
+        x_start, _, _ = x_slice.indices(self.width)
+        read_transform = self.transform @ Affine.translation(x_start, y_start)
+        read_bounds = array_bounds(read_height, read_width, read_transform)
+
+        return ImageData(  # type: ignore
+            masked_data,
+            bounds=read_bounds,
+            crs=self.crs,
+            band_descriptions=kept,
+            nodata=nodata,
+            metadata={"sel": scalars} if scalars else {},
+        )
 
     def _info(self) -> Info:
         """Return Dataset's info.
@@ -488,12 +618,24 @@ class ArrayMixin(SpatialMixin):
 
         attrs: dict[str, Any] = cast(dict[str, Any], self.input.attrs or {})
 
+        # NOTE: we only list `bands` when there is at most one non-spatial dimension
+        # to avoid listing `prod(non-spatial dimensions)` bands for N-D arrays.
+        band_descriptions: list[str] = []
+        if len(self.non_spatial_dims) == 1:
+            band_descriptions = list(
+                map(str, next(iter(self.band_descriptions.values())))
+            )
+        elif not self.non_spatial_dims:
+            band_descriptions = ["b1"]
+
         meta: dict[str, Any] = {
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
-            "band_metadata": [(f"b{ix + 1}", {}) for ix in range(self.nbands)],
+            "band_metadata": [
+                (f"b{ix}", {}) for ix in range(1, len(band_descriptions) + 1)
+            ],
             "band_descriptions": [
-                (f"b{ix}", val) for ix, val in enumerate(self.band_descriptions, 1)
+                (f"b{ix}", val) for ix, val in enumerate(band_descriptions, 1)
             ],
             "dtype": self.input.dtype.name,
             "nodata_type": nodata_type,
@@ -505,6 +647,7 @@ class ArrayMixin(SpatialMixin):
             "height": self.height,
             "dimensions": self.dimensions,
             "coordinates": self.coordinates,
+            "dimension_values": self.band_descriptions,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
                 for k, v in attrs.items()
@@ -513,7 +656,7 @@ class ArrayMixin(SpatialMixin):
 
         minv, maxv = attrs.get("valid_min"), attrs.get("valid_max")
         if minv is not None and maxv is not None:
-            meta["minmax"] = list(((minv, maxv),) * self.nbands)
+            meta["minmax"] = list(((minv, maxv),) * max(len(band_descriptions), 1))
 
         if nodata is not None:
             meta.update({"nodata_value": nodata.item()})
@@ -590,7 +733,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
         hist_options: dict | None = None,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -603,7 +747,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
-            indexes (int or sequence of int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to `self.preview`.
 
@@ -611,18 +756,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
-
-        img = await self._read(indexes=indexes, nodata=nodata)
+        img = await self._read(sel=sel, sel_method=sel_method, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -639,7 +773,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         tile_y: int,
         tile_z: int,
         tilesize: int | None = None,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
@@ -653,7 +788,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
@@ -677,7 +813,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             bbox,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             expression=expression,
             max_size=None,
             height=tilesize or matrix.tileHeight,
@@ -692,7 +829,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         bbox: BBox,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -708,7 +846,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
             bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension.
             height (int, optional): Output height of the array.
@@ -720,17 +859,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
-
         dst_crs = dst_crs or bounds_crs
 
         # 1. Transform output bbox from bounds_crs → output_crs
@@ -772,7 +900,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         img = await self._read(
             y_slice=slice(clipped_row_off, clipped_row_stop),
             x_slice=slice(clipped_col_off, clipped_col_stop),
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             nodata=nodata,
         )
 
@@ -794,7 +923,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
     async def preview(
         self,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
@@ -808,7 +938,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         """Read a preview of a Dataset.
 
         Args:
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
@@ -823,17 +954,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
         """
         dst_crs = dst_crs or self.crs
-
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
 
         # 1. Determine output shape
         # get height/width of the dataset in the output CRS
@@ -854,7 +974,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         )
 
         # 2. Read data
-        img = await self._read(indexes=indexes, nodata=nodata)
+        img = await self._read(sel=sel, sel_method=sel_method, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -880,7 +1000,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         lon: float,
         lat: float,
         coord_crs: CRS = WGS84_CRS,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -891,7 +1012,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             lon (float): Longitude.
             lat (float): Latitude.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
             nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
 
@@ -899,17 +1021,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             PointData: Pixel value per bands/assets.
 
         """
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
-
         coordinates = (lon, lat)
         if coord_crs != self.crs:
             xs, ys = transform_coords(coord_crs, self.crs, [lon], [lat])
@@ -938,12 +1049,13 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         img = await self._read(
             y_slice=slice(y, y + 1),
             x_slice=slice(x, x + 1),
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             nodata=nodata,
         )
 
         pt = PointData(
-            img.array[:, 0, 0],
+            img.array[..., 0, 0],
             band_names=img.band_names,
             band_descriptions=img.band_descriptions,
             coordinates=coordinates,
@@ -964,7 +1076,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         shape: dict,
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -980,7 +1093,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
@@ -1004,7 +1118,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             bbox,
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             expression=expression,
             max_size=max_size,
             height=height,
@@ -1043,7 +1158,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         *,
         y_slice: slice | None = None,
         x_slice: slice | None = None,
-        indexes: Sequence[int] | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         nodata: NoData | None = None,
     ) -> ImageData:
         """Read data from zarr AsyncArray.
@@ -1051,114 +1167,28 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         Args:
             y_slice: index along the Y-axis dimension (named in self.spatial_dim[0]).
             x_slice: index along the X-axis dimension (named in self.spatial_dim[1])
-            indexes: Band indexes (1-based). If None, reads all bands.
+            sel (dict, optional): label based selection for non-spatial dimensions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
-            ImageData: Image data with mask and spatial info.
+            ImageData: Image data with shape (*non-spatial dimensions, height, width), mask and spatial info.
 
         """
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        coordinates: dict[str, slice | numpy.ndarray] = {
-            dim: slice(None) for dim in self.dimensions
-        }
-        coordinates[self.spatial_dims[0]] = y_slice
-        coordinates[self.spatial_dims[1]] = x_slice
-
-        if indexes is None:
-            indexes = list(range(1, self.nbands + 1))
-
-        # Calculate array size in bytes
-        read_height = len(range(*y_slice.indices(self.height)))
-        read_width = len(range(*x_slice.indices(self.width)))
-
-        # NOTE: For now we only accept 2 or 3d arrays so
-        # additional_pix should default to `1.0`
-        # Calculate the number of additional dimensions:
-        # - Exclude spatial dimensions
-        # - Exclude the first dimension (band dimension)
-        dims = [
-            shape
-            for shape, dim in zip(self.input.shape, self.dimensions)
-            if dim not in self.spatial_dims
-        ]
-        additional_pix = numpy.prod(dims[-1:])
-
-        nbytes = (
-            additional_pix
-            * len(indexes)
-            * read_height
-            * read_width
-            * self.input.dtype.itemsize
+        selection, kept, scalars = self._get_read_selection(
+            y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
         )
-        if nbytes > MAX_ARRAY_SIZE:
-            raise MaxArraySizeError(
-                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
-            )
+        data = await self.input.get_orthogonal_selection(selection)
 
-        y_index = self.dimensions.index(self.spatial_dims[0])
-        x_index = self.dimensions.index(self.spatial_dims[1])
-
-        # 2D array: (height, width)
-        if len(self.input.shape) == 2:
-            data = await self.input.get_orthogonal_selection(
-                tuple(v for _, v in coordinates.items())
-            )
-
-            # Make sure data is in form of (height, width)
-            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[type-var]
-
-            # Ensure 3D shape
-            data = numpy.expand_dims(data, axis=0)
-
-        # 3D array: (bands, height, width)
-        else:
-            # TODO: for now we default to the first non-spatial dimension
-            non_spatial_dim = next(
-                dim for dim in self.dimensions if dim not in self.spatial_dims
-            )
-            band_index = self.dimensions.index(non_spatial_dim)
-            coordinates[non_spatial_dim] = numpy.array([bidx - 1 for bidx in indexes])
-
-            data = await self.input.get_orthogonal_selection(
-                tuple(v for _, v in coordinates.items())
-            )
-
-            # Make sure data is in form of (*, bands, height, width)
-            data = numpy.moveaxis(
-                data,  # type: ignore[type-var]
-                [band_index, y_index, x_index],
-                [-3, -2, -1],
-            )
-
-        masked_data = numpy.ma.MaskedArray(data)
-
-        # if data has Nodata then we simply make sure the mask == the nodata
-        nodata = (
-            nodata
-            if nodata is not None
-            else getattr(self.input.metadata, "fill_value", None)
-        )
-        if nodata is not None:
-            if numpy.isnan(nodata):
-                masked_data.mask = numpy.isnan(masked_data.data)
-            else:
-                masked_data.mask = masked_data.data == nodata
-
-        # Calculate bounds for the read window
-        y_start, _, _ = y_slice.indices(self.height)
-        x_start, _, _ = x_slice.indices(self.width)
-        read_transform = self.transform @ Affine.translation(x_start, y_start)
-        read_bounds = array_bounds(read_height, read_width, read_transform)
-
-        return ImageData(  # type: ignore
-            masked_data,
-            bounds=read_bounds,
-            crs=self.crs,
-            band_names=[f"b{idx}" for idx in indexes],
-            band_descriptions=[self.band_descriptions[ix - 1] for ix in indexes],
+        return self._to_image(
+            data,  # type: ignore[arg-type]
+            y_slice=y_slice,
+            x_slice=x_slice,
+            kept=kept,
+            scalars=scalars,
             nodata=nodata,
         )
 
@@ -1232,7 +1262,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
         hist_options: dict | None = None,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -1245,7 +1276,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
-            indexes (int or sequence of int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to `self.preview`.
 
@@ -1253,18 +1285,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
-
-        img = self._read(indexes=indexes, nodata=nodata)
+        img = self._read(sel=sel, sel_method=sel_method, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -1281,7 +1302,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         tile_y: int,
         tile_z: int,
         tilesize: int | None = None,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
@@ -1294,7 +1316,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
@@ -1318,7 +1341,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             bbox,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             expression=expression,
             max_size=None,
             height=tilesize or matrix.tileHeight,
@@ -1332,7 +1356,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         bbox: BBox,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -1348,7 +1373,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
             bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension.
             height (int, optional): Output height of the array.
@@ -1360,17 +1386,6 @@ class ArrayReader(BaseReader, ArrayMixin):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
-
         dst_crs = dst_crs or bounds_crs
 
         # 1. Transform output bbox from bounds_crs → output_crs
@@ -1410,7 +1425,8 @@ class ArrayReader(BaseReader, ArrayMixin):
 
         # 6. Read data from zarr array
         img = self._read(
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             y_slice=slice(clipped_row_off, clipped_row_stop),
             x_slice=slice(clipped_col_off, clipped_col_stop),
             nodata=nodata,
@@ -1434,7 +1450,8 @@ class ArrayReader(BaseReader, ArrayMixin):
 
     def preview(
         self,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
@@ -1448,7 +1465,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         """Read a preview of a Dataset.
 
         Args:
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
@@ -1463,17 +1481,6 @@ class ArrayReader(BaseReader, ArrayMixin):
 
         """
         dst_crs = dst_crs or self.crs
-
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
 
         # 1. Determine output shape
         # get height/width of the dataset in the output CRS
@@ -1494,7 +1501,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         )
 
         # 2. Read data
-        img = self._read(indexes=indexes, nodata=nodata)
+        img = self._read(sel=sel, sel_method=sel_method, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -1520,7 +1527,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         lon: float,
         lat: float,
         coord_crs: CRS = WGS84_CRS,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -1531,7 +1539,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             lon (float): Longitude.
             lat (float): Latitude.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
             nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
 
@@ -1539,17 +1548,6 @@ class ArrayReader(BaseReader, ArrayMixin):
             PointData: Pixel value per bands/assets.
 
         """
-        if indexes and expression:
-            warnings.warn(
-                "Both expression and indexes passed; expression will overwrite indexes parameter.",
-                ExpressionMixingWarning,
-            )
-
-        if expression:
-            indexes = parse_expression(expression)
-
-        indexes = cast_to_sequence(indexes)
-
         coordinates = (lon, lat)
         if coord_crs != self.crs:
             xs, ys = transform_coords(coord_crs, self.crs, [lon], [lat])
@@ -1578,12 +1576,13 @@ class ArrayReader(BaseReader, ArrayMixin):
         img = self._read(
             y_slice=slice(y, y + 1),
             x_slice=slice(x, x + 1),
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             nodata=nodata,
         )
 
         pt = PointData(
-            img.array[:, 0, 0],
+            img.array[..., 0, 0],
             band_names=img.band_names,
             band_descriptions=img.band_descriptions,
             coordinates=coordinates,
@@ -1604,7 +1603,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         shape: dict,
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
-        indexes: Indexes | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -1619,7 +1619,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            indexes (sequence of int or int, optional): Band indexes.
+            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
@@ -1643,7 +1644,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             bbox,
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
-            indexes=indexes,
+            sel=sel,
+            sel_method=sel_method,
             expression=expression,
             max_size=max_size,
             height=height,
@@ -1681,7 +1683,8 @@ class ArrayReader(BaseReader, ArrayMixin):
         *,
         y_slice: slice | None = None,
         x_slice: slice | None = None,
-        indexes: Sequence[int] | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         nodata: NoData | None = None,
     ) -> ImageData:
         """Read data from zarr Array.
@@ -1689,115 +1692,28 @@ class ArrayReader(BaseReader, ArrayMixin):
         Args:
             y_slice: index along the Y-axis dimension (named in self.spatial_dim[0]).
             x_slice: index along the X-axis dimension (named in self.spatial_dim[1])
-            indexes: Band indexes (1-based). If None, reads all bands.
+            sel (dict, optional): label based selection for non-spatial dimensions.
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
-            ImageData: Image data with mask and spatial info.
+            ImageData: Image data with shape (*non-spatial dimensions, height, width), mask and spatial info.
 
         """
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        coordinates: dict[str, slice | numpy.ndarray] = {
-            dim: slice(None) for dim in self.dimensions
-        }
-        coordinates[self.spatial_dims[0]] = y_slice
-        coordinates[self.spatial_dims[1]] = x_slice
-
-        if indexes is None:
-            indexes = list(range(1, self.nbands + 1))
-
-        # Calculate array size in bytes
-        read_height = len(range(*y_slice.indices(self.height)))
-        read_width = len(range(*x_slice.indices(self.width)))
-
-        # NOTE: For now we only accept 2 or 3d arrays so
-        # additional_pix should default to `1.0`
-        # Calculate the number of additional dimensions:
-        # - Exclude spatial dimensions
-        # - Exclude the first dimension (band dimension)
-        dims = [
-            shape
-            for shape, dim in zip(self.input.shape, self.dimensions)
-            if dim not in self.spatial_dims
-        ]
-        additional_pix = numpy.prod(dims[-1:])
-
-        nbytes = (
-            additional_pix
-            * len(indexes)
-            * read_height
-            * read_width
-            * self.input.dtype.itemsize
+        selection, kept, scalars = self._get_read_selection(
+            y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
         )
-        if nbytes > MAX_ARRAY_SIZE:
-            raise MaxArraySizeError(
-                f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {(len(indexes), read_height, read_width)} in memory."
-            )
+        data = self.input.get_orthogonal_selection(selection)
 
-        y_index = self.dimensions.index(self.spatial_dims[0])
-        x_index = self.dimensions.index(self.spatial_dims[1])
-
-        # 2D array: (height, width)
-        if len(self.input.shape) == 2:
-            data = self.input.get_orthogonal_selection(
-                tuple(v for _, v in coordinates.items())
-            )
-
-            # 2D array: (height, width)
-            # Make sure data is in form of (height, width)
-            data = numpy.moveaxis(data, [y_index, x_index], [0, 1])  # type: ignore[type-var]
-
-            # Ensure 3D shape
-            data = numpy.expand_dims(data, axis=0)
-
-        # 3D array: (bands, height, width)
-        else:
-            # TODO: for now we default to the first non-spatial dimension
-            non_spatial_dim = next(
-                dim for dim in self.dimensions if dim not in self.spatial_dims
-            )
-            band_index = self.dimensions.index(non_spatial_dim)
-            coordinates[non_spatial_dim] = numpy.array([bidx - 1 for bidx in indexes])
-
-            data = self.input.get_orthogonal_selection(
-                tuple(v for _, v in coordinates.items())
-            )
-
-            # Make sure data is in form of (*, bands, height, width)
-            data = numpy.moveaxis(
-                data,  # type: ignore[type-var]
-                [band_index, y_index, x_index],
-                [-3, -2, -1],
-            )
-
-        masked_data = numpy.ma.MaskedArray(data)
-
-        # if data has Nodata then we simply make sure the mask == the nodata
-        nodata = (
-            nodata
-            if nodata is not None
-            else getattr(self.input.metadata, "fill_value", None)
-        )
-        if nodata is not None:
-            if numpy.isnan(nodata):
-                masked_data.mask = numpy.isnan(masked_data.data)
-            else:
-                masked_data.mask = masked_data.data == nodata
-
-        # Calculate bounds for the read window
-        y_start, _, _ = y_slice.indices(self.height)
-        x_start, _, _ = x_slice.indices(self.width)
-        read_transform = self.transform @ Affine.translation(x_start, y_start)
-        read_bounds = array_bounds(read_height, read_width, read_transform)
-
-        return ImageData(
-            masked_data,
-            bounds=read_bounds,
-            crs=self.crs,
-            band_names=[f"b{idx}" for idx in indexes],
-            band_descriptions=[self.band_descriptions[ix - 1] for ix in indexes],
+        return self._to_image(
+            data,  # type: ignore[arg-type]
+            y_slice=y_slice,
+            x_slice=x_slice,
+            kept=kept,
+            scalars=scalars,
             nodata=nodata,
         )
 
