@@ -1692,7 +1692,12 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
 
         return bands
 
-    def _expression_to_bidx(self, bands: Sequence[str], expression: str) -> str:
+    def _expression_to_bidx(
+        self, bands: Sequence[str] | dict[str, list[Any]], expression: str
+    ) -> str:
+        # NOTE: MultiBandReader returns 1D (PointData) or 3D (ImageData) data so
+        # `band_descriptions` is always a list
+        bands = cast(list[str], bands)
         mapexpr = {b: f"b{idx + 1}" for idx, b in enumerate(bands)}
         for b in bands:
             _re = re.compile(rf"\b{b}\b")
