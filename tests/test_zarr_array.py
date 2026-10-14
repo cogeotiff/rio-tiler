@@ -15,7 +15,6 @@ from rasterio.transform import from_bounds
 from zarr.storage import ObjectStore
 
 from rio_tiler.errors import (
-    ExpressionMixingWarning,
     InvalidBounds,
     PointOutsideBounds,
     TileOutsideBounds,
@@ -217,7 +216,7 @@ async def test_2d_array_async(zarr_store_2d):
         },
     ) as reader:
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == ["b1"]
+        assert reader.band_descriptions == {}
 
 
 def test_2d_array_sync(zarr_store_2d):
@@ -233,7 +232,7 @@ def test_2d_array_sync(zarr_store_2d):
     ) as reader:
         assert reader.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == ["b1"]
+        assert reader.band_descriptions == {}
 
         img = reader.preview()
         assert img.array.shape == (1, 50, 50), (
@@ -258,7 +257,7 @@ def test_2d_array_sync(zarr_store_2d):
         },
     ) as reader:
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == ["b1"]
+        assert reader.band_descriptions == {}
 
 
 @pytest.mark.asyncio
@@ -395,7 +394,7 @@ def test_part_with_max_size(zarr_store):
 
 
 @pytest.mark.asyncio
-async def test_part_with_indexes_async(zarr_store):
+async def test_part_with_sel_async(zarr_store):
     """Test part() method with band selection."""
     arr = await zarr.api.asynchronous.open_array(store=zarr_store, mode="r")
 
@@ -410,7 +409,7 @@ async def test_part_with_indexes_async(zarr_store):
         img = await reader.part(
             bbox=(500010, 4000010, 500050, 4000050),
             bounds_crs=CRS.from_epsg(32618),
-            indexes=1,
+            sel={"band": [0]},
         )
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["band1"]
@@ -420,14 +419,14 @@ async def test_part_with_indexes_async(zarr_store):
         img = await reader.part(
             bbox=(500010, 4000010, 500050, 4000050),
             bounds_crs=CRS.from_epsg(32618),
-            indexes=(1, 3),
+            sel={"band": [0, 2]},
         )
-        assert img.band_names == ["b1", "b3"]
+        assert img.band_names == ["b1", "b2"]
         assert img.band_descriptions == ["band1", "band3"]
         assert img.array.shape[0] == 2
 
 
-def test_part_with_indexes(zarr_store):
+def test_part_with_sel(zarr_store):
     """Test part() method with band selection."""
     arr = zarr.open_array(store=zarr_store, mode="r")
 
@@ -442,7 +441,7 @@ def test_part_with_indexes(zarr_store):
         img = reader.part(
             bbox=(500010, 4000010, 500050, 4000050),
             bounds_crs=CRS.from_epsg(32618),
-            indexes=1,
+            sel={"band": [0]},
         )
         assert img.band_names == ["b1"]
         assert img.band_descriptions == ["band1"]
@@ -452,9 +451,9 @@ def test_part_with_indexes(zarr_store):
         img = reader.part(
             bbox=(500010, 4000010, 500050, 4000050),
             bounds_crs=CRS.from_epsg(32618),
-            indexes=(1, 3),
+            sel={"band": [0, 2]},
         )
-        assert img.band_names == ["b1", "b3"]
+        assert img.band_names == ["b1", "b2"]
         assert img.band_descriptions == ["band1", "band3"]
         assert img.array.shape[0] == 2
 
@@ -480,11 +479,13 @@ async def test_tile_async(zarr_store):
         assert img.array.shape == (3, 512, 512)
 
         # Read only band 2
-        img = await reader.tile(tile_x=0, tile_y=0, tile_z=0, tilesize=256, indexes=2)
+        img = await reader.tile(
+            tile_x=0, tile_y=0, tile_z=0, tilesize=256, sel={"band": [1]}
+        )
         assert img.array.shape[0] == 1
 
         img = await reader.tile(
-            tile_x=0, tile_y=0, tile_z=0, tilesize=256, indexes=(1, 2)
+            tile_x=0, tile_y=0, tile_z=0, tilesize=256, sel={"band": [0, 1]}
         )
         assert img.array.shape[0] == 2
 
@@ -517,10 +518,12 @@ def test_tile(zarr_store):
         assert img.array.shape == (3, 512, 512)
 
         # Read only band 2
-        img = reader.tile(tile_x=0, tile_y=0, tile_z=0, tilesize=256, indexes=2)
+        img = reader.tile(tile_x=0, tile_y=0, tile_z=0, tilesize=256, sel={"band": [1]})
         assert img.array.shape[0] == 1
 
-        img = reader.tile(tile_x=0, tile_y=0, tile_z=0, tilesize=256, indexes=(1, 2))
+        img = reader.tile(
+            tile_x=0, tile_y=0, tile_z=0, tilesize=256, sel={"band": [0, 1]}
+        )
         assert img.array.shape[0] == 2
 
         # Tile that doesn't intersect the dataset
@@ -576,19 +579,14 @@ async def test_preview_async(zarr_store):
             assert img.array.shape == (3, 32, 64)
 
         # Test with band selection.
-        img = await reader.preview(indexes=1)
+        img = await reader.preview(sel={"band": [0]})
         assert img.count == 1
 
-        img = await reader.preview(indexes=(1, 3))
+        img = await reader.preview(sel={"band": [0, 2]})
         assert img.count == 2
 
         # Test with band expression.
         img = await reader.preview(expression="b1/b2")
-        assert img.count == 1
-
-        # Test warns when both expression and indexes are passed
-        with pytest.warns(ExpressionMixingWarning):
-            img = await reader.preview(indexes=1, expression="b1/b2")
         assert img.count == 1
 
         # Test reprojects to dst_crs
@@ -639,19 +637,14 @@ def test_preview(zarr_store):
             assert img.array.shape == (3, 32, 64)
 
         # Test with band selection.
-        img = reader.preview(indexes=1)
+        img = reader.preview(sel={"band": [0]})
         assert img.count == 1
 
-        img = reader.preview(indexes=(1, 3))
+        img = reader.preview(sel={"band": [0, 2]})
         assert img.count == 2
 
         # Test with band expression.
         img = reader.preview(expression="b1/b2")
-        assert img.count == 1
-
-        # Test warns when both expression and indexes are passed
-        with pytest.warns(ExpressionMixingWarning):
-            img = reader.preview(indexes=1, expression="b1/b2")
         assert img.count == 1
 
         # Test reprojects to dst_crs
@@ -715,19 +708,19 @@ async def test_statistics_async(zarr_store):
             assert band_stats.max <= 1.0
 
         # overwrite nodata value
-        stats = await reader.statistics(nodata=0, indexes=1)
+        stats = await reader.statistics(nodata=0, sel={"band": [0]})
         assert isinstance(stats, dict)
         band_stats = stats["b1"]
         assert band_stats.min == -9999.0
 
         # Test with band selection
-        stats = await reader.statistics(indexes=1)
+        stats = await reader.statistics(sel={"band": [0]})
         assert set(stats.keys()) == {"b1"}
 
-        stats = await reader.statistics(indexes=(1, 3))
-        assert set(stats.keys()) == {"b1", "b3"}
+        stats = await reader.statistics(sel={"band": [0, 2]})
+        assert set(stats.keys()) == {"b1", "b2"}
         assert stats["b1"].description == "band1"
-        assert stats["b3"].description == "band3"
+        assert stats["b2"].description == "band3"
 
         # Test with a band expression
         stats = await reader.statistics(expression="b1/b2")
@@ -769,19 +762,19 @@ def test_statistics(zarr_store):
             assert band_stats.max <= 1.0
 
         # overwrite nodata value
-        stats = reader.statistics(nodata=0, indexes=1)
+        stats = reader.statistics(nodata=0, sel={"band": [0]})
         assert isinstance(stats, dict)
         band_stats = stats["b1"]
         assert band_stats.min == -9999.0
 
         # Test with band selection
-        stats = reader.statistics(indexes=1)
+        stats = reader.statistics(sel={"band": [0]})
         assert set(stats.keys()) == {"b1"}
 
-        stats = reader.statistics(indexes=(1, 3))
-        assert set(stats.keys()) == {"b1", "b3"}
+        stats = reader.statistics(sel={"band": [0, 2]})
+        assert set(stats.keys()) == {"b1", "b2"}
         assert stats["b1"].description == "band1"
-        assert stats["b3"].description == "band3"
+        assert stats["b2"].description == "band3"
 
         # Test with a band expression
         stats = reader.statistics(expression="b1/b2")
@@ -864,7 +857,7 @@ async def test_point_async(zarr_store):
             lon=500050.0,
             lat=4000050.0,
             coord_crs=CRS.from_epsg(32618),
-            indexes=1,
+            sel={"band": [0]},
         )
         assert pt.count == 1
         assert pt.band_names == ["b1"]
@@ -874,10 +867,10 @@ async def test_point_async(zarr_store):
             lon=500050.0,
             lat=4000050.0,
             coord_crs=CRS.from_epsg(32618),
-            indexes=(1, 3),
+            sel={"band": [0, 2]},
         )
         assert pt.count == 2
-        assert pt.band_names == ["b1", "b3"]
+        assert pt.band_names == ["b1", "b2"]
 
         # Test raises error for points outside bounds.
         # Point outside dataset bounds
@@ -918,7 +911,7 @@ def test_point(zarr_store):
             lon=500050.0,
             lat=4000050.0,
             coord_crs=CRS.from_epsg(32618),
-            indexes=1,
+            sel={"band": [0]},
         )
         assert pt.count == 1
         assert pt.band_names == ["b1"]
@@ -928,10 +921,10 @@ def test_point(zarr_store):
             lon=500050.0,
             lat=4000050.0,
             coord_crs=CRS.from_epsg(32618),
-            indexes=(1, 3),
+            sel={"band": [0, 2]},
         )
         assert pt.count == 2
-        assert pt.band_names == ["b1", "b3"]
+        assert pt.band_names == ["b1", "b2"]
 
         # Test raises error for points outside bounds.
         # Point outside dataset bounds
@@ -1006,12 +999,12 @@ async def test_band_descriptions_async(zarr_dataset):
             "time": {"type": "inline", "values": [str(d) for d in time_arrray.tolist()]}
         },
     ) as reader:
-        assert reader.band_descriptions == ["2022-01-01", "2022-01-02"]
+        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
 
-        img = await reader.preview(indexes=1)
+        img = await reader.preview(sel={"time": ["2022-01-01"]})
         assert img.band_descriptions == ["2022-01-01"]
 
-        img = await reader.preview(indexes=2)
+        img = await reader.preview(sel={"time": ["2022-01-02"]})
         assert img.band_descriptions == ["2022-01-02"]
 
         img = await reader.preview(expression="b1/b2")
@@ -1039,12 +1032,12 @@ def test_band_descriptions(zarr_dataset):
             "time": {"type": "inline", "values": [str(d) for d in time_arrray.tolist()]}
         },
     ) as reader:
-        assert reader.band_descriptions == ["2022-01-01", "2022-01-02"]
+        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
 
-        img = reader.preview(indexes=1)
+        img = reader.preview(sel={"time": ["2022-01-01"]})
         assert img.band_descriptions == ["2022-01-01"]
 
-        img = reader.preview(indexes=2)
+        img = reader.preview(sel={"time": ["2022-01-02"]})
         assert img.band_descriptions == ["2022-01-02"]
 
         img = reader.preview(expression="b1/b2")
@@ -1072,18 +1065,20 @@ async def test_geozarr_async(geozarr_dataset):
     ) as reader:
         assert reader.crs == CRS.from_epsg(4326)
         assert reader.bounds == (-180.0, -90.0, 180.0, 90.0)
-        assert reader.band_descriptions == ["2022-01-01", "2022-01-02"]
+        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
 
-        img = await reader.preview(indexes=1)
+        img = await reader.preview(sel={"time": ["2022-01-01"]})
         assert img.crs == CRS.from_epsg(4326)
         assert img.bounds == (-180.0, -90.0, 180.0, 90.0)
 
     # bands names from coords convention
     async with AsyncArrayReader(input=array) as reader:
-        assert reader.band_descriptions == [
-            "2022-01-01T00:00:00Z",
-            "2022-01-02T00:00:00Z",
-        ]
+        assert reader.band_descriptions == {
+            "time": [
+                "2022-01-01T00:00:00Z",
+                "2022-01-02T00:00:00Z",
+            ]
+        }
 
 
 def test_geozar(geozarr_dataset):
@@ -1106,18 +1101,20 @@ def test_geozar(geozarr_dataset):
     ) as reader:
         assert reader.crs == CRS.from_epsg(4326)
         assert reader.bounds == (-180.0, -90.0, 180.0, 90.0)
-        assert reader.band_descriptions == ["2022-01-01", "2022-01-02"]
+        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
 
-        img = reader.preview(indexes=1)
+        img = reader.preview(sel={"time": ["2022-01-01"]})
         assert img.crs == CRS.from_epsg(4326)
         assert img.bounds == (-180.0, -90.0, 180.0, 90.0)
 
     # bands names from coords convention
     with ArrayReader(input=array) as reader:
-        assert reader.band_descriptions == [
-            "2022-01-01T00:00:00Z",
-            "2022-01-02T00:00:00Z",
-        ]
+        assert reader.band_descriptions == {
+            "time": [
+                "2022-01-01T00:00:00Z",
+                "2022-01-02T00:00:00Z",
+            ]
+        }
 
 
 @pytest.mark.asyncio
@@ -1500,7 +1497,7 @@ async def test_coords_conventions_mixin():
     assert reader.dimensions == ["time", "y", "x"]
 
     assert reader.coordinates["time"] == {"type": "inline", "values": ["t1", "t2", "t3"]}
-    assert reader.band_descriptions == ["t1", "t2", "t3"]
+    assert reader.band_descriptions == {"time": ["t1", "t2", "t3"]}
 
     # Interval
     reader = ArrayMixin(
@@ -1515,7 +1512,7 @@ async def test_coords_conventions_mixin():
         "stop": 3000,
         "step": 1000,
     }
-    assert reader.band_descriptions == ["1000", "2000", "3000"]
+    assert reader.band_descriptions == {"time": [1000, 2000, 3000]}
 
     # Date Interval
     reader = ArrayMixin(
@@ -1535,11 +1532,13 @@ async def test_coords_conventions_mixin():
         "stop": "2024-01-03T00:00:00Z",
         "step": "P1D",
     }
-    assert reader.band_descriptions == [
-        "2024-01-01T00:00:00Z",
-        "2024-01-02T00:00:00Z",
-        "2024-01-03T00:00:00Z",
-    ]
+    assert reader.band_descriptions == {
+        "time": [
+            "2024-01-01T00:00:00Z",
+            "2024-01-02T00:00:00Z",
+            "2024-01-03T00:00:00Z",
+        ]
+    }
 
     # Date Interval - hours
     reader = ArrayMixin(
@@ -1559,11 +1558,13 @@ async def test_coords_conventions_mixin():
         "stop": "2024-01-01T02:00:00Z",
         "step": "PT1H",
     }
-    assert reader.band_descriptions == [
-        "2024-01-01T00:00:00Z",
-        "2024-01-01T01:00:00Z",
-        "2024-01-01T02:00:00Z",
-    ]
+    assert reader.band_descriptions == {
+        "time": [
+            "2024-01-01T00:00:00Z",
+            "2024-01-01T01:00:00Z",
+            "2024-01-01T02:00:00Z",
+        ]
+    }
 
 
 @pytest.mark.asyncio
@@ -1607,7 +1608,7 @@ async def test_inverted_axis_async_3d():
     reader = AsyncArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "time", "lat"]
-    assert reader.band_descriptions == ["time1", "time2", "time3"]
+    assert reader.band_descriptions == {"time": ["time1", "time2", "time3"]}
     assert reader.height == 100
     assert reader.width == 200
 
@@ -1660,7 +1661,7 @@ def test_inverted_axis_async_3d_sync():
     reader = ArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "time", "lat"]
-    assert reader.band_descriptions == ["time1", "time2", "time3"]
+    assert reader.band_descriptions == {"time": ["time1", "time2", "time3"]}
     assert reader.height == 100
     assert reader.width == 200
 
@@ -1715,7 +1716,7 @@ async def test_inverted_axis_async_2d():
     reader = AsyncArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "lat"]
-    assert reader.band_descriptions == ["b1"]
+    assert reader.band_descriptions == {}
     assert reader.height == 100
     assert reader.width == 200
 
@@ -1773,7 +1774,7 @@ def test_inverted_axis_async_2d_sync():
     reader = ArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "lat"]
-    assert reader.band_descriptions == ["b1"]
+    assert reader.band_descriptions == {}
     assert reader.height == 100
     assert reader.width == 200
 
