@@ -225,7 +225,7 @@ async def test_2d_array_async(zarr_store_2d):
         },
     ) as reader:
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == ["b1"]
+        assert reader.band_descriptions == {}
 
 
 def test_2d_array_sync(zarr_store_2d):
@@ -241,7 +241,7 @@ def test_2d_array_sync(zarr_store_2d):
     ) as reader:
         assert reader.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == ["b1"]
+        assert reader.band_descriptions == {}
 
         img = reader.preview()
         assert img.array.shape == (1, 50, 50), (
@@ -266,7 +266,7 @@ def test_2d_array_sync(zarr_store_2d):
         },
     ) as reader:
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == ["b1"]
+        assert reader.band_descriptions == {}
 
 
 @pytest.mark.asyncio
@@ -1725,7 +1725,7 @@ async def test_inverted_axis_async_2d():
     reader = AsyncArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "lat"]
-    assert reader.band_descriptions == ["b1"]
+    assert reader.band_descriptions == {}
     assert reader.height == 100
     assert reader.width == 200
 
@@ -1783,7 +1783,7 @@ def test_inverted_axis_async_2d_sync():
     reader = ArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "lat"]
-    assert reader.band_descriptions == ["b1"]
+    assert reader.band_descriptions == {}
     assert reader.height == 100
     assert reader.width == 200
 

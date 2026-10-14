@@ -503,12 +503,9 @@ class ArrayMixin(SpatialMixin):
         return {dim: self._get_labels(dim, slice(None)) for dim in self.coordinate_values}
 
     @property
-    def band_descriptions(self) -> dict[str, list[Any]] | list[str]:
-        """Return coordinate values (labels) for each non-spatial dimension.
-
-        Note: 2D arrays (no non-spatial dimension) return `["b1"]`.
-        """
-        return self.dimension_values or ["b1"]
+    def band_descriptions(self) -> dict[str, list[Any]]:
+        """Return coordinate values (labels) for each non-spatial dimension (empty for 2D arrays)."""
+        return self.dimension_values
 
     def _get_selection(
         self,
