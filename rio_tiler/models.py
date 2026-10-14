@@ -865,7 +865,10 @@ class ImageData:
         ).reshape((*leading, height, width))
         mask = (
             resize_array(
-                self._as_3d(self.array.mask * 1), height, width, resampling_method
+                self._as_3d(numpy.ma.getmaskarray(self.array).astype(int)),
+                height,
+                width,
+                resampling_method,
             )
             .astype("bool")
             .reshape((*leading, height, width))
