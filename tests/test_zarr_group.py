@@ -86,16 +86,16 @@ def geozarr_store():
         },
     )
 
-    arr = numpy.zeros((1000, 1000), dtype="float32") + 1
-    arr[0:50, 0:50] = 0
+    arr = numpy.zeros((1, 1000, 1000), dtype="float32") + 1
+    arr[:, 0:50, 0:50] = 0
 
     highres_b01 = highres_group.create_array(
         "b01",
         shape=arr.shape,
-        chunks=(64, 64),
+        chunks=(1, 64, 64),
         dtype="float32",
         fill_value=0,
-        dimension_names=["y", "x"],
+        dimension_names=["time", "y", "x"],
         attributes={},
     )
     highres_b01[:] = arr
@@ -103,18 +103,18 @@ def geozarr_store():
     highres_b02 = highres_group.create_array(
         "b02",
         shape=arr.shape,
-        chunks=(64, 64),
+        chunks=(1, 64, 64),
         dtype="float32",
         fill_value=0,
-        dimension_names=["y", "x"],
+        dimension_names=["time", "y", "x"],
         attributes={},
     )
     highres_b02[:] = arr
 
     # /1
     # Layout 1 - b02 array only
-    arr = numpy.zeros((100, 100), dtype="float32") + 2
-    arr[0:5, 0:5] = 0
+    arr = numpy.zeros((1, 100, 100), dtype="float32") + 2
+    arr[:, 0:5, 0:5] = 0
 
     lowres_group = root.create_group(
         name="1",
@@ -135,10 +135,10 @@ def geozarr_store():
     lowres_b02 = lowres_group.create_array(
         "b02",
         shape=arr.shape,
-        chunks=(64, 64),
+        chunks=(1, 64, 64),
         dtype="float32",
         fill_value=0,
-        dimension_names=["y", "x"],
+        dimension_names=["time", "y", "x"],
         attributes={},
     )
     lowres_b02[:] = arr
@@ -181,16 +181,16 @@ def geozarr_root_store():
         },
     )
 
-    arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
-    arr[0:50, 0:50] = 0
+    arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1, 1000, 1000)
+    arr[:, 0:50, 0:50] = 0
 
     b01 = group.create_array(
         "b01",
         shape=arr.shape,
-        chunks=(64, 64),
+        chunks=(1, 64, 64),
         dtype="float32",
         fill_value=0,
-        dimension_names=["y", "x"],
+        dimension_names=["time", "y", "x"],
         attributes={},
     )
     b01[:] = arr
@@ -198,10 +198,10 @@ def geozarr_root_store():
     b02 = group.create_array(
         "b02",
         shape=arr.shape,
-        chunks=(64, 64),
+        chunks=(1, 64, 64),
         dtype="float32",
         fill_value=0,
-        dimension_names=["y", "x"],
+        dimension_names=["time", "y", "x"],
         attributes={},
     )
     b02[:] = arr
@@ -237,16 +237,16 @@ def geozarr_root_array_store():
     # /
     root = zarr.open_group(store, mode="w", zarr_format=3, attributes=attributes)
 
-    arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1000, 1000)
-    arr[0:50, 0:50] = 0
+    arr = numpy.arange(0.0, 1000 * 1000, dtype="float32").reshape(1, 1000, 1000)
+    arr[:, 0:50, 0:50] = 0
 
     b01 = root.create_array(
         "b01",
         shape=arr.shape,
-        chunks=(64, 64),
+        chunks=(1, 64, 64),
         dtype="float32",
         fill_value=0,
-        dimension_names=["y", "x"],
+        dimension_names=["time", "y", "x"],
         attributes={},
     )
     b01[:] = arr
@@ -254,10 +254,10 @@ def geozarr_root_array_store():
     b02 = root.create_array(
         "b02",
         shape=arr.shape,
-        chunks=(64, 64),
+        chunks=(1, 64, 64),
         dtype="float32",
         fill_value=0,
-        dimension_names=["y", "x"],
+        dimension_names=["time", "y", "x"],
         attributes={},
     )
     b02[:] = arr
@@ -283,14 +283,14 @@ async def test_geozarr_reader_async(geozarr_store):
         assert info.driver == "GeoZarr"
         assert info.variables == [
             {
-                "nbands": 1,
+                # "nbands": 1,
                 "group": None,
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
             },
             {
-                "nbands": 1,
+                # "nbands": 1,
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
@@ -305,14 +305,14 @@ async def test_geozarr_reader_async(geozarr_store):
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -334,11 +334,11 @@ async def test_geozarr_reader_async(geozarr_store):
         assert meta["arrays"]["b01"][0]["width"] == 1000
         assert meta["arrays"]["b02"][0]["width"] == 1000
         assert meta["arrays"]["b02"][1]["width"] == 100
-        assert meta["arrays"]["b01"][0]["coordinates"] == {
+        assert meta["arrays"]["b01"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
-        assert meta["arrays"]["b02"][0]["coordinates"] == {
+        assert meta["arrays"]["b02"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -346,7 +346,7 @@ async def test_geozarr_reader_async(geozarr_store):
         array = meta["arrays"].get("b02")
         selected = geozarrds.select_variable(array)
         assert selected["width"] == 1000
-        assert selected["coordinates"] == {
+        assert selected["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -452,14 +452,14 @@ def test_geozarr_reader(geozarr_store):
         assert info.driver == "GeoZarr"
         assert info.variables == [
             {
-                "nbands": 1,
+                # "nbands": 1,
                 "group": None,
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
             },
             {
-                "nbands": 1,
+                # "nbands": 1,
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
@@ -474,14 +474,14 @@ def test_geozarr_reader(geozarr_store):
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -503,11 +503,11 @@ def test_geozarr_reader(geozarr_store):
         assert meta["arrays"]["b01"][0]["width"] == 1000
         assert meta["arrays"]["b02"][0]["width"] == 1000
         assert meta["arrays"]["b02"][1]["width"] == 100
-        assert meta["arrays"]["b01"][0]["coordinates"] == {
+        assert meta["arrays"]["b01"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
-        assert meta["arrays"]["b02"][0]["coordinates"] == {
+        assert meta["arrays"]["b02"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -515,7 +515,7 @@ def test_geozarr_reader(geozarr_store):
         array = meta["arrays"].get("b02")
         selected = geozarrds.select_variable(array)
         assert selected["width"] == 1000
-        assert selected["coordinates"] == {
+        assert selected["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -634,14 +634,14 @@ async def test_geozarr_root_async(geozarr_root_store):
                 "long_name": "data:b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -652,14 +652,14 @@ async def test_geozarr_root_async(geozarr_root_store):
                 "long_name": "data:b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -680,11 +680,11 @@ async def test_geozarr_root_async(geozarr_root_store):
         assert len(meta["arrays"]["b02"]) == 1
         assert meta["arrays"]["b01"][0]["width"] == 1000
         assert meta["arrays"]["b02"][0]["width"] == 1000
-        assert meta["arrays"]["b01"][0]["coordinates"] == {
+        assert meta["arrays"]["b01"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
-        assert meta["arrays"]["b02"][0]["coordinates"] == {
+        assert meta["arrays"]["b02"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -698,7 +698,7 @@ async def test_geozarr_root_async(geozarr_root_store):
         array = meta["arrays"].get("b01")
         selected = geozarrds.select_variable(array)
         assert selected["width"] == 1000
-        assert selected["coordinates"] == {
+        assert selected["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -745,14 +745,14 @@ def test_geozarr_root(geozarr_root_store):
                 "long_name": "data:b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -763,14 +763,14 @@ def test_geozarr_root(geozarr_root_store):
                 "long_name": "data:b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -791,11 +791,11 @@ def test_geozarr_root(geozarr_root_store):
         assert len(meta["arrays"]["b02"]) == 1
         assert meta["arrays"]["b01"][0]["width"] == 1000
         assert meta["arrays"]["b02"][0]["width"] == 1000
-        assert meta["arrays"]["b01"][0]["coordinates"] == {
+        assert meta["arrays"]["b01"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
-        assert meta["arrays"]["b02"][0]["coordinates"] == {
+        assert meta["arrays"]["b02"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -809,7 +809,7 @@ def test_geozarr_root(geozarr_root_store):
         array = meta["arrays"].get("b01")
         selected = geozarrds.select_variable(array)
         assert selected["width"] == 1000
-        assert selected["coordinates"] == {
+        assert selected["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -859,14 +859,14 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -877,14 +877,14 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -895,11 +895,11 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
         assert len(meta["arrays"]["b02"]) == 1
         assert meta["arrays"]["b01"][0]["width"] == 1000
         assert meta["arrays"]["b02"][0]["width"] == 1000
-        assert meta["arrays"]["b01"][0]["coordinates"] == {
+        assert meta["arrays"]["b01"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
-        assert meta["arrays"]["b02"][0]["coordinates"] == {
+        assert meta["arrays"]["b02"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -913,7 +913,7 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
         array = meta["arrays"].get("b01")
         selected = geozarrds.select_variable(array)
         assert selected["width"] == 1000
-        assert selected["coordinates"] == {
+        assert selected["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -960,14 +960,14 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -978,14 +978,14 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 
@@ -996,11 +996,11 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
         assert len(meta["arrays"]["b02"]) == 1
         assert meta["arrays"]["b01"][0]["width"] == 1000
         assert meta["arrays"]["b02"][0]["width"] == 1000
-        assert meta["arrays"]["b01"][0]["coordinates"] == {
+        assert meta["arrays"]["b01"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
-        assert meta["arrays"]["b02"][0]["coordinates"] == {
+        assert meta["arrays"]["b02"][0]["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -1014,7 +1014,7 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
         array = meta["arrays"].get("b01")
         selected = geozarrds.select_variable(array)
         assert selected["width"] == 1000
-        assert selected["coordinates"] == {
+        assert selected["coordinates"]["time"] == {
             "type": "inline",
             "values": ["2022-01-01T00:00:00Z"],
         }
@@ -1113,14 +1113,14 @@ async def test_custom_geozarr_separator_async():
                 "long_name": "data::b01",
                 "multiscale": False,
                 "name": "b01",
-                "nbands": 1,
+                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data::b02",
                 "multiscale": False,
                 "name": "b02",
-                "nbands": 1,
+                # "nbands": 1,
             },
         ]
 

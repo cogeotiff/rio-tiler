@@ -34,7 +34,13 @@ nav:
     - Mosaic: 'mosaic.md'
     - Colormaps: 'colormap.md'
     - Supported file formats: 'supported_format.md'
-    - Experimental: 'experimental.md'
+    - Experimental:
+      - experimental/index.md
+      - Async-GeoTIFF: 'experimental/async-geotiff.md'
+      - Async-STAC: 'experimental/async-stac.md'
+      - Async/Sync GeoZarr: 'experimental/geozarr.md'
+      - GeoXarray: 'experimental/geoxarray.md'
+      - VSIFile: 'experimental/vsifile.md'
   - Advanced Topics:
     - Base classes and custom readers: 'advanced/custom_readers.md'
     - Mosaic Backend: 'advanced/mosaic_backend.md'
