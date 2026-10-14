@@ -498,9 +498,17 @@ class ArrayMixin(SpatialMixin):
         return [labels[ix] for ix in idx]
 
     @cached_property
-    def band_descriptions(self) -> dict[str, list[Any]]:
+    def dimension_values(self) -> dict[str, list[Any]]:
         """Return coordinate values (labels) for each non-spatial dimension."""
         return {dim: self._get_labels(dim, slice(None)) for dim in self.coordinate_values}
+
+    @property
+    def band_descriptions(self) -> dict[str, list[Any]] | list[str]:
+        """Return coordinate values (labels) for each non-spatial dimension.
+
+        Note: 2D arrays (no non-spatial dimension) return `["b1"]`.
+        """
+        return self.dimension_values or ["b1"]
 
     def _get_selection(
         self,
@@ -644,9 +652,7 @@ class ArrayMixin(SpatialMixin):
         # to avoid listing `prod(non-spatial dimensions)` bands for N-D arrays.
         band_descriptions: list[str] = []
         if len(self.non_spatial_dims) == 1:
-            band_descriptions = list(
-                map(str, next(iter(self.band_descriptions.values())))
-            )
+            band_descriptions = list(map(str, next(iter(self.dimension_values.values()))))
         elif not self.non_spatial_dims:
             band_descriptions = ["b1"]
 
@@ -669,7 +675,7 @@ class ArrayMixin(SpatialMixin):
             "height": self.height,
             "dimensions": self.dimensions,
             "coordinates": self.coordinates,
-            "dimension_values": self.band_descriptions,
+            "dimension_values": self.dimension_values,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
                 for k, v in attrs.items()
