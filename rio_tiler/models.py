@@ -495,8 +495,6 @@ class ImageData:
 
         (*leading, height, width) -> (prod(leading), height, width)
 
-        Note: only the array is reshaped, not the metadata (e.g `band_descriptions`).
-
         """
         return array.reshape((-1, *array.shape[-2:]))
 
