@@ -1137,3 +1137,159 @@ async def test_custom_geozarr_separator_async():
         # No Multiscale
         z = await geozarrds.get_minzoom(variables="data::b01")
         assert z == 14
+
+
+TIMES = ["2025-01-01T00:00:00Z", "2025-02-01T00:00:00Z"]
+
+
+@pytest.fixture
+def geozarr_4d_store():
+    """Create an in-memory GeoZarr store with 4D (time, z, y, x) arrays."""
+    store = zarr.storage.MemoryStore()
+    root = zarr.open_group(store, mode="w", zarr_format=3)
+
+    group = root.create_group(
+        name="data",
+        attributes={
+            "zarr_conventions": [
+                spatial_conventions,
+                proj_conventions,
+                coordinates_conventions,
+            ],
+            "spatial:dimensions": ["y", "x"],
+            "spatial:bbox": [500000, 4199000, 501000, 4200000],
+            "proj:code": "EPSG:32633",
+            "spatial:transform": list(
+                Affine.translation(500000, 4200000) @ Affine.scale(10, -10)
+            ),
+            "coords:coordinates": {
+                "time": {"type": "inline", "values": TIMES},
+                "z": {"type": "inline", "values": [0, 10, 20]},
+                "y": {"type": "reference", "convention": "spatial"},
+                "x": {"type": "reference", "convention": "spatial"},
+            },
+        },
+    )
+
+    # value = offset + time * 10 + z
+    data = (
+        numpy.arange(2)[:, None, None, None] * 10
+        + numpy.arange(3)[None, :, None, None]
+        + numpy.zeros((2, 3, 100, 100))
+    ).astype("float32")
+    for name, offset in [("a", 100), ("b", 200)]:
+        arr = group.create_array(
+            name,
+            shape=data.shape,
+            chunks=(1, 1, 50, 50),
+            dtype="float32",
+            fill_value=-1,
+            dimension_names=["time", "z", "y", "x"],
+        )
+        arr[:] = data + offset
+
+    return store
+
+
+def test_group_reader_sel(geozarr_4d_store):
+    """Test sel/sel_method forwarded to the arrays."""
+    with GroupReader(input=zarr.open_group(geozarr_4d_store, mode="r")) as src:
+        # Scalar selection on all the dimensions: one band per variable
+        img = src.preview(variables=["data:a", "data:b"], sel={"time": TIMES[1], "z": 10})
+        assert img.array.shape == (2, 100, 100)
+        assert img.band_names == ["b1", "b2"]
+        assert img.array[:, 0, 0].tolist() == [111, 211]
+
+        img = src.preview(
+            variables=["data:a", "data:b"],
+            sel={"time": "2025-01-20", "z": 12},
+            sel_method="nearest",
+            expression="b2-b1",
+        )
+        assert img.array[0, 0, 0] == 100
+
+        # 3D output for one variable
+        img = src.part(
+            (500000, 4199500, 500500, 4200000),
+            bounds_crs=CRS.from_epsg(32633),
+            variables="data:a",
+            sel={"time": TIMES[0]},
+        )
+        assert img.array.shape == (3, 50, 50)
+        assert img.band_names == ["b1", "b2", "b3"]
+        assert img.array[:, 0, 0].tolist() == [100, 101, 102]
+
+        img = src.tile(
+            # center of the dataset (EPSG:32633 500250, 4199750)
+            *src.tms.tile(15.0028, 37.9453, 15),
+            variables="data:a",
+            sel={"z": 0},
+        )
+        assert img.array.shape == (2, 256, 256)
+
+        pt = src.point(
+            500005,
+            4199995,
+            coord_crs=CRS.from_epsg(32633),
+            variables=["data:a", "data:b"],
+            sel={"time": TIMES[0], "z": 20},
+        )
+        assert pt.array.tolist() == [102, 202]
+
+        stats = src.statistics(variables="data:a", sel={"time": TIMES[1], "z": 0})
+        assert stats["b1"].min == 110
+
+        # N-D output for one variable
+        img = src.preview(variables="data:a")
+        assert img.array.shape == (2, 3, 100, 100)
+        assert img.band_names == []
+        assert img.band_descriptions == {"time": TIMES, "z": [0, 10, 20]}
+
+        pt = src.point(
+            500005, 4199995, coord_crs=CRS.from_epsg(32633), variables="data:a"
+        )
+        assert pt.array.shape == (2, 3)
+
+        # N-D output for multiple variables can't be stacked
+        with pytest.raises(ValueError):
+            src.preview(variables=["data:a", "data:b"])
+
+
+@pytest.mark.asyncio
+async def test_async_group_reader_sel(geozarr_4d_store):
+    """Test sel/sel_method forwarded to the arrays."""
+    group = await zarr.api.asynchronous.open_group(store=geozarr_4d_store, mode="r")
+    async with AsyncGroupReader(input=group) as src:
+        img = await src.preview(
+            variables=["data:a", "data:b"], sel={"time": TIMES[1], "z": 10}
+        )
+        assert img.array[:, 0, 0].tolist() == [111, 211]
+
+        img = await src.feature(
+            {
+                "type": "Polygon",
+                "coordinates": [
+                    [
+                        [500000, 4199500],
+                        [500500, 4199500],
+                        [500500, 4200000],
+                        [500000, 4200000],
+                        [500000, 4199500],
+                    ]
+                ],
+            },
+            shape_crs=CRS.from_epsg(32633),
+            variables="data:a",
+            sel={"z": [0, 20]},
+        )
+        assert img.array.shape == (2, 2, 50, 50)
+        assert img.band_descriptions == {"time": TIMES, "z": [0, 20]}
+
+        pt = await src.point(
+            500005,
+            4199995,
+            coord_crs=CRS.from_epsg(32633),
+            variables="data:b",
+            sel={"z": 0},
+        )
+        assert pt.array.tolist() == [200, 210]
