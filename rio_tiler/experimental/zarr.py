@@ -446,50 +446,56 @@ class ArrayMixin(SpatialMixin):
         return [dim for dim in self.dimensions if dim not in self.spatial_dims]
 
     @cached_property
-    def coordinate_values(self) -> dict[str, numpy.ndarray]:
-        """Return coordinate values for each non-spatial dimension.
+    def _coordinates(self) -> dict[str, tuple[numpy.ndarray, list[Any]]]:
+        """Return coordinate values and labels for each non-spatial dimension.
 
-        Values are derived from the `coordinates` (inline or interval), and default
-        to the array positions (`0, 1, ..., n - 1`) when not available.
+        - values: derived from the `coordinates` (inline or interval), used for selection.
+          Default to the array positions (`0, 1, ..., n - 1`) when not available.
+        - labels: inline values as defined in the coordinates, formatted interval values
+          or `{dim}{position + 1}` (e.g `time1`) when coordinates are not available.
         """
         coordinates = self.coordinates or {}
 
-        values: dict[str, numpy.ndarray] = {}
-        self._positional_dims: set[str] = set()
+        out: dict[str, tuple[numpy.ndarray, list[Any]]] = {}
         for dim in self.non_spatial_dims:
             size = self.input.shape[self.dimensions.index(dim)]
 
-            coords: numpy.ndarray | None = None
+            values: numpy.ndarray | None = None
             if dim in coordinates:
-                coords = _get_coordinate_values(coordinates[dim])
-                if coords is not None and len(coords) != size:
+                values = _get_coordinate_values(coordinates[dim])
+                if values is not None and len(values) != size:
                     warnings.warn(
-                        f"Number of '{dim}' coordinates ({len(coords)}) does not match the dimension size ({size}), using positions.",
+                        f"Number of '{dim}' coordinates ({len(values)}) does not match the dimension size ({size}), using positions.",
                         UserWarning,
                     )
-                    coords = None
+                    values = None
 
-            if coords is None:
-                self._positional_dims.add(dim)
-                coords = numpy.arange(size)
+            if values is None:
+                out[dim] = (numpy.arange(size), [f"{dim}{ix + 1}" for ix in range(size)])
 
-            values[dim] = coords
+            elif coordinates[dim]["type"] == "inline":
+                out[dim] = (values, list(coordinates[dim]["values"]))
 
-        return values
+            else:
+                out[dim] = (values, _format_coordinate_values(values))
+
+        return out
+
+    @property
+    def coordinate_values(self) -> dict[str, numpy.ndarray]:
+        """Return coordinate values (used for selection) for each non-spatial dimension."""
+        return {dim: values for dim, (values, _) in self._coordinates.items()}
 
     def _get_labels(self, dim: str, idx: int | numpy.ndarray | slice) -> list[Any]:
-        """Return labels for a positional selection on a non-spatial dimension.
-
-        Dimensions without coordinates are labelled `{dim}{position + 1}` (e.g `time1`).
-        """
-        values = self.coordinate_values[dim]
+        """Return labels for a positional selection on a non-spatial dimension."""
+        labels = self._coordinates[dim][1]
         if isinstance(idx, int):
-            idx = slice(idx, idx + 1)
+            return [labels[idx]]
 
-        if dim in self._positional_dims:
-            return [f"{dim}{ix + 1}" for ix in numpy.arange(len(values))[idx]]
+        if isinstance(idx, slice):
+            return labels[idx]
 
-        return _format_coordinate_values(values[idx])
+        return [labels[ix] for ix in idx]
 
     @cached_property
     def band_descriptions(self) -> dict[str, list[Any]]:
