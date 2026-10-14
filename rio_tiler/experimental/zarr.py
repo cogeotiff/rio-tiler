@@ -2549,6 +2549,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
@@ -2576,6 +2578,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         img = await self.preview(
             variables=variables,
             expression=expression,
+            sel=sel,
+            sel_method=sel_method,
             max_size=max_size,
             nodata=nodata,
             **kwargs,
@@ -2596,6 +2600,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         tilesize: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
@@ -2628,6 +2634,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             bbox,
             variables=variables,
             expression=expression,
+            sel=sel,
+            sel_method=sel_method,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             max_size=None,
@@ -2644,6 +2652,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
         max_size: int | None = None,
@@ -2658,6 +2668,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             variables (list of str or str): list of variables to return value for.
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -2702,6 +2714,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     max_size=max_size,
                     height=height,
                     width=width,
+                    sel=sel,
+                    sel_method=sel_method,
                     nodata=nodata,
                     reproject_method=reproject_method,
                 )
@@ -2709,7 +2723,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         img_stack = await asyncio.gather(*(_part(variable) for variable in variables))
 
         img = ImageData.create_from_list(img_stack)
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if not img.is_nd:
+            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+
         if expression:
             return img.apply_expression(expression)
 
@@ -2720,6 +2736,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
         height: int | None = None,
@@ -2766,6 +2784,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     height=height,
                     width=width,
                     dst_crs=dst_crs,
+                    sel=sel,
+                    sel_method=sel_method,
                     nodata=nodata,
                     resampling_method=resampling_method,
                     reproject_method=reproject_method,
@@ -2775,7 +2795,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         img_stack = await asyncio.gather(*(_preview(variable) for variable in variables))
 
         img = ImageData.create_from_list(img_stack)
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if not img.is_nd:
+            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+
         if expression:
             return img.apply_expression(expression)
 
@@ -2788,6 +2810,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         coord_crs: CRS = WGS84_CRS,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -2826,13 +2850,17 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     lon,
                     lat,
                     coord_crs=coord_crs,
+                    sel=sel,
+                    sel_method=sel_method,
                     nodata=nodata,
                 )
 
         point_stack = await asyncio.gather(*(_point(variable) for variable in variables))
 
         pt = PointData.create_from_list(point_stack)
-        pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+        if not pt.is_nd:
+            pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+
         if expression:
             return pt.apply_expression(expression)
 
@@ -2846,6 +2874,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
@@ -2876,6 +2906,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
             expression=expression,
+            sel=sel,
+            sel_method=sel_method,
             max_size=max_size,
             height=height,
             width=width,
@@ -3322,6 +3354,8 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
@@ -3349,6 +3383,8 @@ class GroupReader(BaseReader, GroupMixin):
         img = self.preview(
             variables=variables,
             expression=expression,
+            sel=sel,
+            sel_method=sel_method,
             max_size=max_size,
             nodata=nodata,
             **kwargs,
@@ -3369,6 +3405,8 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         tilesize: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
@@ -3401,6 +3439,8 @@ class GroupReader(BaseReader, GroupMixin):
             bbox,
             variables=variables,
             expression=expression,
+            sel=sel,
+            sel_method=sel_method,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             max_size=None,
@@ -3417,6 +3457,8 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
         max_size: int | None = None,
@@ -3431,6 +3473,8 @@ class GroupReader(BaseReader, GroupMixin):
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             variables (list of str or str): list of variables to return value for.
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -3475,12 +3519,16 @@ class GroupReader(BaseReader, GroupMixin):
                     max_size=max_size,
                     height=height,
                     width=width,
+                    sel=sel,
+                    sel_method=sel_method,
                     nodata=nodata,
                     reproject_method=reproject_method,
                 )
 
         img = ImageData.create_from_list([_part(variable) for variable in variables])
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if not img.is_nd:
+            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+
         if expression:
             return img.apply_expression(expression)
 
@@ -3491,6 +3539,8 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
         height: int | None = None,
@@ -3537,6 +3587,8 @@ class GroupReader(BaseReader, GroupMixin):
                     height=height,
                     width=width,
                     dst_crs=dst_crs,
+                    sel=sel,
+                    sel_method=sel_method,
                     nodata=nodata,
                     resampling_method=resampling_method,
                     reproject_method=reproject_method,
@@ -3544,7 +3596,9 @@ class GroupReader(BaseReader, GroupMixin):
                 )
 
         img = ImageData.create_from_list([_preview(variable) for variable in variables])
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        if not img.is_nd:
+            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+
         if expression:
             return img.apply_expression(expression)
 
@@ -3557,6 +3611,8 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         coord_crs: CRS = WGS84_CRS,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -3595,11 +3651,15 @@ class GroupReader(BaseReader, GroupMixin):
                     lon,
                     lat,
                     coord_crs=coord_crs,
+                    sel=sel,
+                    sel_method=sel_method,
                     nodata=nodata,
                 )
 
         pt = PointData.create_from_list([_point(variable) for variable in variables])
-        pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+        if not pt.is_nd:
+            pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+
         if expression:
             return pt.apply_expression(expression)
 
@@ -3613,6 +3673,8 @@ class GroupReader(BaseReader, GroupMixin):
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
         expression: str | None = None,
+        sel: dict[str, Any] | None = None,
+        sel_method: SelMethod | None = None,
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
@@ -3643,6 +3705,8 @@ class GroupReader(BaseReader, GroupMixin):
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
             expression=expression,
+            sel=sel,
+            sel_method=sel_method,
             max_size=max_size,
             height=height,
             width=width,
