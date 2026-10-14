@@ -15,6 +15,14 @@
     * `GroupReader`/`AsyncGroupReader` forward the arrays' `spatial_dims` and `coordinates` to the Array readers
 * add: `resampling_method` option to the zarr Array readers' `tile` method
 * docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
+* breaking: replace `indexes` with xarray-like `sel` and `sel_method` options in `rio_tiler.experimental.zarr` readers
+    * `sel` (`{dimension: value | list | slice}`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
+    * `sel_method` supports exact (default), `nearest`, `pad`/`ffill` and `backfill`/`bfill` matching
+    * support N-D arrays: unselected non-spatial dimensions are kept, and readers return `(*non-spatial dims, height, width)` data
+    * `band_descriptions` now returns `{dimension: labels}` for all the non-spatial dimensions, `nbands` is the product of the non-spatial dimension sizes
+    * scalar selection is stored in `ImageData.metadata["sel"]`
+    * `info()` lists bands only when there is at most one non-spatial dimension, and adds `dimension_values`
+* add: N-D support in `ImageData`/`PointData` (`(*leading, height, width)`): N-D data have per-dimension `band_descriptions` (`dict`), no `band_names` and a single scale/offset. Expression, colormap, color formula, rescale, statistics, `to_raster` and rendering (except `NPY`/`NPZ`) raise `ValueError` for N-D data
 
 ## 9.4.12 (2026-10-08)
 
