@@ -180,7 +180,7 @@ for the non-spatial dimensions:
 
 - `sel`: `{dimension: selector}` where the selector can be a scalar (the dimension is dropped), a list of values or a `slice` (inclusive bounds)
 - `sel_method`: `None` (exact match, default), `nearest`, `pad`/`ffill` or `backfill`/`bfill`
-- Values are matched against the `coordinates` (inline or interval). When a dimension has no coordinates, the positions (`0, 1, ..., n - 1`) are used.
+- Values are matched against the `coordinates` (inline or interval). When a dimension has no coordinates, the positions (`0, 1, ..., n - 1`) are used for selection and the values are labelled `{dimension}{position + 1}` (e.g `time1`).
 - Temporal coordinates accept ISO 8601 strings (e.g `"2025-01-01"`, `"2025-01-01T00:00:00Z"`)
 
 Unselected non-spatial dimensions are kept, so the output `ImageData` can be N-D, with shape `(*non-spatial dimensions, height, width)`.

@@ -455,6 +455,7 @@ class ArrayMixin(SpatialMixin):
         coordinates = self.coordinates or {}
 
         values: dict[str, numpy.ndarray] = {}
+        self._positional_dims: set[str] = set()
         for dim in self.non_spatial_dims:
             size = self.input.shape[self.dimensions.index(dim)]
 
@@ -468,17 +469,32 @@ class ArrayMixin(SpatialMixin):
                     )
                     coords = None
 
-            values[dim] = coords if coords is not None else numpy.arange(size)
+            if coords is None:
+                self._positional_dims.add(dim)
+                coords = numpy.arange(size)
+
+            values[dim] = coords
 
         return values
+
+    def _get_labels(self, dim: str, idx: int | numpy.ndarray | slice) -> list[Any]:
+        """Return labels for a positional selection on a non-spatial dimension.
+
+        Dimensions without coordinates are labelled `{dim}{position + 1}` (e.g `time1`).
+        """
+        values = self.coordinate_values[dim]
+        if isinstance(idx, int):
+            idx = slice(idx, idx + 1)
+
+        if dim in self._positional_dims:
+            return [f"{dim}{ix + 1}" for ix in numpy.arange(len(values))[idx]]
+
+        return _format_coordinate_values(values[idx])
 
     @cached_property
     def band_descriptions(self) -> dict[str, list[Any]]:
         """Return coordinate values (labels) for each non-spatial dimension."""
-        return {
-            dim: _format_coordinate_values(values)
-            for dim, values in self.coordinate_values.items()
-        }
+        return {dim: self._get_labels(dim, slice(None)) for dim in self.coordinate_values}
 
     def _get_selection(
         self,
@@ -514,9 +530,9 @@ class ArrayMixin(SpatialMixin):
             )
             selection[dim] = idx
             if isinstance(idx, int):
-                scalars[dim] = _format_coordinate_values(values[idx : idx + 1])[0]
+                scalars[dim] = self._get_labels(dim, idx)[0]
             else:
-                kept[dim] = _format_coordinate_values(values[idx])
+                kept[dim] = self._get_labels(dim, idx)
 
         return selection, kept, scalars
 
