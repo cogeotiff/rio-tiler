@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime
 import math
 import warnings
 from collections.abc import Sequence
@@ -13,7 +14,15 @@ import attr
 import numpy
 import zarr
 from affine import Affine
-from isochron import Duration, format_datetime, parse_datetime, parse_duration
+from isochron import (
+    UTC,
+    Duration,
+    ISO8601Error,
+    format_datetime,
+    parse_date,
+    parse_datetime,
+    parse_duration,
+)
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.errors import NotGeoreferencedWarning
@@ -90,24 +99,54 @@ def _get_transform(attributes: dict) -> Affine | None:
     return None
 
 
-def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
-    """Return band names from coordinates convention.
+SelMethod = Literal["nearest", "pad", "ffill", "backfill", "bfill"]
 
-    Derive band names from coordinates
+
+def _to_datetime64(value: Any) -> numpy.datetime64:
+    """Convert a datetime-like value (ISO 8601 string, date, datetime) to a UTC naive `datetime64[ns]`."""
+    if isinstance(value, numpy.datetime64):
+        return value.astype("datetime64[ns]")
+
+    if isinstance(value, str):
+        try:
+            value = parse_datetime(value)
+        except ISO8601Error:
+            value = parse_date(value)
+
+    if isinstance(value, datetime.datetime):
+        if value.tzinfo is not None:
+            value = value.astimezone(UTC).replace(tzinfo=None)
+
+    elif isinstance(value, datetime.date):
+        value = datetime.datetime.combine(value, datetime.time())
+
+    else:
+        raise ValueError(f"Cannot convert {value!r} to datetime")
+
+    return numpy.datetime64(value, "ns")
+
+
+def _get_coordinate_values(coordinates: dict) -> numpy.ndarray | None:
+    """Return coordinate values from coordinates convention.
+
     Supports for 2 types:
     - Inline coordinate values — short value vectors embedded directly in the metadata
         (for example, a 4-band spectral axis where allocating a separate array would be wasteful).
     - Implicit regularly spaced values — a compact start / end / step descriptor for axes that are uniformly spaced,
         covering both numeric domains (angles, distances, frequencies, levels) and ISO 8601 time intervals, without enumerating every value.
 
+    Returns:
+        numpy.ndarray: numeric, `datetime64[ns]` (temporal) or string values.
+
     """
     if coordinates["type"] == "interval":
         step: str | int | float = coordinates["step"]
         # Handle numeric interval
         if isinstance(step, (int, float)):
-            start: int = coordinates["start"]
-            stop: int = coordinates["stop"]
-            return list(map(str, range(start, stop + step, step)))  # type: ignore
+            start: int | float = coordinates["start"]
+            stop: int | float = coordinates["stop"]
+            size = int(round((stop - start) / step)) + 1
+            return start + numpy.arange(size) * step
 
         # Handle ISO 8601 (temporal) interval
         elif isinstance(step, str):
@@ -115,31 +154,161 @@ def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
             stop_datetime = parse_datetime(coordinates["stop"])
             step_duration = parse_duration(step)
             if isinstance(step_duration, Duration):
-                return [
-                    format_datetime(start_datetime + i * step_duration)  # type: ignore
-                    for i in range(
-                        (
-                            (stop_datetime - start_datetime)
-                            // step_duration.to_timedelta(start_datetime)
-                            + 1
-                        )
-                    )
-                ]
+                size = (stop_datetime - start_datetime) // step_duration.to_timedelta(
+                    start_datetime
+                ) + 1
             else:
-                return [
-                    format_datetime(start_datetime + i * step_duration)  # type: ignore
-                    for i in range(
-                        ((stop_datetime - start_datetime) // step_duration) + 1
-                    )
-                ]
+                size = ((stop_datetime - start_datetime) // step_duration) + 1
+
+            return numpy.array(
+                [
+                    _to_datetime64(start_datetime + i * step_duration)  # type: ignore
+                    for i in range(size)
+                ],
+                dtype="datetime64[ns]",
+            )
 
     elif coordinates["type"] == "inline":
-        return list(map(str, coordinates["values"]))
+        values = numpy.asarray(coordinates["values"])
+        if values.dtype.kind in "iuf":
+            return values
+
+        # Temporal inline values (ISO 8601 strings)
+        try:
+            return numpy.array(
+                [_to_datetime64(v) for v in values.tolist()], dtype="datetime64[ns]"
+            )
+        except (ISO8601Error, ValueError, TypeError):
+            return values.astype(str)
 
     else:
         warnings.warn(f"Unsupported coordinate type '{coordinates['type']}'", UserWarning)
 
     return None
+
+
+def _format_coordinate_values(values: numpy.ndarray) -> list[Any]:
+    """Convert coordinate values to JSON friendly labels (ISO 8601 string for temporal values)."""
+    if values.dtype.kind == "M":
+        return [
+            format_datetime(v.astype("datetime64[us]").item().replace(tzinfo=UTC))
+            for v in values
+        ]
+
+    return values.tolist()
+
+
+def _coerce_label(label: Any, values: numpy.ndarray) -> Any:
+    """Cast a selection label to the coordinate values type."""
+    kind = values.dtype.kind
+    if kind == "M":
+        return _to_datetime64(label)
+
+    if kind in "iuf":
+        return float(label) if isinstance(label, str) else label
+
+    return str(label)
+
+
+def _sel_label(
+    values: numpy.ndarray,
+    label: Any,
+    method: SelMethod | None = None,
+    dim: str = "",
+) -> int:
+    """Return the position of one label in the coordinate values."""
+    label = _coerce_label(label, values)
+
+    if method is None:
+        idx = numpy.nonzero(values == label)[0]
+        if not idx.size:
+            raise KeyError(f"'{label}' not found in '{dim}' coordinates")
+
+        return int(idx[0])
+
+    if values.dtype.kind not in "iufM":
+        raise ValueError(
+            f"Selection method '{method}' is not supported for non-numeric '{dim}' coordinates"
+        )
+
+    order = numpy.argsort(values, kind="stable")
+    sorted_values = values[order]
+    size = len(sorted_values)
+
+    if method in ["pad", "ffill"]:
+        ix = int(numpy.searchsorted(sorted_values, label, side="right")) - 1
+        if ix < 0:
+            raise KeyError(f"No '{dim}' coordinate value before '{label}'")
+
+    elif method in ["backfill", "bfill"]:
+        ix = int(numpy.searchsorted(sorted_values, label, side="left"))
+        if ix >= size:
+            raise KeyError(f"No '{dim}' coordinate value after '{label}'")
+
+    elif method == "nearest":
+        right = min(int(numpy.searchsorted(sorted_values, label, side="left")), size - 1)
+        left = max(right - 1, 0)
+        # NOTE: like pandas, ties are resolved using the larger value
+        ix = (
+            left
+            if abs(sorted_values[left] - label) < abs(sorted_values[right] - label)
+            else right
+        )
+
+    else:
+        raise ValueError(f"Invalid selection method '{method}'")
+
+    return int(order[ix])
+
+
+def _sel_indexer(
+    values: numpy.ndarray,
+    selector: Any,
+    method: SelMethod | None = None,
+    dim: str = "",
+) -> int | numpy.ndarray | slice:
+    """Convert a label-based selector to a positional indexer (like `xarray.DataArray.sel`).
+
+    Args:
+        values (numpy.ndarray): coordinate values.
+        selector (Any): scalar label, sequence of labels or slice of labels (inclusive bounds).
+        method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
+        dim (str, optional): dimension name (for error messages).
+
+    Returns:
+        int, numpy.ndarray or slice: positional indexer.
+
+    """
+    if isinstance(selector, slice):
+        if selector.step is not None:
+            raise ValueError("Slice step is not supported for label based selection")
+
+        increasing = bool(numpy.all(values[1:] >= values[:-1]))
+        decreasing = bool(numpy.all(values[1:] <= values[:-1]))
+        if not (increasing or decreasing):
+            raise ValueError(f"Slice selection requires monotonic '{dim}' coordinates")
+
+        inside = numpy.ones(values.shape, dtype=bool)
+        if selector.start is not None:
+            start = _coerce_label(selector.start, values)
+            inside &= (values >= start) if increasing else (values <= start)
+
+        if selector.stop is not None:
+            stop = _coerce_label(selector.stop, values)
+            inside &= (values <= stop) if increasing else (values >= stop)
+
+        idx = numpy.nonzero(inside)[0]
+        if not idx.size:
+            raise KeyError(f"Empty selection for '{dim}' slice {selector}")
+
+        return slice(int(idx[0]), int(idx[-1]) + 1)
+
+    if isinstance(selector, (list, tuple, numpy.ndarray)):
+        return numpy.array(
+            [_sel_label(values, label, method, dim) for label in selector], dtype="int"
+        )
+
+    return _sel_label(values, selector, method, dim)
 
 
 @attr.s
@@ -296,8 +465,9 @@ class ArrayMixin(SpatialMixin):
             )
             band_descr = [f"{non_spatial_dim}{ix + 1}" for ix in range(self.nbands)]
             if self.coordinates:
-                coords = self.coordinates[non_spatial_dim]
-                return _get_bnames_from_coordinates(coords) or band_descr
+                values = _get_coordinate_values(self.coordinates[non_spatial_dim])
+                if values is not None:
+                    return list(map(str, _format_coordinate_values(values)))
 
             return band_descr
 
