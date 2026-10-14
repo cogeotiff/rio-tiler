@@ -491,7 +491,13 @@ class ImageData:
             )
 
     def _as_3d(self, array: numpy.ndarray) -> numpy.ndarray:
-        """Reshape a (*leading, height, width) array to (prod(leading), height, width)."""
+        """Return a flattened version of the data array.
+
+        (*leading, height, width) -> (prod(leading), height, width)
+
+        Note: only the array is reshaped, not the metadata (e.g `band_descriptions`).
+
+        """
         return array.reshape((-1, *array.shape[-2:]))
 
     @alpha_mask.validator
