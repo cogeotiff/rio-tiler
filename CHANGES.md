@@ -5,6 +5,16 @@
 * update: require `rasterio>=1.5.1` and `affine>=3.0`
 * fix: use masked array reprojection in `rio_tiler._warp.warp` (fix mask warping with GDAL >= 3.11)
 * fix: use `@` instead of `*` for affine matrix multiplication
+* breaking: `rio_tiler.experimental.zarr` Array readers (`AsyncArrayReader`, `ArrayReader`) now use named dimensions
+    * add `dimensions` attribute (defaults to the zarr `dimension_names` metadata)
+    * add `spatial_dims` attribute (`[y_dim, x_dim]`, defaults to `spatial:dimensions` from the `spatial` zarr-convention), so Y/X no longer need to be the last two axes
+    * `coordinates` now holds the full `coords:coordinates` mapping (`{dim: {...}}`) for all dimensions instead of the coordinate of the first non-spatial dimension
+    * remove `band_names` attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to `{dim}{n}`)
+    * `info().dimensions` now returns the `dimensions` attribute
+    * reads use `get_orthogonal_selection` with per-dimension selection (internal `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=)`)
+    * `GroupReader`/`AsyncGroupReader` forward the arrays' `spatial_dims` and `coordinates` to the Array readers
+* add: `resampling_method` option to the zarr Array readers' `tile` method
+* docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
 
 ## 9.4.12 (2026-10-08)
 
