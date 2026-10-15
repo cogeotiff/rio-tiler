@@ -34,7 +34,6 @@ from rio_tiler.errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
-from rio_tiler.experimental._utils import run_sync
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import AsyncBaseReader, BaseReader
 from rio_tiler.io.base import SpatialMixin
@@ -48,6 +47,7 @@ from rio_tiler.utils import (
     estimate_output,
     has_width_or_height,
     output_size,
+    run_sync,
 )
 
 MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"

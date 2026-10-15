@@ -29,7 +29,6 @@ from rio_tiler.errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
-from rio_tiler.experimental._utils import run_sync
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import AsyncBaseReader
 from rio_tiler.models import BandStatistics, ImageData, Info, PointData
@@ -40,6 +39,7 @@ from rio_tiler.utils import (
     cast_to_sequence,
     estimate_output,
     output_size,
+    run_sync,
 )
 
 if TYPE_CHECKING:
