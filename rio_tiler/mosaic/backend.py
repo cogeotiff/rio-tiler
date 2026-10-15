@@ -31,6 +31,7 @@ from rio_tiler.utils import (
     Timer,
     _validate_shape_input,
     inherit_rasterio_env,
+    run_sync,
 )
 
 logger = logging.getLogger(__name__)
@@ -493,14 +494,17 @@ class AsyncBaseBackend(AsyncBaseReader):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        cutline_mask = rasterize(
-            [shape],
-            out_shape=(img.height, img.width),
-            transform=img.transform,
-            all_touched=True,  # Mandatory for matching masks at different resolutions
-            default_value=0,
-            fill=1,
-            dtype="uint8",
+        cutline_mask = (
+            await run_sync(
+                rasterize,
+                [shape],
+                out_shape=(img.height, img.width),
+                transform=img.transform,
+                all_touched=True,  # Mandatory for matching masks at different resolutions
+                default_value=0,
+                fill=1,
+                dtype="uint8",
+            )
         ).astype("bool")
 
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)

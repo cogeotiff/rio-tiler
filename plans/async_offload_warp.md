@@ -67,5 +67,4 @@ The first commit added it as `rio_tiler/experimental/_utils.py`. A later commit 
 
 ## Out of scope / follow-ups
 - `apply_expression` and `statistics` still run on the loop. They are usually cheap, but they can be wrapped the same way if profiling shows they matter.
-- `rasterize` in `feature()` is also left on the loop.
 - Thread pool sizing: the default executor has `min(32, cpu + 4)` threads. If `GDAL_NUM_THREADS` is also set, the total can oversubscribe the CPU. Document this, or let users pass an executor, only if it shows up in practice.
