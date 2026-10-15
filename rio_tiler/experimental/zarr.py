@@ -34,6 +34,7 @@ from rio_tiler.errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
+from rio_tiler.experimental._utils import run_sync
 from rio_tiler.expression import parse_expression
 from rio_tiler.io import AsyncBaseReader, BaseReader
 from rio_tiler.io.base import SpatialMixin
@@ -607,7 +608,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         )
 
         # 7. Reproject/resample to output CRS and dimensions
-        img = warp(
+        img = await run_sync(
+            warp,
             img,
             dst_crs=dst_crs,
             dst_bounds=bbox,
@@ -690,14 +692,16 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
         # 3. Reproject if needed
         if dst_crs != self.crs:
-            img = img.reproject(
+            img = await run_sync(
+                img.reproject,
                 dst_crs=dst_crs,
                 reproject_method=reproject_method,
             )
 
         # 4. Resize
         if width != img.width or height != img.height:
-            img = img.resize(
+            img = await run_sync(
+                img.resize,
                 width=width,
                 height=height,
                 resampling_method=resampling_method,
