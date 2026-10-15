@@ -8,14 +8,8 @@ Branch `async-offload-warp`.
 > the async reader AsyncArrayReader uses `sync` GDAL code for the reprojection (see _warp.py)
 > should I use something like https://github.com/fastapi/asyncer to avoid blocking the event loop?
 
-### Prompt 2
-> ok let's work on this
-> start a new branch and do relatively small commits
-> avoid breaking change and refactor
-
 ### How the prompts shaped the plan
 - Prompt 1: use the standard library (`asyncio.to_thread`) instead of adding `asyncer`/`anyio`.
-- Prompt 2: one helper and one commit per reader. The public API and the method signatures stay the same, and the existing code is not reorganized. Only the blocking calls are wrapped.
 
 ## Context
 `rio_tiler.experimental.geotiff.Reader` and `rio_tiler.experimental.zarr.AsyncArrayReader` read data asynchronously, then post-process it with synchronous code:
@@ -74,5 +68,4 @@ The first commit added it as `rio_tiler/experimental/_utils.py`. A later commit 
 ## Out of scope / follow-ups
 - `apply_expression` and `statistics` still run on the loop. They are usually cheap, but they can be wrapped the same way if profiling shows they matter.
 - `rasterize` in `feature()` is also left on the loop.
-- `rio_tiler.experimental.xarray.GeoArrayReader` is synchronous, so it needs no change.
 - Thread pool sizing: the default executor has `min(32, cpu + 4)` threads. If `GDAL_NUM_THREADS` is also set, the total can oversubscribe the CPU. Document this, or let users pass an executor, only if it shows up in practice.

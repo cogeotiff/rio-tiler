@@ -13,7 +13,6 @@ from async_geotiff import Window
 from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
-from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
 from rasterio.transform import array_bounds, from_bounds
@@ -625,21 +624,15 @@ class Reader(AsyncBaseReader):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
-                [shape],
-                out_shape=(img.height, img.width),
-                transform=img.transform,
-                all_touched=True,  # Mandatory for matching masks at different resolutions
-                default_value=0,
-                fill=1,
-                dtype="uint8",
-            ).astype("bool")
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Mandatory for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
