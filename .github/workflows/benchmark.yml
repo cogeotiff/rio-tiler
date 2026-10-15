@@ -54,6 +54,14 @@ jobs:
           benchmark-data-dir-path: dev/benchmarks
           max-items-in-chart: 100
 
+      - name: Run Benchmark (GeoZarr)
+        run: |
+          uv run pytest tests/benchmarks/async_geozarr_benchmarks.py -s 
+
+      - name: Run Benchmark (async-GeoTiff)
+        run: |
+          uv run pytest tests/benchmarks/async_cog_benchmarks.py -s
+
   benchmark-requests:
     runs-on: ubuntu-latest
     steps:
