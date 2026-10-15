@@ -7693,6 +7693,8 @@
 </ul>
 </li>
 <li>add: <code>resampling_method</code> option to the zarr Array readers' <code>tile</code> method</li>
+<li>fix: run blocking warp/reproject/resize in a worker thread (<code>asyncio.to_thread</code>) in the async experimental readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>) to avoid blocking the event loop</li>
+<li>add: <code>rio_tiler.utils.run_sync</code> to run a blocking function in a worker thread, forwarding the active rasterio environment</li>
 <li>docs: new <code>experimental</code> documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)</li>
 </ul>
 <h2 id="9412-2026-10-08">9.4.12 (2026-10-08)<a class="headerlink" href="#9412-2026-10-08" title="Permanent link">&para;</a></h2>

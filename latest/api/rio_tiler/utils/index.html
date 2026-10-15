@@ -2741,6 +2741,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.run_sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;run_sync
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -3220,6 +3231,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;resize_array
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.run_sync" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;run_sync
       
     </span>
   </a>
@@ -4430,6 +4452,32 @@ multispectral intensities.</p>
     <div class="doc doc-contents ">
 
         <p>resize array to a given height and width.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.run_sync" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">run_sync</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-async"><code>async</code></small>
+  </span>
+
+<a href="#rio_tiler.utils.run_sync" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">run_sync</span><span class="p">(</span><span class="n">func</span><span class="p">:</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="n"><span title="rio_tiler.utils._P">_P</span></span><span class="p">,</span> <span class="n"><span title="rio_tiler.utils._R">_R</span></span><span class="p">],</span> <span class="o">*</span><span class="n">args</span><span class="p">:</span> <span class="n"><span title="rio_tiler.utils._P.args">args</span></span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="rio_tiler.utils._P.kwargs">kwargs</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="rio_tiler.utils._R">_R</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Run a blocking function in a worker thread to avoid blocking the event loop.</p>
+<p>rasterio's GDAL environment is thread-local, so options from an active
+<code>rasterio.Env</code> are re-applied in the worker thread.</p>
 
 
     </div>
