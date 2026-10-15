@@ -3,6 +3,7 @@
 import json
 import math
 import os
+import threading
 import warnings
 from concurrent.futures import ThreadPoolExecutor
 from io import BytesIO
@@ -863,3 +864,32 @@ def test_inherit_rasterio_env_not_empty_separate_thread(monkeypatch):
             (True, "FALSE"),
             (False, "something"),
         ]
+
+
+@pytest.mark.asyncio
+async def test_run_sync():
+    """Should run the function in a worker thread."""
+
+    def _func(a, b=1):
+        return a + b, threading.get_ident()
+
+    res, ident = await utils.run_sync(_func, 1, b=2)
+    assert res == 3
+    assert ident != threading.get_ident()
+
+
+@pytest.mark.asyncio
+async def test_run_sync_env():
+    """Should forward the rasterio environment to the worker thread."""
+
+    def _func():
+        return (
+            rasterio.env.hasenv(),
+            get_gdal_config("GDAL_DISABLE_READDIR_ON_OPEN"),
+        )
+
+    assert (await utils.run_sync(_func))[0] is False
+
+    with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
+        res = await utils.run_sync(_func)
+    assert res == (True, "FALSE")
