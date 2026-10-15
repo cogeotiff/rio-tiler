@@ -1,5 +1,6 @@
 """rio_tiler.utils: utility functions."""
 
+import asyncio
 import math
 import time
 import warnings
@@ -944,6 +945,15 @@ def inherit_rasterio_env(f: Callable[_P, _R]) -> Callable[_P, _R]:
             return f(*args, **kwargs)
 
     return wrapper
+
+
+async def run_sync(func: Callable[_P, _R], *args: _P.args, **kwargs: _P.kwargs) -> _R:
+    """Run a blocking function in a worker thread to avoid blocking the event loop.
+
+    rasterio's GDAL environment is thread-local, so options from an active
+    `rasterio.Env` are re-applied in the worker thread.
+    """
+    return await asyncio.to_thread(inherit_rasterio_env(func), *args, **kwargs)
 
 
 # This code is copied from marblecutter

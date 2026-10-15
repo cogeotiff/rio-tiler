@@ -2,7 +2,6 @@
 
 import abc
 import logging
-import warnings
 from typing import Any
 
 import attr
@@ -10,7 +9,6 @@ import numpy
 from morecantile import TileMatrixSet
 from pydantic import BaseModel, ConfigDict, Field
 from rasterio.crs import CRS
-from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
 from rasterio.warp import transform_geom
@@ -33,6 +31,7 @@ from rio_tiler.utils import (
     Timer,
     _validate_shape_input,
     inherit_rasterio_env,
+    run_sync,
 )
 
 logger = logging.getLogger(__name__)
@@ -253,21 +252,15 @@ class BaseBackend(BaseReader):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
-                [shape],
-                out_shape=(img.height, img.width),
-                transform=img.transform,
-                all_touched=True,  # Mandatory for matching masks at different resolutions
-                default_value=0,
-                fill=1,
-                dtype="uint8",
-            ).astype("bool")
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Mandatory for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
 
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
 
@@ -501,13 +494,9 @@ class AsyncBaseBackend(AsyncBaseReader):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
+        cutline_mask = (
+            await run_sync(
+                rasterize,
                 [shape],
                 out_shape=(img.height, img.width),
                 transform=img.transform,
@@ -515,7 +504,8 @@ class AsyncBaseBackend(AsyncBaseReader):
                 default_value=0,
                 fill=1,
                 dtype="uint8",
-            ).astype("bool")
+            )
+        ).astype("bool")
 
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
 

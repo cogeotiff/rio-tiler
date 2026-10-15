@@ -16,7 +16,6 @@ from affine import Affine
 from isochron import Duration, format_datetime, parse_datetime, parse_duration
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
-from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
 from rasterio.transform import array_bounds, from_bounds, rowcol
@@ -47,6 +46,7 @@ from rio_tiler.utils import (
     estimate_output,
     has_width_or_height,
     output_size,
+    run_sync,
 )
 
 MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
@@ -607,7 +607,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         )
 
         # 7. Reproject/resample to output CRS and dimensions
-        img = warp(
+        img = await run_sync(
+            warp,
             img,
             dst_crs=dst_crs,
             dst_bounds=bbox,
@@ -690,14 +691,16 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
         # 3. Reproject if needed
         if dst_crs != self.crs:
-            img = img.reproject(
+            img = await run_sync(
+                img.reproject,
                 dst_crs=dst_crs,
                 reproject_method=reproject_method,
             )
 
         # 4. Resize
         if width != img.width or height != img.height:
-            img = img.resize(
+            img = await run_sync(
+                img.resize,
                 width=width,
                 height=height,
                 resampling_method=resampling_method,
@@ -847,13 +850,9 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
+        cutline_mask = (
+            await run_sync(
+                rasterize,
                 [shape],
                 out_shape=(img.height, img.width),
                 transform=img.transform,
@@ -861,7 +860,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
                 default_value=0,
                 fill=1,
                 dtype="uint8",
-            ).astype("bool")
+            )
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
@@ -1485,21 +1485,15 @@ class ArrayReader(BaseReader, ArrayMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
-                [shape],
-                out_shape=(img.height, img.width),
-                transform=img.transform,
-                all_touched=True,  # Mandatory for matching masks at different resolutions
-                default_value=0,
-                fill=1,
-                dtype="uint8",
-            ).astype("bool")
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Mandatory for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
@@ -2800,13 +2794,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
+        cutline_mask = (
+            await run_sync(
+                rasterize,
                 [shape],
                 out_shape=(img.height, img.width),
                 transform=img.transform,
@@ -2814,7 +2804,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 default_value=0,
                 fill=1,
                 dtype="uint8",
-            ).astype("bool")
+            )
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
@@ -3567,21 +3558,15 @@ class GroupReader(BaseReader, GroupMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
-                [shape],
-                out_shape=(img.height, img.width),
-                transform=img.transform,
-                all_touched=True,  # Mandatory for matching masks at different resolutions
-                default_value=0,
-                fill=1,
-                dtype="uint8",
-            ).astype("bool")
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Mandatory for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
