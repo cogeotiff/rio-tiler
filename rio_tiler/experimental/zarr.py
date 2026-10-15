@@ -25,7 +25,6 @@ from isochron import (
 )
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
-from rasterio.errors import NotGeoreferencedWarning
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
 from rasterio.transform import array_bounds, from_bounds, rowcol
@@ -54,6 +53,7 @@ from rio_tiler.utils import (
     estimate_output,
     has_width_or_height,
     output_size,
+    run_sync,
 )
 
 MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
@@ -931,7 +931,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         )
 
         # 7. Reproject/resample to output CRS and dimensions
-        img = warp(
+        img = await run_sync(
+            warp,
             img,
             dst_crs=dst_crs,
             dst_bounds=bbox,
@@ -1005,14 +1006,16 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
         # 3. Reproject if needed
         if dst_crs != self.crs:
-            img = img.reproject(
+            img = await run_sync(
+                img.reproject,
                 dst_crs=dst_crs,
                 reproject_method=reproject_method,
             )
 
         # 4. Resize
         if width != img.width or height != img.height:
-            img = img.resize(
+            img = await run_sync(
+                img.resize,
                 width=width,
                 height=height,
                 resampling_method=resampling_method,
@@ -1157,13 +1160,9 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
+        cutline_mask = (
+            await run_sync(
+                rasterize,
                 [shape],
                 out_shape=(img.height, img.width),
                 transform=img.transform,
@@ -1171,7 +1170,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
                 default_value=0,
                 fill=1,
                 dtype="uint8",
-            ).astype("bool")
+            )
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
@@ -1682,21 +1682,15 @@ class ArrayReader(BaseReader, ArrayMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
-                [shape],
-                out_shape=(img.height, img.width),
-                transform=img.transform,
-                all_touched=True,  # Mandatory for matching masks at different resolutions
-                default_value=0,
-                fill=1,
-                dtype="uint8",
-            ).astype("bool")
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Mandatory for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
@@ -2330,11 +2324,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         "multiscale": group_metadata["multiscale"],
-                        # "nbands": array[0]["array"].shape[0]
-                        # if len(array[0]["array"].shape) == 3
-                        # else 1,
                     }
-                    for name, array in arrays.items()
+                    for name, _ in arrays.items()
                 ]
             )
 
@@ -2359,11 +2350,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     "multiscale": is_multiscale,
-                                    # "nbands": array[0]["array"].shape[0]
-                                    # if len(array[0]["array"].shape) == 3
-                                    # else 1,
                                 }
-                                for name, array in arrays.items()
+                                for name, _ in arrays.items()
                             ]
                         )
 
@@ -2448,18 +2436,21 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     )
 
                     array_spatial_dims = (
-                        array_attributes.get("spatial:dimensions") or spatial_dims
+                        array_attributes.get("spatial:dimensions") or spatial_dims or []
                     )
+                    if not array_spatial_dims:
+                        # TODO: add warning when spatial:dimensions is not set
+                        continue
 
                     dims = getattr(array.metadata, "dimension_names", [])
-                    if dims:
-                        y_dim_pos = dims.index(array_spatial_dims[0])
-                        x_dim_pos = dims.index(array_spatial_dims[1])
-                        height = array.shape[y_dim_pos]
-                        width = array.shape[x_dim_pos]
-                    else:
-                        # TODO: raise warning when dimension_names is not set
-                        height, width = array.shape[-2:]
+                    if not dims:
+                        # TODO: add warning when both dimension_names is not set
+                        continue
+
+                    y_dim_pos = dims.index(array_spatial_dims[0])
+                    x_dim_pos = dims.index(array_spatial_dims[1])
+                    height = array.shape[y_dim_pos]
+                    width = array.shape[x_dim_pos]
 
                     array_coordinates = coordinates
                     if find_convention(array_conventions, COORDS_CONVENTION_UUID):
@@ -2501,18 +2492,21 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 array_crs = array_crs or root_crs
                 array_transform = _get_transform(array_attributes) or root_transform
                 array_spatial_dims = (
-                    array_attributes.get("spatial:dimensions") or spatial_dims
+                    array_attributes.get("spatial:dimensions") or spatial_dims or []
                 )
+                if not array_spatial_dims:
+                    # TODO: add warning when spatial:dimensions is not set
+                    continue
 
                 dims = getattr(array.metadata, "dimension_names", [])
-                if dims:
-                    y_dim_pos = dims.index(array_spatial_dims[0])
-                    x_dim_pos = dims.index(array_spatial_dims[1])
-                    height = array.shape[y_dim_pos]
-                    width = array.shape[x_dim_pos]
-                else:
-                    # TODO: raise warning when dimension_names is not set
-                    height, width = array.shape[-2:]
+                if not dims:
+                    # TODO: add warning when both dimension_names is not set
+                    continue
+
+                y_dim_pos = dims.index(array_spatial_dims[0])
+                x_dim_pos = dims.index(array_spatial_dims[1])
+                height = array.shape[y_dim_pos]
+                width = array.shape[x_dim_pos]
 
                 array_coordinates = coordinates
                 if find_convention(array_conventions, COORDS_CONVENTION_UUID):
@@ -2943,13 +2937,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
+        cutline_mask = (
+            await run_sync(
+                rasterize,
                 [shape],
                 out_shape=(img.height, img.width),
                 transform=img.transform,
@@ -2957,7 +2947,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 default_value=0,
                 fill=1,
                 dtype="uint8",
-            ).astype("bool")
+            )
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
@@ -3742,21 +3733,15 @@ class GroupReader(BaseReader, GroupMixin):
         if dst_crs != shape_crs:
             shape = transform_geom(shape_crs, dst_crs, shape)
 
-        with warnings.catch_warnings():
-            warnings.filterwarnings(
-                "ignore",
-                category=NotGeoreferencedWarning,
-                module="rasterio",
-            )
-            cutline_mask = rasterize(
-                [shape],
-                out_shape=(img.height, img.width),
-                transform=img.transform,
-                all_touched=True,  # Mandatory for matching masks at different resolutions
-                default_value=0,
-                fill=1,
-                dtype="uint8",
-            ).astype("bool")
+        cutline_mask = rasterize(
+            [shape],
+            out_shape=(img.height, img.width),
+            transform=img.transform,
+            all_touched=True,  # Mandatory for matching masks at different resolutions
+            default_value=0,
+            fill=1,
+            dtype="uint8",
+        ).astype("bool")
 
         img.cutline_mask = cutline_mask
         img.array.mask = numpy.where(~cutline_mask, img.array.mask, True)
