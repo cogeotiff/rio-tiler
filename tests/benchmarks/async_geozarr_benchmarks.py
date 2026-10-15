@@ -9,7 +9,7 @@ from zarr.storage import ObjectStore
 
 from rio_tiler.experimental.zarr import AsyncGroupReader, GroupReader
 
-src_path = "https://s3.explorer.eopf.copernicus.eu/esa-zarr-sentinel-explorer-fra/tests-output/sentinel-2-l2a/S2C_MSIL2A_20260810T125031_N0512_R095_T26SMJ_20260810T155917.zarr/measurements/reflectance"
+src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260810T125031_N0512_R095_T26SMJ_20260810T155917.zarr/measurements/reflectance"
 
 
 @pytest.mark.asyncio
