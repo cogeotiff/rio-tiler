@@ -2219,11 +2219,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         "multiscale": group_metadata["multiscale"],
-                        # "nbands": array[0]["array"].shape[0]
-                        # if len(array[0]["array"].shape) == 3
-                        # else 1,
                     }
-                    for name, array in arrays.items()
+                    for name, _ in arrays.items()
                 ]
             )
 
@@ -2248,11 +2245,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     "multiscale": is_multiscale,
-                                    # "nbands": array[0]["array"].shape[0]
-                                    # if len(array[0]["array"].shape) == 3
-                                    # else 1,
                                 }
-                                for name, array in arrays.items()
+                                for name, _ in arrays.items()
                             ]
                         )
 
@@ -2337,18 +2331,21 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     )
 
                     array_spatial_dims = (
-                        array_attributes.get("spatial:dimensions") or spatial_dims
+                        array_attributes.get("spatial:dimensions") or spatial_dims or []
                     )
+                    if not array_spatial_dims:
+                        # TODO: add warning when spatial:dimensions is not set
+                        continue
 
                     dims = getattr(array.metadata, "dimension_names", [])
-                    if dims:
-                        y_dim_pos = dims.index(array_spatial_dims[0])
-                        x_dim_pos = dims.index(array_spatial_dims[1])
-                        height = array.shape[y_dim_pos]
-                        width = array.shape[x_dim_pos]
-                    else:
-                        # TODO: raise warning when dimension_names is not set
-                        height, width = array.shape[-2:]
+                    if not dims:
+                        # TODO: add warning when both dimension_names is not set
+                        continue
+
+                    y_dim_pos = dims.index(array_spatial_dims[0])
+                    x_dim_pos = dims.index(array_spatial_dims[1])
+                    height = array.shape[y_dim_pos]
+                    width = array.shape[x_dim_pos]
 
                     array_coordinates = coordinates
                     if find_convention(array_conventions, COORDS_CONVENTION_UUID):
@@ -2390,18 +2387,21 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 array_crs = array_crs or root_crs
                 array_transform = _get_transform(array_attributes) or root_transform
                 array_spatial_dims = (
-                    array_attributes.get("spatial:dimensions") or spatial_dims
+                    array_attributes.get("spatial:dimensions") or spatial_dims or []
                 )
+                if not array_spatial_dims:
+                    # TODO: add warning when spatial:dimensions is not set
+                    continue
 
                 dims = getattr(array.metadata, "dimension_names", [])
-                if dims:
-                    y_dim_pos = dims.index(array_spatial_dims[0])
-                    x_dim_pos = dims.index(array_spatial_dims[1])
-                    height = array.shape[y_dim_pos]
-                    width = array.shape[x_dim_pos]
-                else:
-                    # TODO: raise warning when dimension_names is not set
-                    height, width = array.shape[-2:]
+                if not dims:
+                    # TODO: add warning when both dimension_names is not set
+                    continue
+
+                y_dim_pos = dims.index(array_spatial_dims[0])
+                x_dim_pos = dims.index(array_spatial_dims[1])
+                height = array.shape[y_dim_pos]
+                width = array.shape[x_dim_pos]
 
                 array_coordinates = coordinates
                 if find_convention(array_conventions, COORDS_CONVENTION_UUID):
