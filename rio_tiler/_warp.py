@@ -154,8 +154,6 @@ def warp(
         band_names=img.band_names,
         band_descriptions=img.band_descriptions,
         nodata=img.nodata,
-        scales=img.scales,
-        offsets=img.offsets,
         metadata=img.metadata,
         dataset_statistics=img.dataset_statistics,
         alpha_mask=dst_alpha if has_alpha else None,
