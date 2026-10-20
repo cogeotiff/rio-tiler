@@ -1069,8 +1069,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             crs=coord_crs,
             pixel_location=(x, y),
             nodata=img.nodata,
-            scales=img.scales,
-            offsets=img.offsets,
             metadata=img.metadata,
         )
         if expression:
@@ -1593,8 +1591,6 @@ class ArrayReader(BaseReader, ArrayMixin):
             crs=coord_crs,
             pixel_location=(x, y),
             nodata=img.nodata,
-            scales=img.scales,
-            offsets=img.offsets,
             metadata=img.metadata,
         )
         if expression:

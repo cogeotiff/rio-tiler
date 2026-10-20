@@ -52,7 +52,7 @@ print(reader.crs)
 
 # info
 print(reader.info())
->> bounds=(600000.0, 7890600.0, 709440.0, 8000040.0) crs='http://www.opengis.net/def/crs/EPSG/0/32625' band_metadata=[('b1', {})] band_descriptions=[('b1', 'b1')] dtype='float32' nodata_type='None' colorinterp=None scales=None offsets=None colormap=None name='b02' count=1 width=152 height=152 dimensions=('y', 'x') attrs={'_eopf_attrs': {'add_offset': -0.1, 'coordinates': ['y', 'x'], 'dimensions': ['y', 'x'], 'dtype': '<u2', 'eopf_is_masked': True, 'eopf_target_dtype': '<f8', 'fill_value': 0, 'long_name': 'BOA reflectance from MSI acquisition at spectral band 02 490 nm', 'scale_factor': 0.0001, 'short_name': 'b02_60m', 'units': 'digital_counts', 'valid_max': 65535, 'valid_min': 1}, 'dtype': '<u2', 'long_name': 'BOA reflectance from MSI acquisition at spectral band 02 490 nm', 'units': 'digital_counts'}
+>> bounds=(600000.0, 7890600.0, 709440.0, 8000040.0) crs='http://www.opengis.net/def/crs/EPSG/0/32625' band_metadata=[('b1', {})] band_descriptions=[('b1', 'b1')] dtype='float32' nodata_type='None' colorinterp=None colormap=None name='b02' count=1 width=152 height=152 dimensions=('y', 'x') attrs={'_eopf_attrs': {'add_offset': -0.1, 'coordinates': ['y', 'x'], 'dimensions': ['y', 'x'], 'dtype': '<u2', 'eopf_is_masked': True, 'eopf_target_dtype': '<f8', 'fill_value': 0, 'long_name': 'BOA reflectance from MSI acquisition at spectral band 02 490 nm', 'scale_factor': 0.0001, 'short_name': 'b02_60m', 'units': 'digital_counts', 'valid_max': 65535, 'valid_min': 1}, 'dtype': '<u2', 'long_name': 'BOA reflectance from MSI acquisition at spectral band 02 490 nm', 'units': 'digital_counts'}
 
 # Get the preview for a specific variable
 img = reader.preview()

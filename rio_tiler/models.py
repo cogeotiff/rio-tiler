@@ -215,8 +215,6 @@ class PointData:
     assets: list | None = attr.ib(default=None, kw_only=True)
     metadata: dict | None = attr.ib(factory=dict, kw_only=True)
     nodata: NoData | None = attr.ib(default=None, kw_only=True)
-    scales: list[float | int] = attr.ib(kw_only=True)
-    offsets: list[float | int] = attr.ib(kw_only=True)
     pixel_location: tuple[float | int, float | int] | None = attr.ib(
         default=None, kw_only=True
     )
@@ -246,14 +244,6 @@ class PointData:
             return _default_dimension_descriptions(self.array.shape)
 
         return [f"b{ix + 1}" for ix in range(self.count)]
-
-    @scales.default
-    def _default_scales(self):
-        return [1.0] if self.is_nd else [1.0] * self.count
-
-    @offsets.default
-    def _default_offsets(self):
-        return [0.0] if self.is_nd else [0.0] * self.count
 
     def __attrs_post_init__(self):
         """Validate N-D metadata."""
@@ -337,10 +327,6 @@ class PointData:
             )
         )
 
-        scales = list(itertools.chain.from_iterable([pt.scales for pt in data]))
-
-        offsets = list(itertools.chain.from_iterable([pt.offsets for pt in data]))
-
         metadata = dict(
             itertools.chain.from_iterable(
                 [pt.metadata.items() for pt in data if pt.metadata]
@@ -352,8 +338,6 @@ class PointData:
             assets=assets,
             band_names=band_names,
             band_descriptions=band_descriptions,
-            offsets=offsets,
-            scales=scales,
             coordinates=data[0].coordinates,
             crs=data[0].crs,
             metadata=metadata,
@@ -437,8 +421,6 @@ class ImageData:
     crs: CRS | None = attr.ib(default=None, kw_only=True)
     metadata: dict | None = attr.ib(factory=dict, kw_only=True)
     nodata: NoData | None = attr.ib(default=None, kw_only=True)
-    scales: list[float | int] = attr.ib(kw_only=True)
-    offsets: list[float | int] = attr.ib(kw_only=True)
     band_names: list[str] = attr.ib(kw_only=True)
     band_descriptions: list[str] | dict[str, list[Any]] = attr.ib(kw_only=True)
     dataset_statistics: Sequence[tuple[float, float]] | None = attr.ib(
@@ -462,39 +444,6 @@ class ImageData:
 
         return [f"b{ix + 1}" for ix in range(self.count)]
 
-    @scales.default
-    def _default_scales(self):
-        # NOTE: N-D data use one scale for all the values
-        return [1.0] if self.is_nd else [1.0] * self.count
-
-    @offsets.default
-    def _default_offsets(self):
-        return [0.0] if self.is_nd else [0.0] * self.count
-
-    def __attrs_post_init__(self):
-        """Validate N-D metadata."""
-        self.band_descriptions = _normalize_band_descriptions(
-            self.band_descriptions, self.array.shape[:-2], self.is_nd
-        )
-        if self.is_nd:
-            if len(self.scales) != 1 or len(self.offsets) != 1:
-                raise ValueError(
-                    "N-D ImageData only support one scale/offset value for all the data."
-                )
-
-    @property
-    def is_nd(self) -> bool:
-        """Return True if data has more than 3 dimensions (*leading, height, width)."""
-        return self.array.ndim > 3
-
-    def _as_3d(self, array: numpy.ndarray) -> numpy.ndarray:
-        """Return a flattened version of the data array.
-
-        (*leading, height, width) -> (prod(leading), height, width)
-
-        """
-        return array.reshape((-1, *array.shape[-2:]))
-
     @alpha_mask.validator
     def _check_alpha_mask(self, attribute, value):
         """Make sure alpha mask has valid shame and datatype."""
@@ -512,6 +461,25 @@ class ImageData:
                 raise ValueError(
                     f"Invalide dtype {value.dtype} for AlphaMask, should be of {self.array.dtype}"
                 )
+
+    def __attrs_post_init__(self):
+        """Validate N-D metadata."""
+        self.band_descriptions = _normalize_band_descriptions(
+            self.band_descriptions, self.array.shape[:-2], self.is_nd
+        )
+
+    @property
+    def is_nd(self) -> bool:
+        """Return True if data has more than 3 dimensions (*leading, height, width)."""
+        return self.array.ndim > 3
+
+    def _as_3d(self, array: numpy.ndarray) -> numpy.ndarray:
+        """Return a flattened version of the data array.
+
+        (*leading, height, width) -> (prod(leading), height, width)
+
+        """
+        return array.reshape((-1, *array.shape[-2:]))
 
     @property
     def data(self) -> numpy.ndarray:
@@ -590,8 +558,6 @@ class ImageData:
                         ],
                         dataset_statistics=dataset_statistics,
                         nodata=dataset.nodata,
-                        scales=list(dataset.scales),
-                        offsets=list(dataset.offsets),
                         metadata=dataset.tags(),
                     )
 
@@ -659,10 +625,6 @@ class ImageData:
             )
         )
 
-        scales = list(itertools.chain.from_iterable([img.scales for img in data]))
-
-        offsets = list(itertools.chain.from_iterable([img.offsets for img in data]))
-
         stats = list(
             itertools.chain.from_iterable(
                 [img.dataset_statistics for img in data if img.dataset_statistics]
@@ -686,8 +648,6 @@ class ImageData:
             dataset_statistics=dataset_statistics,
             cutline_mask=cutline_mask,
             metadata=metadata,
-            scales=scales,
-            offsets=offsets,
         )
 
     def data_as_image(self) -> numpy.ndarray:
@@ -752,10 +712,6 @@ class ImageData:
                 out_range=dtype_ranges[out_dtype],
             ).astype(out_dtype)
 
-        # reset scales/offsets
-        self.scales = [1.0] * self.count
-        self.offsets = [0.0] * self.count
-
         return self
 
     def apply_color_formula(self, color_formula: str | None) -> Self:
@@ -780,10 +736,6 @@ class ImageData:
             self.alpha_mask = linear_rescale(
                 self.alpha_mask, in_range=dtype_ranges[str(self.alpha_mask.dtype)]
             ).astype("uint8")
-
-        # reset scales/offsets
-        self.scales = [1.0] * self.count
-        self.offsets = [0.0] * self.count
 
         return self
 
@@ -902,8 +854,6 @@ class ImageData:
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
             nodata=self.nodata,
-            scales=self.scales,
-            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,
@@ -927,8 +877,6 @@ class ImageData:
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
             nodata=self.nodata,
-            scales=self.scales,
-            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,
@@ -1225,8 +1173,6 @@ class ImageData:
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
             nodata=self.nodata,
-            scales=self.scales,
-            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,
