@@ -98,7 +98,7 @@ def read(
         vrt_options (dict, optional): Options to be passed to the rasterio.warp.WarpedVRT class.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
-        unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+        unscale (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
     Returns:
@@ -261,9 +261,9 @@ def read(
         # We only add dataset statistics if we have them for all the indexes
         dataset_statistics = stats if len(stats) == len(indexes) else None
 
-        scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1]
-        offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1]
         if unscale:
+            scales = numpy.array(dataset.scales)[numpy.array(indexes) - 1]
+            offsets = numpy.array(dataset.offsets)[numpy.array(indexes) - 1]
             data = cast(
                 numpy.ma.MaskedArray,
                 data.astype("float32", casting="unsafe"),
@@ -272,7 +272,7 @@ def read(
             numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
             numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
 
-            # apply scale/offsets to stats
+            # apply dataset's scale/offsets to stats
             if dataset_statistics:
                 stats_array = numpy.array(dataset_statistics)
                 numpy.multiply(
@@ -288,9 +288,6 @@ def read(
                     casting="unsafe",
                 )
                 dataset_statistics = [tuple(s) for s in stats_array.tolist()]
-
-            scales = numpy.zeros(len(indexes)) + 1.0
-            offsets = numpy.zeros(len(indexes))
 
         if post_process:
             data = post_process(data)
@@ -311,8 +308,6 @@ def read(
             metadata=dataset.tags(),
             nodata=nodata,
             alpha_mask=alpha_mask,
-            scales=scales.tolist(),
-            offsets=offsets.tolist(),
         )
 
 
@@ -357,7 +352,7 @@ def part(
         align_bounds_with_dataset (bool): Align input bounds with dataset transform. Defaults to `False`.
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
-        unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+        unscale (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
     Returns:
@@ -506,8 +501,6 @@ def part(
             alpha_mask=img.alpha_mask[padding:-padding, padding:-padding]
             if img.alpha_mask is not None
             else None,
-            scales=img.scales,
-            offsets=img.offsets,
         )
 
     return read(
@@ -551,7 +544,7 @@ def point(
         resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Only used when `interpolate=True`. Defaults to `nearest`.
         reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
         interpolate (bool, optional): Interpolate pixels around the coordinates. Defaults to `False`.
-        unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+        unscale (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
         post_process (callable, optional): Function to apply on output data and mask values.
 
     Returns:
@@ -647,7 +640,5 @@ def point(
             crs=coord_crs,
             pixel_location=(col, row),
             nodata=img.nodata,
-            scales=img.scales,
-            offsets=img.offsets,
             metadata=img.metadata,
         )

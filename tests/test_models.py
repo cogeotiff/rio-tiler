@@ -290,8 +290,6 @@ def test_merge_with_diffsize():
         img1 = ImageData(numpy.zeros((1, 256, 256)))
         img2 = ImageData(numpy.zeros((1, 128, 128)))
         img = ImageData.create_from_list([img1, img2])
-        assert img.scales == [1.0, 1.0]
-        assert img.offsets == [0.0, 0.0]
 
     assert img.count == 2
     assert img.width == 256
@@ -424,8 +422,6 @@ def test_point_data():
     assert pt._mask.tolist() == [True]
     assert pt.band_names == ["b1", "b2", "b3"]
     assert pt.nodata is None
-    assert pt.scales == [1.0, 1.0, 1.0]
-    assert pt.offsets == [0.0, 0.0, 0.0]
 
     with pytest.raises(ValueError):
         PointData(numpy.zeros((3, 3)))
@@ -447,8 +443,6 @@ def test_point_data():
     assert pts.data.tolist() == [1, 2, 3]
     assert pts.band_descriptions == ["b1", "b2", "b1+b2"]
     assert pts._mask.tolist() == [True]
-    assert pt.scales == [1.0, 1.0, 1.0]
-    assert pt.offsets == [0.0, 0.0, 0.0]
 
     pts = PointData.create_from_list(
         [
@@ -614,14 +608,10 @@ def test_image_from_bytes():
     """Create ImageData from bytes."""
     im = ImageData(numpy.zeros((1, 256, 256), dtype="uint8"))
     assert im.data.shape == (1, 256, 256)
-    assert im.scales == [1.0]
-    assert im.offsets == [0.0]
 
     im_r = ImageData.from_bytes(im.render(img_format="PNG", add_mask=True))
     assert im_r.data.shape == (1, 256, 256)
     assert im._mask.all()
-    assert im.scales == [1.0]
-    assert im.offsets == [0.0]
 
     data = numpy.zeros((1, 256, 256), dtype="uint8")
     data[0:100, 0:100] = 1
@@ -655,10 +645,8 @@ def test_2d_image():
 def test_apply_color_formula():
     """Test Apply color_formula."""
     data = numpy.random.randint(0, 16000, (3, 256, 256)).astype("uint16")
-    img = ImageData(data, scales=[1.5, 1.5, 1.5], offsets=[0.001, 0.001, 0.001])
+    img = ImageData(data)
     assert img.data.dtype == "uint16"
-    assert img.scales == [1.5, 1.5, 1.5]
-    assert img.offsets == [0.001, 0.001, 0.001]
 
     img.apply_color_formula(
         "gamma b 1.85, gamma rg 1.95, sigmoidal rgb 35 0.13, saturation 1.15"
@@ -667,8 +655,6 @@ def test_apply_color_formula():
     assert img.count == 3
     assert img.width == 256
     assert img.height == 256
-    assert img.scales == [1.0, 1.0, 1.0]
-    assert img.offsets == [0.0, 0.0, 0.0]
 
 
 def test_imagedata_coverage():
@@ -873,19 +859,10 @@ def test_image_rescale():
     mask = numpy.zeros((1, 256, 256), dtype="bool")
     mask[0:50, 0:50] = True
 
-    img = ImageData(
-        numpy.ma.MaskedArray(data=data, mask=mask),
-        scales=[1.5],
-        offsets=[0.001],
-    )
-    assert img.scales == [1.5]
-    assert img.offsets == [0.001]
-
+    img = ImageData(numpy.ma.MaskedArray(data=data, mask=mask))
     img.rescale(((0, 32767),))
     assert img.array[0, 255, 255] == 255
     assert img.array[0, 60, 60] == 0
-    assert img.scales == [1.0]
-    assert img.offsets == [0.0]
 
 
 def test_mask_values():
