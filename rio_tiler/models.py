@@ -280,6 +280,12 @@ class PointData:
     @property
     def count(self) -> int:
         """Number of band."""
+        if self.is_nd:
+            warnings.warn(
+                f"Array has more than 3 dimensions: {self.array.shape}, count will only consider the first dimension.",
+                UserWarning,
+            )
+
         return self.array.shape[0]
 
     @classmethod
@@ -296,6 +302,7 @@ class PointData:
         if len(data) == 1:
             return data[0]
 
+        # TODO: revisit this and maybe allow concatenation of N-D ImageData in the future
         if any(pt.is_nd for pt in data):
             raise InvalidPointDataError(
                 "Cannot concatenate N-D PointData, only 1D (bands) data is supported."
@@ -572,6 +579,7 @@ class ImageData:
         if len(data) == 1:
             return data[0]
 
+        # TODO: revisit this and maybe allow concatenation of N-D ImageData in the future
         if any(img.is_nd for img in data):
             raise ValueError(
                 "Cannot concatenate N-D ImageData, only 3D (bands, height, width) data is supported."
@@ -676,6 +684,12 @@ class ImageData:
     @property
     def count(self) -> int:
         """Number of band (size of the first dimension)."""
+        if self.is_nd:
+            warnings.warn(
+                f"Array has more than 3 dimensions: {self.array.shape}, count will only consider the first dimension.",
+                UserWarning,
+            )
+
         return self.array.shape[0]
 
     @property

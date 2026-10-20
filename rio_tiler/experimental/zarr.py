@@ -338,7 +338,6 @@ class ArrayMixin(SpatialMixin):
     coordinates: dict[str, Any] | None = attr.ib(default=None)
 
     # Array shape
-    nbands: int = attr.ib(init=False)
     height: int = attr.ib(init=False)
     width: int = attr.ib(init=False)
 
@@ -401,17 +400,6 @@ class ArrayMixin(SpatialMixin):
         self.height = shape[y_index]
         self.width = shape[x_index]
 
-        # NOTE: number of `bands` is the product of all the non-spatial dimensions
-        self.nbands = int(
-            numpy.prod(
-                [
-                    size
-                    for size, dim in zip(shape, self.dimensions)
-                    if dim not in self.spatial_dims
-                ]
-            )
-        )
-
         # [xmin, ymin, xmax, ymax]
         self.bounds = array_bounds(self.height, self.width, self.transform)
 
@@ -470,9 +458,11 @@ class ArrayMixin(SpatialMixin):
                     )
                     values = None
 
+            # no coordinates metadata
             if values is None:
                 out[dim] = (numpy.arange(size), [f"{dim}{ix + 1}" for ix in range(size)])
 
+            # inline coordinates
             elif coordinates[dim]["type"] == "inline":
                 out[dim] = (values, list(coordinates[dim]["values"]))
 
@@ -497,18 +487,11 @@ class ArrayMixin(SpatialMixin):
 
         return [labels[ix] for ix in idx]
 
-    @property
-    def dimensions_descriptions(self) -> dict[str, list[Any]]:
-        """Return coordinate values (labels) for each non-spatial dimension (empty for 2D arrays)."""
-        return {dim: self._get_labels(dim, slice(None)) for dim in self.coordinate_values}
-
-    def _get_selection(
+    def _get_non_spatial_selection(
         self,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
-    ) -> tuple[
-        dict[str, int | numpy.ndarray | slice], dict[str, list[Any]], dict[str, Any]
-    ]:
+    ) -> dict[str, int | numpy.ndarray | slice]:
         """Convert label based selection to positional selection for non-spatial dimensions.
 
         Args:
@@ -516,7 +499,7 @@ class ArrayMixin(SpatialMixin):
             sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
 
         Returns:
-            tuple: positional selection per dimension, labels of the kept dimensions and labels of the scalar selection (dropped dimensions).
+            dict: positional selection per (non-spatial) dimension.
 
         """
         sel = sel or {}
@@ -526,8 +509,6 @@ class ArrayMixin(SpatialMixin):
             )
 
         selection: dict[str, int | numpy.ndarray | slice] = {}
-        kept: dict[str, list[Any]] = {}
-        scalars: dict[str, Any] = {}
         for dim, values in self.coordinate_values.items():
             idx: int | numpy.ndarray | slice = (
                 _sel_indexer(values, sel[dim], sel_method, dim)
@@ -535,12 +516,8 @@ class ArrayMixin(SpatialMixin):
                 else slice(None)
             )
             selection[dim] = idx
-            if isinstance(idx, int):
-                scalars[dim] = self._get_labels(dim, idx)[0]
-            else:
-                kept[dim] = self._get_labels(dim, idx)
 
-        return selection, kept, scalars
+        return selection
 
     def _get_read_selection(
         self,
@@ -549,15 +526,19 @@ class ArrayMixin(SpatialMixin):
         x_slice: slice,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
-    ) -> tuple[
-        tuple[int | numpy.ndarray | slice, ...], dict[str, list[Any]], dict[str, Any]
-    ]:
+    ) -> tuple[int | numpy.ndarray | slice, ...]:
         """Build the orthogonal selection for a read and check the output size."""
-        selection, kept, scalars = self._get_selection(sel, sel_method)
+        selection = self._get_non_spatial_selection(sel, sel_method)
+        selection[self.spatial_dims[0]] = y_slice
+        selection[self.spatial_dims[1]] = x_slice
+        indexer = tuple(selection[dim] for dim in self.dimensions)
 
-        read_height = len(range(*y_slice.indices(self.height)))
-        read_width = len(range(*x_slice.indices(self.width)))
-        shape = (*[len(labels) for labels in kept.values()], read_height, read_width)
+        # Output shape of the orthogonal selection (dimensions selected with a scalar are dropped)
+        shape = tuple(
+            len(range(*idx.indices(size))) if isinstance(idx, slice) else len(idx)
+            for idx, size in zip(indexer, self.input.shape)
+            if not isinstance(idx, int)
+        )
 
         nbytes = int(numpy.prod(shape)) * self.input.dtype.itemsize
         if nbytes > MAX_ARRAY_SIZE:
@@ -565,67 +546,9 @@ class ArrayMixin(SpatialMixin):
                 f"Maximum array limit {MAX_ARRAY_SIZE} reached, trying to put Array of {shape} in memory."
             )
 
-        selection[self.spatial_dims[0]] = y_slice
-        selection[self.spatial_dims[1]] = x_slice
+        return indexer
 
-        return tuple(selection[dim] for dim in self.dimensions), kept, scalars
-
-    def _to_image(
-        self,
-        data: numpy.ndarray,
-        *,
-        y_slice: slice,
-        x_slice: slice,
-        kept: dict[str, list[Any]],
-        scalars: dict[str, Any],
-        nodata: NoData | None = None,
-    ) -> ImageData:
-        """Create ImageData from an orthogonal selection result."""
-        # Dimensions selected with a scalar are dropped by the orthogonal selection
-        dims = [dim for dim in self.dimensions if dim not in scalars]
-
-        # Make sure data is in form of (*non-spatial dimensions, height, width)
-        data = numpy.moveaxis(
-            data,
-            [dims.index(self.spatial_dims[0]), dims.index(self.spatial_dims[1])],
-            [-2, -1],
-        )
-
-        # Ensure at least 3D shape
-        if data.ndim == 2:
-            data = numpy.expand_dims(data, axis=0)
-
-        masked_data = numpy.ma.MaskedArray(data)
-
-        # if data has Nodata then we simply make sure the mask == the nodata
-        nodata = (
-            nodata
-            if nodata is not None
-            else getattr(self.input.metadata, "fill_value", None)
-        )
-        if nodata is not None:
-            if numpy.isnan(nodata):
-                masked_data.mask = numpy.isnan(masked_data.data)
-            else:
-                masked_data.mask = masked_data.data == nodata
-
-        # Calculate bounds for the read window
-        read_height, read_width = data.shape[-2:]
-        y_start, _, _ = y_slice.indices(self.height)
-        x_start, _, _ = x_slice.indices(self.width)
-        read_transform = self.transform @ Affine.translation(x_start, y_start)
-        read_bounds = array_bounds(read_height, read_width, read_transform)
-
-        return ImageData(  # type: ignore
-            masked_data,
-            bounds=read_bounds,
-            crs=self.crs,
-            band_descriptions=kept,
-            nodata=nodata,
-            metadata={"sel": scalars} if scalars else {},
-        )
-
-    def _info(self) -> Info:
+    def _info(self, with_coordinates: bool = False) -> Info:
         """Return Dataset's info.
 
         Returns:
@@ -649,14 +572,19 @@ class ArrayMixin(SpatialMixin):
             "nodata_type": nodata_type,
             "colorinterp": None,
             # additional info (not in default model)
+            "driver": "Zarr",
             "dimensions": self.dimensions,
             "dimensions_count": dict(zip(self.dimensions, self.input.shape)),
-            "coordinates": self.coordinates,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
                 for k, v in attrs.items()
             },
         }
+
+        if with_coordinates:
+            meta["coordinates"] = {
+                dim: values for dim, (_, values) in self._coordinates.items()
+            }
 
         minv, maxv = attrs.get("valid_min"), attrs.get("valid_max")
         if minv is not None and maxv is not None:
@@ -715,21 +643,20 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
     coordinates: dict[str, Any] | None = attr.ib(default=None)
 
     # Array shape
-    nbands: int = attr.ib(init=False)
     height: int = attr.ib(init=False)
     width: int = attr.ib(init=False)
 
     # Array bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    async def info(self) -> Info:
+    async def info(self, with_coordinates: bool = False) -> Info:
         """Return Dataset's info.
 
         Returns:
             rio_tiler.models.Info: Dataset info.
 
         """
-        return self._info()
+        return self._info(with_coordinates=with_coordinates)
 
     async def statistics(
         self,
@@ -797,6 +724,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -826,6 +754,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             nodata=nodata,
             reproject_method=reproject_method,
             resampling_method=resampling_method,
+            **kwargs,
         )
 
     async def part(  # noqa: C901
@@ -858,6 +787,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             width (int, optional): Output width of the array.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -1067,7 +997,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             band_descriptions=img.band_descriptions,
             coordinates=coordinates,
             crs=coord_crs,
-            pixel_location=(x, y),
+            pixel_location=(cast(int, x), cast(int, y)),
             nodata=img.nodata,
             metadata=img.metadata,
         )
@@ -1132,6 +1062,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             nodata=nodata,
             reproject_method=reproject_method,
             resampling_method=resampling_method,
+            **kwargs,
         )
 
         if dst_crs != shape_crs:
@@ -1180,17 +1111,61 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        selection, kept, scalars = self._get_read_selection(
+        selection = self._get_read_selection(
             y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
         )
         data = await self.input.get_orthogonal_selection(selection)
 
-        return self._to_image(
-            data,  # type: ignore[arg-type]
-            y_slice=y_slice,
-            x_slice=x_slice,
-            kept=kept,
-            scalars=scalars,
+        # labels for band_descriptions
+        band_descriptions = {
+            d: self._get_labels(d, idx)
+            for d, idx in zip(self.dimensions, selection)
+            if d in self.non_spatial_dims and not isinstance(idx, int)
+        }
+
+        # Dimensions selected with a scalar (e.g `sel={"time": "2025-01-01"}`)
+        # are dropped by the orthogonal selection
+        dims = [
+            d for d, idx in zip(self.dimensions, selection) if not isinstance(idx, int)
+        ]
+
+        # Make sure data is in form of (*non-spatial dimensions, height, width)
+        data = numpy.moveaxis(
+            data,
+            [dims.index(self.spatial_dims[0]), dims.index(self.spatial_dims[1])],
+            [-2, -1],
+        )
+
+        # Ensure at least 3D shape
+        if data.ndim == 2:
+            data = numpy.expand_dims(data, axis=0)
+
+        masked_data = numpy.ma.MaskedArray(data)
+
+        # if data has Nodata then we simply make sure the mask == the nodata
+        nodata = (
+            nodata
+            if nodata is not None
+            else getattr(self.input.metadata, "fill_value", None)
+        )
+        if nodata is not None:
+            if numpy.isnan(nodata):
+                masked_data.mask = numpy.isnan(masked_data.data)
+            else:
+                masked_data.mask = masked_data.data == nodata
+
+        # Calculate bounds for the read window
+        read_height, read_width = data.shape[-2:]
+        y_start, _, _ = y_slice.indices(self.height)
+        x_start, _, _ = x_slice.indices(self.width)
+        read_transform = self.transform @ Affine.translation(x_start, y_start)
+        read_bounds = array_bounds(read_height, read_width, read_transform)
+
+        return ImageData(  # type: ignore
+            masked_data,
+            bounds=read_bounds,
+            crs=self.crs,
+            band_descriptions=band_descriptions,
             nodata=nodata,
         )
 
@@ -1242,21 +1217,20 @@ class ArrayReader(BaseReader, ArrayMixin):
     coordinates: dict[str, Any] | None = attr.ib(default=None)
 
     # Array shape
-    nbands: int = attr.ib(init=False)
     height: int = attr.ib(init=False)
     width: int = attr.ib(init=False)
 
     # Array bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    def info(self) -> Info:
+    def info(self, with_coordinates: bool = False) -> Info:
         """Return Dataset's info.
 
         Returns:
             rio_tiler.models.Info: Dataset info.
 
         """
-        return self._info()
+        return self._info(with_coordinates=with_coordinates)
 
     def statistics(
         self,
@@ -1309,6 +1283,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         expression: str | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Map tile from the Dataset.
@@ -1323,6 +1298,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            resampling_method (str, optional): Resampling method for array read. Defaults to "nearest".
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -1351,6 +1327,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             width=tilesize or matrix.tileWidth,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
+            **kwargs,
         )
 
     def part(  # noqa: C901
@@ -1383,6 +1361,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             width (int, optional): Output width of the array.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (str, optional): Resampling method for array read. Defaults to "nearest".
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -1589,7 +1568,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             band_descriptions=img.band_descriptions,
             coordinates=coordinates,
             crs=coord_crs,
-            pixel_location=(x, y),
+            pixel_location=(cast(int, x), cast(int, y)),
             nodata=img.nodata,
             metadata=img.metadata,
         )
@@ -1611,6 +1590,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         width: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
@@ -1627,6 +1607,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             width (int, optional): Output width of the array.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -1652,6 +1633,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             width=width,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
+            **kwargs,
         )
 
         if dst_crs != shape_crs:
@@ -1697,18 +1680,71 @@ class ArrayReader(BaseReader, ArrayMixin):
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        selection, kept, scalars = self._get_read_selection(
+        selection = self._get_read_selection(
             y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
         )
         data = self.input.get_orthogonal_selection(selection)
 
-        return self._to_image(
-            data,  # type: ignore[arg-type]
-            y_slice=y_slice,
-            x_slice=x_slice,
-            kept=kept,
-            scalars=scalars,
+        # labels for band_descriptions
+        band_descriptions = {
+            d: self._get_labels(d, idx)
+            for d, idx in zip(self.dimensions, selection)
+            if d in self.non_spatial_dims and not isinstance(idx, int)
+        }
+
+        # Dimensions selected with a scalar (e.g `sel={"time": "2025-01-01"}`)
+        # are dropped by the orthogonal selection
+        dims = [
+            d for d, idx in zip(self.dimensions, selection) if not isinstance(idx, int)
+        ]
+
+        # Make sure data is in form of (*non-spatial dimensions, height, width)
+        data = numpy.moveaxis(
+            data,
+            [dims.index(self.spatial_dims[0]), dims.index(self.spatial_dims[1])],
+            [-2, -1],
+        )
+
+        # Ensure at least 3D shape
+        if data.ndim == 2:
+            data = numpy.expand_dims(data, axis=0)
+
+        masked_data = numpy.ma.MaskedArray(data)
+
+        # if data has Nodata then we simply make sure the mask == the nodata
+        nodata = (
+            nodata
+            if nodata is not None
+            else getattr(self.input.metadata, "fill_value", None)
+        )
+        if nodata is not None:
+            if numpy.isnan(nodata):
+                masked_data.mask = numpy.isnan(masked_data.data)
+            else:
+                masked_data.mask = masked_data.data == nodata
+
+        # Calculate bounds for the read window
+        read_height, read_width = data.shape[-2:]
+        y_start, _, _ = y_slice.indices(self.height)
+        x_start, _, _ = x_slice.indices(self.width)
+        read_transform = self.transform @ Affine.translation(x_start, y_start)
+        read_bounds = array_bounds(read_height, read_width, read_transform)
+
+        img_meta = {
+            "selected": {
+                d: self._get_labels(d, idx)
+                for d, idx in zip(self.dimensions, selection)
+                if d in self.non_spatial_dims
+            },
+        }
+
+        return ImageData(  # type: ignore
+            masked_data,
+            bounds=read_bounds,
+            crs=self.crs,
+            band_descriptions=band_descriptions,
             nodata=nodata,
+            metadata=img_meta if sel else {},
         )
 
 
@@ -3099,9 +3135,6 @@ class GroupReader(BaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         "multiscale": group_metadata["multiscale"],
-                        # "nbands": array[0]["array"].shape[0]
-                        # if len(array[0]["array"].shape) == 3
-                        # else 1,
                     }
                     for name, array in arrays.items()
                 ]
@@ -3128,9 +3161,6 @@ class GroupReader(BaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     "multiscale": is_multiscale,
-                                    # "nbands": array[0]["array"].shape[0]
-                                    # if len(array[0]["array"].shape) == 3
-                                    # else 1,
                                 }
                                 for name, array in arrays.items()
                             ]

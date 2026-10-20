@@ -1014,8 +1014,6 @@ def test_nd_image_metadata():
     assert img.width == 12
     assert img.band_names == []
     assert img.band_descriptions == {"dim_0": [0, 1], "dim_1": [0, 1, 2]}
-    assert img.scales == [1.0]
-    assert img.offsets == [0.0]
 
     img = _nd_image(
         band_descriptions={"time": ["2025-01-01", "2025-02-01"], "z": [0, 10, 20]}
@@ -1032,10 +1030,6 @@ def test_nd_image_metadata():
     # band_descriptions must be a dict for N-D data
     with pytest.raises(ValueError):
         _nd_image(band_descriptions=["a", "b"])
-
-    # only one scale/offset for N-D data
-    with pytest.raises(ValueError):
-        _nd_image(scales=[1.0, 2.0])
 
     # 3D data are not N-D
     img = ImageData(numpy.zeros((2, 4, 4)))
@@ -1124,25 +1118,25 @@ def test_nd_image_not_supported():
     """3D only methods raise for N-D data."""
     img = _nd_image()
 
-    with pytest.raises(ValueError, match="only supported for 3D"):
+    with pytest.raises(ValueError, match="only supports 3D"):
         img.apply_expression("b1+b2")
 
-    with pytest.raises(ValueError, match="only supported for 3D"):
+    with pytest.raises(ValueError, match="only supports 3D"):
         img.statistics()
 
-    with pytest.raises(ValueError, match="only supported for 3D"):
+    with pytest.raises(ValueError, match="only supports 3D"):
         img.apply_colormap({0: (0, 0, 0, 255)})
 
-    with pytest.raises(ValueError, match="only supported for 3D"):
+    with pytest.raises(ValueError, match="only supports 3D"):
         img.apply_color_formula("gamma r 1.5")
 
-    with pytest.raises(ValueError, match="only supported for 3D"):
+    with pytest.raises(ValueError, match="only supports 3D"):
         img.rescale(((0, 100),))
 
-    with pytest.raises(ValueError, match="only supported for 3D"):
+    with pytest.raises(ValueError, match="only supports 3D"):
         img.data_as_image()
 
-    with pytest.raises(ValueError, match="only supported for 3D"):
+    with pytest.raises(ValueError, match="only supports 3D"):
         img.to_raster("img.tif")
 
     with pytest.raises(ValueError):
@@ -1181,7 +1175,6 @@ def test_nd_point_data():
     assert pt.count == 2
     assert pt.band_names == []
     assert pt.band_descriptions == {"time": ["a", "b"], "z": [0, 10, 20]}
-    assert pt.scales == [1.0]
     assert pt.mask.shape == (1,)
 
     pt = PointData(numpy.ma.MaskedArray(numpy.zeros((2, 3))))

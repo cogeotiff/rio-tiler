@@ -17,7 +17,6 @@ from zarr.storage import ObjectStore
 
 from rio_tiler.errors import (
     InvalidBounds,
-    MaxArraySizeError,
     PointOutsideBounds,
     TileOutsideBounds,
 )
@@ -95,6 +94,28 @@ def zarr_store_2d() -> zarr.storage.MemoryStore:
     return store
 
 
+@pytest.fixture
+def zarr_store_4d() -> zarr.storage.MemoryStore:
+    """Create an in-memory 4D zarr array (time, z, y, x)."""
+    store = zarr.storage.MemoryStore()
+    arr = zarr.create(
+        store=store,
+        shape=(3, 4, 100, 100),
+        chunks=(1, 1, 50, 50),
+        dtype="float32",
+        fill_value=-9999.0,
+        dimension_names=("time", "z", "y", "x"),
+    )
+    # value = time * 10 + z (+ x/1000 to make pixels unique)
+    data = (
+        numpy.arange(3)[:, None, None, None] * 10
+        + numpy.arange(4)[None, :, None, None]
+        + numpy.arange(100)[None, None, None, :] / 1000
+    )
+    arr[:] = numpy.broadcast_to(data, (3, 4, 100, 100)).astype("float32")
+    return store
+
+
 @pytest.mark.asyncio
 async def test_zarr_reader_async(zarr_store):
     """Test AsyncArrayReader with a 3D array (bands, height, width)."""
@@ -138,8 +159,17 @@ async def test_zarr_reader_async(zarr_store):
         info = await reader.info()
         assert info.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
         assert info.driver == "Zarr"
-        assert info.count == 3
         assert info.model_dump()
+        assert info.model_dump_json()
+
+        sel = reader._get_non_spatial_selection()
+        assert sel["band"] == slice(None)
+
+        sel = reader._get_non_spatial_selection(sel={"band": [1]})
+        assert sel["band"] == numpy.array([1])
+
+        sel = reader._get_non_spatial_selection(sel={"band": 0})
+        assert sel["band"] == 0
 
 
 def test_zarr_reader_sync(zarr_store):
@@ -183,7 +213,6 @@ def test_zarr_reader_sync(zarr_store):
         info = reader.info()
         assert info.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
         assert info.driver == "Zarr"
-        assert info.count == 3
         assert info.model_dump()
 
 
@@ -211,7 +240,6 @@ async def test_2d_array_async(zarr_store_2d):
         info = await reader.info()
         assert info.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
         assert info.driver == "Zarr"
-        assert info.count == 1
         assert info.model_dump()
 
     async with AsyncArrayReader(
@@ -225,7 +253,6 @@ async def test_2d_array_async(zarr_store_2d):
         },
     ) as reader:
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == {}
 
 
 def test_2d_array_sync(zarr_store_2d):
@@ -241,7 +268,6 @@ def test_2d_array_sync(zarr_store_2d):
     ) as reader:
         assert reader.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == {}
 
         img = reader.preview()
         assert img.array.shape == (1, 50, 50), (
@@ -252,7 +278,6 @@ def test_2d_array_sync(zarr_store_2d):
         info = reader.info()
         assert info.bounds == (500000.0, 4000000.0, 500050.0, 4000050.0)
         assert info.driver == "Zarr"
-        assert info.count == 1
         assert info.model_dump()
 
     with ArrayReader(
@@ -266,7 +291,6 @@ def test_2d_array_sync(zarr_store_2d):
         },
     ) as reader:
         assert reader.dimensions == ["y", "x"]
-        assert reader.band_descriptions == {}
 
 
 @pytest.mark.asyncio
@@ -1008,7 +1032,7 @@ async def test_band_descriptions_async(zarr_dataset):
             "time": {"type": "inline", "values": [str(d) for d in time_arrray.tolist()]}
         },
     ) as reader:
-        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
+        assert reader.dimensions == ["time", "y", "x"]
 
         img = await reader.preview(sel={"time": ["2022-01-01"]})
         assert img.band_descriptions == ["2022-01-01"]
@@ -1041,8 +1065,6 @@ def test_band_descriptions(zarr_dataset):
             "time": {"type": "inline", "values": [str(d) for d in time_arrray.tolist()]}
         },
     ) as reader:
-        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
-
         img = reader.preview(sel={"time": ["2022-01-01"]})
         assert img.band_descriptions == ["2022-01-01"]
 
@@ -1074,23 +1096,24 @@ async def test_geozarr_async(geozarr_dataset):
     ) as reader:
         assert reader.crs == CRS.from_epsg(4326)
         assert reader.bounds == (-180.0, -90.0, 180.0, 90.0)
-        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
+        info = await reader.info()
+        assert info.dimensions_count == {"time": 2, "y": 1800, "x": 3600}
 
         img = await reader.preview(sel={"time": ["2022-01-01"]})
         assert img.crs == CRS.from_epsg(4326)
         assert img.bounds == (-180.0, -90.0, 180.0, 90.0)
+        assert img.band_descriptions == ["2022-01-01"]
 
     # bands names from coords convention
     async with AsyncArrayReader(input=array) as reader:
-        assert reader.band_descriptions == {
-            "time": [
-                "2022-01-01T00:00:00Z",
-                "2022-01-02T00:00:00Z",
-            ]
-        }
+        img = await reader.preview()
+        assert img.band_descriptions == [
+            "2022-01-01T00:00:00Z",
+            "2022-01-02T00:00:00Z",
+        ]
 
 
-def test_geozar(geozarr_dataset):
+def test_geozarr(geozarr_dataset):
     """Test GeoZarr with ArrayReader."""
     store = obstore.store.from_url(f"file://{geozarr_dataset}")
     zarr_store = ObjectStore(store=store, read_only=True)
@@ -1110,20 +1133,19 @@ def test_geozar(geozarr_dataset):
     ) as reader:
         assert reader.crs == CRS.from_epsg(4326)
         assert reader.bounds == (-180.0, -90.0, 180.0, 90.0)
-        assert reader.band_descriptions == {"time": ["2022-01-01", "2022-01-02"]}
 
         img = reader.preview(sel={"time": ["2022-01-01"]})
         assert img.crs == CRS.from_epsg(4326)
         assert img.bounds == (-180.0, -90.0, 180.0, 90.0)
+        assert img.band_descriptions == ["2022-01-01"]
 
     # bands names from coords convention
     with ArrayReader(input=array) as reader:
-        assert reader.band_descriptions == {
-            "time": [
-                "2022-01-01T00:00:00Z",
-                "2022-01-02T00:00:00Z",
-            ]
-        }
+        img = reader.preview()
+        assert img.band_descriptions == [
+            "2022-01-01T00:00:00Z",
+            "2022-01-02T00:00:00Z",
+        ]
 
 
 @pytest.mark.asyncio
@@ -1504,9 +1526,9 @@ async def test_coords_conventions_mixin():
     reader = ArrayMixin(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["time", "y", "x"]
-
     assert reader.coordinates["time"] == {"type": "inline", "values": ["t1", "t2", "t3"]}
-    assert reader.band_descriptions == {"time": ["t1", "t2", "t3"]}
+    assert reader.height == 100
+    assert reader.width == 100
 
     # Interval
     reader = ArrayMixin(
@@ -1521,7 +1543,8 @@ async def test_coords_conventions_mixin():
         "stop": 3000,
         "step": 1000,
     }
-    assert reader.band_descriptions == {"time": [1000, 2000, 3000]}
+    assert reader.height == 100
+    assert reader.width == 100
 
     # Date Interval
     reader = ArrayMixin(
@@ -1535,18 +1558,13 @@ async def test_coords_conventions_mixin():
             }
         },
     )
+    assert reader.height == 100
+    assert reader.width == 100
     assert reader.coordinates["time"] == {
         "type": "interval",
         "start": "2024-01-01T00:00:00Z",
         "stop": "2024-01-03T00:00:00Z",
         "step": "P1D",
-    }
-    assert reader.band_descriptions == {
-        "time": [
-            "2024-01-01T00:00:00Z",
-            "2024-01-02T00:00:00Z",
-            "2024-01-03T00:00:00Z",
-        ]
     }
 
     # Date Interval - hours
@@ -1566,13 +1584,6 @@ async def test_coords_conventions_mixin():
         "start": "2024-01-01T00:00:00Z",
         "stop": "2024-01-01T02:00:00Z",
         "step": "PT1H",
-    }
-    assert reader.band_descriptions == {
-        "time": [
-            "2024-01-01T00:00:00Z",
-            "2024-01-01T01:00:00Z",
-            "2024-01-01T02:00:00Z",
-        ]
     }
 
 
@@ -1617,13 +1628,13 @@ async def test_inverted_axis_async_3d():
     reader = AsyncArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "time", "lat"]
-    assert reader.band_descriptions == {"time": ["time1", "time2", "time3"]}
     assert reader.height == 100
     assert reader.width == 200
 
     img = await reader._read()
     assert img.array.shape == (3, 100, 200)
     assert img.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert img.band_descriptions == ["time1", "time2", "time3"]
 
     img = await reader.preview()
     assert img.array.shape == (3, 100, 200)
@@ -1670,13 +1681,13 @@ def test_inverted_axis_async_3d_sync():
     reader = ArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "time", "lat"]
-    assert reader.band_descriptions == {"time": ["time1", "time2", "time3"]}
     assert reader.height == 100
     assert reader.width == 200
 
     img = reader._read()
     assert img.array.shape == (3, 100, 200)
     assert img.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert img.band_descriptions == ["time1", "time2", "time3"]
 
     img = reader.preview()
     assert img.array.shape == (3, 100, 200)
@@ -1725,13 +1736,13 @@ async def test_inverted_axis_async_2d():
     reader = AsyncArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "lat"]
-    assert reader.band_descriptions == {}
     assert reader.height == 100
     assert reader.width == 200
 
     img = await reader._read()
     assert img.array.shape == (1, 100, 200)
     assert img.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert img.band_descriptions == ["b1"]
 
     img = await reader._read(y_slice=slice(0, 20))
     assert img.array.shape == (1, 20, 200)
@@ -1783,7 +1794,6 @@ def test_inverted_axis_async_2d_sync():
     reader = ArrayReader(input=arr)
     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
     assert reader.dimensions == ["lon", "lat"]
-    assert reader.band_descriptions == {}
     assert reader.height == 100
     assert reader.width == 200
 
@@ -1800,93 +1810,11 @@ def test_inverted_axis_async_2d_sync():
     assert img.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
 
 
-# TODO: uncomment when we support >3D arrays
-# def test_inverted_axis_async_5d_sync():
-#     """Test zarr with 5d array."""
-#     store = zarr.storage.MemoryStore()
-
-#     attributes = {}
-#     attributes["zarr_conventions"] = [
-#         spatial_conventions,
-#         proj_conventions,
-#     ]
-
-#     # add spatial and projection metadata
-#     attributes.update(
-#         {
-#             "spatial:dimensions": ["lat", "lon"],
-#             "spatial:transform": list(
-#                 Affine.translation(500000, 4000100) @ Affine.scale(0.5, -1)
-#             ),
-#             "spatial:bbox": [500000.0, 4000000.0, 500100.0, 4000100.0],
-#             "proj:code": "EPSG:32618",
-#         }
-#     )
-
-#     arr_sync = zarr.create(
-#         store=store,
-#         shape=(3, 2, 1, 200, 100),
-#         dtype="float32",
-#         fill_value=-9999.0,
-#         dimension_names=("year", "month", "day", "lon", "lat"),
-#         attributes=attributes,
-#     )
-#     arr_sync[:] = numpy.random.rand(3, 2, 1, 200, 100).astype("float32")
-#     arr_sync[:, :, :, 0:, 10:15] = -9999.0  # Add some nodata
-
-#     arr = zarr.open_array(store=store, mode="r")
-
-#     reader = ArrayReader(input=arr)
-#     assert reader.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
-#     assert reader.dimensions == ["year", "month", "day", "lon", "lat"]
-#     # first non-spatial dimension is the band dimension
-#     assert reader.band_descriptions == ["year1", "year2", "year3"]
-#     assert reader.nbands == 3
-#     assert reader.height == 100
-#     assert reader.width == 200
-
-#     img = reader._read()
-#     assert img.shape == (2, 1, 3, 100, 200)
-
-
 ###############################################################################
 # Selection (sel/sel_method) and N-D arrays
 ###############################################################################
 TIMES = ["2025-01-01T00:00:00Z", "2025-02-01T00:00:00Z", "2025-03-01T00:00:00Z"]
 LEVELS = [0, 100, 200, 300]
-
-
-@pytest.fixture
-def zarr_store_4d() -> zarr.storage.MemoryStore:
-    """Create an in-memory 4D zarr array (time, z, y, x)."""
-    store = zarr.storage.MemoryStore()
-    arr = zarr.create(
-        store=store,
-        shape=(3, 4, 100, 100),
-        chunks=(1, 1, 50, 50),
-        dtype="float32",
-        fill_value=-9999.0,
-        dimension_names=("time", "z", "y", "x"),
-    )
-    # value = time * 10 + z (+ x/1000 to make pixels unique)
-    data = (
-        numpy.arange(3)[:, None, None, None] * 10
-        + numpy.arange(4)[None, :, None, None]
-        + numpy.arange(100)[None, None, None, :] / 1000
-    )
-    arr[:] = numpy.broadcast_to(data, (3, 4, 100, 100)).astype("float32")
-    return store
-
-
-def _reader_4d(store, **kwargs) -> ArrayReader:
-    return ArrayReader(
-        input=zarr.open_array(store=store, mode="r"),
-        crs=CRS.from_epsg(32618),
-        transform=Affine.translation(500000, 4000100) @ Affine.scale(1, -1),
-        spatial_dims=["y", "x"],
-        **kwargs,
-    )
-
 
 COORDS_4D = {
     "time": {"type": "inline", "values": TIMES},
@@ -1895,48 +1823,57 @@ COORDS_4D = {
 
 
 @pytest.mark.parametrize(
-    "selector,method",
+    "selector,method,result",
     [
-        (15, "nearest"),
-        (15, "pad"),
-        (15, "ffill"),
-        (15, "backfill"),
-        (15, "bfill"),
-        (5, "nearest"),
-        (20, "nearest"),
-        (-5, "nearest"),
-        (100, "nearest"),
-        (20, None),
+        (15, "nearest", 20.0),
+        (15, "pad", 10.0),
+        (15, "ffill", 10.0),
+        (15, "backfill", 20.0),
+        (15, "bfill", 20.0),
+        (5, "nearest", 10.0),
+        (20, "nearest", 20.0),
+        (-5, "nearest", 0.0),
+        (100, "nearest", 70.0),
+        (20, None, 20.0),
     ],
 )
-def test_sel_indexer_numeric(selector, method):
+def test_sel_indexer_numeric(selector, method, result):
     """Compare with xarray/pandas."""
     values = numpy.array([0.0, 10.0, 20.0, 50.0, 70.0])
+    selected = _sel_indexer(values, selector, method, "z")
+    assert values[selected] == result
+
+    # Check compat with xarray results
     da = xarray.DataArray(numpy.zeros(5), dims=("z",), coords={"z": values})
     expected = da.indexes["z"].get_indexer([selector], method=method)[0]
-    assert _sel_indexer(values, selector, method, "z") == expected
+    assert selected == expected
 
 
 @pytest.mark.parametrize(
-    "selector,method",
+    "selector,method,idx",
     [
-        ("2025-01-20", "nearest"),
-        ("2025-01-20T00:00:00Z", "pad"),
-        ("2025-01-20T00:00:00", "backfill"),
-        ("2025-02-01", None),
+        ("2025-01-20", "nearest", 1),
+        ("2025-01-20T00:00:00Z", "pad", 0),
+        ("2025-01-20T00:00:00", "backfill", 1),
+        ("2025-02-01", None, 1),
+        ("2025-03-01", None, 2),
     ],
 )
-def test_sel_indexer_datetime(selector, method):
+def test_sel_indexer_datetime(selector, method, idx):
     """Compare with xarray/pandas."""
     values = _get_coordinate_values({"type": "inline", "values": TIMES})
+    assert values is not None
     assert values.dtype.kind == "M"
+    selected = _sel_indexer(values, selector, method, "time")
+    assert selected == idx
 
+    # Check compat with xarray results
     da = xarray.DataArray(numpy.zeros(3), dims=("time",), coords={"time": values})
     ts = pandas.Timestamp(selector)
     if ts.tzinfo is not None:
         ts = ts.tz_convert(None)
     expected = da.indexes["time"].get_indexer([ts], method=method)[0]
-    assert _sel_indexer(values, selector, method, "time") == expected
+    assert selected == expected
 
 
 def test_sel_indexer():
@@ -2027,213 +1964,164 @@ def test_coordinate_values():
 
 def test_reader_4d_metadata(zarr_store_4d):
     """Test N-D reader metadata."""
-    with _reader_4d(zarr_store_4d, coordinates=COORDS_4D) as reader:
-        assert reader.nbands == 12
-        assert reader.non_spatial_dims == ["time", "z"]
-        assert reader.band_descriptions == {"time": TIMES, "z": LEVELS}
-
-        info = reader.info()
-        assert info.count == 12
-        # bands are not listed for N-D arrays
-        assert info.band_descriptions == []
-        assert info.band_metadata == []
-        assert info.dimension_values == {"time": TIMES, "z": LEVELS}
-
-    # No coordinates: `{dim}{n}` labels
-    with _reader_4d(zarr_store_4d) as reader:
-        assert reader.band_descriptions == {
-            "time": ["time1", "time2", "time3"],
-            "z": ["z1", "z2", "z3", "z4"],
-        }
-
-    # Coordinates not matching the dimension size: fallback to positions
-    with _reader_4d(
-        zarr_store_4d,
-        coordinates={"time": {"type": "inline", "values": TIMES[:2]}},
-    ) as reader:
-        with pytest.warns(UserWarning):
-            assert reader.band_descriptions["time"] == ["time1", "time2", "time3"]
-
-
-def test_reader_4d_sel(zarr_store_4d):
-    """Test sel/sel_method with N-D arrays."""
-    with _reader_4d(zarr_store_4d, coordinates=COORDS_4D) as reader:
-        # No selection: N-D output
-        img = reader.preview()
-        assert img.array.shape == (3, 4, 100, 100)
-        assert img.band_names == []
-        assert img.band_descriptions == {"time": TIMES, "z": LEVELS}
-        assert img.metadata == {}
-        assert img.array[2, 3, 0, 0] == 23
-
-        # scalar selection on all dimensions: 3D output (1, h, w)
-        img = reader.preview(sel={"time": "2025-02-01", "z": 200})
-        assert img.array.shape == (1, 100, 100)
-        assert img.band_names == ["b1"]
-        assert img.band_descriptions == ["b1"]
-        assert img.metadata == {"sel": {"time": TIMES[1], "z": 200}}
-        assert img.array[0, 0, 0] == 12
-
-        # nearest
-        img = reader.preview(sel={"time": "2025-01-20", "z": 120}, sel_method="nearest")
-        assert img.metadata == {"sel": {"time": TIMES[1], "z": 100}}
-        assert img.array[0, 0, 0] == 11
-
-        # pad / backfill
-        img = reader.preview(sel={"time": "2025-01-20", "z": 120}, sel_method="pad")
-        assert img.metadata == {"sel": {"time": TIMES[0], "z": 100}}
-        img = reader.preview(sel={"time": "2025-01-20", "z": 120}, sel_method="backfill")
-        assert img.metadata == {"sel": {"time": TIMES[1], "z": 200}}
-
-        # scalar on one dimension: 3D output with the other dimension as bands
-        img = reader.preview(sel={"time": TIMES[2]})
-        assert img.array.shape == (4, 100, 100)
-        assert img.band_names == ["b1", "b2", "b3", "b4"]
-        assert img.band_descriptions == ["0", "100", "200", "300"]
-        assert img.metadata == {"sel": {"time": TIMES[2]}}
-        assert img.array[:, 0, 0].tolist() == [20, 21, 22, 23]
-
-        # list selection keeps the order
-        img = reader.preview(sel={"time": [TIMES[2], TIMES[0]]})
-        assert img.array.shape == (2, 4, 100, 100)
-        assert img.band_descriptions == {"time": [TIMES[2], TIMES[0]], "z": LEVELS}
-        assert img.array[:, 1, 0, 0].tolist() == [21, 1]
-
-        # slice
-        img = reader.preview(sel={"z": slice(100, 200)})
-        assert img.array.shape == (3, 2, 100, 100)
-        assert img.band_descriptions == {"time": TIMES, "z": [100, 200]}
-
-        # string values (e.g from query parameters)
-        img = reader.preview(sel={"time": "2025-01-01", "z": "300"})
-        assert img.array[0, 0, 0] == 3
-
-        # Invalid dimensions
-        with pytest.raises(ValueError):
-            reader.preview(sel={"y": 0})
-
-        with pytest.raises(ValueError):
-            reader.preview(sel={"band": 0})
-
-        # Value not found
-        with pytest.raises(KeyError):
-            reader.preview(sel={"z": 150})
-
-    # No coordinates: selection with positions
-    with _reader_4d(zarr_store_4d) as reader:
-        img = reader.preview(sel={"time": [0, 2], "z": 1})
-        assert img.array.shape == (2, 100, 100)
-        assert img.band_descriptions == ["time1", "time3"]
-        assert img.metadata == {"sel": {"z": "z2"}}
-        assert img.array[:, 0, 0].tolist() == [1, 21]
-
-
-def test_reader_4d_methods(zarr_store_4d):
-    """Test reader methods with N-D output."""
-    feature = {
-        "type": "Polygon",
-        "coordinates": [
-            [
-                [500010, 4000010],
-                [500050, 4000010],
-                [500050, 4000050],
-                [500010, 4000050],
-                [500010, 4000010],
-            ]
-        ],
-    }
-    with _reader_4d(zarr_store_4d, coordinates=COORDS_4D) as reader:
-        bbox = (500010, 4000010, 500050, 4000050)
-        img = reader.part(bbox, bounds_crs=reader.crs)
-        assert img.array.shape == (3, 4, 40, 40)
-        assert img.band_descriptions == {"time": TIMES, "z": LEVELS}
-
-        img = reader.part(bbox, bounds_crs=reader.crs, sel={"z": [0, 300]})
-        assert img.array.shape == (3, 2, 40, 40)
-
-        img = reader.tile(0, 0, 0, tilesize=256)
-        assert img.array.shape == (3, 4, 256, 256)
-
-        img = reader.tile(0, 0, 0, tilesize=256, sel={"time": TIMES[0]})
-        assert img.array.shape == (4, 256, 256)
-
-        img = reader.feature(feature, shape_crs=reader.crs)
-        assert img.array.shape == (3, 4, 40, 40)
-
-        img = reader.preview(max_size=50)
-        assert img.array.shape == (3, 4, 50, 50)
-
-        img = reader.preview(dst_crs=CRS.from_epsg(4326))
-        assert img.array.shape[:2] == (3, 4)
-        assert img.crs == CRS.from_epsg(4326)
-
-        pt = reader.point(500000.5, 4000099.5, coord_crs=reader.crs)
-        assert pt.array.shape == (3, 4)
-        assert pt.band_names == []
-        assert pt.band_descriptions == {"time": TIMES, "z": LEVELS}
-        assert pt.array[2, 1] == 21
-
-        pt = reader.point(500000.5, 4000099.5, coord_crs=reader.crs, sel={"z": 100})
-        assert pt.array.tolist() == [1, 11, 21]
-        assert pt.band_descriptions == TIMES
-
-        # expression on reduced (3D) data
-        img = reader.preview(sel={"time": TIMES[1]}, expression="b2-b1")
-        assert img.array.shape == (1, 100, 100)
-        assert img.band_descriptions == ["100-0"]
-
-        # statistics on reduced (3D) data
-        stats = reader.statistics(sel={"time": TIMES[1]})
-        assert list(stats) == ["b1", "b2", "b3", "b4"]
-        assert stats["b2"].description == "100"
-
-        # 3D only operations raise for N-D data
-        with pytest.raises(ValueError):
-            reader.statistics()
-
-        with pytest.raises(ValueError):
-            reader.preview(expression="b1+b2")
-
-
-@pytest.mark.asyncio
-async def test_async_reader_4d(zarr_store_4d):
-    """Test AsyncArrayReader with N-D arrays."""
-    arr = await zarr.api.asynchronous.open_array(store=zarr_store_4d, mode="r")
-    async with AsyncArrayReader(
-        input=arr,
+    reader = ArrayReader(
+        input=zarr.open_array(store=zarr_store_4d, mode="r"),
         crs=CRS.from_epsg(32618),
         transform=Affine.translation(500000, 4000100) @ Affine.scale(1, -1),
         spatial_dims=["y", "x"],
         coordinates=COORDS_4D,
-    ) as reader:
-        img = await reader.preview()
-        assert img.array.shape == (3, 4, 100, 100)
+    )
+    assert reader.dimensions == ["time", "z", "y", "x"]
+    assert reader.non_spatial_dims == ["time", "z"]
 
-        img = await reader.preview(
-            sel={"time": "2025-01-20", "z": [0, 120]}, sel_method="nearest"
-        )
-        assert img.array.shape == (2, 100, 100)
-        assert img.band_descriptions == ["0", "100"]
-        assert img.metadata == {"sel": {"time": TIMES[1]}}
-        assert img.array[:, 0, 0].tolist() == [10, 11]
+    selection = reader._get_non_spatial_selection()
+    assert selection["time"] == slice(None)
+    assert selection["z"] == slice(None)
 
-        img = await reader.tile(0, 0, 0, tilesize=256, sel={"z": 0})
-        assert img.array.shape == (3, 256, 256)
+    selection = reader._get_non_spatial_selection(
+        sel={"time": "2025-01-20"}, sel_method="nearest"
+    )
+    assert selection["time"] == 1
 
-        pt = await reader.point(500000.5, 4000099.5, coord_crs=reader.crs, sel={"z": 0})
-        assert pt.array.tolist() == [0, 10, 20]
+    selection = reader._get_non_spatial_selection(
+        sel={"time": ["2025-01-20"]}, sel_method="nearest"
+    )
+    assert selection["time"] == [1]
 
-        stats = await reader.statistics(sel={"z": 0})
-        assert list(stats) == ["b1", "b2", "b3"]
+    info = reader.info(with_coordinates=True)
+    assert info.dimensions_count == {
+        "time": len(TIMES),
+        "z": len(LEVELS),
+        "x": 100,
+        "y": 100,
+    }
+    assert info.dimensions == ["time", "z", "y", "x"]
+    assert info.coordinates["time"] == TIMES
+    assert info.coordinates["z"] == LEVELS
+    assert info.model_dump()
+    assert info.model_dump_json()
 
+    img = reader.preview()
+    assert img.array.shape == (3, 4, 100, 100)
+    assert img.band_names == []
+    assert img.band_descriptions == {"time": TIMES, "z": LEVELS}
+    assert img.metadata == {}
+    assert img.array[2, 3, 0, 0] == 23
 
-def test_reader_4d_max_array_size(zarr_store_4d, monkeypatch):
-    """MaxArraySize is checked on the selected shape."""
-    monkeypatch.setattr("rio_tiler.experimental.zarr.MAX_ARRAY_SIZE", 100 * 100 * 4 * 4)
-    with _reader_4d(zarr_store_4d, coordinates=COORDS_4D) as reader:
-        with pytest.raises(MaxArraySizeError):
-            reader.preview()
+    # scalar selection on all dimensions: 3D output (1, h, w)
+    img = reader.preview(sel={"time": "2025-02-01", "z": 200})
+    assert img.array.shape == (1, 100, 100)
+    assert img.band_names == ["b1"]
+    assert img.band_descriptions == ["b1"]
+    assert img.metadata == {"selected": {"time": ["2025-02-01T00:00:00Z"], "z": [200]}}
+    assert img.array[0, 0, 0] == 12
 
-        # 4 bands of 100x100 float32 fits
-        img = reader.preview(sel={"time": TIMES[0]})
-        assert img.array.shape == (4, 100, 100)
+    # nearest
+    img = reader.preview(sel={"time": "2025-01-20", "z": 120}, sel_method="nearest")
+    assert img.array.shape == (1, 100, 100)
+    assert img.band_names == ["b1"]
+    assert img.band_descriptions == ["b1"]
+    assert img.metadata == {"selected": {"time": ["2025-02-01T00:00:00Z"], "z": [100]}}
+    assert img.array[0, 0, 0] == 11
+
+    # pad / backfill
+    img = reader.preview(sel={"time": "2025-01-20", "z": 120}, sel_method="pad")
+    assert img.metadata == {"selected": {"time": ["2025-01-01T00:00:00Z"], "z": [100]}}
+
+    img = reader.preview(sel={"time": "2025-01-20", "z": 120}, sel_method="backfill")
+    assert img.metadata == {"selected": {"time": ["2025-02-01T00:00:00Z"], "z": [200]}}
+
+    # scalar on one dimension: 3D output with the other dimension as bands
+    img = reader.preview(sel={"time": TIMES[2]})
+    assert img.array.shape == (4, 100, 100)
+    assert img.band_names == ["b1", "b2", "b3", "b4"]
+    assert img.band_descriptions == ["0", "100", "200", "300"]
+    assert img.metadata == {
+        "selected": {"time": ["2025-03-01T00:00:00Z"], "z": [0, 100, 200, 300]}
+    }
+    assert img.array[:, 0, 0].tolist() == [20, 21, 22, 23]
+
+    # list selection keeps the order
+    img = reader.preview(sel={"time": [TIMES[2], TIMES[0]]})
+    assert img.array.shape == (2, 4, 100, 100)
+    assert img.band_descriptions == {"time": [TIMES[2], TIMES[0]], "z": LEVELS}
+    assert img.metadata == {
+        "selected": {
+            "time": ["2025-03-01T00:00:00Z", "2025-01-01T00:00:00Z"],
+            "z": [0, 100, 200, 300],
+        }
+    }
+    assert img.array[:, 1, 0, 0].tolist() == [21, 1]
+
+    # slice
+    img = reader.preview(sel={"z": slice(100, 200)})
+    assert img.array.shape == (3, 2, 100, 100)
+    assert img.band_descriptions == {"time": TIMES, "z": [100, 200]}
+    assert img.metadata == {
+        "selected": {
+            "time": [
+                "2025-01-01T00:00:00Z",
+                "2025-02-01T00:00:00Z",
+                "2025-03-01T00:00:00Z",
+            ],
+            "z": [100, 200],
+        }
+    }
+
+    # string values (e.g from query parameters)
+    img = reader.preview(sel={"time": "2025-01-01", "z": "300"})
+    assert img.array.shape == (1, 100, 100)
+    assert img.band_descriptions == ["b1"]
+    assert img.metadata == {"selected": {"time": ["2025-01-01T00:00:00Z"], "z": [300]}}
+    assert img.array[0, 0, 0] == 3
+
+    # Invalid dimensions
+    with pytest.raises(ValueError):
+        reader.preview(sel={"y": 0})
+
+    with pytest.raises(ValueError):
+        reader.preview(sel={"band": 0})
+
+    # Value not found
+    with pytest.raises(KeyError):
+        reader.preview(sel={"z": 150})
+
+    # No coordinates: `{dim}{n}` labels
+    reader = ArrayReader(
+        input=zarr.open_array(store=zarr_store_4d, mode="r"),
+        crs=CRS.from_epsg(32618),
+        transform=Affine.translation(500000, 4000100) @ Affine.scale(1, -1),
+        spatial_dims=["y", "x"],
+    )
+
+    img = reader.preview()
+    assert img.array.shape == (3, 4, 100, 100)
+    assert img.band_descriptions == {
+        "time": ["time1", "time2", "time3"],
+        "z": ["z1", "z2", "z3", "z4"],
+    }
+    assert img.metadata == {}
+
+    img = reader.preview(sel={"time": 0})
+    assert img.array.shape == (4, 100, 100)
+    assert img.band_descriptions == ["z1", "z2", "z3", "z4"]
+    assert img.metadata == {
+        "selected": {"time": ["time1"], "z": ["z1", "z2", "z3", "z4"]}
+    }
+
+    img = reader.preview(sel={"time": 0, "z": 0})
+    assert img.array.shape == (1, 100, 100)
+    assert img.band_descriptions == ["b1"]
+    assert img.metadata == {"selected": {"time": ["time1"], "z": ["z1"]}}
+
+    # Coordinates not matching the dimension size: fallback to positions
+    reader = ArrayReader(
+        input=zarr.open_array(store=zarr_store_4d, mode="r"),
+        crs=CRS.from_epsg(32618),
+        transform=Affine.translation(500000, 4000100) @ Affine.scale(1, -1),
+        spatial_dims=["y", "x"],
+        coordinates={"time": {"type": "inline", "values": TIMES[:2]}},
+    )
+    with pytest.warns(UserWarning):
+        img = reader.preview()
+        assert img.band_descriptions["time"] == ["time1", "time2", "time3"]
