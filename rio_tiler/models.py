@@ -237,12 +237,14 @@ class PointData:
     def _default_band_names(self):
         if self.is_nd:
             return []
+
         return [f"b{ix + 1}" for ix in range(self.count)]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
         if self.is_nd:
             return _default_dimension_descriptions(self.array.shape)
+
         return [f"b{ix + 1}" for ix in range(self.count)]
 
     @scales.default
@@ -301,10 +303,10 @@ class PointData:
         if not data:
             raise InvalidPointDataError("Empty PointData list.")
 
-        if any(pt.is_nd for pt in data):
-            if len(data) == 1:
-                return data[0]
+        if len(data) == 1:
+            return data[0]
 
+        if any(pt.is_nd for pt in data):
             raise InvalidPointDataError(
                 "Cannot concatenate N-D PointData, only 1D (bands) data is supported."
             )
@@ -450,12 +452,14 @@ class ImageData:
         # NOTE: N-D data have no per-band names (would be prod(leading dims) long)
         if self.is_nd:
             return []
+
         return [f"b{ix + 1}" for ix in range(self.count)]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
         if self.is_nd:
             return _default_dimension_descriptions(self.array.shape[:-2])
+
         return [f"b{ix + 1}" for ix in range(self.count)]
 
     @scales.default
@@ -482,13 +486,6 @@ class ImageData:
     def is_nd(self) -> bool:
         """Return True if data has more than 3 dimensions (*leading, height, width)."""
         return self.array.ndim > 3
-
-    def _check_3d(self, operation: str) -> None:
-        """Raise an error if the data is not a 3D (bands, height, width) array."""
-        if self.is_nd:
-            raise ValueError(
-                f"`{operation}` is only supported for 3D (bands, height, width) data, got {self.array.ndim}D array with shape {self.array.shape}."
-            )
 
     def _as_3d(self, array: numpy.ndarray) -> numpy.ndarray:
         """Return a flattened version of the data array.
@@ -606,10 +603,10 @@ class ImageData:
             data (sequence): sequence of ImageData.
 
         """
-        if any(img.is_nd for img in data):
-            if len(data) == 1:
-                return data[0]
+        if len(data) == 1:
+            return data[0]
 
+        if any(img.is_nd for img in data):
             raise ValueError(
                 "Cannot concatenate N-D ImageData, only 3D (bands, height, width) data is supported."
             )
@@ -699,7 +696,11 @@ class ImageData:
         (bands, rows, columns) -> (rows, columns, bands).
 
         """
-        self._check_3d("data_as_image")
+        if self.is_nd:
+            raise ValueError(
+                f"`data_as_image` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         return reshape_as_image(self.array)
 
     @property
@@ -733,7 +734,11 @@ class ImageData:
         out_dtype: str | numpy.number = "uint8",
     ) -> Self:
         """Rescale data in place."""
-        self._check_3d("rescale")
+        if self.is_nd:
+            raise ValueError(
+                f"`rescale` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         self.array = rescale_image(
             self.array,
             in_range=in_range,
@@ -755,7 +760,11 @@ class ImageData:
 
     def apply_color_formula(self, color_formula: str | None) -> Self:
         """Apply color-operations formula in place."""
-        self._check_3d("apply_color_formula")
+        if self.is_nd:
+            raise ValueError(
+                f"`apply_color_formula` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         out = self.array.data
         out[out < 0] = 0
 
@@ -780,7 +789,11 @@ class ImageData:
 
     def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
         """Apply colormap to the image data."""
-        self._check_3d("apply_colormap")
+        if self.is_nd:
+            raise ValueError(
+                f"`apply_colormap` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         data, alpha = apply_cmap(self.array.data, colormap)
 
         array = numpy.ma.MaskedArray(data)
@@ -809,7 +822,11 @@ class ImageData:
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
-        self._check_3d("apply_expression")
+        if self.is_nd:
+            raise ValueError(
+                f"`apply_expression` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         expression = validate_expression(expression)
 
         blocks = get_expression_blocks(expression)
@@ -1033,7 +1050,11 @@ class ImageData:
 
     def to_raster(self, dst_path: str, *, driver: str = "GTIFF", **kwargs: Any) -> None:
         """Save ImageData array to file."""
-        self._check_3d("to_raster")
+        if self.is_nd:
+            raise ValueError(
+                f"`to_raster` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         if driver.upper() == "GTIFF":
             if "transform" not in kwargs:
                 kwargs.update({"transform": self.transform})
@@ -1078,7 +1099,11 @@ class ImageData:
         coverage: numpy.ndarray | None = None,
     ) -> dict[str, BandStatistics]:
         """Return statistics from ImageData."""
-        self._check_3d("statistics")
+        if self.is_nd:
+            raise ValueError(
+                f"`statistics` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         hist_options = hist_options or {}
 
         stats = get_array_statistics(

@@ -497,15 +497,10 @@ class ArrayMixin(SpatialMixin):
 
         return [labels[ix] for ix in idx]
 
-    @cached_property
-    def dimension_values(self) -> dict[str, list[Any]]:
-        """Return coordinate values (labels) for each non-spatial dimension."""
-        return {dim: self._get_labels(dim, slice(None)) for dim in self.coordinate_values}
-
     @property
-    def band_descriptions(self) -> dict[str, list[Any]]:
+    def dimensions_descriptions(self) -> dict[str, list[Any]]:
         """Return coordinate values (labels) for each non-spatial dimension (empty for 2D arrays)."""
-        return self.dimension_values
+        return {dim: self._get_labels(dim, slice(None)) for dim in self.coordinate_values}
 
     def _get_selection(
         self,
@@ -645,34 +640,18 @@ class ArrayMixin(SpatialMixin):
 
         attrs: dict[str, Any] = cast(dict[str, Any], self.input.attrs or {})
 
-        # NOTE: we only list `bands` when there is at most one non-spatial dimension
-        # to avoid listing `prod(non-spatial dimensions)` bands for N-D arrays.
-        band_descriptions: list[str] = []
-        if len(self.non_spatial_dims) == 1:
-            band_descriptions = list(map(str, next(iter(self.dimension_values.values()))))
-        elif not self.non_spatial_dims:
-            band_descriptions = ["b1"]
-
         meta: dict[str, Any] = {
             "bounds": self.bounds,
             "crs": CRS_to_uri(self.crs) or self.crs.to_wkt(),
-            "band_metadata": [
-                (f"b{ix}", {}) for ix in range(1, len(band_descriptions) + 1)
-            ],
-            "band_descriptions": [
-                (f"b{ix}", val) for ix, val in enumerate(band_descriptions, 1)
-            ],
+            "band_metadata": [],
+            "band_descriptions": [],
             "dtype": self.input.dtype.name,
             "nodata_type": nodata_type,
             "colorinterp": None,
             # additional info (not in default model)
-            "driver": "Zarr",
-            "count": self.nbands,
-            "width": self.width,
-            "height": self.height,
             "dimensions": self.dimensions,
+            "dimensions_count": dict(zip(self.dimensions, self.input.shape)),
             "coordinates": self.coordinates,
-            "dimension_values": self.dimension_values,
             "attrs": {
                 k: (v.tolist() if isinstance(v, (numpy.ndarray, numpy.generic)) else v)
                 for k, v in attrs.items()
@@ -681,7 +660,7 @@ class ArrayMixin(SpatialMixin):
 
         minv, maxv = attrs.get("valid_min"), attrs.get("valid_max")
         if minv is not None and maxv is not None:
-            meta["minmax"] = list(((minv, maxv),) * max(len(band_descriptions), 1))
+            meta["minmax"] = [(minv, maxv)]
 
         if nodata is not None:
             meta.update({"nodata_value": nodata.item()})
