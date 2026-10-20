@@ -7678,23 +7678,24 @@
 
 <h1 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h1>
 <ul>
-<li>breaking: remove python 3.11 support (rasterio 1.5 requires python &gt;=3.12)</li>
 <li>update: require <code>rasterio&gt;=1.5.1</code> and <code>affine&gt;=3.0</code></li>
-<li>fix: use masked array reprojection in <code>rio_tiler._warp.warp</code> (fix mask warping with GDAL &gt;= 3.11)</li>
-<li>fix: use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
+<li>breaking: remove python 3.11 support (rasterio 1.5 requires python &gt;=3.12)</li>
+<li>breaking: remove <code>scales</code> and <code>offsets</code> attributes in ImageData and PointData models</li>
 <li>breaking: <code>rio_tiler.experimental.zarr</code> Array readers (<code>AsyncArrayReader</code>, <code>ArrayReader</code>) now use named dimensions<ul>
+<li>remove <code>band_names</code> attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to <code>{dim}{n}</code>)</li>
 <li>add <code>dimensions</code> attribute (defaults to the zarr <code>dimension_names</code> metadata)</li>
 <li>add <code>spatial_dims</code> attribute (<code>[y_dim, x_dim]</code>, defaults to <code>spatial:dimensions</code> from the <code>spatial</code> zarr-convention), so Y/X no longer need to be the last two axes</li>
-<li><code>coordinates</code> now holds the full <code>coords:coordinates</code> mapping (<code>{dim: {...}}</code>) for all dimensions instead of the coordinate of the first non-spatial dimension</li>
-<li>remove <code>band_names</code> attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to <code>{dim}{n}</code>)</li>
-<li><code>info().dimensions</code> now returns the <code>dimensions</code> attribute</li>
-<li>reads use <code>get_orthogonal_selection</code> with per-dimension selection (internal <code>_read(row_slice=, col_slice=)</code> -&gt; <code>_read(y_slice=, x_slice=)</code>)</li>
-<li><code>GroupReader</code>/<code>AsyncGroupReader</code> forward the arrays' <code>spatial_dims</code> and <code>coordinates</code> to the Array readers</li>
+<li>change: <code>coordinates</code> now holds the full <code>coords:coordinates</code> mapping (<code>{dim: {...}}</code>) for all dimensions instead of the coordinate of the first non-spatial dimension</li>
+<li>change: <code>info().dimensions</code> now returns the <code>dimensions</code> attribute</li>
+<li>change: reads use <code>get_orthogonal_selection</code> with per-dimension selection (internal <code>_read(row_slice=, col_slice=)</code> -&gt; <code>_read(y_slice=, x_slice=)</code>)</li>
+<li>change: <code>GroupReader</code>/<code>AsyncGroupReader</code> forward the arrays' <code>spatial_dims</code> and <code>coordinates</code> to the Array readers</li>
 </ul>
 </li>
 <li>add: <code>resampling_method</code> option to the zarr Array readers' <code>tile</code> method</li>
-<li>fix: run blocking warp/reproject/resize in a worker thread (<code>asyncio.to_thread</code>) in the async experimental readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>) to avoid blocking the event loop</li>
 <li>add: <code>rio_tiler.utils.run_sync</code> to run a blocking function in a worker thread, forwarding the active rasterio environment</li>
+<li>fix: use masked array reprojection in <code>rio_tiler._warp.warp</code> (fix mask warping with GDAL &gt;= 3.11)</li>
+<li>fix: use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
+<li>fix: run blocking warp/reproject/resize in a worker thread (<code>asyncio.to_thread</code>) in the async experimental readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>) to avoid blocking the event loop</li>
 <li>docs: new <code>experimental</code> documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)</li>
 </ul>
 <h2 id="9412-2026-10-08">9.4.12 (2026-10-08)<a class="headerlink" href="#9412-2026-10-08" title="Permanent link">&para;</a></h2>
