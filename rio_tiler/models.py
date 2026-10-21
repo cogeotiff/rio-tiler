@@ -236,14 +236,14 @@ class PointData:
         if self.is_nd:
             return []
 
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
         if self.is_nd:
             return _default_dimension_descriptions(self.array.shape)
 
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     def __attrs_post_init__(self):
         """Validate N-D metadata."""
@@ -276,17 +276,6 @@ class PointData:
         """Allow for variable expansion."""
         for i in self.array.data:
             yield i
-
-    @property
-    def count(self) -> int:
-        """Number of band."""
-        if self.is_nd:
-            warnings.warn(
-                f"Array has more than 3 dimensions: {self.array.shape}, count will only consider the first dimension.",
-                UserWarning,
-            )
-
-        return self.array.shape[0]
 
     @classmethod
     def create_from_list(cls, data: Sequence["PointData"]) -> "PointData":
@@ -442,18 +431,18 @@ class ImageData:
         if self.is_nd:
             return []
 
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
         if self.is_nd:
             return _default_dimension_descriptions(self.array.shape[:-2])
 
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @alpha_mask.validator
     def _check_alpha_mask(self, attribute, value):
-        """Make sure alpha mask has valid shame and datatype."""
+        """Make sure alpha mask has valid shape and datatype."""
         if value is not None:
             if (
                 len(value.shape) != 2
@@ -680,17 +669,6 @@ class ImageData:
     def height(self) -> int:
         """Height of the data array."""
         return self.array.shape[-2]
-
-    @property
-    def count(self) -> int:
-        """Number of band (size of the first dimension)."""
-        if self.is_nd:
-            warnings.warn(
-                f"Array has more than 3 dimensions: {self.array.shape}, count will only consider the first dimension.",
-                UserWarning,
-            )
-
-        return self.array.shape[0]
 
     @property
     def transform(self) -> Affine:

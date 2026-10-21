@@ -2763,7 +2763,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         img = ImageData.create_from_list(img_stack)
         if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
 
         if expression:
             return img.apply_expression(expression)
@@ -2835,7 +2835,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         img = ImageData.create_from_list(img_stack)
         if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
 
         if expression:
             return img.apply_expression(expression)
@@ -2898,7 +2898,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         pt = PointData.create_from_list(point_stack)
         if not pt.is_nd:
-            pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+            pt.band_names = [f"b{ix + 1}" for ix in range(pt.array.shape[0])]
 
         if expression:
             return pt.apply_expression(expression)
@@ -3557,7 +3557,7 @@ class GroupReader(BaseReader, GroupMixin):
 
         img = ImageData.create_from_list([_part(variable) for variable in variables])
         if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
 
         if expression:
             return img.apply_expression(expression)
@@ -3627,7 +3627,7 @@ class GroupReader(BaseReader, GroupMixin):
 
         img = ImageData.create_from_list([_preview(variable) for variable in variables])
         if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
 
         if expression:
             return img.apply_expression(expression)
@@ -3688,7 +3688,7 @@ class GroupReader(BaseReader, GroupMixin):
 
         pt = PointData.create_from_list([_point(variable) for variable in variables])
         if not pt.is_nd:
-            pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+            pt.band_names = [f"b{ix + 1}" for ix in range(pt.array.shape[0])]
 
         if expression:
             return pt.apply_expression(expression)

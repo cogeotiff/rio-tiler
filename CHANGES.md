@@ -4,6 +4,7 @@
 * update: require `rasterio>=1.5.1` and `affine>=3.0`
 * breaking: remove python 3.11 support (rasterio 1.5 requires python >=3.12)
 * breaking: remove `scales` and `offsets` attributes in ImageData and PointData models
+* breaking: remove `count` attribute in ImageData and PointData models
 * breaking: `rio_tiler.experimental.zarr` Array readers (`AsyncArrayReader`, `ArrayReader`) now use named dimensions
     * remove `band_names` attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to `{dim}{n}`)
     * add `dimensions` attribute (defaults to the zarr `dimension_names` metadata)

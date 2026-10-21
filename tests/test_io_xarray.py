@@ -101,7 +101,7 @@ def test_xarray_reader():
             stats = dst.statistics(indexes=0)
 
         img = dst.tile(0, 0, 0)
-        assert img.count == 2
+        assert img.array.shape[0] == 2
         assert img.width == 256
         assert img.height == 256
         assert img.array.dtype == numpy.float32
@@ -112,7 +112,7 @@ def test_xarray_reader():
         assert img.dataset_statistics == ((arr.min(), arr.max()), (arr.min(), arr.max()))
 
         img = dst.tile(0, 0, 0, indexes=2)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == [
             "2022-01-02T00:00:00.000000",
         ]
@@ -133,7 +133,7 @@ def test_xarray_reader():
 
         # Test that a high-zoom tile will succeed with auto_expand=True (and that is the default)
         img = dst.tile(tile.x, tile.y, zoom, indexes=1)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.width == 256
         assert img.height == 256
         assert img.bounds == bounds
@@ -141,7 +141,7 @@ def test_xarray_reader():
 
         img = dst.part((-160, -80, 160, 80), indexes=1)
         assert img.crs == "epsg:4326"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 32, 32)
         assert img.array.dtype == numpy.float32
@@ -151,7 +151,7 @@ def test_xarray_reader():
 
         img = dst.part((-160, -80, 160, 80), dst_crs="epsg:3857", indexes=1)
         assert img.crs == "epsg:3857"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 29, 33)
 
@@ -168,7 +168,7 @@ def test_xarray_reader():
 
         img = dst.preview()
         assert img.crs == "epsg:4326"
-        assert img.count == 2
+        assert img.array.shape[0] == 2
         assert img.array.dtype == numpy.float32
         assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000",
@@ -181,13 +181,13 @@ def test_xarray_reader():
 
         img = dst.preview(indexes=1)
         assert img.crs == "epsg:4326"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 33, 35)
 
         img = dst.preview(dst_crs="epsg:3857", indexes=2)
         assert img.crs == "epsg:3857"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-02T00:00:00.000000"]
         assert img.array.shape == (1, 32, 36)
 
@@ -204,7 +204,7 @@ def test_xarray_reader():
         assert img.array.shape == (1, 25, 25)
 
         pt = dst.point(0, 0)
-        assert pt.count == 2
+        assert pt.array.shape[0] == 2
         assert pt.band_descriptions == [
             "2022-01-01T00:00:00.000000",
             "2022-01-02T00:00:00.000000",
@@ -226,7 +226,7 @@ def test_xarray_reader():
             )
 
         pt = dst.point(0, 0, indexes=2)
-        assert pt.count == 1
+        assert pt.array.shape[0] == 1
         assert pt.band_descriptions == ["2022-01-02T00:00:00.000000"]
         assert pt.coordinates
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
@@ -259,7 +259,7 @@ def test_xarray_reader():
             },
         }
         img = dst.feature(feat)
-        assert img.count == 2
+        assert img.array.shape[0] == 2
         assert img.array.dtype == numpy.float32
         assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000",
@@ -268,16 +268,16 @@ def test_xarray_reader():
         assert img.array.shape == (2, 24, 31)
 
         img = dst.feature(feat, out_dtype="uint8")
-        assert img.count == 2
+        assert img.array.shape[0] == 2
         assert img.array.dtype == numpy.uint8
 
         img = dst.feature(feat, indexes=2)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-02T00:00:00.000000"]
         assert img.array.shape == (1, 24, 31)
 
         img = dst.feature(feat, dst_crs="epsg:3857", indexes=1)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.crs == "epsg:3857"
         assert img.array.shape == (1, 19, 34)
@@ -301,7 +301,7 @@ def test_xarray_reader():
         assert stats["b1"].min == 0.0
 
         img = dst.tile(0, 0, 0)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.width == 256
         assert img.height == 256
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
@@ -400,7 +400,7 @@ def test_xarray_reader_external_nodata():
 
             # overwrite the nodata value to 0
             pt = dst.point(-179, 89, nodata=0)
-            assert pt.count == 1
+            assert pt.array.shape[0] == 1
             assert not pt._mask[0]
             assert dst.input.rio.nodata is None
 
@@ -477,7 +477,7 @@ def test_xarray_reader_internal_nodata():
 
             # POINT
             pt = dst.point(-179, 89)
-            assert pt.count == 1
+            assert pt.array.shape[0] == 1
             assert not pt._mask[0]
 
             feat = {
@@ -726,21 +726,21 @@ def test_xarray_reader_no_dims():
             stats = dst.statistics(indexes=(1, 2))
 
         img = dst.tile(0, 0, 0)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.width == 256
         assert img.height == 256
         assert img.band_descriptions == ["b1"]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         img = dst.part((-160, -80, 160, 80))
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.width == 32
         assert img.height == 32
         assert img.band_descriptions == ["b1"]
         assert img.dataset_statistics == ((arr.min(), arr.max()),)
 
         pt = dst.point(0, 0)
-        assert pt.count == 1
+        assert pt.array.shape[0] == 1
         assert img.band_descriptions == ["b1"]
         assert pt.coordinates
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
@@ -811,7 +811,7 @@ def test_xarray_reader_Y_axis():
         assert img.array[0, 0, 0] > img.array[0, -1, -1]
 
         pt = dst.point(0, 0)
-        assert pt.count == 1
+        assert pt.array.shape[0] == 1
         assert pt.coordinates
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
         for xy in xys:
@@ -853,7 +853,7 @@ def test_xarray_reader_Y_axis():
         assert img.array[0, 0, 0] < img.array[0, -1, -1]
 
         pt = dst.point(0, 0)
-        assert pt.count == 1
+        assert pt.array.shape[0] == 1
         assert pt.coordinates
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]
         for xy in xys:
@@ -1111,7 +1111,7 @@ def test_xarray_reader_nodata_option():
 
             # overwrite the nodata value to 0
             pt = dst.point(-179, 89)
-            assert pt.count == 1
+            assert pt.array.shape[0] == 1
             assert not pt._mask[0]
             assert dst.input.rio.nodata is None
 
