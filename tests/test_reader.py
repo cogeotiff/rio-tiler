@@ -855,7 +855,7 @@ def test_read():
         img = reader.read(src)
         assert img.width == src.width
         assert img.height == src.height
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert img.bounds == src.bounds
         assert img.crs == src.crs
 
@@ -864,7 +864,7 @@ def test_read():
             img = reader.read(src, max_size=1000, width=100, height=100)
         assert img.width == 100
         assert img.height == 100
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert img.bounds == src.bounds
         assert img.crs == src.crs
 
@@ -872,14 +872,14 @@ def test_read():
         img = reader.read(src, width=100, height=100)
         assert img.width == 100
         assert img.height == 100
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert img.bounds == src.bounds
         assert img.crs == src.crs
 
     with rasterio.open(COG) as src:
         img = reader.read(src, max_size=100)
         assert max(img.width, img.height) == 100
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert img.bounds == src.bounds
         assert img.crs == src.crs
 
@@ -887,7 +887,7 @@ def test_read():
         img = reader.read(src, dst_crs="epsg:3857")
         assert not img.width == src.width
         assert not img.height == src.height
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert not img.bounds == src.bounds
         assert not img.crs == src.crs
 
@@ -903,7 +903,7 @@ def test_read():
         img = reader.read(src, window=((0, 100), (0, 100)))
         assert img.width == 100
         assert img.height == 100
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert not img.bounds == src.bounds
         assert img.crs == src.crs
 
@@ -912,7 +912,7 @@ def test_read():
         img = reader.read(src, window=((-10, 100), (-10, 100)))
         assert img.width == 110
         assert img.height == 110
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert not img.bounds == src.bounds
         assert img.crs == src.crs
 
@@ -920,7 +920,7 @@ def test_read():
         img = reader.read(src, window=((0, 4000), (0, 4000)))
         assert img.width == 4000
         assert img.height == 4000
-        assert img.count == src.count
+        assert img.array.shape[0] == src.count
         assert not img.bounds == src.bounds
         assert img.crs == src.crs
 

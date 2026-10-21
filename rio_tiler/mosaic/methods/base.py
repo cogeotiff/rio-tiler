@@ -15,6 +15,7 @@ class MosaicMethodBase(abc.ABC):
     cutline_mask: numpy.ndarray | None = field(default=None, init=False)
     width: int = field(init=False)
     height: int = field(init=False)
+    # TODO: replace `int` with `tuple[int]`
     count: int = field(init=False)
 
     @property
