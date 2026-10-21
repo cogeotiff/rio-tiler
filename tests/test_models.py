@@ -291,7 +291,7 @@ def test_merge_with_diffsize():
         img2 = ImageData(numpy.zeros((1, 128, 128)))
         img = ImageData.create_from_list([img1, img2])
 
-    assert img.count == 2
+    assert img.array.shape[0] == 2
     assert img.width == 256
     assert img.height == 256
 
@@ -306,11 +306,11 @@ def test_apply_expression():
     """Apply expression"""
     img = ImageData(numpy.zeros((2, 256, 256)))
     img2 = img.apply_expression("b1+b2")
-    assert img.count == 2
+    assert img.array.shape[0] == 2
     assert img.width == 256
     assert img.height == 256
     assert img.band_names == ["b1", "b2"]
-    assert img2.count == 1
+    assert img2.array.shape[0] == 1
     assert img2.width == 256
     assert img2.height == 256
     assert img2.band_descriptions == ["b1+b2"]
@@ -384,7 +384,7 @@ def test_resize():
     img = ImageData(data)
 
     img_r = img.resize(256, 256)
-    assert img_r.count == 3
+    assert img_r.array.shape[0] == 3
     assert img_r.width == 256
     assert img_r.height == 256
     assert img.width == 1024
@@ -400,7 +400,7 @@ def test_clip():
     img = ImageData(data, crs="epsg:4326", bounds=(-180, -90, 180, 90))
 
     img_c = img.clip((-100, -50, 100, 50))
-    assert img_c.count == 3
+    assert img_c.array.shape[0] == 3
     assert img_c.bounds == (-100, -50, 100, 50)
 
     img.rescale(((0, 32767),))
@@ -416,7 +416,7 @@ def test_clip():
 def test_point_data():
     """Test Point Data Model."""
     pt = PointData(numpy.zeros((3), dtype="uint16"))
-    assert pt.count == 3
+    assert pt.array.shape[0] == 3
     assert pt.data.shape == (3,)
     assert pt.mask.shape == (1,)
     assert pt._mask.tolist() == [True]
@@ -434,9 +434,9 @@ def test_point_data():
 
     pt1 = PointData(numpy.array([1, 2]))
     pt2 = pt1.apply_expression("b1+b2")
-    assert pt1.count == 2
+    assert pt1.array.shape[0] == 2
     assert pt1.band_names == ["b1", "b2"]
-    assert pt2.count == 1
+    assert pt2.array.shape[0] == 1
     assert pt2.band_descriptions == ["b1+b2"]
 
     pts = PointData.create_from_list([pt1, pt2])
@@ -636,7 +636,7 @@ def test_2d_image():
     """Create Image Data from 2d array."""
     data = numpy.zeros((256, 256))
     im = ImageData(data)
-    assert im.count == 1
+    assert im.array.shape[0] == 1
     assert im.width == 256
     assert im.height == 256
     assert im._mask.all()
@@ -652,7 +652,7 @@ def test_apply_color_formula():
         "gamma b 1.85, gamma rg 1.95, sigmoidal rgb 35 0.13, saturation 1.15"
     )
     assert img.data.dtype == "uint8"
-    assert img.count == 3
+    assert img.array.shape[0] == 3
     assert img.width == 256
     assert img.height == 256
 
@@ -741,7 +741,7 @@ def test_image_reproject():
 
     reprojected = img.reproject(dst_crs)
     assert reprojected.crs == dst_crs
-    assert reprojected.count == 1
+    assert reprojected.array.shape[0] == 1
     assert reprojected.width != 256
     assert reprojected.height != 256
     assert reprojected.array[0, 0, 0].data == 0
@@ -777,7 +777,7 @@ def test_image_reproject():
 
     reprojected = img.reproject(dst_crs)
     assert reprojected.crs == dst_crs
-    assert reprojected.count == 3
+    assert reprojected.array.shape[0] == 3
     assert reprojected.width != 256
     assert reprojected.height != 256
     assert reprojected.array.data[:, 0, 0].tolist() == [0, 0, 0]

@@ -189,11 +189,11 @@ class PointData:
 
     @band_names.default
     def _default_band_names(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @property
     def data(self) -> numpy.ndarray:
@@ -215,11 +215,6 @@ class PointData:
         """Allow for variable expansion."""
         for i in self.array.data:
             yield i
-
-    @property
-    def count(self) -> int:
-        """Number of band."""
-        return self.array.shape[0]
 
     @classmethod
     def create_from_list(cls, data: Sequence["PointData"]) -> "PointData":
@@ -357,11 +352,11 @@ class ImageData:
 
     @band_names.default
     def _default_band_names(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @alpha_mask.validator
     def _check_alpha_mask(self, attribute, value):
@@ -553,17 +548,12 @@ class ImageData:
     @property
     def width(self) -> int:
         """Width of the data array."""
-        return self.array.shape[2]
+        return self.array.shape[-1]
 
     @property
     def height(self) -> int:
         """Height of the data array."""
-        return self.array.shape[1]
-
-    @property
-    def count(self) -> int:
-        """Number of band."""
-        return self.array.shape[0]
+        return self.array.shape[-2]
 
     @property
     def transform(self) -> Affine:
@@ -971,7 +961,7 @@ class ImageData:
             resolution=resolution,
         )
 
-        destination = numpy.ma.zeros((self.count, h, w), self.array.dtype)
+        destination = numpy.ma.zeros((self.array.shape[0], h, w), self.array.dtype)
 
         destination, _ = reproject(
             self.array,

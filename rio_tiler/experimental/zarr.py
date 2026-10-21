@@ -2613,7 +2613,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         img_stack = await asyncio.gather(*(_part(variable) for variable in variables))
 
         img = ImageData.create_from_list(img_stack)
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
             return img.apply_expression(expression)
 
@@ -2679,7 +2679,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         img_stack = await asyncio.gather(*(_preview(variable) for variable in variables))
 
         img = ImageData.create_from_list(img_stack)
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
             return img.apply_expression(expression)
 
@@ -2736,7 +2736,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         point_stack = await asyncio.gather(*(_point(variable) for variable in variables))
 
         pt = PointData.create_from_list(point_stack)
-        pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+        pt.band_names = [f"b{ix + 1}" for ix in range(pt.array.shape[0])]
         if expression:
             return pt.apply_expression(expression)
 
@@ -3381,7 +3381,7 @@ class GroupReader(BaseReader, GroupMixin):
                 )
 
         img = ImageData.create_from_list([_part(variable) for variable in variables])
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
             return img.apply_expression(expression)
 
@@ -3445,7 +3445,7 @@ class GroupReader(BaseReader, GroupMixin):
                 )
 
         img = ImageData.create_from_list([_preview(variable) for variable in variables])
-        img.band_names = [f"b{ix + 1}" for ix in range(img.count)]
+        img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
             return img.apply_expression(expression)
 
@@ -3500,7 +3500,7 @@ class GroupReader(BaseReader, GroupMixin):
                 )
 
         pt = PointData.create_from_list([_point(variable) for variable in variables])
-        pt.band_names = [f"b{ix + 1}" for ix in range(pt.count)]
+        pt.band_names = [f"b{ix + 1}" for ix in range(pt.array.shape[0])]
         if expression:
             return pt.apply_expression(expression)
 
