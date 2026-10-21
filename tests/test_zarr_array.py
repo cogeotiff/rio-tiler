@@ -904,7 +904,7 @@ async def test_point_async(zarr_store):
         )
         assert pt.array.shape[0] == 2
         assert pt.band_names == ["b1", "b2"]
-        assert pt.band_descriptions == ["b1", "b3"]
+        assert pt.band_descriptions == ["band1", "band3"]
 
         # Test raises error for points outside bounds.
         # Point outside dataset bounds
@@ -959,7 +959,7 @@ def test_point(zarr_store):
         )
         assert pt.array.shape[0] == 2
         assert pt.band_names == ["b1", "b2"]
-        assert pt.band_descriptions == ["b1", "b3"]
+        assert pt.band_descriptions == ["band1", "band3"]
 
         # Test raises error for points outside bounds.
         # Point outside dataset bounds
