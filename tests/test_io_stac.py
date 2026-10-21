@@ -1238,7 +1238,7 @@ def test_vrt_string_assets():
         assert len(info["vrt://asset?bands=1,2"].band_metadata) == 2
 
         img = stac.preview(assets="vrt://asset?bands=1")
-        assert img.count == 1
+        assert img.array.shape[0] == 1
 
 
 def test_stac_with_rotate_affine():

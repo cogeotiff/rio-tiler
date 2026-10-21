@@ -301,7 +301,7 @@ async def test_mask(src_path):
     geotiff = await GeoTIFF.open(src_path, store=store)
     async with GeoTIFFReader(geotiff) as src:
         im = await src.preview(max_size=1024)
-        assert im.count == 3
+        assert im.array.shape[0] == 3
 
         assert im.array.data[0, 0, 0] == 0
         assert im.array.data[0, -1, -1]

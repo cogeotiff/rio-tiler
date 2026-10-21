@@ -101,9 +101,9 @@ def mosaic_reader(  # noqa: C901
                 pixel_selection.cutline_mask = img.cutline_mask
                 pixel_selection.width = img.width
                 pixel_selection.height = img.height
-                pixel_selection.count = img.count
+                pixel_selection.count = img.array.shape[0]
 
-            assert img.count == pixel_selection.count, (
+            assert img.array.shape[0] == pixel_selection.count, (
                 "Assets HAVE TO have the same number of bands"
             )
             if any(
@@ -237,9 +237,9 @@ def mosaic_point_reader(
                 band_descriptions = pt.band_descriptions
                 pixel_selection.width = 1
                 pixel_selection.height = 1
-                pixel_selection.count = pt.count
+                pixel_selection.count = pt.array.shape[0]
 
-            assert pt.count == pixel_selection.count, (
+            assert pt.array.shape[0] == pixel_selection.count, (
                 "Assets HAVE TO have the same number of bands"
             )
 
@@ -359,9 +359,9 @@ async def async_mosaic_reader(  # noqa: C901
             pixel_selection.cutline_mask = img.cutline_mask
             pixel_selection.width = img.width
             pixel_selection.height = img.height
-            pixel_selection.count = img.count
+            pixel_selection.count = img.array.shape[0]
 
-        assert img.count == pixel_selection.count, (
+        assert img.array.shape[0] == pixel_selection.count, (
             "Assets HAVE TO have the same number of bands"
         )
         if any(
