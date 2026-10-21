@@ -1114,7 +1114,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         selection = self._get_read_selection(
             y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
         )
-        data = await self.input.get_orthogonal_selection(selection)
+        data = numpy.asarray(await self.input.get_orthogonal_selection(selection))
 
         # labels for band_descriptions
         band_descriptions = {
@@ -1161,12 +1161,21 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         read_transform = self.transform @ Affine.translation(x_start, y_start)
         read_bounds = array_bounds(read_height, read_width, read_transform)
 
+        img_meta = {
+            "selected": {
+                d: self._get_labels(d, idx)
+                for d, idx in zip(self.dimensions, selection)
+                if d in self.non_spatial_dims
+            },
+        }
+
         return ImageData(  # type: ignore
             masked_data,
             bounds=read_bounds,
             crs=self.crs,
             band_descriptions=band_descriptions,
             nodata=nodata,
+            metadata=img_meta if sel else {},
         )
 
 
@@ -1683,7 +1692,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         selection = self._get_read_selection(
             y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
         )
-        data = self.input.get_orthogonal_selection(selection)
+        data = numpy.asarray(self.input.get_orthogonal_selection(selection))
 
         # labels for band_descriptions
         band_descriptions = {
