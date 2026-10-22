@@ -49,14 +49,16 @@ def validate_expression(expr: str) -> str:
 
 
 def parse_expression(
-    expression: str, cast: bool = True, dimensions: list[str] | None = None
+    expression: str,
+    cast: bool = True,
+    dimension: str = "b",
 ) -> tuple:
     """Parse rio-tiler band math expression and extract bands.
 
     Args:
         expression (str): band math/combination expression.
         cast (bool): cast band names to integers (convert to index values). Defaults to True.
-        dimensions: (list, optional): list of leading dimensions to look for in the expression. Defaults to ["b"].
+        dimensions: (str, optional): name of the band dimension. Defaults to "b".
 
     Returns:
         tuple: band names/indexes.
@@ -69,14 +71,10 @@ def parse_expression(
             ('1', '2')
 
     """
-    dims = dimensions or ["b"]
-
     expression = validate_expression(expression)
 
     bands = set(
-        re.findall(
-            rf"\b(?:{'|'.join(dims)})(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE
-        )
+        re.findall(rf"\b(?:{dimension})(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE)
     )
 
     output_bands = tuple(map(int, bands)) if cast else tuple(bands)
