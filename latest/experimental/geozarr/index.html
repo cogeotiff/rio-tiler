@@ -699,6 +699,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="AsyncArrayReader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#selection-on-non-spatial-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selection on non-spatial dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2564,6 +2581,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="AsyncArrayReader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#selection-on-non-spatial-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Selection on non-spatial dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2761,7 +2795,7 @@
 <span class="n">sea_ice_fraction</span>
 <span class="n">time</span>
 
-<span class="c1"># Fetch time coordinate for `band_names`</span>
+<span class="c1"># Fetch time coordinate values (used for `sel`)</span>
 <span class="n">time</span> <span class="o">=</span> <span class="k">await</span> <span class="n">group</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="s2">"time"</span><span class="p">)</span>
 <span class="n">time_arrray</span> <span class="o">=</span> <span class="k">await</span> <span class="n">time</span><span class="o">.</span><span class="n">getitem</span><span class="p">(</span><span class="nb">slice</span><span class="p">(</span><span class="kc">None</span><span class="p">))</span>
 
@@ -2799,8 +2833,45 @@
         <span class="s2">"time"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"inline"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="n">time_arrray</span><span class="o">.</span><span class="n">tolist</span><span class="p">()},</span>
     <span class="p">},</span>
 <span class="p">)</span>
-<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ds</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">indexes</span><span class="o">=</span><span class="mi">10</span><span class="p">)</span>
+<span class="c1"># Select one time step using the `time` coordinate values (exact match)</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ds</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="n">time_arrray</span><span class="p">[</span><span class="mi">9</span><span class="p">]})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+
+<span class="c1"># Select the closest time step</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ds</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">9</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mi">5</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="n">time_arrray</span><span class="p">[</span><span class="mi">9</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">},</span> <span class="n">sel_method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span>
 </code></pre></div>
+<h4 id="selection-on-non-spatial-dimensions">Selection on non-spatial dimensions<a class="headerlink" href="#selection-on-non-spatial-dimensions" title="Permanent link">&para;</a></h4>
+<p><code>AsyncArrayReader</code> and <code>ArrayReader</code> methods accept <code>sel</code> and <code>sel_method</code> options which mimic
+<a href="https://docs.xarray.dev/en/stable/generated/xarray.DataArray.sel.html"><code>xarray.DataArray.sel</code></a>
+for the non-spatial dimensions:</p>
+<ul>
+<li><code>sel</code>: <code>{dimension: selector}</code> where the selector can be a scalar (the dimension is dropped), a list of values or a <code>slice</code> (inclusive bounds)</li>
+<li><code>sel_method</code>: <code>None</code> (exact match, default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> or <code>backfill</code>/<code>bfill</code></li>
+<li>Values are matched against the <code>coordinates</code> (inline or interval). When a dimension has no coordinates, the positions (<code>0, 1, ..., n - 1</code>) are used for selection and the values are labelled <code>{dimension}{position + 1}</code> (e.g <code>time1</code>).</li>
+<li>Temporal coordinates accept ISO 8601 strings (e.g <code>"2025-01-01"</code>, <code>"2025-01-01T00:00:00Z"</code>)</li>
+</ul>
+<p>Unselected non-spatial dimensions are kept, so the output <code>ImageData</code> can be N-D, with shape <code>(*non-spatial dimensions, height, width)</code>.</p>
+<div class="highlight"><pre><span></span><code><span class="n">ds</span> <span class="o">=</span> <span class="n">AsyncArrayReader</span><span class="p">(</span>
+    <span class="nb">input</span><span class="o">=</span><span class="n">array</span><span class="p">,</span>  <span class="c1"># dimensions: ["time", "z", "y", "x"]</span>
+    <span class="n">coordinates</span><span class="o">=</span><span class="p">{</span>
+        <span class="s2">"time"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"inline"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"2025-01-01T00:00:00Z"</span><span class="p">,</span> <span class="s2">"2025-02-01T00:00:00Z"</span><span class="p">]},</span>
+        <span class="s2">"z"</span><span class="p">:</span> <span class="p">{</span><span class="s2">"type"</span><span class="p">:</span> <span class="s2">"interval"</span><span class="p">,</span> <span class="s2">"start"</span><span class="p">:</span> <span class="mi">0</span><span class="p">,</span> <span class="s2">"stop"</span><span class="p">:</span> <span class="mi">300</span><span class="p">,</span> <span class="s2">"step"</span><span class="p">:</span> <span class="mi">100</span><span class="p">},</span>
+    <span class="p">},</span>
+<span class="p">)</span>
+
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ds</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="s2">"2025-01-15"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">:</span> <span class="mi">120</span><span class="p">},</span> <span class="n">sel_method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span> <span class="p">{</span><span class="s1">'selected'</span><span class="p">:</span> <span class="p">{</span><span class="s1">'time'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'2025-01-01T00:00:00Z'</span><span class="p">],</span> <span class="s1">'z'</span><span class="p">:</span> <span class="p">[</span><span class="mi">100</span><span class="p">]}}</span>
+
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">ds</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"z"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">100</span><span class="p">]})</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span> <span class="p">{</span><span class="s1">'time'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'2025-01-01T00:00:00Z'</span><span class="p">,</span> <span class="s1">'2025-02-01T00:00:00Z'</span><span class="p">],</span> <span class="s1">'z'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'0'</span><span class="p">,</span> <span class="s1">'100'</span><span class="p">]}</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p>N-D <code>ImageData</code> (more than 3 dimensions) have per-dimension <code>band_descriptions</code> and <code>band_names</code> (<code>dict</code>). Expressions, colormaps, statistics and image rendering (except <code>NPY</code>/<code>NPZ</code>) are only supported for 3D data, so use <code>sel</code> to reduce the data to a single non-spatial dimension first.</p>
+</div>
 <h2 id="asyncgroupreader">AsyncGroupReader<a class="headerlink" href="#asyncgroupreader" title="Permanent link">&para;</a></h2>
 <h4 id="open-top-level-group-in-the-zarr-store">Open Top level group in the Zarr store<a class="headerlink" href="#open-top-level-group-in-the-zarr-store" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>

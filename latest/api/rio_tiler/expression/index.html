@@ -2780,7 +2780,7 @@ data (numpy.array):  array of bands.
 
 
 <a href="#rio_tiler.expression.parse_expression" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">parse_expression</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">cast</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">parse_expression</span><span class="p">(</span><span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">cast</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">True</span><span class="p">,</span> <span class="n">dimension</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">=</span> <span class="s1">'b'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -2806,6 +2806,16 @@ data (numpy.array):  array of bands.
           –
           <div class="doc-md-description">
             <p>cast band names to integers (convert to index values). Defaults to True.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dimension</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;b&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>name of the band dimension. Defaults to "b".</p>
           </div>
         </li>
     </ul>

@@ -7682,6 +7682,7 @@
 <li>breaking: remove python 3.11 support (rasterio 1.5 requires python &gt;=3.12)</li>
 <li>breaking: remove <code>scales</code> and <code>offsets</code> attributes in ImageData and PointData models</li>
 <li>breaking: remove <code>count</code> attribute in ImageData and PointData models</li>
+<li>breaking: <code>band_descriptions</code> and <code>band_names</code> attributes are not forwarded from ImageData and PointData models when using mosaic readers</li>
 <li>breaking: <code>rio_tiler.experimental.zarr</code> Array readers (<code>AsyncArrayReader</code>, <code>ArrayReader</code>) now use named dimensions<ul>
 <li>remove <code>band_names</code> attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to <code>{dim}{n}</code>)</li>
 <li>add <code>dimensions</code> attribute (defaults to the zarr <code>dimension_names</code> metadata)</li>
@@ -7698,6 +7699,17 @@
 <li>fix: use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
 <li>fix: run blocking warp/reproject/resize in a worker thread (<code>asyncio.to_thread</code>) in the async experimental readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>) to avoid blocking the event loop</li>
 <li>docs: new <code>experimental</code> documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)</li>
+<li>breaking: replace <code>indexes</code> with xarray-like <code>sel</code> and <code>sel_method</code> options in <code>rio_tiler.experimental.zarr</code> readers<ul>
+<li><code>sel</code> (<code>{dimension: value | list | slice}</code>) selects non-spatial dimensions using the <code>coordinates</code> values (or positions when a dimension has no coordinates)</li>
+<li><code>sel_method</code> supports exact (default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> and <code>backfill</code>/<code>bfill</code> matching</li>
+<li>support N-D arrays: unselected non-spatial dimensions are kept, and readers return <code>(*non-spatial dims, height, width)</code> data</li>
+<li>the returned <code>ImageData.band_descriptions</code> is <code>{dimension: labels}</code> for all the non-spatial dimensions (a <code>list</code> for 2D/3D arrays)</li>
+<li>add <code>coordinate_values</code> property (<code>{dimension: values}</code>)</li>
+<li>the selected non-spatial labels are stored in <code>ImageData.metadata["selected"]</code></li>
+<li><code>info()</code> no longer lists per-band metadata and adds <code>dimensions_count</code> (plus <code>coordinates</code> when called with <code>with_coordinates=True</code>)</li>
+</ul>
+</li>
+<li>add: N-D support in <code>ImageData</code>/<code>PointData</code> (<code>(*leading, height, width)</code>): N-D data have per-dimension <code>band_descriptions</code> and <code>band_names</code> (<code>dict</code>). Expression, colormap, color formula, rescale, statistics, <code>to_raster</code> and rendering (except <code>NPY</code>/<code>NPZ</code>) raise <code>ValueError</code> for N-D data</li>
 </ul>
 <h2 id="9412-2026-10-08">9.4.12 (2026-10-08)<a class="headerlink" href="#9412-2026-10-08" title="Permanent link">&para;</a></h2>
 <ul>
