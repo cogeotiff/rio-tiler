@@ -138,7 +138,7 @@ async def test_zarr_reader_async(zarr_store):
         # Test _read (full array)
         img = await reader.preview()
         assert img.array.shape == (3, 100, 100)
-        assert img.band_names == ["b1", "b2", "b3"]
+        assert img.band_names == ["band1", "band2", "band3"]
         assert img.band_descriptions == ["band1", "band2", "band3"]
 
         # Test _read with window
@@ -192,7 +192,7 @@ def test_zarr_reader_sync(zarr_store):
         # Test _read (full array)
         img = reader.preview()
         assert img.array.shape == (3, 100, 100)
-        assert img.band_names == ["b1", "b2", "b3"]
+        assert img.band_names == ["band1", "band2", "band3"]
         assert img.band_descriptions == ["band1", "band2", "band3"]
 
         # Test _read with window
@@ -444,7 +444,7 @@ async def test_part_with_sel_async(zarr_store):
             bounds_crs=CRS.from_epsg(32618),
             sel={"band": [0]},
         )
-        assert img.band_names == ["b1"]
+        assert img.band_names == ["band1"]
         assert img.band_descriptions == ["band1"]
         assert img.array.shape[0] == 1
 
@@ -454,7 +454,7 @@ async def test_part_with_sel_async(zarr_store):
             bounds_crs=CRS.from_epsg(32618),
             sel={"band": [0, 2]},
         )
-        assert img.band_names == ["b1", "b2"]
+        assert img.band_names == ["band1", "band2"]
         assert img.band_descriptions == ["band1", "band3"]
         assert img.array.shape[0] == 2
 
@@ -476,7 +476,7 @@ def test_part_with_sel(zarr_store):
             bounds_crs=CRS.from_epsg(32618),
             sel={"band": [0]},
         )
-        assert img.band_names == ["b1"]
+        assert img.band_names == ["band1"]
         assert img.band_descriptions == ["band1"]
         assert img.array.shape[0] == 1
 
@@ -486,7 +486,7 @@ def test_part_with_sel(zarr_store):
             bounds_crs=CRS.from_epsg(32618),
             sel={"band": [0, 2]},
         )
-        assert img.band_names == ["b1", "b2"]
+        assert img.band_names == ["band1", "band2"]
         assert img.band_descriptions == ["band1", "band3"]
         assert img.array.shape[0] == 2
 
@@ -619,7 +619,8 @@ async def test_preview_async(zarr_store):
         assert img.array.shape[0] == 2
 
         # Test with band expression.
-        img = await reader.preview(expression="b1/b2")
+        img = await reader.preview(expression="band1/band2")
+        assert img.band_descriptions == ["band1/band2"]
         assert img.array.shape[0] == 1
 
         # Test reprojects to dst_crs
@@ -677,7 +678,7 @@ def test_preview(zarr_store):
         assert img.array.shape[0] == 2
 
         # Test with band expression.
-        img = reader.preview(expression="b1/b2")
+        img = reader.preview(expression="band1/band2")
         assert img.array.shape[0] == 1
 
         # Test reprojects to dst_crs
@@ -730,7 +731,7 @@ async def test_statistics_async(zarr_store):
     ) as reader:
         stats = await reader.statistics()
         assert isinstance(stats, dict)
-        assert set(stats.keys()) == {"b1", "b2", "b3"}
+        assert set(stats.keys()) == {"band1", "band2", "band3"}
         for band_stats in stats.values():
             assert band_stats.min is not None
             assert band_stats.max is not None
@@ -743,20 +744,20 @@ async def test_statistics_async(zarr_store):
         # overwrite nodata value
         stats = await reader.statistics(nodata=0, sel={"band": [0]})
         assert isinstance(stats, dict)
-        band_stats = stats["b1"]
+        band_stats = stats["band1"]
         assert band_stats.min == -9999.0
 
         # Test with band selection
         stats = await reader.statistics(sel={"band": [0]})
-        assert set(stats.keys()) == {"b1"}
+        assert set(stats.keys()) == {"band1"}
 
         stats = await reader.statistics(sel={"band": [0, 2]})
-        assert set(stats.keys()) == {"b1", "b2"}
-        assert stats["b1"].description == "band1"
-        assert stats["b2"].description == "band3"
+        assert set(stats.keys()) == {"band1", "band2"}
+        assert stats["band1"].description == "band1"
+        assert stats["band2"].description == "band3"
 
         # Test with a band expression
-        stats = await reader.statistics(expression="b1/b2")
+        stats = await reader.statistics(expression="band1/band2")
         assert len(stats) == 1
         assert set(stats.keys()) == {"b1"}
         assert stats["b1"].description == "band1/band2"
@@ -784,7 +785,7 @@ def test_statistics(zarr_store):
     ) as reader:
         stats = reader.statistics()
         assert isinstance(stats, dict)
-        assert set(stats.keys()) == {"b1", "b2", "b3"}
+        assert set(stats.keys()) == {"band1", "band2", "band3"}
         for band_stats in stats.values():
             assert band_stats.min is not None
             assert band_stats.max is not None
@@ -797,20 +798,20 @@ def test_statistics(zarr_store):
         # overwrite nodata value
         stats = reader.statistics(nodata=0, sel={"band": [0]})
         assert isinstance(stats, dict)
-        band_stats = stats["b1"]
+        band_stats = stats["band1"]
         assert band_stats.min == -9999.0
 
         # Test with band selection
         stats = reader.statistics(sel={"band": [0]})
-        assert set(stats.keys()) == {"b1"}
+        assert set(stats.keys()) == {"band1"}
 
         stats = reader.statistics(sel={"band": [0, 2]})
-        assert set(stats.keys()) == {"b1", "b2"}
-        assert stats["b1"].description == "band1"
-        assert stats["b2"].description == "band3"
+        assert set(stats.keys()) == {"band1", "band2"}
+        assert stats["band1"].description == "band1"
+        assert stats["band2"].description == "band3"
 
         # Test with a band expression
-        stats = reader.statistics(expression="b1/b2")
+        stats = reader.statistics(expression="band1/band2")
         assert len(stats) == 1
         assert set(stats.keys()) == {"b1"}
         assert stats["b1"].description == "band1/band2"
@@ -882,7 +883,7 @@ async def test_point_async(zarr_store):
         assert pt.array.shape[0] == 3
         assert pt.crs == CRS.from_epsg(32618)
         assert pt.coordinates == (500050.0, 4000050.0)
-        assert pt.band_names == ["b1", "b2", "b3"]
+        assert pt.band_names == ["band1", "band2", "band3"]
 
         # Test method with band selection
         # Read only band 1
@@ -891,6 +892,15 @@ async def test_point_async(zarr_store):
             lat=4000050.0,
             coord_crs=CRS.from_epsg(32618),
             sel={"band": [0]},
+        )
+        assert pt.array.shape[0] == 1
+        assert pt.band_names == ["band1"]
+
+        pt = await reader.point(
+            lon=500050.0,
+            lat=4000050.0,
+            coord_crs=CRS.from_epsg(32618),
+            sel={"band": 0},
         )
         assert pt.array.shape[0] == 1
         assert pt.band_names == ["b1"]
@@ -903,7 +913,8 @@ async def test_point_async(zarr_store):
             sel={"band": [0, 2]},
         )
         assert pt.array.shape[0] == 2
-        assert pt.band_names == ["b1", "b2"]
+        assert pt.dimensions == ["band"]
+        assert pt.band_names == ["band1", "band2"]
         assert pt.band_descriptions == ["band1", "band3"]
 
         # Test raises error for points outside bounds.
@@ -937,7 +948,7 @@ def test_point(zarr_store):
         assert pt.array.shape[0] == 3
         assert pt.crs == CRS.from_epsg(32618)
         assert pt.coordinates == (500050.0, 4000050.0)
-        assert pt.band_names == ["b1", "b2", "b3"]
+        assert pt.band_names == ["band1", "band2", "band3"]
 
         # Test method with band selection
         # Read only band 1
@@ -948,7 +959,7 @@ def test_point(zarr_store):
             sel={"band": [0]},
         )
         assert pt.array.shape[0] == 1
-        assert pt.band_names == ["b1"]
+        assert pt.band_names == ["band1"]
 
         # Read bands 1 and 3
         pt = reader.point(
@@ -958,7 +969,8 @@ def test_point(zarr_store):
             sel={"band": [0, 2]},
         )
         assert pt.array.shape[0] == 2
-        assert pt.band_names == ["b1", "b2"]
+        assert pt.dimensions == ["band"]
+        assert pt.band_names == ["band1", "band2"]
         assert pt.band_descriptions == ["band1", "band3"]
 
         # Test raises error for points outside bounds.
@@ -1039,10 +1051,19 @@ async def test_band_descriptions_async(zarr_dataset):
         img = await reader.preview(sel={"time": ["2022-01-01"]})
         assert img.band_descriptions == ["2022-01-01"]
 
+        # When using scalar for a dimension, the band_descriptions and dimension is dropped
+        img = await reader.preview(sel={"time": "2022-01-01"})
+        assert img.dimensions == ["b", "y", "x"]
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["b1"]
+
         img = await reader.preview(sel={"time": ["2022-01-02"]})
+        assert img.dimensions == ["time", "y", "x"]
         assert img.band_descriptions == ["2022-01-02"]
 
-        img = await reader.preview(expression="b1/b2")
+        img = await reader.preview(expression="time1/time2")
+        assert img.dimensions == ["b", "y", "x"]
+        assert img.band_names == ["b1"]
         assert img.band_descriptions == ["2022-01-01/2022-01-02"]
 
 
@@ -1070,10 +1091,19 @@ def test_band_descriptions(zarr_dataset):
         img = reader.preview(sel={"time": ["2022-01-01"]})
         assert img.band_descriptions == ["2022-01-01"]
 
+        # When using scalar for a dimension, the band_descriptions and dimension is dropped
+        img = reader.preview(sel={"time": "2022-01-01"})
+        assert img.dimensions == ["b", "y", "x"]
+        assert img.band_names == ["b1"]
+        assert img.band_descriptions == ["b1"]
+
         img = reader.preview(sel={"time": ["2022-01-02"]})
+        assert img.dimensions == ["time", "y", "x"]
         assert img.band_descriptions == ["2022-01-02"]
 
-        img = reader.preview(expression="b1/b2")
+        img = reader.preview(expression="time1/time2")
+        assert img.dimensions == ["b", "y", "x"]
+        assert img.band_names == ["b1"]
         assert img.band_descriptions == ["2022-01-01/2022-01-02"]
 
 
@@ -1186,14 +1216,14 @@ async def test_compat_xarray_async(zarr_dataset):
     stats = xarrayds.statistics(nodata=0)
     zarr_stats = await async_zarrds.statistics()
     assert stats["b1"]
-    assert zarr_stats["b1"]
-    assert zarr_stats["b1"].min == stats["b1"].min
-    assert zarr_stats["b1"].max == stats["b1"].max
-    assert zarr_stats["b1"].mean == stats["b1"].mean
-    assert zarr_stats["b1"].count == stats["b1"].count
-    assert zarr_stats["b1"].sum == stats["b1"].sum
-    assert zarr_stats["b1"].percentile_2 == stats["b1"].percentile_2
-    assert zarr_stats["b1"].histogram == stats["b1"].histogram
+    assert zarr_stats["time1"]
+    assert zarr_stats["time1"].min == stats["b1"].min
+    assert zarr_stats["time1"].max == stats["b1"].max
+    assert zarr_stats["time1"].mean == stats["b1"].mean
+    assert zarr_stats["time1"].count == stats["b1"].count
+    assert zarr_stats["time1"].sum == stats["b1"].sum
+    assert zarr_stats["time1"].percentile_2 == stats["b1"].percentile_2
+    assert zarr_stats["time1"].histogram == stats["b1"].histogram
 
     # Preview
     img = xarrayds.preview(nodata=0)
@@ -1352,14 +1382,14 @@ def test_compat_xarray(zarr_dataset):
     stats = xarrayds.statistics(nodata=0)
     zarr_stats = zarrds.statistics()
     assert stats["b1"]
-    assert zarr_stats["b1"]
-    assert zarr_stats["b1"].min == stats["b1"].min
-    assert zarr_stats["b1"].max == stats["b1"].max
-    assert zarr_stats["b1"].mean == stats["b1"].mean
-    assert zarr_stats["b1"].count == stats["b1"].count
-    assert zarr_stats["b1"].sum == stats["b1"].sum
-    assert zarr_stats["b1"].percentile_2 == stats["b1"].percentile_2
-    assert zarr_stats["b1"].histogram == stats["b1"].histogram
+    assert zarr_stats["time1"]
+    assert zarr_stats["time1"].min == stats["b1"].min
+    assert zarr_stats["time1"].max == stats["b1"].max
+    assert zarr_stats["time1"].mean == stats["b1"].mean
+    assert zarr_stats["time1"].count == stats["b1"].count
+    assert zarr_stats["time1"].sum == stats["b1"].sum
+    assert zarr_stats["time1"].percentile_2 == stats["b1"].percentile_2
+    assert zarr_stats["time1"].histogram == stats["b1"].histogram
 
     # Preview
     img = xarrayds.preview(nodata=0)
@@ -1817,6 +1847,7 @@ def test_inverted_axis_async_2d_sync():
 ###############################################################################
 TIMES = ["2025-01-01T00:00:00Z", "2025-02-01T00:00:00Z", "2025-03-01T00:00:00Z"]
 LEVELS = [0, 100, 200, 300]
+LEVELS_STR = list(map(str, LEVELS))
 
 COORDS_4D = {
     "time": {"type": "inline", "values": TIMES},
@@ -2008,8 +2039,11 @@ async def test_reader_4d_async(zarr_store_4d):
 
     img = await reader.preview()
     assert img.array.shape == (3, 4, 100, 100)
-    assert img.band_names == []
-    assert img.band_descriptions == {"time": TIMES, "z": LEVELS}
+    assert img.band_names == {
+        "time": ["time1", "time2", "time3"],
+        "z": ["z1", "z2", "z3", "z4"],
+    }
+    assert img.band_descriptions == {"time": TIMES, "z": LEVELS_STR}
     assert img.metadata == {}
     assert img.array[2, 3, 0, 0] == 23
 
@@ -2041,8 +2075,8 @@ async def test_reader_4d_async(zarr_store_4d):
     # scalar on one dimension: 3D output with the other dimension as bands
     img = await reader.preview(sel={"time": TIMES[2]})
     assert img.array.shape == (4, 100, 100)
-    assert img.band_names == ["b1", "b2", "b3", "b4"]
-    assert img.band_descriptions == ["0", "100", "200", "300"]
+    assert img.band_names == ["z1", "z2", "z3", "z4"]
+    assert img.band_descriptions == LEVELS_STR
     assert img.metadata == {
         "selected": {"time": ["2025-03-01T00:00:00Z"], "z": [0, 100, 200, 300]}
     }
@@ -2051,7 +2085,7 @@ async def test_reader_4d_async(zarr_store_4d):
     # list selection keeps the order
     img = await reader.preview(sel={"time": [TIMES[2], TIMES[0]]})
     assert img.array.shape == (2, 4, 100, 100)
-    assert img.band_descriptions == {"time": [TIMES[2], TIMES[0]], "z": LEVELS}
+    assert img.band_descriptions == {"time": [TIMES[2], TIMES[0]], "z": LEVELS_STR}
     assert img.metadata == {
         "selected": {
             "time": ["2025-03-01T00:00:00Z", "2025-01-01T00:00:00Z"],
@@ -2063,7 +2097,7 @@ async def test_reader_4d_async(zarr_store_4d):
     # slice
     img = await reader.preview(sel={"z": slice(100, 200)})
     assert img.array.shape == (3, 2, 100, 100)
-    assert img.band_descriptions == {"time": TIMES, "z": [100, 200]}
+    assert img.band_descriptions == {"time": TIMES, "z": ["100", "200"]}
     assert img.metadata == {
         "selected": {
             "time": [
@@ -2174,9 +2208,13 @@ def test_reader_4d_sync(zarr_store_4d):
     assert info.model_dump_json()
 
     img = reader.preview()
+    assert img.dimensions == ["time", "z", "y", "x"]
     assert img.array.shape == (3, 4, 100, 100)
-    assert img.band_names == []
-    assert img.band_descriptions == {"time": TIMES, "z": LEVELS}
+    assert img.band_names == {
+        "time": ["time1", "time2", "time3"],
+        "z": ["z1", "z2", "z3", "z4"],
+    }
+    assert img.band_descriptions == {"time": TIMES, "z": LEVELS_STR}
     assert img.metadata == {}
     assert img.array[2, 3, 0, 0] == 23
 
@@ -2205,9 +2243,10 @@ def test_reader_4d_sync(zarr_store_4d):
 
     # scalar on one dimension: 3D output with the other dimension as bands
     img = reader.preview(sel={"time": TIMES[2]})
+    assert img.dimensions == ["z", "y", "x"]
     assert img.array.shape == (4, 100, 100)
-    assert img.band_names == ["b1", "b2", "b3", "b4"]
-    assert img.band_descriptions == ["0", "100", "200", "300"]
+    assert img.band_names == ["z1", "z2", "z3", "z4"]
+    assert img.band_descriptions == LEVELS_STR
     assert img.metadata == {
         "selected": {"time": ["2025-03-01T00:00:00Z"], "z": [0, 100, 200, 300]}
     }
@@ -2216,7 +2255,7 @@ def test_reader_4d_sync(zarr_store_4d):
     # list selection keeps the order
     img = reader.preview(sel={"time": [TIMES[2], TIMES[0]]})
     assert img.array.shape == (2, 4, 100, 100)
-    assert img.band_descriptions == {"time": [TIMES[2], TIMES[0]], "z": LEVELS}
+    assert img.band_descriptions == {"time": [TIMES[2], TIMES[0]], "z": LEVELS_STR}
     assert img.metadata == {
         "selected": {
             "time": ["2025-03-01T00:00:00Z", "2025-01-01T00:00:00Z"],
@@ -2228,7 +2267,7 @@ def test_reader_4d_sync(zarr_store_4d):
     # slice
     img = reader.preview(sel={"z": slice(100, 200)})
     assert img.array.shape == (3, 2, 100, 100)
-    assert img.band_descriptions == {"time": TIMES, "z": [100, 200]}
+    assert img.band_descriptions == {"time": TIMES, "z": ["100", "200"]}
     assert img.metadata == {
         "selected": {
             "time": [

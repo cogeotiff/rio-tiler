@@ -1242,8 +1242,8 @@ def test_group_reader_sel(geozarr_4d_store):
         # N-D output for one variable
         img = src.preview(variables="data:a")
         assert img.array.shape == (2, 3, 100, 100)
-        assert img.band_names == []
-        assert img.band_descriptions == {"time": TIMES, "z": [0, 10, 20]}
+        assert img.band_names == {"time": ["time1", "time2"], "z": ["z1", "z2", "z3"]}
+        assert img.band_descriptions == {"time": TIMES, "z": ["0", "10", "20"]}
 
         pt = src.point(
             500005, 4199995, coord_crs=CRS.from_epsg(32633), variables="data:a"
@@ -1264,6 +1264,9 @@ async def test_async_group_reader_sel(geozarr_4d_store):
             variables=["data:a", "data:b"], sel={"time": TIMES[1], "z": 10}
         )
         assert img.array[:, 0, 0].tolist() == [111, 211]
+        assert img.dimensions == ["b", "y", "x"]
+        assert img.band_names == ["b1", "b2"]
+        assert img.band_descriptions == ["b1", "b1"]
 
         img = await src.feature(
             {
@@ -1283,7 +1286,7 @@ async def test_async_group_reader_sel(geozarr_4d_store):
             sel={"z": [0, 20]},
         )
         assert img.array.shape == (2, 2, 50, 50)
-        assert img.band_descriptions == {"time": TIMES, "z": [0, 20]}
+        assert img.band_descriptions == {"time": TIMES, "z": ["0", "20"]}
 
         pt = await src.point(
             500005,

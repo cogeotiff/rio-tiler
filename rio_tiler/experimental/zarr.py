@@ -995,6 +995,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             img.array[..., 0, 0],
             band_names=img.band_names,
             band_descriptions=img.band_descriptions,
+            dimensions=img.dimensions[:-2],
             coordinates=coordinates,
             crs=coord_crs,
             pixel_location=(cast(int, x), cast(int, y)),
@@ -1116,13 +1117,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         )
         data = numpy.asarray(await self.input.get_orthogonal_selection(selection))
 
-        # labels for band_descriptions
-        band_descriptions = {
-            d: self._get_labels(d, idx)
-            for d, idx in zip(self.dimensions, selection)
-            if d in self.non_spatial_dims and not isinstance(idx, int)
-        }
-
         # Dimensions selected with a scalar (e.g `sel={"time": "2025-01-01"}`)
         # are dropped by the orthogonal selection
         dims = [
@@ -1169,11 +1163,32 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             },
         }
 
+        # labels for band_descriptions
+        band_descriptions = {
+            d: list(map(str, self._get_labels(d, idx)))
+            for d, idx in zip(self.dimensions, selection)
+            # when idx is a scalar, the dimension is dropped from the selection
+            # thus we don't need to have the band_descriptions for the dim
+            if d in self.non_spatial_dims and not isinstance(idx, int)
+        }
+
+        # Case 1 (3D arrays): For 3D arrays we set band_descriptions to list[str]
+        if band_descriptions and len(dims) < 4:
+            non_spatial_dims = [d for d in dims if d not in self.spatial_dims]
+            band_descriptions = band_descriptions[non_spatial_dims[0]]  # type: ignore [assignment]
+
+        # Case 2 (2D arrays): If band_descriptions is not provided, generate default names for bands
+        # with dimension `b`
+        elif not band_descriptions:
+            band_descriptions = [f"b{i + 1}" for i in range(data.shape[0])]  # type: ignore [assignment]
+            dims = ["b"] + self.spatial_dims
+
         return ImageData(  # type: ignore
             masked_data,
             bounds=read_bounds,
             crs=self.crs,
             band_descriptions=band_descriptions,
+            dimensions=dims,
             nodata=nodata,
             metadata=img_meta if sel else {},
         )
@@ -1575,6 +1590,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             img.array[..., 0, 0],
             band_names=img.band_names,
             band_descriptions=img.band_descriptions,
+            dimensions=img.dimensions[:-2],
             coordinates=coordinates,
             crs=coord_crs,
             pixel_location=(cast(int, x), cast(int, y)),
@@ -1694,13 +1710,6 @@ class ArrayReader(BaseReader, ArrayMixin):
         )
         data = numpy.asarray(self.input.get_orthogonal_selection(selection))
 
-        # labels for band_descriptions
-        band_descriptions = {
-            d: self._get_labels(d, idx)
-            for d, idx in zip(self.dimensions, selection)
-            if d in self.non_spatial_dims and not isinstance(idx, int)
-        }
-
         # Dimensions selected with a scalar (e.g `sel={"time": "2025-01-01"}`)
         # are dropped by the orthogonal selection
         dims = [
@@ -1747,11 +1756,32 @@ class ArrayReader(BaseReader, ArrayMixin):
             },
         }
 
+        # labels for band_descriptions
+        band_descriptions = {
+            d: list(map(str, self._get_labels(d, idx)))
+            for d, idx in zip(self.dimensions, selection)
+            # when idx is a scalar, the dimension is dropped from the selection
+            # thus we don't need to have the band_descriptions for the dim
+            if d in self.non_spatial_dims and not isinstance(idx, int)
+        }
+
+        # Case 1 (3D arrays): For 3D arrays we set band_descriptions to list[str]
+        if band_descriptions and len(dims) < 4:
+            non_spatial_dims = [d for d in dims if d not in self.spatial_dims]
+            band_descriptions = band_descriptions[non_spatial_dims[0]]  # type: ignore [assignment]
+
+        # Case 2 (2D arrays): If band_descriptions is not provided, generate default names for bands
+        # with dimension `b`
+        elif not band_descriptions:
+            band_descriptions = [f"b{i + 1}" for i in range(data.shape[0])]  # type: ignore [assignment]
+            dims = ["b"] + self.spatial_dims
+
         return ImageData(  # type: ignore
             masked_data,
             bounds=read_bounds,
             crs=self.crs,
             band_descriptions=band_descriptions,
+            dimensions=dims,
             nodata=nodata,
             metadata=img_meta if sel else {},
         )

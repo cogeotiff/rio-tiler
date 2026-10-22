@@ -62,11 +62,10 @@ def warp(
     dst_mask = numpy.zeros((count, dst_height, dst_width), dtype=numpy.uint8)
 
     has_alpha = img.alpha_mask is not None
+    dst_alpha: numpy.ndarray | None = None
     if has_alpha:
         alpha_minv, _ = dtype_ranges[str(img.alpha_mask.dtype)]
-        dst_alpha: numpy.ndarray = numpy.zeros(
-            (dst_height, dst_width), dtype=img.alpha_mask.dtype
-        )
+        dst_alpha = numpy.zeros((dst_height, dst_width), dtype=img.alpha_mask.dtype)
 
     # Iterate over output tiles
     for dst_row in range(0, dst_height, _TILE_SIZE):
@@ -156,13 +155,14 @@ def warp(
             dst_data.reshape((*leading, dst_height, dst_width)),
             mask=~dst_mask.astype(bool).reshape((*leading, dst_height, dst_width)),
         ),
-        assets=img.assets,
-        crs=dst_crs,
-        bounds=dst_bounds,
+        dimensions=img.dimensions,
         band_names=img.band_names,
         band_descriptions=img.band_descriptions,
-        nodata=img.nodata,
+        bounds=dst_bounds,
+        crs=dst_crs,
+        assets=img.assets,
         metadata=img.metadata,
+        nodata=img.nodata,
         dataset_statistics=img.dataset_statistics,
         alpha_mask=dst_alpha if has_alpha else None,
     )

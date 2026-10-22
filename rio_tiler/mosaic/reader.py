@@ -339,7 +339,7 @@ async def async_mosaic_reader(  # noqa: C901
     assets_used: list = []
     crs: CRS | None
     bounds: BBox | None
-    band_names: list[str]
+    band_names: list[str] | dict[str, list[str]]
 
     tasks = [
         asyncio.create_task(reader(asset, *args, **kwargs)) for asset in mosaic_assets

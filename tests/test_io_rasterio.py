@@ -1042,6 +1042,7 @@ def test_metadata_img():
         assert "b1" in stats
         assert stats["b1"].description == "Green"
 
+        print(img.band_descriptions)
         img = src.preview(expression="b1*2")
         assert img.band_descriptions == ["Green*2"]
 
