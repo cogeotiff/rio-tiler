@@ -281,7 +281,7 @@ class Reader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            unscale (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
             resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
             reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
@@ -406,7 +406,7 @@ class Reader(AsyncBaseReader):
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
-            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            unscale (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
             resampling_method (str, optional): GDAL Resampling method to use when resizing. Defaults to "nearest".
             reproject_method (str, optional): GDAL Resampling method to use when reprojecting. Defaults to "nearest".
 
@@ -509,7 +509,7 @@ class Reader(AsyncBaseReader):
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             indexes (sequence of int or int, optional): Band indexes.
             expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
-            unscale: (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            unscale: (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
 
         Returns:
             PointData: Pixel value per bands/assets.
@@ -563,8 +563,6 @@ class Reader(AsyncBaseReader):
             crs=coord_crs,
             pixel_location=(col, row),
             nodata=img.nodata,
-            scales=img.scales,
-            offsets=img.offsets,
             metadata=img.metadata,
         )
         if expression:
@@ -679,16 +677,13 @@ class Reader(AsyncBaseReader):
                     data.mask = data.data == self.input.nodata
 
         # Handle Scale/Offset
-        scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
-        offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
         if unscale:
+            scales = numpy.array(self.input.scales)[numpy.array(indexes) - 1]
+            offsets = numpy.array(self.input.offsets)[numpy.array(indexes) - 1]
             data = cast(numpy.ma.MaskedArray, data.astype("float32", casting="unsafe"))
 
             numpy.multiply(data, scales.reshape((-1, 1, 1)), out=data, casting="unsafe")
             numpy.add(data, offsets.reshape((-1, 1, 1)), out=data, casting="unsafe")
-
-            scales = numpy.zeros(len(indexes)) + 1.0
-            offsets = numpy.zeros(len(indexes))
 
         # Get dataset statistics
         stats = []
@@ -711,6 +706,4 @@ class Reader(AsyncBaseReader):
             dataset_statistics=dataset_statistics,
             nodata=array.nodata,
             alpha_mask=alpha_mask if alpha_mask is not None else None,
-            scales=scales.tolist(),
-            offsets=offsets.tolist(),
         )

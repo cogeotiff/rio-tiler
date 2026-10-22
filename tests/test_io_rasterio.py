@@ -576,7 +576,7 @@ def test_imageData_output():
         img = src.tile(43, 24, 7)
         assert img.data.shape == (1, 256, 256)
         assert img._mask.all()
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.data_as_image().shape == (256, 256, 1)
 
         assert numpy.array_equal(~img.array.mask[0], img._mask)
@@ -822,7 +822,7 @@ def test_tile_read_alpha():
         nb = src.dataset.count
         img = src.tile(876432, 1603670, 22)
         assert (
-            not nb == img.count
+            not nb == img.array.shape[0]
         )  # rio-tiler removes the alpha band from the `data` array
         assert img.data.shape == (3, 256, 256)
         assert not img._mask.all()
@@ -886,7 +886,7 @@ def test_read():
         assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
         assert img.width == src.dataset.width
         assert img.height == src.dataset.height
-        assert img.count == src.dataset.count
+        assert img.array.shape[0] == src.dataset.count
 
         with pytest.warns(ExpressionMixingWarning):
             img = src.read(indexes=(1, 2, 3), expression="b1*2")
@@ -942,7 +942,7 @@ def test_nonearthbody():
         assert numpy.array_equal(img.data, src.dataset.read(indexes=(1,)))
         assert img.width == src.dataset.width
         assert img.height == src.dataset.height
-        assert img.count == src.dataset.count
+        assert img.array.shape[0] == src.dataset.count
 
         img = src.preview()
         assert img.bounds == src.bounds
@@ -1200,8 +1200,6 @@ def test_unscale_stats():
     """check if scale/offset were applied on stats."""
     with Reader(COG_SCALE_STATS) as src:
         img = src.read(unscale=True)
-        assert img.scales == [1.0, 1.0]
-        assert img.offsets == [0.0, 0.0]
         stats = img.statistics()
         minb1, maxb1 = stats["b1"].min, stats["b1"].max
 
@@ -1209,8 +1207,6 @@ def test_unscale_stats():
         assert pytest.approx(img.dataset_statistics[0][1]) == pytest.approx(maxb1)
 
         img = src.read()
-        assert img.scales == [0.0001, 0.001]
-        assert img.offsets == [1000.0, 2000.0]
         stats = img.statistics()
         minb1, maxb1 = stats["b1"].min, stats["b1"].max
 

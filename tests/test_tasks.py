@@ -33,7 +33,7 @@ def test_multi_arrays(monkeypatch):
             return im
 
     img = tasks.multi_arrays([COG, COG], reader, threads=2)
-    assert img.count == 2
+    assert img.array.shape[0] == 2
     assert img.band_descriptions == ["FALSE", "FALSE"]
 
 
@@ -58,7 +58,7 @@ def test_multi_point(monkeypatch):
     lon = -56.624124590533825
     lat = 73.52687881825946
     pt = tasks.multi_points([COG, COG], reader, lon, lat, threads=2)
-    assert pt.count == 2
+    assert pt.array.shape[0] == 2
     assert pt.band_descriptions == ["FALSE", "FALSE"]
 
 

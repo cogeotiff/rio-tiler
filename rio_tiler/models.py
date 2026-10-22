@@ -171,8 +171,6 @@ class PointData:
     assets: list | None = attr.ib(default=None, kw_only=True)
     metadata: dict | None = attr.ib(factory=dict, kw_only=True)
     nodata: NoData | None = attr.ib(default=None, kw_only=True)
-    scales: list[float | int] = attr.ib(kw_only=True)
-    offsets: list[float | int] = attr.ib(kw_only=True)
     pixel_location: tuple[float | int, float | int] | None = attr.ib(
         default=None, kw_only=True
     )
@@ -191,19 +189,11 @@ class PointData:
 
     @band_names.default
     def _default_band_names(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
-
-    @scales.default
-    def _default_scales(self):
-        return [1.0] * self.count
-
-    @offsets.default
-    def _default_offsets(self):
-        return [0.0] * self.count
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @property
     def data(self) -> numpy.ndarray:
@@ -225,11 +215,6 @@ class PointData:
         """Allow for variable expansion."""
         for i in self.array.data:
             yield i
-
-    @property
-    def count(self) -> int:
-        """Number of band."""
-        return self.array.shape[0]
 
     @classmethod
     def create_from_list(cls, data: Sequence["PointData"]) -> "PointData":
@@ -268,10 +253,6 @@ class PointData:
             )
         )
 
-        scales = list(itertools.chain.from_iterable([pt.scales for pt in data]))
-
-        offsets = list(itertools.chain.from_iterable([pt.offsets for pt in data]))
-
         metadata = dict(
             itertools.chain.from_iterable(
                 [pt.metadata.items() for pt in data if pt.metadata]
@@ -283,8 +264,6 @@ class PointData:
             assets=assets,
             band_names=band_names,
             band_descriptions=band_descriptions,
-            offsets=offsets,
-            scales=scales,
             coordinates=data[0].coordinates,
             crs=data[0].crs,
             metadata=metadata,
@@ -363,8 +342,6 @@ class ImageData:
     crs: CRS | None = attr.ib(default=None, kw_only=True)
     metadata: dict | None = attr.ib(factory=dict, kw_only=True)
     nodata: NoData | None = attr.ib(default=None, kw_only=True)
-    scales: list[float | int] = attr.ib(kw_only=True)
-    offsets: list[float | int] = attr.ib(kw_only=True)
     band_names: list[str] = attr.ib(kw_only=True)
     band_descriptions: list[str] = attr.ib(kw_only=True)
     dataset_statistics: Sequence[tuple[float, float]] | None = attr.ib(
@@ -375,19 +352,11 @@ class ImageData:
 
     @band_names.default
     def _default_band_names(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return [f"b{ix + 1}" for ix in range(self.count)]
-
-    @scales.default
-    def _default_scales(self):
-        return [1.0] * self.count
-
-    @offsets.default
-    def _default_offsets(self):
-        return [0.0] * self.count
+        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
 
     @alpha_mask.validator
     def _check_alpha_mask(self, attribute, value):
@@ -484,8 +453,6 @@ class ImageData:
                         ],
                         dataset_statistics=dataset_statistics,
                         nodata=dataset.nodata,
-                        scales=list(dataset.scales),
-                        offsets=list(dataset.offsets),
                         metadata=dataset.tags(),
                     )
 
@@ -545,10 +512,6 @@ class ImageData:
             )
         )
 
-        scales = list(itertools.chain.from_iterable([img.scales for img in data]))
-
-        offsets = list(itertools.chain.from_iterable([img.offsets for img in data]))
-
         stats = list(
             itertools.chain.from_iterable(
                 [img.dataset_statistics for img in data if img.dataset_statistics]
@@ -572,8 +535,6 @@ class ImageData:
             dataset_statistics=dataset_statistics,
             cutline_mask=cutline_mask,
             metadata=metadata,
-            scales=scales,
-            offsets=offsets,
         )
 
     def data_as_image(self) -> numpy.ndarray:
@@ -587,17 +548,12 @@ class ImageData:
     @property
     def width(self) -> int:
         """Width of the data array."""
-        return self.array.shape[2]
+        return self.array.shape[-1]
 
     @property
     def height(self) -> int:
         """Height of the data array."""
-        return self.array.shape[1]
-
-    @property
-    def count(self) -> int:
-        """Number of band."""
-        return self.array.shape[0]
+        return self.array.shape[-2]
 
     @property
     def transform(self) -> Affine:
@@ -628,10 +584,6 @@ class ImageData:
                 out_range=dtype_ranges[out_dtype],
             ).astype(out_dtype)
 
-        # reset scales/offsets
-        self.scales = [1.0] * self.count
-        self.offsets = [0.0] * self.count
-
         return self
 
     def apply_color_formula(self, color_formula: str | None) -> Self:
@@ -651,10 +603,6 @@ class ImageData:
             self.alpha_mask = linear_rescale(
                 self.alpha_mask, in_range=dtype_ranges[str(self.alpha_mask.dtype)]
             ).astype("uint8")
-
-        # reset scales/offsets
-        self.scales = [1.0] * self.count
-        self.offsets = [0.0] * self.count
 
         return self
 
@@ -753,8 +701,6 @@ class ImageData:
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
             nodata=self.nodata,
-            scales=self.scales,
-            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,
@@ -778,8 +724,6 @@ class ImageData:
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
             nodata=self.nodata,
-            scales=self.scales,
-            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,
@@ -1017,7 +961,7 @@ class ImageData:
             resolution=resolution,
         )
 
-        destination = numpy.ma.zeros((self.count, h, w), self.array.dtype)
+        destination = numpy.ma.zeros((self.array.shape[0], h, w), self.array.dtype)
 
         destination, _ = reproject(
             self.array,
@@ -1052,8 +996,6 @@ class ImageData:
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
             nodata=self.nodata,
-            scales=self.scales,
-            offsets=self.offsets,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
             alpha_mask=alpha_mask,

@@ -92,7 +92,7 @@ def test_geoxarray_reader():
             stats = dst.statistics(indexes=0)
 
         img = dst.tile(0, 0, 0)
-        assert img.count == 2
+        assert img.array.shape[0] == 2
         assert img.width == 256
         assert img.height == 256
         assert img.array.dtype == numpy.float32
@@ -103,7 +103,7 @@ def test_geoxarray_reader():
         assert img.dataset_statistics == ((arr.min(), arr.max()), (arr.min(), arr.max()))
 
         img = dst.tile(0, 0, 0, indexes=2)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == [
             "2022-01-02T00:00:00.000000",
         ]
@@ -116,7 +116,7 @@ def test_geoxarray_reader():
 
         # Test that a high-zoom tile will succeed
         img = dst.tile(tile.x, tile.y, zoom, indexes=1)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.width == 256
         assert img.height == 256
         assert img.bounds == bounds
@@ -124,14 +124,14 @@ def test_geoxarray_reader():
 
         img = dst.part((-160, -80, 160, 80), indexes=1)
         assert img.crs == "epsg:4326"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 1600, 3200)
         assert img.array.dtype == numpy.float32
 
         img = dst.part((-160, -80, 160, 80), dst_crs="epsg:3857", indexes=1)
         assert img.crs == "epsg:3857"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 2352, 2696)
 
@@ -139,7 +139,7 @@ def test_geoxarray_reader():
             (-160, -80, 160, 80), dst_crs="epsg:3857", indexes=1, max_size=1024
         )
         assert img.crs == "epsg:3857"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 894, 1024)
 
@@ -156,7 +156,7 @@ def test_geoxarray_reader():
 
         img = dst.preview()
         assert img.crs == "epsg:4326"
-        assert img.count == 2
+        assert img.array.shape[0] == 2
         assert img.array.dtype == numpy.float32
         assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000",
@@ -166,13 +166,13 @@ def test_geoxarray_reader():
 
         img = dst.preview(indexes=1)
         assert img.crs == "epsg:4326"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.array.shape == (1, 512, 1024)
 
         img = dst.preview(dst_crs="epsg:3857", indexes=2)
         assert img.crs == "epsg:3857"
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-02T00:00:00.000000"]
         assert img.array.shape == (1, 1024, 1024)
 
@@ -209,7 +209,7 @@ def test_geoxarray_reader():
             },
         }
         img = dst.feature(feat)
-        assert img.count == 2
+        assert img.array.shape[0] == 2
         assert img.array.dtype == numpy.float32
         assert img.band_descriptions == [
             "2022-01-01T00:00:00.000000",
@@ -218,12 +218,12 @@ def test_geoxarray_reader():
         assert img.array.shape == (2, 1222, 3055)
 
         img = dst.feature(feat, indexes=2)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-02T00:00:00.000000"]
         assert img.array.shape == (1, 1222, 3055)
 
         img = dst.feature(feat, dst_crs="epsg:3857", indexes=1)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
         assert img.band_descriptions == ["2022-01-01T00:00:00.000000"]
         assert img.crs == "epsg:3857"
         assert img.array.shape == (1, 1601, 2875)
@@ -329,7 +329,7 @@ def test_geoxarray_reader_point():
         band_names=["2022-01-01T00:00:00.000000", "2022-01-02T00:00:00.000000"],
     ) as dst:
         pt = dst.point(0, 0)
-        assert pt.count == 2
+        assert pt.array.shape[0] == 2
         assert pt.band_descriptions == [
             "2022-01-01T00:00:00.000000",
             "2022-01-02T00:00:00.000000",
@@ -361,7 +361,7 @@ def test_geoxarray_reader_point():
             )
 
         pt = dst.point(0, 0, indexes=2)
-        assert pt.count == 1
+        assert pt.array.shape[0] == 1
         assert pt.band_descriptions == ["2022-01-02T00:00:00.000000"]
         assert pt.coordinates
         xys = [[0, 2.499], [0, 2.501], [-4.999, 0], [-5.001, 0], [-170, 80]]

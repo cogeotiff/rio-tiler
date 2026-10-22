@@ -662,7 +662,7 @@ class ImageReader(Reader):
             indexes (int or sequence of int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
-            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            unscale (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
         Returns:
@@ -716,7 +716,7 @@ class ImageReader(Reader):
             height (int, optional): Output height of the array.
             width (int, optional): Output width of the array.
             resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
-            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            unscale (bool, optional): Apply dataset's 'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
         Returns:
@@ -772,7 +772,7 @@ class ImageReader(Reader):
             indexes (sequence of int or int, optional): Band indexes.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             resampling_method (RIOResampling, optional): RasterIO resampling algorithm. Defaults to `nearest`.
-            unscale (bool, optional): Apply 'scales' and 'offsets' on output data value. Defaults to `False`.
+            unscale (bool, optional): Apply dataset's'scales' and 'offsets' on output data value. Defaults to `False`.
             post_process (callable, optional): Function to apply on output data and mask values.
 
         Returns:

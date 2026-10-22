@@ -560,14 +560,14 @@ async def test_preview_async(zarr_store):
             warnings.simplefilter("ignore", UserWarning)
             img = await reader.preview(width=64)
         assert img.width == 64
-        assert img.count == 3
+        assert img.array.shape[0] == 3
 
         # Test with explicit height (width derived from aspect ratio)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             img = await reader.preview(height=64)
         assert img.height == 64
-        assert img.count == 3
+        assert img.array.shape[0] == 3
 
         # Test  with both explicit width and height
         with warnings.catch_warnings():
@@ -577,19 +577,19 @@ async def test_preview_async(zarr_store):
 
         # Test with band selection.
         img = await reader.preview(indexes=1)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
 
         img = await reader.preview(indexes=(1, 3))
-        assert img.count == 2
+        assert img.array.shape[0] == 2
 
         # Test with band expression.
         img = await reader.preview(expression="b1/b2")
-        assert img.count == 1
+        assert img.array.shape[0] == 1
 
         # Test warns when both expression and indexes are passed
         with pytest.warns(ExpressionMixingWarning):
             img = await reader.preview(indexes=1, expression="b1/b2")
-        assert img.count == 1
+        assert img.array.shape[0] == 1
 
         # Test reprojects to dst_crs
         img = await reader.preview(dst_crs=CRS.from_epsg(4326))
@@ -623,14 +623,14 @@ def test_preview(zarr_store):
             warnings.simplefilter("ignore", UserWarning)
             img = reader.preview(width=64)
         assert img.width == 64
-        assert img.count == 3
+        assert img.array.shape[0] == 3
 
         # Test with explicit height (width derived from aspect ratio)
         with warnings.catch_warnings():
             warnings.simplefilter("ignore", UserWarning)
             img = reader.preview(height=64)
         assert img.height == 64
-        assert img.count == 3
+        assert img.array.shape[0] == 3
 
         # Test  with both explicit width and height
         with warnings.catch_warnings():
@@ -640,19 +640,19 @@ def test_preview(zarr_store):
 
         # Test with band selection.
         img = reader.preview(indexes=1)
-        assert img.count == 1
+        assert img.array.shape[0] == 1
 
         img = reader.preview(indexes=(1, 3))
-        assert img.count == 2
+        assert img.array.shape[0] == 2
 
         # Test with band expression.
         img = reader.preview(expression="b1/b2")
-        assert img.count == 1
+        assert img.array.shape[0] == 1
 
         # Test warns when both expression and indexes are passed
         with pytest.warns(ExpressionMixingWarning):
             img = reader.preview(indexes=1, expression="b1/b2")
-        assert img.count == 1
+        assert img.array.shape[0] == 1
 
         # Test reprojects to dst_crs
         img = reader.preview(dst_crs=CRS.from_epsg(4326))
@@ -853,7 +853,7 @@ async def test_point_async(zarr_store):
             lat=4000050.0,
             coord_crs=CRS.from_epsg(32618),
         )
-        assert pt.count == 3
+        assert pt.array.shape[0] == 3
         assert pt.crs == CRS.from_epsg(32618)
         assert pt.coordinates == (500050.0, 4000050.0)
         assert pt.band_names == ["b1", "b2", "b3"]
@@ -866,7 +866,7 @@ async def test_point_async(zarr_store):
             coord_crs=CRS.from_epsg(32618),
             indexes=1,
         )
-        assert pt.count == 1
+        assert pt.array.shape[0] == 1
         assert pt.band_names == ["b1"]
 
         # Read bands 1 and 3
@@ -876,7 +876,7 @@ async def test_point_async(zarr_store):
             coord_crs=CRS.from_epsg(32618),
             indexes=(1, 3),
         )
-        assert pt.count == 2
+        assert pt.array.shape[0] == 2
         assert pt.band_names == ["b1", "b3"]
 
         # Test raises error for points outside bounds.
@@ -907,7 +907,7 @@ def test_point(zarr_store):
             lat=4000050.0,
             coord_crs=CRS.from_epsg(32618),
         )
-        assert pt.count == 3
+        assert pt.array.shape[0] == 3
         assert pt.crs == CRS.from_epsg(32618)
         assert pt.coordinates == (500050.0, 4000050.0)
         assert pt.band_names == ["b1", "b2", "b3"]
@@ -920,7 +920,7 @@ def test_point(zarr_store):
             coord_crs=CRS.from_epsg(32618),
             indexes=1,
         )
-        assert pt.count == 1
+        assert pt.array.shape[0] == 1
         assert pt.band_names == ["b1"]
 
         # Read bands 1 and 3
@@ -930,7 +930,7 @@ def test_point(zarr_store):
             coord_crs=CRS.from_epsg(32618),
             indexes=(1, 3),
         )
-        assert pt.count == 2
+        assert pt.array.shape[0] == 2
         assert pt.band_names == ["b1", "b3"]
 
         # Test raises error for points outside bounds.
@@ -1173,13 +1173,13 @@ async def test_compat_xarray_async(zarr_dataset):
 
     # Tile
     img = xarrayds.tile(0, 0, 0)
-    assert img.count == 2
+    assert img.array.shape[0] == 2
     assert img.width == 256
     assert img.height == 256
     assert img.array.dtype == numpy.float32
 
     zarr_img = await async_zarrds.tile(0, 0, 0)
-    assert zarr_img.count == 2
+    assert zarr_img.array.shape[0] == 2
     assert zarr_img.width == 256
     assert zarr_img.height == 256
     assert zarr_img.array.dtype == numpy.float32
@@ -1230,13 +1230,13 @@ async def test_compat_xarray_async(zarr_dataset):
 
     # Point
     pt = xarrayds.point(0, 0)
-    assert pt.count == 2
+    assert pt.array.shape[0] == 2
     assert pt.coordinates
     assert pt.pixel_location
     assert pt.array.dtype == numpy.float32
 
     zarr_pt = await async_zarrds.point(0, 0)
-    assert zarr_pt.count == 2
+    assert zarr_pt.array.shape[0] == 2
     assert zarr_pt.coordinates
     assert zarr_pt.pixel_location
     assert zarr_pt.array.dtype == numpy.float32
@@ -1339,13 +1339,13 @@ def test_compat_xarray(zarr_dataset):
 
     # Tile
     img = xarrayds.tile(0, 0, 0)
-    assert img.count == 2
+    assert img.array.shape[0] == 2
     assert img.width == 256
     assert img.height == 256
     assert img.array.dtype == numpy.float32
 
     zarr_img = zarrds.tile(0, 0, 0)
-    assert zarr_img.count == 2
+    assert zarr_img.array.shape[0] == 2
     assert zarr_img.width == 256
     assert zarr_img.height == 256
     assert zarr_img.array.dtype == numpy.float32
@@ -1394,13 +1394,13 @@ def test_compat_xarray(zarr_dataset):
 
     # Point
     pt = xarrayds.point(0, 0)
-    assert pt.count == 2
+    assert pt.array.shape[0] == 2
     assert pt.coordinates
     assert pt.pixel_location
     assert pt.array.dtype == numpy.float32
 
     zarr_pt = zarrds.point(0, 0)
-    assert zarr_pt.count == 2
+    assert zarr_pt.array.shape[0] == 2
     assert zarr_pt.coordinates
     assert zarr_pt.pixel_location
     assert zarr_pt.array.dtype == numpy.float32

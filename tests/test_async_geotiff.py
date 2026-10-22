@@ -115,14 +115,10 @@ async def test_async_reader_point():
             sync_pt = sync_src.point(127, 37)
             numpy.testing.assert_array_equal(sync_pt.array, pt.array)
             assert pt.pixel_location == sync_pt.pixel_location
-            assert pt.scales == [0.0001, 0.001]
-            assert pt.offsets == [1000.0, 2000.0]
 
             pt = await src.point(127, 37, unscale=True)
             sync_pt = sync_src.point(127, 37, unscale=True)
             numpy.testing.assert_array_equal(sync_pt.array, pt.array)
-            assert pt.scales == [1.0, 1.0]
-            assert pt.offsets == [0.0, 0.0]
 
 
 @pytest.mark.asyncio
@@ -186,14 +182,10 @@ async def test_async_reader_preview():
             img = await src.preview(max_size=128)
             sync_img = sync_src.preview(max_size=128)
             numpy.testing.assert_array_equal(sync_img.array, img.array)
-            assert img.scales == [0.0001, 0.001]
-            assert img.offsets == [1000.0, 2000.0]
 
             img = await src.preview(max_size=128, unscale=True)
             sync_img = sync_src.preview(max_size=128, unscale=True)
             numpy.testing.assert_array_equal(sync_img.array, img.array)
-            assert img.scales == [1.0, 1.0]
-            assert img.offsets == [0.0, 0.0]
 
     geotiff = await GeoTIFF.open("red.tif", store=store)
     async with GeoTIFFReader(geotiff) as src:
@@ -309,7 +301,7 @@ async def test_mask(src_path):
     geotiff = await GeoTIFF.open(src_path, store=store)
     async with GeoTIFFReader(geotiff) as src:
         im = await src.preview(max_size=1024)
-        assert im.count == 3
+        assert im.array.shape[0] == 3
 
         assert im.array.data[0, 0, 0] == 0
         assert im.array.data[0, -1, -1]

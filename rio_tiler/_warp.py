@@ -52,9 +52,11 @@ def warp(
     native_width = max(1, round((e - w) / w_res))
     native_height = max(1, round((s - n) / h_res))
 
+    nbands = img.array.shape[0]
+
     # Allocate output arrays at the final size (never the full intermediate size)
-    dst_data = numpy.zeros((img.count, dst_height, dst_width), dtype=img.array.dtype)
-    dst_mask = numpy.zeros((img.count, dst_height, dst_width), dtype=numpy.uint8)
+    dst_data = numpy.zeros((nbands, dst_height, dst_width), dtype=img.array.dtype)
+    dst_mask = numpy.zeros((nbands, dst_height, dst_width), dtype=numpy.uint8)
 
     has_alpha = img.alpha_mask is not None
     if has_alpha:
@@ -97,7 +99,7 @@ def warp(
             # Destination must start fully masked: GDAL skips chunks with no
             # source pixels, leaving the initial alpha (mask) untouched.
             data = numpy.ma.masked_array(
-                numpy.zeros((img.count, chunk_h, chunk_w), dtype=img.array.dtype),
+                numpy.zeros((nbands, chunk_h, chunk_w), dtype=img.array.dtype),
                 mask=True,
             )
             data, _ = reproject(
@@ -154,8 +156,6 @@ def warp(
         band_names=img.band_names,
         band_descriptions=img.band_descriptions,
         nodata=img.nodata,
-        scales=img.scales,
-        offsets=img.offsets,
         metadata=img.metadata,
         dataset_statistics=img.dataset_statistics,
         alpha_mask=dst_alpha if has_alpha else None,
