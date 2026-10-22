@@ -26,7 +26,7 @@
     * support N-D arrays: unselected non-spatial dimensions are kept, and readers return `(*non-spatial dims, height, width)` data
     * `band_descriptions` now returns `{dimension: labels}` for all the non-spatial dimensions (empty for 2D arrays), `nbands` is the product of the non-spatial dimension sizes
     * add `dimension_values` property (`{dimension: labels}`)
-    * scalar selection is stored in `ImageData.metadata["sel"]`
+    * the selected non-spatial labels are stored in `ImageData.metadata["selected"]`
     * `info()` lists bands only when there is at most one non-spatial dimension, and adds `dimension_values`
 * add: N-D support in `ImageData`/`PointData` (`(*leading, height, width)`): N-D data have per-dimension `band_descriptions` (`dict`), no `band_names` and a single scale/offset. Expression, colormap, color formula, rescale, statistics, `to_raster` and rendering (except `NPY`/`NPZ`) raise `ValueError` for N-D data
 

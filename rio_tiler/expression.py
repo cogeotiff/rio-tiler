@@ -58,7 +58,7 @@ def parse_expression(
     Args:
         expression (str): band math/combination expression.
         cast (bool): cast band names to integers (convert to index values). Defaults to True.
-        dimensions: (str, optional): name of the band dimension. Defaults to "b".
+        dimension (str, optional): name of the band dimension. Defaults to "b".
 
     Returns:
         tuple: band names/indexes.
@@ -122,7 +122,7 @@ def apply_expression(
     """
     if len(bands) != data.shape[0]:
         raise ValueError(
-            f"Incompatible number of bands names ({len(bands)}) and data shape {data.shape[0]}"
+            f"Incompatible number of band names ({len(bands)}) and data bands ({data.shape[0]})"
         )
 
     try:

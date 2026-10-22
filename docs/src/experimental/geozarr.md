@@ -196,11 +196,11 @@ ds = AsyncArrayReader(
 
 img = await ds.preview(sel={"time": "2025-01-15", "z": 120}, sel_method="nearest")
 print(img.array.shape, img.metadata)
->> (1, 1024, 1024) {'sel': {'time': '2025-01-01T00:00:00Z', 'z': 100}}
+>> (1, 1024, 1024) {'selected': {'time': ['2025-01-01T00:00:00Z'], 'z': [100]}}
 
 img = await ds.preview(sel={"z": [0, 100]})
 print(img.array.shape, img.band_descriptions)
->> (2, 2, 1024, 1024) {'time': ['2025-01-01T00:00:00Z', '2025-02-01T00:00:00Z'], 'z': [0, 100]}
+>> (2, 2, 1024, 1024) {'time': ['2025-01-01T00:00:00Z', '2025-02-01T00:00:00Z'], 'z': ['0', '100']}
 ```
 
 !!! note
