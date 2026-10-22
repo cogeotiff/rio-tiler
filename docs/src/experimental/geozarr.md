@@ -205,7 +205,7 @@ print(img.array.shape, img.band_descriptions)
 
 !!! note
 
-    N-D `ImageData` (more than 3 dimensions) have per-dimension `band_descriptions` (`dict`) and no `band_names`. Expressions, colormaps, statistics and image rendering (except `NPY`/`NPZ`) are only supported for 3D data, so use `sel` to reduce the data to a single non-spatial dimension first.
+    N-D `ImageData` (more than 3 dimensions) have per-dimension `band_descriptions` and `band_names` (`dict`). Expressions, colormaps, statistics and image rendering (except `NPY`/`NPZ`) are only supported for 3D data, so use `sel` to reduce the data to a single non-spatial dimension first.
 
 ## AsyncGroupReader
 
