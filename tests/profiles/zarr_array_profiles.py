@@ -4,28 +4,9 @@ Run with:
 
     uv run pytest tests/profiles/zarr_array_profiles.py -s
 
-- `test_sync_array_reader` / `test_async_array_reader`: pyinstrument call tree
-  and store calls for one tile.
-- `test_async_event_loop_lag`: event loop lag while tiles are read concurrently.
-- `test_async_slow_callbacks`: steps blocking the event loop for more than 5ms
-  (asyncio debug mode).
-
-Note: zarr fetches chunks in tasks it spawns, so in the async pyinstrument tree
-the I/O time appears next to `AsyncArrayReader.tile` (under `Handle._run`), while
-the reader's own CPU work (warp, ...) appears under it.
-
-Note: zarr's sync API runs I/O and decoding in a background thread that
-pyinstrument doesn't sample. Use py-spy to see all threads, including native
-(GDAL, codecs) frames:
-
-    sudo py-spy record --threads --native --idle -f speedscope -o zarr.json -- \
-        uv run pytest tests/profiles/zarr_array_profiles.py -s -k sync
 """
 
-import asyncio
 import logging
-import re
-import time
 from typing import cast
 
 import pytest
@@ -51,9 +32,6 @@ array_options = {
 # zoom 14 is close to the native 10m resolution
 tile = (6944, 6268, 14)
 
-# 4x4 zoom 14 tiles
-tiles = [(x, y, 14) for x in range(6944, 6948) for y in range(6268, 6272)]
-
 
 def _store() -> LoggingStore:
     """Remote store counting the calls made by zarr."""
@@ -67,7 +45,7 @@ def _store() -> LoggingStore:
 def _print_profile(title: str, profiler: Profiler, store: LoggingStore):
     print(f"\n=== {title} ===")
     print(f"store calls: {dict(store.counter)}")
-    print(profiler.output_text(unicode=True, color=False))
+    print(profiler.output_text(unicode=True, color=False, short_mode=True))
 
 
 def test_sync_array_reader():
@@ -99,72 +77,3 @@ async def test_async_array_reader():
 
     assert img.array.shape == (1, 256, 256)
     _print_profile("AsyncArrayReader.tile", profiler, store)
-
-
-@pytest.mark.asyncio
-async def test_async_event_loop_lag():
-    """measure event loop lag while AsyncArrayReader reads tiles concurrently."""
-    store = _store()
-    loop = asyncio.get_running_loop()
-
-    interval = 0.005
-    lags: list[float] = []
-    done = asyncio.Event()
-
-    async def _probe():
-        while not done.is_set():
-            start = loop.time()
-            await asyncio.sleep(interval)
-            lags.append(loop.time() - start - interval)
-
-    group = await zarr.api.asynchronous.open_group(store=store, mode="r")
-    array = cast(zarr.AsyncArray, await group.getitem(array_path))
-    async with AsyncArrayReader(input=array, **array_options) as src:
-        probe = asyncio.create_task(_probe())
-        start = time.perf_counter()
-        imgs = await asyncio.gather(*(src.tile(*t) for t in tiles))
-        elapsed = time.perf_counter() - start
-        done.set()
-        await probe
-
-    assert all(img.array.shape == (1, 256, 256) for img in imgs)
-
-    lags.sort()
-    print(f"\n=== AsyncArrayReader.tile x {len(tiles)} (concurrent) ===")
-    print(f"store calls: {dict(store.counter)}")
-    print(f"total: {elapsed * 1000:.1f} ms")
-    print(
-        f"event loop lag: max {lags[-1] * 1000:.1f} ms, "
-        f"p99 {lags[int(len(lags) * 0.99)] * 1000:.1f} ms, "
-        f"median {lags[len(lags) // 2] * 1000:.1f} ms"
-    )
-
-
-@pytest.mark.asyncio
-async def test_async_slow_callbacks(caplog):
-    """list the steps blocking the event loop for more than 5ms."""
-    store = _store()
-    loop = asyncio.get_running_loop()
-
-    caplog.set_level(logging.WARNING, logger="asyncio")
-    loop.set_debug(True)
-    loop.slow_callback_duration = 0.005
-    try:
-        group = await zarr.api.asynchronous.open_group(store=store, mode="r")
-        array = cast(zarr.AsyncArray, await group.getitem(array_path))
-        async with AsyncArrayReader(input=array, **array_options) as src:
-            imgs = await asyncio.gather(*(src.tile(*t) for t in tiles))
-    finally:
-        loop.set_debug(False)
-
-    assert all(img.array.shape == (1, 256, 256) for img in imgs)
-
-    # e.g "Executing <Task ... coro=<AsyncArrayReader.tile() ...> took 0.008 seconds"
-    slow = [
-        f"{m.group(1)}: {float(m.group(2)) * 1000:.1f} ms"
-        for r in caplog.records
-        if r.name == "asyncio"
-        and (m := re.search(r"coro=<(\S+?)\(\).* took ([\d.]+) seconds", r.getMessage()))
-    ]
-    print(f"\n=== AsyncArrayReader.tile x {len(tiles)}: blocking steps > 5ms ===")
-    print("\n".join(slow) or "none")
