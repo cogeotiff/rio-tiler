@@ -169,8 +169,8 @@ class PointData:
 
     array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
     dimensions: list[str] = attr.ib(kw_only=True)
-    band_names: list[str] | dict[str, list[Any]] = attr.ib(kw_only=True)
-    band_descriptions: list[str] | dict[str, list[Any]] = attr.ib(kw_only=True)
+    band_names: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
+    band_descriptions: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
     coordinates: tuple[float, float] | None = attr.ib(default=None, kw_only=True)
     crs: CRS | None = attr.ib(default=None, kw_only=True)
     assets: list | None = attr.ib(default=None, kw_only=True)
@@ -194,21 +194,18 @@ class PointData:
 
     @dimensions.default
     def _default_dimensions(self):
-        """Return default dimensions based on the array shape.
-
-        By definition, the last two dimensions are assumed to be spatial (y, x).
-        """
+        """Return default dimensions based on the array shape."""
         if self.is_nd:
-            return [f"d{ix + 1}" for ix in range(len(self.array.shape[:-2]))]
+            return [f"{ix + 1}d" for ix in range(len(self.array.shape))]
 
-        return ["b", "y", "x"]
+        return ["b"]
 
     @band_names.default
     def _default_band_names(self):
         if self.is_nd:
             return {
                 d: [f"{d}{ix + 1}" for ix in list(range(idx))]
-                for d, idx in zip(self.dimensions[:-2], self.array.shape[:-2])
+                for d, idx in zip(self.dimensions, self.array.shape)
             }
 
         return [f"{self.dimensions[0]}{ix + 1}" for ix in range(self.array.shape[0])]
@@ -218,7 +215,7 @@ class PointData:
         if self.is_nd:
             return {
                 d: [f"{d}{ix + 1}" for ix in list(range(idx))]
-                for d, idx in zip(self.dimensions[:-2], self.array.shape[:-2])
+                for d, idx in zip(self.dimensions, self.array.shape)
             }
 
         return [f"{self.dimensions[0]}{ix + 1}" for ix in range(self.array.shape[0])]
@@ -231,6 +228,24 @@ class PointData:
             )
             assert isinstance(self.band_descriptions, dict), (
                 "For Multi-dimensional arrays, band_descriptions should be a dict."
+            )
+            assert len(self.dimensions) == self.array.ndim, (
+                "Dimensions should match the array shape."
+            )
+            assert len(self.band_descriptions) == len(self.array.shape), (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == len(self.array.shape), (
+                "Band names should match the array shape."
+            )
+
+        else:
+            assert len(self.dimensions) == 1, "Dimensions should match the array shape."
+            assert len(self.band_descriptions) == self.array.shape[0], (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == self.array.shape[0], (
+                "Band names should match the array shape."
             )
 
     @property
@@ -408,8 +423,8 @@ class ImageData:
 
     array: numpy.ma.MaskedArray = attr.ib(converter=masked_and_3d)
     dimensions: list[str] = attr.ib(kw_only=True)
-    band_names: list[str] | dict[str, list[Any]] = attr.ib(kw_only=True)
-    band_descriptions: list[str] | dict[str, list[Any]] = attr.ib(kw_only=True)
+    band_names: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
+    band_descriptions: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
     bounds: BoundingBox | None = attr.ib(
         default=None, converter=to_coordsbbox, kw_only=True
     )
@@ -448,9 +463,7 @@ class ImageData:
         By definition, the last two dimensions are assumed to be spatial (y, x).
         """
         if self.is_nd:
-            raise ValueError(
-                f"Default dimensions for N-D arrays are not supported, got array with shape {self.array.shape}."
-            )
+            return [f"{ix + 1}d" for ix in range(len(self.array.shape[:-2]))] + ["y", "x"]
 
         return ["b", "y", "x"]
 
@@ -483,6 +496,23 @@ class ImageData:
             assert isinstance(self.band_descriptions, dict), (
                 "For Multi-dimensional arrays, band_descriptions should be a dict."
             )
+            assert len(self.dimensions) == self.array.ndim, (
+                "Dimensions should match the array shape."
+            )
+            assert len(self.band_descriptions) == len(self.array.shape[:-2]), (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == len(self.array.shape[:-2]), (
+                "Band names should match the array shape."
+            )
+        else:
+            assert len(self.band_descriptions) == self.array.shape[0], (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == self.array.shape[0], (
+                "Band names should match the array shape."
+            )
+            assert len(self.dimensions) == 3, "Dimensions should match the array shape."
 
     @property
     def is_nd(self) -> bool:

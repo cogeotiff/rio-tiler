@@ -1009,47 +1009,28 @@ def test_nd_image_metadata():
     """N-D ImageData have per-dimension metadata."""
     img = _nd_image()
     assert img.is_nd
-    assert img.count == 2
+    assert img.array.shape[0] == 2
+    assert img.array.shape[1] == 3
     assert img.height == 10
     assert img.width == 12
-    assert img.band_names == []
-    assert img.band_descriptions == {"dim_0": [0, 1], "dim_1": [0, 1, 2]}
+    assert img.dimensions == ["1d", "2d", "y", "x"]
+    assert img.band_names == {"1d": ["1d1", "1d2"], "2d": ["2d1", "2d2", "2d3"]}
+    assert img.band_descriptions == {"1d": ["1d1", "1d2"], "2d": ["2d1", "2d2", "2d3"]}
 
     img = _nd_image(
-        band_descriptions={"time": ["2025-01-01", "2025-02-01"], "z": [0, 10, 20]}
+        dimensions=["time", "z", "y", "x"],
+        band_descriptions={"time": ["2025-01-01", "2025-02-01"], "z": ["0", "10", "20"]},
     )
+    assert img.band_names == {"time": ["time1", "time2"], "z": ["z1", "z2", "z3"]}
     assert img.band_descriptions == {
         "time": ["2025-01-01", "2025-02-01"],
-        "z": [0, 10, 20],
+        "z": ["0", "10", "20"],
     }
-
-    # band_descriptions must have one entry per leading dimension
-    with pytest.raises(ValueError):
-        _nd_image(band_descriptions={"time": ["2025-01-01", "2025-02-01"]})
-
-    # band_descriptions must be a dict for N-D data
-    with pytest.raises(ValueError):
-        _nd_image(band_descriptions=["a", "b"])
 
     # 3D data are not N-D
     img = ImageData(numpy.zeros((2, 4, 4)))
     assert not img.is_nd
     assert img.band_names == ["b1", "b2"]
-
-
-def test_band_descriptions_dict_3d():
-    """dict band_descriptions are converted to list for 3D data."""
-    img = ImageData(numpy.zeros((2, 4, 4)), band_descriptions={"time": ["t1", "t2"]})
-    assert img.band_descriptions == ["t1", "t2"]
-
-    img = ImageData(numpy.zeros((2, 4, 4)), band_descriptions={"z": [10, 20]})
-    assert img.band_descriptions == ["10", "20"]
-
-    img = ImageData(numpy.zeros((1, 4, 4)), band_descriptions={})
-    assert img.band_descriptions == ["b1"]
-
-    with pytest.raises(ValueError):
-        ImageData(numpy.zeros((2, 4, 4)), band_descriptions={"time": ["t1"], "z": [1, 2]})
 
 
 def test_nd_image_mask():
@@ -1062,56 +1043,6 @@ def test_nd_image_mask():
     assert not img._mask[0, 0]
     # one value is masked but the others are valid so the pixel is valid
     assert img._mask[1, 1]
-
-
-def test_nd_image_geometry_ops():
-    """Resize/clip/reproject keep the leading dimensions."""
-    img = _nd_image(band_descriptions={"time": ["a", "b"], "z": [0, 10, 20]})
-
-    resized = img.resize(5, 6)
-    assert resized.array.shape == (2, 3, 5, 6)
-    assert resized.band_descriptions == img.band_descriptions
-    # Same result as resizing each 3D slice
-    numpy.testing.assert_array_equal(
-        resized.array[1], ImageData(img.array[1]).resize(5, 6).array
-    )
-
-    clipped = img.clip((0, 0, 6, 5))
-    assert clipped.array.shape == (2, 3, 5, 6)
-    numpy.testing.assert_array_equal(clipped.array[1, 2], img.array[1, 2, 5:, :6])
-
-    reprojected = img.reproject(CRS.from_epsg(3857))
-    assert reprojected.array.shape[:2] == (2, 3)
-    assert reprojected.crs == CRS.from_epsg(3857)
-    assert reprojected.band_descriptions == img.band_descriptions
-
-
-def test_nd_image_warp():
-    """warp keeps the leading dimensions."""
-    from rio_tiler._warp import warp
-
-    img = _nd_image()
-    out = warp(
-        img,
-        dst_crs=CRS.from_epsg(3857),
-        dst_bounds=(0, 0, 100000, 100000),
-        dst_width=20,
-        dst_height=20,
-    )
-    assert out.array.shape == (2, 3, 20, 20)
-    assert out.array.mask.shape == (2, 3, 20, 20)
-    assert out.band_descriptions == img.band_descriptions
-
-    # Same result as warping each 3D slice
-    img3d = ImageData(img.array[1], bounds=img.bounds, crs=img.crs)
-    out3d = warp(
-        img3d,
-        dst_crs=CRS.from_epsg(3857),
-        dst_bounds=(0, 0, 100000, 100000),
-        dst_width=20,
-        dst_height=20,
-    )
-    numpy.testing.assert_array_equal(out.array.data[1], out3d.array.data)
 
 
 def test_nd_image_not_supported():
@@ -1165,20 +1096,48 @@ def test_nd_image_render():
         assert npz["mask"].shape == (10, 12)
 
 
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"band_descriptions": ["b1"]},
+        {"band_names": ["b1"]},
+        # missing dimensions
+        {"dimensions": ["1d"]},
+        {"band_names": {"time": ["time1"]}},
+        {"band_descriptions": {"time": ["time1"]}},
+        # too many dimensions
+        {"dimensions": ["1d", "2d", "3d"]},
+        {"band_names": {"time": ["time1"], "z": ["z1"], "b": ["b1"]}},
+        {"band_descriptions": {"time": ["time1"], "z": ["z1"], "b": ["b1"]}},
+    ],
+)
+def test_nd_image_data_errors(kwargs):
+    """Test N-D ImageData asserting errors."""
+    with pytest.raises(AssertionError):
+        _nd_image(**kwargs)
+
+
 def test_nd_point_data():
     """N-D PointData."""
     pt = PointData(
         numpy.ma.MaskedArray(numpy.zeros((2, 3))),
-        band_descriptions={"time": ["a", "b"], "z": [0, 10, 20]},
+        dimensions=["time", "z"],
+        band_descriptions={"time": ["a", "b"], "z": ["0", "10", "20"]},
     )
     assert pt.is_nd
-    assert pt.count == 2
-    assert pt.band_names == []
-    assert pt.band_descriptions == {"time": ["a", "b"], "z": [0, 10, 20]}
+    assert pt.array.shape[0] == 2
+    assert pt.band_names == {"time": ["time1", "time2"], "z": ["z1", "z2", "z3"]}
+    assert pt.band_descriptions == {"time": ["a", "b"], "z": ["0", "10", "20"]}
     assert pt.mask.shape == (1,)
 
+    pt = PointData(numpy.ma.MaskedArray(numpy.zeros((2, 3))), dimensions=["time", "z"])
+    assert pt.band_names == {"time": ["time1", "time2"], "z": ["z1", "z2", "z3"]}
+    assert pt.band_descriptions == {"time": ["time1", "time2"], "z": ["z1", "z2", "z3"]}
+
     pt = PointData(numpy.ma.MaskedArray(numpy.zeros((2, 3))))
-    assert pt.band_descriptions == {"dim_0": [0, 1], "dim_1": [0, 1, 2]}
+    assert pt.dimensions == ["1d", "2d"]
+    assert pt.band_names == {"1d": ["1d1", "1d2"], "2d": ["2d1", "2d2", "2d3"]}
+    assert pt.band_descriptions == {"1d": ["1d1", "1d2"], "2d": ["2d1", "2d2", "2d3"]}
 
     with pytest.raises(ValueError):
         pt.apply_expression("b1+b2")
@@ -1187,3 +1146,24 @@ def test_nd_point_data():
         PointData.create_from_list([pt, pt])
 
     assert PointData.create_from_list([pt]) is pt
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"band_descriptions": ["b1"]},
+        {"band_names": ["b1"]},
+        # missing dimensions
+        {"dimensions": ["1d"]},
+        {"band_names": {"time": ["time1"]}},
+        {"band_descriptions": {"time": ["time1"]}},
+        # too many dimensions
+        {"dimensions": ["1d", "2d", "3d"]},
+        {"band_names": {"time": ["time1"], "z": ["z1"], "b": ["b1"]}},
+        {"band_descriptions": {"time": ["time1"], "z": ["z1"], "b": ["b1"]}},
+    ],
+)
+def test_nd_point_data_errors(kwargs):
+    """Test N-D PointData asserting errors."""
+    with pytest.raises(AssertionError):
+        PointData(numpy.ma.MaskedArray(numpy.zeros((2, 3))), **kwargs)

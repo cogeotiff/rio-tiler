@@ -5,6 +5,7 @@
 * breaking: remove python 3.11 support (rasterio 1.5 requires python >=3.12)
 * breaking: remove `scales` and `offsets` attributes in ImageData and PointData models
 * breaking: remove `count` attribute in ImageData and PointData models
+* breaking: `band_descriptions` and `band_names` attributes are not forwarded from ImageData and PointData models when using mosaic readers
 * breaking: `rio_tiler.experimental.zarr` Array readers (`AsyncArrayReader`, `ArrayReader`) now use named dimensions
     * remove `band_names` attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to `{dim}{n}`)
     * add `dimensions` attribute (defaults to the zarr `dimension_names` metadata)
