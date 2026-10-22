@@ -1666,6 +1666,7 @@ async def test_inverted_axis_async_3d():
     img = await reader._read()
     assert img.array.shape == (3, 100, 200)
     assert img.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert img.dimensions == ["time", "lat", "lon"]
     assert img.band_descriptions == ["time1", "time2", "time3"]
 
     img = await reader.preview()
@@ -1719,6 +1720,7 @@ def test_inverted_axis_async_3d_sync():
     img = reader._read()
     assert img.array.shape == (3, 100, 200)
     assert img.bounds == (500000.0, 4000000.0, 500100.0, 4000100.0)
+    assert img.dimensions == ["time", "lat", "lon"]
     assert img.band_descriptions == ["time1", "time2", "time3"]
 
     img = reader.preview()

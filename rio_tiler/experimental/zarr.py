@@ -1130,6 +1130,9 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             [-2, -1],
         )
 
+        # Re-order dims to match the data order (*non-spatial dimensions, y, x)
+        dims = [d for d in dims if d not in self.spatial_dims] + self.spatial_dims
+
         # Ensure at least 3D shape
         if data.ndim == 2:
             data = numpy.expand_dims(data, axis=0)
@@ -1722,6 +1725,9 @@ class ArrayReader(BaseReader, ArrayMixin):
             [dims.index(self.spatial_dims[0]), dims.index(self.spatial_dims[1])],
             [-2, -1],
         )
+
+        # Re-order dims to match the data order (*non-spatial dimensions, y, x)
+        dims = [d for d in dims if d not in self.spatial_dims] + self.spatial_dims
 
         # Ensure at least 3D shape
         if data.ndim == 2:
