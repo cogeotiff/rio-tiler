@@ -5,6 +5,7 @@
 * breaking: remove python 3.11 support (rasterio 1.5 requires python >=3.12)
 * breaking: remove `scales` and `offsets` attributes in ImageData and PointData models
 * breaking: remove `count` attribute in ImageData and PointData models
+* breaking: `band_descriptions` and `band_names` attributes are not forwarded from ImageData and PointData models when using mosaic readers
 * breaking: `rio_tiler.experimental.zarr` Array readers (`AsyncArrayReader`, `ArrayReader`) now use named dimensions
     * remove `band_names` attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to `{dim}{n}`)
     * add `dimensions` attribute (defaults to the zarr `dimension_names` metadata)
@@ -19,6 +20,15 @@
 * fix: use `@` instead of `*` for affine matrix multiplication
 * fix: run blocking warp/reproject/resize in a worker thread (`asyncio.to_thread`) in the async experimental readers (`geotiff.Reader`, `zarr.AsyncArrayReader`) to avoid blocking the event loop
 * docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
+* breaking: replace `indexes` with xarray-like `sel` and `sel_method` options in `rio_tiler.experimental.zarr` readers
+    * `sel` (`{dimension: value | list | slice}`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
+    * `sel_method` supports exact (default), `nearest`, `pad`/`ffill` and `backfill`/`bfill` matching
+    * support N-D arrays: unselected non-spatial dimensions are kept, and readers return `(*non-spatial dims, height, width)` data
+    * the returned `ImageData.band_descriptions` is `{dimension: labels}` for all the non-spatial dimensions (a `list` for 2D/3D arrays)
+    * add `coordinate_values` property (`{dimension: values}`)
+    * the selected non-spatial labels are stored in `ImageData.metadata["selected"]`
+    * `info()` no longer lists per-band metadata and adds `dimensions_count` (plus `coordinates` when called with `with_coordinates=True`)
+* add: N-D support in `ImageData`/`PointData` (`(*leading, height, width)`): N-D data have per-dimension `band_descriptions` and `band_names` (`dict`). Expression, colormap, color formula, rescale, statistics, `to_raster` and rendering (except `NPY`/`NPZ`) raise `ValueError` for N-D data
 
 ## 9.4.12 (2026-10-08)
 

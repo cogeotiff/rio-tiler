@@ -52,18 +52,20 @@ def warp(
     native_width = max(1, round((e - w) / w_res))
     native_height = max(1, round((s - n) / h_res))
 
-    nbands = img.array.shape[0]
+    # NOTE: N-D data (*leading, height, width) are warped as (prod(leading), height, width)
+    leading = img.array.shape[:-2]
+    src_array = img.array.reshape((-1, img.height, img.width))
+    count = src_array.shape[0]
 
     # Allocate output arrays at the final size (never the full intermediate size)
-    dst_data = numpy.zeros((nbands, dst_height, dst_width), dtype=img.array.dtype)
-    dst_mask = numpy.zeros((nbands, dst_height, dst_width), dtype=numpy.uint8)
+    dst_data = numpy.zeros((count, dst_height, dst_width), dtype=img.array.dtype)
+    dst_mask = numpy.zeros((count, dst_height, dst_width), dtype=numpy.uint8)
 
     has_alpha = img.alpha_mask is not None
+    dst_alpha: numpy.ndarray | None = None
     if has_alpha:
         alpha_minv, _ = dtype_ranges[str(img.alpha_mask.dtype)]
-        dst_alpha: numpy.ndarray = numpy.zeros(
-            (dst_height, dst_width), dtype=img.alpha_mask.dtype
-        )
+        dst_alpha = numpy.zeros((dst_height, dst_width), dtype=img.alpha_mask.dtype)
 
     # Iterate over output tiles
     for dst_row in range(0, dst_height, _TILE_SIZE):
@@ -99,11 +101,11 @@ def warp(
             # Destination must start fully masked: GDAL skips chunks with no
             # source pixels, leaving the initial alpha (mask) untouched.
             data = numpy.ma.masked_array(
-                numpy.zeros((nbands, chunk_h, chunk_w), dtype=img.array.dtype),
+                numpy.zeros((count, chunk_h, chunk_w), dtype=img.array.dtype),
                 mask=True,
             )
             data, _ = reproject(
-                img.array,
+                src_array,
                 data,
                 src_transform=img.transform,
                 src_crs=img.crs,
@@ -149,14 +151,18 @@ def warp(
                 )
 
     return ImageData(
-        numpy.ma.MaskedArray(dst_data, mask=~dst_mask.astype(bool)),
-        assets=img.assets,
-        crs=dst_crs,
-        bounds=dst_bounds,
+        numpy.ma.MaskedArray(
+            dst_data.reshape((*leading, dst_height, dst_width)),
+            mask=~dst_mask.astype(bool).reshape((*leading, dst_height, dst_width)),
+        ),
+        dimensions=img.dimensions,
         band_names=img.band_names,
         band_descriptions=img.band_descriptions,
-        nodata=img.nodata,
+        bounds=dst_bounds,
+        crs=dst_crs,
+        assets=img.assets,
         metadata=img.metadata,
+        nodata=img.nodata,
         dataset_statistics=img.dataset_statistics,
         alpha_mask=dst_alpha if has_alpha else None,
     )

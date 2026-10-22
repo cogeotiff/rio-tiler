@@ -48,12 +48,17 @@ def validate_expression(expr: str) -> str:
     return expr
 
 
-def parse_expression(expression: str, cast: bool = True) -> tuple:
+def parse_expression(
+    expression: str,
+    cast: bool = True,
+    dimension: str = "b",
+) -> tuple:
     """Parse rio-tiler band math expression and extract bands.
 
     Args:
         expression (str): band math/combination expression.
         cast (bool): cast band names to integers (convert to index values). Defaults to True.
+        dimension (str, optional): name of the band dimension. Defaults to "b".
 
     Returns:
         tuple: band names/indexes.
@@ -68,7 +73,10 @@ def parse_expression(expression: str, cast: bool = True) -> tuple:
     """
     expression = validate_expression(expression)
 
-    bands = set(re.findall(r"\bb(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE))
+    bands = set(
+        re.findall(rf"\b(?:{dimension})(?P<bands>[0-9A-Z]+)\b", expression, re.IGNORECASE)
+    )
+
     output_bands = tuple(map(int, bands)) if cast else tuple(bands)
     if not output_bands:
         raise InvalidExpression(
@@ -114,7 +122,7 @@ def apply_expression(
     """
     if len(bands) != data.shape[0]:
         raise ValueError(
-            f"Incompatible number of bands ({bands}) and data shape {data.shape}"
+            f"Incompatible number of band names ({len(bands)}) and data bands ({data.shape[0]})"
         )
 
     try:

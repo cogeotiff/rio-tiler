@@ -155,17 +155,22 @@ class PointData:
 
     Attributes:
         array (numpy.ma.MaskedArray): pixel values.
-        band_names (list): name of each band. Defaults to `["1", "2", "3"]` for 3 bands image.
+        dimensions (list[str]): list of dimension names corresponding to the array.
+        band_names (list or dict, optional): name of each band. Defaults to `["b1", "b2", "b3"]` for 3 bands image.
+        band_descriptions (list or dict, optional): description of each band. Defaults to `["b1", "b2", "b3"]` for 3 bands image.
         coordinates (tuple): Point's coordinates.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
         assets (list, optional): list of assets used to construct the data values.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
+        nodata (NoData, optional): nodata value for the data.
+        pixel_location (tuple, optional): Pixel location (row, column) within the original dataset.
 
     """
 
     array: numpy.ma.MaskedArray = attr.ib(converter=to_masked)
-    band_names: list[str] = attr.ib(kw_only=True)
-    band_descriptions: list[str] = attr.ib(kw_only=True)
+    dimensions: list[str] = attr.ib(kw_only=True)
+    band_names: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
+    band_descriptions: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
     coordinates: tuple[float, float] | None = attr.ib(default=None, kw_only=True)
     crs: CRS | None = attr.ib(default=None, kw_only=True)
     assets: list | None = attr.ib(default=None, kw_only=True)
@@ -177,9 +182,9 @@ class PointData:
 
     @array.validator
     def _validate_data(self, attribute, value):
-        """PointsData data has to be a 1d array."""
-        if not len(value.shape) == 1:
-            raise ValueError("PointsData data has to be a 1D array")
+        """PointsData data has to be at least a 1d array."""
+        if len(value.shape) < 1:
+            raise ValueError("PointsData data has to be at least a 1D array")
 
     @coordinates.validator
     def _validate_coordinates(self, attribute, value):
@@ -187,13 +192,66 @@ class PointData:
         if value and not len(value) == 2:
             raise ValueError("Coordinates data has to be a 2d list")
 
+    @dimensions.default
+    def _default_dimensions(self):
+        """Return default dimensions based on the array shape."""
+        if self.is_nd:
+            return [f"{ix + 1}d" for ix in range(len(self.array.shape))]
+
+        return ["b"]
+
     @band_names.default
     def _default_band_names(self):
-        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
+        if self.is_nd:
+            return {
+                d: [f"{d}{ix + 1}" for ix in list(range(idx))]
+                for d, idx in zip(self.dimensions, self.array.shape)
+            }
+
+        return [f"{self.dimensions[0]}{ix + 1}" for ix in range(self.array.shape[0])]
 
     @band_descriptions.default
     def _default_band_descriptions(self):
-        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
+        if self.is_nd:
+            return {
+                d: [f"{d}{ix + 1}" for ix in list(range(idx))]
+                for d, idx in zip(self.dimensions, self.array.shape)
+            }
+
+        return [f"{self.dimensions[0]}{ix + 1}" for ix in range(self.array.shape[0])]
+
+    def __attrs_post_init__(self):
+        """Validate N-D metadata."""
+        if self.is_nd:
+            assert isinstance(self.band_names, dict), (
+                "For Multi-dimensional arrays, band_names should be a dict."
+            )
+            assert isinstance(self.band_descriptions, dict), (
+                "For Multi-dimensional arrays, band_descriptions should be a dict."
+            )
+            assert len(self.dimensions) == self.array.ndim, (
+                "Dimensions should match the array shape."
+            )
+            assert len(self.band_descriptions) == len(self.array.shape), (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == len(self.array.shape), (
+                "Band names should match the array shape."
+            )
+
+        else:
+            assert len(self.dimensions) == 1, "Dimensions should match the array shape."
+            assert len(self.band_descriptions) == self.array.shape[0], (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == self.array.shape[0], (
+                "Band names should match the array shape."
+            )
+
+    @property
+    def is_nd(self) -> bool:
+        """Return True if the data has more than one (band) dimension."""
+        return self.array.ndim > 1
 
     @property
     def data(self) -> numpy.ndarray:
@@ -203,7 +261,7 @@ class PointData:
     @property
     def _mask(self):
         """Return `inverted/merged` mask from data array."""
-        return numpy.array([numpy.logical_and.reduce(~self.array.mask)])
+        return numpy.array([numpy.logical_and.reduce(~self.array.mask.ravel())])
 
     @property
     def mask(self) -> numpy.ndarray:
@@ -226,6 +284,15 @@ class PointData:
         """
         if not data:
             raise InvalidPointDataError("Empty PointData list.")
+
+        if len(data) == 1:
+            return data[0]
+
+        # TODO: revisit this and maybe allow concatenation of N-D ImageData in the future
+        if any(pt.is_nd for pt in data):
+            raise InvalidPointDataError(
+                "Cannot concatenate N-D PointData, only 1D (bands) data is supported."
+            )
 
         # validate coordinates
         if all(pt.coordinates or pt.crs or None for pt in data):
@@ -264,6 +331,7 @@ class PointData:
             assets=assets,
             band_names=band_names,
             band_descriptions=band_descriptions,
+            dimensions=data[0].dimensions,
             coordinates=data[0].coordinates,
             crs=data[0].crs,
             metadata=metadata,
@@ -271,18 +339,32 @@ class PointData:
 
     def apply_expression(self, expression: str) -> "PointData":
         """Apply expression to the image data."""
+        if self.is_nd:
+            raise ValueError(
+                f"`apply_expression` is only supported for 1D (bands) data, got {self.array.ndim}D array with shape {self.array.shape}."
+            )
+
         expression = validate_expression(expression)
 
         blocks = get_expression_blocks(expression)
 
-        data = apply_expression(blocks, self.band_names, self.array)
+        bnames = self.band_names
+        if isinstance(self.band_names, dict):
+            bnames = self.band_names[self.dimensions[0]]
+
+        bnames = cast(list[str], bnames)
+
+        bdescrs = self.band_descriptions
+        if isinstance(self.band_descriptions, dict):
+            bdescrs = cast(list[str], self.band_descriptions[self.dimensions[0]])
+        bdescrs = cast(list[str], bdescrs)
+
+        data = apply_expression(blocks, bnames, self.array)
         # NOTE: We use dataset mask when mixing bands
         data.mask = numpy.logical_or.reduce(self.array.mask)
 
-        mapexpr = {
-            self.band_names[idx]: desc for idx, desc in enumerate(self.band_descriptions)
-        }
-        _re = re.compile(r"\bb[0-9A-Z]+\b")
+        mapexpr = {bnames[idx]: desc for idx, desc in enumerate(bdescrs)}
+        _re = re.compile(rf"\b{self.dimensions[0]}[0-9A-Z]+\b")
         band_descriptions = [
             _re.sub(lambda x: mapexpr[x.group()], block) for block in blocks
         ]
@@ -323,44 +405,42 @@ class ImageData:
 
     Attributes:
         array (numpy.ma.MaskedArray): image values.
-        assets (list, optional): list of assets used to construct the data values.
+        dimensions (list[str]): list of dimension names corresponding to the array.
+        band_names (list or dict, optional): name of each band. Defaults to `["b1", "b2", "b3"]` for 3 bands image.
+        band_descriptions (list or dict, optional): description of each band. Defaults to `["b1", "b2", "b3"]` for 3 bands image.
         bounds (BoundingBox, optional): bounding box of the data.
         crs (rasterio.crs.CRS, optional): Coordinates Reference System of the bounds.
+        assets (list, optional): list of assets used to construct the data values.
         metadata (dict, optional): Additional metadata. Defaults to `{}`.
-        band_names (list, optional): name of each band. Defaults to `["b1", "b2", "b3"]` for 3 bands image.
+        nodata (NoData, optional): nodata value for the data.
         dataset_statistics (list, optional): dataset statistics `[(min, max), (min, max)]`
+        cutline_mask (numpy.ndarray, optional): Cutline mask for the image.
+        alpha_mask (numpy.ndarray, optional): Alpha mask for the image.
 
     Note: `mask` should be considered as `PER_BAND` so shape should be similar as the data
 
     """
 
     array: numpy.ma.MaskedArray = attr.ib(converter=masked_and_3d)
-    assets: list | None = attr.ib(default=None, kw_only=True)
+    dimensions: list[str] = attr.ib(kw_only=True)
+    band_names: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
+    band_descriptions: list[str] | dict[str, list[str]] = attr.ib(kw_only=True)
     bounds: BoundingBox | None = attr.ib(
         default=None, converter=to_coordsbbox, kw_only=True
     )
     crs: CRS | None = attr.ib(default=None, kw_only=True)
+    assets: list | None = attr.ib(default=None, kw_only=True)
     metadata: dict | None = attr.ib(factory=dict, kw_only=True)
     nodata: NoData | None = attr.ib(default=None, kw_only=True)
-    band_names: list[str] = attr.ib(kw_only=True)
-    band_descriptions: list[str] = attr.ib(kw_only=True)
     dataset_statistics: Sequence[tuple[float, float]] | None = attr.ib(
         default=None, kw_only=True
     )
     cutline_mask: numpy.ndarray | None = attr.ib(default=None)
     alpha_mask: numpy.ndarray | None = attr.ib(default=None)
 
-    @band_names.default
-    def _default_band_names(self):
-        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
-
-    @band_descriptions.default
-    def _default_band_descriptions(self):
-        return [f"b{ix + 1}" for ix in range(self.array.shape[0])]
-
     @alpha_mask.validator
     def _check_alpha_mask(self, attribute, value):
-        """Make sure alpha mask has valid shame and datatype."""
+        """Make sure alpha mask has valid shape and datatype."""
         if value is not None:
             if (
                 len(value.shape) != 2
@@ -375,6 +455,77 @@ class ImageData:
                 raise ValueError(
                     f"Invalide dtype {value.dtype} for AlphaMask, should be of {self.array.dtype}"
                 )
+
+    @dimensions.default
+    def _default_dimensions(self):
+        """Return default dimensions based on the array shape.
+
+        By definition, the last two dimensions are assumed to be spatial (y, x).
+        """
+        if self.is_nd:
+            return [f"{ix + 1}d" for ix in range(len(self.array.shape[:-2]))] + ["y", "x"]
+
+        return ["b", "y", "x"]
+
+    @band_names.default
+    def _default_band_names(self):
+        if self.is_nd:
+            return {
+                d: [f"{d}{ix + 1}" for ix in list(range(idx))]
+                for d, idx in zip(self.dimensions[:-2], self.array.shape[:-2])
+            }
+
+        return [f"{self.dimensions[0]}{ix + 1}" for ix in range(self.array.shape[0])]
+
+    @band_descriptions.default
+    def _default_band_descriptions(self):
+        if self.is_nd:
+            return {
+                d: [f"{d}{ix + 1}" for ix in list(range(idx))]
+                for d, idx in zip(self.dimensions[:-2], self.array.shape[:-2])
+            }
+
+        return [f"{self.dimensions[0]}{ix + 1}" for ix in range(self.array.shape[0])]
+
+    def __attrs_post_init__(self):
+        """Validate N-D metadata."""
+        if self.is_nd:
+            assert isinstance(self.band_names, dict), (
+                "For Multi-dimensional arrays, band_names should be a dict."
+            )
+            assert isinstance(self.band_descriptions, dict), (
+                "For Multi-dimensional arrays, band_descriptions should be a dict."
+            )
+            assert len(self.dimensions) == self.array.ndim, (
+                "Dimensions should match the array shape."
+            )
+            assert len(self.band_descriptions) == len(self.array.shape[:-2]), (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == len(self.array.shape[:-2]), (
+                "Band names should match the array shape."
+            )
+        else:
+            assert len(self.band_descriptions) == self.array.shape[0], (
+                "Band descriptions should match the array shape."
+            )
+            assert len(self.band_names) == self.array.shape[0], (
+                "Band names should match the array shape."
+            )
+            assert len(self.dimensions) == 3, "Dimensions should match the array shape."
+
+    @property
+    def is_nd(self) -> bool:
+        """Return True if data has more than 3 dimensions (*leading, height, width)."""
+        return self.array.ndim > 3
+
+    def _as_3d(self, array: numpy.ndarray) -> numpy.ndarray:
+        """Return a flattened version of the data array.
+
+        (*leading, height, width) -> (prod(leading), height, width)
+
+        """
+        return array.reshape((-1, *array.shape[-2:]))
 
     @property
     def data(self) -> numpy.ndarray:
@@ -394,7 +545,7 @@ class ImageData:
     @property
     def _mask(self):
         """Return `inverted/merged` mask from data array."""
-        return numpy.logical_or.reduce(~self.array.mask)
+        return numpy.logical_or.reduce(~self._as_3d(self.array.mask))
 
     def __iter__(self):
         """Allow for variable expansion (``arr, mask = ImageData``)"""
@@ -464,6 +615,15 @@ class ImageData:
             data (sequence): sequence of ImageData.
 
         """
+        if len(data) == 1:
+            return data[0]
+
+        # TODO: revisit this and maybe allow concatenation of N-D ImageData in the future
+        if any(img.is_nd for img in data):
+            raise ValueError(
+                "Cannot concatenate N-D ImageData, only 3D (bands, height, width) data is supported."
+            )
+
         h, w = zip(*[(img.height, img.width) for img in data])
 
         # Get cutline mask at highest resolution.
@@ -527,14 +687,15 @@ class ImageData:
 
         return cls(
             arr,
+            dimensions=data[0].dimensions,
+            band_names=band_names,
+            band_descriptions=band_descriptions,
             assets=assets,
             crs=crs,
             bounds=bounds,
-            band_names=band_names,
-            band_descriptions=band_descriptions,
+            metadata=metadata,
             dataset_statistics=dataset_statistics,
             cutline_mask=cutline_mask,
-            metadata=metadata,
         )
 
     def data_as_image(self) -> numpy.ndarray:
@@ -543,6 +704,11 @@ class ImageData:
         (bands, rows, columns) -> (rows, columns, bands).
 
         """
+        if self.is_nd:
+            raise ValueError(
+                f"`data_as_image` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         return reshape_as_image(self.array)
 
     @property
@@ -571,6 +737,11 @@ class ImageData:
         out_dtype: str | numpy.number = "uint8",
     ) -> Self:
         """Rescale data in place."""
+        if self.is_nd:
+            raise ValueError(
+                f"`rescale` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         self.array = rescale_image(
             self.array,
             in_range=in_range,
@@ -588,6 +759,11 @@ class ImageData:
 
     def apply_color_formula(self, color_formula: str | None) -> Self:
         """Apply color-operations formula in place."""
+        if self.is_nd:
+            raise ValueError(
+                f"`apply_color_formula` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         out = self.array.data
         out[out < 0] = 0
 
@@ -608,6 +784,11 @@ class ImageData:
 
     def apply_colormap(self, colormap: ColorMapType) -> "ImageData":
         """Apply colormap to the image data."""
+        if self.is_nd:
+            raise ValueError(
+                f"`apply_colormap` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         data, alpha = apply_cmap(self.array.data, colormap)
 
         array = numpy.ma.MaskedArray(data)
@@ -636,15 +817,30 @@ class ImageData:
 
     def apply_expression(self, expression: str) -> "ImageData":
         """Apply expression to the image data."""
+        if self.is_nd:
+            raise ValueError(
+                f"`apply_expression` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         expression = validate_expression(expression)
 
         blocks = get_expression_blocks(expression)
+
+        bnames = self.band_names
+        if isinstance(self.band_names, dict):
+            bnames = self.band_names[self.dimensions[0]]
+        bnames = cast(list[str], bnames)
+
+        bdescrs = self.band_descriptions
+        if isinstance(self.band_descriptions, dict):
+            bdescrs = cast(list[str], self.band_descriptions[self.dimensions[0]])
+        bdescrs = cast(list[str], bdescrs)
 
         stats = self.dataset_statistics
         if stats:
             res = []
             for prod in itertools.product(*stats):  # type: ignore
-                res.append(apply_expression(blocks, self.band_names, numpy.array(prod)))
+                res.append(apply_expression(blocks, bnames, numpy.array(prod)))
 
             stats = list(
                 zip(
@@ -653,14 +849,12 @@ class ImageData:
                 )
             )
 
-        data = apply_expression(blocks, self.band_names, self.array.copy())
+        data = apply_expression(blocks, bnames, self.array.copy())
         # NOTE: We use dataset mask when mixing bands
         data.mask = numpy.logical_or.reduce(self.array.mask)
 
-        mapexpr = {
-            self.band_names[idx]: desc for idx, desc in enumerate(self.band_descriptions)
-        }
-        _re = re.compile(r"\bb[0-9A-Z]+\b")
+        mapexpr = {bnames[idx]: desc for idx, desc in enumerate(bdescrs)}
+        _re = re.compile(rf"\b{self.dimensions[0]}[0-9A-Z]+\b")
         band_descriptions = [
             _re.sub(lambda x: mapexpr[x.group()], block) for block in blocks
         ]
@@ -685,9 +879,19 @@ class ImageData:
         resampling_method: RIOResampling = "nearest",
     ) -> "ImageData":
         """Resize data and mask."""
-        data = resize_array(self.array.data, height, width, resampling_method)  # type: ignore [arg-type]
-        mask = resize_array(self.array.mask * 1, height, width, resampling_method).astype(  # type: ignore [arg-type]
-            "bool"
+        leading = self.array.shape[:-2]
+        data = resize_array(
+            self._as_3d(self.array.data), height, width, resampling_method
+        ).reshape((*leading, height, width))
+        mask = (
+            resize_array(
+                self._as_3d(numpy.ma.getmaskarray(self.array).astype(int)),
+                height,
+                width,
+                resampling_method,
+            )
+            .astype("bool")
+            .reshape((*leading, height, width))
         )
         alpha_mask = self.alpha_mask
         if alpha_mask is not None:
@@ -700,6 +904,7 @@ class ImageData:
             bounds=self.bounds,
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
+            dimensions=self.dimensions,
             nodata=self.nodata,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
@@ -717,12 +922,13 @@ class ImageData:
             alpha_mask = self.alpha_mask[row_slice, col_slice].copy()
 
         return ImageData(
-            self.array[:, row_slice, col_slice].copy(),
+            self.array[..., row_slice, col_slice].copy(),
             assets=self.assets,
             crs=self.crs,
             bounds=bbox,
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
+            dimensions=self.dimensions,
             nodata=self.nodata,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,
@@ -792,6 +998,17 @@ class ImageData:
         """
         img_format = img_format.upper()
 
+        if self.is_nd:
+            if img_format not in ("NPY", "NPZ"):
+                raise ValueError(
+                    f"Cannot render {self.array.ndim}D array to `{img_format}`, only `NPY` and `NPZ` formats are supported for N-D data."
+                )
+
+            if img_format == "NPY" and add_mask:
+                raise ValueError(
+                    "Cannot add mask to N-D array with `NPY` format, use `NPZ` or `add_mask=False`."
+                )
+
         if img_format == "GTIFF":
             if "transform" not in kwargs:
                 kwargs.update({"transform": self.transform})
@@ -834,6 +1051,11 @@ class ImageData:
 
     def to_raster(self, dst_path: str, *, driver: str = "GTIFF", **kwargs: Any) -> None:
         """Save ImageData array to file."""
+        if self.is_nd:
+            raise ValueError(
+                f"`to_raster` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         if driver.upper() == "GTIFF":
             if "transform" not in kwargs:
                 kwargs.update({"transform": self.transform})
@@ -878,6 +1100,11 @@ class ImageData:
         coverage: numpy.ndarray | None = None,
     ) -> dict[str, BandStatistics]:
         """Return statistics from ImageData."""
+        if self.is_nd:
+            raise ValueError(
+                f"`statistics` only supports 3D (bands, height, width) data, got array with shape {self.array.shape}."
+            )
+
         hist_options = hist_options or {}
 
         stats = get_array_statistics(
@@ -889,10 +1116,21 @@ class ImageData:
             **hist_options,
         )
 
+        # NOTE: statistics are only supported for 3D data so band_descriptions/band_names is a list
+        band_descriptions = (
+            self.band_descriptions[self.dimensions[0]]
+            if isinstance(self.band_descriptions, dict)
+            else self.band_descriptions
+        )
+        band_names = (
+            self.band_names[self.dimensions[0]]
+            if isinstance(self.band_names, dict)
+            else self.band_names
+        )
         return {
-            f"{self.band_names[ix]}": BandStatistics(
+            f"{band_names[ix]}": BandStatistics(
                 **stats[ix],
-                description=self.band_descriptions[ix],
+                description=band_descriptions[ix],
             )
             for ix in range(len(stats))
         }
@@ -961,10 +1199,11 @@ class ImageData:
             resolution=resolution,
         )
 
-        destination = numpy.ma.zeros((self.array.shape[0], h, w), self.array.dtype)
+        leading = self.array.shape[:-2]
+        destination = numpy.ma.zeros((int(numpy.prod(leading)), h, w), self.array.dtype)
 
         destination, _ = reproject(
-            self.array,
+            self._as_3d(self.array),
             destination,
             src_transform=self.transform,
             src_crs=self.crs,
@@ -989,12 +1228,13 @@ class ImageData:
         bounds = array_bounds(h, w, dst_transform)
 
         return ImageData(
-            destination,
+            destination.reshape((*leading, h, w)),
             assets=self.assets,
             crs=dst_crs,
             bounds=bounds,
             band_names=self.band_names,
             band_descriptions=self.band_descriptions,
+            dimensions=self.dimensions,
             nodata=self.nodata,
             metadata=self.metadata,
             dataset_statistics=self.dataset_statistics,

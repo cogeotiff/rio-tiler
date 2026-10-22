@@ -1863,7 +1863,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = tasks.multi_arrays(bands, _reader, tile_x, tile_y, tile_z, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
-            expression = self._expression_to_bidx(img.band_descriptions, expression)
+            expression = self._expression_to_bidx(
+                cast(list[str], img.band_descriptions), expression
+            )
             return img.apply_expression(expression)
 
         return img
@@ -1924,7 +1926,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = tasks.multi_arrays(bands, _reader, bbox, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
-            expression = self._expression_to_bidx(img.band_descriptions, expression)
+            expression = self._expression_to_bidx(
+                cast(list[str], img.band_descriptions), expression
+            )
             return img.apply_expression(expression)
 
         return img
@@ -1983,7 +1987,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = tasks.multi_arrays(bands, _reader, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
-            expression = self._expression_to_bidx(img.band_descriptions, expression)
+            expression = self._expression_to_bidx(
+                cast(list[str], img.band_descriptions), expression
+            )
             return img.apply_expression(expression)
 
         return img
@@ -2046,7 +2052,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         data = tasks.multi_points(bands, _reader, lon, lat, **kwargs)
         data.band_names = [f"b{ix + 1}" for ix in range(data.array.shape[0])]
         if expression:
-            expression = self._expression_to_bidx(data.band_descriptions, expression)
+            expression = self._expression_to_bidx(
+                cast(list[str], data.band_descriptions), expression
+            )
             return data.apply_expression(expression)
 
         return data
@@ -2107,7 +2115,9 @@ class MultiBandReader(SpatialMixin, metaclass=abc.ABCMeta):
         img = tasks.multi_arrays(bands, _reader, shape, **kwargs)
         img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
         if expression:
-            expression = self._expression_to_bidx(img.band_descriptions, expression)
+            expression = self._expression_to_bidx(
+                cast(list[str], img.band_descriptions), expression
+            )
             return img.apply_expression(expression)
 
         return img

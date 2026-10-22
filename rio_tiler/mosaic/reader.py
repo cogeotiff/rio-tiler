@@ -84,7 +84,7 @@ def mosaic_reader(  # noqa: C901
     assets_used: list = []
     crs: CRS | None
     bounds: BBox | None
-    band_names: list[str]
+    band_descriptions: list[str] | dict[str, list[str]]
 
     for chunks in _chunks(mosaic_assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
@@ -96,7 +96,6 @@ def mosaic_reader(  # noqa: C901
             if len(assets_used) == 0:
                 crs = img.crs
                 bounds = img.bounds
-                band_names = img.band_names
                 band_descriptions = img.band_descriptions
                 pixel_selection.cutline_mask = img.cutline_mask
                 pixel_selection.width = img.width
@@ -135,14 +134,13 @@ def mosaic_reader(  # noqa: C901
                     ImageData(
                         pixel_selection.data,
                         assets=assets_used,
-                        crs=crs,
                         bounds=bounds,
-                        band_names=band_names,
-                        band_descriptions=band_descriptions,
+                        crs=crs,
                         metadata={
                             "mosaic_method": pixel_selection.__class__.__name__,
                             "mosaic_assets_count": len(mosaic_assets),
                             "mosaic_assets_used": len(assets_used),
+                            "band_descriptions": band_descriptions,
                         },
                     ),
                     assets_used,
@@ -155,14 +153,13 @@ def mosaic_reader(  # noqa: C901
         ImageData(
             pixel_selection.data,
             assets=assets_used,
-            crs=crs,
             bounds=bounds,
-            band_names=band_names,
-            band_descriptions=band_descriptions,
+            crs=crs,
             metadata={
                 "mosaic_method": pixel_selection.__class__.__name__,
                 "mosaic_assets_count": len(mosaic_assets),
                 "mosaic_assets_used": len(assets_used),
+                "band_descriptions": band_descriptions,
             },
         ),
         assets_used,
@@ -221,7 +218,7 @@ def mosaic_point_reader(
     assets_used: list = []
     crs: CRS | None
     coordinates: tuple[float, float] | None
-    band_names: list[str]
+    band_descriptions: list[str] | dict[str, list[str]]
 
     for chunks in _chunks(mosaic_assets, chunk_size):
         tasks = create_tasks(reader, chunks, threads, *args, **kwargs)
@@ -233,7 +230,6 @@ def mosaic_point_reader(
             if len(assets_used) == 0:
                 crs = pt.crs
                 coordinates = pt.coordinates
-                band_names = pt.band_names
                 band_descriptions = pt.band_descriptions
                 pixel_selection.width = 1
                 pixel_selection.height = 1
@@ -250,15 +246,14 @@ def mosaic_point_reader(
                 return (
                     PointData(
                         pixel_selection.data,
-                        assets=assets_used,
-                        crs=crs,
                         coordinates=coordinates,
-                        band_names=band_names,
-                        band_descriptions=band_descriptions,
+                        crs=crs,
+                        assets=assets_used,
                         metadata={
                             "mosaic_method": pixel_selection.__class__.__name__,
                             "mosaic_assets_count": len(mosaic_assets),
                             "mosaic_assets_used": len(assets_used),
+                            "band_descriptions": band_descriptions,
                         },
                     ),
                     assets_used,
@@ -270,15 +265,14 @@ def mosaic_point_reader(
     return (
         PointData(
             pixel_selection.data,
-            assets=assets_used,
             crs=crs,
             coordinates=coordinates,
-            band_names=band_names,
-            band_descriptions=band_descriptions,
+            assets=assets_used,
             metadata={
                 "mosaic_method": pixel_selection.__class__.__name__,
                 "mosaic_assets_count": len(mosaic_assets),
                 "mosaic_assets_used": len(assets_used),
+                "band_descriptions": band_descriptions,
             },
         ),
         assets_used,
@@ -339,7 +333,7 @@ async def async_mosaic_reader(  # noqa: C901
     assets_used: list = []
     crs: CRS | None
     bounds: BBox | None
-    band_names: list[str]
+    band_descriptions: list[str] | dict[str, list[str]]
 
     tasks = [
         asyncio.create_task(reader(asset, *args, **kwargs)) for asset in mosaic_assets
@@ -354,7 +348,6 @@ async def async_mosaic_reader(  # noqa: C901
         if len(assets_used) == 0:
             crs = img.crs
             bounds = img.bounds
-            band_names = img.band_names
             band_descriptions = img.band_descriptions
             pixel_selection.cutline_mask = img.cutline_mask
             pixel_selection.width = img.width
@@ -396,15 +389,14 @@ async def async_mosaic_reader(  # noqa: C901
             return (
                 ImageData(
                     pixel_selection.data,
-                    assets=assets_used,
-                    crs=crs,
                     bounds=bounds,
-                    band_names=band_names,
-                    band_descriptions=band_descriptions,
+                    crs=crs,
+                    assets=assets_used,
                     metadata={
                         "mosaic_method": pixel_selection.__class__.__name__,
                         "mosaic_assets_count": len(mosaic_assets),
                         "mosaic_assets_used": len(assets_used),
+                        "band_descriptions": band_descriptions,
                     },
                 ),
                 assets_used,
@@ -416,15 +408,14 @@ async def async_mosaic_reader(  # noqa: C901
     return (
         ImageData(
             pixel_selection.data,
-            assets=assets_used,
-            crs=crs,
             bounds=bounds,
-            band_names=band_names,
-            band_descriptions=band_descriptions,
+            crs=crs,
+            assets=assets_used,
             metadata={
                 "mosaic_method": pixel_selection.__class__.__name__,
                 "mosaic_assets_count": len(mosaic_assets),
                 "mosaic_assets_used": len(assets_used),
+                "band_descriptions": band_descriptions,
             },
         ),
         assets_used,

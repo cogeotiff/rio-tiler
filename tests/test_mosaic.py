@@ -96,7 +96,7 @@ def test_mosaic_tiler():
     assert img.band_names == ["b1"]
 
     img, _ = mosaic.mosaic_reader(assets, _read_tile, x, y, z, expression="b1*3")
-    assert img.band_descriptions == ["b1*3"]
+    assert img.metadata["band_descriptions"] == ["b1*3"]
     # Should only have value of 1 but *3
     assert numpy.unique(img.data[0, img._mask]).tolist() == [3]
 
@@ -358,7 +358,7 @@ def test_stac_mosaic_tiler(rio):
         assets="green",
         threads=0,
     )
-    assert img.band_descriptions == ["green_b1"]
+    assert img.metadata["band_descriptions"] == ["green_b1"]
 
     img, _ = mosaic.mosaic_reader(
         [stac_asset],
@@ -370,7 +370,7 @@ def test_stac_mosaic_tiler(rio):
         expression="b1*2",
         threads=0,
     )
-    assert img.band_descriptions == ["green_b1*2"]
+    assert img.metadata["band_descriptions"] == ["green_b1*2"]
 
 
 def test_mosaic_tiler_Stdev():
@@ -860,7 +860,7 @@ async def test_async_mosaic_tiler():
     img, _ = await mosaic.async_mosaic_reader(
         assets, _aread_tile, x, y, z, expression="b1*3"
     )
-    assert img.band_descriptions == ["b1*3"]
+    assert img.metadata["band_descriptions"] == ["b1*3"]
     # Should only have value of 1 but *3
     assert numpy.ma.unique(img.array[0]).tolist() == [3]
 
