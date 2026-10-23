@@ -348,7 +348,16 @@ class PointData:
 
         band_names: list[str] | dict[str, list[str]]
         band_descriptions: list[str] | dict[str, list[str]]
-        if stack_on_dim:
+        # single `b` band data are stacked directly on the new dimension
+        if stack_on_dim and all(
+            pt.dimensions[0] == "b" and pt.array.shape == (1,) for pt in data
+        ):
+            arr = numpy.ma.concatenate([pt.array for pt in data])
+            dimensions = [stack_on_dim]
+            band_names = [f"{stack_on_dim}{ix + 1}" for ix in range(len(data))]
+            band_descriptions = band_names.copy()
+
+        elif stack_on_dim:
             arr = numpy.ma.stack([pt.array for pt in data])
             dimensions = [stack_on_dim, *data[0].dimensions]
 
@@ -799,7 +808,17 @@ class ImageData:
 
         band_names: list[str] | dict[str, list[str]]
         band_descriptions: list[str] | dict[str, list[str]]
-        if stack_on_dim:
+        # 2D data (single `b` band) are stacked directly on the new dimension
+        if stack_on_dim and all(
+            img.dimensions[0] == "b" and img.array.shape[:-2] == (1,) for img in data
+        ):
+            arr = numpy.ma.concatenate([img.array for img in data])
+            dimensions = [stack_on_dim, *data[0].dimensions[1:]]
+            band_names = [f"{stack_on_dim}{ix + 1}" for ix in range(len(data))]
+            band_descriptions = band_names.copy()
+            dataset_statistics = None
+
+        elif stack_on_dim:
             arr = numpy.ma.stack([img.array for img in data])
             dimensions = [stack_on_dim, *data[0].dimensions]
 
