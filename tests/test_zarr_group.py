@@ -961,14 +961,12 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -979,14 +977,12 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -1032,6 +1028,7 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
         assert bbox == (500000, 4190000, 510000, 4200000)
 
         img = await geozarrds.preview(variables=["b01", "b02"])
+        assert img.array.shape == (2, 1, 1000, 1000)
         assert img.dimensions == ["variables", "time", "y", "x"]
         assert img.band_descriptions == {
             "variables": ["b01", "b02"],
@@ -1041,6 +1038,7 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
         img = await geozarrds.preview(
             variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
         )
+        assert img.array.shape == (2, 1000, 1000)
         assert img.dimensions == ["variables", "y", "x"]
         assert img.band_descriptions == ["b01", "b02"]
 
@@ -1072,14 +1070,12 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -1090,14 +1086,12 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -1143,6 +1137,7 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
         assert bbox == (500000, 4190000, 510000, 4200000)
 
         img = geozarrds.preview(variables=["b01", "b02"])
+        assert img.array.shape == (2, 1, 1000, 1000)
         assert img.dimensions == ["variables", "time", "y", "x"]
         assert img.band_descriptions == {
             "variables": ["b01", "b02"],
@@ -1152,6 +1147,7 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
         img = geozarrds.preview(
             variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
         )
+        assert img.array.shape == (2, 1000, 1000)
         assert img.dimensions == ["variables", "y", "x"]
         assert img.band_descriptions == ["b01", "b02"]
 

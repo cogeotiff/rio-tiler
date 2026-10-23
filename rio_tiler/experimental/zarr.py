@@ -3252,6 +3252,7 @@ class GroupReader(BaseReader, GroupMixin):
         zooms = [_get_maxzoom(variable) for variable in variables]
         return max(zooms)
 
+    # TODO: add dimensions to array metadata
     def list_variables(self) -> list[dict[str, Any]]:
         """List variables in the Zarr store."""
         if self._variables is not None:
@@ -3310,6 +3311,7 @@ class GroupReader(BaseReader, GroupMixin):
         self._variables = variables
         return self._variables
 
+    # TODO: add `dimensions` in array metadata
     def get_group_metadata(  # noqa: C901
         self,
         group: str | None = None,
