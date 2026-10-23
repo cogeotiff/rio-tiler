@@ -294,21 +294,40 @@ class PointData:
             yield i
 
     @classmethod
-    def create_from_list(cls, data: Sequence["PointData"]) -> "PointData":
+    def create_from_list(
+        cls,
+        data: Sequence["PointData"],
+        stack_on_dim: str | None = None,
+    ) -> "PointData":
         """Create PointData from a sequence of PointsData objects.
 
         Args:
             data (sequence): sequence of PointData.
+            stack_on_dim (str, optional): Stack the data along a new leading dimension with this name, instead of concatenating them along the first dimension.
 
         """
         if not data:
             raise InvalidPointDataError("Empty PointData list.")
 
-        if len(data) == 1:
+        if len(data) == 1 and not stack_on_dim:
             return data[0]
 
-        # TODO: revisit this and maybe allow concatenation of N-D ImageData in the future
-        if any(pt.is_nd for pt in data):
+        if stack_on_dim:
+            if stack_on_dim in data[0].dimensions:
+                raise InvalidPointDataError(
+                    f"Dimension '{stack_on_dim}' already exists in {data[0].dimensions}."
+                )
+
+            if any(
+                pt.dimensions != data[0].dimensions
+                or pt.array.shape != data[0].array.shape
+                for pt in data
+            ):
+                raise InvalidPointDataError(
+                    "Cannot stack PointData with different dimensions or shapes."
+                )
+
+        elif any(pt.is_nd for pt in data):
             raise InvalidPointDataError(
                 "Cannot concatenate N-D PointData, only 1D (bands) data is supported."
             )
@@ -321,23 +340,52 @@ class PointData:
                     "Cannot concatenate points with different coordinates/CRS."
                 )
 
-        arr = numpy.ma.concatenate([pt.array for pt in data])
-
         assets = list(
             dict.fromkeys(
                 itertools.chain.from_iterable([pt.assets for pt in data if pt.assets])
             )
         )
 
-        band_names = list(
-            itertools.chain.from_iterable([pt.band_names for pt in data if pt.band_names])
-        )
+        band_names: list[str] | dict[str, list[str]]
+        band_descriptions: list[str] | dict[str, list[str]]
+        if stack_on_dim:
+            arr = numpy.ma.stack([pt.array for pt in data])
+            dimensions = [stack_on_dim, *data[0].dimensions]
 
-        band_descriptions = list(
-            itertools.chain.from_iterable(
-                [pt.band_descriptions for pt in data if pt.band_descriptions]
+            # 1D data have list band_names/band_descriptions for the first dimension
+            labels = [f"{stack_on_dim}{ix + 1}" for ix in range(len(data))]
+            band_names = {
+                stack_on_dim: labels,
+                **(
+                    data[0].band_names
+                    if isinstance(data[0].band_names, dict)
+                    else {data[0].dimensions[0]: data[0].band_names}
+                ),
+            }
+            band_descriptions = {
+                stack_on_dim: labels,
+                **(
+                    data[0].band_descriptions
+                    if isinstance(data[0].band_descriptions, dict)
+                    else {data[0].dimensions[0]: data[0].band_descriptions}
+                ),
+            }
+
+        else:
+            arr = numpy.ma.concatenate([pt.array for pt in data])
+            dimensions = data[0].dimensions
+
+            band_names = list(
+                itertools.chain.from_iterable(
+                    [pt.band_names for pt in data if pt.band_names]
+                )
             )
-        )
+
+            band_descriptions = list(
+                itertools.chain.from_iterable(
+                    [pt.band_descriptions for pt in data if pt.band_descriptions]
+                )
+            )
 
         metadata = dict(
             itertools.chain.from_iterable(
@@ -350,7 +398,7 @@ class PointData:
             assets=assets,
             band_names=band_names,
             band_descriptions=band_descriptions,
-            dimensions=data[0].dimensions,
+            dimensions=dimensions,
             coordinates=data[0].coordinates,
             crs=data[0].crs,
             metadata=metadata,
