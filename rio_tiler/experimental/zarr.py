@@ -6,7 +6,7 @@ import asyncio
 import datetime
 import math
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from functools import cached_property
 from typing import Any, Literal, TypedDict, cast
 
@@ -2626,6 +2626,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
@@ -2638,6 +2639,10 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         Args:
             variables (list of str or str, optional): list of variables to return value for. Defaults to all variables.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): Selection for non-spatial dimensions.
+            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             categorical (bool): treat input data as categorical data. Defaults to False.
             categories (list of numbers, optional): list of categories to return value for.
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
@@ -2655,6 +2660,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             expression=expression,
             sel=sel,
             sel_method=sel_method,
+            reduce=reduce,
             max_size=max_size,
             nodata=nodata,
             **kwargs,
@@ -2677,9 +2683,11 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         tilesize: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Map tile from the Dataset.
@@ -2688,6 +2696,15 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
+            variables (Sequence[str] | str): Variables to read from the dataset.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): Selection for non-spatial dimensions.
+            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            tilesize (int, optional): Size of the tile in pixels. Defaults to None.
+            nodata (NoData, optional): Nodata value to use. Defaults to None.
+            reproject_method (WarpResampling, optional): Resampling method to use for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -2711,6 +2728,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             expression=expression,
             sel=sel,
             sel_method=sel_method,
+            reduce=reduce,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             max_size=None,
@@ -2718,6 +2736,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             width=tilesize or matrix.tileWidth,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
             **kwargs,
         )
 
@@ -2729,6 +2748,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
         max_size: int | None = None,
@@ -2736,6 +2756,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         width: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Part of a Dataset.
@@ -2743,8 +2764,18 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
             sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
+            bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -2793,16 +2824,22 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     sel_method=sel_method,
                     nodata=nodata,
                     reproject_method=reproject_method,
+                    resampling_method=resampling_method,
                 )
 
         img_stack = await asyncio.gather(*(_part(variable) for variable in variables))
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
+
+        reduce = reduce or []
+        for dim, func in reduce:
+            img = img.reduce(dim, func)
 
         if expression:
             return img.apply_expression(expression)
@@ -2816,16 +2853,31 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
         height: int | None = None,
         width: int | None = None,
         nodata: NoData | None = None,
-        resampling_method: RIOResampling = "nearest",
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a preview of a Dataset.
+
+        Args:
+            variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -2874,10 +2926,15 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
+
+        reduce = reduce or []
+        for dim, func in reduce:
+            img = img.reduce(dim, func)
 
         if expression:
             return img.apply_expression(expression)
@@ -2893,6 +2950,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         coord_crs: CRS = WGS84_CRS,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -2902,6 +2960,13 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         Args:
             lon (float): Longitude.
             lat (float): Latitude.
+            variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
+            nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
 
         Returns:
             rio_tiler.models.PointData: PointData instance with data, mask and spatial info.
@@ -2940,10 +3005,15 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
+
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
         cast(dict, pt.band_descriptions)["variables"] = list(variables)
+
+        reduce = reduce or []
+        for dim, func in reduce:
+            pt = pt.reduce(dim, func)
 
         if expression:
             return pt.apply_expression(expression)
@@ -2955,22 +3025,37 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         shape: dict,
         *,
         variables: Sequence[str] | str,
-        dst_crs: CRS | None = None,
-        shape_crs: CRS = WGS84_CRS,
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
+        dst_crs: CRS | None = None,
+        shape_crs: CRS = WGS84_CRS,
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
             shape (dict): Valid GeoJSON feature.
+            variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to shape_crs.
+            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -2992,11 +3077,13 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             expression=expression,
             sel=sel,
             sel_method=sel_method,
+            reduce=reduce,
             max_size=max_size,
             height=height,
             width=width,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
 
         if dst_crs != shape_crs:
@@ -3431,6 +3518,7 @@ class GroupReader(BaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
@@ -3443,6 +3531,10 @@ class GroupReader(BaseReader, GroupMixin):
 
         Args:
             variables (list of str or str, optional): list of variables to return value for. Defaults to all variables.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): Selection for non-spatial dimensions.
+            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             categorical (bool): treat input data as categorical data. Defaults to False.
             categories (list of numbers, optional): list of categories to return value for.
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
@@ -3460,6 +3552,7 @@ class GroupReader(BaseReader, GroupMixin):
             expression=expression,
             sel=sel,
             sel_method=sel_method,
+            reduce=reduce,
             max_size=max_size,
             nodata=nodata,
             **kwargs,
@@ -3482,9 +3575,11 @@ class GroupReader(BaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         tilesize: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Map tile from the Dataset.
@@ -3493,6 +3588,15 @@ class GroupReader(BaseReader, GroupMixin):
             tile_x (int): Tile's horizontal index.
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
+            variables (Sequence[str] | str): Variables to read from the dataset.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): Selection for non-spatial dimensions.
+            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            tilesize (int, optional): Size of the tile in pixels. Defaults to None.
+            nodata (NoData, optional): Nodata value to use. Defaults to None.
+            reproject_method (WarpResampling, optional): Resampling method to use for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and tile spatial info.
@@ -3516,6 +3620,7 @@ class GroupReader(BaseReader, GroupMixin):
             expression=expression,
             sel=sel,
             sel_method=sel_method,
+            reduce=reduce,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             max_size=None,
@@ -3523,6 +3628,7 @@ class GroupReader(BaseReader, GroupMixin):
             width=tilesize or matrix.tileWidth,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
             **kwargs,
         )
 
@@ -3534,6 +3640,7 @@ class GroupReader(BaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
         max_size: int | None = None,
@@ -3548,8 +3655,18 @@ class GroupReader(BaseReader, GroupMixin):
         Args:
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
             sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
+            bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -3604,10 +3721,15 @@ class GroupReader(BaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
+
+        reduce = reduce or []
+        for dim, func in reduce:
+            img = img.reduce(dim, func)
 
         if expression:
             return img.apply_expression(expression)
@@ -3621,6 +3743,7 @@ class GroupReader(BaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
         height: int | None = None,
@@ -3631,6 +3754,20 @@ class GroupReader(BaseReader, GroupMixin):
         **kwargs: Any,
     ) -> ImageData:
         """Read a preview of a Dataset.
+
+        Args:
+            variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -3679,10 +3816,15 @@ class GroupReader(BaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
+
+        reduce = reduce or []
+        for dim, func in reduce:
+            img = img.reduce(dim, func)
 
         if expression:
             return img.apply_expression(expression)
@@ -3698,6 +3840,7 @@ class GroupReader(BaseReader, GroupMixin):
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         coord_crs: CRS = WGS84_CRS,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -3707,6 +3850,13 @@ class GroupReader(BaseReader, GroupMixin):
         Args:
             lon (float): Longitude.
             lat (float): Latitude.
+            variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
+            nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
 
         Returns:
             rio_tiler.models.PointData: PointData instance with data, mask and spatial info.
@@ -3745,10 +3895,15 @@ class GroupReader(BaseReader, GroupMixin):
         pt = PointData.create_from_list(
             [_point(variable) for variable in variables], stack_on_dim="variables"
         )
+
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
         cast(dict, pt.band_descriptions)["variables"] = list(variables)
+
+        reduce = reduce or []
+        for dim, func in reduce:
+            pt = pt.reduce(dim, func)
 
         if expression:
             return pt.apply_expression(expression)
@@ -3760,22 +3915,37 @@ class GroupReader(BaseReader, GroupMixin):
         shape: dict,
         *,
         variables: Sequence[str] | str,
-        dst_crs: CRS | None = None,
-        shape_crs: CRS = WGS84_CRS,
         expression: str | None = None,
         sel: dict[str, Any] | None = None,
         sel_method: SelMethod | None = None,
+        reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
+        dst_crs: CRS | None = None,
+        shape_crs: CRS = WGS84_CRS,
         max_size: int | None = None,
         height: int | None = None,
         width: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Dataset for a GeoJSON feature.
 
         Args:
             shape (dict): Valid GeoJSON feature.
+            variables (list of str or str): list of variables to return value for.
+            expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
+            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
+            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
+            dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to shape_crs.
+            shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
+            max_size (int, optional): Limit the size of the longest dimension.
+            height (int, optional): Output height of the array.
+            width (int, optional): Output width of the array.
+            nodata (int or float, optional): Overwrite dataset internal nodata value.
+            reproject_method (str, optional): Resampling method for reprojection. Defaults to "nearest".
+            resampling_method (RIOResampling, optional): Resampling method for array read. Defaults to `nearest`.
 
         Returns:
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
@@ -3797,11 +3967,13 @@ class GroupReader(BaseReader, GroupMixin):
             expression=expression,
             sel=sel,
             sel_method=sel_method,
+            reduce=reduce,
             max_size=max_size,
             height=height,
             width=width,
             nodata=nodata,
             reproject_method=reproject_method,
+            resampling_method=resampling_method,
         )
 
         if dst_crs != shape_crs:
