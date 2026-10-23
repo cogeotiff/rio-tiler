@@ -2799,6 +2799,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        # NOTE: The band_descriptions property will have a `variables` entry with default values
+        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+        # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
@@ -2871,6 +2874,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        # NOTE: The band_descriptions property will have a `variables` entry with default values
+        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+        # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
@@ -2934,6 +2940,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
+        # NOTE: The band_descriptions property will have a `variables` entry with default values
+        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+        # update the `variables` entry with the actual variable names
         cast(dict, pt.band_descriptions)["variables"] = list(variables)
 
         if expression:
@@ -3595,6 +3604,9 @@ class GroupReader(BaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        # NOTE: The band_descriptions property will have a `variables` entry with default values
+        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+        # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
@@ -3667,6 +3679,9 @@ class GroupReader(BaseReader, GroupMixin):
 
         # Stack variables along a new `variables` dimension
         img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        # NOTE: The band_descriptions property will have a `variables` entry with default values
+        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+        # update the `variables` entry with the actual variable names
         cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
@@ -3726,10 +3741,13 @@ class GroupReader(BaseReader, GroupMixin):
                     nodata=nodata,
                 )
 
-        point_stack = [_point(variable) for variable in variables]
-
         # Stack variables along a new `variables` dimension
-        pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
+        pt = PointData.create_from_list(
+            [_point(variable) for variable in variables], stack_on_dim="variables"
+        )
+        # NOTE: The band_descriptions property will have a `variables` entry with default values
+        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+        # update the `variables` entry with the actual variable names
         cast(dict, pt.band_descriptions)["variables"] = list(variables)
 
         if expression:
