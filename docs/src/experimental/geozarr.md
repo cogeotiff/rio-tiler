@@ -235,17 +235,15 @@ print(reader.bounds)
 # List available variables (arrays with group or array Geo/Spatial conventions)
 variables = await reader.list_variables()
 print(variables)
->>> [{'name': 'b02',
-  'group': 'measurements/reflectance',
-  'long_name': 'measurements/reflectance:b02',
-  'multiscale': True,
-  'nbands': 1},
- ...
- {'name': 'snw',
-  'group': 'quality/probability/r20m',
-  'long_name': 'quality/probability/r20m:snw',
-  'multiscale': False,
-  'nbands': 1}]
+>>> [
+    {'name': 'b02', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b02', 'multiscale': True}, 
+    {'name': 'b03', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b03', 'multiscale': True}, 
+    ... 
+    {'name': 'aot', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:aot', 'multiscale': False}, 
+    {'name': 'wvp', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:wvp', 'multiscale': False}, 
+    ...
+    {'name': 'snw', 'group': 'quality/probability/r20m', 'long_name': 'quality/probability/r20m:snw', 'multiscale': False}
+]
 
 await reader.get_group_metadata("measurements/reflectance")
 >> {'crs': CRS.from_epsg(32626),
@@ -258,12 +256,28 @@ await reader.get_group_metadata("measurements/reflectance")
     'width': 10980,
     'transform': Affine(10.0, 0.0, 399965.0,
            0.0, -10.0, 4400035.0),
+    'spatial_dims': ['y', 'x'],
     'coordinates': None},
-....
-
+   ...,
+   {'array': <AsyncArray object_store://HTTPStore("https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260810T125031_N0512_R095_T26SMJ_20260810T155917.zarr")/measurements/reflectance/r720m/b09 shape=(152, 152) dtype=float32>,
+    'crs': CRS.from_epsg(32626),
+    'height': 152,
+    'width': 152,
+    'transform': Affine(720.0, 0.0, 400320.0,
+           0.0, -720.0, 4399680.0),
+    'spatial_dims': ['y', 'x'],
+    'coordinates': None}]}}
 
 # Get the preview for a specific variable
 img = await reader.preview(variables=["measurements/reflectance:b02"], max_size=64)
+print(img.dimensions)
+print(img.band_names)
+print(img.band_descriptions)
+
+>> ['variables', 'y', 'x']
+['variables1']
+['measurements/reflectance:b02']
+
 
 # Get Bounds for a specific set of variables (The root store can have multiple spatial extents)
 bounds = await reader.get_bounds(variables=["measurements/reflectance:b02"], crs="EPSG:4326")
@@ -274,6 +288,13 @@ minzoom = await reader.get_minzoom(variables=["measurements/reflectance:b02"])
 # Get Time image
 tile = reader.tms.tile(bounds[0], bounds[1], minzoom)
 img = await reader.tile(tile.x, tile.y, tile.z, variables=("measurements/reflectance:b04", "measurements/reflectance:b03", "measurements/reflectance:b02"))
+print(img.dimensions)
+print(img.band_names)
+print(img.band_descriptions)
+
+>> ['variables', 'y', 'x']
+['variables1', 'variables2', 'variables3']
+['measurements/reflectance:b04', 'measurements/reflectance:b03', 'measurements/reflectance:b02']
 ```
 
 #### Open a specific Zarr Group
@@ -283,7 +304,7 @@ from obstore.store import HTTPStore
 import zarr
 from zarr.storage import ObjectStore
 
-from rio_tiler.experimental.zarr import GeoZarrReader
+from rio_tiler.experimental.zarr import AsyncGroupReader
 
 from matplotlib.pyplot import imshow
 
@@ -314,4 +335,72 @@ bounds = reader.get_geographic_bounds("epsg:4326")
 # Get Time image
 tile = reader.tms.tile(bounds[0], bounds[1], reader.minzoom)
 img = await reader.tile(tile.x, tile.y, tile.z, variables=("b04", "b03", "b02"))
+
+print(img.dimensions)
+print(img.band_names)
+print(img.band_descriptions)
+
+>> ['variables', 'y', 'x']
+['variables1', 'variables2', 'variables3']
+['b04', 'b03', 'b02']
 ```
+
+#### Variables stacking
+
+`AsyncGroupReader` and `GroupReader` read each variable independently and stack them along a new leading `variables` dimension (using `ImageData.create_from_list(..., stack_on_dim="variables")`):
+
+- when all the variables are 2D (`(y, x)`, or reduced to 2D with a scalar `sel`), the output is 3D with dimensions `["variables", y, x]`
+- otherwise the output is N-D with dimensions `["variables", *non-spatial dimensions, y, x]` (all the variables must have the same non-spatial dimensions and shapes)
+
+The variable names are stored in `band_descriptions` (the `variables` entry for N-D data) while `band_names` are `variables1, variables2, ...`, which are the names to use in `expression` or to access `statistics()` results.
+
+```python
+img = await reader.tile(tile.x, tile.y, tile.z, variables=("b04", "b03", "b02"))
+print(img.dimensions)
+>> ['variables', 'y', 'x']
+
+print(img.band_names, img.band_descriptions)
+>> ['variables1', 'variables2', 'variables3'] ['b04', 'b03', 'b02']
+
+# Normalized difference between b08 and b04
+img = await reader.tile(
+    tile.x,
+    tile.y,
+    tile.z,
+    variables=("b08", "b04"),
+    expression="(variables1-variables2)/(variables1+variables2)",
+)
+```
+
+With variables having non-spatial dimensions (e.g `time`), the output is N-D:
+
+```python
+img = await reader.preview(variables=["data:a", "data:b"])  # dimensions: ["time", "z", "y", "x"]
+print(img.dimensions, img.array.shape)
+>> ['variables', 'time', 'z', 'y', 'x'] (2, 2, 3, 1024, 1024)
+
+print(img.band_descriptions)
+>> {'variables': ['data:a', 'data:b'], 'time': [...], 'z': [...]}
+```
+
+#### Reduce non-spatial dimensions
+
+Group readers' methods (`tile`, `part`, `preview`, `point`, `feature` and `statistics`) accept a `reduce` option: a list of `(dimension, function)` tuples applied, in order, after the variables are stacked (and before `expression`). The function is called as `func(array, axis=axis)` (e.g `numpy.ma.mean`).
+
+```python
+import numpy
+
+img = await reader.preview(
+    variables=["data:a", "data:b"],
+    reduce=[("time", numpy.ma.mean), ("z", numpy.ma.max)],
+)
+print(img.dimensions, img.array.shape)
+>> ['variables', 'y', 'x'] (2, 1024, 1024)
+
+print(img.metadata)
+>> {'reduced': ['time', 'z']}
+```
+
+!!! note
+
+    `reduce` can be used to get 3D outputs from N-D variables, which is required for expression, colormap, statistics and image rendering.
