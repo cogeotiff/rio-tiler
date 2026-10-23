@@ -2835,7 +2835,11 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
-        cast(dict, img.band_descriptions)["variables"] = list(variables)
+        # (band_descriptions is a list when stacking 2D data)
+        if isinstance(img.band_descriptions, dict):
+            img.band_descriptions["variables"] = list(variables)
+        else:
+            img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -2930,7 +2934,11 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
-        cast(dict, img.band_descriptions)["variables"] = list(variables)
+        # (band_descriptions is a list when stacking 2D data)
+        if isinstance(img.band_descriptions, dict):
+            img.band_descriptions["variables"] = list(variables)
+        else:
+            img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3009,7 +3017,11 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
-        cast(dict, pt.band_descriptions)["variables"] = list(variables)
+        # (band_descriptions is a list when stacking 2D data)
+        if isinstance(pt.band_descriptions, dict):
+            pt.band_descriptions["variables"] = list(variables)
+        else:
+            pt.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3727,7 +3739,11 @@ class GroupReader(BaseReader, GroupMixin):
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
-        cast(dict, img.band_descriptions)["variables"] = list(variables)
+        # (band_descriptions is a list when stacking 2D data)
+        if isinstance(img.band_descriptions, dict):
+            img.band_descriptions["variables"] = list(variables)
+        else:
+            img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3822,7 +3838,11 @@ class GroupReader(BaseReader, GroupMixin):
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
-        cast(dict, img.band_descriptions)["variables"] = list(variables)
+        # (band_descriptions is a list when stacking 2D data)
+        if isinstance(img.band_descriptions, dict):
+            img.band_descriptions["variables"] = list(variables)
+        else:
+            img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3901,7 +3921,11 @@ class GroupReader(BaseReader, GroupMixin):
         # NOTE: The band_descriptions property will have a `variables` entry with default values
         # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
         # update the `variables` entry with the actual variable names
-        cast(dict, pt.band_descriptions)["variables"] = list(variables)
+        # (band_descriptions is a list when stacking 2D data)
+        if isinstance(pt.band_descriptions, dict):
+            pt.band_descriptions["variables"] = list(variables)
+        else:
+            pt.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
