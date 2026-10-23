@@ -3177,6 +3177,30 @@
 <code>rio-tiler</code> will automatically rescale the data using the <code>min/max</code> value for the datatype (ref: <a class="magiclink magiclink-github magiclink-pull" href="https://github.com/cogeotiff/rio-tiler/pull/391" title="GitHub Pull Request: cogeotiff/rio-tiler #391">cogeotiff/rio-tiler!391</a>).</p>
 <ul>
 <li>
+<p><strong>reduce()</strong>: Reduce N-D data along a non-spatial dimension. The reducer is called as <code>func(array, axis=axis)</code>, so masked-aware functions (e.g <code>numpy.ma.mean</code>) will only mask pixels masked along the whole dimension.</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
+
+<span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span>
+    <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">MaskedArray</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">rand</span><span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)),</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">,</span> <span class="s2">"y"</span><span class="p">,</span> <span class="s2">"x"</span><span class="p">],</span>
+    <span class="n">band_descriptions</span><span class="o">=</span><span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"t1"</span><span class="p">,</span> <span class="s2">"t2"</span><span class="p">,</span> <span class="s2">"t3"</span><span class="p">,</span> <span class="s2">"t4"</span><span class="p">],</span> <span class="s2">"z"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"0"</span><span class="p">,</span> <span class="s2">"10"</span><span class="p">,</span> <span class="s2">"20"</span><span class="p">]},</span>
+<span class="p">)</span>
+<span class="k">assert</span> <span class="n">img</span><span class="o">.</span><span class="n">is_nd</span>
+
+<span class="n">mean</span> <span class="o">=</span> <span class="n">img</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">mean</span><span class="p">)</span>  <span class="c1"># Returns a new ImageData object</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">(</span><span class="mi">3</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">mean</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'z'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">]</span> <span class="p">[</span><span class="s1">'0'</span><span class="p">,</span> <span class="s1">'10'</span><span class="p">,</span> <span class="s1">'20'</span><span class="p">]</span>
+
+<span class="c1"># reduced dimensions are kept in the metadata</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">mean</span><span class="o">.</span><span class="n">metadata</span><span class="p">[</span><span class="s2">"reduced"</span><span class="p">])</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s1">'time'</span><span class="p">]</span>
+</code></pre></div>
+</li>
+<li>
 <p><strong>to_raster()</strong>: Save ImageData array to raster file</p>
 <div class="highlight"><pre><span></span><code><span class="n">img</span> <span class="o">=</span> <span class="n">ImageData</span><span class="p">(</span><span class="n">numpy</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="mi">1</span><span class="p">,</span> <span class="mi">256</span><span class="p">,</span> <span class="mi">256</span><span class="p">)))</span>
 <span class="n">img</span><span class="o">.</span><span class="n">to_raster</span><span class="p">(</span><span class="s2">"img.tif"</span><span class="p">,</span> <span class="n">driver</span><span class="o">=</span><span class="s2">"GTiff"</span><span class="p">)</span>
@@ -3244,6 +3268,16 @@
 
 <span class="nb">print</span><span class="p">(</span><span class="n">ratio</span><span class="o">.</span><span class="n">count</span><span class="p">)</span>
 <span class="o">&gt;&gt;&gt;</span> <span class="mi">1</span>
+</code></pre></div>
+<ul>
+<li><strong>reduce()</strong>: Reduce N-D data along a dimension</li>
+</ul>
+<div class="highlight"><pre><span></span><code><span class="n">pts</span> <span class="o">=</span> <span class="n">PointData</span><span class="p">(</span>
+    <span class="n">numpy</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">randint</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">3000</span><span class="p">,</span> <span class="p">(</span><span class="mi">4</span><span class="p">,</span> <span class="mi">3</span><span class="p">)),</span>
+    <span class="n">dimensions</span><span class="o">=</span><span class="p">[</span><span class="s2">"time"</span><span class="p">,</span> <span class="s2">"z"</span><span class="p">],</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">pts</span><span class="o">.</span><span class="n">reduce</span><span class="p">(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">max</span><span class="p">)</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span><span class="s2">"z1"</span><span class="p">,</span> <span class="s2">"z2"</span><span class="p">,</span> <span class="s2">"z3"</span><span class="p">]</span>
 </code></pre></div>
 <h2 id="others">Others<a class="headerlink" href="#others" title="Permanent link">&para;</a></h2>
 <p>Readers methods returning metadata like results (<code>info()</code> and <code>statistics()</code>) return <a href="https://pydantic-docs.helpmanual.io">pydantic</a> models to make sure the values are valids.</p>

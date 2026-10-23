@@ -7693,6 +7693,7 @@
 <li>change: <code>GroupReader</code>/<code>AsyncGroupReader</code> forward the arrays' <code>spatial_dims</code> and <code>coordinates</code> to the Array readers</li>
 </ul>
 </li>
+<li>add: <code>reduce(dim, func)</code> method to <code>ImageData</code> and <code>PointData</code> to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in <code>metadata["reduced"]</code>)</li>
 <li>add: <code>resampling_method</code> option to the zarr Array readers' <code>tile</code> method</li>
 <li>add: <code>rio_tiler.utils.run_sync</code> to run a blocking function in a worker thread, forwarding the active rasterio environment</li>
 <li>fix: use masked array reprojection in <code>rio_tiler._warp.warp</code> (fix mask warping with GDAL &gt;= 3.11)</li>

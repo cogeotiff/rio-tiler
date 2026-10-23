@@ -2520,6 +2520,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.models.ImageData.reduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.models.ImageData.render" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2734,8 +2745,30 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rio_tiler.models.PointData.reduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.models._reduce_band_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_reduce_band_metadata
+      
+    </span>
+  </a>
   
 </li>
         
@@ -3327,6 +3360,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.models.ImageData.reduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.models.ImageData.render" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3541,8 +3585,30 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#rio_tiler.models.PointData.reduce" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;reduce
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.models._reduce_band_metadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_reduce_band_metadata
+      
+    </span>
+  </a>
   
 </li>
         
@@ -4516,6 +4582,59 @@ sufficient (&lt;10% error) and require less memory.</p>
 <div class="doc doc-object doc-function">
 
 
+<h4 id="rio_tiler.models.ImageData.reduce" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">reduce</span>
+
+
+<a href="#rio_tiler.models.ImageData.reduce" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">reduce</span><span class="p">(</span><span class="n">dim</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Reduce data along a non-spatial dimension.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>dim</code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>non-spatial dimension name to reduce.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>func</code></b>
+              (<code><span title="callable">callable</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>reducer function called as <code>func(array, axis=axis)</code> (e.g <code>numpy.ma.mean</code>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>ImageData</code></b> (              <code><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></code>
+)          –
+          <div class="doc-md-description">
+            <p>data with <code>dim</code> removed (or of length 1 if <code>dim</code> was the only non-spatial dimension).</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h4 id="rio_tiler.models.ImageData.render" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">render</span>
 
@@ -5152,6 +5271,59 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 </div>
 
+<div class="doc doc-object doc-function">
+
+
+<h4 id="rio_tiler.models.PointData.reduce" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">reduce</span>
+
+
+<a href="#rio_tiler.models.PointData.reduce" class="headerlink" title="Permanent link">&para;</a></h4>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">reduce</span><span class="p">(</span><span class="n">dim</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">func</span><span class="p">:</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="#rio_tiler.models.PointData">PointData</a></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Reduce data along a dimension.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>dim</code></b>
+              (<code><span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>dimension name to reduce.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>func</code></b>
+              (<code><span title="callable">callable</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>reducer function called as <code>func(array, axis=axis)</code> (e.g <code>numpy.ma.mean</code>).</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+<b><code>PointData</code></b> (              <code><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="#rio_tiler.models.PointData">PointData</a></code>
+)          –
+          <div class="doc-md-description">
+            <p>data with <code>dim</code> removed (or of length 1 if <code>dim</code> was the only dimension).</p>
+          </div>
+        </li>
+    </ul>
+
+
+    </div>
+
+</div>
+
 
 
   </div>
@@ -5160,6 +5332,27 @@ sufficient (&lt;10% error) and require less memory.</p>
 
 </div>
 
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.models._reduce_band_metadata" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_reduce_band_metadata</span>
+
+
+<a href="#rio_tiler.models._reduce_band_metadata" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_reduce_band_metadata</span><span class="p">(</span><span class="n">meta</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]],</span> <span class="n">dim</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">dims</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]]</span> <span class="o">|</span> <span class="kc">None</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Remove <code>dim</code> from band metadata, <code>dims</code> being the remaining non-spatial dimensions.</p>
+<p>Returns None when the metadata should be set to the default values.</p>
+
+
+    </div>
+
+</div>
 
 <div class="doc doc-object doc-function">
 
