@@ -336,6 +336,31 @@ Note: Starting with `rio-tiler==2.1`, when the output datatype is not valid for 
 `rio-tiler` will automatically rescale the data using the `min/max` value for the datatype (ref: https://github.com/cogeotiff/rio-tiler/pull/391).
 
 
+- **reduce()**: Reduce N-D data along a non-spatial dimension. The reducer is called as `func(array, axis=axis)`, so masked-aware functions (e.g `numpy.ma.mean`) will only mask pixels masked along the whole dimension.
+
+    ```python
+    import numpy
+    from rio_tiler.models import ImageData
+
+    img = ImageData(
+        numpy.ma.MaskedArray(numpy.random.rand(4, 3, 256, 256)),
+        dimensions=["time", "z", "y", "x"],
+        band_descriptions={"time": ["t1", "t2", "t3", "t4"], "z": ["0", "10", "20"]},
+    )
+    assert img.is_nd
+
+    mean = img.reduce("time", numpy.ma.mean)  # Returns a new ImageData object
+    print(mean.array.shape)
+    >>> (3, 256, 256)
+
+    print(mean.dimensions, mean.band_descriptions)
+    >>> ['z', 'y', 'x'] ['0', '10', '20']
+
+    # reduced dimensions are kept in the metadata
+    print(mean.metadata["reduced"])
+    >>> ['time']
+    ```
+
 - **to_raster()**: Save ImageData array to raster file
 
     ```python
@@ -407,6 +432,17 @@ print(ratio.band_names)
 
 print(ratio.count)
 >>> 1
+```
+
+- **reduce()**: Reduce N-D data along a dimension
+
+```python
+pts = PointData(
+    numpy.random.randint(0, 3000, (4, 3)),
+    dimensions=["time", "z"],
+)
+print(pts.reduce("time", numpy.ma.max).band_names)
+>>> ["z1", "z2", "z3"]
 ```
 
 ## Others
