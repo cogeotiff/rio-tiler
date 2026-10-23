@@ -1421,3 +1421,58 @@ def test_point_create_from_list_stack_on_dim():
             ],
             stack_on_dim="variables",
         )
+
+
+def test_create_from_list_stack_on_dim_2d():
+    """2D data (single `b` band) are stacked directly on the new dimension."""
+    img1 = ImageData(numpy.ma.MaskedArray(numpy.zeros((1, 10, 10))))
+    img2 = ImageData(numpy.ma.MaskedArray(numpy.ones((1, 10, 10))))
+
+    img = ImageData.create_from_list([img1, img2], stack_on_dim="variables")
+    assert not img.is_nd
+    assert img.dimensions == ["variables", "y", "x"]
+    assert img.array.shape == (2, 10, 10)
+    assert img.band_names == ["variables1", "variables2"]
+    assert img.band_descriptions == ["variables1", "variables2"]
+    assert img.array[:, 0, 0].tolist() == [0, 1]
+    # 3D methods are available
+    assert img.apply_expression("variables2-variables1").array[0, 0, 0] == 1
+
+    img = ImageData.create_from_list([img1], stack_on_dim="variables")
+    assert img.dimensions == ["variables", "y", "x"]
+    assert img.array.shape == (1, 10, 10)
+
+    # multi-bands `b` data get a new dimension
+    img3 = ImageData(numpy.ma.MaskedArray(numpy.zeros((2, 10, 10))))
+    img = ImageData.create_from_list([img3, img3], stack_on_dim="variables")
+    assert img.dimensions == ["variables", "b", "y", "x"]
+    assert img.array.shape == (2, 2, 10, 10)
+
+    # single band data with a named dimension get a new dimension
+    img4 = ImageData(
+        numpy.ma.MaskedArray(numpy.zeros((1, 10, 10))), dimensions=["time", "y", "x"]
+    )
+    img = ImageData.create_from_list([img4, img4], stack_on_dim="variables")
+    assert img.dimensions == ["variables", "time", "y", "x"]
+    assert img.array.shape == (2, 1, 10, 10)
+
+    # can't mix 2D and 3D data
+    with pytest.raises(ValueError):
+        ImageData.create_from_list([img1, img3], stack_on_dim="variables")
+
+    pt1 = PointData(numpy.ma.MaskedArray([1]), coordinates=(0, 0))
+    pt2 = PointData(numpy.ma.MaskedArray([2]), coordinates=(0, 0))
+    pt = PointData.create_from_list([pt1, pt2], stack_on_dim="variables")
+    assert not pt.is_nd
+    assert pt.dimensions == ["variables"]
+    assert pt.array.tolist() == [1, 2]
+    assert pt.band_names == ["variables1", "variables2"]
+    assert pt.band_descriptions == ["variables1", "variables2"]
+
+    pt3 = PointData(numpy.ma.MaskedArray([1, 2]), coordinates=(0, 0))
+    pt = PointData.create_from_list([pt3, pt3], stack_on_dim="variables")
+    assert pt.dimensions == ["variables", "b"]
+    assert pt.array.shape == (2, 2)
+
+    with pytest.raises(InvalidPointDataError):
+        PointData.create_from_list([pt1, pt3], stack_on_dim="variables")

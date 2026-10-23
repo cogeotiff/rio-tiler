@@ -1312,17 +1312,9 @@ def geozarr_4d_store():
 def test_group_reader_sel(geozarr_4d_store):
     """Test sel/sel_method forwarded to the arrays."""
     with GroupReader(input=zarr.open_group(geozarr_4d_store, mode="r")) as src:
-        # Scalar selection on all the dimensions: one band per variable
+        # Scalar selection on all the dimensions: one band per variable (2D)
+        # 2D variables are stacked directly on the `variables` dimension
         img = src.preview(variables=["data:a", "data:b"], sel={"time": TIMES[1], "z": 10})
-        assert img.array.shape == (2, 1, 100, 100)
-        assert img.dimensions == ["variables", "b", "y", "x"]
-        assert img.array[:, 0, 0, 0].tolist() == [111, 211]
-
-        img = src.preview(
-            variables=["data:a", "data:b"],
-            sel={"time": TIMES[1], "z": 10},
-            reduce=[("b", numpy.ma.mean)],
-        )
         assert img.array.shape == (2, 100, 100)
         assert img.dimensions == ["variables", "y", "x"]
         assert img.band_names == ["variables1", "variables2"]
@@ -1333,7 +1325,6 @@ def test_group_reader_sel(geozarr_4d_store):
             variables=["data:a", "data:b"],
             sel={"time": "2025-01-20", "z": 12},
             sel_method="nearest",
-            reduce=[("b", numpy.ma.mean)],
             expression="variables2-variables1",
         )
         assert img.array[0, 0, 0] == 100
@@ -1363,16 +1354,14 @@ def test_group_reader_sel(geozarr_4d_store):
             coord_crs=CRS.from_epsg(32633),
             variables=["data:a", "data:b"],
             sel={"time": TIMES[0], "z": 20},
-            reduce=[("b", numpy.ma.mean)],
         )
+        assert pt.dimensions == ["variables"]
+        assert pt.band_descriptions == ["data:a", "data:b"]
         assert pt.array.tolist() == [102, 202]
 
-        stats = src.statistics(
-            variables="data:a",
-            sel={"time": TIMES[1], "z": 0},
-            reduce=[("b", numpy.ma.mean)],
-        )
+        stats = src.statistics(variables="data:a", sel={"time": TIMES[1], "z": 0})
         assert stats["variables1"].min == 110
+        assert stats["variables1"].description == "data:a"
 
         # N-D output for one variable
         img = src.preview(variables="data:a")
@@ -1414,9 +1403,7 @@ async def test_async_group_reader_sel(geozarr_4d_store):
     group = await zarr.api.asynchronous.open_group(store=geozarr_4d_store, mode="r")
     async with AsyncGroupReader(input=group) as src:
         img = await src.preview(
-            variables=["data:a", "data:b"],
-            sel={"time": TIMES[1], "z": 10},
-            reduce=[("b", numpy.ma.mean)],
+            variables=["data:a", "data:b"], sel={"time": TIMES[1], "z": 10}
         )
         assert img.array[:, 0, 0].tolist() == [111, 211]
         assert img.dimensions == ["variables", "y", "x"]
