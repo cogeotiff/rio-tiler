@@ -294,21 +294,40 @@ class PointData:
             yield i
 
     @classmethod
-    def create_from_list(cls, data: Sequence["PointData"]) -> "PointData":
+    def create_from_list(
+        cls,
+        data: Sequence["PointData"],
+        stack_on_dim: str | None = None,
+    ) -> "PointData":
         """Create PointData from a sequence of PointsData objects.
 
         Args:
             data (sequence): sequence of PointData.
+            stack_on_dim (str, optional): Stack the data along a new leading dimension with this name, instead of concatenating them along the first dimension.
 
         """
         if not data:
             raise InvalidPointDataError("Empty PointData list.")
 
-        if len(data) == 1:
+        if len(data) == 1 and not stack_on_dim:
             return data[0]
 
-        # TODO: revisit this and maybe allow concatenation of N-D ImageData in the future
-        if any(pt.is_nd for pt in data):
+        if stack_on_dim:
+            if stack_on_dim in data[0].dimensions:
+                raise InvalidPointDataError(
+                    f"Dimension '{stack_on_dim}' already exists in {data[0].dimensions}."
+                )
+
+            if any(
+                pt.dimensions != data[0].dimensions
+                or pt.array.shape != data[0].array.shape
+                for pt in data
+            ):
+                raise InvalidPointDataError(
+                    "Cannot stack PointData with different dimensions or shapes."
+                )
+
+        elif any(pt.is_nd for pt in data):
             raise InvalidPointDataError(
                 "Cannot concatenate N-D PointData, only 1D (bands) data is supported."
             )
@@ -321,23 +340,64 @@ class PointData:
                     "Cannot concatenate points with different coordinates/CRS."
                 )
 
-        arr = numpy.ma.concatenate([pt.array for pt in data])
-
         assets = list(
             dict.fromkeys(
                 itertools.chain.from_iterable([pt.assets for pt in data if pt.assets])
             )
         )
 
-        band_names = list(
-            itertools.chain.from_iterable([pt.band_names for pt in data if pt.band_names])
-        )
+        band_names: list[str] | dict[str, list[str]]
+        band_descriptions: list[str] | dict[str, list[str]]
 
-        band_descriptions = list(
-            itertools.chain.from_iterable(
-                [pt.band_descriptions for pt in data if pt.band_descriptions]
+        # 2D data (single `b` band) are stacked directly on the new dimension
+        if stack_on_dim and all(
+            pt.dimensions[0] == "b" and pt.array.shape == (1,) for pt in data
+        ):
+            arr = numpy.ma.concatenate([pt.array for pt in data])
+            dimensions = [stack_on_dim]
+            band_names = [f"{stack_on_dim}{ix + 1}" for ix in range(len(data))]
+            band_descriptions = band_names.copy()
+
+        # 3D data (or higher) are stacked along the new dimension
+        elif stack_on_dim:
+            arr = numpy.ma.stack([pt.array for pt in data])
+            dimensions = [stack_on_dim, *data[0].dimensions]
+
+            # 1D data have list band_names/band_descriptions for the first dimension
+            labels = [f"{stack_on_dim}{ix + 1}" for ix in range(len(data))]
+            band_names = {
+                stack_on_dim: labels,
+                **(
+                    data[0].band_names
+                    if isinstance(data[0].band_names, dict)
+                    else {data[0].dimensions[0]: data[0].band_names}
+                ),
+            }
+            band_descriptions = {
+                stack_on_dim: labels,
+                **(
+                    data[0].band_descriptions
+                    if isinstance(data[0].band_descriptions, dict)
+                    else {data[0].dimensions[0]: data[0].band_descriptions}
+                ),
+            }
+
+        # If no stacking dimension is provided, concatenate along the existing dimensions
+        else:
+            arr = numpy.ma.concatenate([pt.array for pt in data])
+            dimensions = data[0].dimensions
+
+            band_names = list(
+                itertools.chain.from_iterable(
+                    [pt.band_names for pt in data if pt.band_names]
+                )
             )
-        )
+
+            band_descriptions = list(
+                itertools.chain.from_iterable(
+                    [pt.band_descriptions for pt in data if pt.band_descriptions]
+                )
+            )
 
         metadata = dict(
             itertools.chain.from_iterable(
@@ -350,7 +410,7 @@ class PointData:
             assets=assets,
             band_names=band_names,
             band_descriptions=band_descriptions,
-            dimensions=data[0].dimensions,
+            dimensions=dimensions,
             coordinates=data[0].coordinates,
             crs=data[0].crs,
             metadata=metadata,
@@ -674,18 +734,37 @@ class ImageData:
                     )
 
     @classmethod
-    def create_from_list(cls, data: Sequence["ImageData"]) -> "ImageData":
+    def create_from_list(
+        cls,
+        data: Sequence["ImageData"],
+        stack_on_dim: str | None = None,
+    ) -> "ImageData":
         """Create ImageData from a sequence of ImageData objects.
 
         Args:
             data (sequence): sequence of ImageData.
+            stack_on_dim (str, optional): Stack the data along a new leading dimension with this name, instead of concatenating them along the first dimension.
 
         """
-        if len(data) == 1:
+        if len(data) == 1 and not stack_on_dim:
             return data[0]
 
-        # TODO: revisit this and maybe allow concatenation of N-D ImageData in the future
-        if any(img.is_nd for img in data):
+        if stack_on_dim:
+            if stack_on_dim in data[0].dimensions:
+                raise ValueError(
+                    f"Dimension '{stack_on_dim}' already exists in {data[0].dimensions}."
+                )
+
+            if any(
+                img.dimensions != data[0].dimensions
+                or img.array.shape[:-2] != data[0].array.shape[:-2]
+                for img in data
+            ):
+                raise ValueError(
+                    "Cannot stack ImageData with different dimensions or non-spatial shapes."
+                )
+
+        elif any(img.is_nd for img in data):
             raise ValueError(
                 "Cannot concatenate N-D ImageData, only 3D (bands, height, width) data is supported."
             )
@@ -706,13 +785,17 @@ class ImageData:
             for img in data:
                 if img.height == max_h and img.width == max_w:
                     continue
+                # N-D data are flattened to 3D for resizing
+                out_shape = (*img.array.shape[:-2], max_h, max_w)
                 arr = numpy.ma.MaskedArray(
-                    resize_array(img.array.data, max_h, max_w),  # type: ignore [arg-type]
-                    mask=resize_array(img.array.mask * 1, max_h, max_w).astype("bool"),  # type: ignore [arg-type]
+                    resize_array(img._as_3d(img.array.data), max_h, max_w).reshape(  # type: ignore [arg-type]
+                        out_shape
+                    ),
+                    mask=resize_array(img._as_3d(img.array.mask) * 1, max_h, max_w)  # type: ignore [arg-type]
+                    .astype("bool")
+                    .reshape(out_shape),
                 )
                 img.array = arr
-
-        arr = numpy.ma.concatenate([img.array for img in data])
 
         assets = list(
             dict.fromkeys(
@@ -726,24 +809,67 @@ class ImageData:
         crs_values = [img.crs for img in data if img.crs]
         crs = crs_values[0] if crs_values else None
 
-        band_names = list(
-            itertools.chain.from_iterable(
-                [img.band_names for img in data if img.band_names]
-            )
-        )
+        band_names: list[str] | dict[str, list[str]]
+        band_descriptions: list[str] | dict[str, list[str]]
 
-        band_descriptions = list(
-            itertools.chain.from_iterable(
-                [img.band_descriptions for img in data if img.band_descriptions]
-            )
-        )
+        # 2D data (single `b` band) are stacked directly on the new dimension
+        if stack_on_dim and all(
+            img.dimensions[0] == "b" and img.array.shape[:-2] == (1,) for img in data
+        ):
+            arr = numpy.ma.concatenate([img.array for img in data])
+            dimensions = [stack_on_dim, *data[0].dimensions[1:]]
+            band_names = [f"{stack_on_dim}{ix + 1}" for ix in range(len(data))]
+            band_descriptions = band_names.copy()
+            dataset_statistics = None
 
-        stats = list(
-            itertools.chain.from_iterable(
-                [img.dataset_statistics for img in data if img.dataset_statistics]
+        # 3D data (or higher) are stacked along the new dimension
+        elif stack_on_dim:
+            arr = numpy.ma.stack([img.array for img in data])
+            dimensions = [stack_on_dim, *data[0].dimensions]
+
+            # 3D data have list band_names/band_descriptions for the first dimension
+            labels = [f"{stack_on_dim}{ix + 1}" for ix in range(len(data))]
+            band_names = {
+                stack_on_dim: labels,
+                **(
+                    data[0].band_names
+                    if isinstance(data[0].band_names, dict)
+                    else {data[0].dimensions[0]: data[0].band_names}
+                ),
+            }
+            band_descriptions = {
+                stack_on_dim: labels,
+                **(
+                    data[0].band_descriptions
+                    if isinstance(data[0].band_descriptions, dict)
+                    else {data[0].dimensions[0]: data[0].band_descriptions}
+                ),
+            }
+            dataset_statistics = None
+
+        # If no stacking dimension is provided, concatenate along the existing dimensions
+        else:
+            arr = numpy.ma.concatenate([img.array for img in data])
+            dimensions = data[0].dimensions
+
+            band_names = list(
+                itertools.chain.from_iterable(
+                    [img.band_names for img in data if img.band_names]
+                )
             )
-        )
-        dataset_statistics = stats if len(stats) == len(band_names) else None
+
+            band_descriptions = list(
+                itertools.chain.from_iterable(
+                    [img.band_descriptions for img in data if img.band_descriptions]
+                )
+            )
+
+            stats = list(
+                itertools.chain.from_iterable(
+                    [img.dataset_statistics for img in data if img.dataset_statistics]
+                )
+            )
+            dataset_statistics = stats if len(stats) == len(band_names) else None
 
         metadata = dict(
             itertools.chain.from_iterable(
@@ -753,7 +879,7 @@ class ImageData:
 
         return cls(
             arr,
-            dimensions=data[0].dimensions,
+            dimensions=dimensions,
             band_names=band_names,
             band_descriptions=band_descriptions,
             assets=assets,

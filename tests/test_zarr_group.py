@@ -283,14 +283,12 @@ async def test_geozarr_reader_async(geozarr_store):
         assert info.driver == "GeoZarr"
         assert info.variables == [
             {
-                # "nbands": 1,
                 "group": None,
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
             },
             {
-                # "nbands": 1,
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
@@ -305,14 +303,12 @@ async def test_geozarr_reader_async(geozarr_store):
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -368,36 +364,76 @@ async def test_geozarr_reader_async(geozarr_store):
         assert selected["width"] == 1000
 
         img = await geozarrds.preview(variables=["b01", "b02"])
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert img.array.shape == (2, 1, 1000, 1000)
+        assert img.dimensions == ["variables", "time", "y", "x"]
+        assert img.band_descriptions == {
+            "variables": ["b01", "b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+        assert not img.metadata
+
+        img = await geozarrds.preview(
+            variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.array.shape == (2, 1000, 1000)
+        assert img.band_descriptions == ["b01", "b02"]
+        assert img.metadata == {"reduced": ["time"]}
         # max-size=1024 so we select the highest resolution (ones)
         assert numpy.ma.unique(img.array[0]).tolist() == [1.0, None]
         assert numpy.ma.unique(img.array[1]).tolist() == [1.0, None]
 
-        img = await geozarrds.preview(variables=["b01", "b02"], max_size=100)
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        img = await geozarrds.preview(
+            variables=["b01", "b02"], max_size=100, reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.band_descriptions == ["b01", "b02"]
         # b01 has only one array (ones)
         assert numpy.ma.unique(img.array[0]).tolist() == [1.0, None]
         # b02 has two arrays (ones: (1000x1000), twos: (100x100))
         assert numpy.ma.unique(img.array[1]).tolist() == [2.0, None]
 
-        stats = await geozarrds.statistics(variables=["b01", "b02"], max_size=1024)
-        assert stats["b1"].min == 1.0
-        assert stats["b1"].max == 1.0
-        assert stats["b2"].min == 1.0
-        assert stats["b2"].max == 1.0
+        stats = await geozarrds.statistics(
+            variables=["b01", "b02"], max_size=1024, reduce=[("time", numpy.ma.mean)]
+        )
+        assert stats["variables1"].description == "b01"
+        assert stats["variables1"].min == 1.0
+        assert stats["variables1"].max == 1.0
+        assert stats["variables2"].description == "b02"
+        assert stats["variables2"].min == 1.0
+        assert stats["variables2"].max == 1.0
 
-        stats = await geozarrds.statistics(variables=["b01", "b02"], max_size=100)
-        assert stats["b1"].min == 1.0
-        assert stats["b1"].max == 1.0
-        assert stats["b2"].min == 2.0
-        assert stats["b2"].max == 2.0
+        stats = await geozarrds.statistics(
+            variables=["b01", "b02"], max_size=100, reduce=[("time", numpy.ma.mean)]
+        )
+        assert stats["variables1"].min == 1.0
+        assert stats["variables1"].max == 1.0
+        assert stats["variables2"].min == 2.0
+        assert stats["variables2"].max == 2.0
 
         pt = await geozarrds.point(
-            505000, 4195000, variables=["b01", "b02"], coord_crs="EPSG:32633"
+            505000,
+            4195000,
+            variables=["b01", "b02"],
+            coord_crs="EPSG:32633",
+        )
+        assert pt.array.shape == (2, 1)
+        assert pt.dimensions == ["variables", "time"]
+        assert pt.band_descriptions == {
+            "variables": ["b01", "b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+
+        pt = await geozarrds.point(
+            505000,
+            4195000,
+            variables=["b01", "b02"],
+            coord_crs="EPSG:32633",
+            reduce=[("time", numpy.ma.mean)],
         )
         # select the highest resolution
+        assert pt.array.shape == (2,)
         assert pt.data.tolist() == [1.0, 1.0]
-        assert pt.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert pt.band_descriptions == ["b01", "b02"]
 
         bounds = geozarrds.get_geographic_bounds("epsg:4326")
         center = ((bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2)
@@ -405,14 +441,18 @@ async def test_geozarr_reader_async(geozarr_store):
         z14_tile = geozarrds.tms.tile(center[0], center[1], 14)
 
         # low res
-        img = await geozarrds.tile(*z10_tile, variables=["b01", "b02"])
-        assert img.statistics()["b1"].min == 1.0
-        assert img.statistics()["b2"].min == 2.0
+        img = await geozarrds.tile(
+            *z10_tile, variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.statistics()["variables1"].min == 1.0
+        assert img.statistics()["variables2"].min == 2.0
 
         # high res
-        img = await geozarrds.tile(*z14_tile, variables=["b01", "b02"])
-        assert img.statistics()["b1"].min == 1.0
-        assert img.statistics()["b2"].min == 1.0
+        img = await geozarrds.tile(
+            *z14_tile, variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.statistics()["variables1"].min == 1.0
+        assert img.statistics()["variables2"].min == 1.0
 
         z14_tile = geozarrds.tms.tile(center[0], center[1], 14)
         wgs84_bounds = geozarrds.tms.bounds(z14_tile)
@@ -423,6 +463,7 @@ async def test_geozarr_reader_async(geozarr_store):
             wgs84_bounds,
             variables=["b01", "b02"],
             bounds_crs="EPSG:4326",
+            reduce=[("time", numpy.ma.mean)],
         )
         assert img.crs == "EPSG:4326"
         assert img.bounds == wgs84_bounds
@@ -432,6 +473,7 @@ async def test_geozarr_reader_async(geozarr_store):
             variables=["b01", "b02"],
             bounds_crs="EPSG:4326",
             dst_crs="EPSG:3857",
+            reduce=[("time", numpy.ma.mean)],
         )
         assert img.crs == "EPSG:3857"
         assert img.bounds != wgs84_bounds
@@ -452,14 +494,12 @@ def test_geozarr_reader(geozarr_store):
         assert info.driver == "GeoZarr"
         assert info.variables == [
             {
-                # "nbands": 1,
                 "group": None,
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
             },
             {
-                # "nbands": 1,
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
@@ -474,14 +514,12 @@ def test_geozarr_reader(geozarr_store):
                 "long_name": "b01",
                 "multiscale": True,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": True,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -537,36 +575,74 @@ def test_geozarr_reader(geozarr_store):
         assert selected["width"] == 1000
 
         img = geozarrds.preview(variables=["b01", "b02"])
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert img.array.shape == (2, 1, 1000, 1000)
+        assert img.dimensions == ["variables", "time", "y", "x"]
+        assert img.band_descriptions == {
+            "variables": ["b01", "b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+        assert not img.metadata
+
+        img = geozarrds.preview(
+            variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.array.shape == (2, 1000, 1000)
+        assert img.band_descriptions == ["b01", "b02"]
+        assert img.metadata == {"reduced": ["time"]}
         # max-size=1024 so we select the highest resolution (ones)
         assert numpy.ma.unique(img.array[0]).tolist() == [1.0, None]
         assert numpy.ma.unique(img.array[1]).tolist() == [1.0, None]
 
-        img = geozarrds.preview(variables=["b01", "b02"], max_size=100)
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        img = geozarrds.preview(
+            variables=["b01", "b02"], max_size=100, reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.band_descriptions == ["b01", "b02"]
         # b01 has only one array (ones)
         assert numpy.ma.unique(img.array[0]).tolist() == [1.0, None]
         # b02 has two arrays (ones: (1000x1000), twos: (100x100))
         assert numpy.ma.unique(img.array[1]).tolist() == [2.0, None]
 
-        stats = geozarrds.statistics(variables=["b01", "b02"], max_size=1024)
-        assert stats["b1"].min == 1.0
-        assert stats["b1"].max == 1.0
-        assert stats["b2"].min == 1.0
-        assert stats["b2"].max == 1.0
+        stats = geozarrds.statistics(
+            variables=["b01", "b02"], max_size=1024, reduce=[("time", numpy.ma.mean)]
+        )
+        assert stats["variables1"].min == 1.0
+        assert stats["variables1"].max == 1.0
+        assert stats["variables2"].min == 1.0
+        assert stats["variables2"].max == 1.0
 
-        stats = geozarrds.statistics(variables=["b01", "b02"], max_size=100)
-        assert stats["b1"].min == 1.0
-        assert stats["b1"].max == 1.0
-        assert stats["b2"].min == 2.0
-        assert stats["b2"].max == 2.0
+        stats = geozarrds.statistics(
+            variables=["b01", "b02"], max_size=100, reduce=[("time", numpy.ma.mean)]
+        )
+        assert stats["variables1"].min == 1.0
+        assert stats["variables1"].max == 1.0
+        assert stats["variables2"].min == 2.0
+        assert stats["variables2"].max == 2.0
 
         pt = geozarrds.point(
-            505000, 4195000, variables=["b01", "b02"], coord_crs="EPSG:32633"
+            505000,
+            4195000,
+            variables=["b01", "b02"],
+            coord_crs="EPSG:32633",
+        )
+        assert pt.array.shape == (2, 1)
+        assert pt.dimensions == ["variables", "time"]
+        assert pt.band_descriptions == {
+            "variables": ["b01", "b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+
+        pt = geozarrds.point(
+            505000,
+            4195000,
+            variables=["b01", "b02"],
+            coord_crs="EPSG:32633",
+            reduce=[("time", numpy.ma.mean)],
         )
         # select the highest resolution
+        assert pt.array.shape == (2,)
         assert pt.data.tolist() == [1.0, 1.0]
-        assert pt.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert pt.band_descriptions == ["b01", "b02"]
 
         bounds = geozarrds.get_geographic_bounds("epsg:4326")
         center = ((bounds[0] + bounds[2]) / 2, (bounds[1] + bounds[3]) / 2)
@@ -574,14 +650,18 @@ def test_geozarr_reader(geozarr_store):
         z14_tile = geozarrds.tms.tile(center[0], center[1], 14)
 
         # low res
-        img = geozarrds.tile(*z10_tile, variables=["b01", "b02"])
-        assert img.statistics()["b1"].min == 1.0
-        assert img.statistics()["b2"].min == 2.0
+        img = geozarrds.tile(
+            *z10_tile, variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.statistics()["variables1"].min == 1.0
+        assert img.statistics()["variables2"].min == 2.0
 
         # high res
-        img = geozarrds.tile(*z14_tile, variables=["b01", "b02"])
-        assert img.statistics()["b1"].min == 1.0
-        assert img.statistics()["b2"].min == 1.0
+        img = geozarrds.tile(
+            *z14_tile, variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.statistics()["variables1"].min == 1.0
+        assert img.statistics()["variables2"].min == 1.0
 
         z14_tile = geozarrds.tms.tile(center[0], center[1], 14)
         wgs84_bounds = geozarrds.tms.bounds(z14_tile)
@@ -592,6 +672,7 @@ def test_geozarr_reader(geozarr_store):
             wgs84_bounds,
             variables=["b01", "b02"],
             bounds_crs="EPSG:4326",
+            reduce=[("time", numpy.ma.mean)],
         )
         assert img.crs == "EPSG:4326"
         assert img.bounds == wgs84_bounds
@@ -601,6 +682,7 @@ def test_geozarr_reader(geozarr_store):
             variables=["b01", "b02"],
             bounds_crs="EPSG:4326",
             dst_crs="EPSG:3857",
+            reduce=[("time", numpy.ma.mean)],
         )
         assert img.crs == "EPSG:3857"
         assert img.bounds != wgs84_bounds
@@ -715,7 +797,17 @@ async def test_geozarr_root_async(geozarr_root_store):
         assert bbox == (500000, 4190000, 510000, 4200000)
 
         img = await geozarrds.preview(variables=["data:b01", "data:b02"])
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert img.dimensions == ["variables", "time", "y", "x"]
+        assert img.band_descriptions == {
+            "variables": ["data:b01", "data:b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+
+        img = await geozarrds.preview(
+            variables=["data:b01", "data:b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.band_descriptions == ["data:b01", "data:b02"]
 
 
 def test_geozarr_root(geozarr_root_store):
@@ -826,7 +918,17 @@ def test_geozarr_root(geozarr_root_store):
         assert bbox == (500000, 4190000, 510000, 4200000)
 
         img = geozarrds.preview(variables=["data:b01", "data:b02"])
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert img.dimensions == ["variables", "time", "y", "x"]
+        assert img.band_descriptions == {
+            "variables": ["data:b01", "data:b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+
+        img = geozarrds.preview(
+            variables=["data:b01", "data:b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.band_descriptions == ["data:b01", "data:b02"]
 
 
 @pytest.mark.asyncio
@@ -859,14 +961,12 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -877,14 +977,12 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -930,7 +1028,19 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
         assert bbox == (500000, 4190000, 510000, 4200000)
 
         img = await geozarrds.preview(variables=["b01", "b02"])
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert img.array.shape == (2, 1, 1000, 1000)
+        assert img.dimensions == ["variables", "time", "y", "x"]
+        assert img.band_descriptions == {
+            "variables": ["b01", "b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+
+        img = await geozarrds.preview(
+            variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.array.shape == (2, 1000, 1000)
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.band_descriptions == ["b01", "b02"]
 
 
 def test_geozarr_root_with_arrays(geozarr_root_array_store):
@@ -960,14 +1070,12 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -978,14 +1086,12 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "long_name": "b01",
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": None,
                 "long_name": "b02",
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -1031,7 +1137,19 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
         assert bbox == (500000, 4190000, 510000, 4200000)
 
         img = geozarrds.preview(variables=["b01", "b02"])
-        assert img.band_descriptions == ["2022-01-01T00:00:00Z", "2022-01-01T00:00:00Z"]
+        assert img.array.shape == (2, 1, 1000, 1000)
+        assert img.dimensions == ["variables", "time", "y", "x"]
+        assert img.band_descriptions == {
+            "variables": ["b01", "b02"],
+            "time": ["2022-01-01T00:00:00Z"],
+        }
+
+        img = geozarrds.preview(
+            variables=["b01", "b02"], reduce=[("time", numpy.ma.mean)]
+        )
+        assert img.array.shape == (2, 1000, 1000)
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.band_descriptions == ["b01", "b02"]
 
 
 @pytest.mark.asyncio
@@ -1194,17 +1312,20 @@ def geozarr_4d_store():
 def test_group_reader_sel(geozarr_4d_store):
     """Test sel/sel_method forwarded to the arrays."""
     with GroupReader(input=zarr.open_group(geozarr_4d_store, mode="r")) as src:
-        # Scalar selection on all the dimensions: one band per variable
+        # Scalar selection on all the dimensions: one band per variable (2D)
+        # 2D variables are stacked directly on the `variables` dimension
         img = src.preview(variables=["data:a", "data:b"], sel={"time": TIMES[1], "z": 10})
         assert img.array.shape == (2, 100, 100)
-        assert img.band_names == ["b1", "b2"]
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.band_names == ["variables1", "variables2"]
+        assert img.band_descriptions == ["data:a", "data:b"]
         assert img.array[:, 0, 0].tolist() == [111, 211]
 
         img = src.preview(
             variables=["data:a", "data:b"],
             sel={"time": "2025-01-20", "z": 12},
             sel_method="nearest",
-            expression="b2-b1",
+            expression="variables2-variables1",
         )
         assert img.array[0, 0, 0] == 100
 
@@ -1215,9 +1336,9 @@ def test_group_reader_sel(geozarr_4d_store):
             variables="data:a",
             sel={"time": TIMES[0]},
         )
-        assert img.array.shape == (3, 50, 50)
-        assert img.band_names == ["b1", "b2", "b3"]
-        assert img.array[:, 0, 0].tolist() == [100, 101, 102]
+        assert img.array.shape == (1, 3, 50, 50)
+        assert img.dimensions == ["variables", "z", "y", "x"]
+        assert img.array[0, :, 0, 0].tolist() == [100, 101, 102]
 
         img = src.tile(
             # center of the dataset (EPSG:32633 500250, 4199750)
@@ -1225,7 +1346,7 @@ def test_group_reader_sel(geozarr_4d_store):
             variables="data:a",
             sel={"z": 0},
         )
-        assert img.array.shape == (2, 256, 256)
+        assert img.array.shape == (1, 2, 256, 256)
 
         pt = src.point(
             500005,
@@ -1234,25 +1355,46 @@ def test_group_reader_sel(geozarr_4d_store):
             variables=["data:a", "data:b"],
             sel={"time": TIMES[0], "z": 20},
         )
+        assert pt.dimensions == ["variables"]
+        assert pt.band_descriptions == ["data:a", "data:b"]
         assert pt.array.tolist() == [102, 202]
 
         stats = src.statistics(variables="data:a", sel={"time": TIMES[1], "z": 0})
-        assert stats["b1"].min == 110
+        assert stats["variables1"].min == 110
+        assert stats["variables1"].description == "data:a"
 
         # N-D output for one variable
         img = src.preview(variables="data:a")
-        assert img.array.shape == (2, 3, 100, 100)
-        assert img.band_names == {"time": ["time1", "time2"], "z": ["z1", "z2", "z3"]}
-        assert img.band_descriptions == {"time": TIMES, "z": ["0", "10", "20"]}
+        assert img.array.shape == (1, 2, 3, 100, 100)
+        assert img.band_names == {
+            "variables": ["variables1"],
+            "time": ["time1", "time2"],
+            "z": ["z1", "z2", "z3"],
+        }
+        assert img.band_descriptions == {
+            "variables": ["data:a"],
+            "time": TIMES,
+            "z": ["0", "10", "20"],
+        }
 
         pt = src.point(
             500005, 4199995, coord_crs=CRS.from_epsg(32633), variables="data:a"
         )
-        assert pt.array.shape == (2, 3)
+        assert pt.array.shape == (1, 2, 3)
 
-        # N-D output for multiple variables can't be stacked
-        with pytest.raises(ValueError):
-            src.preview(variables=["data:a", "data:b"])
+        # N-D output for multiple variables
+        img = src.preview(variables=["data:a", "data:b"])
+        assert img.array.shape == (2, 2, 3, 100, 100)
+        assert img.dimensions == ["variables", "time", "z", "y", "x"]
+
+        img = src.preview(
+            variables=["data:a", "data:b"],
+            reduce=[("time", numpy.ma.mean), ("z", numpy.ma.max)],
+        )
+        assert img.array.shape == (2, 100, 100)
+        assert img.dimensions == ["variables", "y", "x"]
+        # mean(time) = 5 and max(z) = 2
+        assert img.array[:, 0, 0].tolist() == [107, 207]
 
 
 @pytest.mark.asyncio
@@ -1264,9 +1406,9 @@ async def test_async_group_reader_sel(geozarr_4d_store):
             variables=["data:a", "data:b"], sel={"time": TIMES[1], "z": 10}
         )
         assert img.array[:, 0, 0].tolist() == [111, 211]
-        assert img.dimensions == ["b", "y", "x"]
-        assert img.band_names == ["b1", "b2"]
-        assert img.band_descriptions == ["b1", "b1"]
+        assert img.dimensions == ["variables", "y", "x"]
+        assert img.band_names == ["variables1", "variables2"]
+        assert img.band_descriptions == ["data:a", "data:b"]
 
         img = await src.feature(
             {
@@ -1285,8 +1427,12 @@ async def test_async_group_reader_sel(geozarr_4d_store):
             variables="data:a",
             sel={"z": [0, 20]},
         )
-        assert img.array.shape == (2, 2, 50, 50)
-        assert img.band_descriptions == {"time": TIMES, "z": ["0", "20"]}
+        assert img.array.shape == (1, 2, 2, 50, 50)
+        assert img.band_descriptions == {
+            "variables": ["data:a"],
+            "time": TIMES,
+            "z": ["0", "20"],
+        }
 
         pt = await src.point(
             500005,
@@ -1295,4 +1441,15 @@ async def test_async_group_reader_sel(geozarr_4d_store):
             variables="data:b",
             sel={"z": 0},
         )
+        assert pt.array.tolist() == [[200, 210]]
+
+        pt = await src.point(
+            500005,
+            4199995,
+            coord_crs=CRS.from_epsg(32633),
+            variables="data:b",
+            sel={"z": 0},
+            reduce=[("variables", numpy.ma.mean)],
+        )
+        assert pt.dimensions == ["time"]
         assert pt.array.tolist() == [200, 210]
