@@ -1256,3 +1256,168 @@ def test_nd_point_data_reduce():
 
     with pytest.raises(ValueError):
         pt.reduce("b", numpy.ma.mean)
+
+
+def test_image_create_from_list_stack_on_dim():
+    """Stack ImageData along a new dimension."""
+    img1 = ImageData(
+        numpy.ma.MaskedArray(numpy.zeros((2, 10, 10))),
+        dimensions=["time", "y", "x"],
+        band_descriptions=["2025-01-01", "2025-02-01"],
+        crs=CRS.from_epsg(4326),
+        bounds=(-180, -90, 180, 90),
+    )
+    img2 = ImageData(
+        numpy.ma.MaskedArray(numpy.ones((2, 10, 10))),
+        dimensions=["time", "y", "x"],
+        band_descriptions=["2025-01-01", "2025-02-01"],
+    )
+
+    img = ImageData.create_from_list([img1, img2], stack_on_dim="assets")
+    assert img.is_nd
+    assert img.dimensions == ["assets", "time", "y", "x"]
+    assert img.array.shape == (2, 2, 10, 10)
+    assert img.band_names == {
+        "assets": ["assets1", "assets2"],
+        "time": ["time1", "time2"],
+    }
+    assert img.band_descriptions == {
+        "assets": ["assets1", "assets2"],
+        "time": ["2025-01-01", "2025-02-01"],
+    }
+    assert img.crs == img1.crs
+    assert img.bounds == img1.bounds
+    assert not img.dataset_statistics
+    assert img.array[0].sum() == 0
+    assert img.array[1].sum() == 2 * 10 * 10
+
+    # default is still concatenation
+    img = ImageData.create_from_list([img1, img2])
+    assert img.dimensions == ["time", "y", "x"]
+    assert img.array.shape == (4, 10, 10)
+
+    # single image still gets the new dimension
+    img = ImageData.create_from_list([img1], stack_on_dim="assets")
+    assert img.dimensions == ["assets", "time", "y", "x"]
+    assert img.array.shape == (1, 2, 10, 10)
+
+    # N-D data
+    img = ImageData.create_from_list(
+        [_nd_image(shape=(2, 3, 10, 12)), _nd_image(shape=(2, 3, 10, 12))],
+        stack_on_dim="variables",
+    )
+    assert img.dimensions == ["variables", "1d", "2d", "y", "x"]
+    assert img.array.shape == (2, 2, 3, 10, 12)
+    assert img.band_names == {
+        "variables": ["variables1", "variables2"],
+        "1d": ["1d1", "1d2"],
+        "2d": ["2d1", "2d2", "2d3"],
+    }
+
+    # different sizes are resized to the max width/height
+    with pytest.warns(UserWarning):
+        img = ImageData.create_from_list(
+            [_nd_image(shape=(2, 3, 10, 12)), _nd_image(shape=(2, 3, 5, 6))],
+            stack_on_dim="variables",
+        )
+    assert img.array.shape == (2, 2, 3, 10, 12)
+
+    # stack then reduce
+    img = ImageData.create_from_list([img1, img2], stack_on_dim="assets")
+    reduced = img.reduce("assets", numpy.ma.mean)
+    assert reduced.dimensions == ["time", "y", "x"]
+    assert reduced.band_descriptions == ["2025-01-01", "2025-02-01"]
+    assert reduced.array[0, 0, 0] == 0.5
+
+    # dimension already exists
+    with pytest.raises(ValueError):
+        ImageData.create_from_list([img1, img2], stack_on_dim="time")
+
+    # different dimensions
+    with pytest.raises(ValueError):
+        ImageData.create_from_list(
+            [img1, ImageData(numpy.ma.MaskedArray(numpy.zeros((2, 10, 10))))],
+            stack_on_dim="assets",
+        )
+
+    # different non-spatial shapes
+    with pytest.raises(ValueError):
+        ImageData.create_from_list(
+            [
+                img1,
+                ImageData(
+                    numpy.ma.MaskedArray(numpy.zeros((3, 10, 10))),
+                    dimensions=["time", "y", "x"],
+                ),
+            ],
+            stack_on_dim="assets",
+        )
+
+
+def test_point_create_from_list_stack_on_dim():
+    """Stack PointData along a new dimension."""
+    pt1 = PointData(
+        numpy.ma.MaskedArray([1, 2]),
+        dimensions=["time"],
+        band_descriptions=["2025-01-01", "2025-02-01"],
+        coordinates=(0, 0),
+        crs=CRS.from_epsg(4326),
+    )
+    pt2 = PointData(
+        numpy.ma.MaskedArray([3, 4]),
+        dimensions=["time"],
+        band_descriptions=["2025-01-01", "2025-02-01"],
+        coordinates=(0, 0),
+        crs=CRS.from_epsg(4326),
+    )
+
+    pt = PointData.create_from_list([pt1, pt2], stack_on_dim="variables")
+    assert pt.is_nd
+    assert pt.dimensions == ["variables", "time"]
+    assert pt.array.tolist() == [[1, 2], [3, 4]]
+    assert pt.band_names == {
+        "variables": ["variables1", "variables2"],
+        "time": ["time1", "time2"],
+    }
+    assert pt.band_descriptions == {
+        "variables": ["variables1", "variables2"],
+        "time": ["2025-01-01", "2025-02-01"],
+    }
+    assert pt.coordinates == (0, 0)
+
+    # default is still concatenation
+    pt = PointData.create_from_list([pt1, pt2])
+    assert pt.dimensions == ["time"]
+    assert pt.array.tolist() == [1, 2, 3, 4]
+
+    # single point still gets the new dimension
+    pt = PointData.create_from_list([pt1], stack_on_dim="variables")
+    assert pt.array.shape == (1, 2)
+
+    # stack then reduce
+    pt = PointData.create_from_list([pt1, pt2], stack_on_dim="variables")
+    reduced = pt.reduce("time", numpy.ma.max)
+    assert reduced.dimensions == ["variables"]
+    assert reduced.array.tolist() == [2, 4]
+
+    with pytest.raises(InvalidPointDataError):
+        PointData.create_from_list([pt1, pt2], stack_on_dim="time")
+
+    with pytest.raises(InvalidPointDataError):
+        PointData.create_from_list(
+            [pt1, PointData(numpy.ma.MaskedArray([1, 2]), coordinates=(0, 0))],
+            stack_on_dim="variables",
+        )
+
+    with pytest.raises(InvalidPointDataError):
+        PointData.create_from_list(
+            [
+                pt1,
+                PointData(
+                    numpy.ma.MaskedArray([1, 2, 3]),
+                    dimensions=["time"],
+                    coordinates=(0, 0),
+                ),
+            ],
+            stack_on_dim="variables",
+        )
