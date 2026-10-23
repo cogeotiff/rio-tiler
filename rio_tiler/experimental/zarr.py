@@ -2797,15 +2797,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         img_stack = await asyncio.gather(*(_part(variable) for variable in variables))
 
-        # Stack variables along a new `variables` dimension unless all are single band
-        stack_on_dim = (
-            None if all(d.array.shape[:-2] == (1,) for d in img_stack) else "variables"
-        )
-        img = ImageData.create_from_list(img_stack, stack_on_dim=stack_on_dim)
-        if stack_on_dim:
-            cast(dict, img.band_descriptions)[stack_on_dim] = list(variables)
-        if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
+        # Stack variables along a new `variables` dimension
+        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
             return img.apply_expression(expression)
@@ -2875,15 +2869,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         img_stack = await asyncio.gather(*(_preview(variable) for variable in variables))
 
-        # Stack variables along a new `variables` dimension unless all are single band
-        stack_on_dim = (
-            None if all(d.array.shape[:-2] == (1,) for d in img_stack) else "variables"
-        )
-        img = ImageData.create_from_list(img_stack, stack_on_dim=stack_on_dim)
-        if stack_on_dim:
-            cast(dict, img.band_descriptions)[stack_on_dim] = list(variables)
-        if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
+        # Stack variables along a new `variables` dimension
+        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
             return img.apply_expression(expression)
@@ -2944,15 +2932,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         point_stack = await asyncio.gather(*(_point(variable) for variable in variables))
 
-        # Stack variables along a new `variables` dimension unless all are single band
-        stack_on_dim = (
-            None if all(d.array.shape == (1,) for d in point_stack) else "variables"
-        )
-        pt = PointData.create_from_list(point_stack, stack_on_dim=stack_on_dim)
-        if stack_on_dim:
-            cast(dict, pt.band_descriptions)[stack_on_dim] = list(variables)
-        if not pt.is_nd:
-            pt.band_names = [f"b{ix + 1}" for ix in range(pt.array.shape[0])]
+        # Stack variables along a new `variables` dimension
+        pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
+        cast(dict, pt.band_descriptions)["variables"] = list(variables)
 
         if expression:
             return pt.apply_expression(expression)
@@ -3611,15 +3593,9 @@ class GroupReader(BaseReader, GroupMixin):
 
         img_stack = [_part(variable) for variable in variables]
 
-        # Stack variables along a new `variables` dimension unless all are single band
-        stack_on_dim = (
-            None if all(d.array.shape[:-2] == (1,) for d in img_stack) else "variables"
-        )
-        img = ImageData.create_from_list(img_stack, stack_on_dim=stack_on_dim)
-        if stack_on_dim:
-            cast(dict, img.band_descriptions)[stack_on_dim] = list(variables)
-        if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
+        # Stack variables along a new `variables` dimension
+        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
             return img.apply_expression(expression)
@@ -3689,15 +3665,9 @@ class GroupReader(BaseReader, GroupMixin):
 
         img_stack = [_preview(variable) for variable in variables]
 
-        # Stack variables along a new `variables` dimension unless all are single band
-        stack_on_dim = (
-            None if all(d.array.shape[:-2] == (1,) for d in img_stack) else "variables"
-        )
-        img = ImageData.create_from_list(img_stack, stack_on_dim=stack_on_dim)
-        if stack_on_dim:
-            cast(dict, img.band_descriptions)[stack_on_dim] = list(variables)
-        if not img.is_nd:
-            img.band_names = [f"b{ix + 1}" for ix in range(img.array.shape[0])]
+        # Stack variables along a new `variables` dimension
+        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+        cast(dict, img.band_descriptions)["variables"] = list(variables)
 
         if expression:
             return img.apply_expression(expression)
@@ -3758,15 +3728,9 @@ class GroupReader(BaseReader, GroupMixin):
 
         point_stack = [_point(variable) for variable in variables]
 
-        # Stack variables along a new `variables` dimension unless all are single band
-        stack_on_dim = (
-            None if all(d.array.shape == (1,) for d in point_stack) else "variables"
-        )
-        pt = PointData.create_from_list(point_stack, stack_on_dim=stack_on_dim)
-        if stack_on_dim:
-            cast(dict, pt.band_descriptions)[stack_on_dim] = list(variables)
-        if not pt.is_nd:
-            pt.band_names = [f"b{ix + 1}" for ix in range(pt.array.shape[0])]
+        # Stack variables along a new `variables` dimension
+        pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
+        cast(dict, pt.band_descriptions)["variables"] = list(variables)
 
         if expression:
             return pt.apply_expression(expression)
