@@ -4332,7 +4332,7 @@
   </span>
 
 <a href="#rio_tiler.models.ImageData.create_from_list" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">create_from_list</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">create_from_list</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span><span class="p">],</span> <span class="n">stack_on_dim</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -4348,6 +4348,16 @@
           –
           <div class="doc-md-description">
             <p>sequence of ImageData.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>stack_on_dim</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Stack the data along a new leading dimension with this name, instead of concatenating them along the first dimension.</p>
           </div>
         </li>
     </ul>
@@ -5246,7 +5256,7 @@ sufficient (&lt;10% error) and require less memory.</p>
   </span>
 
 <a href="#rio_tiler.models.PointData.create_from_list" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">create_from_list</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="#rio_tiler.models.PointData">PointData</a></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="#rio_tiler.models.PointData">PointData</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">create_from_list</span><span class="p">(</span><span class="n">data</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="#rio_tiler.models.PointData">PointData</a></span><span class="p">],</span> <span class="n">stack_on_dim</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="PointData (rio_tiler.models.PointData)" href="#rio_tiler.models.PointData">PointData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -5262,6 +5272,16 @@ sufficient (&lt;10% error) and require less memory.</p>
           –
           <div class="doc-md-description">
             <p>sequence of PointData.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>stack_on_dim</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Stack the data along a new leading dimension with this name, instead of concatenating them along the first dimension.</p>
           </div>
         </li>
     </ul>

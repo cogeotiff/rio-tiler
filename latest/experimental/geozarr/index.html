@@ -752,6 +752,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#variables-stacking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variables stacking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reduce-non-spatial-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reduce non-spatial dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2634,6 +2656,28 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#variables-stacking" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Variables stacking
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reduce-non-spatial-dimensions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Reduce non-spatial dimensions
+      
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2897,17 +2941,15 @@ for the non-spatial dimensions:</p>
 <span class="c1"># List available variables (arrays with group or array Geo/Spatial conventions)</span>
 <span class="n">variables</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">list_variables</span><span class="p">()</span>
 <span class="nb">print</span><span class="p">(</span><span class="n">variables</span><span class="p">)</span>
-<span class="o">&gt;&gt;&gt;</span> <span class="p">[{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b02'</span><span class="p">,</span>
-  <span class="s1">'group'</span><span class="p">:</span> <span class="s1">'measurements/reflectance'</span><span class="p">,</span>
-  <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'measurements/reflectance:b02'</span><span class="p">,</span>
-  <span class="s1">'multiscale'</span><span class="p">:</span> <span class="kc">True</span><span class="p">,</span>
-  <span class="s1">'nbands'</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
- <span class="o">...</span>
- <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'snw'</span><span class="p">,</span>
-  <span class="s1">'group'</span><span class="p">:</span> <span class="s1">'quality/probability/r20m'</span><span class="p">,</span>
-  <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'quality/probability/r20m:snw'</span><span class="p">,</span>
-  <span class="s1">'multiscale'</span><span class="p">:</span> <span class="kc">False</span><span class="p">,</span>
-  <span class="s1">'nbands'</span><span class="p">:</span> <span class="mi">1</span><span class="p">}]</span>
+<span class="o">&gt;&gt;&gt;</span> <span class="p">[</span>
+    <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b02'</span><span class="p">,</span> <span class="s1">'group'</span><span class="p">:</span> <span class="s1">'measurements/reflectance'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'measurements/reflectance:b02'</span><span class="p">,</span> <span class="s1">'multiscale'</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span> 
+    <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'b03'</span><span class="p">,</span> <span class="s1">'group'</span><span class="p">:</span> <span class="s1">'measurements/reflectance'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'measurements/reflectance:b03'</span><span class="p">,</span> <span class="s1">'multiscale'</span><span class="p">:</span> <span class="kc">True</span><span class="p">},</span> 
+    <span class="o">...</span> 
+    <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'aot'</span><span class="p">,</span> <span class="s1">'group'</span><span class="p">:</span> <span class="s1">'quality/atmosphere/r10m'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'quality/atmosphere/r10m:aot'</span><span class="p">,</span> <span class="s1">'multiscale'</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> 
+    <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'wvp'</span><span class="p">,</span> <span class="s1">'group'</span><span class="p">:</span> <span class="s1">'quality/atmosphere/r10m'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'quality/atmosphere/r10m:wvp'</span><span class="p">,</span> <span class="s1">'multiscale'</span><span class="p">:</span> <span class="kc">False</span><span class="p">},</span> 
+    <span class="o">...</span>
+    <span class="p">{</span><span class="s1">'name'</span><span class="p">:</span> <span class="s1">'snw'</span><span class="p">,</span> <span class="s1">'group'</span><span class="p">:</span> <span class="s1">'quality/probability/r20m'</span><span class="p">,</span> <span class="s1">'long_name'</span><span class="p">:</span> <span class="s1">'quality/probability/r20m:snw'</span><span class="p">,</span> <span class="s1">'multiscale'</span><span class="p">:</span> <span class="kc">False</span><span class="p">}</span>
+<span class="p">]</span>
 
 <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_group_metadata</span><span class="p">(</span><span class="s2">"measurements/reflectance"</span><span class="p">)</span>
 <span class="o">&gt;&gt;</span> <span class="p">{</span><span class="s1">'crs'</span><span class="p">:</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">32626</span><span class="p">),</span>
@@ -2920,12 +2962,28 @@ for the non-spatial dimensions:</p>
     <span class="s1">'width'</span><span class="p">:</span> <span class="mi">10980</span><span class="p">,</span>
     <span class="s1">'transform'</span><span class="p">:</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">399965.0</span><span class="p">,</span>
            <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">10.0</span><span class="p">,</span> <span class="mf">4400035.0</span><span class="p">),</span>
+    <span class="s1">'spatial_dims'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">],</span>
     <span class="s1">'coordinates'</span><span class="p">:</span> <span class="kc">None</span><span class="p">},</span>
-<span class="o">....</span>
-
+   <span class="o">...</span><span class="p">,</span>
+   <span class="p">{</span><span class="s1">'array'</span><span class="p">:</span> <span class="o">&lt;</span><span class="n">AsyncArray</span> <span class="n">object_store</span><span class="p">:</span><span class="o">//</span><span class="n">HTTPStore</span><span class="p">(</span><span class="s2">"https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260810T125031_N0512_R095_T26SMJ_20260810T155917.zarr"</span><span class="p">)</span><span class="o">/</span><span class="n">measurements</span><span class="o">/</span><span class="n">reflectance</span><span class="o">/</span><span class="n">r720m</span><span class="o">/</span><span class="n">b09</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">152</span><span class="p">,</span> <span class="mi">152</span><span class="p">)</span> <span class="n">dtype</span><span class="o">=</span><span class="n">float32</span><span class="o">&gt;</span><span class="p">,</span>
+    <span class="s1">'crs'</span><span class="p">:</span> <span class="n">CRS</span><span class="o">.</span><span class="n">from_epsg</span><span class="p">(</span><span class="mi">32626</span><span class="p">),</span>
+    <span class="s1">'height'</span><span class="p">:</span> <span class="mi">152</span><span class="p">,</span>
+    <span class="s1">'width'</span><span class="p">:</span> <span class="mi">152</span><span class="p">,</span>
+    <span class="s1">'transform'</span><span class="p">:</span> <span class="n">Affine</span><span class="p">(</span><span class="mf">720.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">400320.0</span><span class="p">,</span>
+           <span class="mf">0.0</span><span class="p">,</span> <span class="o">-</span><span class="mf">720.0</span><span class="p">,</span> <span class="mf">4399680.0</span><span class="p">),</span>
+    <span class="s1">'spatial_dims'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">],</span>
+    <span class="s1">'coordinates'</span><span class="p">:</span> <span class="kc">None</span><span class="p">}]}}</span>
 
 <span class="c1"># Get the preview for a specific variable</span>
 <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"measurements/reflectance:b02"</span><span class="p">],</span> <span class="n">max_size</span><span class="o">=</span><span class="mi">64</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'variables1'</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'measurements/reflectance:b02'</span><span class="p">]</span>
+
 
 <span class="c1"># Get Bounds for a specific set of variables (The root store can have multiple spatial extents)</span>
 <span class="n">bounds</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">get_bounds</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"measurements/reflectance:b02"</span><span class="p">],</span> <span class="n">crs</span><span class="o">=</span><span class="s2">"EPSG:4326"</span><span class="p">)</span>
@@ -2936,13 +2994,20 @@ for the non-spatial dimensions:</p>
 <span class="c1"># Get Time image</span>
 <span class="n">tile</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">minzoom</span><span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">"measurements/reflectance:b04"</span><span class="p">,</span> <span class="s2">"measurements/reflectance:b03"</span><span class="p">,</span> <span class="s2">"measurements/reflectance:b02"</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'variables1'</span><span class="p">,</span> <span class="s1">'variables2'</span><span class="p">,</span> <span class="s1">'variables3'</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'measurements/reflectance:b04'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b03'</span><span class="p">,</span> <span class="s1">'measurements/reflectance:b02'</span><span class="p">]</span>
 </code></pre></div>
 <h4 id="open-a-specific-zarr-group">Open a specific Zarr Group<a class="headerlink" href="#open-a-specific-zarr-group" title="Permanent link">&para;</a></h4>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
 <span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoZarrReader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncGroupReader</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imshow</span>
 
@@ -2973,7 +3038,64 @@ for the non-spatial dimensions:</p>
 <span class="c1"># Get Time image</span>
 <span class="n">tile</span> <span class="o">=</span> <span class="n">reader</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">reader</span><span class="o">.</span><span class="n">minzoom</span><span class="p">)</span>
 <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">"b04"</span><span class="p">,</span> <span class="s2">"b03"</span><span class="p">,</span> <span class="s2">"b02"</span><span class="p">))</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
+
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'variables1'</span><span class="p">,</span> <span class="s1">'variables2'</span><span class="p">,</span> <span class="s1">'variables3'</span><span class="p">]</span>
+<span class="p">[</span><span class="s1">'b04'</span><span class="p">,</span> <span class="s1">'b03'</span><span class="p">,</span> <span class="s1">'b02'</span><span class="p">]</span>
 </code></pre></div>
+<h4 id="variables-stacking">Variables stacking<a class="headerlink" href="#variables-stacking" title="Permanent link">&para;</a></h4>
+<p><code>AsyncGroupReader</code> and <code>GroupReader</code> read each variable independently and stack them along a new leading <code>variables</code> dimension (using <code>ImageData.create_from_list(..., stack_on_dim="variables")</code>):</p>
+<ul>
+<li>when all the variables are 2D (<code>(y, x)</code>, or reduced to 2D with a scalar <code>sel</code>), the output is 3D with dimensions <code>["variables", y, x]</code></li>
+<li>otherwise the output is N-D with dimensions <code>["variables", *non-spatial dimensions, y, x]</code> (all the variables must have the same non-spatial dimensions and shapes)</li>
+</ul>
+<p>The variable names are stored in <code>band_descriptions</code> (the <code>variables</code> entry for N-D data) while <code>band_names</code> are <code>variables1, variables2, ...</code>, which are the names to use in <code>expression</code> or to access <code>statistics()</code> results.</p>
+<div class="highlight"><pre><span></span><code><span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span> <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">"b04"</span><span class="p">,</span> <span class="s2">"b03"</span><span class="p">,</span> <span class="s2">"b02"</span><span class="p">))</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">]</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables1'</span><span class="p">,</span> <span class="s1">'variables2'</span><span class="p">,</span> <span class="s1">'variables3'</span><span class="p">]</span> <span class="p">[</span><span class="s1">'b04'</span><span class="p">,</span> <span class="s1">'b03'</span><span class="p">,</span> <span class="s1">'b02'</span><span class="p">]</span>
+
+<span class="c1"># Normalized difference between b08 and b04</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+    <span class="n">tile</span><span class="o">.</span><span class="n">x</span><span class="p">,</span>
+    <span class="n">tile</span><span class="o">.</span><span class="n">y</span><span class="p">,</span>
+    <span class="n">tile</span><span class="o">.</span><span class="n">z</span><span class="p">,</span>
+    <span class="n">variables</span><span class="o">=</span><span class="p">(</span><span class="s2">"b08"</span><span class="p">,</span> <span class="s2">"b04"</span><span class="p">),</span>
+    <span class="n">expression</span><span class="o">=</span><span class="s2">"(variables1-variables2)/(variables1+variables2)"</span><span class="p">,</span>
+<span class="p">)</span>
+</code></pre></div>
+<p>With variables having non-spatial dimensions (e.g <code>time</code>), the output is N-D:</p>
+<div class="highlight"><pre><span></span><code><span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"data:a"</span><span class="p">,</span> <span class="s2">"data:b"</span><span class="p">])</span>  <span class="c1"># dimensions: ["time", "z", "y", "x"]</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables'</span><span class="p">,</span> <span class="s1">'time'</span><span class="p">,</span> <span class="s1">'z'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">]</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">2</span><span class="p">,</span> <span class="mi">3</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">{</span><span class="s1">'variables'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'data:a'</span><span class="p">,</span> <span class="s1">'data:b'</span><span class="p">],</span> <span class="s1">'time'</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">],</span> <span class="s1">'z'</span><span class="p">:</span> <span class="p">[</span><span class="o">...</span><span class="p">]}</span>
+</code></pre></div>
+<h4 id="reduce-non-spatial-dimensions">Reduce non-spatial dimensions<a class="headerlink" href="#reduce-non-spatial-dimensions" title="Permanent link">&para;</a></h4>
+<p>Group readers' methods (<code>tile</code>, <code>part</code>, <code>preview</code>, <code>point</code>, <code>feature</code> and <code>statistics</code>) accept a <code>reduce</code> option: a list of <code>(dimension, function)</code> tuples applied, in order, after the variables are stacked (and before <code>expression</code>). The function is called as <code>func(array, axis=axis)</code> (e.g <code>numpy.ma.mean</code>).</p>
+<div class="highlight"><pre><span></span><code><span class="kn">import</span><span class="w"> </span><span class="nn">numpy</span>
+
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
+    <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"data:a"</span><span class="p">,</span> <span class="s2">"data:b"</span><span class="p">],</span>
+    <span class="n">reduce</span><span class="o">=</span><span class="p">[(</span><span class="s2">"time"</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">mean</span><span class="p">),</span> <span class="p">(</span><span class="s2">"z"</span><span class="p">,</span> <span class="n">numpy</span><span class="o">.</span><span class="n">ma</span><span class="o">.</span><span class="n">max</span><span class="p">)],</span>
+<span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">array</span><span class="o">.</span><span class="n">shape</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables'</span><span class="p">,</span> <span class="s1">'y'</span><span class="p">,</span> <span class="s1">'x'</span><span class="p">]</span> <span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="mi">1024</span><span class="p">,</span> <span class="mi">1024</span><span class="p">)</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="n">img</span><span class="o">.</span><span class="n">metadata</span><span class="p">)</span>
+<span class="o">&gt;&gt;</span> <span class="p">{</span><span class="s1">'reduced'</span><span class="p">:</span> <span class="p">[</span><span class="s1">'time'</span><span class="p">,</span> <span class="s1">'z'</span><span class="p">]}</span>
+</code></pre></div>
+<div class="admonition note">
+<p class="admonition-title">Note</p>
+<p><code>reduce</code> can be used to get 3D outputs from N-D variables, which is required for expression, colormap, statistics and image rendering.</p>
+</div>
 
 
 

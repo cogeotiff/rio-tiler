@@ -7052,7 +7052,7 @@ For 2D arrays, treats as single-band (height, width).</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.AsyncGroupReader.feature" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">feature</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">feature</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -7062,7 +7062,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -7078,6 +7083,139 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>Valid GeoJSON feature.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code>list of str or str</code>)
+          –
+          <div class="doc-md-description">
+            <p>list of variables to return value for.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>label based selection for non-spatial dimensions, applied to all the variables (e.g <code>{"time": "2025-01-01"}</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target coordinate reference system. Defaults to shape_crs.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>shape_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Input geojson coordinate reference system. Defaults to <code>epsg:4326</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>max_size</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Limit the size of the longest dimension.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output height of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output width of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><span title="int">int</span> or <span title="float">float</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Overwrite dataset internal nodata value.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
           </div>
         </li>
     </ul>
@@ -7277,7 +7415,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.BBox)" href="../../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+   (rio_tiler.types.BBox)" href="../../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -7287,7 +7425,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -7314,6 +7457,16 @@ For 2D arrays, treats as single-band (height, width).</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
             <b><code>sel</code></b>
               (<code><span title="dict">dict</span></code>, default:
                   <code>None</code>
@@ -7331,6 +7484,101 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target coordinate reference system. Defaults to bounds_crs.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>bounds_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>CRS of the input bounds. Defaults to WGS84.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>max_size</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Limit the size of the longest dimension.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output height of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output width of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><span title="int">int</span> or <span title="float">float</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Overwrite dataset internal nodata value.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
           </div>
         </li>
     </ul>
@@ -7364,7 +7612,7 @@ For 2D arrays, treats as single-band (height, width).</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.AsyncGroupReader.point" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">point</span><span class="p">(</span><span class="n">lon</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coord_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">point</span><span class="p">(</span><span class="n">lon</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coord_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -7393,6 +7641,79 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>Latitude.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code>list of str or str</code>)
+          –
+          <div class="doc-md-description">
+            <p>list of variables to return value for.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>label based selection for non-spatial dimensions, applied to all the variables (e.g <code>{"time": "2025-01-01"}</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>coord_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Coordinate Reference System of the input coords. Defaults to <code>epsg:4326</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>(int or float, optional): Overwrite dataset internal nodata value. Defaults to <code>None</code>.</p>
           </div>
         </li>
     </ul>
@@ -7426,27 +7747,155 @@ For 2D arrays, treats as single-band (height, width).</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.AsyncGroupReader.preview" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">preview</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">preview</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
       module-attribute
-   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="WarpResampling
 
 
   
       module-attribute
-   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">reproject_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="WarpResampling
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
 
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
         <p>Read a preview of a Dataset.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code>list of str or str</code>)
+          –
+          <div class="doc-md-description">
+            <p>list of variables to return value for.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>label based selection for non-spatial dimensions, applied to all the variables (e.g <code>{"time": "2025-01-01"}</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target coordinate reference system. Defaults to None (same as input).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>max_size</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>1024</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Limit the size of the longest dimension.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output height of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output width of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><span title="int">int</span> or <span title="float">float</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Overwrite dataset internal nodata value.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
+          </div>
+        </li>
+    </ul>
 
 
 <p><span class="doc-section-title">Returns:</span></p>
@@ -7477,7 +7926,7 @@ For 2D arrays, treats as single-band (height, width).</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.AsyncGroupReader.statistics" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">statistics</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hist_options</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">statistics</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hist_options</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -7498,6 +7947,46 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>list of variables to return value for. Defaults to all variables.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Selection for non-spatial dimensions.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Method to use for selecting non-spatial dimensions. Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -7601,7 +8090,7 @@ For 2D arrays, treats as single-band (height, width).</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.AsyncGroupReader.tile" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tilesize</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tilesize</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -7611,7 +8100,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -7643,6 +8137,109 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>Tile's zoom level index.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code><span title="collections.abc.Sequence">Sequence</span>[<span title="str">str</span>] | <span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Variables to read from the dataset.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Selection for non-spatial dimensions.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Method to use for selecting non-spatial dimensions. Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>tilesize</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Size of the tile in pixels. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Nodata value to use. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method to use for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
           </div>
         </li>
     </ul>
@@ -7999,7 +8596,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 
 <a href="#rio_tiler.experimental.zarr.GroupReader.feature" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">feature</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">feature</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -8009,7 +8606,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -8025,6 +8627,139 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>Valid GeoJSON feature.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code>list of str or str</code>)
+          –
+          <div class="doc-md-description">
+            <p>list of variables to return value for.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>label based selection for non-spatial dimensions, applied to all the variables (e.g <code>{"time": "2025-01-01"}</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target coordinate reference system. Defaults to shape_crs.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>shape_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Input geojson coordinate reference system. Defaults to <code>epsg:4326</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>max_size</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Limit the size of the longest dimension.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output height of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output width of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><span title="int">int</span> or <span title="float">float</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Overwrite dataset internal nodata value.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
           </div>
         </li>
     </ul>
@@ -8196,7 +8931,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.BBox)" href="../../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+   (rio_tiler.types.BBox)" href="../../types/#rio_tiler.types.BBox">BBox</a></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">bounds_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -8233,6 +8968,16 @@ For 2D arrays, treats as single-band (height, width).</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
             <b><code>sel</code></b>
               (<code><span title="dict">dict</span></code>, default:
                   <code>None</code>
@@ -8250,6 +8995,99 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target coordinate reference system. Defaults to bounds_crs.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>bounds_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>CRS of the input bounds. Defaults to WGS84.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>max_size</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Limit the size of the longest dimension.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output height of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output width of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><span title="int">int</span> or <span title="float">float</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Overwrite dataset internal nodata value.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
           </div>
         </li>
     </ul>
@@ -8279,7 +9117,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 
 <a href="#rio_tiler.experimental.zarr.GroupReader.point" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">point</span><span class="p">(</span><span class="n">lon</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coord_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">point</span><span class="p">(</span><span class="n">lon</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">coord_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -8310,6 +9148,79 @@ For 2D arrays, treats as single-band (height, width).</p>
             <p>Latitude.</p>
           </div>
         </li>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code>list of str or str</code>)
+          –
+          <div class="doc-md-description">
+            <p>list of variables to return value for.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>label based selection for non-spatial dimensions, applied to all the variables (e.g <code>{"time": "2025-01-01"}</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>coord_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Coordinate Reference System of the input coords. Defaults to <code>epsg:4326</code>.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a> | None</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>(int or float, optional): Overwrite dataset internal nodata value. Defaults to <code>None</code>.</p>
+          </div>
+        </li>
     </ul>
 
 
@@ -8337,7 +9248,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 
 <a href="#rio_tiler.experimental.zarr.GroupReader.preview" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">preview</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">preview</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -8358,6 +9269,134 @@ For 2D arrays, treats as single-band (height, width).</p>
     <div class="doc doc-contents ">
 
         <p>Read a preview of a Dataset.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code>list of str or str</code>)
+          –
+          <div class="doc-md-description">
+            <p>list of variables to return value for.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>label based selection for non-spatial dimensions, applied to all the variables (e.g <code>{"time": "2025-01-01"}</code>).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>dst_crs</code></b>
+              (<code><span title="rasterio.crs.CRS">CRS</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Target coordinate reference system. Defaults to None (same as input).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>max_size</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>1024</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Limit the size of the longest dimension.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output height of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Output width of the array.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><span title="int">int</span> or <span title="float">float</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Overwrite dataset internal nodata value.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
+          </div>
+        </li>
+    </ul>
 
 
 <p><span class="doc-section-title">Returns:</span></p>
@@ -8384,7 +9423,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 
 <a href="#rio_tiler.experimental.zarr.GroupReader.statistics" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">statistics</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hist_options</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">statistics</span><span class="p">(</span><span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hist_options</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -8405,6 +9444,46 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>list of variables to return value for. Defaults to all variables.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Selection for non-spatial dimensions.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Method to use for selecting non-spatial dimensions. Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
           </div>
         </li>
         <li class="doc-section-item field-body">
@@ -8504,7 +9583,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 
 <a href="#rio_tiler.experimental.zarr.GroupReader.tile" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tilesize</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="o">*</span><span class="p">,</span> <span class="n">variables</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">]</span> <span class="o">|</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">expression</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">sel_method</span><span class="p">:</span> <span class="n"><span title="rio_tiler.experimental.zarr.SelMethod">SelMethod</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">reduce</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[</span><span class="o">...</span><span class="p">,</span> <span class="n"><span title="numpy.ma.MaskedArray">MaskedArray</span></span><span class="p">]]]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">tilesize</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">nodata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="NoData
 
 
   
@@ -8514,7 +9593,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -8546,6 +9630,109 @@ For 2D arrays, treats as single-band (height, width).</p>
           –
           <div class="doc-md-description">
             <p>Tile's zoom level index.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>variables</code></b>
+              (<code><span title="collections.abc.Sequence">Sequence</span>[<span title="str">str</span>] | <span title="str">str</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Variables to read from the dataset.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>expression</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>rio-tiler expression (e.g. b1/b2+b3).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel</code></b>
+              (<code><span title="dict">dict</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Selection for non-spatial dimensions.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>sel_method</code></b>
+              (<code><span title="str">str</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Method to use for selecting non-spatial dimensions. Defaults to exact match.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reduce</code></b>
+              (<code>list of tuple</code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>tilesize</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Size of the tile in pixels. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>nodata</code></b>
+              (<code><a class="autorefs autorefs-internal" title="NoData
+
+
+  
+      module-attribute
+   (rio_tiler.types.NoData)" href="../../types/#rio_tiler.types.NoData">NoData</a></code>, default:
+                  <code>None</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Nodata value to use. Defaults to None.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>reproject_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="WarpResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method to use for reprojection. Defaults to "nearest".</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>resampling_method</code></b>
+              (<code><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
           </div>
         </li>
     </ul>

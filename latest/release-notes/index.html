@@ -7710,6 +7710,8 @@
 <li><code>info()</code> no longer lists per-band metadata and adds <code>dimensions_count</code> (plus <code>coordinates</code> when called with <code>with_coordinates=True</code>)</li>
 </ul>
 </li>
+<li>add: <code>stack_on_dim</code> option to <code>ImageData.create_from_list</code> and <code>PointData.create_from_list</code> to stack data along a new leading dimension (instead of concatenating them along the first dimension), which enables merging N-D data. 2D data (<code>(1, y, x)</code> with a <code>b</code> dimension) are stacked directly on the new dimension (<code>[stack_on_dim, y, x]</code>)</li>
+<li>change: <code>rio_tiler.experimental.zarr</code> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>) stack the variables along a new <code>variables</code> dimension (labeled with the variable names in <code>band_descriptions</code>) (N-D data, or 3D <code>[variables, y, x]</code> when all the variables are 2D)</li>
 <li>add: N-D support in <code>ImageData</code>/<code>PointData</code> (<code>(*leading, height, width)</code>): N-D data have per-dimension <code>band_descriptions</code> and <code>band_names</code> (<code>dict</code>). Expression, colormap, color formula, rescale, statistics, <code>to_raster</code> and rendering (except <code>NPY</code>/<code>NPZ</code>) raise <code>ValueError</code> for N-D data</li>
 </ul>
 <h2 id="9412-2026-10-08">9.4.12 (2026-10-08)<a class="headerlink" href="#9412-2026-10-08" title="Permanent link">&para;</a></h2>
