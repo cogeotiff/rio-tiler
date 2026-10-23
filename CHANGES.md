@@ -29,6 +29,8 @@
     * add `coordinate_values` property (`{dimension: values}`)
     * the selected non-spatial labels are stored in `ImageData.metadata["selected"]`
     * `info()` no longer lists per-band metadata and adds `dimensions_count` (plus `coordinates` when called with `with_coordinates=True`)
+* add: `stack_on_dim` option to `ImageData.create_from_list` and `PointData.create_from_list` to stack data along a new leading dimension (instead of concatenating them along the first dimension), which enables merging N-D data
+* change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) stack multi-band or N-D variables along a new `variables` dimension (labeled with the variable names in `band_descriptions`); single band variables are still concatenated
 * add: N-D support in `ImageData`/`PointData` (`(*leading, height, width)`): N-D data have per-dimension `band_descriptions` and `band_names` (`dict`). Expression, colormap, color formula, rescale, statistics, `to_raster` and rendering (except `NPY`/`NPZ`) raise `ValueError` for N-D data
 
 ## 9.4.12 (2026-10-08)
