@@ -3,7 +3,7 @@
 import itertools
 import re
 import warnings
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from typing import Any, Literal, Self, cast
 
 import attr
@@ -147,6 +147,25 @@ def to_masked(array: numpy.ndarray) -> numpy.ma.MaskedArray:
         array.mask = False
 
     return array
+
+
+def _reduce_band_metadata(
+    meta: list[str] | dict[str, list[str]],
+    dim: str,
+    dims: list[str],
+) -> list[str] | dict[str, list[str]] | None:
+    """Remove `dim` from band metadata, `dims` being the remaining non-spatial dimensions.
+
+    Returns None when the metadata should be set to the default values.
+    """
+    if not isinstance(meta, dict) or not dims:
+        return None
+
+    meta = {d: v for d, v in meta.items() if d != dim}
+    if len(dims) == 1:
+        return meta[dims[0]]
+
+    return meta
 
 
 @attr.s
@@ -377,6 +396,53 @@ class PointData:
             band_descriptions=band_descriptions,
             metadata=self.metadata,
             pixel_location=self.pixel_location,
+        )
+
+    def reduce(
+        self,
+        dim: str,
+        func: Callable[..., numpy.ma.MaskedArray],
+    ) -> "PointData":
+        """Reduce data along a dimension.
+
+        Args:
+            dim (str): dimension name to reduce.
+            func (callable): reducer function called as `func(array, axis=axis)` (e.g `numpy.ma.mean`).
+
+        Returns:
+            PointData: data with `dim` removed (or of length 1 if `dim` was the only dimension).
+
+        """
+        if dim not in self.dimensions:
+            raise ValueError(
+                f"Invalid dimension `{dim}`, should be one of {self.dimensions}."
+            )
+
+        axis = self.dimensions.index(dim)
+        data = numpy.ma.atleast_1d(numpy.ma.asarray(func(self.array, axis=axis)))
+
+        dims = [d for d in self.dimensions if d != dim] or [dim]
+        kwargs: dict[str, Any] = {}
+        if (band_names := _reduce_band_metadata(self.band_names, dim, dims)) is not None:
+            kwargs["band_names"] = band_names
+        if (
+            band_descriptions := _reduce_band_metadata(self.band_descriptions, dim, dims)
+        ) is not None:
+            kwargs["band_descriptions"] = band_descriptions
+
+        metadata = self.metadata or {}
+        metadata = {**metadata, "reduced": [*metadata.get("reduced", []), dim]}
+
+        return PointData(
+            data,
+            dimensions=dims,
+            assets=self.assets,
+            crs=self.crs,
+            coordinates=self.coordinates,
+            metadata=metadata,
+            nodata=self.nodata,
+            pixel_location=self.pixel_location,
+            **kwargs,
         )
 
 
@@ -870,6 +936,54 @@ class ImageData:
             alpha_mask=self.alpha_mask.astype(data.dtype)
             if self.alpha_mask is not None
             else None,
+        )
+
+    def reduce(
+        self,
+        dim: str,
+        func: Callable[..., numpy.ma.MaskedArray],
+    ) -> "ImageData":
+        """Reduce data along a non-spatial dimension.
+
+        Args:
+            dim (str): non-spatial dimension name to reduce.
+            func (callable): reducer function called as `func(array, axis=axis)` (e.g `numpy.ma.mean`).
+
+        Returns:
+            ImageData: data with `dim` removed (or of length 1 if `dim` was the only non-spatial dimension).
+
+        """
+        if dim not in self.dimensions[:-2]:
+            raise ValueError(
+                f"Invalid dimension `{dim}`, should be one of {self.dimensions[:-2]}."
+            )
+
+        axis = self.dimensions.index(dim)
+        data = numpy.ma.asarray(func(self.array, axis=axis))
+
+        dims = [d for d in self.dimensions[:-2] if d != dim] or [dim]
+        kwargs: dict[str, Any] = {}
+        if (band_names := _reduce_band_metadata(self.band_names, dim, dims)) is not None:
+            kwargs["band_names"] = band_names
+        if (
+            band_descriptions := _reduce_band_metadata(self.band_descriptions, dim, dims)
+        ) is not None:
+            kwargs["band_descriptions"] = band_descriptions
+
+        metadata = self.metadata or {}
+        metadata = {**metadata, "reduced": [*metadata.get("reduced", []), dim]}
+
+        return ImageData(
+            data,
+            dimensions=[*dims, *self.dimensions[-2:]],
+            assets=self.assets,
+            crs=self.crs,
+            bounds=self.bounds,
+            metadata=metadata,
+            nodata=self.nodata,
+            cutline_mask=self.cutline_mask,
+            alpha_mask=self.alpha_mask,
+            **kwargs,
         )
 
     def resize(

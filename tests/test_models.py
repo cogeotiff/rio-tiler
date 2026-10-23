@@ -1167,3 +1167,92 @@ def test_nd_point_data_errors(kwargs):
     """Test N-D PointData asserting errors."""
     with pytest.raises(AssertionError):
         PointData(numpy.ma.MaskedArray(numpy.zeros((2, 3))), **kwargs)
+
+
+def test_nd_image_reduce():
+    """Reduce N-D ImageData along a non-spatial dimension."""
+    img = _nd_image(
+        dimensions=["time", "z", "y", "x"],
+        band_descriptions={"time": ["2025-01-01", "2025-02-01"], "z": ["0", "10", "20"]},
+    )
+    # masked in all time slices
+    img.array.mask[:, 0, 0, 0] = True
+    # masked in one time slice
+    img.array.mask[0, 0, 1, 1] = True
+
+    reduced = img.reduce("time", numpy.ma.mean)
+    assert not reduced.is_nd
+    assert reduced.array.shape == (3, 10, 12)
+    assert reduced.dimensions == ["z", "y", "x"]
+    assert reduced.metadata["reduced"] == ["time"]
+    assert "reduced" not in img.metadata
+    assert reduced.band_names == ["z1", "z2", "z3"]
+    assert reduced.band_descriptions == ["0", "10", "20"]
+    assert reduced.bounds == img.bounds
+    assert reduced.crs == img.crs
+    numpy.testing.assert_array_equal(
+        reduced.array.data[1:], numpy.ma.mean(img.array, axis=0).data[1:]
+    )
+    assert reduced.array.mask[0, 0, 0]
+    assert not reduced.array.mask[0, 1, 1]
+    assert reduced.array[0, 1, 1] == img.array[1, 0, 1, 1]
+
+    # 3D methods are now available
+    assert reduced.apply_expression("z1+z2").array.shape == (1, 10, 12)
+
+    reduced = img.reduce("z", numpy.ma.max)
+    assert reduced.array.shape == (2, 10, 12)
+    assert reduced.dimensions == ["time", "y", "x"]
+    assert reduced.band_descriptions == ["2025-01-01", "2025-02-01"]
+
+    # 5D -> 4D keeps per-dimension metadata
+    img = _nd_image(shape=(2, 3, 4, 10, 12))
+    reduced = img.reduce("2d", numpy.ma.mean)
+    assert reduced.is_nd
+    assert reduced.array.shape == (2, 4, 10, 12)
+    assert reduced.dimensions == ["1d", "3d", "y", "x"]
+    assert reduced.band_names == {
+        "1d": ["1d1", "1d2"],
+        "3d": ["3d1", "3d2", "3d3", "3d4"],
+    }
+
+    # 3D -> single band
+    img = ImageData(numpy.ma.MaskedArray(numpy.ones((3, 4, 4))))
+    reduced = img.reduce("b", numpy.ma.sum)
+    assert reduced.array.shape == (1, 4, 4)
+    assert reduced.dimensions == ["b", "y", "x"]
+    assert reduced.band_names == ["b1"]
+    assert reduced.array[0, 0, 0] == 3
+
+    with pytest.raises(ValueError):
+        img.reduce("time", numpy.ma.mean)
+
+    with pytest.raises(ValueError):
+        img.reduce("y", numpy.ma.mean)
+
+
+def test_nd_point_data_reduce():
+    """Reduce N-D PointData along a dimension."""
+    pt = PointData(
+        numpy.ma.MaskedArray(numpy.arange(6).reshape(2, 3)),
+        dimensions=["time", "z"],
+        band_descriptions={"time": ["a", "b"], "z": ["0", "10", "20"]},
+        coordinates=(0, 0),
+    )
+    reduced = pt.reduce("time", numpy.ma.max)
+    assert not reduced.is_nd
+    assert reduced.dimensions == ["z"]
+    assert reduced.band_names == ["z1", "z2", "z3"]
+    assert reduced.band_descriptions == ["0", "10", "20"]
+    assert reduced.coordinates == (0, 0)
+    numpy.testing.assert_array_equal(reduced.array, [3, 4, 5])
+
+    reduced = reduced.reduce("z", numpy.ma.sum)
+    assert reduced.array.shape == (1,)
+    assert reduced.dimensions == ["z"]
+    assert reduced.band_names == ["z1"]
+    assert reduced.array[0] == 12
+    assert reduced.metadata["reduced"] == ["time", "z"]
+
+    with pytest.raises(ValueError):
+        pt.reduce("b", numpy.ma.mean)

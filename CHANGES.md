@@ -14,6 +14,7 @@
     * change: `info().dimensions` now returns the `dimensions` attribute
     * change: reads use `get_orthogonal_selection` with per-dimension selection (internal `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=)`)
     * change: `GroupReader`/`AsyncGroupReader` forward the arrays' `spatial_dims` and `coordinates` to the Array readers
+* add: `reduce(dim, func)` method to `ImageData` and `PointData` to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in `metadata["reduced"]`)
 * add: `resampling_method` option to the zarr Array readers' `tile` method
 * add: `rio_tiler.utils.run_sync` to run a blocking function in a worker thread, forwarding the active rasterio environment
 * fix: use masked array reprojection in `rio_tiler._warp.warp` (fix mask warping with GDAL >= 3.11)
