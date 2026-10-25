@@ -2739,16 +2739,18 @@
   <h1>Async/Sync GeoZarr</h1>
 
 <p>Asynchronous rio-tiler readers built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a> that can read zarr groups or arrays.</p>
-<p>Required dependencies:
-- <code>zarr&gt;=3.0</code>
-- <code>obstore</code> 
-- <code>isochron</code></p>
+<p>Required dependencies:</p>
+<ul>
+<li><code>zarr&gt;=3.0</code></li>
+<li><code>obstore</code> </li>
+<li><code>isochron</code></li>
+</ul>
 <p>You can install the dependencies with `python -m pip install "rio-tiler[zarr]".</p>
 <p><strong>Zarr Array Mini Spec</strong></p>
 <p>If not provided as attribute, the <code>AsyncArrayReader</code>/<code>ArrayReader</code> will require some zarr-metadata/conventions:</p>
 <ul>
 <li>
-<p><code>dimensions</code> MUST be set in the zarr metadata </p>
+<p><code>dimension_names</code> MUST be set in the zarr metadata </p>
 </li>
 <li>
 <p><code>zarr_conventions</code>:</p>
