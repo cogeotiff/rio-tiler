@@ -1336,9 +1336,11 @@ def test_group_reader_sel(geozarr_4d_store):
             variables="data:a",
             sel={"time": TIMES[0]},
         )
-        assert img.array.shape == (1, 3, 50, 50)
-        assert img.dimensions == ["variables", "z", "y", "x"]
-        assert img.array[0, :, 0, 0].tolist() == [100, 101, 102]
+        # single variable is not stacked
+        assert img.array.shape == (3, 50, 50)
+        assert img.dimensions == ["z", "y", "x"]
+        assert img.band_descriptions == ["0", "10", "20"]
+        assert img.array[:, 0, 0].tolist() == [100, 101, 102]
 
         img = src.tile(
             # center of the dataset (EPSG:32633 500250, 4199750)
@@ -1346,7 +1348,8 @@ def test_group_reader_sel(geozarr_4d_store):
             variables="data:a",
             sel={"z": 0},
         )
-        assert img.array.shape == (1, 2, 256, 256)
+        assert img.array.shape == (2, 256, 256)
+        assert img.dimensions == ["time", "y", "x"]
 
         pt = src.point(
             500005,
@@ -1360,27 +1363,20 @@ def test_group_reader_sel(geozarr_4d_store):
         assert pt.array.tolist() == [102, 202]
 
         stats = src.statistics(variables="data:a", sel={"time": TIMES[1], "z": 0})
-        assert stats["variables1"].min == 110
-        assert stats["variables1"].description == "data:a"
+        assert stats["b1"].min == 110
 
         # N-D output for one variable
         img = src.preview(variables="data:a")
-        assert img.array.shape == (1, 2, 3, 100, 100)
-        assert img.band_names == {
-            "variables": ["variables1"],
-            "time": ["time1", "time2"],
-            "z": ["z1", "z2", "z3"],
-        }
-        assert img.band_descriptions == {
-            "variables": ["data:a"],
-            "time": TIMES,
-            "z": ["0", "10", "20"],
-        }
+        assert img.array.shape == (2, 3, 100, 100)
+        assert img.dimensions == ["time", "z", "y", "x"]
+        assert img.band_names == {"time": ["time1", "time2"], "z": ["z1", "z2", "z3"]}
+        assert img.band_descriptions == {"time": TIMES, "z": ["0", "10", "20"]}
 
         pt = src.point(
             500005, 4199995, coord_crs=CRS.from_epsg(32633), variables="data:a"
         )
-        assert pt.array.shape == (1, 2, 3)
+        assert pt.array.shape == (2, 3)
+        assert pt.dimensions == ["time", "z"]
 
         # N-D output for multiple variables
         img = src.preview(variables=["data:a", "data:b"])
@@ -1427,12 +1423,8 @@ async def test_async_group_reader_sel(geozarr_4d_store):
             variables="data:a",
             sel={"z": [0, 20]},
         )
-        assert img.array.shape == (1, 2, 2, 50, 50)
-        assert img.band_descriptions == {
-            "variables": ["data:a"],
-            "time": TIMES,
-            "z": ["0", "20"],
-        }
+        assert img.array.shape == (2, 2, 50, 50)
+        assert img.band_descriptions == {"time": TIMES, "z": ["0", "20"]}
 
         pt = await src.point(
             500005,
@@ -1440,16 +1432,18 @@ async def test_async_group_reader_sel(geozarr_4d_store):
             coord_crs=CRS.from_epsg(32633),
             variables="data:b",
             sel={"z": 0},
-        )
-        assert pt.array.tolist() == [[200, 210]]
-
-        pt = await src.point(
-            500005,
-            4199995,
-            coord_crs=CRS.from_epsg(32633),
-            variables="data:b",
-            sel={"z": 0},
-            reduce=[("variables", numpy.ma.mean)],
         )
         assert pt.dimensions == ["time"]
+        assert pt.band_descriptions == TIMES
         assert pt.array.tolist() == [200, 210]
+
+        pt = await src.point(
+            500005,
+            4199995,
+            coord_crs=CRS.from_epsg(32633),
+            variables="data:b",
+            sel={"z": 0},
+            reduce=[("time", numpy.ma.mean)],
+        )
+        assert pt.dimensions == ["time"]
+        assert pt.array.tolist() == [205]
