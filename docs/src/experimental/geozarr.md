@@ -2,6 +2,7 @@
 Asynchronous rio-tiler readers built on top [`zarr-python`](https://zarr.readthedocs.io/) that can read zarr groups or arrays.
 
 Required dependencies:
+
 - `zarr>=3.0`
 - `obstore` 
 - `isochron`
@@ -12,7 +13,7 @@ You can install the dependencies with `python -m pip install "rio-tiler[zarr]".
 
 If not provided as attribute, the `AsyncArrayReader`/`ArrayReader` will require some zarr-metadata/conventions:
 
-- `dimensions` MUST be set in the zarr metadata 
+- `dimension_names` MUST be set in the zarr metadata 
 
 - `zarr_conventions`:
     - **spatial**
