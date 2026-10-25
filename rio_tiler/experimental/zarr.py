@@ -1825,6 +1825,7 @@ class ArrayMetadata(TypedDict):
     transform: Affine
     height: int
     width: int
+    dimensions: list[str]
     spatial_dims: list[str]
     coordinates: dict[str, Any] | None
 
@@ -2379,9 +2380,11 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         "name": name,
                         "group": None,
                         "long_name": name,
+                        # assume all arrays within the group have the same dimensions
+                        "dimensions": zarr_arrays[0]["dimensions"],
                         "multiscale": group_metadata["multiscale"],
                     }
-                    for name, _ in arrays.items()
+                    for name, zarr_arrays in arrays.items()
                 ]
             )
 
@@ -2405,9 +2408,11 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                                     "name": name,
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
+                                    # assume all arrays within the group have the same dimensions
+                                    "dimensions": zarr_arrays[0]["dimensions"],
                                     "multiscale": is_multiscale,
                                 }
-                                for name, _ in arrays.items()
+                                for name, zarr_arrays in arrays.items()
                             ]
                         )
 
@@ -2478,12 +2483,12 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     if array.ndim < 2:
                         continue
 
-                    array_attributes = cast(dict[str, Any], array.attrs)
-                    array_conventions = array_attributes.get("zarr_conventions", [])
-
                     variable_name = array.name.split("/")[-1]
                     if variable_name not in arrays:
                         arrays[variable_name] = []
+
+                    array_attributes = cast(dict[str, Any], array.attrs)
+                    array_conventions = array_attributes.get("zarr_conventions", [])
 
                     # NOTE: Transform from the array or the multiscale layout
                     transform = _get_transform(array_attributes) or meta["transform"]
@@ -2498,7 +2503,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         # TODO: add warning when spatial:dimensions is not set
                         continue
 
-                    dims = getattr(array.metadata, "dimension_names", [])
+                    dims = getattr(array.metadata, "dimension_names", []) or []
                     if not dims:
                         # TODO: add warning when both dimension_names is not set
                         continue
@@ -2521,6 +2526,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": transform,
+                            "dimensions": dims,
                             "spatial_dims": array_spatial_dims,
                             "coordinates": array_coordinates,
                         }
@@ -2579,6 +2585,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": array_transform,
+                            "dimensions": dims,
                             "spatial_dims": array_spatial_dims,
                             "coordinates": array_coordinates,
                         }
@@ -3297,9 +3304,11 @@ class GroupReader(BaseReader, GroupMixin):
                         "name": name,
                         "group": None,
                         "long_name": name,
+                        # assume all arrays within the group have the same dimensions
+                        "dimensions": zarr_arrays[0]["dimensions"],
                         "multiscale": group_metadata["multiscale"],
                     }
-                    for name, array in arrays.items()
+                    for name, zarr_arrays in arrays.items()
                 ]
             )
 
@@ -3323,16 +3332,17 @@ class GroupReader(BaseReader, GroupMixin):
                                     "name": name,
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
+                                    # assume all arrays within the group have the same dimensions
+                                    "dimensions": zarr_arrays[0]["dimensions"],
                                     "multiscale": is_multiscale,
                                 }
-                                for name, array in arrays.items()
+                                for name, zarr_arrays in arrays.items()
                             ]
                         )
 
         self._variables = variables
         return self._variables
 
-    # TODO: add `dimensions` in array metadata
     def get_group_metadata(  # noqa: C901
         self,
         group: str | None = None,
@@ -3404,6 +3414,7 @@ class GroupReader(BaseReader, GroupMixin):
 
                     array_attributes = cast(dict[str, Any], array.attrs)
                     array_conventions = array_attributes.get("zarr_conventions", [])
+
                     # NOTE: Transform from the array or the multiscale layout
                     transform = _get_transform(array_attributes) or meta["transform"]
                     assert transform, (
@@ -3413,17 +3424,19 @@ class GroupReader(BaseReader, GroupMixin):
                     array_spatial_dims = (
                         array_attributes.get("spatial:dimensions") or spatial_dims
                     )
+                    if not array_spatial_dims:
+                        # TODO: add warning when spatial:dimensions is not set
+                        continue
 
-                    dims = getattr(array.metadata, "dimension_names", [])
-                    if dims:
-                        y_dim_pos = dims.index(array_spatial_dims[0])
-                        x_dim_pos = dims.index(array_spatial_dims[1])
-                        height = array.shape[y_dim_pos]
-                        width = array.shape[x_dim_pos]
+                    dims = getattr(array.metadata, "dimension_names", []) or []
+                    if not dims:
+                        # TODO: add warning when both dimension_names is not set
+                        continue
 
-                    else:
-                        # TODO: raise warning when dimension_names is not set
-                        height, width = array.shape[-2:]
+                    y_dim_pos = dims.index(array_spatial_dims[0])
+                    x_dim_pos = dims.index(array_spatial_dims[1])
+                    height = array.shape[y_dim_pos]
+                    width = array.shape[x_dim_pos]
 
                     array_coordinates = coordinates
                     if find_convention(array_conventions, COORDS_CONVENTION_UUID):
@@ -3438,6 +3451,7 @@ class GroupReader(BaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": transform,
+                            "dimensions": dims,
                             "spatial_dims": array_spatial_dims,
                             "coordinates": array_coordinates,
                         }
@@ -3456,7 +3470,6 @@ class GroupReader(BaseReader, GroupMixin):
 
                 array_attributes = cast(dict[str, Any], array.attrs)
                 array_conventions = array_attributes.get("zarr_conventions", [])
-
                 if find_convention(array_conventions, PROJ_CONVENTION_UUID):
                     array_crs = _get_proj_crs(array_attributes)
 
@@ -3468,16 +3481,19 @@ class GroupReader(BaseReader, GroupMixin):
                 array_spatial_dims = (
                     array_attributes.get("spatial:dimensions") or spatial_dims
                 )
+                if not array_spatial_dims:
+                    # TODO: add warning when spatial:dimensions is not set
+                    continue
 
-                dims = getattr(array.metadata, "dimension_names", [])
-                if dims:
-                    y_dim_pos = dims.index(array_spatial_dims[0])
-                    x_dim_pos = dims.index(array_spatial_dims[1])
-                    height = array.shape[y_dim_pos]
-                    width = array.shape[x_dim_pos]
-                else:
-                    # TODO: raise warning when dimension_names is not set
-                    height, width = array.shape[-2:]
+                dims = getattr(array.metadata, "dimension_names", []) or []
+                if not dims:
+                    # TODO: add warning when both dimension_names is not set
+                    continue
+
+                y_dim_pos = dims.index(array_spatial_dims[0])
+                x_dim_pos = dims.index(array_spatial_dims[1])
+                height = array.shape[y_dim_pos]
+                width = array.shape[x_dim_pos]
 
                 array_coordinates = coordinates
                 if find_convention(array_conventions, COORDS_CONVENTION_UUID):
@@ -3494,6 +3510,7 @@ class GroupReader(BaseReader, GroupMixin):
                             "height": height,
                             "width": width,
                             "transform": array_transform,
+                            "dimensions": dims,
                             "spatial_dims": array_spatial_dims,
                             "coordinates": array_coordinates,
                         }

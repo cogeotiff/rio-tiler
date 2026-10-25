@@ -209,6 +209,16 @@ print(img.array.shape, img.band_descriptions)
 
 ## AsyncGroupReader
 
+The group readers list as `variables` the arrays (2D or more) found in the groups with Geo/Spatial conventions. Arrays without `spatial:dimensions` (group or array level) or without `dimension_names` in the zarr metadata are skipped.
+
+Each variable is described by:
+
+- `name`: the array name
+- `group`: the group path (`None` for the opened group)
+- `long_name`: the variable identifier (`{group}:{name}`), to use in the `variables` option
+- `dimensions`: the array dimensions (e.g `('time', 'y', 'x')`). For multiscale groups, all the resolution levels are assumed to have the same dimensions
+- `multiscale`: whether the group follows the multiscales convention
+
 #### Open Top level group in the Zarr store
 
 ```python
@@ -236,13 +246,13 @@ print(reader.bounds)
 variables = await reader.list_variables()
 print(variables)
 >>> [
-    {'name': 'b02', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b02', 'multiscale': True}, 
-    {'name': 'b03', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b03', 'multiscale': True}, 
+    {'name': 'b02', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b02', 'dimensions': ('y', 'x'), 'multiscale': True}, 
+    {'name': 'b03', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b03', 'dimensions': ('y', 'x'), 'multiscale': True}, 
     ... 
-    {'name': 'aot', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:aot', 'multiscale': False}, 
-    {'name': 'wvp', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:wvp', 'multiscale': False}, 
+    {'name': 'aot', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:aot', 'dimensions': ('y', 'x'), 'multiscale': False}, 
+    {'name': 'wvp', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:wvp', 'dimensions': ('y', 'x'), 'multiscale': False}, 
     ...
-    {'name': 'snw', 'group': 'quality/probability/r20m', 'long_name': 'quality/probability/r20m:snw', 'multiscale': False}
+    {'name': 'snw', 'group': 'quality/probability/r20m', 'long_name': 'quality/probability/r20m:snw', 'dimensions': ('y', 'x'), 'multiscale': False}
 ]
 
 await reader.get_group_metadata("measurements/reflectance")
@@ -256,6 +266,7 @@ await reader.get_group_metadata("measurements/reflectance")
     'width': 10980,
     'transform': Affine(10.0, 0.0, 399965.0,
            0.0, -10.0, 4400035.0),
+    'dimensions': ('y', 'x'),
     'spatial_dims': ['y', 'x'],
     'coordinates': None},
    ...,
@@ -265,6 +276,7 @@ await reader.get_group_metadata("measurements/reflectance")
     'width': 152,
     'transform': Affine(720.0, 0.0, 400320.0,
            0.0, -720.0, 4399680.0),
+    'dimensions': ('y', 'x'),
     'spatial_dims': ['y', 'x'],
     'coordinates': None}]}}
 
