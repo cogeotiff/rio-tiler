@@ -2829,17 +2829,20 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         img_stack = await asyncio.gather(*(_part(variable) for variable in variables))
 
-        # Stack variables along a new `variables` dimension
-        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
-
-        # NOTE: The band_descriptions property will have a `variables` entry with default values
-        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
-        # update the `variables` entry with the actual variable names
-        # (band_descriptions is a list when stacking 2D data)
-        if isinstance(img.band_descriptions, dict):
-            img.band_descriptions["variables"] = list(variables)
+        if len(img_stack) == 1:
+            img = img_stack[0]
         else:
-            img.band_descriptions = list(variables)
+            # Stack variables along a new `variables` dimension
+            img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
+            # NOTE: The band_descriptions property will have a `variables` entry with default values
+            # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+            # update the `variables` entry with the actual variable names
+            # (band_descriptions is a list when stacking 2D data)
+            if isinstance(img.band_descriptions, dict):
+                img.band_descriptions["variables"] = list(variables)
+            else:
+                img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -2928,17 +2931,20 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         img_stack = await asyncio.gather(*(_preview(variable) for variable in variables))
 
-        # Stack variables along a new `variables` dimension
-        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
-
-        # NOTE: The band_descriptions property will have a `variables` entry with default values
-        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
-        # update the `variables` entry with the actual variable names
-        # (band_descriptions is a list when stacking 2D data)
-        if isinstance(img.band_descriptions, dict):
-            img.band_descriptions["variables"] = list(variables)
+        if len(img_stack) == 1:
+            img = img_stack[0]
         else:
-            img.band_descriptions = list(variables)
+            # Stack variables along a new `variables` dimension
+            img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
+            # NOTE: The band_descriptions property will have a `variables` entry with default values
+            # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+            # update the `variables` entry with the actual variable names
+            # (band_descriptions is a list when stacking 2D data)
+            if isinstance(img.band_descriptions, dict):
+                img.band_descriptions["variables"] = list(variables)
+            else:
+                img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3011,17 +3017,20 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         point_stack = await asyncio.gather(*(_point(variable) for variable in variables))
 
-        # Stack variables along a new `variables` dimension
-        pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
-
-        # NOTE: The band_descriptions property will have a `variables` entry with default values
-        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
-        # update the `variables` entry with the actual variable names
-        # (band_descriptions is a list when stacking 2D data)
-        if isinstance(pt.band_descriptions, dict):
-            pt.band_descriptions["variables"] = list(variables)
+        if len(point_stack) == 1:
+            pt = point_stack[0]
         else:
-            pt.band_descriptions = list(variables)
+            # Stack variables along a new `variables` dimension
+            pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
+
+            # NOTE: The band_descriptions property will have a `variables` entry with default values
+            # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+            # update the `variables` entry with the actual variable names
+            # (band_descriptions is a list when stacking 2D data)
+            if isinstance(pt.band_descriptions, dict):
+                pt.band_descriptions["variables"] = list(variables)
+            else:
+                pt.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3733,17 +3742,20 @@ class GroupReader(BaseReader, GroupMixin):
 
         img_stack = [_part(variable) for variable in variables]
 
-        # Stack variables along a new `variables` dimension
-        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
-
-        # NOTE: The band_descriptions property will have a `variables` entry with default values
-        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
-        # update the `variables` entry with the actual variable names
-        # (band_descriptions is a list when stacking 2D data)
-        if isinstance(img.band_descriptions, dict):
-            img.band_descriptions["variables"] = list(variables)
+        if len(img_stack) == 1:
+            img = img_stack[0]
         else:
-            img.band_descriptions = list(variables)
+            # Stack variables along a new `variables` dimension
+            img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
+            # NOTE: The band_descriptions property will have a `variables` entry with default values
+            # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+            # update the `variables` entry with the actual variable names
+            # (band_descriptions is a list when stacking 2D data)
+            if isinstance(img.band_descriptions, dict):
+                img.band_descriptions["variables"] = list(variables)
+            else:
+                img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3832,17 +3844,20 @@ class GroupReader(BaseReader, GroupMixin):
 
         img_stack = [_preview(variable) for variable in variables]
 
-        # Stack variables along a new `variables` dimension
-        img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
-
-        # NOTE: The band_descriptions property will have a `variables` entry with default values
-        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
-        # update the `variables` entry with the actual variable names
-        # (band_descriptions is a list when stacking 2D data)
-        if isinstance(img.band_descriptions, dict):
-            img.band_descriptions["variables"] = list(variables)
+        if len(img_stack) == 1:
+            img = img_stack[0]
         else:
-            img.band_descriptions = list(variables)
+            # Stack variables along a new `variables` dimension
+            img = ImageData.create_from_list(img_stack, stack_on_dim="variables")
+
+            # NOTE: The band_descriptions property will have a `variables` entry with default values
+            # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+            # update the `variables` entry with the actual variable names
+            # (band_descriptions is a list when stacking 2D data)
+            if isinstance(img.band_descriptions, dict):
+                img.band_descriptions["variables"] = list(variables)
+            else:
+                img.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:
@@ -3913,19 +3928,22 @@ class GroupReader(BaseReader, GroupMixin):
                     nodata=nodata,
                 )
 
-        # Stack variables along a new `variables` dimension
-        pt = PointData.create_from_list(
-            [_point(variable) for variable in variables], stack_on_dim="variables"
-        )
+        point_stack = [_point(variable) for variable in variables]
 
-        # NOTE: The band_descriptions property will have a `variables` entry with default values
-        # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
-        # update the `variables` entry with the actual variable names
-        # (band_descriptions is a list when stacking 2D data)
-        if isinstance(pt.band_descriptions, dict):
-            pt.band_descriptions["variables"] = list(variables)
+        if len(point_stack) == 1:
+            pt = point_stack[0]
         else:
-            pt.band_descriptions = list(variables)
+            # Stack variables along a new `variables` dimension
+            pt = PointData.create_from_list(point_stack, stack_on_dim="variables")
+
+            # NOTE: The band_descriptions property will have a `variables` entry with default values
+            # defined by the `stack_on_dim` argument in `ImageData.create_from_list`
+            # update the `variables` entry with the actual variable names
+            # (band_descriptions is a list when stacking 2D data)
+            if isinstance(pt.band_descriptions, dict):
+                pt.band_descriptions["variables"] = list(variables)
+            else:
+                pt.band_descriptions = list(variables)
 
         reduce = reduce or []
         for dim, func in reduce:

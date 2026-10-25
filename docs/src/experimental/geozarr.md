@@ -274,9 +274,10 @@ print(img.dimensions)
 print(img.band_names)
 print(img.band_descriptions)
 
->> ['variables', 'y', 'x']
-['variables1']
-['measurements/reflectance:b02']
+# single variable: data is returned as is (no `variables` dimension)
+>> ['b', 'y', 'x']
+['b1']
+['b1']
 
 
 # Get Bounds for a specific set of variables (The root store can have multiple spatial extents)
@@ -351,6 +352,7 @@ print(img.band_descriptions)
 
 - when all the variables are 2D (`(y, x)`, or reduced to 2D with a scalar `sel`), the output is 3D with dimensions `["variables", y, x]`
 - otherwise the output is N-D with dimensions `["variables", *non-spatial dimensions, y, x]` (all the variables must have the same non-spatial dimensions and shapes)
+- when only one variable is requested, its data is returned as is (no `variables` dimension), with its own `dimensions`, `band_names` and `band_descriptions`
 
 The variable names are stored in `band_descriptions` (the `variables` entry for N-D data) while `band_names` are `variables1, variables2, ...`, which are the names to use in `expression` or to access `statistics()` results.
 

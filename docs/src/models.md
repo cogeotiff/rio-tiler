@@ -69,6 +69,25 @@ print(ImageData(data))
     img = ImageData.create_from_list([r, g, b])
     ```
 
+    By default the data are concatenated along the first dimension. With `stack_on_dim`, the data are stacked along a new leading dimension instead, which allows merging N-D data. All the inputs must have the same `dimensions` and non-spatial shapes.
+
+    ```python
+    t1 = ImageData(numpy.zeros((2, 256, 256)), dimensions=["time", "y", "x"])
+    t2 = ImageData(numpy.zeros((2, 256, 256)), dimensions=["time", "y", "x"])
+
+    img = ImageData.create_from_list([t1, t2], stack_on_dim="assets")
+    print(img.dimensions, img.array.shape)
+    >> ['assets', 'time', 'y', 'x'] (2, 2, 256, 256)
+
+    print(img.band_descriptions)
+    >> {'assets': ['assets1', 'assets2'], 'time': ['time1', 'time2']}
+
+    # 2D data (`(1, y, x)` with a `b` dimension) are stacked directly on the new dimension
+    img = ImageData.create_from_list([r, g, b], stack_on_dim="assets")
+    print(img.dimensions, img.array.shape)
+    >> ['assets', 'y', 'x'] (3, 256, 256)
+    ```
+
 #### Methods
 
 - **data_as_image()**: Return the data array reshaped into an image processing/visualization software friendly order
