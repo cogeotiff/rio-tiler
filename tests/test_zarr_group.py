@@ -285,12 +285,14 @@ async def test_geozarr_reader_async(geozarr_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b02",
             },
@@ -301,12 +303,14 @@ async def test_geozarr_reader_async(geozarr_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b02",
             },
@@ -496,12 +500,14 @@ def test_geozarr_reader(geozarr_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b02",
             },
@@ -512,12 +518,14 @@ def test_geozarr_reader(geozarr_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": True,
                 "name": "b02",
             },
@@ -714,16 +722,16 @@ async def test_geozarr_root_async(geozarr_root_store):
             {
                 "group": "data",
                 "long_name": "data:b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -732,16 +740,16 @@ async def test_geozarr_root_async(geozarr_root_store):
             {
                 "group": "data",
                 "long_name": "data:b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -835,16 +843,16 @@ def test_geozarr_root(geozarr_root_store):
             {
                 "group": "data",
                 "long_name": "data:b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -853,16 +861,16 @@ def test_geozarr_root(geozarr_root_store):
             {
                 "group": "data",
                 "long_name": "data:b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data:b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
@@ -959,12 +967,14 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
             },
@@ -975,12 +985,14 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1068,12 +1080,14 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1084,12 +1098,14 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
             {
                 "group": None,
                 "long_name": "b01",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b01",
             },
             {
                 "group": None,
                 "long_name": "b02",
+                "dimensions": ("time", "y", "x"),
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1229,16 +1245,16 @@ async def test_custom_geozarr_separator_async():
             {
                 "group": "data",
                 "long_name": "data::b01",
+                "dimensions": ("y", "x"),
                 "multiscale": False,
                 "name": "b01",
-                # "nbands": 1,
             },
             {
                 "group": "data",
                 "long_name": "data::b02",
+                "dimensions": ("y", "x"),
                 "multiscale": False,
                 "name": "b02",
-                # "nbands": 1,
             },
         ]
 
