@@ -19,6 +19,7 @@
 * add: `rio_tiler.utils.run_sync` to run a blocking function in a worker thread, forwarding the active rasterio environment
 * fix: use masked array reprojection in `rio_tiler._warp.warp` (fix mask warping with GDAL >= 3.11)
 * fix: use `@` instead of `*` for affine matrix multiplication
+* fix: compute the cumulative weights in `float64` in `rio_tiler.utils._weighted_quantiles` to avoid wrong `median`/`percentile_*` statistics with `float32` coverage arrays (https://github.com/cogeotiff/rio-tiler/issues/1045)
 * fix: run blocking warp/reproject/resize in a worker thread (`asyncio.to_thread`) in the async experimental readers (`geotiff.Reader`, `zarr.AsyncArrayReader`) to avoid blocking the event loop
 * docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
 * breaking: replace `indexes` with xarray-like `sel` and `sel_method` options in `rio_tiler.experimental.zarr` readers

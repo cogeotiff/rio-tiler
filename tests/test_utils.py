@@ -709,6 +709,27 @@ def test_get_array_statistics_coverage():
     assert stats[0]["valid_percent"] == 66.67
 
 
+def test_get_array_statistics_float32_coverage_precision():
+    """Weighted quantiles should not lose precision with float32 coverage.
+
+    ref: https://github.com/cogeotiff/rio-tiler/issues/1045
+    """
+    # 1002 values: the first and last ones have a weight of 2**24, all the
+    # others a weight of 1. In float32, `2**24 + 1 == 2**24`, so a cumulative
+    # sum computed in float32 ignores all the unit weights.
+    data = np.ma.arange(1002, dtype="float64").reshape((1, 1, 1002))
+    coverage = np.ones((1, 1002), dtype="float32")
+    coverage[0, 0] = 2**24
+    coverage[0, -1] = 2**24
+
+    stats = utils.get_array_statistics(data, coverage=coverage, percentiles=[50])
+    expected = utils.get_array_statistics(
+        data, coverage=coverage.astype("float64"), percentiles=[50]
+    )
+    assert stats[0]["median"] == expected[0]["median"] == 500.0
+    assert stats[0]["percentile_50"] == expected[0]["percentile_50"] == 500.0
+
+
 def test_get_vrt_transform_world_file(dataset_fixture):
     """Should return correct transform and size."""
     bounds = (
