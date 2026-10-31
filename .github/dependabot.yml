@@ -23,3 +23,7 @@ updates:
       all:
         patterns:
         - "*"
+      security:
+        applies-to: security-updates
+        patterns:
+        - "*"
