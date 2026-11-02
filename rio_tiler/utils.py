@@ -78,7 +78,9 @@ def _weighted_quantiles(
     quantiles: Sequence[float] = (0.5,),
 ) -> list[float]:
     i = numpy.argsort(values)
-    c = numpy.cumsum(weights[i])
+    # accumulate in float64 so large float32 weights (e.g coverage arrays)
+    # do not lose precision once the cumulative sum exceeds 2**24
+    c = numpy.cumsum(weights[i], dtype="float64")
     q = numpy.atleast_1d(quantiles) * c[-1]
     return [float(value) for value in values[i[numpy.searchsorted(c, q)]]]
 
