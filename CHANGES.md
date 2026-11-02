@@ -1,7 +1,7 @@
 
 # Unreleased
 
-* update: require `rasterio>=1.5.1` and `affine>=3.0`
+* change: require `rasterio>=1.5.1` and `affine>=3.0`
 * breaking: remove python 3.11 support (rasterio 1.5 requires python >=3.12)
 * breaking: remove `scales` and `offsets` attributes in ImageData and PointData models
 * breaking: remove `count` attribute in ImageData and PointData models
@@ -14,14 +14,10 @@
     * change: `info().dimensions` now returns the `dimensions` attribute
     * change: reads use `get_orthogonal_selection` with per-dimension selection (internal `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=)`)
     * change: `GroupReader`/`AsyncGroupReader` forward the arrays' `spatial_dims` and `coordinates` to the Array readers
+* change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) stack the variables along a new `variables` dimension (labeled with the variable names in `band_descriptions`) (N-D data, or 3D `[variables, y, x]` when all the variables are 2D). When only one variable is requested, its data is returned as is (no `variables` dimension)
 * add: `reduce(dim, func)` method to `ImageData` and `PointData` to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in `metadata["reduced"]`)
 * add: `resampling_method` option to the zarr Array readers' `tile` method
 * add: `rio_tiler.utils.run_sync` to run a blocking function in a worker thread, forwarding the active rasterio environment
-* fix: use masked array reprojection in `rio_tiler._warp.warp` (fix mask warping with GDAL >= 3.11)
-* fix: use `@` instead of `*` for affine matrix multiplication
-* fix: compute the cumulative weights in `float64` in `rio_tiler.utils._weighted_quantiles` to avoid wrong `median`/`percentile_*` statistics with `float32` coverage arrays (https://github.com/cogeotiff/rio-tiler/issues/1045)
-* fix: run blocking warp/reproject/resize in a worker thread (`asyncio.to_thread`) in the async experimental readers (`geotiff.Reader`, `zarr.AsyncArrayReader`) to avoid blocking the event loop
-* docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
 * breaking: replace `indexes` with xarray-like `sel` and `sel_method` options in `rio_tiler.experimental.zarr` readers
     * `sel` (`{dimension: value | list | slice}`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
     * `sel_method` supports exact (default), `nearest`, `pad`/`ffill` and `backfill`/`bfill` matching
@@ -31,8 +27,16 @@
     * the selected non-spatial labels are stored in `ImageData.metadata["selected"]`
     * `info()` no longer lists per-band metadata and adds `dimensions_count` (plus `coordinates` when called with `with_coordinates=True`)
 * add: `stack_on_dim` option to `ImageData.create_from_list` and `PointData.create_from_list` to stack data along a new leading dimension (instead of concatenating them along the first dimension), which enables merging N-D data. 2D data (`(1, y, x)` with a `b` dimension) are stacked directly on the new dimension (`[stack_on_dim, y, x]`)
-* change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) stack the variables along a new `variables` dimension (labeled with the variable names in `band_descriptions`) (N-D data, or 3D `[variables, y, x]` when all the variables are 2D). When only one variable is requested, its data is returned as is (no `variables` dimension)
 * add: N-D support in `ImageData`/`PointData` (`(*leading, height, width)`): N-D data have per-dimension `band_descriptions` and `band_names` (`dict`). Expression, colormap, color formula, rescale, statistics, `to_raster` and rendering (except `NPY`/`NPZ`) raise `ValueError` for N-D data
+* fix: use masked array reprojection in `rio_tiler._warp.warp` (fix mask warping with GDAL >= 3.11)
+* fix: use `@` instead of `*` for affine matrix multiplication
+* fix: compute the cumulative weights in `float64` in `rio_tiler.utils._weighted_quantiles` to avoid wrong `median`/`percentile_*` statistics with `float32` coverage arrays (https://github.com/cogeotiff/rio-tiler/issues/1045)
+* fix: run blocking warp/reproject/resize in a worker thread (`asyncio.to_thread`) in the async experimental readers (`geotiff.Reader`, `zarr.AsyncArrayReader`) to avoid blocking the event loop
+* docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
+
+## 9.4.13 (2026-11-02)
+
+* fix: compute the cumulative weights in `float64` in `rio_tiler.utils._weighted_quantiles` to avoid wrong `median`/`percentile_*` statistics with `float32` coverage arrays (https://github.com/cogeotiff/rio-tiler/issues/1045)
 
 ## 9.4.12 (2026-10-08)
 
