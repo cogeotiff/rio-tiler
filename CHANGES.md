@@ -1,6 +1,10 @@
 
 # Unreleased
 
+## 9.4.13 (2026-11-02)
+
+* fix: compute the cumulative weights in `float64` in `rio_tiler.utils._weighted_quantiles` to avoid wrong `median`/`percentile_*` statistics with `float32` coverage arrays (https://github.com/cogeotiff/rio-tiler/issues/1045)
+
 ## 9.4.12 (2026-10-08)
 
 * fix: make `isochron` an optional dependency, required by the `rio_tiler.experimental.zarr` (`zarr` extra) and `rio_tiler.experimental.xarray` (new `geoarray` extra) readers
