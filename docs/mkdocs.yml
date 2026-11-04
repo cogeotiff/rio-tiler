@@ -64,6 +64,7 @@ nav:
     - v4.0 -> v5.0: 'migrations/v5_migration.md'
     - v6.0 -> v7.0: 'migrations/v7_migration.md'
     - v8.0 -> v9.0: 'migrations/v9_migration.md'
+    - v9.0 -> v10.0: 'migrations/v10_migration.md'
   - API:
     - rio_tiler.io:
       - rio_tiler.io.base: api/rio_tiler/io/base.md
