@@ -9,7 +9,7 @@ import os
 import warnings
 from collections.abc import Callable, Sequence
 from functools import cached_property
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, Literal, NotRequired, TypedDict, cast
 
 import attr
 import numpy
@@ -166,6 +166,21 @@ def _get_slices(
 
 
 SelMethod = Literal["nearest", "pad", "ffill", "backfill", "bfill"]
+
+
+class Selector(TypedDict):
+    """Label based selection for one non-spatial dimension.
+
+    Attributes:
+        dimension (str): non-spatial dimension name.
+        values (Any): scalar label (the dimension is dropped), sequence of labels or slice of labels (inclusive bounds).
+        method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+
+    """
+
+    dimension: str
+    values: Any
+    method: NotRequired[SelMethod | None]
 
 
 def _to_datetime64(value: Any) -> numpy.datetime64:
@@ -577,30 +592,40 @@ class ArrayMixin(SpatialMixin):
 
     def _get_non_spatial_selection(
         self,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
     ) -> dict[str, int | numpy.ndarray | slice]:
         """Convert label based selection to positional selection for non-spatial dimensions.
 
         Args:
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`).
 
         Returns:
             dict: positional selection per (non-spatial) dimension.
 
         """
-        sel = sel or {}
-        if invalid := [dim for dim in sel if dim not in self.non_spatial_dims]:
-            raise ValueError(
-                f"Invalid selection dimension(s) {invalid}, should be one of {self.non_spatial_dims}"
-            )
+        selectors: dict[str, Selector] = {}
+        for selector in sel or []:
+            dim = selector["dimension"]
+            if dim not in self.non_spatial_dims:
+                raise ValueError(
+                    f"Invalid selection dimension '{dim}', should be one of {self.non_spatial_dims}"
+                )
+
+            if dim in selectors:
+                raise ValueError(f"Duplicate selection for dimension '{dim}'")
+
+            selectors[dim] = selector
 
         selection: dict[str, int | numpy.ndarray | slice] = {}
         for dim, values in self.coordinate_values.items():
             idx: int | numpy.ndarray | slice = (
-                _sel_indexer(values, sel[dim], sel_method, dim)
-                if dim in sel
+                _sel_indexer(
+                    values,
+                    selectors[dim]["values"],
+                    selectors[dim].get("method"),
+                    dim,
+                )
+                if dim in selectors
                 else slice(None)
             )
             selection[dim] = idx
@@ -612,11 +637,10 @@ class ArrayMixin(SpatialMixin):
         *,
         y_slice: slice,
         x_slice: slice,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
     ) -> tuple[int | numpy.ndarray | slice, ...]:
         """Build the orthogonal selection for a read and check the output size."""
-        selection = self._get_non_spatial_selection(sel, sel_method)
+        selection = self._get_non_spatial_selection(sel)
         selection[self.spatial_dims[0]] = y_slice
         selection[self.spatial_dims[1]] = x_slice
         indexer = tuple(selection[dim] for dim in self.dimensions)
@@ -752,8 +776,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
         hist_options: dict | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -766,8 +789,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to `self.preview`.
 
@@ -775,7 +797,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        img = await self._read(sel=sel, sel_method=sel_method, nodata=nodata)
+        img = await self._read(sel=sel, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -792,8 +814,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         tile_y: int,
         tile_z: int,
         tilesize: int | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
@@ -807,8 +828,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
@@ -834,7 +854,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             sel=sel,
-            sel_method=sel_method,
             expression=expression,
             max_size=None,
             height=tilesize or matrix.tileHeight,
@@ -850,8 +869,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         bbox: BBox,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -867,8 +885,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
             bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension.
             height (int, optional): Output height of the array.
@@ -911,7 +928,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             y_slice=y_slice,
             x_slice=x_slice,
             sel=sel,
-            sel_method=sel_method,
             nodata=nodata,
         )
 
@@ -934,8 +950,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
 
     async def preview(
         self,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
@@ -949,8 +964,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         """Read a preview of a Dataset.
 
         Args:
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
@@ -985,7 +999,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         )
 
         # 2. Read data
-        img = await self._read(sel=sel, sel_method=sel_method, nodata=nodata)
+        img = await self._read(sel=sel, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -1013,8 +1027,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         lon: float,
         lat: float,
         coord_crs: CRS = WGS84_CRS,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -1025,8 +1038,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             lon (float): Longitude.
             lat (float): Latitude.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
             nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
 
@@ -1063,7 +1075,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             y_slice=slice(y, y + 1),
             x_slice=slice(x, x + 1),
             sel=sel,
-            sel_method=sel_method,
             nodata=nodata,
         )
 
@@ -1088,8 +1099,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         shape: dict,
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -1105,8 +1115,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
@@ -1131,7 +1140,6 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
             sel=sel,
-            sel_method=sel_method,
             expression=expression,
             max_size=max_size,
             height=height,
@@ -1168,8 +1176,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         *,
         y_slice: slice | None = None,
         x_slice: slice | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         nodata: NoData | None = None,
     ) -> ImageData:
         """Read data from zarr AsyncArray.
@@ -1177,8 +1184,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         Args:
             y_slice: index along the Y-axis dimension (named in self.spatial_dim[0]).
             x_slice: index along the X-axis dimension (named in self.spatial_dim[1])
-            sel (dict, optional): label based selection for non-spatial dimensions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
+            sel (list of Selector, optional): label based selection for non-spatial dimensions.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
@@ -1188,12 +1194,10 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        selection = self._get_read_selection(
-            y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
-        )
+        selection = self._get_read_selection(y_slice=y_slice, x_slice=x_slice, sel=sel)
         data = numpy.asarray(await self.input.get_orthogonal_selection(selection))
 
-        # Dimensions selected with a scalar (e.g `sel={"time": "2025-01-01"}`)
+        # Dimensions selected with a scalar (e.g `{"dimension": "time", "values": "2025-01-01"}`)
         # are dropped by the orthogonal selection
         dims = [
             d for d, idx in zip(self.dimensions, selection) if not isinstance(idx, int)
@@ -1341,8 +1345,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         categories: list[float] | None = None,
         percentiles: list[int] | None = None,
         hist_options: dict | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -1355,8 +1358,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             percentiles (list of numbers, optional): list of percentile values to calculate. Defaults to `[2, 98]`.
             hist_options (dict, optional): Options to forward to numpy.histogram function.
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             kwargs (optional): Options to forward to `self.preview`.
 
@@ -1364,7 +1366,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             dict[str, rio_tiler.models.BandStatistics]: bands statistics.
 
         """
-        img = self._read(sel=sel, sel_method=sel_method, nodata=nodata)
+        img = self._read(sel=sel, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -1381,8 +1383,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         tile_y: int,
         tile_z: int,
         tilesize: int | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
@@ -1396,8 +1397,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             tile_y (int): Tile's vertical index.
             tile_z (int): Tile's zoom level index.
             tilesize (int, optional): Output tile size. Defaults to TMS tilesize.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             nodata (int or float, optional): Overwrite dataset internal nodata value.
             reproject_method (WarpResampling, optional): WarpKernel resampling algorithm. Defaults to `nearest`.
@@ -1423,7 +1423,6 @@ class ArrayReader(BaseReader, ArrayMixin):
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
             sel=sel,
-            sel_method=sel_method,
             expression=expression,
             max_size=None,
             height=tilesize or matrix.tileHeight,
@@ -1439,8 +1438,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         bbox: BBox,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -1456,8 +1454,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
             bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension.
             height (int, optional): Output height of the array.
@@ -1498,7 +1495,6 @@ class ArrayReader(BaseReader, ArrayMixin):
         # 5. Read data from zarr array
         img = self._read(
             sel=sel,
-            sel_method=sel_method,
             y_slice=y_slice,
             x_slice=x_slice,
             nodata=nodata,
@@ -1522,8 +1518,7 @@ class ArrayReader(BaseReader, ArrayMixin):
 
     def preview(
         self,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
@@ -1537,8 +1532,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         """Read a preview of a Dataset.
 
         Args:
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio. Defaults to 1024.
@@ -1573,7 +1567,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         )
 
         # 2. Read data
-        img = self._read(sel=sel, sel_method=sel_method, nodata=nodata)
+        img = self._read(sel=sel, nodata=nodata)
         if expression:
             img = img.apply_expression(expression)
 
@@ -1599,8 +1593,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         lon: float,
         lat: float,
         coord_crs: CRS = WGS84_CRS,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         nodata: NoData | None = None,
         **kwargs: Any,
@@ -1611,8 +1604,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             lon (float): Longitude.
             lat (float): Latitude.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression: (str, optional): Expression to apply on the pixel values. Defaults to `None`.
             nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
 
@@ -1649,7 +1641,6 @@ class ArrayReader(BaseReader, ArrayMixin):
             y_slice=slice(y, y + 1),
             x_slice=slice(x, x + 1),
             sel=sel,
-            sel_method=sel_method,
             nodata=nodata,
         )
 
@@ -1674,8 +1665,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         shape: dict,
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         expression: str | None = None,
         max_size: int | None = None,
         height: int | None = None,
@@ -1691,8 +1681,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             shape (dict): Valid GeoJSON feature.
             dst_crs (rasterio.crs.CRS, optional): Overwrite target coordinate reference system.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
-            sel (dict, optional): label based selection for non-spatial dimensions (e.g `{"time": "2025-01-01", "z": [10, 20]}`). Dimensions without coordinates use positions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions (e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}, {"dimension": "z", "values": [10, 20]}]`). Dimensions without coordinates use positions.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
             max_size (int, optional): Limit the size of the longest dimension of the dataset read, respecting bounds X/Y aspect ratio.
             height (int, optional): Output height of the array.
@@ -1718,7 +1707,6 @@ class ArrayReader(BaseReader, ArrayMixin):
             dst_crs=dst_crs,
             bounds_crs=shape_crs,
             sel=sel,
-            sel_method=sel_method,
             expression=expression,
             max_size=max_size,
             height=height,
@@ -1752,8 +1740,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         *,
         y_slice: slice | None = None,
         x_slice: slice | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         nodata: NoData | None = None,
     ) -> ImageData:
         """Read data from zarr Array.
@@ -1761,8 +1748,7 @@ class ArrayReader(BaseReader, ArrayMixin):
         Args:
             y_slice: index along the Y-axis dimension (named in self.spatial_dim[0]).
             x_slice: index along the X-axis dimension (named in self.spatial_dim[1])
-            sel (dict, optional): label based selection for non-spatial dimensions.
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill).
+            sel (list of Selector, optional): label based selection for non-spatial dimensions.
             nodata (int or float, optional): Overwrite dataset internal nodata value.
 
         Returns:
@@ -1772,12 +1758,10 @@ class ArrayReader(BaseReader, ArrayMixin):
         y_slice = y_slice or slice(None)
         x_slice = x_slice or slice(None)
 
-        selection = self._get_read_selection(
-            y_slice=y_slice, x_slice=x_slice, sel=sel, sel_method=sel_method
-        )
+        selection = self._get_read_selection(y_slice=y_slice, x_slice=x_slice, sel=sel)
         data = numpy.asarray(self.input.get_orthogonal_selection(selection))
 
-        # Dimensions selected with a scalar (e.g `sel={"time": "2025-01-01"}`)
+        # Dimensions selected with a scalar (e.g `{"dimension": "time", "values": "2025-01-01"}`)
         # are dropped by the orthogonal selection
         dims = [
             d for d, idx in zip(self.dimensions, selection) if not isinstance(idx, int)
@@ -2776,8 +2760,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
@@ -2792,8 +2775,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         Args:
             variables (list of str or str, optional): list of variables to return value for. Defaults to all variables.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): Selection for non-spatial dimensions.
-            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions.
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             categorical (bool): treat input data as categorical data. Defaults to False.
             categories (list of numbers, optional): list of categories to return value for.
@@ -2811,7 +2793,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             variables=variables,
             expression=expression,
             sel=sel,
-            sel_method=sel_method,
             reduce=reduce,
             max_size=max_size,
             nodata=nodata,
@@ -2833,8 +2814,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         tilesize: int | None = None,
         nodata: NoData | None = None,
@@ -2850,8 +2830,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             tile_z (int): Tile's zoom level index.
             variables (Sequence[str] | str): Variables to read from the dataset.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): Selection for non-spatial dimensions.
-            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions.
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             tilesize (int, optional): Size of the tile in pixels. Defaults to None.
             nodata (NoData, optional): Nodata value to use. Defaults to None.
@@ -2879,7 +2858,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             variables=variables,
             expression=expression,
             sel=sel,
-            sel_method=sel_method,
             reduce=reduce,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
@@ -2898,8 +2876,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
@@ -2917,8 +2894,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
             bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
@@ -2973,7 +2949,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     height=height,
                     width=width,
                     sel=sel,
-                    sel_method=sel_method,
                     nodata=nodata,
                     reproject_method=reproject_method,
                     resampling_method=resampling_method,
@@ -3010,8 +2985,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
@@ -3027,8 +3001,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         Args:
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension.
@@ -3074,7 +3047,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     width=width,
                     dst_crs=dst_crs,
                     sel=sel,
-                    sel_method=sel_method,
                     nodata=nodata,
                     resampling_method=resampling_method,
                     reproject_method=reproject_method,
@@ -3114,8 +3086,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         coord_crs: CRS = WGS84_CRS,
         nodata: NoData | None = None,
@@ -3128,8 +3099,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             lat (float): Latitude.
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
@@ -3163,7 +3133,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     lat,
                     coord_crs=coord_crs,
                     sel=sel,
-                    sel_method=sel_method,
                     nodata=nodata,
                 )
 
@@ -3199,8 +3168,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
@@ -3218,8 +3186,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             shape (dict): Valid GeoJSON feature.
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to shape_crs.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
@@ -3249,7 +3216,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
             bounds_crs=shape_crs,
             expression=expression,
             sel=sel,
-            sel_method=sel_method,
             reduce=reduce,
             max_size=max_size,
             height=height,
@@ -3771,8 +3737,7 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         categorical: bool = False,
         categories: list[float] | None = None,
@@ -3787,8 +3752,7 @@ class GroupReader(BaseReader, GroupMixin):
         Args:
             variables (list of str or str, optional): list of variables to return value for. Defaults to all variables.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): Selection for non-spatial dimensions.
-            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions.
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             categorical (bool): treat input data as categorical data. Defaults to False.
             categories (list of numbers, optional): list of categories to return value for.
@@ -3806,7 +3770,6 @@ class GroupReader(BaseReader, GroupMixin):
             variables=variables,
             expression=expression,
             sel=sel,
-            sel_method=sel_method,
             reduce=reduce,
             max_size=max_size,
             nodata=nodata,
@@ -3828,8 +3791,7 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         tilesize: int | None = None,
         nodata: NoData | None = None,
@@ -3845,8 +3807,7 @@ class GroupReader(BaseReader, GroupMixin):
             tile_z (int): Tile's zoom level index.
             variables (Sequence[str] | str): Variables to read from the dataset.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): Selection for non-spatial dimensions.
-            sel_method (str, optional): Method to use for selecting non-spatial dimensions. Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions.
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             tilesize (int, optional): Size of the tile in pixels. Defaults to None.
             nodata (NoData, optional): Nodata value to use. Defaults to None.
@@ -3874,7 +3835,6 @@ class GroupReader(BaseReader, GroupMixin):
             variables=variables,
             expression=expression,
             sel=sel,
-            sel_method=sel_method,
             reduce=reduce,
             dst_crs=self.tms.rasterio_crs,
             bounds_crs=self.tms.rasterio_crs,
@@ -3893,8 +3853,7 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         bounds_crs: CRS = WGS84_CRS,
@@ -3911,8 +3870,7 @@ class GroupReader(BaseReader, GroupMixin):
             bbox (tuple): Output bounds (left, bottom, right, top) in target crs.
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to bounds_crs.
             bounds_crs (rasterio.crs.CRS, optional): CRS of the input bounds. Defaults to WGS84.
@@ -3967,7 +3925,6 @@ class GroupReader(BaseReader, GroupMixin):
                     height=height,
                     width=width,
                     sel=sel,
-                    sel_method=sel_method,
                     nodata=nodata,
                     reproject_method=reproject_method,
                 )
@@ -4003,8 +3960,7 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         max_size: int | None = 1024,
@@ -4020,8 +3976,7 @@ class GroupReader(BaseReader, GroupMixin):
         Args:
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to None (same as input).
             max_size (int, optional): Limit the size of the longest dimension.
@@ -4067,7 +4022,6 @@ class GroupReader(BaseReader, GroupMixin):
                     width=width,
                     dst_crs=dst_crs,
                     sel=sel,
-                    sel_method=sel_method,
                     nodata=nodata,
                     resampling_method=resampling_method,
                     reproject_method=reproject_method,
@@ -4107,8 +4061,7 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         coord_crs: CRS = WGS84_CRS,
         nodata: NoData | None = None,
@@ -4121,8 +4074,7 @@ class GroupReader(BaseReader, GroupMixin):
             lat (float): Latitude.
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             coord_crs (rasterio.crs.CRS, optional): Coordinate Reference System of the input coords. Defaults to `epsg:4326`.
             nodata: (int or float, optional): Overwrite dataset internal nodata value. Defaults to `None`.
@@ -4156,7 +4108,6 @@ class GroupReader(BaseReader, GroupMixin):
                     lat,
                     coord_crs=coord_crs,
                     sel=sel,
-                    sel_method=sel_method,
                     nodata=nodata,
                 )
 
@@ -4192,8 +4143,7 @@ class GroupReader(BaseReader, GroupMixin):
         *,
         variables: Sequence[str] | str,
         expression: str | None = None,
-        sel: dict[str, Any] | None = None,
-        sel_method: SelMethod | None = None,
+        sel: Sequence[Selector] | None = None,
         reduce: list[tuple[str, Callable[..., numpy.ma.MaskedArray]]] | None = None,
         dst_crs: CRS | None = None,
         shape_crs: CRS = WGS84_CRS,
@@ -4211,8 +4161,7 @@ class GroupReader(BaseReader, GroupMixin):
             shape (dict): Valid GeoJSON feature.
             variables (list of str or str): list of variables to return value for.
             expression (str, optional): rio-tiler expression (e.g. b1/b2+b3).
-            sel (dict, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `{"time": "2025-01-01"}`).
-            sel_method (str, optional): method to use for inexact matches (nearest, pad/ffill, backfill/bfill). Defaults to exact match.
+            sel (list of Selector, optional): label based selection for non-spatial dimensions, applied to all the variables (e.g `[{"dimension": "time", "values": "2025-01-01"}]`).
             reduce (list of tuple, optional): List of reduction operations to apply on the data. Each tuple should contain the name of the reduced dimension and a callable function. Defaults to None.
             dst_crs (rasterio.crs.CRS, optional): Target coordinate reference system. Defaults to shape_crs.
             shape_crs (rasterio.crs.CRS, optional): Input geojson coordinate reference system. Defaults to `epsg:4326`.
@@ -4242,7 +4191,6 @@ class GroupReader(BaseReader, GroupMixin):
             bounds_crs=shape_crs,
             expression=expression,
             sel=sel,
-            sel_method=sel_method,
             reduce=reduce,
             max_size=max_size,
             height=height,

@@ -13,9 +13,10 @@
     * change: `info().dimensions` now returns the `dimensions` attribute
     * change: reads use `get_orthogonal_selection` with per-dimension selection (internal `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=)`)
     * change: `GroupReader`/`AsyncGroupReader` forward the arrays' `spatial_dims` and `coordinates` to the Array readers
-* breaking: replace `indexes` with xarray-like `sel` and `sel_method` options in `rio_tiler.experimental.zarr` readers
-    * `sel` (`{dimension: value | list | slice}`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
-    * `sel_method` supports exact (default), `nearest`, `pad`/`ffill` and `backfill`/`bfill` matching
+* breaking: replace `indexes` with xarray-like `sel` option in `rio_tiler.experimental.zarr` readers
+    * `sel` (`list[Selector]`, e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}]`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
+    * `Selector["values"]` can be a scalar (the dimension is dropped), a list of labels or a slice of labels
+    * `Selector["method"]` (per dimension) supports exact (default), `nearest`, `pad`/`ffill` and `backfill`/`bfill` matching
     * support N-D arrays: unselected non-spatial dimensions are kept, and readers return `(*non-spatial dims, height, width)` data
     * the returned `ImageData.band_descriptions` is `{dimension: labels}` for all the non-spatial dimensions (a `list` for 2D/3D arrays)
     * add `coordinate_values` property (`{dimension: values}`)
