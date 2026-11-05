@@ -7774,9 +7774,10 @@
 <li>change: <code>GroupReader</code>/<code>AsyncGroupReader</code> forward the arrays' <code>spatial_dims</code> and <code>coordinates</code> to the Array readers</li>
 </ul>
 </li>
-<li>breaking: replace <code>indexes</code> with xarray-like <code>sel</code> and <code>sel_method</code> options in <code>rio_tiler.experimental.zarr</code> readers<ul>
-<li><code>sel</code> (<code>{dimension: value | list | slice}</code>) selects non-spatial dimensions using the <code>coordinates</code> values (or positions when a dimension has no coordinates)</li>
-<li><code>sel_method</code> supports exact (default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> and <code>backfill</code>/<code>bfill</code> matching</li>
+<li>breaking: replace <code>indexes</code> with xarray-like <code>sel</code> option in <code>rio_tiler.experimental.zarr</code> readers<ul>
+<li><code>sel</code> (<code>list[Selector]</code>, e.g <code>[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}]</code>) selects non-spatial dimensions using the <code>coordinates</code> values (or positions when a dimension has no coordinates)</li>
+<li><code>Selector["values"]</code> can be a scalar (the dimension is dropped), a list of labels or a slice of labels</li>
+<li><code>Selector["method"]</code> (per dimension) supports exact (default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> and <code>backfill</code>/<code>bfill</code> matching</li>
 <li>support N-D arrays: unselected non-spatial dimensions are kept, and readers return <code>(*non-spatial dims, height, width)</code> data</li>
 <li>the returned <code>ImageData.band_descriptions</code> is <code>{dimension: labels}</code> for all the non-spatial dimensions (a <code>list</code> for 2D/3D arrays)</li>
 <li>add <code>coordinate_values</code> property (<code>{dimension: values}</code>)</li>

@@ -1629,10 +1629,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#indexes-replaced-by-selsel_method" class="md-nav__link">
+  <a href="#indexes-replaced-by-sel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        indexes replaced by sel/sel_method
+        indexes replaced by sel
       
     </span>
   </a>
@@ -2852,10 +2852,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#indexes-replaced-by-selsel_method" class="md-nav__link">
+  <a href="#indexes-replaced-by-sel" class="md-nav__link">
     <span class="md-ellipsis">
       
-        indexes replaced by sel/sel_method
+        indexes replaced by sel
       
     </span>
   </a>
@@ -3172,11 +3172,11 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 10.
 <span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="o">...</span>
 </code></pre></div>
-<h3 id="indexes-replaced-by-selsel_method"><code>indexes</code> replaced by <code>sel</code>/<code>sel_method</code><a class="headerlink" href="#indexes-replaced-by-selsel_method" title="Permanent link">&para;</a></h3>
-<p>The <code>indexes</code> option has been <strong>removed</strong> from all the zarr readers' methods (<code>read</code>, <code>tile</code>, <code>part</code>, <code>preview</code>, <code>point</code>, <code>feature</code>, <code>statistics</code>). Non-spatial dimensions are now selected with xarray-like <code>sel</code> and <code>sel_method</code> options:</p>
+<h3 id="indexes-replaced-by-sel"><code>indexes</code> replaced by <code>sel</code><a class="headerlink" href="#indexes-replaced-by-sel" title="Permanent link">&para;</a></h3>
+<p>The <code>indexes</code> option has been <strong>removed</strong> from all the zarr readers' methods (<code>read</code>, <code>tile</code>, <code>part</code>, <code>preview</code>, <code>point</code>, <code>feature</code>, <code>statistics</code>). Non-spatial dimensions are now selected with an xarray-like <code>sel</code> option, a list of <code>Selector</code> (<code>{"dimension": str, "values": Any, "method": str | None}</code>):</p>
 <ul>
-<li><code>sel</code>: <code>{dimension: value | list | slice}</code>, selection using the <code>coordinates</code> values (or positions when a dimension has no coordinates). A scalar drops the dimension</li>
-<li><code>sel_method</code>: <code>None</code> (exact match, default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> or <code>backfill</code>/<code>bfill</code></li>
+<li><code>values</code>: <code>value | list | slice</code>, selection using the <code>coordinates</code> values (or positions when a dimension has no coordinates). A scalar drops the dimension</li>
+<li><code>method</code> (per dimension): <code>None</code> (exact match, default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> or <code>backfill</code>/<code>bfill</code></li>
 </ul>
 <div class="highlight"><pre><span></span><code><span class="c1"># before (9.x)</span>
 <span class="k">with</span> <span class="n">ArrayReader</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">band_names</span><span class="o">=</span><span class="p">[</span><span class="s2">"red"</span><span class="p">,</span> <span class="s2">"green"</span><span class="p">,</span> <span class="s2">"blue"</span><span class="p">])</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
@@ -3185,13 +3185,15 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 10.
 <span class="c1"># now (10.x)</span>
 <span class="k">with</span> <span class="n">ArrayReader</span><span class="p">(</span><span class="n">array</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>  <span class="c1"># dimensions: ["band", "y", "x"]</span>
     <span class="c1"># select by coordinate values</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"band"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"red"</span><span class="p">,</span> <span class="s2">"green"</span><span class="p">]})</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">[{</span><span class="s2">"dimension"</span><span class="p">:</span> <span class="s2">"band"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="p">[</span><span class="s2">"red"</span><span class="p">,</span> <span class="s2">"green"</span><span class="p">]}])</span>
 
     <span class="c1"># or by position, when the dimension has no coordinates</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"band"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]})</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">[{</span><span class="s2">"dimension"</span><span class="p">:</span> <span class="s2">"band"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]}])</span>
 
     <span class="c1"># inexact match on a time dimension</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="s2">"2025-01-15"</span><span class="p">},</span> <span class="n">sel_method</span><span class="o">=</span><span class="s2">"nearest"</span><span class="p">)</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">,</span> <span class="n">sel</span><span class="o">=</span><span class="p">[{</span><span class="s2">"dimension"</span><span class="p">:</span> <span class="s2">"time"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="s2">"2025-01-15"</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"nearest"</span><span class="p">}]</span>
+    <span class="p">)</span>
 </code></pre></div>
 <p>Unselected non-spatial dimensions are kept, so readers now return <code>(*non-spatial dims, height, width)</code> data, which can be N-D. The selected labels are stored in <code>ImageData.metadata["selected"]</code>.</p>
 <h3 id="expressions-and-statistics-keys">Expressions and Statistics Keys<a class="headerlink" href="#expressions-and-statistics-keys" title="Permanent link">&para;</a></h3>
@@ -3261,7 +3263,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 10.
     <span class="o">&gt;&gt;</span> <span class="p">[</span><span class="s1">'variables1'</span><span class="p">,</span> <span class="s1">'variables2'</span><span class="p">,</span> <span class="s1">'variables3'</span><span class="p">]</span> <span class="p">[</span><span class="s1">'b04'</span><span class="p">,</span> <span class="s1">'b03'</span><span class="p">,</span> <span class="s1">'b02'</span><span class="p">]</span>
 </code></pre></div>
 <h3 id="custom-array-reader-subclasses">Custom Array Reader Subclasses<a class="headerlink" href="#custom-array-reader-subclasses" title="Permanent link">&para;</a></h3>
-<p>The internal <code>_read</code> method signature changed from <code>_read(row_slice=, col_slice=, indexes=)</code> to <code>_read(y_slice=, x_slice=, sel=, sel_method=)</code>, and reads now use zarr's <code>get_orthogonal_selection</code>.</p>
+<p>The internal <code>_read</code> method signature changed from <code>_read(row_slice=, col_slice=, indexes=)</code> to <code>_read(y_slice=, x_slice=, sel=)</code>, and reads now use zarr's <code>get_orthogonal_selection</code>.</p>
 <h2 id="new-features">New Features<a class="headerlink" href="#new-features" title="Permanent link">&para;</a></h2>
 <h3 id="imagedatareduce-pointdatareduce"><code>ImageData.reduce</code> / <code>PointData.reduce</code><a class="headerlink" href="#imagedatareduce-pointdatareduce" title="Permanent link">&para;</a></h3>
 <p>Reduce N-D data along a non-spatial dimension. Reduced dimensions are listed in <code>metadata["reduced"]</code>.</p>
@@ -3324,7 +3326,7 @@ document aims to help with migrating your code to use <code>rio-tiler</code> 10.
 <p><strong>Update zarr expressions and statistics keys</strong> - Use <code>{dimension}{n}</code> (e.g. <code>band1</code>) for Array readers and <code>variables{n}</code> for Group readers</p>
 </li>
 <li>
-<p><strong>Update custom zarr reader subclasses</strong> - <code>_read(row_slice=, col_slice=)</code> -&gt; <code>_read(y_slice=, x_slice=, sel=, sel_method=)</code></p>
+<p><strong>Update custom zarr reader subclasses</strong> - <code>_read(row_slice=, col_slice=)</code> -&gt; <code>_read(y_slice=, x_slice=, sel=)</code></p>
 </li>
 </ol>
 

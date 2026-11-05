@@ -5064,8 +5064,7 @@ await reader.get_group_metadata("ascending")</div>
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h3 id="working-with-non-spatial-dimensions">Working with non-spatial dimensions<a class="anchor-link" href="#working-with-non-spatial-dimensions">¶</a></h3><p>When a variable has extra (non-spatial) dimensions, rio-tiler will, by default, flatten them into bands. Use:</p>
 <ul>
-<li><code>sel</code>: to select one (or more) value along a dimension (label based, or position based when the dimension has no coordinates)</li>
-<li><code>sel_method</code>: to control inexact matches (<code>nearest</code>, <code>pad</code>/<code>ffill</code>, <code>backfill</code>/<code>bfill</code>)</li>
+<li><code>sel</code>: a list of <code>{"dimension": ..., "values": ..., "method": ...}</code> selectors to select one (or more) value along a dimension (label based, or position based when the dimension has no coordinates). The optional <code>method</code> controls inexact matches (<code>nearest</code>, <code>pad</code>/<code>ffill</code>, <code>backfill</code>/<code>bfill</code>)</li>
 <li><code>reduce</code>: to reduce a dimension with a function (e.g. <code>numpy.ma.mean</code>)</li>
 </ul>
 </div>
@@ -5171,7 +5170,9 @@ Array Shape: (3, 915, 915)
 </div>
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Select a specific time slice</span>
 <span class="c1"># Note: because the `time` dimension has no coordinates, selection is done by position</span>
-<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span><span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"ascending:vv"</span><span class="p">],</span> <span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="mi">0</span><span class="p">})</span>
+<span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
+    <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"ascending:vv"</span><span class="p">],</span> <span class="n">sel</span><span class="o">=</span><span class="p">[{</span><span class="s2">"dimension"</span><span class="p">:</span> <span class="s2">"time"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="mi">0</span><span class="p">}]</span>
+<span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Dimensions:"</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Band Names:"</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Band Descriptions:"</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">band_descriptions</span><span class="p">)</span>
@@ -5181,7 +5182,9 @@ Array Shape: (3, 915, 915)
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-15"># Select a specific time slice
 # Note: because the `time` dimension has no coordinates, selection is done by position
-img = await reader.preview(variables=["ascending:vv"], sel={"time": 0})
+img = await reader.preview(
+    variables=["ascending:vv"], sel=[{"dimension": "time", "values": 0}]
+)
 print("Dimensions:", img.dimensions)
 print("Band Names:", img.band_names)
 print("Band Descriptions:", img.band_descriptions)
@@ -5255,7 +5258,7 @@ Array Shape: (1, 915, 915)
 <div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Create a VV/VH/VV composite for the second time step</span>
 <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">reader</span><span class="o">.</span><span class="n">preview</span><span class="p">(</span>
     <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"descending:vv"</span><span class="p">,</span> <span class="s2">"descending:vh"</span><span class="p">,</span> <span class="s2">"descending:vv"</span><span class="p">],</span>
-    <span class="n">sel</span><span class="o">=</span><span class="p">{</span><span class="s2">"time"</span><span class="p">:</span> <span class="mi">1</span><span class="p">},</span>
+    <span class="n">sel</span><span class="o">=</span><span class="p">[{</span><span class="s2">"dimension"</span><span class="p">:</span> <span class="s2">"time"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="mi">1</span><span class="p">}],</span>
 <span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Dimensions:"</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">dimensions</span><span class="p">)</span>
 <span class="nb">print</span><span class="p">(</span><span class="s2">"Band Names:"</span><span class="p">,</span> <span class="n">img</span><span class="o">.</span><span class="n">band_names</span><span class="p">)</span>
@@ -5267,7 +5270,7 @@ Array Shape: (1, 915, 915)
 <div class="clipboard-copy-txt" id="cell-16"># Create a VV/VH/VV composite for the second time step
 img = await reader.preview(
     variables=["descending:vv", "descending:vh", "descending:vv"],
-    sel={"time": 1},
+    sel=[{"dimension": "time", "values": 1}],
 )
 print("Dimensions:", img.dimensions)
 print("Band Names:", img.band_names)
