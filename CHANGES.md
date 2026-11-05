@@ -20,6 +20,7 @@
 * change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) cache `get_group_metadata` results in a cache shared by all readers (keyed by store location and group path), concurrent calls for the same group share a single request. Cache size and TTL are configurable with `RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE` (default: 512) and `RIO_TILER_ZARR_METADATA_CACHE_TTL` (default: 300 seconds)
 * add: `async-lru>=2.4` to the `zarr` optional dependencies
 * change: `rio_tiler.experimental.zarr.AsyncGroupReader.get_group_metadata` fetches the multiscale levels concurrently
+* fix: `rio_tiler.experimental.zarr` Array readers (`ArrayReader`, `AsyncArrayReader`) read the exact pixel window in `part()` (no extra row/column, avoiding reading neighbouring chunks); 1 pixel padding is added on each side only for `bilinear`/`cubic`/... resampling methods. Windows outside the array now raise `InvalidBounds`
 * add: `rio_tiler.utils.run_sync` to run a blocking function in a worker thread, forwarding the active rasterio environment
 * breaking: replace `indexes` with xarray-like `sel` and `sel_method` options in `rio_tiler.experimental.zarr` readers
     * `sel` (`{dimension: value | list | slice}`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
