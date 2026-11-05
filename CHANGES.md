@@ -24,6 +24,7 @@
 * change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) stack the variables along a new `variables` dimension (labeled with the variable names in `band_descriptions`) (N-D data, or 3D `[variables, y, x]` when all the variables are 2D). When only one variable is requested, its data is returned as is (no `variables` dimension)
 * change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) cache `get_group_metadata` results in a cache shared by all readers (keyed by store location and group path), concurrent calls for the same group share a single request. Cache size and TTL are configurable with `RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE` (default: 512) and `RIO_TILER_ZARR_METADATA_CACHE_TTL` (default: 300 seconds)
 * change: `rio_tiler.experimental.zarr.AsyncGroupReader.get_group_metadata` fetches the multiscale levels concurrently
+* perf: `rio_tiler.experimental.zarr` Array readers build fixed-step temporal `interval` coordinates with numpy (no Python loop) and create coordinate labels only for the selected positions
 * change: require `rasterio>=1.5.1` and `affine>=3.0`
 * add: `reduce(dim, func)` method to `ImageData` and `PointData` to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in `metadata["reduced"]`)
 * add: `resampling_method` option to the zarr Array readers' `tile` method
