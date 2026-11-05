@@ -4684,18 +4684,20 @@ to consider children within that many levels of the root Group.</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.ArrayMixin._coordinates" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="n">_coordinates</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]]]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">_coordinates</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">,</span> <span class="n"><span title="collections.abc.Callable">Callable</span></span><span class="p">[[</span><span class="n"><span title="numpy.ndarray">ndarray</span></span><span class="p">],</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]]]]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Return coordinate values and labels for each non-spatial dimension.</p>
+        <p>Return coordinate values and labels getter for each non-spatial dimension.</p>
 <ul>
 <li>values: derived from the <code>coordinates</code> (inline or interval), used for selection.
   Default to the array positions (<code>0, 1, ..., n - 1</code>) when not available.</li>
-<li>labels: inline values as defined in the coordinates, formatted interval values
-  or <code>{dim}{position + 1}</code> (e.g <code>time1</code>) when coordinates are not available.</li>
+<li>labels getter: return the labels for an array of positions. Labels are the inline
+  values as defined in the coordinates, formatted interval values or
+  <code>{dim}{position + 1}</code> (e.g <code>time1</code>) when coordinates are not available.</li>
 </ul>
+<p>NOTE: labels are created only for the requested positions (dimensions can be large).</p>
 
     </div>
 
@@ -4830,12 +4832,12 @@ to consider children within that many levels of the root Group.</p>
 
 
 <a href="#rio_tiler.experimental.zarr.ArrayMixin._get_labels" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_labels</span><span class="p">(</span><span class="n">dim</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span> <span class="o">|</span> <span class="n"><span title="slice">slice</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_labels</span><span class="p">(</span><span class="n">dim</span><span class="p">:</span> <span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n">idx</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="n"><span title="numpy.ndarray">ndarray</span></span> <span class="o">|</span> <span class="n"><span title="slice">slice</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Return labels for a positional selection on a non-spatial dimension.</p>
+        <p>Return labels for a positional selection on a non-spatial dimension (all labels when <code>idx</code> is None).</p>
 
 
     </div>
