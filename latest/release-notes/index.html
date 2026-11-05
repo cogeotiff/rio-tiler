@@ -7760,7 +7760,6 @@
 
 <h1 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h1>
 <ul>
-<li>change: require <code>rasterio&gt;=1.5.1</code> and <code>affine&gt;=3.0</code></li>
 <li>breaking: remove python 3.11 support (rasterio 1.5 requires python &gt;=3.12)</li>
 <li>breaking: remove <code>scales</code> and <code>offsets</code> attributes in ImageData and PointData models</li>
 <li>breaking: remove <code>count</code> attribute in ImageData and PointData models</li>
@@ -7775,14 +7774,6 @@
 <li>change: <code>GroupReader</code>/<code>AsyncGroupReader</code> forward the arrays' <code>spatial_dims</code> and <code>coordinates</code> to the Array readers</li>
 </ul>
 </li>
-<li>change: <code>rio_tiler.experimental.zarr</code> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>) stack the variables along a new <code>variables</code> dimension (labeled with the variable names in <code>band_descriptions</code>) (N-D data, or 3D <code>[variables, y, x]</code> when all the variables are 2D). When only one variable is requested, its data is returned as is (no <code>variables</code> dimension)</li>
-<li>add: <code>reduce(dim, func)</code> method to <code>ImageData</code> and <code>PointData</code> to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in <code>metadata["reduced"]</code>)</li>
-<li>add: <code>resampling_method</code> option to the zarr Array readers' <code>tile</code> method</li>
-<li>change: <code>rio_tiler.experimental.zarr</code> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>) cache <code>get_group_metadata</code> results in a cache shared by all readers (keyed by store location and group path), concurrent calls for the same group share a single request. Cache size and TTL are configurable with <code>RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE</code> (default: 512) and <code>RIO_TILER_ZARR_METADATA_CACHE_TTL</code> (default: 300 seconds)</li>
-<li>add: <code>async-lru&gt;=2.4</code> to the <code>zarr</code> optional dependencies</li>
-<li>change: <code>rio_tiler.experimental.zarr.AsyncGroupReader.get_group_metadata</code> fetches the multiscale levels concurrently</li>
-<li>fix: <code>rio_tiler.experimental.zarr</code> Array readers (<code>ArrayReader</code>, <code>AsyncArrayReader</code>) read the exact pixel window in <code>part()</code> (no extra row/column, avoiding reading neighbouring chunks); 1 pixel padding is added on each side only for <code>bilinear</code>/<code>cubic</code>/... resampling methods. Windows outside the array now raise <code>InvalidBounds</code></li>
-<li>add: <code>rio_tiler.utils.run_sync</code> to run a blocking function in a worker thread, forwarding the active rasterio environment</li>
 <li>breaking: replace <code>indexes</code> with xarray-like <code>sel</code> and <code>sel_method</code> options in <code>rio_tiler.experimental.zarr</code> readers<ul>
 <li><code>sel</code> (<code>{dimension: value | list | slice}</code>) selects non-spatial dimensions using the <code>coordinates</code> values (or positions when a dimension has no coordinates)</li>
 <li><code>sel_method</code> supports exact (default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> and <code>backfill</code>/<code>bfill</code> matching</li>
@@ -7793,12 +7784,21 @@
 <li><code>info()</code> no longer lists per-band metadata and adds <code>dimensions_count</code> (plus <code>coordinates</code> when called with <code>with_coordinates=True</code>)</li>
 </ul>
 </li>
+<li>change: <code>rio_tiler.experimental.zarr</code> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>) stack the variables along a new <code>variables</code> dimension (labeled with the variable names in <code>band_descriptions</code>) (N-D data, or 3D <code>[variables, y, x]</code> when all the variables are 2D). When only one variable is requested, its data is returned as is (no <code>variables</code> dimension)</li>
+<li>change: <code>rio_tiler.experimental.zarr</code> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>) cache <code>get_group_metadata</code> results in a cache shared by all readers (keyed by store location and group path), concurrent calls for the same group share a single request. Cache size and TTL are configurable with <code>RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE</code> (default: 512) and <code>RIO_TILER_ZARR_METADATA_CACHE_TTL</code> (default: 300 seconds)</li>
+<li>change: <code>rio_tiler.experimental.zarr.AsyncGroupReader.get_group_metadata</code> fetches the multiscale levels concurrently</li>
+<li>change: require <code>rasterio&gt;=1.5.1</code> and <code>affine&gt;=3.0</code></li>
+<li>add: <code>reduce(dim, func)</code> method to <code>ImageData</code> and <code>PointData</code> to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in <code>metadata["reduced"]</code>)</li>
+<li>add: <code>resampling_method</code> option to the zarr Array readers' <code>tile</code> method</li>
+<li>add: <code>async-lru&gt;=2.4</code> to the <code>zarr</code> optional dependencies</li>
+<li>add: <code>rio_tiler.utils.run_sync</code> to run a blocking function in a worker thread, forwarding the active rasterio environment</li>
 <li>add: <code>stack_on_dim</code> option to <code>ImageData.create_from_list</code> and <code>PointData.create_from_list</code> to stack data along a new leading dimension (instead of concatenating them along the first dimension), which enables merging N-D data. 2D data (<code>(1, y, x)</code> with a <code>b</code> dimension) are stacked directly on the new dimension (<code>[stack_on_dim, y, x]</code>)</li>
 <li>add: N-D support in <code>ImageData</code>/<code>PointData</code> (<code>(*leading, height, width)</code>): N-D data have per-dimension <code>band_descriptions</code> and <code>band_names</code> (<code>dict</code>). Expression, colormap, color formula, rescale, statistics, <code>to_raster</code> and rendering (except <code>NPY</code>/<code>NPZ</code>) raise <code>ValueError</code> for N-D data</li>
 <li>fix: use masked array reprojection in <code>rio_tiler._warp.warp</code> (fix mask warping with GDAL &gt;= 3.11)</li>
 <li>fix: use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
 <li>fix: compute the cumulative weights in <code>float64</code> in <code>rio_tiler.utils._weighted_quantiles</code> to avoid wrong <code>median</code>/<code>percentile_*</code> statistics with <code>float32</code> coverage arrays (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/cogeotiff/rio-tiler/issues/1045" title="GitHub Issue: cogeotiff/rio-tiler #1045">cogeotiff/rio-tiler#1045</a>)</li>
 <li>fix: run blocking warp/reproject/resize in a worker thread (<code>asyncio.to_thread</code>) in the async experimental readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>) to avoid blocking the event loop</li>
+<li>fix: <code>rio_tiler.experimental.zarr</code> Array readers (<code>ArrayReader</code>, <code>AsyncArrayReader</code>) read the exact pixel window in <code>part()</code> (no extra row/column, avoiding reading neighbouring chunks); 1 pixel padding is added on each side only for <code>bilinear</code>/<code>cubic</code>/... resampling methods. Windows outside the array now raise <code>InvalidBounds</code></li>
 <li>docs: new <code>experimental</code> documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)</li>
 </ul>
 <h2 id="9413-2026-11-02">9.4.13 (2026-11-02)<a class="headerlink" href="#9413-2026-11-02" title="Permanent link">&para;</a></h2>
