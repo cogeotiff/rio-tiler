@@ -9,7 +9,9 @@ Required dependencies:
 
 You can install the dependencies with `python -m pip install "rio-tiler[zarr]".
 
-**Zarr Array Mini Spec**
+## Mini Spec
+
+### Arrays 
 
 If not provided as attribute, the `AsyncArrayReader`/`ArrayReader` will require some zarr-metadata/conventions:
 
@@ -95,6 +97,41 @@ Example:
         attributes=attributes,
     )
 ```
+
+### Groups
+
+Variables discovery:
+
+- If the opened group has valid arrays, they are the variables and the children groups are NOT scanned
+- If the opened group is a **multiscales** group, its children groups (resolution levels) are NOT scanned
+- Otherwise, the children groups are scanned (up to `RIO_TILER_ZARR_MAX_CHILDREN_DEPTH` levels, default to `10`, `-1` for no limit). The resolution level groups of a multiscales child group are not scanned.
+- A `UserWarning` is emitted when the opened group has no valid arrays but has invalid ones, or is a multiscales group
+
+An array is a valid variable if:
+
+- it has 2 dimensions or more
+
+- `dimension_names` MUST be set in the zarr metadata
+
+- **proj**: one of `proj:code, proj:wkt2, proj:projjson` MUST be defined, at the array or group level (with the `proj` convention)
+
+- **spatial**:
+    
+    - `spatial:dimensions` MUST be defined at the array, multiscales layout or group level. Both dimensions MUST be in the array `dimension_names`
+    - `spatial:transform` MUST be defined:
+        - non-multiscales groups: at the array or group level (with the `spatial` convention)
+        - multiscales groups: at the array (no convention required) or multiscales layout level
+
+- **coords** (Optional): `coords:coordinates` CAN be defined at the array or group level (with the `coords` convention) to describe the non-spatial dimensions
+
+For **multiscales** groups:
+
+- arrays with the same name in each resolution level are aggregated as one variable
+- the layouts are assumed to be ordered from the highest (`layout[0]`) to the lowest (`layout[-1]`) resolution
+
+The readers' `bounds`, `crs` and `zoom levels` are derived from the opened group metadata (`spatial:bbox`, or `spatial:shape` and `spatial:transform`, at the group or first multiscales layout level). They require both `spatial` and `proj` conventions at the group level, otherwise they default to `EPSG:4326` and `(-180, -90, 180, 90)`.
+
+## Readers
 
 ### AsyncArrayReader
 
@@ -209,7 +246,7 @@ print(img.array.shape, img.band_descriptions)
 
 ## AsyncGroupReader
 
-The group readers list as `variables` the arrays (2D or more) found in the groups with Geo/Spatial conventions. Arrays without `spatial:dimensions` (group or array level) or without `dimension_names` in the zarr metadata are skipped.
+The group readers list as `variables` the arrays (2D or more) found in the groups with Geo/Spatial conventions. 
 
 Each variable is described by:
 
