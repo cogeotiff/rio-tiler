@@ -4254,7 +4254,7 @@ performance = [
 requires-dist = [
     { name = "affine", specifier = ">=3.0" },
     { name = "async-geotiff", marker = "extra == 'geotiff'", specifier = ">=0.5,<0.6" },
-    { name = "async-lru", marker = "extra == 'zarr'", specifier = ">=2.0" },
+    { name = "async-lru", marker = "extra == 'zarr'", specifier = ">=2.4" },
     { name = "attrs" },
     { name = "boto3", marker = "extra == 's3'" },
     { name = "cachetools" },
@@ -4283,7 +4283,7 @@ provides-extras = ["geoarray", "geotiff", "s3", "xarray", "zarr"]
 deploy = [{ name = "hatch" }]
 dev = [
     { name = "async-geotiff", specifier = ">=0.3,<0.6" },
-    { name = "async-lru", specifier = ">=2.0" },
+    { name = "async-lru", specifier = ">=2.4" },
     { name = "boto3" },
     { name = "h5netcdf" },
     { name = "h5py" },
