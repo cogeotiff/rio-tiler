@@ -2124,6 +2124,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_MAXSIZE" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ZARR_METADATA_CACHE_MAXSIZE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_TTL" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ZARR_METADATA_CACHE_TTL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr.ArrayMetadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2912,6 +2934,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_zoom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr._group_metadata_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_group_metadata_key
       
     </span>
   </a>
@@ -3489,6 +3522,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_MAXSIZE" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ZARR_METADATA_CACHE_MAXSIZE
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_TTL" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ZARR_METADATA_CACHE_TTL
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr.ArrayMetadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4284,6 +4339,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr._group_metadata_key" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_group_metadata_key
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr._sel_indexer" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4442,6 +4508,54 @@
         <p>The maximum number of levels of the hierarchy to include within one Zarr Store. Set
 <code>RIO_TILER_ZARR_MAX_CHILDREN_DEPTH=-1</code> to include all nodes, and some positive integer
 to consider children within that many levels of the root Group.</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_MAXSIZE" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">ZARR_METADATA_CACHE_MAXSIZE</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_MAXSIZE" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">ZARR_METADATA_CACHE_MAXSIZE</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="n"><span title="int">int</span></span><span class="p">(</span><span class="n"><span title="os">os</span></span><span class="o">.</span><span class="n"><span title="os.environ">environ</span></span><span class="o">.</span><span class="n"><span title="os.environ.get">get</span></span><span class="p">(</span><span class="s1">'RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE'</span><span class="p">,</span> <span class="mi">512</span><span class="p">))</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Maximum number of Zarr groups metadata to keep in cache (shared by all Group readers).</p>
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_TTL" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">ZARR_METADATA_CACHE_TTL</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#rio_tiler.experimental.zarr.ZARR_METADATA_CACHE_TTL" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">ZARR_METADATA_CACHE_TTL</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="n"><span title="int">int</span></span><span class="p">(</span><span class="n"><span title="os">os</span></span><span class="o">.</span><span class="n"><span title="os.environ">environ</span></span><span class="o">.</span><span class="n"><span title="os.environ.get">get</span></span><span class="p">(</span><span class="s1">'RIO_TILER_ZARR_METADATA_CACHE_TTL'</span><span class="p">,</span> <span class="mi">300</span><span class="p">))</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Time (in seconds) a Zarr group metadata stays in cache. Set <code>0</code> to disable expiration.</p>
 
     </div>
 
@@ -9987,6 +10101,26 @@ For 2D arrays, treats as single-band (height, width).</p>
     <div class="doc doc-contents ">
 
         <p>Get MaxZoom for a Group.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.experimental.zarr._group_metadata_key" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_group_metadata_key</span>
+
+
+<a href="#rio_tiler.experimental.zarr._group_metadata_key" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_group_metadata_key</span><span class="p">(</span><span class="n">reader</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Group metadata cache key: Zarr store location + group path.</p>
 
 
     </div>
