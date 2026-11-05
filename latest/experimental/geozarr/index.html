@@ -78,7 +78,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#asyncarrayreader" class="md-skip">
+        <a href="#mini-spec" class="md-skip">
           Skip to content
         </a>
       
@@ -691,6 +691,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#mini-spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mini Spec
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mini Spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arrays
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#readers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Readers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Readers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#asyncarrayreader" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -710,6 +761,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2655,6 +2711,57 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#mini-spec" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Mini Spec
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Mini Spec">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#arrays" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Arrays
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#groups" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Groups
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#readers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Readers
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Readers">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
   <a href="#asyncarrayreader" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2674,6 +2781,11 @@
       
     </span>
   </a>
+  
+</li>
+        
+      </ul>
+    </nav>
   
 </li>
         
@@ -2776,7 +2888,8 @@
 <li><code>isochron</code></li>
 </ul>
 <p>You can install the dependencies with `python -m pip install "rio-tiler[zarr]".</p>
-<p><strong>Zarr Array Mini Spec</strong></p>
+<h2 id="mini-spec">Mini Spec<a class="headerlink" href="#mini-spec" title="Permanent link">&para;</a></h2>
+<h3 id="arrays">Arrays<a class="headerlink" href="#arrays" title="Permanent link">&para;</a></h3>
 <p>If not provided as attribute, the <code>AsyncArrayReader</code>/<code>ArrayReader</code> will require some zarr-metadata/conventions:</p>
 <ul>
 <li>
@@ -2874,6 +2987,47 @@
         <span class="n">attributes</span><span class="o">=</span><span class="n">attributes</span><span class="p">,</span>
     <span class="p">)</span>
 </code></pre></div>
+<h3 id="groups">Groups<a class="headerlink" href="#groups" title="Permanent link">&para;</a></h3>
+<p>Variables discovery:</p>
+<ul>
+<li>If the opened group has valid arrays, they are the variables and the children groups are NOT scanned</li>
+<li>If the opened group is a <strong>multiscales</strong> group, its children groups (resolution levels) are NOT scanned</li>
+<li>Otherwise, the children groups are scanned (up to <code>RIO_TILER_ZARR_MAX_CHILDREN_DEPTH</code> levels, default to <code>10</code>, <code>-1</code> for no limit). The resolution level groups of a multiscales child group are not scanned.</li>
+<li>A <code>UserWarning</code> is emitted when the opened group has no valid arrays but has invalid ones, or is a multiscales group</li>
+</ul>
+<p>An array is a valid variable if:</p>
+<ul>
+<li>
+<p>it has 2 dimensions or more</p>
+</li>
+<li>
+<p><code>dimension_names</code> MUST be set in the zarr metadata</p>
+</li>
+<li>
+<p><strong>proj</strong>: one of <code>proj:code, proj:wkt2, proj:projjson</code> MUST be defined, at the array or group level (with the <code>proj</code> convention)</p>
+</li>
+<li>
+<p><strong>spatial</strong>:</p>
+<ul>
+<li><code>spatial:dimensions</code> MUST be defined at the array, multiscales layout or group level. Both dimensions MUST be in the array <code>dimension_names</code></li>
+<li><code>spatial:transform</code> MUST be defined:<ul>
+<li>non-multiscales groups: at the array or group level (with the <code>spatial</code> convention)</li>
+<li>multiscales groups: at the array (no convention required) or multiscales layout level</li>
+</ul>
+</li>
+</ul>
+</li>
+<li>
+<p><strong>coords</strong> (Optional): <code>coords:coordinates</code> CAN be defined at the array or group level (with the <code>coords</code> convention) to describe the non-spatial dimensions</p>
+</li>
+</ul>
+<p>For <strong>multiscales</strong> groups:</p>
+<ul>
+<li>arrays with the same name in each resolution level are aggregated as one variable</li>
+<li>the layouts are assumed to be ordered from the highest (<code>layout[0]</code>) to the lowest (<code>layout[-1]</code>) resolution</li>
+</ul>
+<p>The readers' <code>bounds</code>, <code>crs</code> and <code>zoom levels</code> are derived from the opened group metadata (<code>spatial:bbox</code>, or <code>spatial:shape</code> and <code>spatial:transform</code>, at the group or first multiscales layout level). They require both <code>spatial</code> and <code>proj</code> conventions at the group level, otherwise they default to <code>EPSG:4326</code> and <code>(-180, -90, 180, 90)</code>.</p>
+<h2 id="readers">Readers<a class="headerlink" href="#readers" title="Permanent link">&para;</a></h2>
 <h3 id="asyncarrayreader">AsyncArrayReader<a class="headerlink" href="#asyncarrayreader" title="Permanent link">&para;</a></h3>
 <div class="highlight"><pre><span></span><code><span class="kn">from</span><span class="w"> </span><span class="nn">affine</span><span class="w"> </span><span class="kn">import</span> <span class="n">Affine</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">S3Store</span>
@@ -2979,7 +3133,7 @@ for the non-spatial dimensions:</p>
 <p>N-D <code>ImageData</code> (more than 3 dimensions) have per-dimension <code>band_descriptions</code> and <code>band_names</code> (<code>dict</code>). Expressions, colormaps, statistics and image rendering (except <code>NPY</code>/<code>NPZ</code>) are only supported for 3D data, so use <code>sel</code> to reduce the data to a single non-spatial dimension first.</p>
 </div>
 <h2 id="asyncgroupreader">AsyncGroupReader<a class="headerlink" href="#asyncgroupreader" title="Permanent link">&para;</a></h2>
-<p>The group readers list as <code>variables</code> the arrays (2D or more) found in the groups with Geo/Spatial conventions. Arrays without <code>spatial:dimensions</code> (group or array level) or without <code>dimension_names</code> in the zarr metadata are skipped.</p>
+<p>The group readers list as <code>variables</code> the arrays (2D or more) found in the groups with Geo/Spatial conventions. </p>
 <p>Each variable is described by:</p>
 <ul>
 <li><code>name</code>: the array name</li>
