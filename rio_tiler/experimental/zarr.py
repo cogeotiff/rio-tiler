@@ -2511,16 +2511,24 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         # 2. Arrays Metadata
         # 2.1 Multiscale group handling
         if find_convention(conventions, MULTISCALE_CONVENTION_UUID):
-            for layout in attributes["multiscales"]["layout"]:
+            layouts = attributes["multiscales"]["layout"]
+
+            async def _get_layout_arrays(layout: dict) -> list[zarr.AsyncArray]:
+                # NOTE: `ms_group` reference group names so we know `getitem` return a group
+                msgroup = cast(zarr.AsyncGroup, await g.getitem(layout["asset"]))
+                return [array async for array in msgroup.array_values()]
+
+            # NOTE: fetch all the multiscale levels concurrently
+            # (`gather` keeps the layout order: highest resolution first)
+            layouts_arrays = await asyncio.gather(
+                *(_get_layout_arrays(layout) for layout in layouts)
+            )
+
+            for layout, layout_arrays in zip(layouts, layouts_arrays, strict=True):
                 layout_transform: Affine | None = _get_transform(layout)
                 layout_spatial_dims = layout.get("spatial:dimensions")
 
-                msgroup = await g.getitem(layout["asset"])
-
-                # NOTE: `ms_group` reference group names so we know `getitem` return a group
-                msgroup = cast(zarr.AsyncGroup, msgroup)
-
-                async for array in msgroup.array_values():
+                for array in layout_arrays:
                     array_crs = None
                     array_coordinates = None
 
