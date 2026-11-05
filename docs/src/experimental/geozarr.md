@@ -23,7 +23,6 @@ If not provided as attribute, the `AsyncArrayReader`/`ArrayReader` will require 
     - **proj**
         - one of `proj:code, proj:wkt2, proj:projjson` MUST be defined (as per the spatial specification)
 
-
     - **coords** (Optional)
         - `coords:coordinates`: CAN be defined to indicate the non-spatial coordinates names (band-descriptions)
 
