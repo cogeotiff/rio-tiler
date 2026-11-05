@@ -1846,6 +1846,8 @@ class GroupMetadata(TypedDict):
     transform: Affine | None
     multiscale: bool
     arrays: dict[str, list[ArrayMetadata]]
+    # number of (>=2D) arrays skipped because of missing/invalid metadata
+    invalid_arrays: int
 
 
 def calculate_output_transform(
@@ -2370,19 +2372,24 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         if self._variables is not None:
             return self._variables
 
-        ms_groups = []
         variables: list[dict[str, Any]] = []
 
         # 1. Check Root level group
         group_metadata = await self.get_group_metadata()
 
-        # Zarr store is a multiscale group
-        if group_metadata["multiscale"]:
-            ms_groups.append("__root__")
-
         # 2. Root has top level arrays
         # NOTE: By GeoZarr spec, if a group has top-level arrays, it won't have child groups.
-        if group_arrays := group_metadata["arrays"]:
+        group_arrays = group_metadata["arrays"]
+        if not group_arrays and (
+            group_metadata["invalid_arrays"] or group_metadata["multiscale"]
+        ):
+            warnings.warn(
+                f"No valid variables found in the root group ({group_metadata['invalid_arrays']} array(s) skipped).",
+                UserWarning,
+            )
+
+        # NOTE: a multiscale root's children are its resolution levels, never scan them.
+        if group_arrays or group_metadata["multiscale"]:
             variables.extend(
                 [
                     {
@@ -2400,12 +2407,17 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
 
         # 3. Check children groups (up to `ZARR_MAX_CHILDREN_DEPTH` level)
         else:
+            ms_groups: list[str] = []
+
             async for group_name, member in self.input.members(
                 max_depth=ZARR_MAX_CHILDREN_DEPTH
                 if ZARR_MAX_CHILDREN_DEPTH >= 0
                 else None
             ):
-                if any(group_name.startswith(msg) for msg in ms_groups):
+                if any(
+                    group_name == group or group_name.startswith(f"{group}/")
+                    for group in ms_groups
+                ):
                     continue
 
                 # Check Children group for variables
@@ -2452,6 +2464,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         )
 
         arrays: dict[str, list[ArrayMetadata]] = {}
+        invalid_arrays = 0
 
         group_crs: CRS | None = None
         group_transform: Affine | None = None
@@ -2502,26 +2515,28 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         )
                         continue
 
-                    variable_name = array.name.split("/")[-1]
-                    if variable_name not in arrays:
-                        arrays[variable_name] = []
-
                     array_attributes = cast(dict[str, Any], array.attrs)
                     array_conventions = array_attributes.get("zarr_conventions", [])
                     if find_convention(array_conventions, PROJ_CONVENTION_UUID):
                         array_crs = _get_proj_crs(array_attributes)
 
                     array_crs = array_crs or group_crs
-                    assert array_crs, (
-                        f"CRS metadata (proj convention) missing for multiscales layout {layout['asset']} (path: '{array.name}')"
-                    )
+                    if not array_crs:
+                        warnings.warn(
+                            f"Could not determine CRS for array {array.name}, skipping."
+                        )
+                        invalid_arrays += 1
+                        continue
 
                     # NOTE: Transform from the array or the multiscale layout
                     # For Multiscale arrays, the transform metadata doesn't have to be set at array metadata level (no convention)
                     array_transform = _get_transform(array_attributes) or layout_transform
-                    assert array_transform, (
-                        f"`spatial:transform` missing for multiscales layout {layout['asset']} (path: '{array.name}')"
-                    )
+                    if not array_transform:
+                        warnings.warn(
+                            f"Could not determine transform for array {array.name}, skipping."
+                        )
+                        invalid_arrays += 1
+                        continue
 
                     if find_convention(array_conventions, COORDS_CONVENTION_UUID):
                         array_coordinates = cast(
@@ -2538,6 +2553,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         warnings.warn(
                             f"`spatial:dimensions` not set for array {array.name}, skipping."
                         )
+                        invalid_arrays += 1
                         continue
 
                     dims = getattr(array.metadata, "dimension_names", []) or []
@@ -2545,12 +2561,17 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         warnings.warn(
                             f"`dimension_names` not set for array {array.name}, skipping."
                         )
+                        invalid_arrays += 1
                         continue
 
                     y_dim_pos = dims.index(array_spatial_dims[0])
                     x_dim_pos = dims.index(array_spatial_dims[1])
                     height = array.shape[y_dim_pos]
                     width = array.shape[x_dim_pos]
+
+                    variable_name = array.name.split("/")[-1]
+                    if variable_name not in arrays:
+                        arrays[variable_name] = []
 
                     arrays[variable_name].append(
                         {
@@ -2571,6 +2592,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 "transform": group_transform,
                 "multiscale": True,
                 "arrays": arrays,
+                "invalid_arrays": invalid_arrays,
             }
 
         # 2.2 Non-multiscale arrays handling
@@ -2601,7 +2623,20 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     )
 
                 array_crs = array_crs or group_crs
+                if not array_crs:
+                    warnings.warn(
+                        f"Could not determine CRS for array {array.name}, skipping."
+                    )
+                    invalid_arrays += 1
+                    continue
+
                 array_transform = array_transform or group_transform
+                if not array_transform:
+                    warnings.warn(
+                        f"Could not determine transform for array {array.name}, skipping."
+                    )
+                    invalid_arrays += 1
+                    continue
 
                 array_spatial_dims = (
                     array_attributes.get("spatial:dimensions") or group_spatial_dims or []
@@ -2610,6 +2645,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     warnings.warn(
                         f"`spatial:dimensions` not set for array {array.name}, skipping."
                     )
+                    invalid_arrays += 1
                     continue
 
                 dims = getattr(array.metadata, "dimension_names", [])
@@ -2617,6 +2653,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     warnings.warn(
                         f"`dimension_names` not set for array {array.name}, skipping."
                     )
+                    invalid_arrays += 1
                     continue
 
                 y_dim_pos = dims.index(array_spatial_dims[0])
@@ -2624,20 +2661,19 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 height = array.shape[y_dim_pos]
                 width = array.shape[x_dim_pos]
 
-                if all([array_crs, array_transform]):
-                    array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
-                    arrays[array_name] = [
-                        {
-                            "array": array,
-                            "crs": array_crs,
-                            "height": height,
-                            "width": width,
-                            "transform": array_transform,
-                            "dimensions": dims,
-                            "spatial_dims": array_spatial_dims,
-                            "coordinates": array_coordinates or group_coordinates,
-                        }
-                    ]
+                array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
+                arrays[array_name] = [
+                    {
+                        "array": array,
+                        "crs": array_crs,
+                        "height": height,
+                        "width": width,
+                        "transform": array_transform,
+                        "dimensions": dims,
+                        "spatial_dims": array_spatial_dims,
+                        "coordinates": array_coordinates or group_coordinates,
+                    }
+                ]
 
             self._groups[group] = {
                 "crs": group_crs,
@@ -2645,6 +2681,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 "transform": group_transform,
                 "multiscale": False,
                 "arrays": arrays,
+                "invalid_arrays": invalid_arrays,
             }
 
         return self._groups[group]
@@ -3334,19 +3371,24 @@ class GroupReader(BaseReader, GroupMixin):
         if self._variables is not None:
             return self._variables
 
-        ms_groups = []
         variables: list[dict[str, Any]] = []
 
         # 1. Check Root level group
         group_metadata = self.get_group_metadata()
 
-        # Zarr store is a multiscale group
-        if group_metadata["multiscale"]:
-            ms_groups.append("__root__")
-
         # 2. Root has top level arrays
         # NOTE: By GeoZarr spec, if a group has top-level arrays, it won't have child groups.
-        if group_arrays := group_metadata["arrays"]:
+        group_arrays = group_metadata["arrays"]
+        if not group_arrays and (
+            group_metadata["invalid_arrays"] or group_metadata["multiscale"]
+        ):
+            warnings.warn(
+                f"No valid variables found in the root group ({group_metadata['invalid_arrays']} array(s) skipped).",
+                UserWarning,
+            )
+
+        # NOTE: a multiscale root's children are its resolution levels, never scan them.
+        if group_arrays or group_metadata["multiscale"]:
             variables.extend(
                 [
                     {
@@ -3364,12 +3406,17 @@ class GroupReader(BaseReader, GroupMixin):
 
         # 3. Check children groups (up to `ZARR_MAX_CHILDREN_DEPTH` level)
         else:
+            ms_groups: list[str] = []
+
             for group_name, member in self.input.members(
                 max_depth=ZARR_MAX_CHILDREN_DEPTH
                 if ZARR_MAX_CHILDREN_DEPTH >= 0
                 else None
             ):
-                if any(group_name.startswith(msg) for msg in ms_groups):
+                if any(
+                    group_name == group or group_name.startswith(f"{group}/")
+                    for group in ms_groups
+                ):
                     continue
 
                 # Check Children group for variables
@@ -3414,6 +3461,7 @@ class GroupReader(BaseReader, GroupMixin):
         assert isinstance(g, zarr.Group), f"Group '{group}' not found in the Zarr store."
 
         arrays: dict[str, list[ArrayMetadata]] = {}
+        invalid_arrays = 0
 
         group_crs: CRS | None = None
         group_transform: Affine | None = None
@@ -3464,26 +3512,28 @@ class GroupReader(BaseReader, GroupMixin):
                         )
                         continue
 
-                    variable_name = array.name.split("/")[-1]
-                    if variable_name not in arrays:
-                        arrays[variable_name] = []
-
                     array_attributes = cast(dict[str, Any], array.attrs)
                     array_conventions = array_attributes.get("zarr_conventions", [])
                     if find_convention(array_conventions, PROJ_CONVENTION_UUID):
                         array_crs = _get_proj_crs(array_attributes)
 
                     array_crs = array_crs or group_crs
-                    assert array_crs, (
-                        f"CRS metadata (proj convention) missing for multiscales layout {layout['asset']} (path: '{array.name}')"
-                    )
+                    if not array_crs:
+                        warnings.warn(
+                            f"Could not determine CRS for array {array.name}, skipping."
+                        )
+                        invalid_arrays += 1
+                        continue
 
                     # NOTE: Transform from the array or the multiscale layout
                     # For Multiscale arrays, the transform metadata doesn't have to be set at array metadata level (no convention)
                     array_transform = _get_transform(array_attributes) or layout_transform
-                    assert array_transform, (
-                        f"`spatial:transform` missing for multiscales layout {layout['asset']} (path: '{array.name}')"
-                    )
+                    if not array_transform:
+                        warnings.warn(
+                            f"Could not determine transform for array {array.name}, skipping."
+                        )
+                        invalid_arrays += 1
+                        continue
 
                     if find_convention(array_conventions, COORDS_CONVENTION_UUID):
                         array_coordinates = cast(
@@ -3500,6 +3550,7 @@ class GroupReader(BaseReader, GroupMixin):
                         warnings.warn(
                             f"`spatial:dimensions` not set for array {array.name}, skipping."
                         )
+                        invalid_arrays += 1
                         continue
 
                     dims = getattr(array.metadata, "dimension_names", []) or []
@@ -3507,12 +3558,17 @@ class GroupReader(BaseReader, GroupMixin):
                         warnings.warn(
                             f"`dimension_names` not set for array {array.name}, skipping."
                         )
+                        invalid_arrays += 1
                         continue
 
                     y_dim_pos = dims.index(array_spatial_dims[0])
                     x_dim_pos = dims.index(array_spatial_dims[1])
                     height = array.shape[y_dim_pos]
                     width = array.shape[x_dim_pos]
+
+                    variable_name = array.name.split("/")[-1]
+                    if variable_name not in arrays:
+                        arrays[variable_name] = []
 
                     arrays[variable_name].append(
                         {
@@ -3533,6 +3589,7 @@ class GroupReader(BaseReader, GroupMixin):
                 "transform": group_transform,
                 "multiscale": True,
                 "arrays": arrays,
+                "invalid_arrays": invalid_arrays,
             }
 
         # 2.2 Non-multiscale arrays handling
@@ -3563,7 +3620,20 @@ class GroupReader(BaseReader, GroupMixin):
                     )
 
                 array_crs = array_crs or group_crs
+                if not array_crs:
+                    warnings.warn(
+                        f"Could not determine CRS for array {array.name}, skipping."
+                    )
+                    invalid_arrays += 1
+                    continue
+
                 array_transform = array_transform or group_transform
+                if not array_transform:
+                    warnings.warn(
+                        f"Could not determine transform for array {array.name}, skipping."
+                    )
+                    invalid_arrays += 1
+                    continue
 
                 array_spatial_dims = (
                     array_attributes.get("spatial:dimensions") or group_spatial_dims or []
@@ -3572,6 +3642,7 @@ class GroupReader(BaseReader, GroupMixin):
                     warnings.warn(
                         f"`spatial:dimensions` not set for array {array.name}, skipping."
                     )
+                    invalid_arrays += 1
                     continue
 
                 dims = getattr(array.metadata, "dimension_names", [])
@@ -3579,6 +3650,7 @@ class GroupReader(BaseReader, GroupMixin):
                     warnings.warn(
                         f"`dimension_names` not set for array {array.name}, skipping."
                     )
+                    invalid_arrays += 1
                     continue
 
                 y_dim_pos = dims.index(array_spatial_dims[0])
@@ -3586,20 +3658,19 @@ class GroupReader(BaseReader, GroupMixin):
                 height = array.shape[y_dim_pos]
                 width = array.shape[x_dim_pos]
 
-                if all([array_crs, array_transform]):
-                    array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
-                    arrays[array_name] = [
-                        {
-                            "array": array,
-                            "crs": array_crs,
-                            "height": height,
-                            "width": width,
-                            "transform": array_transform,
-                            "dimensions": dims,
-                            "spatial_dims": array_spatial_dims,
-                            "coordinates": array_coordinates or group_coordinates,
-                        }
-                    ]
+                array_name = array.name.replace(f"{g.name}/", "").lstrip("/")
+                arrays[array_name] = [
+                    {
+                        "array": array,
+                        "crs": array_crs,
+                        "height": height,
+                        "width": width,
+                        "transform": array_transform,
+                        "dimensions": dims,
+                        "spatial_dims": array_spatial_dims,
+                        "coordinates": array_coordinates or group_coordinates,
+                    }
+                ]
 
             self._groups[group] = {
                 "crs": group_crs,
@@ -3607,6 +3678,7 @@ class GroupReader(BaseReader, GroupMixin):
                 "transform": group_transform,
                 "multiscale": False,
                 "arrays": arrays,
+                "invalid_arrays": invalid_arrays,
             }
 
         return self._groups[group]
