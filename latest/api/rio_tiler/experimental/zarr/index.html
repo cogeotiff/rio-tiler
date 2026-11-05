@@ -2113,6 +2113,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.ZARR_MAX_CHILDREN_DEPTH" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ZARR_MAX_CHILDREN_DEPTH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr.ArrayMetadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -3467,6 +3478,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.ZARR_MAX_CHILDREN_DEPTH" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;ZARR_MAX_CHILDREN_DEPTH
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr.ArrayMetadata" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4398,6 +4420,32 @@
 
 
 
+
+<div class="doc doc-object doc-attribute">
+
+
+
+<h3 id="rio_tiler.experimental.zarr.ZARR_MAX_CHILDREN_DEPTH" class="doc doc-heading">
+            <span class="doc doc-object-name doc-attribute-name">ZARR_MAX_CHILDREN_DEPTH</span>
+
+
+  <span class="doc doc-labels">
+      <small class="doc doc-label doc-label-module-attribute"><code>module-attribute</code></small>
+  </span>
+
+<a href="#rio_tiler.experimental.zarr.ZARR_MAX_CHILDREN_DEPTH" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="n">ZARR_MAX_CHILDREN_DEPTH</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="n"><span title="int">int</span></span><span class="p">(</span><span class="n"><span title="os">os</span></span><span class="o">.</span><span class="n"><span title="os.environ">environ</span></span><span class="o">.</span><span class="n"><span title="os.environ.get">get</span></span><span class="p">(</span><span class="s1">'RIO_TILER_ZARR_MAX_CHILDREN_DEPTH'</span><span class="p">,</span> <span class="mi">10</span><span class="p">))</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>The maximum number of levels of the hierarchy to include within one Zarr Store. Set
+<code>RIO_TILER_ZARR_MAX_CHILDREN_DEPTH=-1</code> to include all nodes, and some positive integer
+to consider children within that many levels of the root Group.</p>
+
+    </div>
+
+</div>
 
 
 
@@ -7343,7 +7391,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Find arrays in a Zarr store and extract spatial metadata.</p>
+        <p>Find arrays in a Zarr Group and extract metadata.</p>
 
 
     </div>
@@ -8879,7 +8927,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
     <div class="doc doc-contents ">
 
-        <p>Find arrays in a Zarr store and extract spatial metadata.</p>
+        <p>Find arrays in a Zarr Group and extract metadata.</p>
 
 
     </div>
