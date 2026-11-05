@@ -201,22 +201,25 @@ ds = AsyncArrayReader(
     },
 )
 # Select one time step using the `time` coordinate values (exact match)
-img = await ds.tile(9, 10, 5, sel={"time": time_arrray[9]})
+img = await ds.tile(9, 10, 5, sel=[{"dimension": "time", "values": time_arrray[9]}])
 print(img.array.shape)
 >> (1, 256, 256)
 
 # Select the closest time step
-img = await ds.tile(9, 10, 5, sel={"time": time_arrray[9] + 1}, sel_method="nearest")
+img = await ds.tile(
+    9, 10, 5, sel=[{"dimension": "time", "values": time_arrray[9] + 1, "method": "nearest"}]
+)
 ```
 
 #### Selection on non-spatial dimensions
 
-`AsyncArrayReader` and `ArrayReader` methods accept `sel` and `sel_method` options which mimic
+`AsyncArrayReader` and `ArrayReader` methods accept a `sel` option which mimics
 [`xarray.DataArray.sel`](https://docs.xarray.dev/en/stable/generated/xarray.DataArray.sel.html)
 for the non-spatial dimensions:
 
-- `sel`: `{dimension: selector}` where the selector can be a scalar (the dimension is dropped), a list of values or a `slice` (inclusive bounds)
-- `sel_method`: `None` (exact match, default), `nearest`, `pad`/`ffill` or `backfill`/`bfill`
+- `sel`: list of `Selector` (`{"dimension": str, "values": Any, "method": str | None}`), one per non-spatial dimension
+- `values` can be a scalar (the dimension is dropped), a list of values or a `slice` (inclusive bounds)
+- `method` (per dimension): `None` (exact match, default), `nearest`, `pad`/`ffill` or `backfill`/`bfill`
 - Values are matched against the `coordinates` (inline or interval). When a dimension has no coordinates, the positions (`0, 1, ..., n - 1`) are used for selection and the values are labelled `{dimension}{position + 1}` (e.g `time1`).
 - Temporal coordinates accept ISO 8601 strings (e.g `"2025-01-01"`, `"2025-01-01T00:00:00Z"`)
 
@@ -231,11 +234,16 @@ ds = AsyncArrayReader(
     },
 )
 
-img = await ds.preview(sel={"time": "2025-01-15", "z": 120}, sel_method="nearest")
+img = await ds.preview(
+    sel=[
+        {"dimension": "time", "values": "2025-01-15", "method": "nearest"},
+        {"dimension": "z", "values": 120, "method": "nearest"},
+    ]
+)
 print(img.array.shape, img.metadata)
 >> (1, 1024, 1024) {'selected': {'time': ['2025-01-01T00:00:00Z'], 'z': [100]}}
 
-img = await ds.preview(sel={"z": [0, 100]})
+img = await ds.preview(sel=[{"dimension": "z", "values": [0, 100]}])
 print(img.array.shape, img.band_descriptions)
 >> (2, 2, 1024, 1024) {'time': ['2025-01-01T00:00:00Z', '2025-02-01T00:00:00Z'], 'z': ['0', '100']}
 ```

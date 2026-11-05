@@ -203,12 +203,12 @@ with ArrayReader(
     ...
 ```
 
-### `indexes` replaced by `sel`/`sel_method`
+### `indexes` replaced by `sel`
 
-The `indexes` option has been **removed** from all the zarr readers' methods (`read`, `tile`, `part`, `preview`, `point`, `feature`, `statistics`). Non-spatial dimensions are now selected with xarray-like `sel` and `sel_method` options:
+The `indexes` option has been **removed** from all the zarr readers' methods (`read`, `tile`, `part`, `preview`, `point`, `feature`, `statistics`). Non-spatial dimensions are now selected with an xarray-like `sel` option, a list of `Selector` (`{"dimension": str, "values": Any, "method": str | None}`):
 
-- `sel`: `{dimension: value | list | slice}`, selection using the `coordinates` values (or positions when a dimension has no coordinates). A scalar drops the dimension
-- `sel_method`: `None` (exact match, default), `nearest`, `pad`/`ffill` or `backfill`/`bfill`
+- `values`: `value | list | slice`, selection using the `coordinates` values (or positions when a dimension has no coordinates). A scalar drops the dimension
+- `method` (per dimension): `None` (exact match, default), `nearest`, `pad`/`ffill` or `backfill`/`bfill`
 
 ```python
 # before (9.x)
@@ -218,13 +218,15 @@ with ArrayReader(array, band_names=["red", "green", "blue"]) as src:
 # now (10.x)
 with ArrayReader(array) as src:  # dimensions: ["band", "y", "x"]
     # select by coordinate values
-    img = src.tile(x, y, z, sel={"band": ["red", "green"]})
+    img = src.tile(x, y, z, sel=[{"dimension": "band", "values": ["red", "green"]}])
 
     # or by position, when the dimension has no coordinates
-    img = src.tile(x, y, z, sel={"band": [0, 1]})
+    img = src.tile(x, y, z, sel=[{"dimension": "band", "values": [0, 1]}])
 
     # inexact match on a time dimension
-    img = src.tile(x, y, z, sel={"time": "2025-01-15"}, sel_method="nearest")
+    img = src.tile(
+        x, y, z, sel=[{"dimension": "time", "values": "2025-01-15", "method": "nearest"}]
+    )
 ```
 
 Unselected non-spatial dimensions are kept, so readers now return `(*non-spatial dims, height, width)` data, which can be N-D. The selected labels are stored in `ImageData.metadata["selected"]`.
@@ -307,7 +309,7 @@ with GroupReader(group) as src:
 
 ### Custom Array Reader Subclasses
 
-The internal `_read` method signature changed from `_read(row_slice=, col_slice=, indexes=)` to `_read(y_slice=, x_slice=, sel=, sel_method=)`, and reads now use zarr's `get_orthogonal_selection`.
+The internal `_read` method signature changed from `_read(row_slice=, col_slice=, indexes=)` to `_read(y_slice=, x_slice=, sel=)`, and reads now use zarr's `get_orthogonal_selection`.
 
 
 ## New Features
@@ -379,4 +381,4 @@ img = await run_sync(img.resize, 512, 512)
 
 8. **Update zarr expressions and statistics keys** - Use `{dimension}{n}` (e.g. `band1`) for Array readers and `variables{n}` for Group readers
 
-9. **Update custom zarr reader subclasses** - `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=, sel=, sel_method=)`
+9. **Update custom zarr reader subclasses** - `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=, sel=)`
