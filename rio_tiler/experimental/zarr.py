@@ -219,13 +219,16 @@ def _get_coordinate_values(coordinates: dict) -> numpy.ndarray | None:
             start_datetime = parse_datetime(coordinates["start"])
             stop_datetime = parse_datetime(coordinates["stop"])
             step_duration = parse_duration(step)
-            if isinstance(step_duration, Duration):
-                size = (stop_datetime - start_datetime) // step_duration.to_timedelta(
-                    start_datetime
-                ) + 1
-            else:
+            if not isinstance(step_duration, Duration):
+                # NOTE: fixed length step (e.g `PT1H`, `P1D`), vectorized
                 size = ((stop_datetime - start_datetime) // step_duration) + 1
+                step64 = numpy.timedelta64(step_duration).astype("timedelta64[ns]")
+                return _to_datetime64(start_datetime) + numpy.arange(size) * step64
 
+            # NOTE: calendar step (e.g `P1M`, `P1Y`) have variable length
+            size = (stop_datetime - start_datetime) // step_duration.to_timedelta(
+                start_datetime
+            ) + 1
             return numpy.array(
                 [
                     _to_datetime64(start_datetime + i * step_duration)  # type: ignore
@@ -502,17 +505,22 @@ class ArrayMixin(SpatialMixin):
         return [dim for dim in self.dimensions if dim not in self.spatial_dims]
 
     @cached_property
-    def _coordinates(self) -> dict[str, tuple[numpy.ndarray, list[Any]]]:
-        """Return coordinate values and labels for each non-spatial dimension.
+    def _coordinates(
+        self,
+    ) -> dict[str, tuple[numpy.ndarray, Callable[[numpy.ndarray], list[Any]]]]:
+        """Return coordinate values and labels getter for each non-spatial dimension.
 
         - values: derived from the `coordinates` (inline or interval), used for selection.
           Default to the array positions (`0, 1, ..., n - 1`) when not available.
-        - labels: inline values as defined in the coordinates, formatted interval values
-          or `{dim}{position + 1}` (e.g `time1`) when coordinates are not available.
+        - labels getter: return the labels for an array of positions. Labels are the inline
+          values as defined in the coordinates, formatted interval values or
+          `{dim}{position + 1}` (e.g `time1`) when coordinates are not available.
+
+        NOTE: labels are created only for the requested positions (dimensions can be large).
         """
         coordinates = self.coordinates or {}
 
-        out: dict[str, tuple[numpy.ndarray, list[Any]]] = {}
+        out: dict[str, tuple[numpy.ndarray, Callable[[numpy.ndarray], list[Any]]]] = {}
         for dim in self.non_spatial_dims:
             size = self.input.shape[self.dimensions.index(dim)]
 
@@ -528,14 +536,26 @@ class ArrayMixin(SpatialMixin):
 
             # no coordinates metadata
             if values is None:
-                out[dim] = (numpy.arange(size), [f"{dim}{ix + 1}" for ix in range(size)])
+                out[dim] = (
+                    numpy.arange(size),
+                    lambda pos, dim=dim: [f"{dim}{ix + 1}" for ix in pos.tolist()],  # type: ignore[misc]
+                )
 
             # inline coordinates
             elif coordinates[dim]["type"] == "inline":
-                out[dim] = (values, list(coordinates[dim]["values"]))
+                inline_values = coordinates[dim]["values"]
+                out[dim] = (
+                    values,
+                    lambda pos, inline_values=inline_values: [  # type: ignore[misc]
+                        inline_values[ix] for ix in pos.tolist()
+                    ],
+                )
 
             else:
-                out[dim] = (values, _format_coordinate_values(values))
+                out[dim] = (
+                    values,
+                    lambda pos, values=values: _format_coordinate_values(values[pos]),  # type: ignore[misc]
+                )
 
         return out
 
@@ -544,16 +564,16 @@ class ArrayMixin(SpatialMixin):
         """Return coordinate values (used for selection) for each non-spatial dimension."""
         return {dim: values for dim, (values, _) in self._coordinates.items()}
 
-    def _get_labels(self, dim: str, idx: int | numpy.ndarray | slice) -> list[Any]:
-        """Return labels for a positional selection on a non-spatial dimension."""
-        labels = self._coordinates[dim][1]
-        if isinstance(idx, int):
-            return [labels[idx]]
+    def _get_labels(
+        self, dim: str, idx: int | numpy.ndarray | slice | None = None
+    ) -> list[Any]:
+        """Return labels for a positional selection on a non-spatial dimension (all labels when `idx` is None)."""
+        values, get_labels = self._coordinates[dim]
+        positions = numpy.arange(len(values))
+        if idx is not None:
+            positions = numpy.atleast_1d(positions[idx])
 
-        if isinstance(idx, slice):
-            return labels[idx]
-
-        return [labels[ix] for ix in idx]
+        return get_labels(positions)
 
     def _get_non_spatial_selection(
         self,
@@ -651,7 +671,7 @@ class ArrayMixin(SpatialMixin):
 
         if with_coordinates:
             meta["coordinates"] = {
-                dim: values for dim, (_, values) in self._coordinates.items()
+                dim: self._get_labels(dim) for dim in self._coordinates
             }
 
         minv, maxv = attrs.get("valid_min"), attrs.get("valid_max")
