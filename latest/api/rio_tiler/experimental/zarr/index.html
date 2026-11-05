@@ -2930,6 +2930,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr._get_slices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_slices
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr._get_zoom" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4321,6 +4332,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_proj_crs
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr._get_slices" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_slices
       
     </span>
   </a>
@@ -10076,6 +10098,90 @@ For 2D arrays, treats as single-band (height, width).</p>
     <div class="doc doc-contents ">
 
         <p>Get CRS defined by PROJ conventions.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.experimental.zarr._get_slices" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_get_slices</span>
+
+
+<a href="#rio_tiler.experimental.zarr._get_slices" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_slices</span><span class="p">(</span><span class="n">window</span><span class="p">:</span> <span class="n"><span title="rasterio.windows.Window">Window</span></span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">pad</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">0</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="slice">slice</span></span><span class="p">,</span> <span class="n"><span title="slice">slice</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Get the Y/X slices covering a pixel window, clamped to the array bounds.</p>
+
+
+<p><span class="doc-section-title">Parameters:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+            <b><code>window</code></b>
+              (<code><span title="rasterio.windows.Window">Window</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Pixel window (can be fractional and/or outside the array).</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>height</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Array height.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>width</code></b>
+              (<code><span title="int">int</span></code>)
+          –
+          <div class="doc-md-description">
+            <p>Array width.</p>
+          </div>
+        </li>
+        <li class="doc-section-item field-body">
+            <b><code>pad</code></b>
+              (<code><span title="int">int</span></code>, default:
+                  <code>0</code>
+)
+          –
+          <div class="doc-md-description">
+            <p>Number of pixels to add on each side of the window
+(e.g. for resampling kernels needing neighbouring pixels). Defaults to <code>0</code>.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Returns:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><span title="tuple">tuple</span>[<span title="slice">slice</span>, <span title="slice">slice</span>]</code>
+          –
+          <div class="doc-md-description">
+            <p>tuple[slice, slice]: Y (rows) and X (columns) slices.</p>
+          </div>
+        </li>
+    </ul>
+
+
+<p><span class="doc-section-title">Raises:</span></p>
+    <ul>
+        <li class="doc-section-item field-body">
+              <code><a class="autorefs autorefs-internal" title="InvalidBounds (rio_tiler.errors.InvalidBounds)" href="../../errors/#rio_tiler.errors.InvalidBounds">InvalidBounds</a></code>
+            –
+          <div class="doc-md-description">
+            <p>If the window does not intersect the array.</p>
+          </div>
+        </li>
+    </ul>
 
 
     </div>
