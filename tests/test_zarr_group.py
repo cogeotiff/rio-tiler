@@ -761,6 +761,7 @@ async def test_geozarr_root_async(geozarr_root_store):
             "transform": None,
             "multiscale": False,
             "arrays": {},
+            "invalid_arrays": 0,
         }
 
         meta = await geozarrds.get_group_metadata("data")
@@ -882,6 +883,7 @@ def test_geozarr_root(geozarr_root_store):
             "transform": None,
             "multiscale": False,
             "arrays": {},
+            "invalid_arrays": 0,
         }
 
         meta = geozarrds.get_group_metadata("data")
@@ -1266,6 +1268,7 @@ async def test_custom_geozarr_separator_async():
             "transform": None,
             "multiscale": False,
             "arrays": {},
+            "invalid_arrays": 0,
         }
 
         # No Multiscale
