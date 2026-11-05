@@ -51,6 +51,7 @@ dev = [
     # Experimental
     "vsifile>=0.2",
     "zarr~=3.0",
+    "async-lru>=2.4",
     "obstore",
     "isochron",
     "async-geotiff>=0.3,<0.6",
@@ -93,6 +94,7 @@ xarray = [
 # for experimental.zarr Readers
 zarr = [
     "zarr~=3.0",
+    "async-lru>=2.4",
     "obstore",
     "isochron",
 ]
@@ -218,4 +220,6 @@ filterwarnings = [
     # affine>=3 deprecates `*` for matrix multiplication; still used by
     # third-party dependencies (async-geotiff, rioxarray)
     "ignore:Use `@` matmul:PendingDeprecationWarning",
+    # async-lru caches are reset when used from a new event loop (one per test)
+    "ignore::async_lru.AlruCacheLoopResetWarning",
 ]

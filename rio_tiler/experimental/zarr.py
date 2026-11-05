@@ -15,6 +15,8 @@ import attr
 import numpy
 import zarr
 from affine import Affine
+from async_lru import alru_cache
+from cachetools import LRUCache, TTLCache, cached
 from isochron import (
     UTC,
     Duration,
@@ -64,10 +66,26 @@ ZARR_MAX_CHILDREN_DEPTH: int = int(
 ``RIO_TILER_ZARR_MAX_CHILDREN_DEPTH=-1`` to include all nodes, and some positive integer
 to consider children within that many levels of the root Group."""
 
+ZARR_METADATA_CACHE_MAXSIZE: int = int(
+    os.environ.get("RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE", 512)
+)
+"""Maximum number of Zarr groups metadata to keep in cache (shared by all Group readers)."""
+
+ZARR_METADATA_CACHE_TTL: int = int(
+    os.environ.get("RIO_TILER_ZARR_METADATA_CACHE_TTL", 300)
+)
+"""Time (in seconds) a Zarr group metadata stays in cache. Set ``0`` to disable expiration."""
+
+
 MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
 SPATIAL_CONVENTION_UUID = "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
 PROJ_CONVENTION_UUID = "f17cb550-5864-4468-aeb7-f3180cfb622f"
 COORDS_CONVENTION_UUID = "6ca4454a-658a-4348-a667-b39ced0e58cb"
+
+
+def _group_metadata_key(reader: Any, group: str | None = None) -> tuple[str, str]:
+    """Group metadata cache key: Zarr store location + group path."""
+    return (str(reader.input.store_path), group or "__root__")
 
 
 def find_convention(conventions: list[dict], uuid: str) -> bool:
@@ -2027,8 +2045,6 @@ class GroupMixin(SpatialMixin):
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    # list of availables the groups with variables (used for cache)
-    _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
     _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
 
     _group_var_sep: str = ":"
@@ -2252,8 +2268,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    # list of availables the groups with variables (used for cache)
-    _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
     _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
 
     _group_var_sep: str = ":"
@@ -2447,17 +2461,19 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         self._variables = variables
         return self._variables
 
+    # NOTE: cache shared by all readers, keyed by store location and group path.
+    # Concurrent calls with the same key share a single in-flight task.
+    @alru_cache(
+        maxsize=ZARR_METADATA_CACHE_MAXSIZE,
+        ttl=ZARR_METADATA_CACHE_TTL or None,
+        key=_group_metadata_key,
+    )
     async def get_group_metadata(  # noqa: C901
         self,
         group: str | None = None,
     ) -> GroupMetadata:
         """Find arrays in a Zarr Group and extract metadata."""
         group = group or "__root__"
-
-        # NOTE: Check in cache
-        if group in self._groups:
-            return self._groups[group]
-
         g = self.input if group == "__root__" else await self.input.getitem(group)
         assert isinstance(g, zarr.AsyncGroup), (
             f"Group '{group}' not found in the Zarr store."
@@ -2586,7 +2602,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         }
                     )
 
-            self._groups[group] = {
+            return {
                 "crs": group_crs,
                 "bbox": group_bbox,
                 "transform": group_transform,
@@ -2675,7 +2691,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                     }
                 ]
 
-            self._groups[group] = {
+            return {
                 "crs": group_crs,
                 "bbox": group_bbox,
                 "transform": group_transform,
@@ -2683,8 +2699,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 "arrays": arrays,
                 "invalid_arrays": invalid_arrays,
             }
-
-        return self._groups[group]
 
     async def info(self) -> GeoZarrInfo:  # type: ignore[override]
         """Return Dataset's info.
@@ -3250,8 +3264,6 @@ class GroupReader(BaseReader, GroupMixin):
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    # list of availables the groups with variables (used for cache)
-    _groups: dict[str, GroupMetadata] = attr.ib(init=False, factory=dict)
     _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
 
     _group_var_sep: str = ":"
@@ -3446,17 +3458,19 @@ class GroupReader(BaseReader, GroupMixin):
         self._variables = variables
         return self._variables
 
+    # NOTE: cache shared by all readers, keyed by store location and group path.
+    @cached(
+        TTLCache(maxsize=ZARR_METADATA_CACHE_MAXSIZE, ttl=ZARR_METADATA_CACHE_TTL)
+        if ZARR_METADATA_CACHE_TTL
+        else LRUCache(maxsize=ZARR_METADATA_CACHE_MAXSIZE),
+        key=_group_metadata_key,
+    )
     def get_group_metadata(  # noqa: C901
         self,
         group: str | None = None,
     ) -> GroupMetadata:
         """Find arrays in a Zarr Group and extract metadata."""
         group = group or "__root__"
-
-        # NOTE: Check in cache
-        if group in self._groups:
-            return self._groups[group]
-
         g = self.input if group == "__root__" else self.input[group]
         assert isinstance(g, zarr.Group), f"Group '{group}' not found in the Zarr store."
 
@@ -3583,7 +3597,7 @@ class GroupReader(BaseReader, GroupMixin):
                         }
                     )
 
-            self._groups[group] = {
+            return {
                 "crs": group_crs,
                 "bbox": group_bbox,
                 "transform": group_transform,
@@ -3672,7 +3686,7 @@ class GroupReader(BaseReader, GroupMixin):
                     }
                 ]
 
-            self._groups[group] = {
+            return {
                 "crs": group_crs,
                 "bbox": group_bbox,
                 "transform": group_transform,
@@ -3680,8 +3694,6 @@ class GroupReader(BaseReader, GroupMixin):
                 "arrays": arrays,
                 "invalid_arrays": invalid_arrays,
             }
-
-        return self._groups[group]
 
     def info(self) -> GeoZarrInfo:  # type: ignore[override]
         """Return Dataset's info.
