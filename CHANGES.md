@@ -17,6 +17,8 @@
 * change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) stack the variables along a new `variables` dimension (labeled with the variable names in `band_descriptions`) (N-D data, or 3D `[variables, y, x]` when all the variables are 2D). When only one variable is requested, its data is returned as is (no `variables` dimension)
 * add: `reduce(dim, func)` method to `ImageData` and `PointData` to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in `metadata["reduced"]`)
 * add: `resampling_method` option to the zarr Array readers' `tile` method
+* change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) cache `get_group_metadata` results in a cache shared by all readers (keyed by store location and group path), concurrent calls for the same group share a single request. Cache size and TTL are configurable with `RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE` (default: 512) and `RIO_TILER_ZARR_METADATA_CACHE_TTL` (default: 300 seconds)
+* add: `async-lru>=2.4` to the `zarr` optional dependencies
 * add: `rio_tiler.utils.run_sync` to run a blocking function in a worker thread, forwarding the active rasterio environment
 * breaking: replace `indexes` with xarray-like `sel` and `sel_method` options in `rio_tiler.experimental.zarr` readers
     * `sel` (`{dimension: value | list | slice}`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)

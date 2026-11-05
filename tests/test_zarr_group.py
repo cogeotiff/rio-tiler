@@ -19,6 +19,17 @@ from .utils import (
 )
 
 
+@pytest.fixture(autouse=True)
+def clear_group_metadata_cache():
+    """Clear the (shared) group metadata caches between tests.
+
+    MemoryStore cache keys are based on `id()`, which can be reused by a new store.
+    """
+    AsyncGroupReader.get_group_metadata.cache_clear()
+    GroupReader.get_group_metadata.cache_clear()
+    yield
+
+
 @pytest.fixture
 def geozarr_store():
     """Create an in-memory GeoZarr store"""

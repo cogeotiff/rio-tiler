@@ -157,11 +157,11 @@ wheels = [
 
 [[package]]
 name = "async-lru"
-version = "2.3.0"
+version = "2.4.0"
 source = { registry = "https://pypi.org/simple" }
-sdist = { url = "https://files.pythonhosted.org/packages/e8/1f/989ecfef8e64109a489fff357450cb73fa73a865a92bd8c272170a6922c2/async_lru-2.3.0.tar.gz", hash = "sha256:89bdb258a0140d7313cf8f4031d816a042202faa61d0ab310a0a538baa1c24b6", size = 16332, upload-time = "2026-03-19T01:04:32.413Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/8f/43/9d22679e8dd0ed965182cca990d32c68b150730cce8046ad61b3179b5b7a/async_lru-2.4.0.tar.gz", hash = "sha256:b0b0077d9b7596615b3c12d0aad4f6aeccaaa0ac75ceae472608ede89e764c08", size = 22927, upload-time = "2026-10-12T18:12:54.276Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/e5/e2/c2e3abf398f80732e58b03be77bde9022550d221dd8781bf586bd4d97cc1/async_lru-2.3.0-py3-none-any.whl", hash = "sha256:eea27b01841909316f2cc739807acea1c623df2be8c5cfad7583286397bb8315", size = 8403, upload-time = "2026-03-19T01:04:30.883Z" },
+    { url = "https://files.pythonhosted.org/packages/ec/0b/6a817103fb78faca4970c686a61065047da7226aba0d7cae6d4299b20c59/async_lru-2.4.0-py3-none-any.whl", hash = "sha256:1b46a96419ef91fe11431d58db98d792c9b4250001427191a40faf1031934212", size = 10045, upload-time = "2026-10-12T18:12:53.091Z" },
 ]
 
 [[package]]
@@ -4200,6 +4200,7 @@ xarray = [
     { name = "xarray" },
 ]
 zarr = [
+    { name = "async-lru" },
     { name = "isochron" },
     { name = "obstore" },
     { name = "zarr" },
@@ -4211,6 +4212,7 @@ deploy = [
 ]
 dev = [
     { name = "async-geotiff" },
+    { name = "async-lru" },
     { name = "boto3" },
     { name = "h5netcdf" },
     { name = "h5py" },
@@ -4252,6 +4254,7 @@ performance = [
 requires-dist = [
     { name = "affine", specifier = ">=3.0" },
     { name = "async-geotiff", marker = "extra == 'geotiff'", specifier = ">=0.5,<0.6" },
+    { name = "async-lru", marker = "extra == 'zarr'", specifier = ">=2.0" },
     { name = "attrs" },
     { name = "boto3", marker = "extra == 's3'" },
     { name = "cachetools" },
@@ -4280,6 +4283,7 @@ provides-extras = ["geoarray", "geotiff", "s3", "xarray", "zarr"]
 deploy = [{ name = "hatch" }]
 dev = [
     { name = "async-geotiff", specifier = ">=0.3,<0.6" },
+    { name = "async-lru", specifier = ">=2.0" },
     { name = "boto3" },
     { name = "h5netcdf" },
     { name = "h5py" },
