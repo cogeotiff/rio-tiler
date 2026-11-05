@@ -34,6 +34,7 @@ from rasterio.transform import array_bounds, from_bounds, rowcol
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
+from rasterio.windows import Window
 from rasterio.windows import from_bounds as window_from_bounds
 
 from rio_tiler._warp import warp
@@ -121,6 +122,47 @@ def _get_transform(attributes: dict) -> Affine | None:
         return Affine(*tr)
 
     return None
+
+
+def _get_slices(
+    window: Window,
+    height: int,
+    width: int,
+    pad: int = 0,
+) -> tuple[slice, slice]:
+    """Get the Y/X slices covering a pixel window, clamped to the array bounds.
+
+    Args:
+        window (rasterio.windows.Window): Pixel window (can be fractional and/or outside the array).
+        height (int): Array height.
+        width (int): Array width.
+        pad (int, optional): Number of pixels to add on each side of the window
+            (e.g. for resampling kernels needing neighbouring pixels). Defaults to `0`.
+
+    Returns:
+        tuple[slice, slice]: Y (rows) and X (columns) slices.
+
+    Raises:
+        InvalidBounds: If the window does not intersect the array.
+
+    """
+    # NOTE: round to avoid floating point noise (e.g `256.0000000001`)
+    # adding a pixel (and potentially a chunk) to the read
+    row_start = math.floor(round(window.row_off, 6))
+    col_start = math.floor(round(window.col_off, 6))
+    row_stop = math.ceil(round(window.row_off + window.height, 6))
+    col_stop = math.ceil(round(window.col_off + window.width, 6))
+
+    # NOTE: check intersection on the un-padded window
+    if max(0, row_start) >= min(height, row_stop) or max(0, col_start) >= min(
+        width, col_stop
+    ):
+        raise InvalidBounds("Input BBOX and dataset bounds do not intersect")
+
+    return (
+        slice(max(0, row_start - pad), min(height, row_stop + pad)),
+        slice(max(0, col_start - pad), min(width, col_stop + pad)),
+    )
 
 
 SelMethod = Literal["nearest", "pad", "ffill", "backfill", "bfill"]
@@ -839,33 +881,21 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
         # 3. Build pixel window from bounds in dataset CRS
         window = window_from_bounds(*dst_bounds, transform=self.transform)
 
-        # 4. Validate window intersection
-        row_off = math.floor(window.row_off)
-        col_off = math.floor(window.col_off)
-        win_width = math.ceil(window.width) + 1
-        win_height = math.ceil(window.height) + 1
+        # 4. Get Y/X slices (clamped to array bounds)
+        # NOTE: resampling kernels other than `nearest` need neighbouring pixels
+        pad = 0 if reproject_method == resampling_method == "nearest" else 1
+        y_slice, x_slice = _get_slices(window, self.height, self.width, pad=pad)
 
-        col_end = min(self.width, math.ceil(window.col_off + window.width))
-        row_end = min(self.height, math.ceil(window.row_off + window.height))
-        if col_off >= col_end or row_off >= row_end:
-            raise InvalidBounds("Input BBOX and dataset bounds do not intersect")
-
-        # 5. Clamp window to array bounds
-        clipped_col_off = max(0, col_off)
-        clipped_row_off = max(0, row_off)
-        clipped_col_stop = min(self.width, col_off + win_width)
-        clipped_row_stop = min(self.height, row_off + win_height)
-
-        # 6. Read data from zarr array
+        # 5. Read data from zarr array
         img = await self._read(
-            y_slice=slice(clipped_row_off, clipped_row_stop),
-            x_slice=slice(clipped_col_off, clipped_col_stop),
+            y_slice=y_slice,
+            x_slice=x_slice,
             sel=sel,
             sel_method=sel_method,
             nodata=nodata,
         )
 
-        # 7. Reproject/resample to output CRS and dimensions
+        # 6. Reproject/resample to output CRS and dimensions
         img = await run_sync(
             warp,
             img,
@@ -1440,33 +1470,21 @@ class ArrayReader(BaseReader, ArrayMixin):
         # 3. Build pixel window from bounds in dataset CRS
         window = window_from_bounds(*dst_bounds, transform=self.transform)
 
-        # 4. Validate window intersection
-        row_off = math.floor(window.row_off)
-        col_off = math.floor(window.col_off)
-        win_width = math.ceil(window.width) + 1
-        win_height = math.ceil(window.height) + 1
+        # 4. Get Y/X slices (clamped to array bounds)
+        # NOTE: resampling kernels other than `nearest` need neighbouring pixels
+        pad = 0 if reproject_method == resampling_method == "nearest" else 1
+        y_slice, x_slice = _get_slices(window, self.height, self.width, pad=pad)
 
-        col_end = min(self.width, math.ceil(window.col_off + window.width))
-        row_end = min(self.height, math.ceil(window.row_off + window.height))
-        if col_off >= col_end or row_off >= row_end:
-            raise InvalidBounds("Input BBOX and dataset bounds do not intersect")
-
-        # 5. Clamp window to array bounds
-        clipped_col_off = max(0, col_off)
-        clipped_row_off = max(0, row_off)
-        clipped_col_stop = min(self.width, col_off + win_width)
-        clipped_row_stop = min(self.height, row_off + win_height)
-
-        # 6. Read data from zarr array
+        # 5. Read data from zarr array
         img = self._read(
             sel=sel,
             sel_method=sel_method,
-            y_slice=slice(clipped_row_off, clipped_row_stop),
-            x_slice=slice(clipped_col_off, clipped_col_stop),
+            y_slice=y_slice,
+            x_slice=x_slice,
             nodata=nodata,
         )
 
-        # 7. Reproject/resample to output CRS and dimensions
+        # 6. Reproject/resample to output CRS and dimensions
         img = warp(
             img,
             dst_crs=dst_crs,
