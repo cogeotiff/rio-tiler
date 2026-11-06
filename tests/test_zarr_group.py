@@ -18,6 +18,8 @@ from .utils import (
     spatial_conventions,
 )
 
+TIME_COORDINATES = {"time": {"type": "inline", "values": ["2022-01-01T00:00:00Z"]}}
+
 
 @pytest.fixture(autouse=True)
 def clear_group_metadata_cache():
@@ -299,6 +301,7 @@ async def test_geozarr_reader_async(geozarr_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b01",
             },
@@ -306,6 +309,7 @@ async def test_geozarr_reader_async(geozarr_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b02",
             },
@@ -317,6 +321,7 @@ async def test_geozarr_reader_async(geozarr_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b01",
             },
@@ -324,6 +329,7 @@ async def test_geozarr_reader_async(geozarr_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b02",
             },
@@ -514,6 +520,7 @@ def test_geozarr_reader(geozarr_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b01",
             },
@@ -521,6 +528,7 @@ def test_geozarr_reader(geozarr_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b02",
             },
@@ -532,6 +540,7 @@ def test_geozarr_reader(geozarr_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b01",
             },
@@ -539,6 +548,7 @@ def test_geozarr_reader(geozarr_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": True,
                 "name": "b02",
             },
@@ -736,6 +746,7 @@ async def test_geozarr_root_async(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -743,6 +754,7 @@ async def test_geozarr_root_async(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -754,6 +766,7 @@ async def test_geozarr_root_async(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -761,6 +774,7 @@ async def test_geozarr_root_async(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -858,6 +872,7 @@ def test_geozarr_root(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -865,6 +880,7 @@ def test_geozarr_root(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -876,6 +892,7 @@ def test_geozarr_root(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -883,6 +900,7 @@ def test_geozarr_root(geozarr_root_store):
                 "group": "data",
                 "long_name": "data:b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -983,6 +1001,7 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -990,6 +1009,7 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1001,6 +1021,7 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -1008,6 +1029,7 @@ async def test_geozarr_root_with_arrays_async(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1096,6 +1118,7 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -1103,6 +1126,7 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1114,6 +1138,7 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b01",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b01",
             },
@@ -1121,6 +1146,7 @@ def test_geozarr_root_with_arrays(geozarr_root_array_store):
                 "group": None,
                 "long_name": "b02",
                 "dimensions": ("time", "y", "x"),
+                "coordinates": TIME_COORDINATES,
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1261,6 +1287,7 @@ async def test_custom_geozarr_separator_async():
                 "group": "data",
                 "long_name": "data::b01",
                 "dimensions": ("y", "x"),
+                "coordinates": {},
                 "multiscale": False,
                 "name": "b01",
             },
@@ -1268,6 +1295,7 @@ async def test_custom_geozarr_separator_async():
                 "group": "data",
                 "long_name": "data::b02",
                 "dimensions": ("y", "x"),
+                "coordinates": {},
                 "multiscale": False,
                 "name": "b02",
             },
@@ -1344,6 +1372,13 @@ def geozarr_4d_store():
 def test_group_reader_sel(geozarr_4d_store):
     """Test sel forwarded to the arrays."""
     with GroupReader(input=zarr.open_group(geozarr_4d_store, mode="r")) as src:
+        # only non-spatial coordinates
+        for var in src.list_variables():
+            assert var["coordinates"] == {
+                "time": {"type": "inline", "values": TIMES},
+                "z": {"type": "inline", "values": [0, 10, 20]},
+            }
+
         # Scalar selection on all the dimensions: one band per variable (2D)
         # 2D variables are stacked directly on the `variables` dimension
         img = src.preview(
@@ -1500,3 +1535,74 @@ async def test_async_group_reader_sel(geozarr_4d_store):
         )
         assert pt.dimensions == ["time"]
         assert pt.array.tolist() == [205]
+
+
+@pytest.fixture
+def geozarr_no_coords_store():
+    """Create an in-memory GeoZarr store without coordinates."""
+    store = zarr.storage.MemoryStore()
+    root = zarr.open_group(store, mode="w", zarr_format=3)
+
+    group = root.create_group(
+        name="data",
+        attributes={
+            "zarr_conventions": [spatial_conventions, proj_conventions],
+            "spatial:dimensions": ["y", "x"],
+            "spatial:bbox": [500000, 4199000, 501000, 4200000],
+            "proj:code": "EPSG:32633",
+            "spatial:transform": list(
+                Affine.translation(500000, 4200000) @ Affine.scale(10, -10)
+            ),
+        },
+    )
+
+    # No coordinates
+    arr = group.create_array(
+        "a",
+        shape=(10, 100, 100),
+        chunks=(1, 50, 50),
+        dtype="float32",
+        fill_value=0,
+        dimension_names=["time", "y", "x"],
+    )
+    arr[:] = numpy.ones((10, 100, 100), dtype="float32")
+
+    # No coordinates (4D)
+    arr = group.create_array(
+        "b",
+        shape=(2, 3, 100, 100),
+        chunks=(1, 1, 50, 50),
+        dtype="float32",
+        fill_value=0,
+        dimension_names=["time", "z", "y", "x"],
+    )
+    arr[:] = numpy.ones((2, 3, 100, 100), dtype="float32")
+
+    return store
+
+
+NO_COORDS_EXPECTED = {
+    "a": {"time": {"type": "interval", "start": 0, "end": 9, "step": 1}},
+    "b": {
+        "time": {"type": "interval", "start": 0, "end": 1, "step": 1},
+        "z": {"type": "interval", "start": 0, "end": 2, "step": 1},
+    },
+}
+
+
+def test_group_reader_default_coordinates(geozarr_no_coords_store):
+    """Test default coordinates for non-spatial dimensions."""
+    with GroupReader(input=zarr.open_group(geozarr_no_coords_store, mode="r")) as src:
+        variables = src.list_variables()
+        assert {v["name"]: v["coordinates"] for v in variables} == NO_COORDS_EXPECTED
+
+
+@pytest.mark.asyncio
+async def test_async_group_reader_default_coordinates(geozarr_no_coords_store):
+    """Test default coordinates for non-spatial dimensions."""
+    group = await zarr.api.asynchronous.open_group(
+        store=geozarr_no_coords_store, mode="r"
+    )
+    async with AsyncGroupReader(input=group) as src:
+        variables = await src.list_variables()
+        assert {v["name"]: v["coordinates"] for v in variables} == NO_COORDS_EXPECTED

@@ -89,13 +89,13 @@ def _get_bnames_from_coordinates(coordinates: dict) -> list[str] | None:
         # Handle numeric interval
         if isinstance(step, (int, float)):
             start: int = coordinates["start"]
-            stop: int = coordinates["stop"]
+            stop: int = coordinates["end"]
             return list(map(str, range(start, stop + step, step)))  # type: ignore
 
         # Handle ISO 8601 (temporal) interval
         elif isinstance(step, str):
             start_datetime = parse_datetime(coordinates["start"])
-            stop_datetime = parse_datetime(coordinates["stop"])
+            stop_datetime = parse_datetime(coordinates["end"])
             step_duration = parse_duration(step)
             if isinstance(step_duration, Duration):
                 return [

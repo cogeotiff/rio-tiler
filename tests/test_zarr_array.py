@@ -1588,13 +1588,13 @@ async def test_coords_conventions_mixin():
     reader = ArrayMixin(
         input=arr,
         coordinates={
-            "time": {"type": "interval", "start": 1000, "stop": 3000, "step": 1000}
+            "time": {"type": "interval", "start": 1000, "end": 3000, "step": 1000}
         },
     )
     assert reader.coordinates["time"] == {
         "type": "interval",
         "start": 1000,
-        "stop": 3000,
+        "end": 3000,
         "step": 1000,
     }
     assert reader.height == 100
@@ -1607,7 +1607,7 @@ async def test_coords_conventions_mixin():
             "time": {
                 "type": "interval",
                 "start": "2024-01-01T00:00:00Z",
-                "stop": "2024-01-03T00:00:00Z",
+                "end": "2024-01-03T00:00:00Z",
                 "step": "P1D",
             }
         },
@@ -1617,7 +1617,7 @@ async def test_coords_conventions_mixin():
     assert reader.coordinates["time"] == {
         "type": "interval",
         "start": "2024-01-01T00:00:00Z",
-        "stop": "2024-01-03T00:00:00Z",
+        "end": "2024-01-03T00:00:00Z",
         "step": "P1D",
     }
 
@@ -1628,7 +1628,7 @@ async def test_coords_conventions_mixin():
             "time": {
                 "type": "interval",
                 "start": "2024-01-01T00:00:00Z",
-                "stop": "2024-01-01T02:00:00Z",
+                "end": "2024-01-01T02:00:00Z",
                 "step": "PT1H",
             }
         },
@@ -1636,7 +1636,7 @@ async def test_coords_conventions_mixin():
     assert reader.coordinates["time"] == {
         "type": "interval",
         "start": "2024-01-01T00:00:00Z",
-        "stop": "2024-01-01T02:00:00Z",
+        "end": "2024-01-01T02:00:00Z",
         "step": "PT1H",
     }
 
@@ -1875,7 +1875,7 @@ LEVELS_STR = list(map(str, LEVELS))
 
 COORDS_4D = {
     "time": {"type": "inline", "values": TIMES},
-    "z": {"type": "interval", "start": 0, "stop": 300, "step": 100},
+    "z": {"type": "interval", "start": 0, "end": 300, "step": 100},
 }
 
 
@@ -1984,13 +1984,13 @@ def test_sel_indexer():
 def test_coordinate_values():
     """Test coordinate values and labels."""
     values = _get_coordinate_values(
-        {"type": "interval", "start": 0, "stop": 300, "step": 100}
+        {"type": "interval", "start": 0, "end": 300, "step": 100}
     )
     assert values.tolist() == [0, 100, 200, 300]
     assert _format_coordinate_values(values) == [0, 100, 200, 300]
 
     values = _get_coordinate_values(
-        {"type": "interval", "start": 0.5, "stop": 1.5, "step": 0.5}
+        {"type": "interval", "start": 0.5, "end": 1.5, "step": 0.5}
     )
     assert values.tolist() == [0.5, 1.0, 1.5]
 
@@ -1998,7 +1998,7 @@ def test_coordinate_values():
         {
             "type": "interval",
             "start": "2024-01-01T00:00:00Z",
-            "stop": "2024-01-03T00:00:00Z",
+            "end": "2024-01-03T00:00:00Z",
             "step": "P1D",
         }
     )

@@ -221,14 +221,14 @@ def _get_coordinate_values(coordinates: dict) -> numpy.ndarray | None:
         # Handle numeric interval
         if isinstance(step, (int, float)):
             start: int | float = coordinates["start"]
-            stop: int | float = coordinates["stop"]
+            stop: int | float = coordinates["end"]
             size = int(round((stop - start) / step)) + 1
             return start + numpy.arange(size) * step
 
         # Handle ISO 8601 (temporal) interval
         elif isinstance(step, str):
             start_datetime = parse_datetime(coordinates["start"])
-            stop_datetime = parse_datetime(coordinates["stop"])
+            stop_datetime = parse_datetime(coordinates["end"])
             step_duration = parse_duration(step)
             if not isinstance(step_duration, Duration):
                 # NOTE: fixed length step (e.g `PT1H`, `P1D`), vectorized
@@ -1893,7 +1893,23 @@ class VariableMetadata(TypedDict):
     group: str | None
     long_name: str
     dimensions: list[str]
+    coordinates: dict[str, Any]
     multiscale: bool
+
+
+def _variable_coordinates(metadata: ArrayMetadata) -> dict[str, Any]:
+    """Return zarr-coords coordinates for the non-spatial dimensions.
+
+    Dimensions without coordinates get a default (position based) interval.
+    """
+    coordinates = metadata["coordinates"] or {}
+    return {
+        dim: coordinates.get(dim)
+        # NOTE: `end` is inclusive (see `_get_coordinate_values`)
+        or {"type": "interval", "start": 0, "end": size - 1, "step": 1}
+        for dim, size in zip(metadata["dimensions"], metadata["array"].shape)
+        if dim not in metadata["spatial_dims"]
+    }
 
 
 def calculate_output_transform(
@@ -2437,8 +2453,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         # NOTE: arrays will have multiple entries for multiscale groups
-                        # assume all arrays within a multiscale group have the same dimensions
+                        # assume all arrays within a multiscale group have the same dimensions/coordinates
                         "dimensions": arrays[0]["dimensions"],
+                        "coordinates": _variable_coordinates(arrays[0]),
                         "multiscale": group_metadata["multiscale"],
                     }
                     for name, arrays in group_arrays.items()
@@ -2476,8 +2493,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     # NOTE: arrays will have multiple entries for multiscale groups
-                                    # assume all arrays within a multiscale group have the same dimensions
+                                    # assume all arrays within a multiscale group have the same dimensions/coordinates
                                     "dimensions": arrays[0]["dimensions"],
+                                    "coordinates": _variable_coordinates(arrays[0]),
                                     "multiscale": is_multiscale,
                                 }
                                 for name, arrays in group_arrays.items()
@@ -3424,8 +3442,9 @@ class GroupReader(BaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         # NOTE: arrays will have multiple entries for multiscale groups
-                        # assume all arrays within a multiscale group have the same dimensions
+                        # assume all arrays within a multiscale group have the same dimensions/coordinates
                         "dimensions": arrays[0]["dimensions"],
+                        "coordinates": _variable_coordinates(arrays[0]),
                         "multiscale": group_metadata["multiscale"],
                     }
                     for name, arrays in group_arrays.items()
@@ -3463,8 +3482,9 @@ class GroupReader(BaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     # NOTE: arrays will have multiple entries for multiscale groups
-                                    # assume all arrays within a multiscale group have the same dimensions
+                                    # assume all arrays within a multiscale group have the same dimensions/coordinates
                                     "dimensions": arrays[0]["dimensions"],
+                                    "coordinates": _variable_coordinates(arrays[0]),
                                     "multiscale": is_multiscale,
                                 }
                                 for name, arrays in group_arrays.items()

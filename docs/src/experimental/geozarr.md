@@ -230,7 +230,7 @@ ds = AsyncArrayReader(
     input=array,  # dimensions: ["time", "z", "y", "x"]
     coordinates={
         "time": {"type": "inline", "values": ["2025-01-01T00:00:00Z", "2025-02-01T00:00:00Z"]},
-        "z": {"type": "interval", "start": 0, "stop": 300, "step": 100},
+        "z": {"type": "interval", "start": 0, "end": 300, "step": 100},
     },
 )
 
