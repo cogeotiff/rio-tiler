@@ -7773,6 +7773,7 @@
 <li>change: <code>info().dimensions</code> now returns the <code>dimensions</code> attribute</li>
 <li>change: reads use <code>get_orthogonal_selection</code> with per-dimension selection (internal <code>_read(row_slice=, col_slice=)</code> -&gt; <code>_read(y_slice=, x_slice=)</code>)</li>
 <li>change: <code>GroupReader</code>/<code>AsyncGroupReader</code> forward the arrays' <code>spatial_dims</code> and <code>coordinates</code> to the Array readers</li>
+<li>add: <code>selectable_dimensions</code> (<code>{dimension: coordinates}</code> for the non-spatial dimensions, usable with <code>sel</code>) in <code>GroupReader</code>/<code>AsyncGroupReader</code> <code>list_variables()</code> entries</li>
 </ul>
 </li>
 <li>breaking: replace <code>indexes</code> with xarray-like <code>sel</code> option in <code>rio_tiler.experimental.zarr</code> readers<ul>

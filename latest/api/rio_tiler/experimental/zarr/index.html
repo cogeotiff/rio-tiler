@@ -2996,10 +2996,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.zarr._to_datetime64" class="md-nav__link">
+  <a href="#rio_tiler.experimental.zarr._selectable_dimensions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_to_datetime64
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_selectable_dimensions
       
     </span>
   </a>
@@ -3007,10 +3007,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.zarr._variable_coordinates" class="md-nav__link">
+  <a href="#rio_tiler.experimental.zarr._to_datetime64" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_variable_coordinates
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_to_datetime64
       
     </span>
   </a>
@@ -4427,10 +4427,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.zarr._to_datetime64" class="md-nav__link">
+  <a href="#rio_tiler.experimental.zarr._selectable_dimensions" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_to_datetime64
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_selectable_dimensions
       
     </span>
   </a>
@@ -4438,10 +4438,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.zarr._variable_coordinates" class="md-nav__link">
+  <a href="#rio_tiler.experimental.zarr._to_datetime64" class="md-nav__link">
     <span class="md-ellipsis">
       
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_variable_coordinates
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_to_datetime64
       
     </span>
   </a>
@@ -10210,6 +10210,28 @@ For 2D arrays, treats as single-band (height, width).</p>
 <div class="doc doc-object doc-function">
 
 
+<h3 id="rio_tiler.experimental.zarr._selectable_dimensions" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">_selectable_dimensions</span>
+
+
+<a href="#rio_tiler.experimental.zarr._selectable_dimensions" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_selectable_dimensions</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Return the selectable (non-spatial) dimensions and their zarr-coords coordinates.</p>
+<p>Describes the values users can pass to <code>sel</code> (e.g to build a visual product).
+Dimensions without coordinates get a default (position based) interval.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
 <h3 id="rio_tiler.experimental.zarr._to_datetime64" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">_to_datetime64</span>
 
@@ -10221,27 +10243,6 @@ For 2D arrays, treats as single-band (height, width).</p>
     <div class="doc doc-contents ">
 
         <p>Convert a datetime-like value (ISO 8601 string, date, datetime) to a UTC naive <code>datetime64[ns]</code>.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="rio_tiler.experimental.zarr._variable_coordinates" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">_variable_coordinates</span>
-
-
-<a href="#rio_tiler.experimental.zarr._variable_coordinates" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_variable_coordinates</span><span class="p">(</span><span class="n">metadata</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Return zarr-coords coordinates for the non-spatial dimensions.</p>
-<p>Dimensions without coordinates get a default (position based) interval.</p>
 
 
     </div>
