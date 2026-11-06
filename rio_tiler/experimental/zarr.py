@@ -1894,6 +1894,9 @@ class VariableMetadata(TypedDict):
     long_name: str
     dimensions: list[str]
     selectable_dimensions: dict[str, Any]
+    dtype: str
+    valid_min: float | None
+    valid_max: float | None
     multiscale: bool
 
 
@@ -2454,9 +2457,16 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         # NOTE: arrays will have multiple entries for multiscale groups
-                        # assume all arrays within a multiscale group have the same dimensions/coordinates
+                        # assume all arrays within a multiscale group are similar in structure
                         "dimensions": arrays[0]["dimensions"],
                         "selectable_dimensions": _selectable_dimensions(arrays[0]),
+                        "dtype": arrays[0]["array"].dtype.name,
+                        "valid_min": cast(dict, arrays[0]["array"].attrs).get(
+                            "valid_min"
+                        ),
+                        "valid_max": cast(dict, arrays[0]["array"].attrs).get(
+                            "valid_max"
+                        ),
                         "multiscale": group_metadata["multiscale"],
                     }
                     for name, arrays in group_arrays.items()
@@ -2494,10 +2504,17 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     # NOTE: arrays will have multiple entries for multiscale groups
-                                    # assume all arrays within a multiscale group have the same dimensions/coordinates
+                                    # assume all arrays within a multiscale group are similar in structure
                                     "dimensions": arrays[0]["dimensions"],
                                     "selectable_dimensions": _selectable_dimensions(
                                         arrays[0]
+                                    ),
+                                    "dtype": arrays[0]["array"].dtype.name,
+                                    "valid_min": cast(dict, arrays[0]["array"].attrs).get(
+                                        "valid_min"
+                                    ),
+                                    "valid_max": cast(dict, arrays[0]["array"].attrs).get(
+                                        "valid_max"
                                     ),
                                     "multiscale": is_multiscale,
                                 }
@@ -3445,9 +3462,16 @@ class GroupReader(BaseReader, GroupMixin):
                         "group": None,
                         "long_name": name,
                         # NOTE: arrays will have multiple entries for multiscale groups
-                        # assume all arrays within a multiscale group have the same dimensions/coordinates
+                        # assume all arrays within a multiscale group are similar in structure
                         "dimensions": arrays[0]["dimensions"],
                         "selectable_dimensions": _selectable_dimensions(arrays[0]),
+                        "dtype": arrays[0]["array"].dtype.name,
+                        "valid_min": cast(dict, arrays[0]["array"].attrs).get(
+                            "valid_min"
+                        ),
+                        "valid_max": cast(dict, arrays[0]["array"].attrs).get(
+                            "valid_max"
+                        ),
                         "multiscale": group_metadata["multiscale"],
                     }
                     for name, arrays in group_arrays.items()
@@ -3485,10 +3509,17 @@ class GroupReader(BaseReader, GroupMixin):
                                     "group": group_name,
                                     "long_name": f"{group_name}{self._group_var_sep}{name}",
                                     # NOTE: arrays will have multiple entries for multiscale groups
-                                    # assume all arrays within a multiscale group have the same dimensions/coordinates
+                                    # assume all arrays within a multiscale group are similar in structure
                                     "dimensions": arrays[0]["dimensions"],
                                     "selectable_dimensions": _selectable_dimensions(
                                         arrays[0]
+                                    ),
+                                    "dtype": arrays[0]["array"].dtype.name,
+                                    "valid_min": cast(dict, arrays[0]["array"].attrs).get(
+                                        "valid_min"
+                                    ),
+                                    "valid_max": cast(dict, arrays[0]["array"].attrs).get(
+                                        "valid_max"
                                     ),
                                     "multiscale": is_multiscale,
                                 }
