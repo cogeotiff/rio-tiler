@@ -140,6 +140,11 @@ def apply_expression(
     except MemoryError as e:
         raise e
 
+    except KeyError as e:
+        raise InvalidExpression(
+            f"Invalid expression: {e} (available bands: {', '.join(bands)})"
+        ) from e
+
     # NOTE: We could explicitly handle the other error types, rather than using the Exception catch-all,
     # but that would require tracking the various types of exceptions that numexpr and numpy could raise,
     # and numexpr doesn't even document the specific exceptions it can raise.
