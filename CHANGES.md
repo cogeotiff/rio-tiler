@@ -14,6 +14,7 @@
     * change: `info().dimensions` now returns the `dimensions` attribute
     * change: reads use `get_orthogonal_selection` with per-dimension selection (internal `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=)`)
     * change: `GroupReader`/`AsyncGroupReader` forward the arrays' `spatial_dims` and `coordinates` to the Array readers
+    * add: `selectable_dimensions` (`{dimension: coordinates}` for the non-spatial dimensions, usable with `sel`) in `GroupReader`/`AsyncGroupReader` `list_variables()` entries
 * breaking: replace `indexes` with xarray-like `sel` option in `rio_tiler.experimental.zarr` readers
     * `sel` (`list[Selector]`, e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}]`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
     * `Selector["values"]` can be a scalar (the dimension is dropped), a list of labels or a slice of labels

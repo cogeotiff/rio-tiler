@@ -262,6 +262,7 @@ Each variable is described by:
 - `group`: the group path (`None` for the opened group)
 - `long_name`: the variable identifier (`{group}:{name}`), to use in the `variables` option
 - `dimensions`: the array dimensions (e.g `('time', 'y', 'x')`). For multiscale groups, all the resolution levels are assumed to have the same dimensions
+- `selectable_dimensions`: the non-spatial dimensions and their coordinates (`{dimension: {...}}`, `coords` zarr-convention `inline` or `interval`), describing the values available for the `sel` option. Dimensions without coordinates get a position based interval (`{"type": "interval", "start": 0, "end": size - 1, "step": 1}`). Empty for 2D arrays
 - `multiscale`: whether the group follows the multiscales convention
 
 #### Open Top level group in the Zarr store
@@ -291,13 +292,13 @@ print(reader.bounds)
 variables = await reader.list_variables()
 print(variables)
 >>> [
-    {'name': 'b02', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b02', 'dimensions': ('y', 'x'), 'multiscale': True}, 
-    {'name': 'b03', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b03', 'dimensions': ('y', 'x'), 'multiscale': True}, 
+    {'name': 'b02', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b02', 'dimensions': ('y', 'x'), 'selectable_dimensions': {}, 'multiscale': True}, 
+    {'name': 'b03', 'group': 'measurements/reflectance', 'long_name': 'measurements/reflectance:b03', 'dimensions': ('y', 'x'), 'selectable_dimensions': {}, 'multiscale': True}, 
     ... 
-    {'name': 'aot', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:aot', 'dimensions': ('y', 'x'), 'multiscale': False}, 
-    {'name': 'wvp', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:wvp', 'dimensions': ('y', 'x'), 'multiscale': False}, 
+    {'name': 'aot', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:aot', 'dimensions': ('y', 'x'), 'selectable_dimensions': {}, 'multiscale': False}, 
+    {'name': 'wvp', 'group': 'quality/atmosphere/r10m', 'long_name': 'quality/atmosphere/r10m:wvp', 'dimensions': ('y', 'x'), 'selectable_dimensions': {}, 'multiscale': False}, 
     ...
-    {'name': 'snw', 'group': 'quality/probability/r20m', 'long_name': 'quality/probability/r20m:snw', 'dimensions': ('y', 'x'), 'multiscale': False}
+    {'name': 'snw', 'group': 'quality/probability/r20m', 'long_name': 'quality/probability/r20m:snw', 'dimensions': ('y', 'x'), 'selectable_dimensions': {}, 'multiscale': False}
 ]
 
 await reader.get_group_metadata("measurements/reflectance")

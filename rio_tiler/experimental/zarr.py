@@ -1893,13 +1893,14 @@ class VariableMetadata(TypedDict):
     group: str | None
     long_name: str
     dimensions: list[str]
-    coordinates: dict[str, Any]
+    selectable_dimensions: dict[str, Any]
     multiscale: bool
 
 
-def _variable_coordinates(metadata: ArrayMetadata) -> dict[str, Any]:
-    """Return zarr-coords coordinates for the non-spatial dimensions.
+def _selectable_dimensions(metadata: ArrayMetadata) -> dict[str, Any]:
+    """Return the selectable (non-spatial) dimensions and their zarr-coords coordinates.
 
+    Describes the values users can pass to `sel` (e.g to build a visual product).
     Dimensions without coordinates get a default (position based) interval.
     """
     coordinates = metadata["coordinates"] or {}
@@ -2455,7 +2456,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                         # NOTE: arrays will have multiple entries for multiscale groups
                         # assume all arrays within a multiscale group have the same dimensions/coordinates
                         "dimensions": arrays[0]["dimensions"],
-                        "coordinates": _variable_coordinates(arrays[0]),
+                        "selectable_dimensions": _selectable_dimensions(arrays[0]),
                         "multiscale": group_metadata["multiscale"],
                     }
                     for name, arrays in group_arrays.items()
@@ -2495,7 +2496,9 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                                     # NOTE: arrays will have multiple entries for multiscale groups
                                     # assume all arrays within a multiscale group have the same dimensions/coordinates
                                     "dimensions": arrays[0]["dimensions"],
-                                    "coordinates": _variable_coordinates(arrays[0]),
+                                    "selectable_dimensions": _selectable_dimensions(
+                                        arrays[0]
+                                    ),
                                     "multiscale": is_multiscale,
                                 }
                                 for name, arrays in group_arrays.items()
@@ -3444,7 +3447,7 @@ class GroupReader(BaseReader, GroupMixin):
                         # NOTE: arrays will have multiple entries for multiscale groups
                         # assume all arrays within a multiscale group have the same dimensions/coordinates
                         "dimensions": arrays[0]["dimensions"],
-                        "coordinates": _variable_coordinates(arrays[0]),
+                        "selectable_dimensions": _selectable_dimensions(arrays[0]),
                         "multiscale": group_metadata["multiscale"],
                     }
                     for name, arrays in group_arrays.items()
@@ -3484,7 +3487,9 @@ class GroupReader(BaseReader, GroupMixin):
                                     # NOTE: arrays will have multiple entries for multiscale groups
                                     # assume all arrays within a multiscale group have the same dimensions/coordinates
                                     "dimensions": arrays[0]["dimensions"],
-                                    "coordinates": _variable_coordinates(arrays[0]),
+                                    "selectable_dimensions": _selectable_dimensions(
+                                        arrays[0]
+                                    ),
                                     "multiscale": is_multiscale,
                                 }
                                 for name, arrays in group_arrays.items()
