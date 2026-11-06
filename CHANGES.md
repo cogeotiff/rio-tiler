@@ -5,8 +5,9 @@
 * breaking: remove `scales` and `offsets` attributes in ImageData and PointData models
 * breaking: remove `count` attribute in ImageData and PointData models
 * breaking: `band_descriptions` and `band_names` attributes are not forwarded from ImageData and PointData models when using mosaic readers
-* breaking: `rio_tiler.experimental.zarr` Array readers (`AsyncArrayReader`, `ArrayReader`) now use named dimensions
+* breaking: refactor `rio_tiler.experimental.zarr` Array (`AsyncArrayReader`, `ArrayReader`) and Group (`AsyncGroupReader`, `GroupReader`) readers
     * remove `band_names` attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to `{dim}{n}`)
+    * remove: `_variables` property in `AsyncGroupReader` and `GroupReader`
     * add `dimensions` attribute (defaults to the zarr `dimension_names` metadata)
     * add `spatial_dims` attribute (`[y_dim, x_dim]`, defaults to `spatial:dimensions` from the `spatial` zarr-convention), so Y/X no longer need to be the last two axes
     * change: `coordinates` now holds the full `coords:coordinates` mapping (`{dim: {...}}`) for all dimensions instead of the coordinate of the first non-spatial dimension

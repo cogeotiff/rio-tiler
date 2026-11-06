@@ -26,7 +26,9 @@ def clear_group_metadata_cache():
     MemoryStore cache keys are based on `id()`, which can be reused by a new store.
     """
     AsyncGroupReader.get_group_metadata.cache_clear()
+    AsyncGroupReader.list_variables.cache_clear()
     GroupReader.get_group_metadata.cache_clear()
+    GroupReader.list_variables.cache_clear()
     yield
 
 

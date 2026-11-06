@@ -9,6 +9,7 @@ import os
 import warnings
 from collections.abc import Callable, Sequence
 from functools import cached_property
+from threading import Condition
 from typing import Any, Literal, NotRequired, TypedDict, cast
 
 import attr
@@ -82,11 +83,6 @@ MULTISCALE_CONVENTION_UUID = "d35379db-88df-4056-af3a-620245f8e347"
 SPATIAL_CONVENTION_UUID = "689b58e2-cf7b-45e0-9fff-9cfc0883d6b4"
 PROJ_CONVENTION_UUID = "f17cb550-5864-4468-aeb7-f3180cfb622f"
 COORDS_CONVENTION_UUID = "6ca4454a-658a-4348-a667-b39ced0e58cb"
-
-
-def _group_metadata_key(reader: Any, group: str | None = None) -> tuple[str, str]:
-    """Group metadata cache key: Zarr store location + group path."""
-    return (str(reader.input.store_path), group or "__root__")
 
 
 def find_convention(conventions: list[dict], uuid: str) -> bool:
@@ -1890,6 +1886,16 @@ class GroupMetadata(TypedDict):
     invalid_arrays: int
 
 
+class VariableMetadata(TypedDict):
+    """Variable Metadata."""
+
+    name: str
+    group: str | None
+    long_name: str
+    dimensions: list[str]
+    multiscale: bool
+
+
 def calculate_output_transform(
     crs: CRS,
     bounds: BBox,
@@ -2066,8 +2072,6 @@ class GroupMixin(SpatialMixin):
 
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
-
-    _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
 
     _group_var_sep: str = ":"
 
@@ -2290,8 +2294,6 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
-
     _group_var_sep: str = ":"
 
     async def get_bounds(
@@ -2403,12 +2405,14 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         zooms = await asyncio.gather(*(_get_maxzoom(variable) for variable in variables))
         return max(zooms)
 
-    async def list_variables(self) -> list[dict[str, Any]]:
+    @alru_cache(
+        maxsize=ZARR_METADATA_CACHE_MAXSIZE,
+        ttl=ZARR_METADATA_CACHE_TTL or None,
+        key=lambda obj: str(obj.input.store_path),
+    )
+    async def list_variables(self) -> list[VariableMetadata]:
         """List variables in the Zarr store."""
-        if self._variables is not None:
-            return self._variables
-
-        variables: list[dict[str, Any]] = []
+        variables: list[VariableMetadata] = []
 
         # 1. Check Root level group
         group_metadata = await self.get_group_metadata()
@@ -2480,15 +2484,14 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                             ]
                         )
 
-        self._variables = variables
-        return self._variables
+        return variables
 
     # NOTE: cache shared by all readers, keyed by store location and group path.
     # Concurrent calls with the same key share a single in-flight task.
     @alru_cache(
         maxsize=ZARR_METADATA_CACHE_MAXSIZE,
         ttl=ZARR_METADATA_CACHE_TTL or None,
-        key=_group_metadata_key,
+        key=lambda obj, group=None: (str(obj.input.store_path), group or "__root__"),
     )
     async def get_group_metadata(  # noqa: C901
         self,
@@ -3276,8 +3279,6 @@ class GroupReader(BaseReader, GroupMixin):
     # Group bounds (calculated from shape + transform)
     bounds: BBox = attr.ib(init=False)
 
-    _variables: list[dict[str, Any]] = attr.ib(init=False, default=None)
-
     _group_var_sep: str = ":"
 
     def get_bounds(
@@ -3389,13 +3390,16 @@ class GroupReader(BaseReader, GroupMixin):
         zooms = [_get_maxzoom(variable) for variable in variables]
         return max(zooms)
 
-    # TODO: add dimensions to array metadata
-    def list_variables(self) -> list[dict[str, Any]]:
+    @cached(
+        TTLCache(maxsize=ZARR_METADATA_CACHE_MAXSIZE, ttl=ZARR_METADATA_CACHE_TTL)
+        if ZARR_METADATA_CACHE_TTL
+        else LRUCache(maxsize=ZARR_METADATA_CACHE_MAXSIZE),
+        key=lambda obj: str(obj.input.store_path),
+        condition=Condition(),
+    )
+    def list_variables(self) -> list[VariableMetadata]:
         """List variables in the Zarr store."""
-        if self._variables is not None:
-            return self._variables
-
-        variables: list[dict[str, Any]] = []
+        variables: list[VariableMetadata] = []
 
         # 1. Check Root level group
         group_metadata = self.get_group_metadata()
@@ -3467,15 +3471,15 @@ class GroupReader(BaseReader, GroupMixin):
                             ]
                         )
 
-        self._variables = variables
-        return self._variables
+        return variables
 
     # NOTE: cache shared by all readers, keyed by store location and group path.
     @cached(
         TTLCache(maxsize=ZARR_METADATA_CACHE_MAXSIZE, ttl=ZARR_METADATA_CACHE_TTL)
         if ZARR_METADATA_CACHE_TTL
         else LRUCache(maxsize=ZARR_METADATA_CACHE_MAXSIZE),
-        key=_group_metadata_key,
+        key=lambda obj, group=None: (str(obj.input.store_path), group or "__root__"),
+        condition=Condition(),
     )
     def get_group_metadata(  # noqa: C901
         self,
