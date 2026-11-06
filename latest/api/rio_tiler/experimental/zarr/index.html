@@ -2897,6 +2897,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.VariableMetadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;VariableMetadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr._coerce_label" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -2956,17 +2967,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_zoom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.zarr._group_metadata_key" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_group_metadata_key
       
     </span>
   </a>
@@ -4317,6 +4317,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#rio_tiler.experimental.zarr.VariableMetadata" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;VariableMetadata
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#rio_tiler.experimental.zarr._coerce_label" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -4376,17 +4387,6 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_get_zoom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.zarr._group_metadata_key" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;_group_metadata_key
       
     </span>
   </a>
@@ -7494,7 +7494,7 @@ For 2D arrays, treats as single-band (height, width).</p>
   </span>
 
 <a href="#rio_tiler.experimental.zarr.AsyncGroupReader.list_variables" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">list_variables</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">list_variables</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="VariableMetadata (rio_tiler.experimental.zarr.VariableMetadata)" href="#rio_tiler.experimental.zarr.VariableMetadata">VariableMetadata</a></span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -8954,7 +8954,7 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 
 <a href="#rio_tiler.experimental.zarr.GroupReader.list_variables" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">list_variables</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="dict">dict</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">]]</span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">list_variables</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="VariableMetadata (rio_tiler.experimental.zarr.VariableMetadata)" href="#rio_tiler.experimental.zarr.VariableMetadata">VariableMetadata</a></span><span class="p">]</span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -9837,6 +9837,54 @@ For 2D arrays, treats as single-band (height, width).</p>
 
 </div>
 
+<div class="doc doc-object doc-class">
+
+
+
+<h3 id="rio_tiler.experimental.zarr.VariableMetadata" class="doc doc-heading">
+            <span class="doc doc-object-name doc-class-name">VariableMetadata</span>
+
+
+<a href="#rio_tiler.experimental.zarr.VariableMetadata" class="headerlink" title="Permanent link">&para;</a></h3>
+
+
+    <div class="doc doc-contents ">
+            <p class="doc doc-class-bases">
+              Bases: <code><span title="typing.TypedDict">TypedDict</span></code></p>
+
+
+
+        <p>Variable Metadata.</p>
+
+
+
+
+
+
+
+
+
+
+
+<div class="doc doc-children">
+
+
+
+
+
+
+
+
+
+
+
+
+  </div>
+
+    </div>
+
+</div>
+
 
 <div class="doc doc-object doc-function">
 
@@ -10038,26 +10086,6 @@ For 2D arrays, treats as single-band (height, width).</p>
     <div class="doc doc-contents ">
 
         <p>Get MaxZoom for a Group.</p>
-
-
-    </div>
-
-</div>
-
-<div class="doc doc-object doc-function">
-
-
-<h3 id="rio_tiler.experimental.zarr._group_metadata_key" class="doc doc-heading">
-            <span class="doc doc-object-name doc-function-name">_group_metadata_key</span>
-
-
-<a href="#rio_tiler.experimental.zarr._group_metadata_key" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_group_metadata_key</span><span class="p">(</span><span class="n">reader</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">,</span> <span class="n">group</span><span class="p">:</span> <span class="n"><span title="str">str</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="tuple">tuple</span></span><span class="p">[</span><span class="n"><span title="str">str</span></span><span class="p">,</span> <span class="n"><span title="str">str</span></span><span class="p">]</span>
-</code></pre></div>
-
-    <div class="doc doc-contents ">
-
-        <p>Group metadata cache key: Zarr store location + group path.</p>
 
 
     </div>

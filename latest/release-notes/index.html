@@ -7764,8 +7764,9 @@
 <li>breaking: remove <code>scales</code> and <code>offsets</code> attributes in ImageData and PointData models</li>
 <li>breaking: remove <code>count</code> attribute in ImageData and PointData models</li>
 <li>breaking: <code>band_descriptions</code> and <code>band_names</code> attributes are not forwarded from ImageData and PointData models when using mosaic readers</li>
-<li>breaking: <code>rio_tiler.experimental.zarr</code> Array readers (<code>AsyncArrayReader</code>, <code>ArrayReader</code>) now use named dimensions<ul>
+<li>breaking: refactor <code>rio_tiler.experimental.zarr</code> Array (<code>AsyncArrayReader</code>, <code>ArrayReader</code>) and Group (<code>AsyncGroupReader</code>, <code>GroupReader</code>) readers<ul>
 <li>remove <code>band_names</code> attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to <code>{dim}{n}</code>)</li>
+<li>remove: <code>_variables</code> property in <code>AsyncGroupReader</code> and <code>GroupReader</code></li>
 <li>add <code>dimensions</code> attribute (defaults to the zarr <code>dimension_names</code> metadata)</li>
 <li>add <code>spatial_dims</code> attribute (<code>[y_dim, x_dim]</code>, defaults to <code>spatial:dimensions</code> from the <code>spatial</code> zarr-convention), so Y/X no longer need to be the last two axes</li>
 <li>change: <code>coordinates</code> now holds the full <code>coords:coordinates</code> mapping (<code>{dim: {...}}</code>) for all dimensions instead of the coordinate of the first non-spatial dimension</li>
