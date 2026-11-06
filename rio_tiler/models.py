@@ -1029,7 +1029,7 @@ class ImageData:
         bdescrs = cast(list[str], bdescrs)
 
         stats = self.dataset_statistics
-        if stats:
+        if stats and len(stats) == self.array.shape[0]:
             res = []
             for prod in itertools.product(*stats):  # type: ignore
                 res.append(apply_expression(blocks, bnames, numpy.array(prod)))
