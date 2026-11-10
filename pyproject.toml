@@ -214,6 +214,11 @@ filename = "rio_tiler/__init__.py"
 search = '__version__ = "{current_version}"'
 replace = '__version__ = "{new_version}"'
 
+[[tool.bumpversion.files]]
+filename = ".release-please-manifest.json"
+search = '".": "{current_version}"'
+replace = '".": "{new_version}"'
+
 [tool.pytest.ini_options]
 filterwarnings = [
     "ignore::rio_tiler.errors.RioTilerExperimentalWarning",
