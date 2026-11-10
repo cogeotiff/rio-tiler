@@ -1,0 +1,20 @@
+{
+  "packages": {
+    ".": {
+      "release-type": "python",
+      "skip-changelog": true,
+      "package-name": "rio-tiler",
+      "changelog-path": "CHANGES.md",
+      "include-v-in-tag": false,
+      "include-v-in-release-name": false,
+      "include-component-in-tag": false,
+      "extra-files": [
+        {
+          "type": "toml",
+          "path": "pyproject.toml",
+          "jsonpath": "$.tool.bumpversion.current_version"
+        }
+      ]
+    }
+  }
+}
