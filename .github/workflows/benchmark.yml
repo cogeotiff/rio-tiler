@@ -44,7 +44,9 @@ jobs:
           tool: 'pytest'
           output-file-path: output.json
           alert-threshold: '150%'
-          comment-on-alert: true
+          # PR tokens from Dependabot and forks are read-only: on PRs, report in the job summary instead of commenting
+          comment-on-alert: ${{ github.event_name != 'pull_request' }}
+          summary-always: ${{ github.event_name == 'pull_request' }}
           fail-on-alert: false
           # GitHub API token to make a commit comment
           github-token: ${{ secrets.GITHUB_TOKEN }}
