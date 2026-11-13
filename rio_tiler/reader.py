@@ -234,8 +234,8 @@ def read(
         else:
             # When the dataset mask only comes from the nodata value, we don't need
             # rasterio to read it because we re-create it from the data below.
-            # Reading it can be really slow with WarpedVRT because GDAL doesn't use
-            # the overviews for the mask band.
+            # Reading it can be really slow with WarpedVRT because GDAL reads the
+            # mask band by band, which doesn't use the VRT's whole-dataset warp path.
             nodata_mask_only = (
                 nodata is not None
                 and dataset.nodata is not None
