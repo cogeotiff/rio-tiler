@@ -10,7 +10,7 @@ from affine import Affine
 from rasterio import windows
 from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
-from rasterio.enums import ColorInterp, Resampling
+from rasterio.enums import ColorInterp, MaskFlags, Resampling
 from rasterio.io import DatasetReader, DatasetWriter
 from rasterio.transform import array_bounds, rowcol
 from rasterio.vrt import WarpedVRT
@@ -232,16 +232,32 @@ def read(
                 alpha_mask = None
 
         else:
+            # When the dataset mask only comes from the nodata value, we don't need
+            # rasterio to read it because we re-create it from the data below.
+            # Reading it can be really slow with WarpedVRT because GDAL doesn't use
+            # the overviews for the mask band.
+            nodata_mask_only = (
+                nodata is not None
+                and dataset.nodata is not None
+                and numpy.array_equal(dataset.nodata, nodata, equal_nan=True)
+                and all(
+                    dataset.mask_flag_enums[idx - 1] == [MaskFlags.nodata]
+                    for idx in indexes
+                )
+            )
+
             data = dataset.read(
                 indexes=indexes,
                 window=window,
                 out_shape=(len(indexes), height, width),
                 resampling=io_resampling,
                 boundless=boundless,
-                masked=True,
-                fill_value=nodata,
+                masked=not nodata_mask_only,
+                fill_value=None if nodata_mask_only and not boundless else nodata,
                 out_dtype=out_dtype,
             )
+            if nodata_mask_only:
+                data = numpy.ma.MaskedArray(data, fill_value=nodata)
 
             # if data has Nodata then we simply make sure the mask == the nodata
             if nodata is not None:

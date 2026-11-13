@@ -8,6 +8,7 @@ import rasterio
 from numpy.testing import assert_array_almost_equal
 from rasterio.io import MemoryFile
 from rasterio.transform import from_bounds
+from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 
 from rio_tiler import constants, reader
@@ -384,6 +385,47 @@ def test_tile_read_nodata():
     assert arr.shape == (1, 16, 16)
     assert mask.shape == (16, 16)
     assert not mask.all()
+
+
+@pytest.mark.parametrize(
+    "path,nodata",
+    [(COG_NODATA, None), (COG_NODATA_FLOAT_NAN, None), (COG, 1)],
+)
+def test_tile_read_nodata_no_mask_read(monkeypatch, path, nodata):
+    """Should not read the dataset mask when it only comes from nodata."""
+    mask_reads = []
+    _read = WarpedVRT._read
+
+    def _spy(self, *args, **kwargs):
+        mask_reads.append(kwargs.get("masks", False))
+        return _read(self, *args, **kwargs)
+
+    monkeypatch.setattr(WarpedVRT, "_read", _spy)
+
+    # Partial Tile 7-42-24
+    bounds = [
+        -6887893.4928338025,
+        12210356.646387195,
+        -6574807.424977721,
+        12523442.714243278,
+    ]
+    with rasterio.open(path) as src_dst:
+        img = reader.part(
+            src_dst,
+            bounds,
+            16,
+            16,
+            nodata=nodata,
+            dst_crs=constants.WEB_MERCATOR_CRS,
+            bounds_crs=constants.WEB_MERCATOR_CRS,
+        )
+
+    assert mask_reads and not any(mask_reads)
+    nodata = img.nodata
+    data = img.array.data
+    expected = numpy.isnan(data) if numpy.isnan(nodata) else data == nodata
+    numpy.testing.assert_array_equal(img.array.mask, expected)
+    assert img.array.mask.any() and not img.array.mask.all()
 
 
 def test_tile_read_nodata_and_alpha():
