@@ -81,4 +81,6 @@ jobs:
           uv sync --group performance
 
       - name: Run Benchmark
-        run: uv run pytest tests/benchmarks/requests.py -s -vv
+        run: | 
+          uv run pytest tests/benchmarks/requests.py -s -vv
+          uv run pytest tests/benchmarks/geozarr_requests.py -s -vv
