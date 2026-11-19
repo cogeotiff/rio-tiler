@@ -93,9 +93,12 @@ nav:
   - Benchmarking: advanced/benchmark.html
   - Development - Contributing: 'contributing.md'
   - Release Notes: 'release-notes.md'
+  - Blog:
+    - blog/index.md
 
 plugins:
   - search
+  - blog
   - mkdocs-jupyter:
       include_source: true
       ignore: ["**/.ipynb_checkpoints/*.ipynb"]
@@ -133,8 +136,24 @@ theme:
   name: 'material'
   language: 'en'
   palette:
-    primary: 'blue'
-    accent:  'light blue'
+    - media: '(prefers-color-scheme)'
+      toggle:
+        icon: material/brightness-auto
+        name: Switch to light mode
+    - media: '(prefers-color-scheme: light)'
+      scheme: default
+      primary: 'blue'
+      accent: 'light blue'
+      toggle:
+        icon: material/brightness-7
+        name: Switch to dark mode
+    - media: '(prefers-color-scheme: dark)'
+      scheme: slate
+      primary: 'blue'
+      accent: 'light blue'
+      toggle:
+        icon: material/brightness-4
+        name: Switch to system preference
   font:
     text: 'Nunito Sans'
     code: 'Fira Code'
