@@ -337,7 +337,7 @@ class STACReader(MultiBaseReader):
         default_assets (list of string or dict, optional): Default assets to use if none are defined.
         reader (rio_tiler.io.BaseReader, optional): rio-tiler Reader. Defaults to `rio_tiler.io.Reader`.
         reader_options (dict, optional): Additional option to forward to the Reader. Defaults to `{}`.
-        fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Defaults to `{}`.
+        fetch_options (dict, optional): Options to pass to `rio_tiler.io.stac.fetch` function fetching the STAC Items. Non-JSON values (e.g. an `ssl.SSLContext` for `verify`) are cached by object identity, so reuse the same object across readers. Defaults to `{}`.
 
     Examples:
         >>> with STACReader(stac_path) as stac:
