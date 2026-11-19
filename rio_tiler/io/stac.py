@@ -104,7 +104,9 @@ def aws_get_object(
 
 @cached(  # type: ignore
     lru_cache,
-    key=lambda filepath, **kargs: hashkey(filepath, json.dumps(kargs)),
+    key=lambda filepath, **kargs: hashkey(
+        filepath, json.dumps(kargs, sort_keys=True, default=repr)
+    ),
     lock=Lock(),
 )
 def fetch(filepath: str, **kwargs: Any) -> dict:
