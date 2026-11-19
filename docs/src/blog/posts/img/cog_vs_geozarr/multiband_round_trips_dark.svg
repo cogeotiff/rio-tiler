@@ -1,0 +1,96 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1000 300" width="1000" height="300" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="Round trips for a 3-band tile">
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d;
+          --cog:#4a8cf0; --cog-soft:#1c2c4d; --zarr:#e06a30; --zarr-soft:#4a2516;
+          --cog-o:#27406a; --zarr-o:#633420; }
+  text { white-space:pre; }
+  .bg { fill:none; } .panel { fill:var(--panel); stroke:var(--line); }
+  .t { fill:var(--fg); font-size:13px; } .s { fill:var(--muted); font-size:11.5px; }
+  .xs { fill:var(--muted); font-size:10.5px; }
+  .h1 { fill:var(--fg); font-size:20px; font-weight:600; }
+  .h2c { fill:var(--cog); font-size:16px; font-weight:600; }
+  .h2z { fill:var(--zarr); font-size:16px; font-weight:600; }
+  .b { fill:var(--fg); font-size:13px; font-weight:600; }
+  .bc { fill:var(--cog); font-size:13px; font-weight:600; }
+  .bz { fill:var(--zarr); font-size:13px; font-weight:600; }
+  .mono { fill:var(--fg); font-size:11.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .monos { fill:var(--muted); font-size:10.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .onc { fill:#ffffff; font-size:12px; font-weight:600; }
+  .ln { stroke:var(--line); stroke-width:1; fill:none; }
+  .axis { stroke:var(--line); stroke-width:1; fill:none; }
+  .dash { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .life { stroke:var(--line); stroke-width:2; fill:none; }
+  .cogS { fill:var(--cog); } .cogF { fill:var(--cog-soft); stroke:var(--cog); stroke-width:1; }
+  .cogG { stroke:var(--cog); stroke-width:0.6; opacity:.7; }
+  .cogO { fill:var(--cog-o); }
+  .zarS { fill:var(--zarr); } .zarF { fill:var(--zarr-soft); stroke:var(--zarr); stroke-width:1; }
+  .zarG { stroke:var(--zarr); stroke-width:0.5; opacity:.6; }
+  .zarO { fill:var(--zarr-o); }
+  .fpc { fill:none; stroke:var(--fg); stroke-width:1.6; }
+  .box { fill:var(--bg); stroke:var(--line); }
+  .gray { fill:var(--muted); } .grayO { fill:var(--muted); opacity:.4; }
+  .hc { paint-order:stroke; stroke:var(--cog-soft); stroke-width:5px; stroke-linejoin:round; }
+  .hp { paint-order:stroke; stroke:var(--panel); stroke-width:5px; stroke-linejoin:round; }
+  .arr { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#am); }
+  .arr-c { stroke:var(--cog); stroke-width:1.5; fill:none; marker-end:url(#ac); }
+  .arr-z { stroke:var(--zarr); stroke-width:1.5; fill:none; marker-end:url(#az); }
+  .arr-cd { stroke:var(--cog); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#ac); }
+  .arr-zd { stroke:var(--zarr); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#az); }
+</style>
+<defs>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--cog)"/></marker>
+  <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--zarr)"/></marker>
+</defs>
+<rect x="0.0" y="0.0" width="1000.0" height="300.0" rx="0" class="bg"></rect>
+<text x="350.0" y="30.0" class="b" text-anchor="middle">RTT 1</text>
+<line x1="230.0" y1="40.0" x2="230.0" y2="280.0" class="ln"/>
+<text x="590.0" y="30.0" class="b" text-anchor="middle">RTT 2</text>
+<line x1="470.0" y1="40.0" x2="470.0" y2="280.0" class="ln"/>
+<text x="830.0" y="30.0" class="b" text-anchor="middle">RTT 3</text>
+<line x1="710.0" y1="40.0" x2="710.0" y2="280.0" class="ln"/>
+<line x1="950.0" y1="40.0" x2="950.0" y2="280.0" class="ln"/>
+<text x="20.0" y="70.0" class="h2c" text-anchor="start">COG</text>
+<text x="20.0" y="90.0" class="s" text-anchor="start">STAC Item, 3 files</text>
+<text x="20.0" y="108.0" class="xs" text-anchor="start">Item + 3 header + 3 block reads</text>
+<rect x="240.0" y="56.0" width="220.0" height="24.0" rx="3" class="cogF"></rect>
+<text x="350.0" y="72.0" class="s" text-anchor="middle">STAC Item</text>
+<rect x="480.0" y="56.0" width="220.0" height="24.0" rx="3" class="cogF"></rect>
+<text x="590.0" y="72.0" class="s" text-anchor="middle">header B04</text>
+<rect x="480.0" y="86.0" width="220.0" height="24.0" rx="3" class="cogF"></rect>
+<text x="590.0" y="102.0" class="s" text-anchor="middle">header B03</text>
+<rect x="480.0" y="116.0" width="220.0" height="24.0" rx="3" class="cogF"></rect>
+<text x="590.0" y="132.0" class="s" text-anchor="middle">header B02</text>
+<rect x="720.0" y="56.0" width="220.0" height="24.0" rx="3" class="cogS"></rect>
+<text x="830.0" y="72.0" class="onc" text-anchor="middle">blocks B04</text>
+<rect x="720.0" y="86.0" width="220.0" height="24.0" rx="3" class="cogS"></rect>
+<text x="830.0" y="102.0" class="onc" text-anchor="middle">blocks B03</text>
+<rect x="720.0" y="116.0" width="220.0" height="24.0" rx="3" class="cogS"></rect>
+<text x="830.0" y="132.0" class="onc" text-anchor="middle">blocks B02</text>
+<line x1="10.0" y1="156.0" x2="990.0" y2="156.0" class="ln"/>
+<text x="20.0" y="186.0" class="h2z" text-anchor="start">GeoZarr</text>
+<text x="20.0" y="206.0" class="s" text-anchor="start">1 store, 3 arrays</text>
+<text x="20.0" y="224.0" class="xs" text-anchor="start">7 GETs</text>
+<rect x="240.0" y="172.0" width="220.0" height="24.0" rx="3" class="zarF"></rect>
+<text x="350.0" y="188.0" class="s" text-anchor="middle">zarr.json</text>
+<rect x="480.0" y="172.0" width="220.0" height="24.0" rx="3" class="zarF"></rect>
+<text x="590.0" y="188.0" class="s" text-anchor="middle">shard index b04</text>
+<rect x="480.0" y="202.0" width="220.0" height="24.0" rx="3" class="zarF"></rect>
+<text x="590.0" y="218.0" class="s" text-anchor="middle">shard index b03</text>
+<rect x="480.0" y="232.0" width="220.0" height="24.0" rx="3" class="zarF"></rect>
+<text x="590.0" y="248.0" class="s" text-anchor="middle">shard index b02</text>
+<rect x="720.0" y="172.0" width="220.0" height="24.0" rx="3" class="zarS"></rect>
+<text x="830.0" y="188.0" class="onc" text-anchor="middle">chunks b04</text>
+<rect x="720.0" y="202.0" width="220.0" height="24.0" rx="3" class="zarS"></rect>
+<text x="830.0" y="218.0" class="onc" text-anchor="middle">chunks b03</text>
+<rect x="720.0" y="232.0" width="220.0" height="24.0" rx="3" class="zarS"></rect>
+<text x="830.0" y="248.0" class="onc" text-anchor="middle">chunks b02</text>
+<rect x="230.0" y="286.0" width="14.0" height="10.0" rx="2" class="grayO"></rect>
+<text x="250.0" y="295.0" class="xs" text-anchor="start">metadata</text>
+<rect x="320.0" y="286.0" width="14.0" height="10.0" rx="2" class="gray"></rect>
+<text x="340.0" y="295.0" class="xs" text-anchor="start">pixel data</text>
+<text x="990.0" y="295.0" class="xs" text-anchor="end">stacked boxes = requests in flight at the same time</text>
+</svg>
