@@ -31,6 +31,7 @@ from rio_tiler.errors import (
     NoOverviewWarning,
     PointOutsideBounds,
     TileOutsideBounds,
+    ZoomOutsideNativeRangeWarning,
 )
 from rio_tiler.expression import parse_expression
 from rio_tiler.io.base import BaseReader
@@ -291,6 +292,13 @@ class Reader(BaseReader):
         if not self.tile_exists(tile_x, tile_y, tile_z):
             raise TileOutsideBounds(
                 f"Tile(x={tile_x}, y={tile_y}, z={tile_z}) is outside bounds"
+            )
+
+        if tile_z < self.minzoom:
+            warnings.warn(
+                f"Tile(z={tile_z}) is below the dataset minzoom ({self.minzoom}). "
+                "Output is resampled beyond the dataset's coarsest overview and the read can be slow.",
+                ZoomOutsideNativeRangeWarning,
             )
 
         matrix = self.tms.matrix(tile_z)
