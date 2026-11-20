@@ -176,7 +176,8 @@ ignore = [
     "B028",
 ]
 exclude = [
-    "*.ipynb"
+    "*.ipynb",
+    "docs/scripts/*",
 ]
 
 [tool.ruff.lint.mccabe]

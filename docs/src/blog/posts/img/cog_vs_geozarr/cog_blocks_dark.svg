@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1000 410" width="1000" height="410" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="COG: fetch the blocks">
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d;
+          --cog:#4a8cf0; --cog-soft:#1c2c4d; --zarr:#e06a30; --zarr-soft:#4a2516;
+          --cog-o:#27406a; --zarr-o:#633420; }
+  text { white-space:pre; }
+  .bg { fill:none; } .panel { fill:var(--panel); stroke:var(--line); }
+  .t { fill:var(--fg); font-size:13px; } .s { fill:var(--muted); font-size:11.5px; }
+  .xs { fill:var(--muted); font-size:10.5px; }
+  .h1 { fill:var(--fg); font-size:20px; font-weight:600; }
+  .h2c { fill:var(--cog); font-size:16px; font-weight:600; }
+  .h2z { fill:var(--zarr); font-size:16px; font-weight:600; }
+  .b { fill:var(--fg); font-size:13px; font-weight:600; }
+  .bc { fill:var(--cog); font-size:13px; font-weight:600; }
+  .bz { fill:var(--zarr); font-size:13px; font-weight:600; }
+  .mono { fill:var(--fg); font-size:11.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .monos { fill:var(--muted); font-size:10.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .onc { fill:#ffffff; font-size:12px; font-weight:600; }
+  .ln { stroke:var(--line); stroke-width:1; fill:none; }
+  .axis { stroke:var(--line); stroke-width:1; fill:none; }
+  .dash { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .life { stroke:var(--line); stroke-width:2; fill:none; }
+  .cogS { fill:var(--cog); } .cogF { fill:var(--cog-soft); stroke:var(--cog); stroke-width:1; }
+  .cogG { stroke:var(--cog); stroke-width:0.6; opacity:.7; }
+  .cogO { fill:var(--cog-o); }
+  .zarS { fill:var(--zarr); } .zarF { fill:var(--zarr-soft); stroke:var(--zarr); stroke-width:1; }
+  .zarG { stroke:var(--zarr); stroke-width:0.5; opacity:.6; }
+  .zarO { fill:var(--zarr-o); }
+  .fpc { fill:none; stroke:var(--fg); stroke-width:1.6; }
+  .box { fill:var(--bg); stroke:var(--line); }
+  .gray { fill:var(--muted); } .grayO { fill:var(--muted); opacity:.4; }
+  .hc { paint-order:stroke; stroke:var(--cog-soft); stroke-width:5px; stroke-linejoin:round; }
+  .hp { paint-order:stroke; stroke:var(--panel); stroke-width:5px; stroke-linejoin:round; }
+  .arr { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#am); }
+  .arr-c { stroke:var(--cog); stroke-width:1.5; fill:none; marker-end:url(#ac); }
+  .arr-z { stroke:var(--zarr); stroke-width:1.5; fill:none; marker-end:url(#az); }
+  .arr-cd { stroke:var(--cog); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#ac); }
+  .arr-zd { stroke:var(--zarr); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#az); }
+</style>
+<defs>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--cog)"/></marker>
+  <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--zarr)"/></marker>
+</defs>
+<rect x="0.0" y="0.0" width="1000.0" height="410.0" rx="0" class="bg"></rect>
+<rect x="50.0" y="50.0" width="321.7" height="321.7" rx="0" class="cogF"></rect>
+<line x1="80.0" y1="50.0" x2="80.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="80.0" x2="371.7" y2="80.0" class="cogG"/>
+<line x1="110.0" y1="50.0" x2="110.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="110.0" x2="371.7" y2="110.0" class="cogG"/>
+<line x1="140.0" y1="50.0" x2="140.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="140.0" x2="371.7" y2="140.0" class="cogG"/>
+<line x1="170.0" y1="50.0" x2="170.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="170.0" x2="371.7" y2="170.0" class="cogG"/>
+<line x1="200.0" y1="50.0" x2="200.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="200.0" x2="371.7" y2="200.0" class="cogG"/>
+<line x1="230.0" y1="50.0" x2="230.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="230.0" x2="371.7" y2="230.0" class="cogG"/>
+<line x1="260.0" y1="50.0" x2="260.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="260.0" x2="371.7" y2="260.0" class="cogG"/>
+<line x1="290.0" y1="50.0" x2="290.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="290.0" x2="371.7" y2="290.0" class="cogG"/>
+<line x1="320.0" y1="50.0" x2="320.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="320.0" x2="371.7" y2="320.0" class="cogG"/>
+<line x1="350.0" y1="50.0" x2="350.0" y2="371.7" class="cogG"/>
+<line x1="50.0" y1="350.0" x2="371.7" y2="350.0" class="cogG"/>
+<text x="65.0" y="42.0" class="xs" text-anchor="middle">0</text>
+<text x="40.0" y="69.0" class="xs" text-anchor="middle">0</text>
+<text x="95.0" y="42.0" class="xs" text-anchor="middle">1</text>
+<text x="40.0" y="99.0" class="xs" text-anchor="middle">1</text>
+<text x="125.0" y="42.0" class="xs" text-anchor="middle">2</text>
+<text x="40.0" y="129.0" class="xs" text-anchor="middle">2</text>
+<text x="155.0" y="42.0" class="xs" text-anchor="middle">3</text>
+<text x="40.0" y="159.0" class="xs" text-anchor="middle">3</text>
+<text x="185.0" y="42.0" class="xs" text-anchor="middle">4</text>
+<text x="40.0" y="189.0" class="xs" text-anchor="middle">4</text>
+<text x="215.0" y="42.0" class="xs" text-anchor="middle">5</text>
+<text x="40.0" y="219.0" class="xs" text-anchor="middle">5</text>
+<text x="245.0" y="42.0" class="xs" text-anchor="middle">6</text>
+<text x="40.0" y="249.0" class="xs" text-anchor="middle">6</text>
+<text x="275.0" y="42.0" class="xs" text-anchor="middle">7</text>
+<text x="40.0" y="279.0" class="xs" text-anchor="middle">7</text>
+<text x="305.0" y="42.0" class="xs" text-anchor="middle">8</text>
+<text x="40.0" y="309.0" class="xs" text-anchor="middle">8</text>
+<text x="335.0" y="42.0" class="xs" text-anchor="middle">9</text>
+<text x="40.0" y="339.0" class="xs" text-anchor="middle">9</text>
+<text x="365.0" y="42.0" class="xs" text-anchor="middle">10</text>
+<text x="40.0" y="369.0" class="xs" text-anchor="middle">10</text>
+<rect x="230.0" y="140.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (3,6) fetched</title></rect>
+<rect x="230.0" y="170.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (4,6) fetched</title></rect>
+<rect x="110.0" y="260.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (7,2) fetched</title></rect>
+<rect x="230.8" y="155.0" width="28.4" height="28.4" rx="0" class="fpc"></rect>
+<rect x="125.0" y="272.0" width="5.6" height="5.6" rx="0" class="fpc"></rect>
+<text x="210.8" y="393.7" class="xs" text-anchor="middle">full resolution: 11 × 11 blocks of 1024×1024 (to scale)</text>
+<line x1="261.0" y1="170.0" x2="440.0" y2="170.0" class="dash"/>
+<text x="450.0" y="136.0" class="b" text-anchor="start">z12 tile — footprint ~970 px</text>
+<text x="450.0" y="154.0" class="s" text-anchor="start">→ 2 blocks, one above the other: not adjacent in the file</text>
+<text x="450.0" y="172.0" class="s" text-anchor="start">→ 2 ranges, fetched in parallel (1 round trip)</text>
+<text x="450.0" y="196.0" class="mono" text-anchor="start">GET bytes=50341499-50714262   372,764 B</text>
+<text x="450.0" y="214.0" class="mono" text-anchor="start">GET bytes=53732093-54004221   272,129 B</text>
+<line x1="132.6" y1="274.8" x2="440.0" y2="274.8" class="dash"/>
+<text x="450.0" y="266.8" class="b" text-anchor="start">z14 tile — footprint ~190 px</text>
+<text x="450.0" y="284.8" class="s" text-anchor="start">→ 1 whole 1024² block = 1.49 MB</text>
+<text x="450.0" y="302.8" class="s" text-anchor="start">the tile uses ~3% of the bytes it downloads</text>
+<rect x="450.0" y="345.0" width="16.0" height="12.0" rx="0" class="cogO"></rect>
+<text x="472.0" y="355.0" class="s" text-anchor="start">block fetched</text>
+<rect x="570.0" y="345.0" width="16.0" height="12.0" rx="0" class="fpc"></rect>
+<text x="592.0" y="355.0" class="s" text-anchor="start">tile footprint</text>
+<text x="450.0" y="385.0" class="s" text-anchor="start">Trade-off: big blocks → few requests, but most of each block is unused at high zoom.</text>
+</svg>
