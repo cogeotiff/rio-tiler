@@ -1,6 +1,7 @@
 """tests rio_tiler.io.rasterio.Reader"""
 
 import os
+import warnings
 from io import BytesIO
 from typing import Any, Dict
 
@@ -25,6 +26,7 @@ from rio_tiler.errors import (
     InvalidExpression,
     NoOverviewWarning,
     TileOutsideBounds,
+    ZoomOutsideNativeRangeWarning,
 )
 from rio_tiler.io import Reader
 from rio_tiler.models import BandStatistics
@@ -1276,3 +1278,20 @@ def test_feature_reader_vrt_options():
         img = src.feature(shape, max_size=256)
 
     numpy.testing.assert_array_equal(img.mask, expected.mask)
+
+
+def test_tile_below_minzoom_warns():
+    """Should warn when the tile zoom is below the dataset minzoom."""
+    with Reader(COG_NODATA) as src:
+        bounds = src.get_geographic_bounds(WGS84_CRS)
+        lon = (bounds[0] + bounds[2]) / 2
+        lat = (bounds[1] + bounds[3]) / 2
+
+        tile = src.tms.tile(lon, lat, src.minzoom - 1)
+        with pytest.warns(ZoomOutsideNativeRangeWarning):
+            src.tile(tile.x, tile.y, tile.z)
+
+        tile = src.tms.tile(lon, lat, src.minzoom)
+        with warnings.catch_warnings():
+            warnings.simplefilter("error", ZoomOutsideNativeRangeWarning)
+            src.tile(tile.x, tile.y, tile.z)

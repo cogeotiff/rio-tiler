@@ -2,6 +2,7 @@
 
 import json
 import os
+import ssl
 import sys
 from typing import Any, List, Set
 from unittest.mock import patch
@@ -743,6 +744,35 @@ def test_relative_assets():
 
         for asset in stac.assets:
             assert stac._get_asset_info(asset)["url"].startswith(PREFIX)
+
+
+@patch("rio_tiler.io.stac.httpx")
+def test_fetch_stac_non_json_options(httpx):
+    """test non-JSON serializable options forwarding."""
+
+    class MockResponse:
+        def __init__(self, data):
+            self.data = data
+
+        def json(self):
+            return json.loads(self.data)
+
+        def raise_for_status(self):
+            return True
+
+    with open(STAC_PATH, "r") as f:
+        httpx.get.return_value = MockResponse(f.read())
+
+    ctx = ssl.create_default_context()
+    for _ in range(2):
+        with STACReader(
+            "http://somewhereovertherainbow.io/mystac-ssl.json",
+            fetch_options={"verify": ctx},
+        ) as stac:
+            assert stac.assets == ["red", "green", "blue", "lowres", "rgb"]
+
+    httpx.get.assert_called_once()
+    assert httpx.get.call_args[1]["verify"] is ctx
 
 
 @patch("rio_tiler.io.stac.aws_get_object")
