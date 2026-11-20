@@ -6,7 +6,7 @@ from tilebench import profile
 
 from rio_tiler.io import Reader
 
-dataset_url = "https://sentinel-cogs.s3.us-west-2.amazonaws.com/sentinel-s2-l2a-cogs/15/T/VK/2023/10/S2B_15TVK_20231008_0_L2A/TCI.tif"
+dataset_url = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_26SMJ_20260810_0_L2A_B04.tif"
 
 gdal_version = GDALVersion.runtime()
 
@@ -25,14 +25,13 @@ def test_info():
         quiet=True,
         add_to_return=True,
     )
-    def info(src_path: str):
-        with Reader(src_path) as src_dst:
+    def get_info(src_path: str):
+        with Reader(input=src_path, options={}) as src_dst:
             return src_dst.info()
 
-    info, stats = info(dataset_url)
-    assert info.bounds
-
-    print(stats)
+    metadata, stats = get_info(dataset_url)
+    assert metadata.driver == "GTiff"
+    assert metadata.bounds[0] == 399960.0
     assert stats["HEAD"]["count"] == 1
     assert stats["GET"]["count"] == 1
     assert stats["GET"]["bytes"] == 32768
@@ -56,25 +55,23 @@ def test_tile_read():
         quiet=True,
         add_to_return=True,
     )
-    def tile(src_path: str, x: int, y: int, z: int):
-        with Reader(src_path) as src_dst:
+    def get_tile(src_path: str, x: int, y: int, z: int):
+        with Reader(input=src_path, options={}) as src_dst:
             return src_dst.tile(x, y, z, tilesize=256)
 
-    img, stats = tile(
-        dataset_url,
-        493,
-        741,
-        11,
-    )
-    assert img.array.shape == (3, 256, 256)
-
-    print(stats)
+    img, stats = get_tile(dataset_url, 1736, 1567, 12)
+    assert img.array.shape == (1, 256, 256)
     assert stats["HEAD"]["count"] == 1
     assert stats["GET"]["count"] == 3
-    assert stats["GET"]["bytes"] == 2293760
+    assert stats["GET"]["bytes"] == 677661
     assert stats["GET"]["ranges"] == [
+        # Header
         "0-32767",
-        "9011200-10158079",
-        "11075584-12189695",
+        # To construct the tile we need to fetch the following blocks
+        # We can't merge the request because they are not consecutive
+        # Block 1
+        "50341499-50714262",
+        # Block 2
+        "53732093-54004221",
     ]
     assert stats["WarpKernels"]
