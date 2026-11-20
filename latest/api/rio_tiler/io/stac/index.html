@@ -3349,7 +3349,7 @@
               (<code><span title="dict">dict</span></code>)
           –
           <div class="doc-md-description">
-            <p>Options to pass to <code>rio_tiler.io.stac.fetch</code> function fetching the STAC Items. Defaults to <code>{}</code>.</p>
+            <p>Options to pass to <code>rio_tiler.io.stac.fetch</code> function fetching the STAC Items. Non-JSON values (e.g. an <code>ssl.SSLContext</code> for <code>verify</code>) are cached by object identity, so reuse the same object across readers. Defaults to <code>{}</code>.</p>
           </div>
         </li>
     </ul>
