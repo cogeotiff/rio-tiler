@@ -1,6 +1,8 @@
 
 # Unreleased
 
+## 9.4.14 (2026-11-20)
+
 * fix: allow `ssl.SSLContext` in `STACReader` `fetch_options` (https://github.com/cogeotiff/rio-tiler/pull/1071)
 * perf: skip the dataset mask read in `rio_tiler.reader.read` when the mask only comes from the nodata value (the mask is re-created from the data), avoiding full-resolution mask reads through `WarpedVRT` (https://github.com/cogeotiff/rio-tiler/pull/1074)
 * feat: emit a `ZoomOutsideNativeRangeWarning` in `Reader.tile()` when the tile zoom is below the dataset `minzoom` (output is resampled beyond the coarsest overview and the read can be slow) (https://github.com/cogeotiff/rio-tiler/pull/1074)
