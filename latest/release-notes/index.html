@@ -8093,6 +8093,8 @@
 <li>fix: use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
 <li>fix: compute the cumulative weights in <code>float64</code> in <code>rio_tiler.utils._weighted_quantiles</code> to avoid wrong <code>median</code>/<code>percentile_*</code> statistics with <code>float32</code> coverage arrays (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/cogeotiff/rio-tiler/issues/1045" title="GitHub Issue: cogeotiff/rio-tiler #1045">cogeotiff/rio-tiler#1045</a>)</li>
 <li>fix: run blocking warp/reproject/resize in a worker thread (<code>asyncio.to_thread</code>) in the async experimental readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>) to avoid blocking the event loop</li>
+<li>perf: skip the dataset mask read in <code>rio_tiler.reader.read</code> when the mask only comes from the nodata value (the mask is re-created from the data), avoiding full-resolution mask reads through <code>WarpedVRT</code></li>
+<li>feat: emit a <code>ZoomOutsideNativeRangeWarning</code> in <code>Reader.tile()</code> when the tile zoom is below the dataset <code>minzoom</code> (output is resampled beyond the coarsest overview and the read can be slow)</li>
 <li>fix: <code>rio_tiler.experimental.zarr</code> Array readers (<code>ArrayReader</code>, <code>AsyncArrayReader</code>) read the exact pixel window in <code>part()</code> (no extra row/column, avoiding reading neighbouring chunks); 1 pixel padding is added on each side only for <code>bilinear</code>/<code>cubic</code>/... resampling methods. Windows outside the array now raise <code>InvalidBounds</code></li>
 <li>docs: new <code>experimental</code> documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)</li>
 </ul>
