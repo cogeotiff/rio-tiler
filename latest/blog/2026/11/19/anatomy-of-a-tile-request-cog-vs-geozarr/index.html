@@ -3054,6 +3054,13 @@
                       </div>
                     </li>
                     
+                      <li class="md-nav__item">
+                        <div class="md-nav__link">
+                          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 13h1.5v2.82l2.44 1.41-.75 1.3L15 16.69zm4-5H5v11h4.67c-.43-.91-.67-1.93-.67-3a7 7 0 0 1 7-7c1.07 0 2.09.24 3 .67zM5 21a2 2 0 0 1-2-2V5c0-1.11.89-2 2-2h1V1h2v2h8V1h2v2h1a2 2 0 0 1 2 2v6.1c1.24 1.26 2 2.99 2 4.9a7 7 0 0 1-7 7c-1.91 0-3.64-.76-4.9-2zm11-9.85A4.85 4.85 0 0 0 11.15 16c0 2.68 2.17 4.85 4.85 4.85A4.85 4.85 0 0 0 20.85 16c0-2.68-2.17-4.85-4.85-4.85"/></svg>
+                          <time datetime="2026-11-23 00:00:00+00:00" class="md-ellipsis">November 23, 2026</time>
+                        </div>
+                      </li>
+                    
                     
                       <li class="md-nav__item">
                         <div class="md-nav__link">
@@ -3072,7 +3079,7 @@
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 20a8 8 0 0 0 8-8 8 8 0 0 0-8-8 8 8 0 0 0-8 8 8 8 0 0 0 8 8m0-18a10 10 0 0 1 10 10 10 10 0 0 1-10 10C6.47 22 2 17.5 2 12A10 10 0 0 1 12 2m.5 5v5.25l4.5 2.67-.75 1.23L11 13V7z"/></svg>
                           <span class="md-ellipsis">
                             
-                              9 min read
+                              11 min read
                             
                           </span>
                         </div>
@@ -3108,9 +3115,22 @@ from the same Sentinel-2 band (B04, red), stored as a COG and as a GeoZarr.</p>
 <p class="admonition-title">Note</p>
 <p>This post, along with its benchmark scripts and figures, was written with the help of <a href="https://claude.com/claude-code">Claude Code</a> (Anthropic).</p>
 </div>
+<div class="admonition info">
+<p class="admonition-title">Updated on 2026-11-23: GeoZarr stored as <code>uint16</code></p>
+<p>The first version of this post (2026-11-19) used a GeoZarr that stored reflectance as
+<code>float32</code> (scene <code>26SMJ</code>, 2026-08-10). That made it read more bytes than the <code>uint16</code> COG,
+so the comparison mixed two things: the layout and the data type.</p>
+<p>This version uses a newer EOPF GeoZarr (scene <code>33TVF</code>, 2026-09-28) that stores <code>uint16</code> on
+disk and decodes it to <code>float32</code> with the <code>scale_offset</code> + <code>cast_value</code> codecs. All the
+numbers and figures were measured again on this scene, with COGs of the same scene.</p>
+<p>What changed: GeoZarr now downloads <strong>about half the bytes</strong> of the COG for full-resolution
+tiles, and is <strong>5–9% faster</strong> for 3-band tiles. The round trips are unchanged
+(2 for COG, 3 for sharded GeoZarr). The post also now says that inner chunks are stored in
+Morton order, not row by row.</p>
+</div>
 <hr />
 <h2 id="the-two-datasets">The two datasets<a class="headerlink" href="#the-two-datasets" title="Permanent link">&para;</a></h2>
-<p>Both are the same scene: Sentinel-2 tile <code>26SMJ</code>, 2026-08-10, 10980×10980 px at 10 m, EPSG:32626.</p>
+<p>Both are the same scene: Sentinel-2 tile <code>33TVF</code>, 2026-09-28, 10980×10980 px at 10 m, EPSG:32633.</p>
 <table>
 <thead>
 <tr>
@@ -3122,18 +3142,18 @@ from the same Sentinel-2 band (B04, red), stored as a COG and as a GeoZarr.</p>
 <tbody>
 <tr>
 <td>URL</td>
-<td><code>cogs/S2C_26SMJ_20260810_0_L2A_B04.tif</code></td>
-<td><code>geozarrs/S2C_MSIL2A_…_T26SMJ_….zarr/measurements/reflectance</code></td>
+<td><code>cogs/S2C_33TVF_20260928_0_L2A_B04.tif</code></td>
+<td><code>geozarrs/S2C_MSIL2A_…_T33TVF_….zarr/measurements/reflectance</code></td>
 </tr>
 <tr>
 <td>Content</td>
 <td>one band</td>
-<td><strong>all bands × all resolutions</strong> (87 arrays)</td>
+<td><strong>all bands × all resolutions</strong> (81 arrays)</td>
 </tr>
 <tr>
 <td>dtype</td>
 <td><code>uint16</code></td>
-<td><code>float32</code></td>
+<td><code>uint16</code> on disk, decoded to <code>float32</code> reflectance by the <code>scale_offset</code> + <code>cast_value</code> codecs</td>
 </tr>
 <tr>
 <td>Compression</td>
@@ -3153,18 +3173,24 @@ from the same Sentinel-2 band (B04, red), stored as a COG and as a GeoZarr.</p>
 <tr>
 <td>Metadata</td>
 <td>TIFF header, read the first <strong>32 KB</strong></td>
-<td>consolidated <code>zarr.json</code>, <strong>166 KB</strong></td>
+<td>consolidated <code>zarr.json</code>, <strong>215 KB</strong></td>
 </tr>
 <tr>
 <td>Size (B04 full res)</td>
-<td>222 MB file</td>
-<td>374 MB shard (<code>r10m/b04/c/0/0</code>)</td>
+<td>212 MB file</td>
+<td>150 MB shard (<code>r10m/b04/c/0/0</code>)</td>
 </tr>
 </tbody>
 </table>
 <p>Bucket: <code>https://titiler-benchmark-public.s3.us-east-1.amazonaws.com</code></p>
 <p><img alt="COG vs GeoZarr structure" src="../../../../img/cog_vs_geozarr/structure.svg#only-light" />
 <img alt="COG vs GeoZarr structure" src="../../../../img/cog_vs_geozarr/structure_dark.svg#only-dark" /></p>
+<div class="admonition tip">
+<p class="admonition-title">Reading this GeoZarr</p>
+<p>The scale/offset is done by Zarr codecs, not by CF attributes: zarr-python returns
+<code>float32</code> reflectance (<code>DN / 10000 − 0.1</code>) directly. With zarr-python 3.4, the
+<code>cast_value</code> codec needs the optional <code>cast-value-rs</code> package.</p>
+</div>
 <hr />
 <h2 id="a-tile-request-in-two-steps">A tile request, in two steps<a class="headerlink" href="#a-tile-request-in-two-steps" title="Permanent link">&para;</a></h2>
 <p><img alt="A tile request in two steps" src="../../../../img/cog_vs_geozarr/tile_request_flow.svg#only-light" />
@@ -3202,7 +3228,10 @@ What it <strong>does not</strong> tell us: where each inner chunk sits inside th
 <p><img alt="GeoZarr shard index and coalesced chunk read" src="../../../../img/cog_vs_geozarr/zarr_shard.svg#only-light" />
 <img alt="GeoZarr shard index and coalesced chunk read" src="../../../../img/cog_vs_geozarr/zarr_shard_dark.svg#only-dark" /></p>
 <p>②b is coalesced: zarr-python merges the chunk ranges into one GET when the gap
-between them is &lt; 1 MiB — even if that means downloading the chunks in between.</p>
+between them is &lt; 1 MiB — even if that means downloading the chunks in between.
+Inner chunks are written in Morton (Z) order, so two chunks side by side on the map
+can have other chunks between them in the file: here 7 chunks (580 KB) are downloaded
+for the 2 the tile needs (163 KB).</p>
 <hr />
 <h3 id="side-by-side-the-round-trips">Side by side: the round trips<a class="headerlink" href="#side-by-side-the-round-trips" title="Permanent link">&para;</a></h3>
 <p><img alt="Round trips, COG vs GeoZarr" src="../../../../img/cog_vs_geozarr/round_trips.svg#only-light" />
@@ -3226,48 +3255,54 @@ one cold store per request, every byte range recorded.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>14/6944/6268</code></td>
+<td><code>14/8849/6139</code></td>
 <td>full res / <code>r10m</code></td>
 <td>1 + 1</td>
-<td>1,519,289</td>
+<td>1,600,142</td>
 <td>1 + 1 + 1</td>
-<td>1,467,606</td>
+<td>827,412</td>
 </tr>
 <tr>
-<td><code>12/1736/1567</code></td>
+<td><code>12/2212/1534</code></td>
 <td>full res / <code>r20m</code></td>
+<td>1 + 4</td>
+<td>1,643,723</td>
+<td>1 + 1 + 1</td>
+<td>853,837</td>
+</tr>
+<tr>
+<td><code>10/553/383</code></td>
+<td>overview / <code>r120m</code></td>
 <td>1 + 2</td>
-<td>677,661</td>
+<td>817,099</td>
 <td>1 + 1 + 1</td>
-<td>1,895,980</td>
+<td>500,999</td>
 </tr>
 <tr>
-<td><code>10/434/391</code></td>
+<td><code>9/276/191</code></td>
 <td>overview / <code>r120m</code></td>
-<td>1 + 4</td>
-<td>864,440</td>
+<td>1 + 1</td>
+<td>407,420</td>
 <td>1 + 1 + 1</td>
-<td>1,355,346</td>
-</tr>
-<tr>
-<td><code>9/217/195</code></td>
-<td>overview / <code>r120m</code></td>
-<td>1 + 4</td>
-<td>532,687</td>
-<td>1 + 1 + 1</td>
-<td>1,748,580</td>
+<td>891,666</td>
 </tr>
 </tbody>
 </table>
+<p>COG "1 + 4" means the header, then one call with 4 block ranges.</p>
 <p><img alt="Bytes per tile" src="../../../../img/cog_vs_geozarr/bytes_per_tile.svg#only-light" />
 <img alt="Bytes per tile" src="../../../../img/cog_vs_geozarr/bytes_per_tile_dark.svg#only-dark" /></p>
 <ul>
-<li>COG metadata is 32 KB; Zarr's is 166 KB (it describes 87 arrays, we use 1).</li>
-<li>Zarr over-reads because of coalescing, and because it stores <code>float32</code> (vs <code>uint16</code>).</li>
+<li>COG metadata is 32 KB; Zarr's is 215 KB (it describes 81 arrays, we use 1).</li>
+<li>From z14 to z10, <strong>Zarr downloads about half the bytes of the COG</strong> (0.5–0.9 MB vs
+  0.8–1.6 MB): both store <code>uint16</code>, but the 244² / 183² inner chunks fit the tile much more
+  tightly than 1024² blocks, even with the coalescing over-read.</li>
+<li>At z9 it is the other way around: the COG reads one block of its ×16 overview (407 KB),
+  while Zarr reads the whole <code>r120m</code> array (676 KB) in one coalesced GET.</li>
 </ul>
 <hr />
 <h3 id="time">Time<a class="headerlink" href="#time" title="Permanent link">&para;</a></h3>
-<p>10 runs per tile, median, from a laptop over the public internet to <code>us-east-1</code>.</p>
+<p>10 cold runs per tile (fresh process each time), median, from a laptop over the public
+internet to <code>us-east-1</code>.</p>
 <table>
 <thead>
 <tr>
@@ -3283,57 +3318,61 @@ one cold store per request, every byte range recorded.</p>
 <tbody>
 <tr>
 <td>z14</td>
-<td>524 ms</td>
-<td>634 ms</td>
-<td><strong>1158 ms</strong></td>
-<td>636 ms</td>
-<td>275 ms</td>
-<td><strong>926 ms</strong></td>
+<td>544 ms</td>
+<td>738 ms</td>
+<td><strong>1281 ms</strong></td>
+<td>769 ms</td>
+<td>533 ms</td>
+<td><strong>1290 ms</strong></td>
 </tr>
 <tr>
 <td>z12</td>
-<td>522 ms</td>
-<td>636 ms</td>
-<td><strong>1173 ms</strong></td>
-<td>662 ms</td>
-<td>282 ms</td>
-<td><strong>978 ms</strong></td>
+<td>572 ms</td>
+<td>874 ms</td>
+<td><strong>1465 ms</strong></td>
+<td>796 ms</td>
+<td>509 ms</td>
+<td><strong>1291 ms</strong></td>
 </tr>
 <tr>
 <td>z10</td>
-<td>532 ms</td>
-<td>540 ms</td>
-<td><strong>1081 ms</strong></td>
-<td>666 ms</td>
-<td>277 ms</td>
-<td><strong>998 ms</strong></td>
+<td>565 ms</td>
+<td>657 ms</td>
+<td><strong>1205 ms</strong></td>
+<td>786 ms</td>
+<td>391 ms</td>
+<td><strong>1175 ms</strong></td>
 </tr>
 <tr>
 <td>z9</td>
-<td>519 ms</td>
-<td>432 ms</td>
-<td><strong>954 ms</strong></td>
-<td>712 ms</td>
-<td>294 ms</td>
-<td><strong>1006 ms</strong></td>
+<td>580 ms</td>
+<td>485 ms</td>
+<td><strong>1066 ms</strong></td>
+<td>791 ms</td>
+<td>498 ms</td>
+<td><strong>1283 ms</strong></td>
 </tr>
 </tbody>
 </table>
 <p><img alt="Time per tile" src="../../../../img/cog_vs_geozarr/time_per_tile.svg#only-light" />
 <img alt="Time per tile" src="../../../../img/cog_vs_geozarr/time_per_tile_dark.svg#only-dark" /></p>
 <ul>
-<li><strong>Open</strong> is dominated by the first request (DNS + TLS + cold connection): ~500 ms for both.</li>
-<li>Totals are within ~20% of each other. Run-to-run spread on Zarr went up to 1.8 s.</li>
+<li><strong>Open</strong> is dominated by the first request (DNS + TLS + cold connection). It costs
+  ~560 ms for the COG (32 KB header) and ~790 ms for Zarr (215 KB <code>zarr.json</code>).</li>
+<li><strong>Totals are close</strong>: within 3% at z14 and z10. Zarr is 12% faster at z12 (half the bytes),
+  the COG 17% faster at z9 (half the bytes, the other way around).</li>
 </ul>
 <p><strong>Why is Zarr's tile step faster with <em>more</em> round trips?</strong></p>
-<p>Not explained by the format. What we checked:</p>
+<p>Zarr's tile step (2 dependent GETs: shard index, then chunks) takes 390–530 ms, the COG's
+(1 GET for the blocks) 490–870 ms. From a laptop, bandwidth is part of the cost:</p>
 <ul>
-<li>A bigger first read warms the TCP connection: fetching the same 1.4 MB COG
-  range after a 166 KB read instead of a 32 KB one: <strong>562 → 418 ms</strong> (median, 8 runs).
-  Zarr always opens with 166 KB.</li>
-<li>The rest of the gap is not explained yet. Identical 1.4 MB range GETs varied
-  from 140 ms to 600 ms between runs from this machine.</li>
+<li>Zarr downloads about half the bytes from z14 to z10, which pays for its extra round trip.</li>
+<li>A bigger first read also warms the TCP connection: in an earlier run of this benchmark,
+  fetching the same 1.4 MB COG range after a 166 KB read instead of a 32 KB one went from
+  <strong>562 to 418 ms</strong> (median, 8 runs). Zarr always opens with a bigger read.</li>
 </ul>
+<p>➡ These timings should be re-run from compute in <code>us-east-1</code> (where RTT is ~10 ms and
+bandwidth is not the bottleneck) before drawing conclusions on time.</p>
 <hr />
 <h2 id="profiles-3-bands">Profiles (3 Bands)<a class="headerlink" href="#profiles-3-bands" title="Permanent link">&para;</a></h2>
 <p>A true-color tile needs three bands (RGB). As COGs that means <strong>three files</strong>; in the GeoZarr
@@ -3341,7 +3380,7 @@ it is <strong>three arrays of the same store</strong>.</p>
 <ul>
 <li>COG: <code>rio_tiler.experimental.async_stac.AsyncSTACReader</code> with a STAC Item listing the
   three files, fetched from the bucket
-  (<a href="https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_26SMJ_20260810_0_L2A.json"><code>cogs/S2C_26SMJ_20260810_0_L2A.json</code></a>, 2.7 KB).
+  (<a href="https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A.json"><code>cogs/S2C_33TVF_20260928_0_L2A.json</code></a>, 2.7 KB).
   Each asset is opened with <code>async-geotiff</code> (<code>rio_tiler.experimental.geotiff.Reader</code>) and
   its own obstore <code>HTTPStore</code>, since in real life the files can live in different buckets.</li>
 <li>GeoZarr: <code>rio_tiler.experimental.zarr.AsyncGroupReader</code>.</li>
@@ -3354,12 +3393,12 @@ it is <strong>three arrays of the same store</strong>.</p>
     <span class="k">async</span> <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="n">geotiff</span><span class="p">,</span> <span class="o">*</span><span class="n">args</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
         <span class="k">yield</span> <span class="n">src</span>
 
-<span class="n">item</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">httpx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_26SMJ_20260810_0_L2A.json"</span><span class="p">)</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
+<span class="n">item</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">httpx</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A.json"</span><span class="p">)</span><span class="o">.</span><span class="n">content</span><span class="p">)</span>
 <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncSTACReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">item</span><span class="p">,</span> <span class="n">reader</span><span class="o">=</span><span class="n">reader</span><span class="p">)</span> <span class="k">as</span> <span class="n">dst</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1736</span><span class="p">,</span> <span class="mi">1567</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B04"</span><span class="p">,</span> <span class="s2">"B03"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">])</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">dst</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">2212</span><span class="p">,</span> <span class="mi">1534</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">assets</span><span class="o">=</span><span class="p">[</span><span class="s2">"B04"</span><span class="p">,</span> <span class="s2">"B03"</span><span class="p">,</span> <span class="s2">"B02"</span><span class="p">])</span>
 
 <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncGroupReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">group</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">1736</span><span class="p">,</span> <span class="mi">1567</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"b04"</span><span class="p">,</span> <span class="s2">"b03"</span><span class="p">,</span> <span class="s2">"b02"</span><span class="p">])</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="mi">2212</span><span class="p">,</span> <span class="mi">1534</span><span class="p">,</span> <span class="mi">12</span><span class="p">,</span> <span class="n">variables</span><span class="o">=</span><span class="p">[</span><span class="s2">"b04"</span><span class="p">,</span> <span class="s2">"b03"</span><span class="p">,</span> <span class="s2">"b02"</span><span class="p">])</span>
 </code></pre></div>
 <p><strong>Round trips</strong></p>
 <p><img alt="Round trips for a 3-band tile" src="../../../../img/cog_vs_geozarr/multiband_round_trips.svg#only-light" />
@@ -3386,34 +3425,35 @@ read per band, then one data read per band.</p>
 </thead>
 <tbody>
 <tr>
-<td><code>14/6944/6268</code></td>
+<td><code>14/8849/6139</code></td>
 <td>Item + 3 headers + 3 block reads (7 ranges)</td>
-<td>4,579,541</td>
+<td>4,716,679</td>
 <td>7</td>
-<td>4,053,842</td>
+<td>1,991,013</td>
 </tr>
 <tr>
-<td><code>12/1736/1567</code></td>
-<td>Item + 3 headers + 3 block reads (10 ranges)</td>
-<td>2,038,332</td>
-<td>7</td>
-<td>5,315,058</td>
-</tr>
-<tr>
-<td><code>10/434/391</code></td>
+<td><code>12/2212/1534</code></td>
 <td>Item + 3 headers + 3 block reads (16 ranges)</td>
-<td>2,606,638</td>
+<td>4,838,992</td>
 <td>7</td>
-<td>3,701,878</td>
+<td>2,062,192</td>
+</tr>
+<tr>
+<td><code>10/553/383</code></td>
+<td>Item + 3 headers + 3 block reads (10 ranges)</td>
+<td>2,393,540</td>
+<td>7</td>
+<td>1,032,839</td>
 </tr>
 </tbody>
 </table>
 <p><img alt="Bytes per 3-band tile" src="../../../../img/cog_vs_geozarr/multiband_bytes.svg#only-light" />
 <img alt="Bytes per 3-band tile" src="../../../../img/cog_vs_geozarr/multiband_bytes_dark.svg#only-dark" /></p>
 <ul>
-<li>Metadata: COG = 2.7 KB STAC Item + 3 × 32 KB headers; GeoZarr = one 166 KB <code>zarr.json</code> + 3 shard indexes.</li>
-<li>COG bytes are ~3× the single-band numbers (z14: 3 × 1.52 MB ≈ 4.58 MB).
-  GeoZarr grows less than 3× because <code>zarr.json</code> is paid only once (z14: 1.47 MB → 4.05 MB).</li>
+<li>Metadata: COG = 2.7 KB STAC Item + 3 × 32 KB headers; GeoZarr = one 215 KB <code>zarr.json</code> + 3 shard indexes.</li>
+<li><strong>GeoZarr downloads ~2.3× fewer bytes</strong> (1.0–2.1 MB vs 2.4–4.8 MB). COG bytes are ~3× the
+  single-band numbers (z14: 3 × 1.6 MB ≈ 4.7 MB); GeoZarr grows less than 3× because
+  <code>zarr.json</code> is paid only once (z14: 0.83 MB → 1.99 MB).</li>
 </ul>
 <h3 id="time_1">Time<a class="headerlink" href="#time_1" title="Permanent link">&para;</a></h3>
 <p>10 cold runs per tile (fresh process each time), median, laptop → <code>us-east-1</code>.</p>
@@ -3432,42 +3472,41 @@ read per band, then one data read per band.</p>
 <tbody>
 <tr>
 <td>z14</td>
-<td>500 ms</td>
-<td>1258 ms</td>
-<td><strong>1778 ms</strong></td>
-<td>687 ms</td>
-<td>1150 ms</td>
-<td><strong>1849 ms</strong></td>
+<td>503 ms</td>
+<td>1339 ms</td>
+<td><strong>1854 ms</strong></td>
+<td>780 ms</td>
+<td>973 ms</td>
+<td><strong>1764 ms</strong></td>
 </tr>
 <tr>
 <td>z12</td>
-<td>496 ms</td>
-<td>1214 ms</td>
-<td><strong>1718 ms</strong></td>
-<td>689 ms</td>
-<td>1120 ms</td>
-<td><strong>1814 ms</strong></td>
+<td>502 ms</td>
+<td>1457 ms</td>
+<td><strong>1949 ms</strong></td>
+<td>786 ms</td>
+<td>986 ms</td>
+<td><strong>1767 ms</strong></td>
 </tr>
 <tr>
 <td>z10</td>
 <td>490 ms</td>
-<td>1155 ms</td>
-<td><strong>1650 ms</strong></td>
-<td>695 ms</td>
-<td>983 ms</td>
-<td><strong>1702 ms</strong></td>
+<td>1182 ms</td>
+<td><strong>1684 ms</strong></td>
+<td>795 ms</td>
+<td>767 ms</td>
+<td><strong>1566 ms</strong></td>
 </tr>
 </tbody>
 </table>
 <p><img alt="Time per 3-band tile" src="../../../../img/cog_vs_geozarr/multiband_time.svg#only-light" />
 <img alt="Time per 3-band tile" src="../../../../img/cog_vs_geozarr/multiband_time_dark.svg#only-dark" /></p>
 <ul>
-<li><strong>COG and GeoZarr are within ~3–5%</strong> (1.65–1.78 s vs 1.70–1.85 s): same number of
-  round trips.</li>
-<li>COG <strong>opens</strong> faster (2.7 KB STAC Item vs 166 KB <code>zarr.json</code>, ~500 vs ~690 ms), but
-  its <strong>tile</strong> step is ~100–170 ms slower: with one store per file, each band's first
-  request opens a new HTTPS connection, while the three GeoZarr index reads reuse the
-  one store's connections.</li>
+<li><strong>GeoZarr is 5–9% faster</strong> (1.57–1.77 s vs 1.68–1.95 s), with the same number of round trips.</li>
+<li>COG <strong>opens</strong> faster (2.7 KB STAC Item vs 215 KB <code>zarr.json</code>, ~500 vs ~790 ms), but
+  its <strong>tile</strong> step is ~370–470 ms slower: it downloads more than twice the bytes, and with
+  one store per file each band's first request opens a new HTTPS connection, while the
+  three GeoZarr index reads reuse the one store's connections.</li>
 </ul>
 <hr />
 <h2 id="takeaways">Takeaways<a class="headerlink" href="#takeaways" title="Permanent link">&para;</a></h2>
@@ -3483,7 +3522,7 @@ read per band, then one data read per band.</p>
 <tr>
 <td>metadata request</td>
 <td>32 KB, one file</td>
-<td>166 KB, whole hierarchy</td>
+<td>215 KB, whole hierarchy</td>
 </tr>
 <tr>
 <td>dependent round trips</td>
@@ -3496,9 +3535,9 @@ read per band, then one data read per band.</p>
 <td>244² / 183² inner chunk</td>
 </tr>
 <tr>
-<td>bytes per tile</td>
-<td>0.5 – 1.5 MB</td>
-<td>1.4 – 1.9 MB</td>
+<td>bytes per tile (z14–z10)</td>
+<td>0.8 – 1.6 MB</td>
+<td>0.5 – 0.9 MB</td>
 </tr>
 <tr>
 <td>multi-band access</td>
@@ -3516,23 +3555,23 @@ read per band, then one data read per band.</p>
 <li><strong>Round trips</strong>: COG has the block index in its header → 2 trips.
   A sharded Zarr needs to read the shard index first → 3 trips.
   Caching shard indexes (like the header) would bring Zarr down to 2 trips.</li>
-<li><strong>Bytes</strong>: smaller inner chunks <em>should</em> mean fewer bytes, but coalescing
-  (1 MiB gap) and <code>float32</code> storage cancel that out here.</li>
+<li><strong>Bytes</strong>: with the same <code>uint16</code> storage, small inner chunks pay off — about half the
+  bytes of the COG's 1024² blocks at high zoom, even though coalescing over Morton-ordered
+  chunks still downloads chunks the tile doesn't need. At low zoom, a level picked finer
+  than the COG's overview can cost more (z9).</li>
 <li><strong>Metadata</strong>: consolidated <code>zarr.json</code> pays off when reading several bands
-  or levels from the same store — and costs extra for a single-band tile.</li>
+  or levels from the same store — and costs extra (~230 ms here) for a single-band tile.</li>
 <li><strong>Several bands</strong>: the round trips don't grow with the number of bands (bands are read
   concurrently): 3 for both, with the STAC Item playing the role of <code>zarr.json</code>. COG pays
-  one header and one new connection per file; GeoZarr reads <code>zarr.json</code> once and reuses
-  the store's connections.</li>
+  one header and one new connection per file; GeoZarr reads <code>zarr.json</code> once, reuses the
+  store's connections, and downloads less than half the bytes.</li>
 </ul>
 <hr />
 <h2 id="reproduce">Reproduce<a class="headerlink" href="#reproduce" title="Permanent link">&para;</a></h2>
 <ul>
-<li>Benchmarks: <code>tests/benchmarks/async_cog_benchmarks.py</code>, <code>tests/benchmarks/async_geozarr_benchmarks.py</code></li>
-<li>Request assertions: <code>tests/benchmarks/requests.py</code>, <code>tests/benchmarks/geozarr_requests.py</code></li>
+<li>Requests and timings: <code>uv run python docs/scripts/cog_vs_geozarr/measure.py trace</code> (every request),
+  <code>uv run python docs/scripts/cog_vs_geozarr/drive.py 10</code> (10 cold runs per reader and tile)</li>
 <li>Profiles: <code>uv run pytest tests/profiles/geotiff_profiles.py tests/profiles/zarr_array_profiles.py -s</code></li>
-<li>Multi-band: <code>uv run python docs/scripts/cog_vs_geozarr/multiband_measure.py trace</code> (requests),
-  <code>uv run python docs/scripts/cog_vs_geozarr/multiband_drive.py 10</code> (timings)</li>
 <li>Figures: <code>python3 docs/scripts/cog_vs_geozarr/make_figures.py</code></li>
 </ul>
 <p>Recording byte ranges (the trick used for the numbers above):</p>
@@ -3557,6 +3596,7 @@ read per band, then one data read per band.</p>
         <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">zarr</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">Store</span><span class="o">.</span><span class="n">get_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">byte_ranges</span><span class="p">,</span> <span class="n">prototype</span><span class="o">=</span><span class="n">prototype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 </code></pre></div>
+<p>Versions: zarr-python 3.4.2, cast-value-rs 0.5.1, measured 2026-11-23.</p>
 
 
 

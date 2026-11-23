@@ -70,16 +70,16 @@
 <text x="645.0" y="118.0" class="xs hc" text-anchor="middle">1024×1024 uint16, DEFLATE</text>
 <text x="40.0" y="146.0" class="monos" text-anchor="middle">0</text>
 <text x="170.0" y="146.0" class="monos" text-anchor="middle">32 KB</text>
-<text x="330.0" y="146.0" class="monos" text-anchor="middle">~2.6 MB</text>
-<text x="960.0" y="146.0" class="monos" text-anchor="middle">222 MB</text>
+<text x="330.0" y="146.0" class="monos" text-anchor="middle">~54 MB</text>
+<text x="960.0" y="146.0" class="monos" text-anchor="middle">212 MB</text>
 <text x="40.0" y="28.0" class="bc" text-anchor="start">① GET bytes=0-32767</text>
 <text x="40.0" y="46.0" class="s" text-anchor="start">1 request</text>
 <path d="M60,52 L60,77" class="arr-c"/>
 <path d="M140,78 C140,46 640,46 640,77" class="arr-c"/>
 <path d="M140,78 C140,58 250,58 250,77" class="arr-c"/>
 <text x="420.0" y="40.0" class="s" text-anchor="middle">the header holds the byte offset of every block, of every level</text>
-<text x="40.0" y="182.0" class="mono" text-anchor="start">TileOffsets[]    = [ 3562, 278796, 369721, … , 203262362, … ]</text>
-<text x="40.0" y="202.0" class="mono" text-anchor="start">TileByteCounts[] = [ 275234, 90925, 92775, … , 1486521, … ]</text>
+<text x="40.0" y="182.0" class="mono" text-anchor="start">TileOffsets[]    = [ 3562, 378214, … , 142834054, … ]</text>
+<text x="40.0" y="202.0" class="mono" text-anchor="start">TileByteCounts[] = [ 374652, … , 1567374, … ]</text>
 <text x="40.0" y="234.0" class="s" text-anchor="start">After this single request the reader knows the exact byte range of any block — no more metadata requests.</text>
 <text x="960.0" y="234.0" class="xs" text-anchor="end">byte layout, not to scale</text>
 </svg>
