@@ -1,697 +1,8 @@
 window.BENCHMARK_DATA = {
-  "lastUpdate": 1795181132442,
+  "lastUpdate": 1795446110633,
   "repoUrl": "https://github.com/cogeotiff/rio-tiler",
   "entries": {
     "rio-tiler Benchmarks": [
-      {
-        "commit": {
-          "author": {
-            "email": "vincent.sarago@gmail.com",
-            "name": "github-actions",
-            "username": "vincentsarago"
-          },
-          "committer": {
-            "email": "vincent.sarago@gmail.com",
-            "name": "github-actions",
-            "username": "vincentsarago"
-          },
-          "distinct": true,
-          "id": "c7ef89bcbd1b2e7fab300c1f460b7fd8739669f7",
-          "message": "chore: update lock file",
-          "timestamp": "2026-07-28T10:00:31-04:00",
-          "tree_id": "6554dafde99f7bec90b053062b8c4cad6f3d0281",
-          "url": "https://github.com/cogeotiff/rio-tiler/commit/c7ef89bcbd1b2e7fab300c1f460b7fd8739669f7"
-        },
-        "date": 1785247628810,
-        "tool": "pytest",
-        "benches": [
-          {
-            "name": "equator-int8-nodata",
-            "value": 48.13042723293273,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0001674533576214714",
-            "extra": "mean: 20.776877694444412 msec\nrounds: 36"
-          },
-          {
-            "name": "dateline-int8-nodata",
-            "value": 53.116486897891306,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0028102173312028337",
-            "extra": "mean: 18.826546302325188 msec\nrounds: 43"
-          },
-          {
-            "name": "equator-uint8-nodata",
-            "value": 65.73347216977685,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00009651652340370687",
-            "extra": "mean: 15.212949612903355 msec\nrounds: 62"
-          },
-          {
-            "name": "dateline-uint8-nodata",
-            "value": 70.14092810622898,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00011625259853221503",
-            "extra": "mean: 14.25701123437506 msec\nrounds: 64"
-          },
-          {
-            "name": "equator-uint16-nodata",
-            "value": 60.41830582236934,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00011787267653859019",
-            "extra": "mean: 16.551275087719507 msec\nrounds: 57"
-          },
-          {
-            "name": "dateline-uint16-nodata",
-            "value": 68.85132733581882,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00008773146502836403",
-            "extra": "mean: 14.524048245614077 msec\nrounds: 57"
-          },
-          {
-            "name": "equator-int16-nodata",
-            "value": 57.160291334147445,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002555168876649419",
-            "extra": "mean: 17.494662407408025 msec\nrounds: 54"
-          },
-          {
-            "name": "dateline-int16-nodata",
-            "value": 66.48830521685711,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0010008968354292113",
-            "extra": "mean: 15.040238982455895 msec\nrounds: 57"
-          },
-          {
-            "name": "equator-uint32-nodata",
-            "value": 48.41906699112697,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002859380897668267",
-            "extra": "mean: 20.653020847825402 msec\nrounds: 46"
-          },
-          {
-            "name": "dateline-uint32-nodata",
-            "value": 51.75124838335523,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0008078795527004592",
-            "extra": "mean: 19.3232053571413 msec\nrounds: 42"
-          },
-          {
-            "name": "equator-int32-nodata",
-            "value": 43.262800746325055,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0013772401935676127",
-            "extra": "mean: 23.1145460476214 msec\nrounds: 42"
-          },
-          {
-            "name": "dateline-int32-nodata",
-            "value": 54.985304736148144,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0001878044038551314",
-            "extra": "mean: 18.186677418604635 msec\nrounds: 43"
-          },
-          {
-            "name": "equator-float16-nodata",
-            "value": 29.0032371673121,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00031970995922376313",
-            "extra": "mean: 34.47890986207027 msec\nrounds: 29"
-          },
-          {
-            "name": "dateline-float16-nodata",
-            "value": 22.951400263886256,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00030599337747231296",
-            "extra": "mean: 43.57032636363749 msec\nrounds: 22"
-          },
-          {
-            "name": "equator-float32-nodata",
-            "value": 47.96587540785762,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00019438609261881348",
-            "extra": "mean: 20.848154891303896 msec\nrounds: 46"
-          },
-          {
-            "name": "dateline-float32-nodata",
-            "value": 61.85218836688966,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0003372486260785453",
-            "extra": "mean: 16.167576708333797 msec\nrounds: 48"
-          },
-          {
-            "name": "equator-float64-nodata",
-            "value": 42.188226071593455,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00029787229109482183",
-            "extra": "mean: 23.703295756095528 msec\nrounds: 41"
-          },
-          {
-            "name": "dateline-float64-nodata",
-            "value": 53.53459157285369,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00034368793160789675",
-            "extra": "mean: 18.679511146342243 msec\nrounds: 41"
-          },
-          {
-            "name": "equator-int64-nodata",
-            "value": 53.676563028627946,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0008761266979985193",
-            "extra": "mean: 18.63010490195988 msec\nrounds: 51"
-          },
-          {
-            "name": "dateline-int64-nodata",
-            "value": 83.4265302947773,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00032336423245064915",
-            "extra": "mean: 11.986594629629497 msec\nrounds: 54"
-          },
-          {
-            "name": "equator-uint64-nodata",
-            "value": 52.472686460733605,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00043009867137738556",
-            "extra": "mean: 19.057533879999085 msec\nrounds: 50"
-          },
-          {
-            "name": "dateline-uint64-nodata",
-            "value": 84.12602060414028,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00021423317804700624",
-            "extra": "mean: 11.886928596154052 msec\nrounds: 52"
-          },
-          {
-            "name": "equator-int8-alpha",
-            "value": 73.27977045499308,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00008712649468775675",
-            "extra": "mean: 13.646330955883373 msec\nrounds: 68"
-          },
-          {
-            "name": "dateline-int8-alpha",
-            "value": 161.81576531640732,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00004960107882432265",
-            "extra": "mean: 6.179867567567627 msec\nrounds: 111"
-          },
-          {
-            "name": "equator-uint8-alpha",
-            "value": 84.8631181536923,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00013729035312327716",
-            "extra": "mean: 11.783682025316804 msec\nrounds: 79"
-          },
-          {
-            "name": "dateline-uint8-alpha",
-            "value": 177.68495910367994,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00007178704452431327",
-            "extra": "mean: 5.62793837500053 msec\nrounds: 128"
-          },
-          {
-            "name": "equator-uint16-alpha",
-            "value": 80.4402769419179,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000158052212901397",
-            "extra": "mean: 12.431583256756468 msec\nrounds: 74"
-          },
-          {
-            "name": "dateline-uint16-alpha",
-            "value": 177.53051432944648,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00008453302333228058",
-            "extra": "mean: 5.632834466666855 msec\nrounds: 120"
-          },
-          {
-            "name": "equator-int16-alpha",
-            "value": 71.6680304397482,
-            "unit": "iter/sec",
-            "range": "stddev: 0.000423192861848349",
-            "extra": "mean: 13.953222850748032 msec\nrounds: 67"
-          },
-          {
-            "name": "dateline-int16-alpha",
-            "value": 167.0394833268547,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00010300329019746755",
-            "extra": "mean: 5.98660855555479 msec\nrounds: 117"
-          },
-          {
-            "name": "equator-uint32-alpha",
-            "value": 65.18563520106291,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0003989073221191728",
-            "extra": "mean: 15.340803183332241 msec\nrounds: 60"
-          },
-          {
-            "name": "dateline-uint32-alpha",
-            "value": 140.4514607451226,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00020166761135770802",
-            "extra": "mean: 7.119897469878942 msec\nrounds: 83"
-          },
-          {
-            "name": "equator-int32-alpha",
-            "value": 56.40403094791442,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00048148575723895847",
-            "extra": "mean: 17.729229333333237 msec\nrounds: 54"
-          },
-          {
-            "name": "dateline-int32-alpha",
-            "value": 138.20894229075444,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00034846621407194455",
-            "extra": "mean: 7.235421843372978 msec\nrounds: 83"
-          },
-          {
-            "name": "equator-float16-alpha",
-            "value": 57.930681122309764,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002415362737654964",
-            "extra": "mean: 17.26201005454584 msec\nrounds: 55"
-          },
-          {
-            "name": "dateline-float16-alpha",
-            "value": 146.76608734491214,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0003234411927158191",
-            "extra": "mean: 6.813563120000055 msec\nrounds: 100"
-          },
-          {
-            "name": "equator-float32-alpha",
-            "value": 58.71877423930784,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0003705335614705802",
-            "extra": "mean: 17.030328254546134 msec\nrounds: 55"
-          },
-          {
-            "name": "dateline-float32-alpha",
-            "value": 149.1439841082798,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002492922007876936",
-            "extra": "mean: 6.704930178571544 msec\nrounds: 84"
-          },
-          {
-            "name": "equator-float64-alpha",
-            "value": 50.31399018295863,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00022460639626035943",
-            "extra": "mean: 19.875187723407805 msec\nrounds: 47"
-          },
-          {
-            "name": "dateline-float64-alpha",
-            "value": 118.73785575733922,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00035355058480315127",
-            "extra": "mean: 8.421913918031905 msec\nrounds: 61"
-          },
-          {
-            "name": "equator-int64-alpha",
-            "value": 49.3145611024191,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00021283118249720872",
-            "extra": "mean: 20.277986413042324 msec\nrounds: 46"
-          },
-          {
-            "name": "dateline-int64-alpha",
-            "value": 115.82301228544402,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00028285411223380425",
-            "extra": "mean: 8.633862824561282 msec\nrounds: 57"
-          },
-          {
-            "name": "equator-uint64-alpha",
-            "value": 56.460539219901776,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00022639398384159557",
-            "extra": "mean: 17.711485115386747 msec\nrounds: 52"
-          },
-          {
-            "name": "dateline-uint64-alpha",
-            "value": 117.11092477240707,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00021703361786156816",
-            "extra": "mean: 8.538913017238967 msec\nrounds: 58"
-          },
-          {
-            "name": "equator-int8-mask",
-            "value": 80.26395835963297,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00014481331701097846",
-            "extra": "mean: 12.45889214084573 msec\nrounds: 71"
-          },
-          {
-            "name": "dateline-int8-mask",
-            "value": 154.54621038089937,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00009507842800625205",
-            "extra": "mean: 6.470556589743412 msec\nrounds: 117"
-          },
-          {
-            "name": "equator-uint8-mask",
-            "value": 84.67273749873847,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0006884388889946855",
-            "extra": "mean: 11.810176799998924 msec\nrounds: 75"
-          },
-          {
-            "name": "dateline-uint8-mask",
-            "value": 155.3691983615702,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00009886325222804641",
-            "extra": "mean: 6.436282162393811 msec\nrounds: 117"
-          },
-          {
-            "name": "equator-uint16-mask",
-            "value": 81.04327015366529,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002858636560000292",
-            "extra": "mean: 12.339087478872838 msec\nrounds: 71"
-          },
-          {
-            "name": "dateline-uint16-mask",
-            "value": 153.31733924719367,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00012310275405911207",
-            "extra": "mean: 6.5224194791673185 msec\nrounds: 96"
-          },
-          {
-            "name": "equator-int16-mask",
-            "value": 76.79155157245309,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00015258678504422789",
-            "extra": "mean: 13.022265855072568 msec\nrounds: 69"
-          },
-          {
-            "name": "dateline-int16-mask",
-            "value": 152.8624858661826,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00042172886047154293",
-            "extra": "mean: 6.541827409999144 msec\nrounds: 100"
-          },
-          {
-            "name": "equator-uint32-mask",
-            "value": 71.62010722505899,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00035873825235238074",
-            "extra": "mean: 13.962559380951504 msec\nrounds: 63"
-          },
-          {
-            "name": "dateline-uint32-mask",
-            "value": 142.7847931598063,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00023129811255139416",
-            "extra": "mean: 7.003546931505438 msec\nrounds: 73"
-          },
-          {
-            "name": "equator-int32-mask",
-            "value": 62.71004574399025,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00035362937061715795",
-            "extra": "mean: 15.94640839654999 msec\nrounds: 58"
-          },
-          {
-            "name": "dateline-int32-mask",
-            "value": 140.89850244563246,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00012566115232374617",
-            "extra": "mean: 7.097307513157303 msec\nrounds: 76"
-          },
-          {
-            "name": "equator-float16-mask",
-            "value": 63.58261676208185,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00013206454499811978",
-            "extra": "mean: 15.727569120690239 msec\nrounds: 58"
-          },
-          {
-            "name": "dateline-float16-mask",
-            "value": 138.4826241124008,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00010469431065060383",
-            "extra": "mean: 7.2211225517241795 msec\nrounds: 87"
-          },
-          {
-            "name": "equator-float32-mask",
-            "value": 65.29560942392044,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002453376021553581",
-            "extra": "mean: 15.314965413794871 msec\nrounds: 58"
-          },
-          {
-            "name": "dateline-float32-mask",
-            "value": 145.2973024152003,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00023306339141603897",
-            "extra": "mean: 6.882440233765721 msec\nrounds: 77"
-          },
-          {
-            "name": "equator-float64-mask",
-            "value": 56.5624901297782,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0003530042419628655",
-            "extra": "mean: 17.679561096153627 msec\nrounds: 52"
-          },
-          {
-            "name": "dateline-float64-mask",
-            "value": 127.71625807885425,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00018496016703115076",
-            "extra": "mean: 7.829856707691691 msec\nrounds: 65"
-          },
-          {
-            "name": "equator-int64-mask",
-            "value": 55.50795698902873,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0003443867380044005",
-            "extra": "mean: 18.015435160001516 msec\nrounds: 50"
-          },
-          {
-            "name": "dateline-int64-mask",
-            "value": 111.83807432141575,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0011318129199910597",
-            "extra": "mean: 8.941498734376108 msec\nrounds: 64"
-          },
-          {
-            "name": "equator-uint64-mask",
-            "value": 60.88892595446179,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002874134948857845",
-            "extra": "mean: 16.42334766666585 msec\nrounds: 54"
-          },
-          {
-            "name": "dateline-uint64-mask",
-            "value": 122.52508892640343,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0001759093765707758",
-            "extra": "mean: 8.161593750000584 msec\nrounds: 64"
-          },
-          {
-            "name": "equator-int8-none",
-            "value": 77.83265510859239,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00014425430853074174",
-            "extra": "mean: 12.848077694443246 msec\nrounds: 72"
-          },
-          {
-            "name": "dateline-int8-none",
-            "value": 148.29734971676254,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00009276922185480877",
-            "extra": "mean: 6.743208842976151 msec\nrounds: 121"
-          },
-          {
-            "name": "equator-uint8-none",
-            "value": 87.13718658307151,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00015520204120986528",
-            "extra": "mean: 11.476156612500432 msec\nrounds: 80"
-          },
-          {
-            "name": "dateline-uint8-none",
-            "value": 181.72399319011083,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00007208676060022138",
-            "extra": "mean: 5.502850682759588 msec\nrounds: 145"
-          },
-          {
-            "name": "equator-uint16-none",
-            "value": 82.41854157556135,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00012950396907793324",
-            "extra": "mean: 12.133192129870434 msec\nrounds: 77"
-          },
-          {
-            "name": "dateline-uint16-none",
-            "value": 183.8801515048927,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00006263616057695617",
-            "extra": "mean: 5.438324864407086 msec\nrounds: 118"
-          },
-          {
-            "name": "equator-int16-none",
-            "value": 76.69321196264048,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00016730141843574974",
-            "extra": "mean: 13.0389636111098 msec\nrounds: 72"
-          },
-          {
-            "name": "dateline-int16-none",
-            "value": 183.69641903988463,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00006894874728168028",
-            "extra": "mean: 5.443764256410886 msec\nrounds: 117"
-          },
-          {
-            "name": "equator-uint32-none",
-            "value": 67.69227693902444,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0005552126768363726",
-            "extra": "mean: 14.772733984126074 msec\nrounds: 63"
-          },
-          {
-            "name": "dateline-uint32-none",
-            "value": 144.67705724914225,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00019388838200485976",
-            "extra": "mean: 6.911945950614286 msec\nrounds: 81"
-          },
-          {
-            "name": "equator-int32-none",
-            "value": 60.07252079146384,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002615910545763428",
-            "extra": "mean: 16.646546321427177 msec\nrounds: 56"
-          },
-          {
-            "name": "dateline-int32-none",
-            "value": 134.01356452134627,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0007315475860712901",
-            "extra": "mean: 7.461931212498385 msec\nrounds: 80"
-          },
-          {
-            "name": "equator-float16-none",
-            "value": 59.696345364926444,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00019564753618871823",
-            "extra": "mean: 16.751444228067147 msec\nrounds: 57"
-          },
-          {
-            "name": "dateline-float16-none",
-            "value": 114.88650564251697,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0001317515206702857",
-            "extra": "mean: 8.704242455694658 msec\nrounds: 79"
-          },
-          {
-            "name": "equator-float32-none",
-            "value": 66.4960088071272,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00021280537577621182",
-            "extra": "mean: 15.038496564515878 msec\nrounds: 62"
-          },
-          {
-            "name": "dateline-float32-none",
-            "value": 172.7279926016588,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00010814344319680121",
-            "extra": "mean: 5.789449555557427 msec\nrounds: 90"
-          },
-          {
-            "name": "equator-float64-none",
-            "value": 55.47378815866987,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0004126018948240678",
-            "extra": "mean: 18.02653168627555 msec\nrounds: 51"
-          },
-          {
-            "name": "dateline-float64-none",
-            "value": 126.36425286410572,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0003362540376100646",
-            "extra": "mean: 7.913630455880724 msec\nrounds: 68"
-          },
-          {
-            "name": "equator-int64-none",
-            "value": 54.73543943760055,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00038844372559062007",
-            "extra": "mean: 18.269698942309933 msec\nrounds: 52"
-          },
-          {
-            "name": "dateline-int64-none",
-            "value": 123.34942575244277,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0002903404049556661",
-            "extra": "mean: 8.107050307692221 msec\nrounds: 65"
-          },
-          {
-            "name": "equator-uint64-none",
-            "value": 58.7062605228103,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0004522247944659639",
-            "extra": "mean: 17.033958407407848 msec\nrounds: 54"
-          },
-          {
-            "name": "dateline-uint64-none",
-            "value": 125.57724790680605,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00017314334992977315",
-            "extra": "mean: 7.9632259558843375 msec\nrounds: 68"
-          },
-          {
-            "name": "STACReader",
-            "value": 13.248913482440509,
-            "unit": "iter/sec",
-            "range": "stddev: 0.0009022801145806985",
-            "extra": "mean: 75.47788740000101 msec\nrounds: 5"
-          },
-          {
-            "name": "STACReader-With-Threads",
-            "value": 12.46282549465118,
-            "unit": "iter/sec",
-            "range": "stddev: 0.006840000570020688",
-            "extra": "mean: 80.2386265000005 msec\nrounds: 12"
-          },
-          {
-            "name": "XarrayReader",
-            "value": 56.81133022762475,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00032306793083343774",
-            "extra": "mean: 17.602122604651594 msec\nrounds: 43"
-          },
-          {
-            "name": "Mosaic-FirstMethod",
-            "value": 41.90632596623611,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00017944032932836593",
-            "extra": "mean: 23.8627457058798 msec\nrounds: 34"
-          },
-          {
-            "name": "Mosaic-FirstMethod-With-Threads",
-            "value": 10.717381912334117,
-            "unit": "iter/sec",
-            "range": "stddev: 0.001265226946047007",
-            "extra": "mean: 93.3063697999927 msec\nrounds: 10"
-          },
-          {
-            "name": "Mosaic-MeanMethod",
-            "value": 13.187715383887074,
-            "unit": "iter/sec",
-            "range": "stddev: 0.00047361156237039437",
-            "extra": "mean: 75.8281454285716 msec\nrounds: 14"
-          },
-          {
-            "name": "Mosaic-MeanMethod-With-Threads",
-            "value": 10.207455675879526,
-            "unit": "iter/sec",
-            "range": "stddev: 0.004007473304998325",
-            "extra": "mean: 97.96760639999889 msec\nrounds: 10"
-          }
-        ]
-      },
       {
         "commit": {
           "author": {
@@ -68900,6 +68211,695 @@ window.BENCHMARK_DATA = {
             "unit": "iter/sec",
             "range": "stddev: 0.006484400072059579",
             "extra": "mean: 120.12517109999692 msec\nrounds: 10"
+          }
+        ]
+      },
+      {
+        "commit": {
+          "author": {
+            "email": "vincent.sarago@gmail.com",
+            "name": "Vincent Sarago",
+            "username": "vincentsarago"
+          },
+          "committer": {
+            "email": "noreply@github.com",
+            "name": "GitHub",
+            "username": "web-flow"
+          },
+          "distinct": true,
+          "id": "79f37cc03b8ec882f4cd4dd993e98bad6c5f1756",
+          "message": "docs: update blog post using GeoZarr with scale/offset codec (#1076)",
+          "timestamp": "2026-11-23T15:58:16+01:00",
+          "tree_id": "a3a9075f4e44ab6af56ed8c5f454b9f58dbb598b",
+          "url": "https://github.com/cogeotiff/rio-tiler/commit/79f37cc03b8ec882f4cd4dd993e98bad6c5f1756"
+        },
+        "date": 1795446106945,
+        "tool": "pytest",
+        "benches": [
+          {
+            "name": "equator-int8-nodata",
+            "value": 78.63184584576504,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00040195985829493634",
+            "extra": "mean: 12.717493647058497 msec\nrounds: 51"
+          },
+          {
+            "name": "dateline-int8-nodata",
+            "value": 101.62145233909165,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005573993431782065",
+            "extra": "mean: 9.840441924242416 msec\nrounds: 66"
+          },
+          {
+            "name": "equator-uint8-nodata",
+            "value": 84.93660621167362,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003234498298333525",
+            "extra": "mean: 11.773486657894752 msec\nrounds: 76"
+          },
+          {
+            "name": "dateline-uint8-nodata",
+            "value": 131.80268005293883,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00008958764779842584",
+            "extra": "mean: 7.587099136363146 msec\nrounds: 110"
+          },
+          {
+            "name": "equator-uint16-nodata",
+            "value": 82.12681180746607,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003382147980092046",
+            "extra": "mean: 12.17629149350579 msec\nrounds: 77"
+          },
+          {
+            "name": "dateline-uint16-nodata",
+            "value": 128.5660744855442,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00025382569797341724",
+            "extra": "mean: 7.778101680412111 msec\nrounds: 97"
+          },
+          {
+            "name": "equator-int16-nodata",
+            "value": 78.27400725098464,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0004847937249450266",
+            "extra": "mean: 12.775633126760871 msec\nrounds: 71"
+          },
+          {
+            "name": "dateline-int16-nodata",
+            "value": 125.22802622999939,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001267113037119953",
+            "extra": "mean: 7.9854328947368005 msec\nrounds: 95"
+          },
+          {
+            "name": "equator-uint32-nodata",
+            "value": 70.27524733393933,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0006065279154692846",
+            "extra": "mean: 14.229761373135023 msec\nrounds: 67"
+          },
+          {
+            "name": "dateline-uint32-nodata",
+            "value": 97.69147418535245,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0006027839758292424",
+            "extra": "mean: 10.23630780821953 msec\nrounds: 73"
+          },
+          {
+            "name": "equator-int32-nodata",
+            "value": 66.42036059696858,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00036039868413638177",
+            "extra": "mean: 15.055624374999855 msec\nrounds: 64"
+          },
+          {
+            "name": "dateline-int32-nodata",
+            "value": 99.40928130241795,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003402487219593961",
+            "extra": "mean: 10.05942289189125 msec\nrounds: 74"
+          },
+          {
+            "name": "equator-float16-nodata",
+            "value": 54.86407662587742,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00028589849160258897",
+            "extra": "mean: 18.2268628490566 msec\nrounds: 53"
+          },
+          {
+            "name": "dateline-float16-nodata",
+            "value": 48.1111420729315,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00019064227758352556",
+            "extra": "mean: 20.785206023255565 msec\nrounds: 43"
+          },
+          {
+            "name": "equator-float32-nodata",
+            "value": 67.88064389318957,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005429681151752088",
+            "extra": "mean: 14.731740046153709 msec\nrounds: 65"
+          },
+          {
+            "name": "dateline-float32-nodata",
+            "value": 115.59987750636714,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00022811864795532438",
+            "extra": "mean: 8.650528197531358 msec\nrounds: 81"
+          },
+          {
+            "name": "equator-float64-nodata",
+            "value": 59.300574986114924,
+            "unit": "iter/sec",
+            "range": "stddev: 0.001979110695017885",
+            "extra": "mean: 16.863242898304907 msec\nrounds: 59"
+          },
+          {
+            "name": "dateline-float64-nodata",
+            "value": 96.98173432181505,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00036833444479015875",
+            "extra": "mean: 10.311220014706008 msec\nrounds: 68"
+          },
+          {
+            "name": "equator-int64-nodata",
+            "value": 59.013846264484634,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0004414916930748723",
+            "extra": "mean: 16.945175807017584 msec\nrounds: 57"
+          },
+          {
+            "name": "dateline-int64-nodata",
+            "value": 84.53070971836335,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00041661051854362176",
+            "extra": "mean: 11.83002015873009 msec\nrounds: 63"
+          },
+          {
+            "name": "equator-uint64-nodata",
+            "value": 57.98431116989243,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002796684922681262",
+            "extra": "mean: 17.246044314815222 msec\nrounds: 54"
+          },
+          {
+            "name": "dateline-uint64-nodata",
+            "value": 85.45622941085193,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00034658499137196096",
+            "extra": "mean: 11.701897063492622 msec\nrounds: 63"
+          },
+          {
+            "name": "equator-int8-alpha",
+            "value": 78.02440513183673,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002641974409360613",
+            "extra": "mean: 12.81650271232846 msec\nrounds: 73"
+          },
+          {
+            "name": "dateline-int8-alpha",
+            "value": 163.7766440332881,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00007996812046687452",
+            "extra": "mean: 6.105876731707526 msec\nrounds: 123"
+          },
+          {
+            "name": "equator-uint8-alpha",
+            "value": 86.7481905884006,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014188202340698286",
+            "extra": "mean: 11.527617962024829 msec\nrounds: 79"
+          },
+          {
+            "name": "dateline-uint8-alpha",
+            "value": 173.82247463878383,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00028516415625028026",
+            "extra": "mean: 5.752995992480692 msec\nrounds: 133"
+          },
+          {
+            "name": "equator-uint16-alpha",
+            "value": 82.05321970319308,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003099558472805459",
+            "extra": "mean: 12.187212197367135 msec\nrounds: 76"
+          },
+          {
+            "name": "dateline-uint16-alpha",
+            "value": 168.08019938101828,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00034398939958787977",
+            "extra": "mean: 5.949540776859243 msec\nrounds: 121"
+          },
+          {
+            "name": "equator-int16-alpha",
+            "value": 74.86802147524286,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002496350803300469",
+            "extra": "mean: 13.356837542857695 msec\nrounds: 70"
+          },
+          {
+            "name": "dateline-int16-alpha",
+            "value": 163.76363674758744,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014747299205598174",
+            "extra": "mean: 6.106361704346627 msec\nrounds: 115"
+          },
+          {
+            "name": "equator-uint32-alpha",
+            "value": 68.2167380438057,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000570095374155563",
+            "extra": "mean: 14.659158861536962 msec\nrounds: 65"
+          },
+          {
+            "name": "dateline-uint32-alpha",
+            "value": 135.9005950325874,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003525466653175135",
+            "extra": "mean: 7.358319511111865 msec\nrounds: 90"
+          },
+          {
+            "name": "equator-int32-alpha",
+            "value": 62.16781367008492,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00036881930616469895",
+            "extra": "mean: 16.08549409999919 msec\nrounds: 60"
+          },
+          {
+            "name": "dateline-int32-alpha",
+            "value": 134.97908775060506,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002895379093630828",
+            "extra": "mean: 7.408555033707563 msec\nrounds: 89"
+          },
+          {
+            "name": "equator-float16-alpha",
+            "value": 61.43087277885632,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00032851813293810245",
+            "extra": "mean: 16.278459913794137 msec\nrounds: 58"
+          },
+          {
+            "name": "dateline-float16-alpha",
+            "value": 146.50261789012794,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003324634370039124",
+            "extra": "mean: 6.825816592232956 msec\nrounds: 103"
+          },
+          {
+            "name": "equator-float32-alpha",
+            "value": 64.68936208096875,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002595401614033996",
+            "extra": "mean: 15.458492213114503 msec\nrounds: 61"
+          },
+          {
+            "name": "dateline-float32-alpha",
+            "value": 139.7942535830731,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00032730284630936766",
+            "extra": "mean: 7.153369858695568 msec\nrounds: 92"
+          },
+          {
+            "name": "equator-float64-alpha",
+            "value": 53.28662215497427,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00033437575243493064",
+            "extra": "mean: 18.766436294116847 msec\nrounds: 51"
+          },
+          {
+            "name": "dateline-float64-alpha",
+            "value": 106.77802920009549,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00027157886774869546",
+            "extra": "mean: 9.365222485292938 msec\nrounds: 68"
+          },
+          {
+            "name": "equator-int64-alpha",
+            "value": 52.19186130091594,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003902517624533393",
+            "extra": "mean: 19.160075442307527 msec\nrounds: 52"
+          },
+          {
+            "name": "dateline-int64-alpha",
+            "value": 102.00872884055423,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005281551208959145",
+            "extra": "mean: 9.803082651515638 msec\nrounds: 66"
+          },
+          {
+            "name": "equator-uint64-alpha",
+            "value": 58.39023906138978,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00027261011285457004",
+            "extra": "mean: 17.12615012499999 msec\nrounds: 56"
+          },
+          {
+            "name": "dateline-uint64-alpha",
+            "value": 99.4202611847883,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005189552349794791",
+            "extra": "mean: 10.058311938462339 msec\nrounds: 65"
+          },
+          {
+            "name": "equator-int8-mask",
+            "value": 81.14491445958184,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00028984734774937783",
+            "extra": "mean: 12.32363120547867 msec\nrounds: 73"
+          },
+          {
+            "name": "dateline-int8-mask",
+            "value": 160.56629320485857,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00035116960749216483",
+            "extra": "mean: 6.227957188524926 msec\nrounds: 122"
+          },
+          {
+            "name": "equator-uint8-mask",
+            "value": 84.76653866819194,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00030921332817796784",
+            "extra": "mean: 11.797107864866058 msec\nrounds: 74"
+          },
+          {
+            "name": "dateline-uint8-mask",
+            "value": 163.45316886717532,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000138620246748622",
+            "extra": "mean: 6.117960311999923 msec\nrounds: 125"
+          },
+          {
+            "name": "equator-uint16-mask",
+            "value": 82.4371642127481,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00021247723308311816",
+            "extra": "mean: 12.130451229730191 msec\nrounds: 74"
+          },
+          {
+            "name": "dateline-uint16-mask",
+            "value": 158.78254222736388,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017997252146991852",
+            "extra": "mean: 6.29792158490623 msec\nrounds: 106"
+          },
+          {
+            "name": "equator-int16-mask",
+            "value": 77.0917503689472,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00039879839867617016",
+            "extra": "mean: 12.971556557143668 msec\nrounds: 70"
+          },
+          {
+            "name": "dateline-int16-mask",
+            "value": 159.71844470941042,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001348096050499579",
+            "extra": "mean: 6.261017641509009 msec\nrounds: 106"
+          },
+          {
+            "name": "equator-uint32-mask",
+            "value": 72.41686793727929,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003970848385211321",
+            "extra": "mean: 13.808937454545898 msec\nrounds: 66"
+          },
+          {
+            "name": "dateline-uint32-mask",
+            "value": 146.37004627166525,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00024832935594197694",
+            "extra": "mean: 6.831998933333554 msec\nrounds: 90"
+          },
+          {
+            "name": "equator-int32-mask",
+            "value": 67.22922127212234,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003628638513185167",
+            "extra": "mean: 14.874484354836127 msec\nrounds: 62"
+          },
+          {
+            "name": "dateline-int32-mask",
+            "value": 141.09138689866018,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00020968623915021417",
+            "extra": "mean: 7.087604863635344 msec\nrounds: 88"
+          },
+          {
+            "name": "equator-float16-mask",
+            "value": 64.21440747467729,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005113121841438424",
+            "extra": "mean: 15.572829203389386 msec\nrounds: 59"
+          },
+          {
+            "name": "dateline-float16-mask",
+            "value": 142.4921798889436,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023565098407350485",
+            "extra": "mean: 7.017928989361985 msec\nrounds: 94"
+          },
+          {
+            "name": "equator-float32-mask",
+            "value": 67.9355095001764,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00036212495514919223",
+            "extra": "mean: 14.719842500002205 msec\nrounds: 62"
+          },
+          {
+            "name": "dateline-float32-mask",
+            "value": 148.36551603919023,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002769938720063326",
+            "extra": "mean: 6.740110685395746 msec\nrounds: 89"
+          },
+          {
+            "name": "equator-float64-mask",
+            "value": 60.66608937320926,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003549331623881272",
+            "extra": "mean: 16.483673339287463 msec\nrounds: 56"
+          },
+          {
+            "name": "dateline-float64-mask",
+            "value": 122.96557669905829,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002405059808049396",
+            "extra": "mean: 8.132357256757844 msec\nrounds: 74"
+          },
+          {
+            "name": "equator-int64-mask",
+            "value": 59.305559643109355,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0004062146587946078",
+            "extra": "mean: 16.861825535714154 msec\nrounds: 56"
+          },
+          {
+            "name": "dateline-int64-mask",
+            "value": 120.10902457403323,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005823470677503488",
+            "extra": "mean: 8.325769054794183 msec\nrounds: 73"
+          },
+          {
+            "name": "equator-uint64-mask",
+            "value": 62.63865045028013,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0004228670043792476",
+            "extra": "mean: 15.964584051723099 msec\nrounds: 58"
+          },
+          {
+            "name": "dateline-uint64-mask",
+            "value": 122.38775128829298,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003082264927978666",
+            "extra": "mean: 8.170752297298359 msec\nrounds: 74"
+          },
+          {
+            "name": "equator-int8-none",
+            "value": 78.43342232706313,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001738495416080943",
+            "extra": "mean: 12.74966679166509 msec\nrounds: 72"
+          },
+          {
+            "name": "dateline-int8-none",
+            "value": 151.0642244268832,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000098690879075743",
+            "extra": "mean: 6.619701016530299 msec\nrounds: 121"
+          },
+          {
+            "name": "equator-uint8-none",
+            "value": 85.8134823227327,
+            "unit": "iter/sec",
+            "range": "stddev: 0.000182047450870854",
+            "extra": "mean: 11.653180513513457 msec\nrounds: 74"
+          },
+          {
+            "name": "dateline-uint8-none",
+            "value": 183.4872158084945,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00026925061606318675",
+            "extra": "mean: 5.449970972602796 msec\nrounds: 146"
+          },
+          {
+            "name": "equator-uint16-none",
+            "value": 81.62353524768824,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00027203077286664713",
+            "extra": "mean: 12.251368394734191 msec\nrounds: 76"
+          },
+          {
+            "name": "dateline-uint16-none",
+            "value": 177.3300821771583,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00014386543344546178",
+            "extra": "mean: 5.639201131148006 msec\nrounds: 122"
+          },
+          {
+            "name": "equator-int16-none",
+            "value": 77.39572236959498,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007407142608977322",
+            "extra": "mean: 12.920610718310854 msec\nrounds: 71"
+          },
+          {
+            "name": "dateline-int16-none",
+            "value": 177.77052461186943,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001779379422529791",
+            "extra": "mean: 5.625229504066119 msec\nrounds: 123"
+          },
+          {
+            "name": "equator-uint32-none",
+            "value": 68.82007140558214,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0005961250597381257",
+            "extra": "mean: 14.530644615385969 msec\nrounds: 65"
+          },
+          {
+            "name": "dateline-uint32-none",
+            "value": 143.79016927501448,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00026537426016159883",
+            "extra": "mean: 6.954578362637506 msec\nrounds: 91"
+          },
+          {
+            "name": "equator-int32-none",
+            "value": 64.81492639132702,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0006055225438422559",
+            "extra": "mean: 15.428544868853102 msec\nrounds: 61"
+          },
+          {
+            "name": "dateline-int32-none",
+            "value": 140.43789512660825,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001616154489473801",
+            "extra": "mean: 7.120585217390756 msec\nrounds: 92"
+          },
+          {
+            "name": "equator-float16-none",
+            "value": 60.793295747773826,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00043883479316379813",
+            "extra": "mean: 16.449182228068604 msec\nrounds: 57"
+          },
+          {
+            "name": "dateline-float16-none",
+            "value": 115.78639433199646,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00023363209595910302",
+            "extra": "mean: 8.636593321428435 msec\nrounds: 84"
+          },
+          {
+            "name": "equator-float32-none",
+            "value": 70.21113901527117,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0003588302539927989",
+            "extra": "mean: 14.242754269838812 msec\nrounds: 63"
+          },
+          {
+            "name": "dateline-float32-none",
+            "value": 167.92775597477842,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00017356850538198724",
+            "extra": "mean: 5.954941719998885 msec\nrounds: 100"
+          },
+          {
+            "name": "equator-float64-none",
+            "value": 57.549290965139974,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0002426223007148116",
+            "extra": "mean: 17.37640869642933 msec\nrounds: 56"
+          },
+          {
+            "name": "dateline-float64-none",
+            "value": 116.98108345996306,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0004017719797232042",
+            "extra": "mean: 8.54839064935017 msec\nrounds: 77"
+          },
+          {
+            "name": "equator-int64-none",
+            "value": 57.52685689165643,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00043774904403880285",
+            "extra": "mean: 17.383185072727965 msec\nrounds: 55"
+          },
+          {
+            "name": "dateline-int64-none",
+            "value": 116.96885357313215,
+            "unit": "iter/sec",
+            "range": "stddev: 0.00033611878260341664",
+            "extra": "mean: 8.549284441560953 msec\nrounds: 77"
+          },
+          {
+            "name": "equator-uint64-none",
+            "value": 59.68252307858825,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0008286916401332157",
+            "extra": "mean: 16.755323810342748 msec\nrounds: 58"
+          },
+          {
+            "name": "dateline-uint64-none",
+            "value": 111.93385703491202,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0007929277485185977",
+            "extra": "mean: 8.933847421054216 msec\nrounds: 76"
+          },
+          {
+            "name": "STACReader",
+            "value": 14.44340845085373,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0035312067458939727",
+            "extra": "mean: 69.2357349999952 msec\nrounds: 5"
+          },
+          {
+            "name": "STACReader-With-Threads",
+            "value": 13.286924844003904,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0019094928664842483",
+            "extra": "mean: 75.26195953846144 msec\nrounds: 13"
+          },
+          {
+            "name": "XarrayReader",
+            "value": 71.86045866462919,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0029382034428333155",
+            "extra": "mean: 13.915858854547155 msec\nrounds: 55"
+          },
+          {
+            "name": "Mosaic-FirstMethod",
+            "value": 53.872180578081014,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0001546257749388956",
+            "extra": "mean: 18.56245634146226 msec\nrounds: 41"
+          },
+          {
+            "name": "Mosaic-FirstMethod-With-Threads",
+            "value": 13.054049515301674,
+            "unit": "iter/sec",
+            "range": "stddev: 0.005576505941350489",
+            "extra": "mean: 76.60458150000287 msec\nrounds: 14"
+          },
+          {
+            "name": "Mosaic-MeanMethod",
+            "value": 17.00394525537861,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0012565952422817612",
+            "extra": "mean: 58.809881176469 msec\nrounds: 17"
+          },
+          {
+            "name": "Mosaic-MeanMethod-With-Threads",
+            "value": 11.959752782342436,
+            "unit": "iter/sec",
+            "range": "stddev: 0.0038686155723252225",
+            "extra": "mean: 83.61376846153672 msec\nrounds: 13"
           }
         ]
       }
