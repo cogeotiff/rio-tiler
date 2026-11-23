@@ -41,6 +41,10 @@ class NoOverviewWarning(UserWarning):
     """Dataset has no overviews."""
 
 
+class ZoomOutsideNativeRangeWarning(UserWarning):
+    """Requested zoom level is outside the dataset's native zoom range."""
+
+
 class InvalidAssetName(RioTilerError):
     """Invalid Asset name."""
 
