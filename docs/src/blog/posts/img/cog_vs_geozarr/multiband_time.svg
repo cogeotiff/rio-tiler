@@ -66,35 +66,35 @@
 <text x="764.0" y="58.0" class="xs" text-anchor="middle">1,600</text>
 <line x1="880.0" y1="64.0" x2="880.0" y2="250.0" class="axis"/>
 <text x="880.0" y="58.0" class="xs" text-anchor="middle">2,000 ms</text>
-<text x="30.0" y="92.0" class="t" text-anchor="start">z14 · 14/6944/6268</text>
+<text x="30.0" y="92.0" class="t" text-anchor="start">z14 · 14/8849/6139</text>
 <text x="30.0" y="109.0" class="xs" text-anchor="start">full res / r10m</text>
 <text x="292.0" y="90.0" class="xs" text-anchor="end">COG</text>
-<rect x="300.0" y="78.0" width="144.0" height="16.0" rx="0" class="cogO"><title>z14 COG open: 500 ms</title></rect>
-<path d="M446.0,78.0 H805.8 Q809.8,78.0 809.8,82.0 V90.0 Q809.8,94.0 805.8,94.0 H446.0 Z" class="cogS"><title>z14 COG tile: 1258 ms</title></path>
-<text x="815.8" y="90.0" class="s" text-anchor="start">1,778 ms</text>
+<rect x="300.0" y="78.0" width="144.9" height="16.0" rx="0" class="cogO"><title>z14 COG open: 503 ms</title></rect>
+<path d="M446.9,78.0 H830.2 Q834.2,78.0 834.2,82.0 V90.0 Q834.2,94.0 830.2,94.0 H446.9 Z" class="cogS"><title>z14 COG tile: 1339 ms</title></path>
+<text x="840.2" y="90.0" class="s" text-anchor="start">1,854 ms</text>
 <text x="292.0" y="108.0" class="xs" text-anchor="end">GeoZarr</text>
-<rect x="300.0" y="96.0" width="198.2" height="16.0" rx="0" class="zarO"><title>z14 GeoZarr open: 687 ms</title></rect>
-<path d="M500.2,96.0 H828.7 Q832.7,96.0 832.7,100.0 V108.0 Q832.7,112.0 828.7,112.0 H500.2 Z" class="zarS"><title>z14 GeoZarr tile: 1150 ms</title></path>
-<text x="838.7" y="108.0" class="s" text-anchor="start">1,849 ms</text>
-<text x="30.0" y="150.0" class="t" text-anchor="start">z12 · 12/1736/1567</text>
+<rect x="300.0" y="96.0" width="225.2" height="16.0" rx="0" class="zarO"><title>z14 GeoZarr open: 780 ms</title></rect>
+<path d="M527.2,96.0 H804.4 Q808.4,96.0 808.4,100.0 V108.0 Q808.4,112.0 804.4,112.0 H527.2 Z" class="zarS"><title>z14 GeoZarr tile: 973 ms</title></path>
+<text x="814.4" y="108.0" class="s" text-anchor="start">1,764 ms</text>
+<text x="30.0" y="150.0" class="t" text-anchor="start">z12 · 12/2212/1534</text>
 <text x="30.0" y="167.0" class="xs" text-anchor="start">full res / r20m</text>
 <text x="292.0" y="148.0" class="xs" text-anchor="end">COG</text>
-<rect x="300.0" y="136.0" width="142.8" height="16.0" rx="0" class="cogO"><title>z12 COG open: 496 ms</title></rect>
-<path d="M444.8,136.0 H791.9 Q795.9,136.0 795.9,140.0 V148.0 Q795.9,152.0 791.9,152.0 H444.8 Z" class="cogS"><title>z12 COG tile: 1214 ms</title></path>
-<text x="801.9" y="148.0" class="s" text-anchor="start">1,718 ms</text>
+<rect x="300.0" y="136.0" width="144.6" height="16.0" rx="0" class="cogO"><title>z12 COG open: 502 ms</title></rect>
+<path d="M446.6,136.0 H864.1 Q868.1,136.0 868.1,140.0 V148.0 Q868.1,152.0 864.1,152.0 H446.6 Z" class="cogS"><title>z12 COG tile: 1457 ms</title></path>
+<text x="874.1" y="148.0" class="s" text-anchor="start">1,949 ms</text>
 <text x="292.0" y="166.0" class="xs" text-anchor="end">GeoZarr</text>
-<rect x="300.0" y="154.0" width="198.8" height="16.0" rx="0" class="zarO"><title>z12 GeoZarr open: 689 ms</title></rect>
-<path d="M500.8,154.0 H820.6 Q824.6,154.0 824.6,158.0 V166.0 Q824.6,170.0 820.6,170.0 H500.8 Z" class="zarS"><title>z12 GeoZarr tile: 1120 ms</title></path>
-<text x="830.6" y="166.0" class="s" text-anchor="start">1,814 ms</text>
-<text x="30.0" y="208.0" class="t" text-anchor="start">z10 · 10/434/391</text>
+<rect x="300.0" y="154.0" width="226.9" height="16.0" rx="0" class="zarO"><title>z12 GeoZarr open: 786 ms</title></rect>
+<path d="M528.9,154.0 H809.9 Q813.9,154.0 813.9,158.0 V166.0 Q813.9,170.0 809.9,170.0 H528.9 Z" class="zarS"><title>z12 GeoZarr tile: 986 ms</title></path>
+<text x="819.9" y="166.0" class="s" text-anchor="start">1,767 ms</text>
+<text x="30.0" y="208.0" class="t" text-anchor="start">z10 · 10/553/383</text>
 <text x="30.0" y="225.0" class="xs" text-anchor="start">overview / r120m</text>
 <text x="292.0" y="206.0" class="xs" text-anchor="end">COG</text>
 <rect x="300.0" y="194.0" width="141.1" height="16.0" rx="0" class="cogO"><title>z10 COG open: 490 ms</title></rect>
-<path d="M443.1,194.0 H773.0 Q777.0,194.0 777.0,198.0 V206.0 Q777.0,210.0 773.0,210.0 H443.1 Z" class="cogS"><title>z10 COG tile: 1155 ms</title></path>
-<text x="783.0" y="206.0" class="s" text-anchor="start">1,650 ms</text>
+<path d="M443.1,194.0 H780.9 Q784.9,194.0 784.9,198.0 V206.0 Q784.9,210.0 780.9,210.0 H443.1 Z" class="cogS"><title>z10 COG tile: 1182 ms</title></path>
+<text x="790.9" y="206.0" class="s" text-anchor="start">1,684 ms</text>
 <text x="292.0" y="224.0" class="xs" text-anchor="end">GeoZarr</text>
-<rect x="300.0" y="212.0" width="200.6" height="16.0" rx="0" class="zarO"><title>z10 GeoZarr open: 695 ms</title></rect>
-<path d="M502.6,212.0 H782.6 Q786.6,212.0 786.6,216.0 V224.0 Q786.6,228.0 782.6,228.0 H502.6 Z" class="zarS"><title>z10 GeoZarr tile: 983 ms</title></path>
-<text x="792.6" y="224.0" class="s" text-anchor="start">1,702 ms</text>
+<rect x="300.0" y="212.0" width="229.6" height="16.0" rx="0" class="zarO"><title>z10 GeoZarr open: 795 ms</title></rect>
+<path d="M531.5,212.0 H749.0 Q753.0,212.0 753.0,216.0 V224.0 Q753.0,228.0 749.0,228.0 H531.5 Z" class="zarS"><title>z10 GeoZarr tile: 767 ms</title></path>
+<text x="759.0" y="224.0" class="s" text-anchor="start">1,566 ms</text>
 <text x="30.0" y="270.0" class="xs" text-anchor="start">Median of 10 cold runs (fresh process each), laptop → us-east-1. COG open = STAC Item fetch; GeoZarr open = zarr.json.</text>
 </svg>

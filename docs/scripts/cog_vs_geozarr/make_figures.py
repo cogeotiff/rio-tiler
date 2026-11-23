@@ -149,7 +149,7 @@ def structure():
 
     # COG
     T(55, 104, "COG — one file per band", "h2c")
-    T(55, 124, "S2C_26SMJ_20260810_0_L2A_B04.tif · 222 MB · uint16 · DEFLATE", "s")
+    T(55, 124, "S2C_33TVF_20260928_0_L2A_B04.tif · 212 MB · uint16 · DEFLATE", "s")
     bx0, bx1, by, bh, hx1, ox1 = 60, 555, 175, 46, 135, 235
     f.rect(bx0, by, hx1 - bx0, bh, "cogS", rx=0)
     f.rect(hx1, by, ox1 - hx1, bh, "cogF", rx=0)
@@ -165,7 +165,7 @@ def structure():
     T((hx1 + ox1) / 2, by + 35, "×16 … ×2", "xs hc", "middle")
     T((ox1 + bx1) / 2, by + 20, "full-resolution blocks", "t hc", "middle")
     T((ox1 + bx1) / 2, by + 35, "121 × (1024×1024)", "xs hc", "middle")
-    for x, s in [(bx0, "0"), (hx1, "32 KB"), (ox1, "~2.6 MB"), (bx1, "222 MB")]:
+    for x, s in [(bx0, "0"), (hx1, "32 KB"), (ox1, "~54 MB"), (bx1, "212 MB")]:
         T(x, by + bh + 15, s, "monos", "middle")
     T(bx0, by + bh + 30, "byte layout of the file (not to scale)", "xs")
     hc = (bx0 + hx1) / 2
@@ -201,18 +201,23 @@ def structure():
 
     # GeoZarr
     T(640, 104, "GeoZarr — one store, all bands × all resolutions", "h2z")
-    T(640, 124, ".zarr/measurements/reflectance · float32 · Blosc zstd · sharded", "s")
+    T(
+        640,
+        124,
+        ".zarr/measurements/reflectance · uint16 (scale/offset codec) · Blosc zstd · sharded",
+        "s",
+    )
     rx0, ry0, rw, rh = 740, 145, 305, 48
     f.rect(rx0, ry0, rw, rh, "zarF", rx=6)
     T(rx0 + 14, ry0 + 20, "reflectance/", "b")
-    T(rx0 + 14, ry0 + 38, "zarr.json — consolidated: 87 arrays · 166 KB", "s")
+    T(rx0 + 14, ry0 + 38, "zarr.json — consolidated: 81 arrays · 215 KB", "s")
     groups = [
         ("r10m", "10980²"),
         ("r20m", "5490²"),
         ("r60m", "1830²"),
         ("r120m", "915²"),
         ("r360m", "305²"),
-        ("r720m", "153²"),
+        ("r720m", "152²"),
     ]
     gy, gw, gh, gap, gx0, bus = 228, 78, 40, 10, 633, 212
     f.line(rx0 + rw / 2, ry0 + rh, rx0 + rw / 2, bus)
@@ -251,9 +256,9 @@ def structure():
     )
     T(985, sy - 24, "offsets", "s", "middle")
     T(sx0, sy + sh + 15, "0", "monos", "middle")
-    T(sx1, sy + sh + 15, "374 MB", "monos", "middle")
+    T(sx1, sy + sh + 15, "150 MB", "monos", "middle")
     T(sx0, sy + sh + 30, "r10m/b04/c/0/0 — ONE shard = the whole array", "t")
-    T(sx0, sy + sh + 46, "2025 inner chunks (45×45 of 244×244), row-major", "s")
+    T(sx0, sy + sh + 46, "2025 inner chunks (45×45 of 244×244), Morton order", "s")
     T(sx1, sy + sh + 30, "index at the end", "t", "end")
     T(sx1, sy + sh + 46, "2025 × (offset, nbytes) · 32 KB", "s", "end")
 
@@ -284,8 +289,8 @@ def structure():
         (855, 5490, 183, "r20m", "183² chunks"),
         (965, 1830, 183, "r60m", ""),
         (1025, 915, 183, "r120m", ""),
-        (1072, 305, 183, "r360m", ""),
-        (1132, 153, 153, "r720m", ""),
+        (1072, 305, 256, "r360m", ""),
+        (1132, 152, 152, "r720m", ""),
     ]:
         size = max(img * S, 2)
         f.grid(x, base - size, size, img, chunk, "zarF", "zarG")
@@ -297,7 +302,7 @@ def structure():
     T(55, 770, "Tile read = 2 dependent round trips", "b")
     T(55, 790, "① header (32 KB)  →  ② block ranges", "s")
     T(640, 770, "Tile read = 3 dependent round trips", "b")
-    T(640, 790, "① zarr.json (166 KB)  →  ② shard index (32 KB)  →  ③ chunk ranges", "s")
+    T(640, 790, "① zarr.json (215 KB)  →  ② shard index (32 KB)  →  ③ chunk ranges", "s")
     f.save("structure.svg")
 
 
@@ -367,7 +372,7 @@ def cog_header():
     T((hx1 + ox1) / 2, by + 38, "×16 … ×2, small", "xs hc", "middle")
     T((ox1 + bx1) / 2, by + 22, "full-resolution blocks (11 × 11)", "t hc", "middle")
     T((ox1 + bx1) / 2, by + 38, "1024×1024 uint16, DEFLATE", "xs hc", "middle")
-    for x, s in [(bx0, "0"), (hx1, "32 KB"), (ox1, "~2.6 MB"), (bx1, "222 MB")]:
+    for x, s in [(bx0, "0"), (hx1, "32 KB"), (ox1, "~54 MB"), (bx1, "212 MB")]:
         T(x, by + bh + 16, s, "monos", "middle")
     # GET
     T(40, 28, "① GET bytes=0-32767", "bc")
@@ -383,8 +388,8 @@ def cog_header():
         "s",
         "middle",
     )
-    T(40, 182, "TileOffsets[]    = [ 3562, 278796, 369721, … , 203262362, … ]", "mono")
-    T(40, 202, "TileByteCounts[] = [ 275234, 90925, 92775, … , 1486521, … ]", "mono")
+    T(40, 182, "TileOffsets[]    = [ 3562, 378214, … , 142834054, … ]", "mono")
+    T(40, 202, "TileByteCounts[] = [ 374652, … , 1567374, … ]", "mono")
     T(
         40,
         234,
@@ -406,7 +411,7 @@ def cog_blocks():
         T(gx + i * c + c / 2, gy - 8, str(i), "xs", "middle")
         T(gx - 10, gy + i * c + c / 2 + 4, str(i), "xs", "middle")
     # fetched blocks
-    for col, row in [(6, 3), (6, 4), (2, 7)]:
+    for col, row in [(4, 4), (5, 4), (4, 5), (5, 5)]:
         f.rect(
             gx + col * c,
             gy + row * c,
@@ -416,12 +421,12 @@ def cog_blocks():
             rx=0,
             title=f"block ({row},{col}) fetched",
         )
-    # z12 footprint ~970 px → spans rows 3-4 in column 6
-    fp = 970 / 1024 * c
-    f.rect(gx + 6 * c + 0.8, gy + 3 * c + 15, fp, fp, "fpc", rx=0)
-    # z14 footprint ~190 px inside block (7,2)
-    fz = 190 / 1024 * c
-    f.rect(gx + 2 * c + 15, gy + 7 * c + 12, fz, fz, "fpc", rx=0)
+    # z12 footprint ~743 px (cols 5080-5822, rows 4861-5601) → 2 × 2 blocks
+    fp = 743 / 1024 * c
+    f.rect(gx + 5080 / 1024 * c, gy + 4861 / 1024 * c, fp, fp, "fpc", rx=0)
+    # z14 footprint ~186 px (cols 5264-5450, rows 5414-5599) inside block (5,5)
+    fz = 186 / 1024 * c
+    f.rect(gx + 5264 / 1024 * c, gy + 5414 / 1024 * c, fz, fz, "fpc", rx=0)
     T(
         gx + size / 2,
         gy + size + 22,
@@ -431,18 +436,23 @@ def cog_blocks():
     )
 
     # z12 callout
-    y12 = gy + 4 * c
-    f.line(gx + 7 * c + 1, y12, 440, y12, "dash")
-    T(450, y12 - 34, "z12 tile — footprint ~970 px", "b")
-    T(450, y12 - 16, "→ 2 blocks, one above the other: not adjacent in the file", "s")
-    T(450, y12 + 2, "→ 2 ranges, fetched in parallel (1 round trip)", "s")
-    T(450, y12 + 26, "GET bytes=50341499-50714262   372,764 B", "mono")
-    T(450, y12 + 44, "GET bytes=53732093-54004221   272,129 B", "mono")
+    y12 = gy + 3 * c
+    f.line(gx + 5822 / 1024 * c + 2, gy + 4861 / 1024 * c, 440, y12, "dash")
+    T(450, y12 - 34, "z12 tile — footprint ~743 px", "b")
+    T(
+        450,
+        y12 - 16,
+        "→ 2 × 2 blocks: 4 ranges, all fetched in parallel (1 round trip)",
+        "s",
+    )
+    T(450, y12 + 8, "GET bytes=31709542-32104336   394,795 B   block (4,4)", "mono")
+    T(450, y12 + 26, "GET bytes=32104337-32505212   400,876 B   block (4,5)", "mono")
+    T(450, y12 + 44, "…  2 more ranges for row 5", "monos")
     # z14 callout
-    y14 = gy + 7 * c + 12 + fz / 2
-    f.line(gx + 2 * c + 15 + fz + 2, y14, 440, y14, "dash")
-    T(450, y14 - 8, "z14 tile — footprint ~190 px", "b")
-    T(450, y14 + 10, "→ 1 whole 1024² block = 1.49 MB", "s")
+    y14 = gy + 8 * c
+    f.line(gx + 5450 / 1024 * c + 2, gy + 5507 / 1024 * c, 440, y14, "dash")
+    T(450, y14 - 8, "z14 tile — footprint ~186 px", "b")
+    T(450, y14 + 10, "→ 1 whole 1024² block = 1.57 MB", "s")
     T(450, y14 + 28, "the tile uses ~3% of the bytes it downloads", "s")
     # legend
     f.rect(450, 345, 16, 12, "cogO", rx=0)
@@ -465,9 +475,9 @@ def zarr_tree():
     rx0, ry0, rw, rh = 360, 30, 330, 50
     f.rect(rx0, ry0, rw, rh, "zarF", rx=6)
     T(rx0 + 14, ry0 + 21, "reflectance/", "b")
-    T(rx0 + 14, ry0 + 39, "zarr.json — consolidated · 166 KB · 87 arrays", "s")
+    T(rx0 + 14, ry0 + 39, "zarr.json — consolidated · 215 KB · 81 arrays", "s")
     T(40, 50, "① GET zarr.json", "bz")
-    T(40, 68, "1 request, 166 KB", "s")
+    T(40, 68, "1 request, 215 KB", "s")
     f.path(f"M175,55 L{rx0 - 4},55", "arr-z")
 
     groups = [
@@ -476,7 +486,7 @@ def zarr_tree():
         ("r60m", "1830²"),
         ("r120m", "915²"),
         ("r360m", "305²"),
-        ("r720m", "153²"),
+        ("r720m", "152²"),
     ]
     gy, gw, gh, gap, gx0, bus = 120, 120, 42, 20, 90, 102
     f.line(rx0 + rw / 2, ry0 + rh, rx0 + rw / 2, bus)
@@ -501,13 +511,13 @@ def zarr_tree():
     f.line(b04x, ay + ah, b04x, 262, "dash")
     f.rect(gx0, 266, 330, 42, "zarF", rx=4)
     T(gx0 + 12, 284, "c/0/0 — ONE shard = the whole array", "t")
-    T(gx0 + 12, 300, "10980×10980 · 374 MB", "s")
+    T(gx0 + 12, 300, "10980×10980 · 150 MB", "s")
     T(40, 290, "shard", "xs", "middle")
 
     nx = 520
     f.rect(nx, 200, 440, 108, "panel", rx=6)
     T(nx + 16, 224, "What zarr.json tells us", "b")
-    T(nx + 16, 242, "shapes, transforms, chunk grid, codecs — for all 87 arrays", "s")
+    T(nx + 16, 242, "shapes, transforms, chunk grid, codecs — for all 81 arrays", "s")
     T(nx + 16, 270, "What it does not tell us", "b")
     T(nx + 16, 288, "where each inner chunk sits inside the shard", "s")
     f.save("zarr_tree.svg")
@@ -524,29 +534,29 @@ def zarr_shard():
     while x < ix0 - 8:
         x += 8
         f.line(x, sy, x, sy + sh, "zarG")
-    f.rect(440, sy, 32, sh, "zarO", rx=0, title="coalesced chunk range")
-    T(240, sy + 31, "chunk(0,0) … chunk(i,j) … chunk(44,44)", "t hp", "middle")
+    f.rect(352, sy, 16, sh, "zarO", rx=0, title="coalesced chunk range")
+    T(580, sy + 31, "chunk(0,0) … chunk(i,j) … chunk(44,44)", "t hp", "middle")
     T((ix0 + sx1) / 2, sy + 31, "INDEX", "onc", "middle")
     # ②a
     T(880, 34, "②a GET bytes=-32404", "bz", "middle")
     T(880, 52, "2025 × 16 B + crc32c", "s", "middle")
     f.path(f"M880,58 L880,{sy - 3}", "arr-z")
     # ②b
-    T(456, 34, "②b GET bytes=253563958-254833242", "bz", "middle")
-    T(456, 52, "needs ②a to know the offsets", "s", "middle")
-    f.path(f"M456,58 L456,{sy - 3}", "arr-z")
+    T(360, 34, "②b GET bytes=63161124-63740650", "bz", "middle")
+    T(360, 52, "needs ②a to know the offsets", "s", "middle")
+    f.path(f"M360,58 L360,{sy - 3}", "arr-z")
     # offsets arc under
     f.path(
-        f"M880,{sy + sh + 2} C880,{sy + sh + 34} 456,{sy + sh + 34} 456,{sy + sh + 3}",
+        f"M880,{sy + sh + 2} C880,{sy + sh + 34} 360,{sy + sh + 34} 360,{sy + sh + 3}",
         "arr-zd",
     )
-    T(668, sy + sh + 42, "offsets", "s", "middle")
+    T(620, sy + sh + 42, "offsets", "s", "middle")
     T(sx0, sy + sh + 16, "0", "monos", "middle")
-    T(sx1, sy + sh + 16, "374 MB", "monos", "middle")
+    T(sx1, sy + sh + 16, "150 MB", "monos", "middle")
     T(
         40,
         212,
-        "r10m/b04/c/0/0 · 45 × 45 = 2025 inner chunks of 244×244 float32 · index at the end",
+        "r10m/b04/c/0/0 · 45 × 45 = 2025 inner chunks of 244×244 uint16 · index at the end",
         "s",
     )
     f.line(40, 232, 960, 232)
@@ -559,56 +569,53 @@ def zarr_shard():
         "the reader merges chunk ranges into one GET when the gap between them is small (< 1 MiB)",
         "s",
     )
-    cx, cy, cs = 70, 290, 34
-    for r in range(3):
-        for cc in range(3):
-            need = cc == 1 and r < 2
-            f.rect(
-                cx + cc * cs,
-                cy + r * cs,
-                cs - 2,
-                cs - 2,
-                "zarS" if need else "zarF",
-                rx=2,
-            )
-    T(cx + 1.5 * cs, cy - 8, "j", "xs", "middle")
-    T(cx - 12, cy + cs / 2 + 4, "i", "xs", "middle")
-    T(cx - 12, cy + 1.5 * cs + 4, "i+1", "xs", "middle")
-    T(cx + 1.5 * cs, cy + 3 * cs + 18, "tile needs (i,j), (i+1,j)", "xs", "middle")
+    # chunk grid around the tile: rows 20-23, cols 21-23 (Morton order inside the shard)
+    need = {(22, 21), (22, 22)}
+    extra = {(23, 21), (20, 22), (21, 22), (20, 23), (21, 23)}
+    cx, cy, cs = 80, 292, 26
+    for r in range(20, 24):
+        for cc in range(21, 24):
+            cls = "zarS" if (r, cc) in need else "zarO" if (r, cc) in extra else "zarF"
+            f.rect(cx + (cc - 21) * cs, cy + (r - 20) * cs, cs - 2, cs - 2, cls, rx=2)
+        T(cx - 8, cy + (r - 20) * cs + cs / 2 + 3, str(r), "xs", "end")
+    for cc in range(21, 24):
+        T(cx + (cc - 21) * cs + cs / 2 - 1, cy - 6, str(cc), "xs", "middle")
+    T(cx + 1.5 * cs, cy + 4 * cs + 16, "tile needs (22,21), (22,22)", "xs", "middle")
 
-    rx, ry, rh = 260, 312, 40
-    cells = [("[i,j]", 1), ("[i,j+1]", 0)]
-    x = rx
+    rx, ry, rh, cw = 270, 312, 40, 88
+    cells = [
+        ("22,21", 1),
+        ("23,21", 0),
+        ("20,22", 0),
+        ("21,22", 0),
+        ("20,23", 0),
+        ("21,23", 0),
+        ("22,22", 1),
+    ]
     f.rect(rx - 30, ry, 30, rh, "zarF", rx=0)
     T(rx - 15, ry + 25, "…", "t", "middle")
-    span0 = x
-    for lab, need in cells:
-        f.rect(x, ry, 60, rh, "zarS" if need else "zarO", rx=0)
-        T(x + 30, ry + 25, lab, "onc" if need else "mono", "middle")
-        x += 60
-    f.rect(x, ry, 430, rh, "zarO", rx=0)
-    T(x + 215, ry + 25, "… 43 more chunks of row i, then row i+1 …", "mono", "middle")
-    x += 430
-    f.rect(x, ry, 60, rh, "zarS", rx=0)
-    T(x + 30, ry + 25, "[i+1,j]", "onc", "middle")
-    x += 60
-    span1 = x
-    f.rect(x, ry, 50, rh, "zarF", rx=0)
-    T(x + 25, ry + 25, "…", "t", "middle")
+    x = span0 = rx
+    for lab, needed in cells:
+        f.rect(x, ry, cw - 2, rh, "zarS" if needed else "zarO", rx=0)
+        T(x + cw / 2 - 1, ry + 25, lab, "onc" if needed else "mono", "middle")
+        x += cw
+    span1 = x - 2
+    f.rect(x, ry, 40, rh, "zarF", rx=0)
+    T(x + 20, ry + 25, "…", "t", "middle")
     f.path(
         f"M{span0},{ry - 6} L{span0},{ry - 14} L{span1},{ry - 14} L{span1},{ry - 6}", "ln"
     )
     T(
         (span0 + span1) / 2,
         ry - 20,
-        "one coalesced GET · 1.27 MB for the 2 chunks needed",
+        "one coalesced GET · 580 KB (7 chunks) for the 2 chunks needed (163 KB)",
         "b",
         "middle",
     )
     T(
         rx - 30,
         ry + rh + 20,
-        "row-major order inside the shard — everything in between is downloaded too",
+        "chunks are stored in Morton (Z) order — everything in between is downloaded too",
         "s",
     )
     f.rect(rx - 30, ry + rh + 36, 14, 10, "zarS", rx=0)
@@ -629,7 +636,7 @@ def round_trips():
             "COG — 2 round trips",
             [
                 ("GET bytes=0-32767", "32 KB"),
-                ("GET block ranges (parallel)", "0.5 – 1.5 MB"),
+                ("GET block ranges (parallel)", "0.4 – 1.6 MB"),
             ],
         ),
         (
@@ -637,9 +644,9 @@ def round_trips():
             "z",
             "GeoZarr (sharded) — 3 round trips",
             [
-                ("GET zarr.json", "166 KB"),
+                ("GET zarr.json", "215 KB"),
                 ("GET bytes=-32404 (shard index)", "32 KB"),
-                ("GET chunk range (coalesced)", "1.2 – 1.7 MB"),
+                ("GET chunk range (coalesced)", "0.3 – 0.7 MB"),
             ],
         ),
     ]
@@ -666,10 +673,10 @@ def round_trips():
 
 # ───────────────────────────── bar charts ─────────────────────────────
 TILES = [
-    ("z14", "14/6944/6268", "full res / r10m"),
-    ("z12", "12/1736/1567", "full res / r20m"),
-    ("z10", "10/434/391", "overview / r120m"),
-    ("z9", "9/217/195", "overview / r120m"),
+    ("z14", "14/8849/6139", "full res / r10m"),
+    ("z12", "12/2212/1534", "full res / r20m"),
+    ("z10", "10/553/383", "overview / r120m"),
+    ("z9", "9/276/191", "overview / r120m"),
 ]
 
 
@@ -693,10 +700,10 @@ def _axis(f, x0, x1, top, bottom, vmax, step, unit):
 
 def bytes_chart():
     data = [
-        (1519.289, 1467.606, "1 + 1", "1 + 1 + 1"),
-        (677.661, 1895.980, "1 + 2", "1 + 1 + 1"),
-        (864.440, 1355.346, "1 + 4", "1 + 1 + 1"),
-        (532.687, 1748.580, "1 + 4", "1 + 1 + 1"),
+        (1600.142, 827.412, "1 + 1", "1 + 1 + 1"),
+        (1643.723, 853.837, "1 + 4", "1 + 1 + 1"),
+        (817.099, 500.999, "1 + 2", "1 + 1 + 1"),
+        (407.420, 891.666, "1 + 1", "1 + 1 + 1"),
     ]
     f = Fig(1000, 330, "Bytes downloaded per tile")
     x0, x1, vmax = 230, 880, 2000
@@ -719,10 +726,10 @@ def bytes_chart():
 
 def time_chart():
     data = [
-        ((524, 634, 1158), (636, 275, 926)),
-        ((522, 636, 1173), (662, 282, 978)),
-        ((532, 540, 1081), (666, 277, 998)),
-        ((519, 432, 954), (712, 294, 1006)),
+        ((544, 738, 1281), (769, 533, 1290)),
+        ((572, 874, 1465), (796, 509, 1291)),
+        ((565, 657, 1205), (786, 391, 1175)),
+        ((580, 485, 1066), (791, 498, 1283)),
     ]
     f = Fig(1000, 350, "Time per tile")
 
@@ -733,7 +740,7 @@ def time_chart():
         f.text(504, y, "tile", "s")
 
     _legend(f, 26, extra)
-    x0, x1, vmax = 230, 880, 1400
+    x0, x1, vmax = 230, 880, 1600
     top = 64
     _axis(f, x0, x1, top, 310, vmax, 200, "ms")
     for i, ((z, tile, lvl), rows) in enumerate(zip(TILES, data)):
@@ -766,7 +773,7 @@ def time_chart():
     f.text(
         30,
         336,
-        "Median of 10 runs, laptop → us-east-1. Labels are the median total; open and tile medians are computed separately, so they may not add up exactly.",
+        "Median of 10 cold runs (fresh process each), laptop → us-east-1. Labels are the median total; open and tile medians are computed separately.",
         "xs",
     )
     f.save("time_per_tile.svg")
@@ -837,12 +844,12 @@ MB_TILES = TILES[:3]
 
 def multiband_bytes_chart():
     data = [
-        (4579.541, 4053.842, "7 ranges", "7 GET"),
-        (2038.332, 5315.058, "10 ranges", "7 GET"),
-        (2606.638, 3701.878, "16 ranges", "7 GET"),
+        (4716.679, 1991.013, "7 ranges", "7 GET"),
+        (4838.992, 2062.192, "16 ranges", "7 GET"),
+        (2393.540, 1032.839, "10 ranges", "7 GET"),
     ]
     f = Fig(1000, 280, "Bytes downloaded per 3-band tile")
-    x0, x1, vmax = 300, 860, 6000
+    x0, x1, vmax = 300, 860, 5000
     for x, cls, lab in [
         (300, "cogS", "COG — 3 files"),
         (420, "zarS", "GeoZarr — 1 store"),
@@ -873,9 +880,9 @@ def multiband_bytes_chart():
 
 def multiband_time_chart():
     data = [
-        [(500, 1258, 1778), (687, 1150, 1849)],
-        [(496, 1214, 1718), (689, 1120, 1814)],
-        [(490, 1155, 1650), (695, 983, 1702)],
+        [(503, 1339, 1854), (780, 973, 1764)],
+        [(502, 1457, 1949), (786, 986, 1767)],
+        [(490, 1182, 1684), (795, 767, 1566)],
     ]
     series = [("COG", "c"), ("GeoZarr", "z")]
     f = Fig(1000, 280, "Time per 3-band tile")

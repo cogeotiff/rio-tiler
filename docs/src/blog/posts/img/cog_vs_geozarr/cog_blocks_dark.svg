@@ -89,22 +89,23 @@
 <text x="40.0" y="339.0" class="xs" text-anchor="middle">9</text>
 <text x="365.0" y="42.0" class="xs" text-anchor="middle">10</text>
 <text x="40.0" y="369.0" class="xs" text-anchor="middle">10</text>
-<rect x="230.0" y="140.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (3,6) fetched</title></rect>
-<rect x="230.0" y="170.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (4,6) fetched</title></rect>
-<rect x="110.0" y="260.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (7,2) fetched</title></rect>
-<rect x="230.8" y="155.0" width="28.4" height="28.4" rx="0" class="fpc"></rect>
-<rect x="125.0" y="272.0" width="5.6" height="5.6" rx="0" class="fpc"></rect>
+<rect x="170.0" y="170.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (4,4) fetched</title></rect>
+<rect x="200.0" y="170.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (4,5) fetched</title></rect>
+<rect x="170.0" y="200.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (5,4) fetched</title></rect>
+<rect x="200.0" y="200.0" width="30.0" height="30.0" rx="0" class="cogO"><title>block (5,5) fetched</title></rect>
+<rect x="198.8" y="192.4" width="21.8" height="21.8" rx="0" class="fpc"></rect>
+<rect x="204.2" y="208.6" width="5.4" height="5.4" rx="0" class="fpc"></rect>
 <text x="210.8" y="393.7" class="xs" text-anchor="middle">full resolution: 11 × 11 blocks of 1024×1024 (to scale)</text>
-<line x1="261.0" y1="170.0" x2="440.0" y2="170.0" class="dash"/>
-<text x="450.0" y="136.0" class="b" text-anchor="start">z12 tile — footprint ~970 px</text>
-<text x="450.0" y="154.0" class="s" text-anchor="start">→ 2 blocks, one above the other: not adjacent in the file</text>
-<text x="450.0" y="172.0" class="s" text-anchor="start">→ 2 ranges, fetched in parallel (1 round trip)</text>
-<text x="450.0" y="196.0" class="mono" text-anchor="start">GET bytes=50341499-50714262   372,764 B</text>
-<text x="450.0" y="214.0" class="mono" text-anchor="start">GET bytes=53732093-54004221   272,129 B</text>
-<line x1="132.6" y1="274.8" x2="440.0" y2="274.8" class="dash"/>
-<text x="450.0" y="266.8" class="b" text-anchor="start">z14 tile — footprint ~190 px</text>
-<text x="450.0" y="284.8" class="s" text-anchor="start">→ 1 whole 1024² block = 1.49 MB</text>
-<text x="450.0" y="302.8" class="s" text-anchor="start">the tile uses ~3% of the bytes it downloads</text>
+<line x1="222.6" y1="192.4" x2="440.0" y2="140.0" class="dash"/>
+<text x="450.0" y="106.0" class="b" text-anchor="start">z12 tile — footprint ~743 px</text>
+<text x="450.0" y="124.0" class="s" text-anchor="start">→ 2 × 2 blocks: 4 ranges, all fetched in parallel (1 round trip)</text>
+<text x="450.0" y="148.0" class="mono" text-anchor="start">GET bytes=31709542-32104336   394,795 B   block (4,4)</text>
+<text x="450.0" y="166.0" class="mono" text-anchor="start">GET bytes=32104337-32505212   400,876 B   block (4,5)</text>
+<text x="450.0" y="184.0" class="monos" text-anchor="start">…  2 more ranges for row 5</text>
+<line x1="211.7" y1="211.3" x2="440.0" y2="290.0" class="dash"/>
+<text x="450.0" y="282.0" class="b" text-anchor="start">z14 tile — footprint ~186 px</text>
+<text x="450.0" y="300.0" class="s" text-anchor="start">→ 1 whole 1024² block = 1.57 MB</text>
+<text x="450.0" y="318.0" class="s" text-anchor="start">the tile uses ~3% of the bytes it downloads</text>
 <rect x="450.0" y="345.0" width="16.0" height="12.0" rx="0" class="cogO"></rect>
 <text x="472.0" y="355.0" class="s" text-anchor="start">block fetched</text>
 <rect x="570.0" y="345.0" width="16.0" height="12.0" rx="0" class="fpc"></rect>

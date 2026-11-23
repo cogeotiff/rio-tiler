@@ -52,41 +52,39 @@
 <text x="438.0" y="26.0" class="s" text-anchor="start">GeoZarr — 1 store</text>
 <line x1="300.0" y1="64.0" x2="300.0" y2="250.0" class="axis"/>
 <text x="300.0" y="58.0" class="xs" text-anchor="middle">0</text>
-<line x1="393.3" y1="64.0" x2="393.3" y2="250.0" class="axis"/>
-<text x="393.3" y="58.0" class="xs" text-anchor="middle">1,000</text>
-<line x1="486.7" y1="64.0" x2="486.7" y2="250.0" class="axis"/>
-<text x="486.7" y="58.0" class="xs" text-anchor="middle">2,000</text>
-<line x1="580.0" y1="64.0" x2="580.0" y2="250.0" class="axis"/>
-<text x="580.0" y="58.0" class="xs" text-anchor="middle">3,000</text>
-<line x1="673.3" y1="64.0" x2="673.3" y2="250.0" class="axis"/>
-<text x="673.3" y="58.0" class="xs" text-anchor="middle">4,000</text>
-<line x1="766.7" y1="64.0" x2="766.7" y2="250.0" class="axis"/>
-<text x="766.7" y="58.0" class="xs" text-anchor="middle">5,000</text>
+<line x1="412.0" y1="64.0" x2="412.0" y2="250.0" class="axis"/>
+<text x="412.0" y="58.0" class="xs" text-anchor="middle">1,000</text>
+<line x1="524.0" y1="64.0" x2="524.0" y2="250.0" class="axis"/>
+<text x="524.0" y="58.0" class="xs" text-anchor="middle">2,000</text>
+<line x1="636.0" y1="64.0" x2="636.0" y2="250.0" class="axis"/>
+<text x="636.0" y="58.0" class="xs" text-anchor="middle">3,000</text>
+<line x1="748.0" y1="64.0" x2="748.0" y2="250.0" class="axis"/>
+<text x="748.0" y="58.0" class="xs" text-anchor="middle">4,000</text>
 <line x1="860.0" y1="64.0" x2="860.0" y2="250.0" class="axis"/>
-<text x="860.0" y="58.0" class="xs" text-anchor="middle">6,000 KB</text>
-<text x="30.0" y="92.0" class="t" text-anchor="start">z14 · 14/6944/6268</text>
+<text x="860.0" y="58.0" class="xs" text-anchor="middle">5,000 KB</text>
+<text x="30.0" y="92.0" class="t" text-anchor="start">z14 · 14/8849/6139</text>
 <text x="30.0" y="109.0" class="xs" text-anchor="start">full res / r10m</text>
 <text x="292.0" y="90.0" class="xs" text-anchor="end">7 ranges</text>
-<path d="M300.0,78.0 H723.4 Q727.4,78.0 727.4,82.0 V90.0 Q727.4,94.0 723.4,94.0 H300.0 Z" class="cogS"><title>z14 COG: 4,580 KB, 7 ranges</title></path>
-<text x="733.4" y="90.0" class="s" text-anchor="start">4,580 KB</text>
+<path d="M300.0,78.0 H824.3 Q828.3,78.0 828.3,82.0 V90.0 Q828.3,94.0 824.3,94.0 H300.0 Z" class="cogS"><title>z14 COG: 4,717 KB, 7 ranges</title></path>
+<text x="834.3" y="90.0" class="s" text-anchor="start">4,717 KB</text>
 <text x="292.0" y="108.0" class="xs" text-anchor="end">7 GET</text>
-<path d="M300.0,96.0 H674.4 Q678.4,96.0 678.4,100.0 V108.0 Q678.4,112.0 674.4,112.0 H300.0 Z" class="zarS"><title>z14 GeoZarr: 4,054 KB, 7 GET</title></path>
-<text x="684.4" y="108.0" class="s" text-anchor="start">4,054 KB</text>
-<text x="30.0" y="150.0" class="t" text-anchor="start">z12 · 12/1736/1567</text>
+<path d="M300.0,96.0 H519.0 Q523.0,96.0 523.0,100.0 V108.0 Q523.0,112.0 519.0,112.0 H300.0 Z" class="zarS"><title>z14 GeoZarr: 1,991 KB, 7 GET</title></path>
+<text x="529.0" y="108.0" class="s" text-anchor="start">1,991 KB</text>
+<text x="30.0" y="150.0" class="t" text-anchor="start">z12 · 12/2212/1534</text>
 <text x="30.0" y="167.0" class="xs" text-anchor="start">full res / r20m</text>
-<text x="292.0" y="148.0" class="xs" text-anchor="end">10 ranges</text>
-<path d="M300.0,136.0 H486.2 Q490.2,136.0 490.2,140.0 V148.0 Q490.2,152.0 486.2,152.0 H300.0 Z" class="cogS"><title>z12 COG: 2,038 KB, 10 ranges</title></path>
-<text x="496.2" y="148.0" class="s" text-anchor="start">2,038 KB</text>
+<text x="292.0" y="148.0" class="xs" text-anchor="end">16 ranges</text>
+<path d="M300.0,136.0 H838.0 Q842.0,136.0 842.0,140.0 V148.0 Q842.0,152.0 838.0,152.0 H300.0 Z" class="cogS"><title>z12 COG: 4,839 KB, 16 ranges</title></path>
+<text x="848.0" y="148.0" class="s" text-anchor="start">4,839 KB</text>
 <text x="292.0" y="166.0" class="xs" text-anchor="end">7 GET</text>
-<path d="M300.0,154.0 H792.1 Q796.1,154.0 796.1,158.0 V166.0 Q796.1,170.0 792.1,170.0 H300.0 Z" class="zarS"><title>z12 GeoZarr: 5,315 KB, 7 GET</title></path>
-<text x="802.1" y="166.0" class="s" text-anchor="start">5,315 KB</text>
-<text x="30.0" y="208.0" class="t" text-anchor="start">z10 · 10/434/391</text>
+<path d="M300.0,154.0 H527.0 Q531.0,154.0 531.0,158.0 V166.0 Q531.0,170.0 527.0,170.0 H300.0 Z" class="zarS"><title>z12 GeoZarr: 2,062 KB, 7 GET</title></path>
+<text x="537.0" y="166.0" class="s" text-anchor="start">2,062 KB</text>
+<text x="30.0" y="208.0" class="t" text-anchor="start">z10 · 10/553/383</text>
 <text x="30.0" y="225.0" class="xs" text-anchor="start">overview / r120m</text>
-<text x="292.0" y="206.0" class="xs" text-anchor="end">16 ranges</text>
-<path d="M300.0,194.0 H539.3 Q543.3,194.0 543.3,198.0 V206.0 Q543.3,210.0 539.3,210.0 H300.0 Z" class="cogS"><title>z10 COG: 2,607 KB, 16 ranges</title></path>
-<text x="549.3" y="206.0" class="s" text-anchor="start">2,607 KB</text>
+<text x="292.0" y="206.0" class="xs" text-anchor="end">10 ranges</text>
+<path d="M300.0,194.0 H564.1 Q568.1,194.0 568.1,198.0 V206.0 Q568.1,210.0 564.1,210.0 H300.0 Z" class="cogS"><title>z10 COG: 2,394 KB, 10 ranges</title></path>
+<text x="574.1" y="206.0" class="s" text-anchor="start">2,394 KB</text>
 <text x="292.0" y="224.0" class="xs" text-anchor="end">7 GET</text>
-<path d="M300.0,212.0 H641.5 Q645.5,212.0 645.5,216.0 V224.0 Q645.5,228.0 641.5,228.0 H300.0 Z" class="zarS"><title>z10 GeoZarr: 3,702 KB, 7 GET</title></path>
-<text x="651.5" y="224.0" class="s" text-anchor="start">3,702 KB</text>
+<path d="M300.0,212.0 H411.7 Q415.7,212.0 415.7,216.0 V224.0 Q415.7,228.0 411.7,228.0 H300.0 Z" class="zarS"><title>z10 GeoZarr: 1,033 KB, 7 GET</title></path>
+<text x="421.7" y="224.0" class="s" text-anchor="start">1,033 KB</text>
 <text x="30.0" y="270.0" class="xs" text-anchor="start">B04 + B03 + B02, cold, every range recorded. COG: 7 calls (STAC Item + 3 headers + 3 block reads). GeoZarr: 7 GETs.</text>
 </svg>

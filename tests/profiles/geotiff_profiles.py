@@ -52,11 +52,11 @@ from rio_tiler.experimental.geotiff import Reader as AsyncGeoTIFFReader
 from rio_tiler.io import Reader
 
 base_url = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs"
-filename = "S2C_26SMJ_20260810_0_L2A_B04.tif"
+filename = "S2C_33TVF_20260928_0_L2A_B04.tif"
 src_path = f"{base_url}/{filename}"
 
 # zoom 14 is close to the native 10m resolution
-tile = (6944, 6268, 14)
+tile = (8849, 6139, 14)
 
 gdal_env = {
     "GDAL_HTTP_MERGE_CONSECUTIVE_RANGES": "YES",

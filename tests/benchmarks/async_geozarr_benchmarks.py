@@ -9,7 +9,7 @@ from zarr.storage import ObjectStore
 
 from rio_tiler.experimental.zarr import AsyncGroupReader, GroupReader
 
-src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260810T125031_N0512_R095_T26SMJ_20260810T155917.zarr/measurements/reflectance"
+src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260928T095031_N0513_R079_T33TVF_20260928T130916.zarr/measurements/reflectance"
 
 
 @pytest.mark.asyncio
@@ -21,7 +21,7 @@ async def test_async(async_benchmark):
         zarr_store = ObjectStore(store=store, read_only=True)
         group = await zarr.api.asynchronous.open_group(store=zarr_store, mode="r")
         async with AsyncGroupReader(input=group) as src:
-            img = await src.tile(1736, 1567, 12, variables=["b04"])
+            img = await src.tile(2212, 1534, 12, variables=["b04"])
             assert img.array.shape == (1, 256, 256)
             return img
 
@@ -38,7 +38,7 @@ async def test_sync(async_benchmark):
         group = zarr.open_group(store=zarr_store, mode="r")
 
         with GroupReader(input=group) as src:
-            img = src.tile(1736, 1567, 12, variables=["b04"])
+            img = src.tile(2212, 1534, 12, variables=["b04"])
             assert img.array.shape == (1, 256, 256)
             return img
 
