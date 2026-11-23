@@ -62,6 +62,7 @@ dev = [
     "ipyleaflet",
     "matplotlib",
     "pyinstrument",
+    "cast-value-rs>=0.4.2",
 ]
 
 performance = [
@@ -93,7 +94,7 @@ xarray = [
 ]
 # for experimental.zarr Readers
 zarr = [
-    "zarr~=3.0",
+    "zarr[cast-value-rs]~=3.0",
     "async-lru>=2.4",
     "obstore",
     "isochron",

@@ -59,7 +59,7 @@
 <path d="M70,190 L398,206" class="arr-c"/>
 <text x="235.0" y="188.0" class="mono" text-anchor="middle">GET block ranges (parallel)</text>
 <path d="M400,228 L72,244" class="arr-cd"/>
-<text x="235.0" y="256.0" class="s" text-anchor="middle">0.5 – 1.5 MB</text>
+<text x="235.0" y="256.0" class="s" text-anchor="middle">0.4 – 1.6 MB</text>
 <text x="412.0" y="222.0" class="b" text-anchor="start">RTT 2</text>
 <text x="70.0" y="303.0" class="s" text-anchor="middle">decode, reproject</text>
 <rect x="65.0" y="280.0" width="10.0" height="10.0" rx="2" class="cogS"></rect>
@@ -71,7 +71,7 @@
 <path d="M570,90 L898,106" class="arr-z"/>
 <text x="735.0" y="88.0" class="mono" text-anchor="middle">GET zarr.json</text>
 <path d="M900,128 L572,144" class="arr-zd"/>
-<text x="735.0" y="156.0" class="s" text-anchor="middle">166 KB</text>
+<text x="735.0" y="156.0" class="s" text-anchor="middle">215 KB</text>
 <text x="912.0" y="122.0" class="b" text-anchor="start">RTT 1</text>
 <path d="M570,190 L898,206" class="arr-z"/>
 <text x="735.0" y="188.0" class="mono" text-anchor="middle">GET bytes=-32404 (shard index)</text>
@@ -81,7 +81,7 @@
 <path d="M570,290 L898,306" class="arr-z"/>
 <text x="735.0" y="288.0" class="mono" text-anchor="middle">GET chunk range (coalesced)</text>
 <path d="M900,328 L572,344" class="arr-zd"/>
-<text x="735.0" y="356.0" class="s" text-anchor="middle">1.2 – 1.7 MB</text>
+<text x="735.0" y="356.0" class="s" text-anchor="middle">0.3 – 0.7 MB</text>
 <text x="912.0" y="322.0" class="b" text-anchor="start">RTT 3</text>
 <text x="570.0" y="403.0" class="s" text-anchor="middle">decode, reproject</text>
 <rect x="565.0" y="380.0" width="10.0" height="10.0" rx="2" class="zarS"></rect>

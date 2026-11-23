@@ -45,10 +45,10 @@ from zarr.storage import LoggingStore, ObjectStore
 
 from rio_tiler.experimental.zarr import AsyncGroupReader, GroupReader
 
-src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260810T125031_N0512_R095_T26SMJ_20260810T155917.zarr/measurements/reflectance"
+src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260928T095031_N0513_R079_T33TVF_20260928T130916.zarr/measurements/reflectance"
 
 # zoom 14 is close to the native 10m resolution
-tile = (6944, 6268, 14)
+tile = (8849, 6139, 14)
 
 
 @pytest.fixture(autouse=True)
@@ -80,8 +80,8 @@ def _print_profile(title: str, profiler: Profiler, store: LoggingStore):
 #     """profile ArrayReader on a remote zarr Array."""
 #     # Spatial metadata is stored on the `r10m` group, not on the arrays
 #     array_options = {
-#         "crs": CRS.from_epsg(32626),
-#         "transform": Affine(10.0, 0.0, 399965.0, 0.0, -10.0, 4400035.0),
+#         "crs": CRS.from_epsg(32633),
+#         "transform": Affine(10.0, 0.0, 399965.0, 0.0, -10.0, 4600015.0),
 #         "spatial_dims": ["y", "x"],
 #     }
 
@@ -102,8 +102,8 @@ def _print_profile(title: str, profiler: Profiler, store: LoggingStore):
 #     """profile AsyncArrayReader on a remote zarr Array."""
 #     # Spatial metadata is stored on the `r10m` group, not on the arrays
 #     array_options = {
-#         "crs": CRS.from_epsg(32626),
-#         "transform": Affine(10.0, 0.0, 399965.0, 0.0, -10.0, 4400035.0),
+#         "crs": CRS.from_epsg(32633),
+#         "transform": Affine(10.0, 0.0, 399965.0, 0.0, -10.0, 4600015.0),
 #         "spatial_dims": ["y", "x"],
 #     }
 

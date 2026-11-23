@@ -11,7 +11,7 @@ from zarr.storage import LoggingStore, ObjectStore
 
 from rio_tiler.experimental.zarr import GroupReader
 
-src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260810T125031_N0512_R095_T26SMJ_20260810T155917.zarr/measurements/reflectance"
+src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260928T095031_N0513_R079_T33TVF_20260928T130916.zarr/measurements/reflectance"
 
 
 @pytest.fixture(autouse=True)
@@ -21,7 +21,6 @@ def clear_group_metadata_cache():
     GroupReader.list_variables.cache_clear()
 
 
-@pytest.mark.xfail
 def test_info():
     """Info should only do 1 HTTP request."""
     zarr_store = LoggingStore(
@@ -38,7 +37,6 @@ def test_info():
     assert zarr_store.counter["get"] == 1
 
 
-@pytest.mark.xfail
 def test_tile_read():
     """Tile Read tests."""
     zarr_store = LoggingStore(
@@ -48,7 +46,7 @@ def test_tile_read():
         store=zarr_store, mode="r", zarr_format=3, use_consolidated=True
     )
     with GroupReader(input=group) as src:
-        img = src.tile(1736, 1567, 12, variables=["b02"], tilesize=256)
+        img = src.tile(2212, 1534, 12, variables=["b02"], tilesize=256)
 
     assert img.array.shape == (1, 256, 256)
     # 1 GET for the zarr.json
