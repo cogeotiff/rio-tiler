@@ -1,5 +1,7 @@
 ---
-date: 2026-11-19
+date:
+  created: 2026-11-19
+  updated: 2026-11-23
 authors:
   - vincentsarago
 categories:
@@ -16,6 +18,21 @@ from the same Sentinel-2 band (B04, red), stored as a COG and as a GeoZarr.
 !!! note
 
     This post, along with its benchmark scripts and figures, was written with the help of [Claude Code](https://claude.com/claude-code) (Anthropic).
+
+!!! info "Updated on 2026-11-23: GeoZarr stored as `uint16`"
+
+    The first version of this post (2026-11-19) used a GeoZarr that stored reflectance as
+    `float32` (scene `26SMJ`, 2026-08-10). That made it read more bytes than the `uint16` COG,
+    so the comparison mixed two things: the layout and the data type.
+
+    This version uses a newer EOPF GeoZarr (scene `33TVF`, 2026-09-28) that stores `uint16` on
+    disk and decodes it to `float32` with the `scale_offset` + `cast_value` codecs. All the
+    numbers and figures were measured again on this scene, with COGs of the same scene.
+
+    What changed: GeoZarr now downloads **about half the bytes** of the COG for full-resolution
+    tiles, and is **5–9% faster** for 3-band tiles. The round trips are unchanged
+    (2 for COG, 3 for sharded GeoZarr). The post also now says that inner chunks are stored in
+    Morton order, not row by row.
 
 
 ---
