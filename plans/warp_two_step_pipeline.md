@@ -1,5 +1,8 @@
 # Plan: Two-Step Warp Pipeline in `rio_tiler._warp`
 
+> **Superseded by [PR #1083](https://github.com/cogeotiff/rio-tiler/pull/1083) — see [warp_parity.md](warp_parity.md).**
+> The premise below turned out to be wrong: GDAL's `WarpedVRT` + `read(out_shape=...)` warps the selected overview directly onto the output grid (one pass), so `warp()` is single-pass again. The two-step path is only kept for `gauss`, which GDAL's warper doesn't support.
+
 ## TL;DR
 
 Split `_warp.warp()` into two distinct steps — reproject then resample — to match what the sync reader's `WarpedVRT + dataset.read(out_shape=...)` pipeline does internally. This fixes a quality/accuracy difference between the async and sync readers when using non-nearest resampling.
@@ -48,6 +51,8 @@ Both data and mask are processed through each step. Mask is carried as `uint8` (
 - [rio_tiler/experimental/geotiff.py](rio_tiler/experimental/geotiff.py) — updated `warp()` call in `part()`
 - [rio_tiler/experimental/zarr.py](rio_tiler/experimental/zarr.py) — updated `warp()` call in `part()`
 
-## Status: ✅ Implemented
+## Status: ⛔ Superseded
 
-All changes on `fix/warp-method` branch. No API breaking changes — `resampling_method` defaults to `"nearest"` in `warp()`, matching the previous implicit behavior.
+Replaced by the single-pass warp and GDAL overview selection in PR #1083 (`fix/experimental-warp`).
+
+Originally implemented on the `fix/warp-method` branch. No API breaking changes — `resampling_method` defaults to `"nearest"` in `warp()`, matching the previous implicit behavior.
