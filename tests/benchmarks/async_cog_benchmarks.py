@@ -8,6 +8,7 @@ from async_geotiff import GeoTIFF
 from obstore.store import HTTPStore
 
 from rio_tiler.experimental.geotiff import Reader as AsyncReader
+from rio_tiler.experimental.rasterio import Reader as ExpRioReader
 from rio_tiler.io import Reader as SyncReader
 
 src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A_B04.tif"
@@ -42,6 +43,27 @@ async def test_sync_geotiff(async_benchmark):
                 "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A_B04.tif"
             ) as src:
                 return src.tile(2212, 1534, 12)
+
+    async def _tile():
+        return await asyncio.to_thread(sync_tile)
+
+    _ = await async_benchmark(_tile)
+
+
+@pytest.mark.asyncio
+async def test_experimental_rasterio(async_benchmark):
+    """benchmark experimental Rasterio Reader on a remote GeoTIFF."""
+
+    def sync_tile():
+        with rasterio.Env(
+            GDAL_DISABLE_READDIR_ON_OPEN="EMPTY_DIR",
+            NUM_THREADS="all",
+            CPL_VSIL_CURL_NON_CACHED="/vsicurl/https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_26SMJ_20260810_0_L2A_B04.tif",
+        ):
+            with ExpRioReader(
+                "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_26SMJ_20260810_0_L2A_B04.tif"
+            ) as src:
+                return src.tile(1736, 1567, 12)
 
     async def _tile():
         return await asyncio.to_thread(sync_tile)
