@@ -71,7 +71,7 @@ With bilinear or cubic, a pixel that is nodata in only some bands now counts as 
 
 ### Overview rule and single-pass warp
 
-Async-geotiff reader vs `rio_tiler.io.Reader`, on every `tests/fixtures/cog.tif` tile from minzoom to maxzoom. Cells give the share of identical values as median / worst tile.
+Async-geotiff reader vs `rio_tiler.io.Reader`, on every `tests/fixtures/cog.tif` tile from minzoom to maxzoom. Cells give the share of identical values as median / worst tile. The bilinear and cubic columns set `resampling_method` and keep the default `reproject_method="nearest"`; see [Known differences](#known-differences) for a non-nearest `reproject_method`.
 
 | zoom | tiles | nearest main | nearest PR | bilinear main | bilinear PR | cubic main | cubic PR | mask mismatch main | mask mismatch PR |
 | ---: | ----: | --- | --- | --- | --- | --- | --- | ---: | ---: |
@@ -123,6 +123,7 @@ The internal `zoom_level_strategy` option of the overview selection methods is r
 
 ## Known differences
 
+- **`reproject_method` other than `nearest`.** When the warp downsamples with bilinear or cubic, GDAL sets up its widened (anti-aliased) kernel for each warp chunk, so the output depends on how the warp is chunked. `rio_tiler.io.Reader` warps the whole overview in `WarpedVRT` blocks; `warp()` warps a window with `rasterio.warp.reproject`, in different chunks. Exact parity isn't possible from a window. On `cog.tif` with both methods set to `bilinear`, the median tile is 66% identical at z5, 90% at z7 and 100% at z9, and the mean difference is under 1% of the mean value. Found while working on #1079.
 - **Same-CRS reads near an overview's resolution.** With bilinear or cubic, values can still differ when the output resolution is within a few percent of an overview's. Both readers pick the same overview, but the sync reader resamples with GDAL's RasterIO and `warp()` uses GDAL's warper, and the two kernels differ slightly at about 1:1.
 - **`gauss` when downsampling.** The two-step path caps the intermediate grid at the output size to bound memory, so the resize does nothing and the output equals nearest. That's unchanged from main.
 - **Masks without nodata.** Without a nodata value, the warp produces one mask shared by all bands, like `rio_tiler.io.Reader`'s WarpedVRT alpha band. Only nodata-based masks are kept per band, in both readers.
