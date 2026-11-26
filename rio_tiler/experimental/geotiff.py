@@ -5,7 +5,7 @@ from __future__ import annotations
 import math
 import warnings
 from collections.abc import Sequence
-from typing import TYPE_CHECKING, Any, Literal, cast
+from typing import TYPE_CHECKING, Any, cast
 
 import attr
 import numpy
@@ -15,13 +15,13 @@ from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.features import bounds as featureBounds
 from rasterio.features import rasterize
-from rasterio.transform import array_bounds, from_bounds
+from rasterio.transform import array_bounds
 from rasterio.warp import calculate_default_transform
 from rasterio.warp import transform as transform_coords
 from rasterio.warp import transform_bounds, transform_geom
 from rasterio.windows import from_bounds as window_from_bounds
 
-from rio_tiler._warp import warp
+from rio_tiler._warp import get_downsampling_factor, get_overview_level, warp
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     ExpressionMixingWarning,
@@ -87,33 +87,24 @@ class Reader(AsyncBaseReader):
 
     def _get_overview_level(
         self,
-        target_res: float,
-        zoom_level_strategy: Literal["AUTO", "LOWER", "UPPER"] = "AUTO",
+        desired_factor: float,
+        resampling_method: RIOResampling = "nearest",
     ) -> int:
-        """Return the overview level corresponding to the resolution."""
-        src_res = max(abs(self.input.transform.a), abs(self.input.transform.e))
+        """Return the overview level (0 = full resolution) for a downsampling factor.
 
-        available_resolutions = [src_res] + [
-            min(abs(ovr.transform.a), abs(ovr.transform.e))
-            for ovr in self.input.overviews
-        ]
+        `desired_factor` is the number of full resolution pixels for one output pixel
+        (see `rio_tiler._warp.get_downsampling_factor`). The overview is selected
+        with GDAL's rule (see `rio_tiler._warp.get_overview_level`).
 
-        # Based on aiocogeo:
-        # https://github.com/geospatial-jeff/aiocogeo/blob/5a1d32c3f22c883354804168a87abb0a2ea1c328/aiocogeo/partial_reads.py#L113-L147
-        percentage = {"AUTO": 50, "LOWER": 100, "UPPER": 0}.get(zoom_level_strategy, 50)
-
-        assert 0 <= percentage <= 100
-        # Iterate over zoom levels from lowest/coarsest to highest/finest. If the `target_res` is more than `percentage`
-        # percent of the way from the zoom level below to the zoom level above, then upsample the zoom level below, else
-        # downsample the zoom level above.
-        for i in reversed(range(1, len(available_resolutions))):
-            res_current = available_resolutions[i]
-            res_higher = available_resolutions[i - 1]
-            threshold = res_current - (res_current - res_higher) * (percentage / 100.0)
-            if target_res > threshold or target_res == res_current:
-                return i
-
-        return 0
+        """
+        return get_overview_level(
+            [
+                min(self.input.width / ovr.width, self.input.height / ovr.height)
+                for ovr in self.input.overviews
+            ],
+            desired_factor,
+            resampling_method,
+        )
 
     async def info(self) -> Info:
         """Return Dataset's info.
@@ -317,20 +308,21 @@ class Reader(AsyncBaseReader):
             max_size=max_size,
         )
 
-        # 3. Select IFD based on output resolution in dataset CRS
-        w, s, e, n = bbox
-        if dst_crs != self.crs:
-            # Get Transform from output shape and bbox
-            transform, _, _ = calculate_default_transform(
-                dst_crs, self.crs, width, height, w, s, e, n
-            )
-        else:
-            transform = from_bounds(w, s, e, n, width, height)
-
-        target_res = min(abs(transform.a), abs(transform.e))
+        # 3. Select IFD based on the output resolution
+        desired_factor = get_downsampling_factor(
+            output_bounds=bbox,
+            output_crs=dst_crs,
+            output_width=width,
+            output_height=height,
+            dataset_crs=self.crs,
+            dataset_transform=self.transform,  # type: ignore
+            dataset_width=self.input.width,
+            dataset_height=self.input.height,
+            dataset_bounds=self.bounds,
+        )
 
         dataset: GeoTIFF | Overview = self.input
-        if level := self._get_overview_level(target_res):
+        if level := self._get_overview_level(desired_factor, resampling_method):
             dataset = self.input.overviews[level - 1]
 
         # 4. Build pixel window from bounds in dataset CRS
@@ -345,7 +337,7 @@ class Reader(AsyncBaseReader):
         # TODO: add `minimum_overlap` like in reader.part method
         col_end = min(dataset.width, math.ceil(window.col_off + window.width))
         row_end = min(dataset.height, math.ceil(window.row_off + window.height))
-        if col_off >= col_end or row_off >= row_end:
+        if max(col_off, 0) >= col_end or max(row_off, 0) >= row_end:
             raise ValueError("Input BBOX and dataset's bounds do not intersect")
 
         # 6. Clamp window to array bounds
@@ -445,26 +437,13 @@ class Reader(AsyncBaseReader):
             max_size=max_size,
         )
 
-        # 2. determine overview level to read
-        # Output dataset `transform` in the output CRS
-        if dst_crs != self.crs:
-            proj_bbox = transform_bounds(
-                self.crs, dst_crs, *self.input.bounds, densify_pts=21
-            )
-            transform, _, _ = calculate_default_transform(
-                dst_crs,
-                self.crs,
-                width,
-                height,
-                *proj_bbox,
-            )
-        else:
-            transform = from_bounds(*self.input.bounds, width, height)
-
-        # 3. Select Overview level
-        target_res = min(abs(transform.a), abs(transform.e))
+        # 2-3. Select Overview level
+        # NOTE: `dst_width/dst_height` is the dataset size in the output CRS, at the
+        # dataset resolution (the WarpedVRT size in rio_tiler.io.Reader)
         dataset: GeoTIFF | Overview = self.input
-        if level := self._get_overview_level(target_res):
+        if level := self._get_overview_level(
+            min(dst_width / width, dst_height / height), resampling_method
+        ):
             dataset = self.input.overviews[level - 1]
 
         # 4. Read data

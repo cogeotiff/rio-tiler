@@ -1,6 +1,7 @@
-"""Tests for rio_tiler._warp.warp() two-step pipeline."""
+"""Tests for rio_tiler._warp."""
 
 import numpy
+import rasterio
 from rasterio.crs import CRS
 from rasterio.enums import Resampling
 from rasterio.io import MemoryFile
@@ -8,7 +9,7 @@ from rasterio.transform import from_bounds as rasterio_from_bounds
 from rasterio.vrt import WarpedVRT
 from rasterio.warp import transform_bounds
 
-from rio_tiler._warp import warp
+from rio_tiler._warp import get_downsampling_factor, get_overview_level, warp
 from rio_tiler.models import ImageData
 
 WGS84 = CRS.from_epsg(4326)
@@ -54,105 +55,118 @@ def _make_utm_memfile() -> MemoryFile:
 
 
 def test_warp_reproject_method_has_effect():
-    """Check reproject_method has effect."""
-    img = _make_gradient_image(256, 256, WGS84, WGS84_BOUNDS)
+    """reproject_method is the warp kernel when the CRS changes."""
     dst_bounds = transform_bounds(WGS84, WEB_MERCATOR, *WGS84_BOUNDS)
 
-    out_nearest = warp(
-        img,
-        dst_crs=WEB_MERCATOR,
-        dst_bounds=dst_bounds,
-        dst_width=256,
-        dst_height=256,
-        reproject_method="nearest",
-    )
-    out_bilinear = warp(
-        img,
-        dst_crs=WEB_MERCATOR,
-        dst_bounds=dst_bounds,
-        dst_width=256,
-        dst_height=256,
-        reproject_method="bilinear",
-    )
-    assert out_nearest.array.shape == (1, 256, 256)
-    assert out_bilinear.array.shape == (1, 256, 256)
-    assert not numpy.array_equal(out_nearest.array, out_bilinear.array)
-
-    out_nearest = warp(
-        img,
-        dst_crs=WEB_MERCATOR,
-        dst_bounds=dst_bounds,
-        dst_width=64,
-        dst_height=64,
-        reproject_method="nearest",
-    )
-    out_bilinear = warp(
-        img,
-        dst_crs=WEB_MERCATOR,
-        dst_bounds=dst_bounds,
-        dst_width=64,
-        dst_height=64,
-        reproject_method="bilinear",
-    )
-    assert out_nearest.array.shape == (1, 64, 64)
-    assert out_bilinear.array.shape == (1, 64, 64)
-    assert not numpy.array_equal(out_nearest.array, out_bilinear.array)
+    # upsampling and downsampling
+    for src_size, dst_size in [(64, 256), (256, 64)]:
+        img = _make_gradient_image(src_size, src_size, WGS84, WGS84_BOUNDS)
+        out_nearest = warp(
+            img,
+            dst_crs=WEB_MERCATOR,
+            dst_bounds=dst_bounds,
+            dst_width=dst_size,
+            dst_height=dst_size,
+            reproject_method="nearest",
+        )
+        out_bilinear = warp(
+            img,
+            dst_crs=WEB_MERCATOR,
+            dst_bounds=dst_bounds,
+            dst_width=dst_size,
+            dst_height=dst_size,
+            reproject_method="bilinear",
+        )
+        assert out_nearest.array.shape == (1, dst_size, dst_size)
+        assert out_bilinear.array.shape == (1, dst_size, dst_size)
+        assert not numpy.array_equal(out_nearest.array, out_bilinear.array)
 
 
-def test_warp_resampling_methods_has_effect():
-    """Check resampling_method has effect."""
-    img = _make_gradient_image(256, 256, WGS84, WGS84_BOUNDS)
-    dst_bounds = transform_bounds(WGS84, WEB_MERCATOR, *WGS84_BOUNDS)
+def test_warp_resampling_method_no_effect_when_reprojecting():
+    """resampling_method has no effect when the CRS changes (single warp pass).
 
-    out_nearest = warp(
-        img,
-        dst_crs=WEB_MERCATOR,
-        dst_bounds=dst_bounds,
-        dst_width=512,
-        dst_height=512,
-        resampling_method="nearest",
-    )
-    out_bilinear = warp(
-        img,
-        dst_crs=WEB_MERCATOR,
-        dst_bounds=dst_bounds,
-        dst_width=512,
-        dst_height=512,
-        resampling_method="bilinear",
-    )
-    assert out_nearest.array.shape == (1, 512, 512)
-    assert out_bilinear.array.shape == (1, 512, 512)
-    assert not numpy.array_equal(out_nearest.array, out_bilinear.array)
-
-
-def test_warp_resampling_method_no_effect_when_downsampling():
-    """resampling_method has no effect when downsampling.
-
-    The intermediate chunk is capped to the output tile size to bound peak
-    memory, so step 2 (resize) is always a no-op in the downsampling case.
-    reproject_method is the only kernel that matters.
+    Like rio_tiler.io.Reader (WarpedVRT), only reproject_method is used.
     """
-    img = _make_gradient_image(256, 256, WEB_MERCATOR, (-1e6, 4e6, 1e6, 6e6))
+    img = _make_gradient_image(64, 64, WGS84, WGS84_BOUNDS)
+    dst_bounds = transform_bounds(WGS84, WEB_MERCATOR, *WGS84_BOUNDS)
 
     out_nearest = warp(
         img,
         dst_crs=WEB_MERCATOR,
-        dst_bounds=(-1e6, 4e6, 1e6, 6e6),
-        dst_width=32,
-        dst_height=32,
-        reproject_method="bilinear",
+        dst_bounds=dst_bounds,
+        dst_width=256,
+        dst_height=256,
         resampling_method="nearest",
     )
     out_bilinear = warp(
         img,
         dst_crs=WEB_MERCATOR,
-        dst_bounds=(-1e6, 4e6, 1e6, 6e6),
-        dst_width=32,
-        dst_height=32,
-        reproject_method="bilinear",
+        dst_bounds=dst_bounds,
+        dst_width=256,
+        dst_height=256,
         resampling_method="bilinear",
     )
+    numpy.testing.assert_array_equal(out_nearest.array, out_bilinear.array)
 
+
+def test_warp_resampling_method_has_effect_same_crs():
+    """resampling_method is the warp kernel when the CRS doesn't change."""
+    bounds = (-1e6, 4e6, 1e6, 6e6)
+    rng = numpy.random.default_rng(42)
+
+    # upsampling and downsampling
+    for src_size, dst_size in [(64, 256), (256, 64)]:
+        # NOTE: random data, because bilinear on a linear gradient can match nearest
+        data = rng.integers(0, 255, (1, src_size, src_size), dtype=numpy.uint8)
+        img = ImageData(numpy.ma.MaskedArray(data), bounds=bounds, crs=WEB_MERCATOR)
+        out = {
+            method: warp(
+                img,
+                dst_crs=WEB_MERCATOR,
+                dst_bounds=bounds,
+                dst_width=dst_size,
+                dst_height=dst_size,
+                resampling_method=method,
+            )
+            for method in ["nearest", "bilinear", "gauss"]
+        }
+        for img_out in out.values():
+            assert img_out.array.shape == (1, dst_size, dst_size)
+
+        assert not numpy.array_equal(out["nearest"].array, out["bilinear"].array)
+        # `gauss` isn't supported by the warper: two steps (warp + resize).
+        # NOTE: when downsampling, the intermediate grid is capped to the output
+        # size (memory bound), so the resize is a no-op and `gauss` has no effect.
+        if dst_size > src_size:
+            assert not numpy.array_equal(out["nearest"].array, out["gauss"].array)
+
+
+def test_warp_reproject_method_no_effect_same_crs():
+    """reproject_method has no effect when the CRS doesn't change.
+
+    Like rio_tiler.io.Reader (no WarpedVRT), only resampling_method is used.
+    """
+    bounds = (-1e6, 4e6, 1e6, 6e6)
+    img = _make_gradient_image(64, 64, WEB_MERCATOR, bounds)
+
+    out_nearest = warp(
+        img,
+        dst_crs=WEB_MERCATOR,
+        dst_bounds=bounds,
+        dst_width=256,
+        dst_height=256,
+        reproject_method="nearest",
+        resampling_method="nearest",
+    )
+    out_bilinear = warp(
+        img,
+        dst_crs=WEB_MERCATOR,
+        dst_bounds=bounds,
+        dst_width=256,
+        dst_height=256,
+        reproject_method="bilinear",
+        resampling_method="nearest",
+    )
     numpy.testing.assert_array_equal(out_nearest.array, out_bilinear.array)
 
 
@@ -183,8 +197,8 @@ def test_warp_masked_pixels_propagate():
 #
 # Both paths start from the same in-memory raster so source-pixel selection
 # is identical. The only difference is the transformation mechanism:
-#   warp()    — rasterio.warp.reproject (step 1) + resize_array (step 2)
-#   WarpedVRT — GDAL warp kernel (step 1) + dataset.read(out_shape) (step 2)
+#   warp()    — rasterio.warp.reproject directly onto the output grid
+#   WarpedVRT — GDAL warp kernel + dataset.read(out_shape)
 # ---------------------------------------------------------------------------
 def test_warp_vs_warped_vrt_nearest():
     """warp() with nearest should match WarpedVRT for the same in-memory source."""
@@ -267,3 +281,86 @@ def test_warp_vs_warped_vrt_bilinear():
         vrt_data.data[valid].astype(float),
         atol=5,
     )
+
+
+def test_get_overview_level(monkeypatch):
+    """Overview selection with GDAL's rule.
+
+    Select the most downsampled overview whose factor is < desired * threshold + 0.1,
+    with threshold = 1.2 for `nearest` and 1.0 for other resampling methods.
+    """
+    factors = [2, 4, 8, 16]
+
+    # upsampling or full resolution
+    assert get_overview_level(factors, 0.5) == 0
+    assert get_overview_level(factors, 1) == 0
+    assert get_overview_level(factors, 2) == 1
+    assert get_overview_level(factors, 1000) == 4
+
+    # no overviews
+    assert get_overview_level([], 1000) == 0
+
+    # nearest: an overview up to ~1.2x coarser than the output can be used
+    assert get_overview_level(factors, 1.4) == 0  # 2 >= 1.4 * 1.2 + 0.1
+    assert get_overview_level(factors, 1.6) == 1  # 2 < 1.6 * 1.2 + 0.1
+    assert get_overview_level(factors, 3.5) == 2  # 4 < 3.5 * 1.2 + 0.1
+
+    # other methods: never use an overview coarser than the output
+    assert get_overview_level(factors, 1.6, "bilinear") == 0
+    assert get_overview_level(factors, 1.95, "bilinear") == 1  # 2 < 1.95 + 0.1
+    assert get_overview_level(factors, 3.5, "cubic") == 1
+
+    # real (non integer) overview factors, e.g 2658 / 167 = 15.92
+    assert get_overview_level([2.0, 3.99, 7.98, 15.92], 15.0, "bilinear") == 3
+    assert get_overview_level([2.0, 3.99, 7.98, 15.92], 15.9, "bilinear") == 4
+
+    # GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD overrides the default threshold
+    with rasterio.Env(GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD="2"):
+        assert get_overview_level(factors, 3.5, "cubic") == 2
+
+    # RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD (read at import) takes precedence
+    monkeypatch.setattr("rio_tiler._warp.OVERVIEW_OVERSAMPLING_THRESHOLD", 1.0)
+    assert get_overview_level(factors, 1.6) == 0  # 2 >= 1.6 * 1.0 + 0.1
+    with rasterio.Env(GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD="2"):
+        assert get_overview_level(factors, 3.5, "cubic") == 1
+
+
+def test_get_downsampling_factor():
+    """Downsampling factor, like rio_tiler.io.Reader computes it."""
+    transform = rasterio_from_bounds(*_SRC_BOUNDS_UTM, 1000, 1000)  # 50m pixels
+    kwargs = {
+        "dataset_crs": UTM21N,
+        "dataset_transform": transform,
+        "dataset_width": 1000,
+        "dataset_height": 1000,
+        "dataset_bounds": _SRC_BOUNDS_UTM,
+    }
+
+    # same CRS: window size (in dataset pixels) / output size
+    factor = get_downsampling_factor(
+        output_bounds=(400000.0, 8100000.0, 410000.0, 8110000.0),  # 200x200 pixels
+        output_crs=UTM21N,
+        output_width=100,
+        output_height=50,
+        **kwargs,
+    )
+    assert factor == 2  # least reduced axis (200 / 100 vs 200 / 50)
+
+    # different CRS: WarpedVRT size (dataset resolution in the output CRS) / output size
+    dst_bounds = transform_bounds(UTM21N, WEB_MERCATOR, *_SRC_BOUNDS_UTM)
+    full = get_downsampling_factor(
+        output_bounds=dst_bounds,
+        output_crs=WEB_MERCATOR,
+        output_width=1000,
+        output_height=1000,
+        **kwargs,
+    )
+    half = get_downsampling_factor(
+        output_bounds=dst_bounds,
+        output_crs=WEB_MERCATOR,
+        output_width=500,
+        output_height=500,
+        **kwargs,
+    )
+    assert 0.9 < full < 1.1
+    assert half == 2 * full

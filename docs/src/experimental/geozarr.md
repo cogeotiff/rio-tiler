@@ -128,6 +128,7 @@ For **multiscales** groups:
 
 - arrays with the same name in each resolution level are aggregated as one variable
 - the layouts are assumed to be ordered from the highest (`layout[0]`) to the lowest (`layout[-1]`) resolution
+- for `part()` and `preview()`, the resolution level is selected from the output resolution with GDAL's overview rule (same as `rio_tiler.io.Reader`): the lowest resolution level whose resolution is finer than `output resolution × threshold`, with a threshold of `1.2` for `nearest` and `1.0` for other `resampling_method` values (set it with `RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD`, which defaults to GDAL's `GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD` when defined)
 
 The readers' `bounds`, `crs` and `zoom levels` are derived from the opened group metadata (`spatial:bbox`, or `spatial:shape` and `spatial:transform`, at the group or first multiscales layout level). They require both `spatial` and `proj` conventions at the group level, otherwise they default to `EPSG:4326` and `(-180, -90, 180, 90)`.
 
