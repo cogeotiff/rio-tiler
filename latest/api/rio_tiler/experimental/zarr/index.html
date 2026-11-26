@@ -8905,7 +8905,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.BBox)" href="../../types/#rio_tiler.types.BBox">BBox</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span>
+   (rio_tiler.types.BBox)" href="../../types/#rio_tiler.types.BBox">BBox</a></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">height</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">width</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -9330,7 +9335,12 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
+   (rio_tiler.types.WarpResampling)" href="../../types/#rio_tiler.types.WarpResampling">WarpResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">:</span> <span class="n"><span title="typing.Any">Any</span></span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
@@ -9463,7 +9473,9 @@ For 2D arrays, treats as single-band (height, width).</p>
 
   
       module-attribute
-   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>)
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></code>, default:
+                  <code>&#39;nearest&#39;</code>
+)
           –
           <div class="doc-md-description">
             <p>Resampling method for array read. Defaults to <code>nearest</code>.</p>
@@ -10626,12 +10638,20 @@ Dimensions without coordinates get a default (position based) interval.</p>
 
 
 <a href="#rio_tiler.experimental.zarr.get_multiscale_level" class="headerlink" title="Permanent link">&para;</a></h3>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_multiscale_level</span><span class="p">(</span><span class="n">variable_metadata</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span><span class="p">],</span> <span class="n">target_res</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">zoom_level_strategy</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">'AUTO'</span><span class="p">,</span> <span class="s1">'LOWER'</span><span class="p">,</span> <span class="s1">'UPPER'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'AUTO'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">get_multiscale_level</span><span class="p">(</span><span class="n">variable_metadata</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span><span class="p">],</span> <span class="n">target_res</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ArrayMetadata (rio_tiler.experimental.zarr.ArrayMetadata)" href="#rio_tiler.experimental.zarr.ArrayMetadata">ArrayMetadata</a></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
         <p>Return the multiscale level corresponding to the desired resolution.</p>
+<p>The level is selected with GDAL's overview rule (see <code>rio_tiler._warp.get_overview_level</code>):
+the most downsampled level whose resolution is lower than <code>target_res * threshold</code>,
+with <code>threshold = 1.2</code> for <code>nearest</code> and <code>1.0</code> for other resampling methods.</p>
 
 
     </div>

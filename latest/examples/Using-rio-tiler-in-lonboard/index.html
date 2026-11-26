@@ -1390,21 +1390,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-1-async-reader" class="md-nav__link">
+  <a href="#fetch-tiles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option 1: Async reader
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#option-2-rasterio-based-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Option 2: rasterio-based Reader
+        Fetch tiles
       
     </span>
   </a>
@@ -2977,21 +2966,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#option-1-async-reader" class="md-nav__link">
+  <a href="#fetch-tiles" class="md-nav__link">
     <span class="md-ellipsis">
       
-        Option 1: Async reader
-      
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#option-2-rasterio-based-reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        Option 2: rasterio-based Reader
+        Fetch tiles
       
     </span>
   </a>
@@ -3251,11 +3229,7 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h1 id="using-rio-tiler-in-lonboard">Using rio-tiler in Lonboard<a class="anchor-link" href="#using-rio-tiler-in-lonboard">¶</a></h1><p>This notebook shows how to use <code>rio-tiler</code> as a dynamic tile source for a <a href="https://developmentseed.org/lonboard/">Lonboard</a> <code>RasterLayer</code>.</p>
-<p>Instead of pre-generating tiles, Lonboard calls a user-provided <code>fetch_tile(x, y, z)</code> coroutine whenever the map needs a tile. We implement that function with <code>rio-tiler</code> in two ways:</p>
-<ol>
-<li>Using the <strong>experimental async reader</strong> (<code>rio_tiler.experimental.geotiff.Reader</code>), backed by <a href="https://github.com/developmentseed/async-geotiff"><code>async-geotiff</code></a> and <a href="https://github.com/developmentseed/obstore"><code>obstore</code></a>.</li>
-<li>Using the classic <strong>rasterio-based <code>Reader</code></strong>, run in a worker thread with <code>asyncio.to_thread</code> so it doesn't block the event loop.</li>
-</ol>
+<p>Instead of pre-generating tiles, Lonboard calls a user-provided <code>fetch_tile(x, y, z)</code> coroutine whenever the map needs a tile. We implement that function with the rasterio-based <code>rio_tiler.io.Reader</code>, run in a worker thread with <code>asyncio.to_thread</code> so it doesn't block the event loop.</p>
 </div>
 </div>
 </div>
@@ -3284,8 +3258,6 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="c1"># dependencies = [</span>
 <span class="c1">#     "lonboard&gt;=0.17.0",</span>
 <span class="c1">#     "rio-tiler",</span>
-<span class="c1">#     "async-geotiff",</span>
-<span class="c1">#     "obstore",</span>
 <span class="c1"># ]</span>
 <span class="c1"># ///</span>
 </pre></div>
@@ -3294,8 +3266,6 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 # dependencies = [
 #     "lonboard&gt;=0.17.0",
 #     "rio-tiler",
-#     "async-geotiff",
-#     "obstore",
 # ]
 # ///</div>
 </div>
@@ -3343,18 +3313,14 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 <span class="kn">import</span><span class="w"> </span><span class="nn">morecantile</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">morecantile.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">TMSBoundingBox</span>
 
-<span class="c1"># rio-tiler: output data model and the experimental async GeoTIFF reader</span>
+<span class="c1"># rio-tiler: rasterio-based reader and output data model</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.models</span><span class="w"> </span><span class="kn">import</span> <span class="n">ImageData</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.geotiff</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span> <span class="k">as</span> <span class="n">AsyncReader</span>
 
 <span class="c1"># Lonboard: map widget, raster tile layer and helpers</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lonboard</span><span class="w"> </span><span class="kn">import</span> <span class="n">Map</span><span class="p">,</span> <span class="n">RasterLayer</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lonboard._geoarrow.ops</span><span class="w"> </span><span class="kn">import</span> <span class="n">Bbox</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">lonboard.raster</span><span class="w"> </span><span class="kn">import</span> <span class="n">EncodedImage</span>
-
-<span class="c1"># Async GeoTIFF/COG reader and the object store used to fetch bytes over HTTP</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">async_geotiff</span><span class="w"> </span><span class="kn">import</span> <span class="n">GeoTIFF</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">obstore.store</span><span class="w"> </span><span class="kn">import</span> <span class="n">HTTPStore</span>
 </pre></div>
 <div class="clipboard-copy-txt" id="cell-2">import asyncio
 
@@ -3362,18 +3328,14 @@ span.linenos.special { color: #000000; background-color: #ffffc0; padding-left: 
 import morecantile
 from morecantile.models import TMSBoundingBox
 
-# rio-tiler: output data model and the experimental async GeoTIFF reader
+# rio-tiler: rasterio-based reader and output data model
+from rio_tiler.io import Reader
 from rio_tiler.models import ImageData
-from rio_tiler.experimental.geotiff import Reader as AsyncReader
 
 # Lonboard: map widget, raster tile layer and helpers
 from lonboard import Map, RasterLayer
 from lonboard._geoarrow.ops import Bbox
-from lonboard.raster import EncodedImage
-
-# Async GeoTIFF/COG reader and the object store used to fetch bytes over HTTP
-from async_geotiff import GeoTIFF
-from obstore.store import HTTPStore</div>
+from lonboard.raster import EncodedImage</div>
 </div>
 </div>
 </div>
@@ -3387,7 +3349,7 @@ from obstore.store import HTTPStore</div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
 <h2 id="open-the-cog">Open the COG<a class="anchor-link" href="#open-the-cog">¶</a></h2><p>We use a Sentinel-2 True Color Image (TCI) Cloud Optimized GeoTIFF hosted on S3.</p>
-<p>The file is opened <strong>once</strong> with <code>async_geotiff.GeoTIFF.open</code> (this reads the header and IFDs), and the resulting <code>GeoTIFF</code> object is reused for every tile request. We also grab the metadata Lonboard needs to set up the layer: geographic bounds, zoom range and center.</p>
+<p>We open it once to grab the metadata Lonboard needs to set up the layer: geographic bounds, zoom range and center.</p>
 </div>
 </div>
 </div>
@@ -3411,13 +3373,10 @@ from obstore.store import HTTPStore</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># HTTP store pointing to the "directory" holding the COGs</span>
-<span class="n">store</span> <span class="o">=</span> <span class="n">HTTPStore</span><span class="p">(</span><span class="s2">"https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs"</span><span class="p">)</span>
+<div class="highlight-ipynb hl-python"><pre><span></span><span class="c1"># Full URL to the COG (GDAL handles HTTP access via /vsicurl/)</span>
+<span class="n">src_path</span> <span class="o">=</span> <span class="s2">"https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A_TCI.tif"</span>
 
-<span class="c1"># Open the GeoTIFF once (reads header + IFDs); the object is reused for all tiles</span>
-<span class="n">geotiff</span> <span class="o">=</span> <span class="k">await</span> <span class="n">GeoTIFF</span><span class="o">.</span><span class="n">open</span><span class="p">(</span><span class="s2">"S2C_33TVF_20260928_0_L2A_TCI.tif"</span><span class="p">,</span> <span class="n">store</span><span class="o">=</span><span class="n">store</span><span class="p">)</span>
-
-<span class="k">async</span> <span class="k">with</span> <span class="n">AsyncReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">geotiff</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+<span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">src_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
     <span class="c1"># Dataset bounds in WGS84 (west, south, east, north)</span>
     <span class="n">bounds</span> <span class="o">=</span> <span class="n">src</span><span class="o">.</span><span class="n">get_geographic_bounds</span><span class="p">(</span><span class="n">crs</span><span class="o">=</span><span class="s2">"EPSG:4326"</span><span class="p">)</span>
     <span class="c1"># Zoom levels (in WebMercatorQuad) matching the dataset's overviews/resolution</span>
@@ -3426,13 +3385,10 @@ from obstore.store import HTTPStore</div>
     <span class="c1"># Initial map center</span>
     <span class="n">center</span> <span class="o">=</span> <span class="p">((</span><span class="n">bounds</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">,</span> <span class="p">(</span><span class="n">bounds</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">bounds</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span> <span class="o">/</span> <span class="mi">2</span><span class="p">)</span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-3"># HTTP store pointing to the "directory" holding the COGs
-store = HTTPStore("https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs")
+<div class="clipboard-copy-txt" id="cell-3"># Full URL to the COG (GDAL handles HTTP access via /vsicurl/)
+src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A_TCI.tif"
 
-# Open the GeoTIFF once (reads header + IFDs); the object is reused for all tiles
-geotiff = await GeoTIFF.open("S2C_33TVF_20260928_0_L2A_TCI.tif", store=store)
-
-async with AsyncReader(input=geotiff) as src:
+with Reader(input=src_path) as src:
     # Dataset bounds in WGS84 (west, south, east, north)
     bounds = src.get_geographic_bounds(crs="EPSG:4326")
     # Zoom levels (in WebMercatorQuad) matching the dataset's overviews/resolution
@@ -3498,7 +3454,7 @@ async with AsyncReader(input=geotiff) as src:
 </div>
 <div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
 </div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="option-1-async-reader">Option 1: Async reader<a class="anchor-link" href="#option-1-async-reader">¶</a></h2><p><code>fetch_tile</code> is a coroutine called by Lonboard for each visible tile. With the experimental <code>AsyncReader</code>, the tile read is natively async: the byte-range requests are awaited, so many tiles can be fetched concurrently without threads.</p>
+<h2 id="fetch-tiles">Fetch tiles<a class="anchor-link" href="#fetch-tiles">¶</a></h2><p><code>fetch_tile</code> is a coroutine called by Lonboard for each visible tile. The <code>rio_tiler.io.Reader</code> (GDAL/rasterio) methods are synchronous, so we run them in a worker thread with <code>asyncio.to_thread</code> to avoid blocking the event loop (and the map) while tiles are being read.</p>
 <p>We also build a <code>WebMercatorQuad</code> TileMatrixSet whose <code>boundingBox</code> is restricted to the dataset extent, so Lonboard only requests tiles that intersect the image.</p>
 </div>
 </div>
@@ -3528,10 +3484,15 @@ async with AsyncReader(input=geotiff) as src:
     <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
     <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
 <span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageData</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Read a WebMercatorQuad tile from the COG using the async reader."""</span>
-    <span class="c1"># Reuse the already opened `geotiff` object (no need to re-read the header)</span>
-    <span class="k">async</span> <span class="k">with</span> <span class="n">AsyncReader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">geotiff</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-        <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+<span class="w">    </span><span class="sd">"""Read a WebMercatorQuad tile with the rasterio Reader in a worker thread."""</span>
+
+    <span class="k">def</span><span class="w"> </span><span class="nf">get_tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
+        <span class="c1"># Blocking (GDAL) read</span>
+        <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">src_path</span><span class="p">)</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
+            <span class="k">return</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
+
+    <span class="c1"># Offload the blocking call so the event loop stays responsive</span>
+    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">get_tile</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
     <span class="k">return</span> <span class="n">img</span>
 
 
@@ -3570,10 +3531,15 @@ async with AsyncReader(input=geotiff) as src:
     y: int,
     z: int,
 ) -&gt; ImageData:
-    """Read a WebMercatorQuad tile from the COG using the async reader."""
-    # Reuse the already opened `geotiff` object (no need to re-read the header)
-    async with AsyncReader(input=geotiff) as src:
-        img = await src.tile(x, y, z)
+    """Read a WebMercatorQuad tile with the rasterio Reader in a worker thread."""
+
+    def get_tile(x, y, z):
+        # Blocking (GDAL) read
+        with Reader(input=src_path) as src:
+            return src.tile(x, y, z)
+
+    # Offload the blocking call so the event loop stays responsive
+    img = await asyncio.to_thread(get_tile, x, y, z)
     return img
 
 
@@ -3611,21 +3577,8 @@ m</div>
 </div>
 </div>
 </div>
-</div>
-<div class="jp-Cell jp-MarkdownCell jp-Notebook-cell" id="cell-id=baa97d9a">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea"><div class="jp-InputPrompt jp-InputArea-prompt">
-</div><div class="jp-RenderedHTMLCommon jp-RenderedMarkdown jp-MarkdownOutput" data-mime-type="text/markdown">
-<h2 id="option-2-rasterio-based-reader">Option 2: rasterio-based Reader<a class="anchor-link" href="#option-2-rasterio-based-reader">¶</a></h2><p>The same can be done with the classic <code>rio_tiler.io.Reader</code> (GDAL/rasterio). Its methods are synchronous, so we run them in a worker thread with <code>asyncio.to_thread</code> to avoid blocking the event loop (and the map) while tiles are being read.</p>
-<p>Note: the dataset is opened for every tile request here, whereas the async version reuses the same <code>GeoTIFF</code> object.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=00d69ab8">
+</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
+<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cbfe49b3">
 <div class="jp-Cell-inputWrapper" tabindex="0">
 <div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
 </div>
@@ -3643,136 +3596,9 @@ m</div>
 </div>
 </clipboard-copy>
 </div>
-<div class="highlight-ipynb hl-python"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io</span><span class="w"> </span><span class="kn">import</span> <span class="n">Reader</span>
-
-<span class="c1"># Full URL to the same COG (GDAL handles HTTP access via /vsicurl/)</span>
-<span class="n">src_path</span> <span class="o">=</span> <span class="s2">"https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A_TCI.tif"</span>
-
-
-<span class="k">async</span> <span class="k">def</span><span class="w"> </span><span class="nf">fetch_tile</span><span class="p">(</span>
-    <span class="n">x</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">y</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-    <span class="n">z</span><span class="p">:</span> <span class="nb">int</span><span class="p">,</span>
-<span class="p">)</span> <span class="o">-&gt;</span> <span class="n">ImageData</span><span class="p">:</span>
-<span class="w">    </span><span class="sd">"""Read a WebMercatorQuad tile with the rasterio Reader in a worker thread."""</span>
-
-    <span class="k">def</span><span class="w"> </span><span class="nf">get_tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">):</span>
-        <span class="c1"># Blocking (GDAL) read</span>
-        <span class="k">with</span> <span class="n">Reader</span><span class="p">(</span><span class="nb">input</span><span class="o">=</span><span class="n">src_path</span><span class="p">,</span> <span class="n">options</span><span class="o">=</span><span class="p">{})</span> <span class="k">as</span> <span class="n">src</span><span class="p">:</span>
-            <span class="k">return</span> <span class="n">src</span><span class="o">.</span><span class="n">tile</span><span class="p">(</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-
-    <span class="c1"># Offload the blocking call so the event loop stays responsive</span>
-    <span class="n">img</span> <span class="o">=</span> <span class="k">await</span> <span class="n">asyncio</span><span class="o">.</span><span class="n">to_thread</span><span class="p">(</span><span class="n">get_tile</span><span class="p">,</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span><span class="p">)</span>
-    <span class="k">return</span> <span class="n">img</span>
-
-
-<span class="c1"># Same TMS restricted to the dataset extent as above</span>
-<span class="n">west</span><span class="p">,</span> <span class="n">south</span><span class="p">,</span> <span class="n">east</span><span class="p">,</span> <span class="n">north</span> <span class="o">=</span> <span class="n">bounds</span>
-<span class="n">web_mercator</span> <span class="o">=</span> <span class="n">morecantile</span><span class="o">.</span><span class="n">tms</span><span class="o">.</span><span class="n">get</span><span class="p">(</span><span class="s2">"WebMercatorQuad"</span><span class="p">)</span>
-<span class="n">tms</span> <span class="o">=</span> <span class="n">web_mercator</span><span class="o">.</span><span class="n">model_copy</span><span class="p">(</span>
-    <span class="n">update</span><span class="o">=</span><span class="p">{</span>
-        <span class="s2">"boundingBox"</span><span class="p">:</span> <span class="n">TMSBoundingBox</span><span class="p">(</span>
-            <span class="n">lowerLeft</span><span class="o">=</span><span class="n">web_mercator</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">west</span><span class="p">,</span> <span class="n">south</span><span class="p">),</span>
-            <span class="n">upperRight</span><span class="o">=</span><span class="n">web_mercator</span><span class="o">.</span><span class="n">xy</span><span class="p">(</span><span class="n">east</span><span class="p">,</span> <span class="n">north</span><span class="p">),</span>
-            <span class="n">crs</span><span class="o">=</span><span class="n">web_mercator</span><span class="o">.</span><span class="n">crs</span><span class="p">,</span>
-        <span class="p">),</span>
-    <span class="p">},</span>
-<span class="p">)</span>
-
-<span class="n">layer</span> <span class="o">=</span> <span class="n">RasterLayer</span><span class="p">(</span>
-    <span class="n">_tile_matrix_set</span><span class="o">=</span><span class="n">tms</span><span class="p">,</span>
-    <span class="n">_crs</span><span class="o">=</span><span class="s2">"EPSG:3857"</span><span class="p">,</span>
-    <span class="n">_fetch_tile</span><span class="o">=</span><span class="n">fetch_tile</span><span class="p">,</span>
-    <span class="n">_render_tile</span><span class="o">=</span><span class="n">render_rgb_tile</span><span class="p">,</span>
-    <span class="n">min_zoom</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span>
-    <span class="n">max_zoom</span><span class="o">=</span><span class="n">maxzoom</span><span class="p">,</span>
-    <span class="n">extent</span><span class="o">=</span><span class="n">bounds</span><span class="p">,</span>
-    <span class="n">_bounds</span><span class="o">=</span><span class="n">Bbox</span><span class="p">(</span><span class="o">*</span><span class="n">bounds</span><span class="p">),</span>
-    <span class="n">_center</span><span class="o">=</span><span class="n">center</span><span class="p">,</span>
-<span class="p">)</span>
-
-<span class="c1"># Create the map</span>
-<span class="n">m</span> <span class="o">=</span> <span class="n">Map</span><span class="p">(</span><span class="n">layer</span><span class="p">,</span> <span class="n">height</span><span class="o">=</span><span class="mi">800</span><span class="p">)</span>
-<span class="n">m</span>
-</pre></div>
-<div class="clipboard-copy-txt" id="cell-6">from rio_tiler.io import Reader
-
-# Full URL to the same COG (GDAL handles HTTP access via /vsicurl/)
-src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A_TCI.tif"
-
-
-async def fetch_tile(
-    x: int,
-    y: int,
-    z: int,
-) -&gt; ImageData:
-    """Read a WebMercatorQuad tile with the rasterio Reader in a worker thread."""
-
-    def get_tile(x, y, z):
-        # Blocking (GDAL) read
-        with Reader(input=src_path, options={}) as src:
-            return src.tile(x, y, z)
-
-    # Offload the blocking call so the event loop stays responsive
-    img = await asyncio.to_thread(get_tile, x, y, z)
-    return img
-
-
-# Same TMS restricted to the dataset extent as above
-west, south, east, north = bounds
-web_mercator = morecantile.tms.get("WebMercatorQuad")
-tms = web_mercator.model_copy(
-    update={
-        "boundingBox": TMSBoundingBox(
-            lowerLeft=web_mercator.xy(west, south),
-            upperRight=web_mercator.xy(east, north),
-            crs=web_mercator.crs,
-        ),
-    },
-)
-
-layer = RasterLayer(
-    _tile_matrix_set=tms,
-    _crs="EPSG:3857",
-    _fetch_tile=fetch_tile,
-    _render_tile=render_rgb_tile,
-    min_zoom=0,
-    max_zoom=maxzoom,
-    extent=bounds,
-    _bounds=Bbox(*bounds),
-    _center=center,
-)
-
-# Create the map
-m = Map(layer, height=800)
-m</div>
-</div>
-</div>
-</div>
-</div>
-</div>
-</div><div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs">
-<div class="jp-Cell jp-CodeCell jp-Notebook-cell jp-mod-noOutputs" id="cell-id=cbfe49b3">
-<div class="jp-Cell-inputWrapper" tabindex="0">
-<div class="jp-Collapser jp-InputCollapser jp-Cell-inputCollapser">
-</div>
-<div class="jp-InputArea jp-Cell-inputArea">
-<div class="jp-InputPrompt jp-InputArea-prompt">In [ ]:</div><div class="jp-CodeMirrorEditor jp-Editor jp-InputArea-editor" data-type="inline">
-<div class="CodeMirror cm-s-jupyter">
-<div class="zeroclipboard-container">
-<clipboard-copy ,="" aria-label="Copy to Clipboard" for="cell-7">
-<div>
-<span class="notice" hidden="">Copied!</span>
-<svg aria-hidden="true" class="clipboard-copy-icon" data-view-component="true" height="20" version="1.1" viewbox="0 0 16 16" width="20">
-<path d="M0 6.75C0 5.784.784 5 1.75 5h1.5a.75.75 0 010 1.5h-1.5a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-1.5a.75.75 0 011.5 0v1.5A1.75 1.75 0 019.25 16h-7.5A1.75 1.75 0 010 14.25v-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-<path d="M5 1.75C5 .784 5.784 0 6.75 0h7.5C15.216 0 16 .784 16 1.75v7.5A1.75 1.75 0 0114.25 11h-7.5A1.75 1.75 0 015 9.25v-7.5zm1.75-.25a.25.25 0 00-.25.25v7.5c0 .138.112.25.25.25h7.5a.25.25 0 00.25-.25v-7.5a.25.25 0 00-.25-.25h-7.5z" fill="currentColor" fill-rule="evenodd"></path>
-</svg>
-</div>
-</clipboard-copy>
-</div>
 <div class="highlight-ipynb hl-python"><pre><span></span>
 </pre></div>
-<div class="clipboard-copy-txt" id="cell-7"></div>
+<div class="clipboard-copy-txt" id="cell-6"></div>
 </div>
 </div>
 </div>

@@ -3482,12 +3482,20 @@
 
 
 <a href="#rio_tiler.experimental.geotiff.Reader._get_overview_level" class="headerlink" title="Permanent link">&para;</a></h4>
-<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_overview_level</span><span class="p">(</span><span class="n">target_res</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">zoom_level_strategy</span><span class="p">:</span> <span class="n"><span title="typing.Literal">Literal</span></span><span class="p">[</span><span class="s1">'AUTO'</span><span class="p">,</span> <span class="s1">'LOWER'</span><span class="p">,</span> <span class="s1">'UPPER'</span><span class="p">]</span> <span class="o">=</span> <span class="s1">'AUTO'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="int">int</span></span>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_overview_level</span><span class="p">(</span><span class="n">desired_factor</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
+
+
+  
+      module-attribute
+   (rio_tiler.types.RIOResampling)" href="../../types/#rio_tiler.types.RIOResampling">RIOResampling</a></span> <span class="o">=</span> <span class="s1">'nearest'</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><span title="int">int</span></span>
 </code></pre></div>
 
     <div class="doc doc-contents ">
 
-        <p>Return the overview level corresponding to the resolution.</p>
+        <p>Return the overview level (0 = full resolution) for a downsampling factor.</p>
+<p><code>desired_factor</code> is the number of full resolution pixels for one output pixel
+(see <code>rio_tiler._warp.get_downsampling_factor</code>). The overview is selected
+with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 
 
     </div>

@@ -3344,6 +3344,7 @@
 <ul>
 <li>arrays with the same name in each resolution level are aggregated as one variable</li>
 <li>the layouts are assumed to be ordered from the highest (<code>layout[0]</code>) to the lowest (<code>layout[-1]</code>) resolution</li>
+<li>for <code>part()</code> and <code>preview()</code>, the resolution level is selected from the output resolution with GDAL's overview rule (same as <code>rio_tiler.io.Reader</code>): the lowest resolution level whose resolution is finer than <code>output resolution × threshold</code>, with a threshold of <code>1.2</code> for <code>nearest</code> and <code>1.0</code> for other <code>resampling_method</code> values (set it with <code>RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD</code>, which defaults to GDAL's <code>GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD</code> when defined)</li>
 </ul>
 <p>The readers' <code>bounds</code>, <code>crs</code> and <code>zoom levels</code> are derived from the opened group metadata (<code>spatial:bbox</code>, or <code>spatial:shape</code> and <code>spatial:transform</code>, at the group or first multiscales layout level). They require both <code>spatial</code> and <code>proj</code> conventions at the group level, otherwise they default to <code>EPSG:4326</code> and <code>(-180, -90, 180, 90)</code>.</p>
 <h2 id="readers">Readers<a class="headerlink" href="#readers" title="Permanent link">&para;</a></h2>
