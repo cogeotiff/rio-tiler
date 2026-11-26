@@ -19,3 +19,12 @@ WGS84_CRS = CRS.from_epsg(4326)
 WEB_MERCATOR_TMS = morecantile.tms.get("WebMercatorQuad")
 
 STAC_ALTERNATE_KEY = os.environ.get("RIO_TILER_STAC_ALTERNATE_KEY", None)
+
+# Overview selection threshold (see `rio_tiler._warp.get_overview_level`).
+# When not set, GDAL's value is used: `GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD` if defined,
+# else `1.2` for `nearest` and `1.0` for other resampling methods.
+OVERVIEW_OVERSAMPLING_THRESHOLD: float | None = (
+    float(threshold)
+    if (threshold := os.environ.get("RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD"))
+    else None
+)

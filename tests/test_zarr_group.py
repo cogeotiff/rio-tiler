@@ -387,8 +387,19 @@ async def test_geozarr_reader_async(geozarr_store):
         selected = geozarrds.select_variable(array, max_size=900)
         assert selected["width"] == 1000
 
+        # GDAL's overview rule: the 10x level is used only when it's at most
+        # ~1.2x coarser than the output (nearest) or not coarser (other methods)
+        # 1000 / 150 = 6.7 -> 10 >= 6.7 * 1.2 + 0.1
         selected = geozarrds.select_variable(array, max_size=150)
+        assert selected["width"] == 1000
+
+        # 1000 / 110 = 9.1 -> 10 < 9.1 * 1.2 + 0.1 (nearest), 10 >= 9.1 + 0.1 (bilinear)
+        selected = geozarrds.select_variable(array, max_size=110)
         assert selected["width"] == 100
+        selected = geozarrds.select_variable(
+            array, max_size=110, resampling_method="bilinear"
+        )
+        assert selected["width"] == 1000
 
         selected = geozarrds.select_variable(array, max_size=50)
         assert selected["width"] == 100
@@ -618,8 +629,19 @@ def test_geozarr_reader(geozarr_store):
         selected = geozarrds.select_variable(array, max_size=900)
         assert selected["width"] == 1000
 
+        # GDAL's overview rule: the 10x level is used only when it's at most
+        # ~1.2x coarser than the output (nearest) or not coarser (other methods)
+        # 1000 / 150 = 6.7 -> 10 >= 6.7 * 1.2 + 0.1
         selected = geozarrds.select_variable(array, max_size=150)
+        assert selected["width"] == 1000
+
+        # 1000 / 110 = 9.1 -> 10 < 9.1 * 1.2 + 0.1 (nearest), 10 >= 9.1 + 0.1 (bilinear)
+        selected = geozarrds.select_variable(array, max_size=110)
         assert selected["width"] == 100
+        selected = geozarrds.select_variable(
+            array, max_size=110, resampling_method="bilinear"
+        )
+        assert selected["width"] == 1000
 
         selected = geozarrds.select_variable(array, max_size=50)
         assert selected["width"] == 100

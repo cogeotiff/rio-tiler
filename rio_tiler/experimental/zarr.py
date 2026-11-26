@@ -38,7 +38,7 @@ from rasterio.warp import transform_bounds, transform_geom
 from rasterio.windows import Window
 from rasterio.windows import from_bounds as window_from_bounds
 
-from rio_tiler._warp import warp
+from rio_tiler._warp import get_overview_level, warp
 from rio_tiler.constants import MAX_ARRAY_SIZE, WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import (
     InvalidBounds,
@@ -2037,34 +2037,33 @@ def get_target_resolution(
 def get_multiscale_level(
     variable_metadata: list[ArrayMetadata],
     target_res: float,
-    zoom_level_strategy: Literal["AUTO", "LOWER", "UPPER"] = "AUTO",
+    resampling_method: RIOResampling = "nearest",
 ) -> ArrayMetadata:
-    """Return the multiscale level corresponding to the desired resolution."""
-    ms_resolutions: list[tuple[float, ArrayMetadata]] = [
-        (min(abs(ms["transform"][0]), abs(ms["transform"][4])), ms)
-        for ms in variable_metadata
+    """Return the multiscale level corresponding to the desired resolution.
+
+    The level is selected with GDAL's overview rule (see `rio_tiler._warp.get_overview_level`):
+    the most downsampled level whose resolution is lower than `target_res * threshold`,
+    with `threshold = 1.2` for `nearest` and `1.0` for other resampling methods.
+
+    """
+    resolutions = [
+        min(abs(ms["transform"][0]), abs(ms["transform"][4])) for ms in variable_metadata
     ]
 
-    # Based on aiocogeo:
-    # https://github.com/geospatial-jeff/aiocogeo/blob/5a1d32c3f22c883354804168a87abb0a2ea1c328/aiocogeo/partial_reads.py#L113-L147
-    percentage = {"AUTO": 50, "LOWER": 100, "UPPER": 0}.get(zoom_level_strategy, 50)
+    # Full resolution level and the other levels (overviews) sorted from finest to coarsest
+    full_idx = min(range(len(resolutions)), key=lambda i: resolutions[i])
+    full_res = resolutions[full_idx]
+    overviews = sorted(
+        (i for i in range(len(resolutions)) if i != full_idx),
+        key=lambda i: resolutions[i],
+    )
 
-    # Iterate over zoom levels from lowest/coarsest to highest/finest. If the `target_res` is more than `percentage`
-    # percent of the way from the zoom level below to the zoom level above, then upsample the zoom level below, else
-    # downsample the zoom level above.
-    available_resolutions = sorted(ms_resolutions, key=lambda x: x[0], reverse=True)
-    if len(available_resolutions) == 1:
-        return available_resolutions[0][1]
-
-    for i in range(0, len(available_resolutions) - 1):
-        res_current, _ = available_resolutions[i]
-        res_higher, _ = available_resolutions[i + 1]
-        threshold = res_higher - (res_higher - res_current) * (percentage / 100.0)
-        if target_res > threshold or target_res == res_current:
-            return available_resolutions[i][1]
-
-    # Default level is the first ms level
-    return ms_resolutions[0][1]
+    level = get_overview_level(
+        [resolutions[i] / full_res for i in overviews],
+        target_res / full_res,
+        resampling_method,
+    )
+    return variable_metadata[overviews[level - 1] if level else full_idx]
 
 
 class GeoZarrInfo(Bounds):
@@ -2245,6 +2244,7 @@ class GroupMixin(SpatialMixin):
         width: int | None = None,
         max_size: int | None = None,
         dst_crs: CRS | None = None,
+        resampling_method: RIOResampling = "nearest",
     ) -> ArrayMetadata:
         """Get DataArray from xarray Dataset."""
         if max_size and (width or height):
@@ -2280,7 +2280,9 @@ class GroupMixin(SpatialMixin):
                 output_width=width,
             )
 
-            variable = get_multiscale_level(variable_metadata, target_res)
+            variable = get_multiscale_level(
+                variable_metadata, target_res, resampling_method
+            )
 
         return variable
 
@@ -2973,6 +2975,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 height=height,
                 width=width,
                 dst_crs=dst_crs,
+                resampling_method=resampling_method,
             )
             async with AsyncArrayReader(
                 input=cast(zarr.AsyncArray, array_metadata["array"]),
@@ -3073,6 +3076,7 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
                 height=height,
                 width=width,
                 dst_crs=dst_crs,
+                resampling_method=resampling_method,
             )
             async with AsyncArrayReader(
                 input=cast(zarr.AsyncArray, array_metadata["array"]),
@@ -3922,6 +3926,7 @@ class GroupReader(BaseReader, GroupMixin):
         width: int | None = None,
         nodata: NoData | None = None,
         reproject_method: WarpResampling = "nearest",
+        resampling_method: RIOResampling = "nearest",
         **kwargs: Any,
     ) -> ImageData:
         """Read a Part of a Dataset.
@@ -3968,6 +3973,7 @@ class GroupReader(BaseReader, GroupMixin):
                 height=height,
                 width=width,
                 dst_crs=dst_crs,
+                resampling_method=resampling_method,
             )
             with ArrayReader(
                 input=cast(zarr.Array, array_metadata["array"]),
@@ -3987,6 +3993,7 @@ class GroupReader(BaseReader, GroupMixin):
                     sel=sel,
                     nodata=nodata,
                     reproject_method=reproject_method,
+                    resampling_method=resampling_method,
                 )
 
         img_stack = [_part(variable) for variable in variables]
@@ -4067,6 +4074,7 @@ class GroupReader(BaseReader, GroupMixin):
                 height=height,
                 width=width,
                 dst_crs=dst_crs,
+                resampling_method=resampling_method,
             )
             with ArrayReader(
                 input=cast(zarr.Array, array_metadata["array"]),
