@@ -283,6 +283,86 @@ def test_warp_vs_warped_vrt_bilinear():
     )
 
 
+def test_warp_per_band_nodata():
+    """A pixel nodata in only some bands must stay valid in the other bands.
+
+    `rasterio.warp.reproject` masks a pixel in all bands when ANY band is masked,
+    while WarpedVRT (and rio-tiler) only invalidates the bands equal to nodata.
+    """
+    transform = rasterio_from_bounds(*_SRC_BOUNDS_UTM, _SRC_WIDTH, _SRC_HEIGHT)
+    xx, yy = numpy.meshgrid(numpy.arange(_SRC_WIDTH), numpy.arange(_SRC_HEIGHT))
+    # band 1: nodata (0) on a checkerboard, bands 2 and 3: always valid
+    b1 = numpy.where((xx // 8 + yy // 8) % 2 == 0, 0, 200).astype(numpy.uint8)
+    b2 = numpy.full((_SRC_HEIGHT, _SRC_WIDTH), 100, dtype=numpy.uint8)
+    b3 = numpy.full((_SRC_HEIGHT, _SRC_WIDTH), 150, dtype=numpy.uint8)
+
+    with MemoryFile() as memfile:
+        with memfile.open(
+            driver="GTiff",
+            dtype="uint8",
+            width=_SRC_WIDTH,
+            height=_SRC_HEIGHT,
+            count=3,
+            crs=UTM21N,
+            transform=transform,
+            nodata=0,
+        ) as ds:
+            ds.write(numpy.stack([b1, b2, b3]))
+
+        with memfile.open() as ds:
+            src_data = ds.read(masked=True)
+            img = ImageData(src_data, bounds=_SRC_BOUNDS_UTM, crs=UTM21N, nodata=0)
+
+            with WarpedVRT(ds, crs=WGS84, resampling=Resampling.nearest) as vrt:
+                b = vrt.bounds
+                wgs84_bounds = (b.left, b.bottom, b.right, b.top)
+                vrt_data = vrt.read(
+                    out_shape=(3, _DST_HEIGHT, _DST_WIDTH),
+                    resampling=Resampling.nearest,
+                )
+
+    warp_img = warp(
+        img,
+        dst_crs=WGS84,
+        dst_bounds=wgs84_bounds,
+        dst_width=_DST_WIDTH,
+        dst_height=_DST_HEIGHT,
+        reproject_method="nearest",
+        resampling_method="nearest",
+    )
+
+    # Footprint of the source in the output grid (where bands 2/3 are valid),
+    # eroded by 1 pixel to skip edge pixels where both warpers can differ.
+    valid = vrt_data[1] != 0
+    footprint = numpy.zeros_like(valid)
+    footprint[1:-1, 1:-1] = (
+        valid[1:-1, 1:-1]
+        & valid[:-2, 1:-1]
+        & valid[2:, 1:-1]
+        & valid[1:-1, :-2]
+        & valid[1:-1, 2:]
+    )
+    assert footprint.any()
+
+    # band 1 has both valid and nodata pixels within the footprint
+    assert warp_img.array.mask[0][footprint].any()
+    assert not warp_img.array.mask[0][footprint].all()
+
+    # bands 2 and 3 must not inherit band 1 nodata
+    assert not warp_img.array.mask[1][footprint].any()
+    assert not warp_img.array.mask[2][footprint].any()
+    assert (warp_img.array.data[1][footprint] == 100).all()
+    assert (warp_img.array.data[2][footprint] == 150).all()
+
+    # per-band mask is `data == nodata`, like rio_tiler.reader
+    numpy.testing.assert_array_equal(
+        warp_img.array.mask[0][footprint], warp_img.array.data[0][footprint] == 0
+    )
+
+    # pixels are valid (render mask) wherever the source footprint is
+    numpy.testing.assert_array_equal(warp_img.mask[footprint], 255)
+
+
 def test_get_overview_level(monkeypatch):
     """Overview selection with GDAL's rule.
 

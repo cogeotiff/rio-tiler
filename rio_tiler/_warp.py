@@ -165,6 +165,17 @@ def warp(
     src_array = img.array.reshape((-1, img.height, img.width))
     count = src_array.shape[0]
 
+    # NOTE: `rasterio.warp.reproject` merges the band masks of a masked source
+    # into a single validity band, where a pixel is invalid if ANY band is masked
+    # (the pixel is then nodata in all bands). rio-tiler (and GDAL's WarpedVRT)
+    # considers a pixel valid if ANY band is valid, so we only mask the pixels
+    # where ALL the bands are masked and re-apply the per-band nodata after the warp.
+    src_mask = numpy.logical_and.reduce(numpy.ma.getmaskarray(src_array), axis=0)
+    src_array = numpy.ma.MaskedArray(
+        src_array.data,
+        mask=numpy.broadcast_to(src_mask, src_array.shape),
+    )
+
     # Allocate output arrays at the final size (never the full intermediate size)
     dst_data = numpy.zeros((count, dst_height, dst_width), dtype=img.array.dtype)
     dst_mask = numpy.zeros((count, dst_height, dst_width), dtype=numpy.uint8)
@@ -267,10 +278,19 @@ def warp(
                     chunk_alpha
                 )
 
+    out_mask = ~dst_mask.astype(bool)
+
+    # Re-apply the per-band nodata mask (like `rio_tiler.reader.read`)
+    if img.nodata is not None:
+        if numpy.isnan(img.nodata):
+            out_mask |= numpy.isnan(dst_data)
+        else:
+            out_mask |= dst_data == img.nodata
+
     return ImageData(
         numpy.ma.MaskedArray(
             dst_data.reshape((*leading, dst_height, dst_width)),
-            mask=~dst_mask.astype(bool).reshape((*leading, dst_height, dst_width)),
+            mask=out_mask.reshape((*leading, dst_height, dst_width)),
         ),
         dimensions=img.dimensions,
         band_names=img.band_names,
