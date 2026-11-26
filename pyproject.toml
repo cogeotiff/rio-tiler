@@ -63,6 +63,7 @@ dev = [
     "matplotlib",
     "pyinstrument",
     "cast-value-rs>=0.4.2",
+    "lonboard>=0.17.0",
 ]
 
 performance = [
