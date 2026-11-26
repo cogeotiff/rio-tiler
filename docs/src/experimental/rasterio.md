@@ -74,6 +74,10 @@ Except for 4 pixels in one z5 tile (99.97% identical), the values are identical 
 
     For a read in the dataset CRS (no reprojection) with `bilinear` or `cubic` resampling, values can still differ when the output resolution is within a few percent of an overview resolution: both readers read the same overview, but `rio_tiler.io.Reader` resamples it with GDAL's RasterIO while the experimental reader uses GDAL's warper, and the two kernels differ slightly at a ~1:1 scale.
 
+!!! warning "`reproject_method` other than `nearest`"
+
+    The numbers above use the default `reproject_method="nearest"`. With `reproject_method="bilinear"` (or `cubic`), reprojected tiles differ from `rio_tiler.io.Reader`: for `cog.tif`, the median tile is 66% identical at zoom 5 and 90% at zoom 7. The [async-geotiff reader](async-geotiff.md) gives exactly the same numbers, so the difference comes from the shared `rio_tiler._warp.warp`, not from the read step. The cause is still being investigated.
+
 These numbers are checked in `tests/test_experimental_rasterio.py::test_reader_tile_footprint`, and the figures above are generated with `uv run --with matplotlib python docs/scripts/experimental_rasterio/experimental_rasterio_figures.py`. Other tests in that file check that tiles from datasets with nodata, an internal mask or an alpha band have identical masks, and that `read()`, `preview()` and `point()` return the same values as `rio_tiler.io.Reader`.
 
 ## Behavior differences
@@ -93,7 +97,7 @@ These numbers are checked in `tests/test_experimental_rasterio.py::test_reader_t
 
 ### Pros
 
-- **Same pixels as `rio_tiler.io.Reader`.** Same overview selection, same overview geometry and a single warp pass: tiles are identical to the ones from `rio_tiler.io.Reader` (except for a footprint edge pixel), for `nearest`, `bilinear` and `cubic` resampling.
+- **Same pixels as `rio_tiler.io.Reader`.** Same overview selection, same overview geometry and a single warp pass: tiles are identical to the ones from `rio_tiler.io.Reader` (except for a footprint edge pixel), for `nearest`, `bilinear` and `cubic` resampling, with the default `reproject_method="nearest"`.
 - **Fast zoomed-out tiles for reprojected datasets.** The reader never builds a `WarpedVRT` at the dataset's native resolution. Mask and single-band reads can't fall into GDAL's slow block-by-block warp path, which can cost seconds of CPU per band on a large COG at low zoom. Each read is a window from a source overview, and the warp runs in memory on that small array.
 - **One algorithm across backends.** Overview selection, window computation and warping are shared with the [async-geotiff reader](async-geotiff.md), so both readers return the same output. The read step can be replaced by any backend able to fetch a window of pixels.
 - **Explicit overview selection.** The overview is chosen in rio-tiler (`rio_tiler._warp.get_overview_level`, same rule as GDAL), not by GDAL's warper, which makes it easier to test and debug.
@@ -105,6 +109,7 @@ These numbers are checked in `tests/test_experimental_rasterio.py::test_reader_t
 ### Cons
 
 - **Not strictly pixel-identical to `rio_tiler.io.Reader`.** Footprint masks can differ by an edge pixel, and `bilinear`/`cubic` values can differ for reads in the dataset CRS at a ~1:1 scale (see [Visual differences](#visual-differences)).
+- **`reproject_method` other than `nearest` differs.** With `bilinear` or `cubic` as the warp kernel, the median reprojected tile is only 66% (zoom 5) to 90% (zoom 7) identical to `rio_tiler.io.Reader` on `cog.tif` (same gap as the async-geotiff reader, see [Visual differences](#visual-differences)).
 - **`gauss` resampling takes two steps.** GDAL's warper has no `gauss` kernel, so with `resampling_method="gauss"` (and no reprojection) the data is warped at native resolution, then resized to the output shape.
 - **Different output size for `part()` / `feature()`.** The output size is estimated from the bounds in the dataset CRS, so the output shape can differ from `rio_tiler.io.Reader` for the same request.
 - **Missing options.** `padding`, `vrt_options`, `align_bounds_with_dataset` and `minimum_overlap` are ignored (with a warning), and only `nodata` and `unscale` are taken from `options`.
