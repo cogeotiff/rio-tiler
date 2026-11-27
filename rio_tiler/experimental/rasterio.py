@@ -1,6 +1,6 @@
 """rio_tiler.experimental.rasterio: rio-tiler reader built on top of rasterio, without WarpedVRT.
 
-This reader mirrors the logic of `rio_tiler.experimental.geotiff.Reader` (async-geotiff):
+This reader mirrors the logic of `rio_tiler.io.geotiff.Reader` (async-geotiff):
 
 1. Select the overview level matching the output resolution (GDAL's rule, `rio_tiler._warp.get_overview_level`)
 2. Read the native (overview) pixels for the requested window, in the dataset CRS
@@ -59,7 +59,7 @@ class Reader(RasterioReader):
     Dataset opening (incl. GCPS), `info` and `feature` are inherited from
     `rio_tiler.io.rasterio.Reader`. All data access methods (`read`, `tile`, `part`,
     `preview`, `point`, `statistics`) are re-implemented to follow the
-    `rio_tiler.experimental.geotiff.Reader` logic (no `rio_tiler.reader` / WarpedVRT).
+    `rio_tiler.io.geotiff.Reader` logic (no `rio_tiler.reader` / WarpedVRT).
 
     Note: Only `nodata` and `unscale` are taken from `options`. Other low-level
     reader options (e.g `padding`, `vrt_options`) are not supported and will be ignored

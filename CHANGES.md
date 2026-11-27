@@ -1,6 +1,8 @@
 
 # Unreleased
 
+* breaking: move `rio_tiler.experimental.geotiff` to `rio_tiler.io.geotiff` and `rio_tiler.experimental.zarr` to `rio_tiler.io.zarr` (the readers are no longer experimental)
+* breaking: move `rio_tiler.experimental.async_stac.AsyncSTACReader` to `rio_tiler.io.stac.AsyncSTACReader` (also available as `rio_tiler.io.AsyncSTACReader`)
 * breaking: remove python 3.11 support (rasterio 1.5 requires python >=3.12)
 * breaking: remove `scales` and `offsets` attributes in ImageData and PointData models
 * breaking: remove `count` attribute in ImageData and PointData models

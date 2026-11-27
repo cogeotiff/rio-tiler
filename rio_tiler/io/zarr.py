@@ -1,4 +1,4 @@
-"""rio_tiler.experimental.zarr reader: rio-tiler Async reader built on top of zarr-python."""
+"""rio_tiler.io.zarr reader: rio-tiler Async reader built on top of zarr-python."""
 
 from __future__ import annotations
 
@@ -14,19 +14,8 @@ from typing import Any, Literal, NotRequired, TypedDict, cast
 
 import attr
 import numpy
-import zarr
 from affine import Affine
-from async_lru import alru_cache
 from cachetools import LRUCache, TTLCache, cached
-from isochron import (
-    UTC,
-    Duration,
-    ISO8601Error,
-    format_datetime,
-    parse_date,
-    parse_datetime,
-    parse_duration,
-)
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.features import bounds as featureBounds
@@ -60,6 +49,24 @@ from rio_tiler.utils import (
     output_size,
     run_sync,
 )
+
+try:
+    import zarr
+    from async_lru import alru_cache
+    from isochron import (
+        UTC,
+        Duration,
+        ISO8601Error,
+        format_datetime,
+        parse_date,
+        parse_datetime,
+        parse_duration,
+    )
+except ImportError as e:  # pragma: nocover
+    raise ImportError(
+        "`rio_tiler.io.zarr` requires optional dependencies, "
+        'install them with `python -m pip install "rio-tiler[zarr]"`'
+    ) from e
 
 ZARR_MAX_CHILDREN_DEPTH: int = int(
     os.environ.get("RIO_TILER_ZARR_MAX_CHILDREN_DEPTH", 10)

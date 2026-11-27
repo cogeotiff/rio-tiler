@@ -14,8 +14,8 @@ from rasterio.crs import CRS
 from rasterio.warp import transform_geom
 
 from rio_tiler.constants import WEB_MERCATOR_TMS
-from rio_tiler.experimental.geotiff import Reader as GeoTIFFReader
 from rio_tiler.io import BaseReader, MultiBaseReader, Reader
+from rio_tiler.io.geotiff import Reader as GeoTIFFReader
 from rio_tiler.models import PointData
 from rio_tiler.mosaic.backend import AsyncBaseBackend, BaseBackend
 from rio_tiler.mosaic.methods import defaults

@@ -1,4 +1,4 @@
-"""rio_tiler.experimental.geotiff reader: rio-tiler Async reader built on top of async-geotiff."""
+"""rio_tiler.io.geotiff reader: rio-tiler Async reader built on top of async-geotiff."""
 
 from __future__ import annotations
 
@@ -9,8 +9,6 @@ from typing import TYPE_CHECKING, Any, cast
 
 import attr
 import numpy
-from async_geotiff import Window
-from async_geotiff.enums import ColorInterp
 from morecantile import Tile, TileMatrixSet
 from rasterio.crs import CRS
 from rasterio.features import bounds as featureBounds
@@ -40,6 +38,15 @@ from rio_tiler.utils import (
     output_size,
     run_sync,
 )
+
+try:
+    from async_geotiff import Window
+    from async_geotiff.enums import ColorInterp
+except ImportError as e:  # pragma: nocover
+    raise ImportError(
+        "`rio_tiler.io.geotiff` requires optional dependencies, "
+        'install them with `python -m pip install "rio-tiler[geotiff]"`'
+    ) from e
 
 if TYPE_CHECKING:
     from async_geotiff import GeoTIFF, Overview

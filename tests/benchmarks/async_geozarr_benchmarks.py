@@ -7,7 +7,7 @@ import zarr
 from obstore.store import HTTPStore
 from zarr.storage import ObjectStore
 
-from rio_tiler.experimental.zarr import AsyncGroupReader, GroupReader
+from rio_tiler.io.zarr import AsyncGroupReader, GroupReader
 
 src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260928T095031_N0513_R079_T33TVF_20260928T130916.zarr/measurements/reflectance"
 

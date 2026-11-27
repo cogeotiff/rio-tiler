@@ -7,9 +7,9 @@ import rasterio
 from async_geotiff import GeoTIFF
 from obstore.store import HTTPStore
 
-from rio_tiler.experimental.geotiff import Reader as AsyncReader
 from rio_tiler.experimental.rasterio import Reader as ExpRioReader
 from rio_tiler.io import Reader as SyncReader
+from rio_tiler.io.geotiff import Reader as AsyncReader
 
 src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A_B04.tif"
 

@@ -7,7 +7,7 @@ Required dependencies:
 - `obstore` 
 - `isochron`
 
-You can install the dependencies with `python -m pip install "rio-tiler[zarr]".
+You can install the dependencies with `python -m pip install "rio-tiler[zarr]"`.
 
 ## Mini Spec
 
@@ -142,7 +142,7 @@ from obstore.store import S3Store
 import zarr
 from zarr.storage import ObjectStore
 from rasterio.crs import CRS
-from rio_tiler.experimental.zarr import AsyncArrayReader
+from rio_tiler.io.zarr import AsyncArrayReader
 
 # Create Obstore Store
 store = S3Store("mur-sst/zarr-v1", skip_signature=True, region="us-west-2")
@@ -273,7 +273,7 @@ from obstore.store import HTTPStore
 import zarr
 from zarr.storage import ObjectStore
 
-from rio_tiler.experimental.zarr import AsyncGroupReader
+from rio_tiler.io.zarr import AsyncGroupReader
 
 from matplotlib.pyplot import imshow
 
@@ -364,7 +364,7 @@ from obstore.store import HTTPStore
 import zarr
 from zarr.storage import ObjectStore
 
-from rio_tiler.experimental.zarr import AsyncGroupReader
+from rio_tiler.io.zarr import AsyncGroupReader
 
 from matplotlib.pyplot import imshow
 

@@ -10,11 +10,11 @@ store calls: {'read_only': 1, '_ensure_open': 1, 'get': 2}
 ├─ 0.663 open_group  zarr/api/synchronous.py:496
 │     [4 frames hidden]  zarr, concurrent, threading
 │        0.663 lock.acquire  <built-in>
-└─ 0.592 GroupReader.tile  rio_tiler/experimental/zarr.py:3846
-   └─ 0.592 GroupReader.part  rio_tiler/experimental/zarr.py:3910
-      └─ 0.592 _part  rio_tiler/experimental/zarr.py:3955
-         └─ 0.578 ArrayReader.part  rio_tiler/experimental/zarr.py:1432
-            └─ 0.567 ArrayReader._read  rio_tiler/experimental/zarr.py:1734
+└─ 0.592 GroupReader.tile  rio_tiler/io/zarr.py:3846
+   └─ 0.592 GroupReader.part  rio_tiler/io/zarr.py:3910
+      └─ 0.592 _part  rio_tiler/io/zarr.py:3955
+         └─ 0.578 ArrayReader.part  rio_tiler/io/zarr.py:1432
+            └─ 0.567 ArrayReader._read  rio_tiler/io/zarr.py:1734
                └─ 0.567 Array.get_orthogonal_selection  zarr/core/array.py:3103
                      [4 frames hidden]  zarr, concurrent, threading
                         0.567 lock.acquire  <built-in>
@@ -43,7 +43,7 @@ from obstore.store import HTTPStore
 from pyinstrument import Profiler
 from zarr.storage import LoggingStore, ObjectStore
 
-from rio_tiler.experimental.zarr import AsyncGroupReader, GroupReader
+from rio_tiler.io.zarr import AsyncGroupReader, GroupReader
 
 src_path = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/geozarrs/S2C_MSIL2A_20260928T095031_N0513_R079_T33TVF_20260928T130916.zarr/measurements/reflectance"
 
