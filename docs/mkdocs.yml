@@ -98,6 +98,8 @@ nav:
   - Release Notes: 'release-notes.md'
   - Blog:
     - blog/index.md
+    - rio-tiler 10.0.0a1: 'blog/2026/11/27/rio-tiler-10-0-0a1/'
+    - 'Anatomy of a tile request: COG vs GeoZarr': 'blog/2026/11/19/anatomy-of-a-tile-request-cog-vs-geozarr/'
 
 plugins:
   - search
