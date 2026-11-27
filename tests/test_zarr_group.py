@@ -1,4 +1,4 @@
-"""test rio_tiler.experimental.zarr.AsyncGroupReader."""
+"""test rio_tiler.io.zarr.AsyncGroupReader."""
 
 from typing import Any
 
@@ -9,7 +9,7 @@ import zarr
 from affine import Affine
 from rasterio.crs import CRS
 
-from rio_tiler.experimental.zarr import AsyncGroupReader, GroupReader
+from rio_tiler.io.zarr import AsyncGroupReader, GroupReader
 
 from .utils import (
     coordinates_conventions,

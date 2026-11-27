@@ -1,4 +1,4 @@
-"""test rio_tiler.experimental.zarr.Reader."""
+"""test rio_tiler.io.zarr.Reader."""
 
 import os
 import shutil
@@ -20,7 +20,8 @@ from rio_tiler.errors import (
     PointOutsideBounds,
     TileOutsideBounds,
 )
-from rio_tiler.experimental.zarr import (
+from rio_tiler.io.xarray import XarrayReader
+from rio_tiler.io.zarr import (
     ArrayMixin,
     ArrayReader,
     AsyncArrayReader,
@@ -28,7 +29,6 @@ from rio_tiler.experimental.zarr import (
     _get_coordinate_values,
     _sel_indexer,
 )
-from rio_tiler.io.xarray import XarrayReader
 
 from .utils import (
     coordinates_conventions,

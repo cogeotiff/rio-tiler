@@ -143,7 +143,7 @@ COG: 2 dependent round trips. GeoZarr (sharded): 3.
 
 ### Requests and bytes
 
-Async readers (`rio_tiler.experimental.geotiff.Reader` / `rio_tiler.experimental.zarr.AsyncGroupReader`),
+Async readers (`rio_tiler.io.geotiff.Reader` / `rio_tiler.io.zarr.AsyncGroupReader`),
 one cold store per request, every byte range recorded.
 
 | Tile | Level used (COG / Zarr) | COG GETs | COG bytes | Zarr GETs | Zarr bytes |
@@ -207,12 +207,12 @@ bandwidth is not the bottleneck) before drawing conclusions on time.
 A true-color tile needs three bands (RGB). As COGs that means **three files**; in the GeoZarr
 it is **three arrays of the same store**.
 
-- COG: `rio_tiler.experimental.async_stac.AsyncSTACReader` with a STAC Item listing the
+- COG: `rio_tiler.io.stac.AsyncSTACReader` with a STAC Item listing the
   three files, fetched from the bucket
   ([`cogs/S2C_33TVF_20260928_0_L2A.json`](https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs/S2C_33TVF_20260928_0_L2A.json), 2.7 KB).
-  Each asset is opened with `async-geotiff` (`rio_tiler.experimental.geotiff.Reader`) and
+  Each asset is opened with `async-geotiff` (`rio_tiler.io.geotiff.Reader`) and
   its own obstore `HTTPStore`, since in real life the files can live in different buckets.
-- GeoZarr: `rio_tiler.experimental.zarr.AsyncGroupReader`.
+- GeoZarr: `rio_tiler.io.zarr.AsyncGroupReader`.
 
 ```python
 @asynccontextmanager

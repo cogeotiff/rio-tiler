@@ -8,7 +8,7 @@ from .base import (
     MultiBaseReader,
 )
 from .rasterio import ImageReader, Reader
-from .stac import STACReader
+from .stac import AsyncSTACReader, STACReader
 from .xarray import XarrayReader
 
 # Keep Compatibility with <4.0
@@ -23,6 +23,7 @@ __all__ = [
     "ImageReader",
     "Reader",
     "STACReader",
+    "AsyncSTACReader",
     "XarrayReader",
     "COGReader",
 ]

@@ -14,8 +14,8 @@ from rasterio.warp import transform_bounds
 from rio_tiler import mosaic
 from rio_tiler.constants import WEB_MERCATOR_TMS, WGS84_CRS
 from rio_tiler.errors import EmptyMosaicError, InvalidMosaicMethod, TileOutsideBounds
-from rio_tiler.experimental.geotiff import Reader as GeoTIFFReader
 from rio_tiler.io import Reader, STACReader
+from rio_tiler.io.geotiff import Reader as GeoTIFFReader
 from rio_tiler.models import ImageData, PointData
 from rio_tiler.mosaic.methods import PixelSelectionMethod, defaults
 

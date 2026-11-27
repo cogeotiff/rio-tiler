@@ -93,7 +93,7 @@ xarray = [
     "xarray",
     "rioxarray",
 ]
-# for experimental.zarr Readers
+# for rio_tiler.io.zarr Readers
 zarr = [
     "zarr[cast-value-rs]~=3.0",
     "async-lru>=2.4",
@@ -106,6 +106,7 @@ geoarray = [
     "rioxarray",
     "isochron",
 ]
+# for rio_tiler.io.geotiff Reader
 geotiff = [
     "async-geotiff>=0.5,<0.6",
     "obstore",

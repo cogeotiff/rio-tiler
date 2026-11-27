@@ -1,7 +1,7 @@
 
 # Rasterio Reader (read, then warp)
 
-`rio_tiler.experimental.rasterio.Reader` is a drop-in variant of `rio_tiler.io.Reader` that **does not use GDAL's `WarpedVRT`**. It reads the native pixels in the dataset's CRS and then reprojects/resamples them in memory, exactly like the [async-geotiff reader](async-geotiff.md) does.
+`rio_tiler.experimental.rasterio.Reader` is a drop-in variant of `rio_tiler.io.Reader` that **does not use GDAL's `WarpedVRT`**. It reads the native pixels in the dataset's CRS and then reprojects/resamples them in memory, exactly like the [async-geotiff reader](../async-geotiff.md) does.
 
 ```python
 from rio_tiler.experimental.rasterio import Reader
@@ -76,7 +76,7 @@ Except for 4 pixels in one z5 tile (99.97% identical), the values are identical 
 
 !!! warning "`reproject_method` other than `nearest`"
 
-    The numbers above use the default `reproject_method="nearest"`. With `reproject_method="bilinear"` (or `cubic`), reprojected tiles can differ slightly from `rio_tiler.io.Reader` when the warp downsamples. The [async-geotiff reader](async-geotiff.md) gives exactly the same numbers: the difference comes from the shared `rio_tiler._warp.warp`, not from the read step.
+    The numbers above use the default `reproject_method="nearest"`. With `reproject_method="bilinear"` (or `cubic`), reprojected tiles can differ slightly from `rio_tiler.io.Reader` when the warp downsamples. The [async-geotiff reader](../async-geotiff.md) gives exactly the same numbers: the difference comes from the shared `rio_tiler._warp.warp`, not from the read step.
 
     **Why.** Both readers read the same overview and GDAL runs the same warp kernel, but GDAL's output depends on how the warp is split into chunks. When downsampling with `bilinear` or `cubic`, GDAL widens the kernel (anti-aliasing) and sets it up for each chunk from that chunk's source window. `rio_tiler.io.Reader` warps the whole overview in `WarpedVRT` blocks (e.g. two 256×128 chunks for a 256×256 tile), while `rasterio.warp.reproject` warps a window of it in its own chunks (e.g. 128×128 and 64×64). A `WarpedVRT` over the whole overview reproduces `rio_tiler.io.Reader` exactly, but a window of it doesn't, even when padded, so exact parity isn't possible with a "read a window, then warp" approach. With `nearest` there is no widened kernel and the outputs are identical.
 
@@ -103,7 +103,7 @@ These numbers are checked in `tests/test_experimental_rasterio.py::test_reader_t
 
 - **Same pixels as `rio_tiler.io.Reader`.** Same overview selection, same overview geometry and a single warp pass: tiles are identical to the ones from `rio_tiler.io.Reader` (except for a footprint edge pixel), for `nearest`, `bilinear` and `cubic` resampling, with the default `reproject_method="nearest"`.
 - **Fast zoomed-out tiles for reprojected datasets.** The reader never builds a `WarpedVRT` at the dataset's native resolution. Mask and single-band reads can't fall into GDAL's slow block-by-block warp path, which can cost seconds of CPU per band on a large COG at low zoom. Each read is a window from a source overview, and the warp runs in memory on that small array.
-- **One algorithm across backends.** Overview selection, window computation and warping are shared with the [async-geotiff reader](async-geotiff.md), so both readers return the same output. The read step can be replaced by any backend able to fetch a window of pixels.
+- **One algorithm across backends.** Overview selection, window computation and warping are shared with the [async-geotiff reader](../async-geotiff.md), so both readers return the same output. The read step can be replaced by any backend able to fetch a window of pixels.
 - **Explicit overview selection.** The overview is chosen in rio-tiler (`rio_tiler._warp.get_overview_level`, same rule as GDAL), not by GDAL's warper, which makes it easier to test and debug.
 - **Predictable reads.** Only a window clamped to the dataset is read, at overview resolution, with no warping in the read itself. Below the dataset's `minzoom`, only the coarsest overview is read.
 - **Bounded memory.** `rio_tiler._warp.warp` processes the output in chunks of up to 2048×2048 pixels.

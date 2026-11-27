@@ -165,9 +165,31 @@ img.apply_expression("band1/band2")
 If your code assumes `band_names`/`band_descriptions` are always lists (e.g. in a custom reader or a titiler dependency), make sure to handle the `dict` case (or check `img.is_nd`).
 
 
-## Experimental Zarr Readers
+## GeoTIFF, Zarr and Async STAC Readers Moved to `rio_tiler.io`
 
-The `rio_tiler.experimental.zarr` readers (`ArrayReader`, `AsyncArrayReader`, `GroupReader`, `AsyncGroupReader`) have been refactored to use **named dimensions**.
+The async-geotiff, zarr and async STAC readers are no longer experimental and have moved from `rio_tiler.experimental` to `rio_tiler.io`:
+
+- `rio_tiler.experimental.geotiff` -> `rio_tiler.io.geotiff`
+- `rio_tiler.experimental.zarr` -> `rio_tiler.io.zarr`
+- `rio_tiler.experimental.async_stac.AsyncSTACReader` -> `rio_tiler.io.stac.AsyncSTACReader`
+
+```python
+# before (9.x)
+from rio_tiler.experimental.geotiff import Reader
+from rio_tiler.experimental.zarr import AsyncGroupReader
+from rio_tiler.experimental.async_stac import AsyncSTACReader
+
+# now (10.x)
+from rio_tiler.io.geotiff import Reader
+from rio_tiler.io.zarr import AsyncGroupReader
+from rio_tiler.io import AsyncSTACReader
+```
+
+The geotiff and zarr readers still require their optional dependencies (`rio-tiler[geotiff]`, `rio-tiler[zarr]`), so they are not exported in `rio_tiler.io`.
+
+## Zarr Readers
+
+The zarr readers (`ArrayReader`, `AsyncArrayReader`, `GroupReader`, `AsyncGroupReader`) have been refactored to use **named dimensions**.
 
 ### Array Readers Init Options
 
@@ -178,7 +200,7 @@ The `rio_tiler.experimental.zarr` readers (`ArrayReader`, `AsyncArrayReader`, `G
 - 2D and 3D arrays are no longer the only supported shapes: any array with `>=2` dimensions can be read
 
 ```python
-from rio_tiler.experimental.zarr import ArrayReader
+from rio_tiler.io.zarr import ArrayReader
 
 # before (9.x)
 with ArrayReader(
@@ -281,7 +303,7 @@ with ArrayReader(array) as src:
 The variable names are stored in `band_descriptions`, while `band_names` are `variables1`, `variables2`, ..., which are the names to use in expressions or to access `statistics()` results.
 
 ```python
-from rio_tiler.experimental.zarr import GroupReader
+from rio_tiler.io.zarr import GroupReader
 
 # before (9.x)
 with GroupReader(group) as src:
@@ -354,7 +376,7 @@ The zarr Array readers' `tile` method now accepts a `resampling_method` option.
 
 ### `rio_tiler.utils.run_sync`
 
-Run a blocking function in a worker thread (`asyncio.to_thread`), forwarding the active rasterio environment. The async experimental readers (`geotiff.Reader`, `zarr.AsyncArrayReader`) and `AsyncBaseBackend` now use it for warp/reproject/resize/rasterize operations to avoid blocking the event loop.
+Run a blocking function in a worker thread (`asyncio.to_thread`), forwarding the active rasterio environment. The async readers (`rio_tiler.io.geotiff.Reader`, `rio_tiler.io.zarr.AsyncArrayReader`) and `AsyncBaseBackend` now use it for warp/reproject/resize/rasterize operations to avoid blocking the event loop.
 
 ```python
 from rio_tiler.utils import run_sync
@@ -373,7 +395,7 @@ img = await run_sync(img.resize, 512, 512)
 
 4. **Update mosaic band descriptions handling** - Read the first asset's descriptions from `img.metadata["band_descriptions"]`
 
-5. **Handle N-D data** - If you consume `ImageData`/`PointData` from experimental readers, `band_names`/`band_descriptions` can be `dict`; check `img.is_nd` and use `reduce()` before rendering
+5. **Handle N-D data** - If you consume `ImageData`/`PointData` from the zarr readers, `band_names`/`band_descriptions` can be `dict`; check `img.is_nd` and use `reduce()` before rendering
 
 6. **Update zarr Array readers init** - Replace `band_names` with `coordinates` and set `dimensions`/`spatial_dims` if not in the zarr metadata
 
@@ -382,3 +404,5 @@ img = await run_sync(img.resize, 512, 512)
 8. **Update zarr expressions and statistics keys** - Use `{dimension}{n}` (e.g. `band1`) for Array readers and `variables{n}` for Group readers
 
 9. **Update custom zarr reader subclasses** - `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=, sel=)`
+
+10. **Update imports** - `rio_tiler.experimental.geotiff` -> `rio_tiler.io.geotiff`, `rio_tiler.experimental.zarr` -> `rio_tiler.io.zarr`, `rio_tiler.experimental.async_stac` -> `rio_tiler.io.stac`

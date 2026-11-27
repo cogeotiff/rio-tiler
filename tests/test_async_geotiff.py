@@ -8,8 +8,8 @@ from async_geotiff import GeoTIFF
 from obstore.store import LocalStore
 
 from rio_tiler.errors import ExpressionMixingWarning, TileOutsideBounds
-from rio_tiler.experimental.geotiff import Reader as GeoTIFFReader
 from rio_tiler.io import Reader
+from rio_tiler.io.geotiff import Reader as GeoTIFFReader
 from rio_tiler.models import BandStatistics
 
 PREFIX = os.path.join(os.path.dirname(__file__), "fixtures")

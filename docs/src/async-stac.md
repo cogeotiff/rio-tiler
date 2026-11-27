@@ -1,8 +1,8 @@
 
-An experimental *Reader* built on top the `AsyncMultiReaderBase` abstract base class. This reader differs from the regular STACReader with:
+An asynchronous STAC *Reader* (`rio_tiler.io.stac.AsyncSTACReader`) built on top of the `AsyncMultiBaseReader` abstract base class. This reader differs from the regular STACReader with:
 
     - takes a `pystac.Item` as input (not a URL)
-    - `reader: AsyncBaseReader = ...` is a required argument (no default async reader exist outside the experimental ones)
+    - `reader: AsyncBaseReader = ...` is a required argument (no default async reader, e.g. use `rio_tiler.io.geotiff.Reader`)
 
 
 ```python
@@ -14,8 +14,8 @@ from urllib.parse import urlparse
 
 from async_geotiff import GeoTIFF
 from obstore.store import from_url
-from rio_tiler.experimental.geotiff import Reader as GeoTIFFReader
-from rio_tiler.experimental.async_stac import AsyncSTACReader
+from rio_tiler.io.geotiff import Reader as GeoTIFFReader
+from rio_tiler.io.stac import AsyncSTACReader
 import pystac 
 
 @asynccontextmanager

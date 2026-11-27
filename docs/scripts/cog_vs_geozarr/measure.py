@@ -1,9 +1,9 @@
 """Measure tile requests: COG vs GeoZarr, one band (B04) and three bands (B04 + B03 + B02).
 
-- COG, one band: rio_tiler.experimental.geotiff.Reader (async-geotiff + obstore).
-- COG, three bands: rio_tiler.experimental.async_stac.AsyncSTACReader on a STAC Item
+- COG, one band: rio_tiler.io.geotiff.Reader (async-geotiff + obstore).
+- COG, three bands: rio_tiler.io.stac.AsyncSTACReader on a STAC Item
   (fetched from the bucket), one obstore HTTPStore per file.
-- GeoZarr: rio_tiler.experimental.zarr.AsyncGroupReader on `measurements/reflectance`.
+- GeoZarr: rio_tiler.io.zarr.AsyncGroupReader on `measurements/reflectance`.
 
 Every request is recorded (start ms, end ms, key, byte ranges).
 
@@ -30,9 +30,9 @@ from async_geotiff import GeoTIFF
 from obstore.store import HTTPStore
 from zarr.storage import ObjectStore, WrapperStore
 
-from rio_tiler.experimental.async_stac import AsyncSTACReader
-from rio_tiler.experimental.geotiff import Reader
-from rio_tiler.experimental.zarr import AsyncGroupReader
+from rio_tiler.io.geotiff import Reader
+from rio_tiler.io.stac import AsyncSTACReader
+from rio_tiler.io.zarr import AsyncGroupReader
 
 BUCKET = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com"
 SCENE = "S2C_33TVF_20260928_0_L2A"

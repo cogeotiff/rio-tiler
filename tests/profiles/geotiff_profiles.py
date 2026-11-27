@@ -28,9 +28,9 @@ store calls: {'open: get_range_async': 1, 'tile: get_ranges_async': 1}
 │  └─ 0.515 HTTPStore.get_ranges_async  obstore/store.py:254
 │     └─ 0.515 [await]  obstore/store.py
 └─ 0.055 test_async_geotiff_reader  tests/profiles/geotiff_profiles.py:113
-   └─ 0.053 Reader.tile  rio_tiler/experimental/geotiff.py:214
-      └─ 0.051 Reader.part  rio_tiler/experimental/geotiff.py:258
-         ├─ 0.021 Reader._read  rio_tiler/experimental/geotiff.py:643
+   └─ 0.053 Reader.tile  rio_tiler/io/geotiff.py:214
+      └─ 0.051 Reader.part  rio_tiler/io/geotiff.py:258
+         ├─ 0.021 Reader._read  rio_tiler/io/geotiff.py:643
          │  └─ 0.020 GeoTIFF.read  async_geotiff/_read.py:34
          │        [3 frames hidden]  async_geotiff
          └─ 0.020 run_sync  rio_tiler/utils.py:952
@@ -48,8 +48,8 @@ from async_geotiff import GeoTIFF
 from obstore.store import HTTPStore
 from pyinstrument import Profiler
 
-from rio_tiler.experimental.geotiff import Reader as AsyncGeoTIFFReader
 from rio_tiler.io import Reader
+from rio_tiler.io.geotiff import Reader as AsyncGeoTIFFReader
 
 base_url = "https://titiler-benchmark-public.s3.us-east-1.amazonaws.com/cogs"
 filename = "S2C_33TVF_20260928_0_L2A_B04.tif"
