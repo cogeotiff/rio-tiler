@@ -291,7 +291,8 @@ class Reader(AsyncBaseReader):
 
         indexes = cast_to_sequence(indexes)
 
-        dst_crs = dst_crs or bounds_crs
+        bounds_crs = CRS.from_user_input(bounds_crs)
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else bounds_crs
 
         # 1. Transform output bbox from bounds_crs → output_crs
         if bounds_crs != dst_crs:
@@ -406,7 +407,7 @@ class Reader(AsyncBaseReader):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        dst_crs = dst_crs or self.crs
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else self.crs
 
         if indexes and expression:
             warnings.warn(

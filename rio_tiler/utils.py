@@ -1087,6 +1087,11 @@ def estimate_output(
             output_crs, dataset_crs, *output_bounds, densify_pts=21
         )
 
+        # NOTE: the bbox can't be transformed when it's outside the validity
+        # area of the dataset CRS (e.g. far from a UTM zone)
+        if has_undefined_extent(output_bounds):
+            raise ValueError("Input BBOX and dataset's bounds do not intersect")
+
         # Compute native output shape in dataset resolution/CRS
         native_src_w = max(
             1,
