@@ -98,6 +98,7 @@ nav:
   - Release Notes: 'release-notes.md'
   - Blog:
     - blog/index.md
+    - rio-tiler 10.0.0a1: 'blog/2026/11/27/rio-tiler-10-0-0a1/'
 
 plugins:
   - search
