@@ -1,7 +1,7 @@
 ---
 date:
   created: 2026-11-19
-  updated: 2026-11-23
+  updated: 2026-11-27
 authors:
   - vincentsarago
 categories:
@@ -18,6 +18,17 @@ from the same Sentinel-2 band (B04, red), stored as a COG and as a GeoZarr.
 !!! note
 
     This post, along with its benchmark scripts and figures, was written with the help of [Claude Code](https://claude.com/claude-code) (Anthropic).
+
+!!! info "Updated on 2026-11-27: measured again with rio-tiler's new readers"
+
+    The readers left `rio_tiler.experimental`: they are now `rio_tiler.io.geotiff.Reader`,
+    `rio_tiler.io.zarr.AsyncGroupReader` and `rio_tiler.io.stac.AsyncSTACReader`. They also
+    pick the overview (or multiscale level) with GDAL's rule, and warp the pixels onto the
+    tile in a single pass.
+
+    All the scripts were run again. Requests and bytes are **exactly the same** for every tile
+    (same levels, same byte ranges). Only the timings were measured again (new 10-run medians).
+    The conclusions don't change.
 
 !!! info "Updated on 2026-11-23: GeoZarr stored as `uint16`"
 
@@ -174,23 +185,23 @@ internet to `us-east-1`.
 
 | Tile | COG open | COG tile | **COG total** | Zarr open | Zarr tile | **Zarr total** |
 |---|---|---|---|---|---|---|
-| z14 | 544 ms | 738 ms | **1281 ms** | 769 ms | 533 ms | **1290 ms** |
-| z12 | 572 ms | 874 ms | **1465 ms** | 796 ms | 509 ms | **1291 ms** |
-| z10 | 565 ms | 657 ms | **1205 ms** | 786 ms | 391 ms | **1175 ms** |
-| z9  | 580 ms | 485 ms | **1066 ms** | 791 ms | 498 ms | **1283 ms** |
+| z14 | 571 ms | 743 ms | **1305 ms** | 770 ms | 533 ms | **1321 ms** |
+| z12 | 556 ms | 843 ms | **1414 ms** | 796 ms | 438 ms | **1214 ms** |
+| z10 | 577 ms | 650 ms | **1217 ms** | 776 ms | 388 ms | **1162 ms** |
+| z9  | 563 ms | 456 ms | **1011 ms** | 783 ms | 500 ms | **1270 ms** |
 
 ![Time per tile](img/cog_vs_geozarr/time_per_tile.svg#only-light)
 ![Time per tile](img/cog_vs_geozarr/time_per_tile_dark.svg#only-dark)
 
 - **Open** is dominated by the first request (DNS + TLS + cold connection). It costs
-  ~560 ms for the COG (32 KB header) and ~790 ms for Zarr (215 KB `zarr.json`).
-- **Totals are close**: within 3% at z14 and z10. Zarr is 12% faster at z12 (half the bytes),
-  the COG 17% faster at z9 (half the bytes, the other way around).
+  ~570 ms for the COG (32 KB header) and ~780 ms for Zarr (215 KB `zarr.json`).
+- **Totals are close** at z14 (within 1%) and z10 (Zarr 5% faster). Zarr is 14% faster at
+  z12 (half the bytes), the COG 20% faster at z9 (half the bytes, the other way around).
 
 **Why is Zarr's tile step faster with *more* round trips?**
 
 Zarr's tile step (2 dependent GETs: shard index, then chunks) takes 390–530 ms, the COG's
-(1 GET for the blocks) 490–870 ms. From a laptop, bandwidth is part of the cost:
+(1 GET for the blocks) 460–840 ms. From a laptop, bandwidth is part of the cost:
 
 - Zarr downloads about half the bytes from z14 to z10, which pays for its extra round trip.
 - A bigger first read also warms the TCP connection: in an earlier run of this benchmark,
@@ -267,16 +278,16 @@ read per band, then one data read per band.
 
 | Tile | COG open | COG tile | **COG total** | Zarr open | Zarr tile | **Zarr total** |
 |---|---|---|---|---|---|---|
-| z14 | 503 ms | 1339 ms | **1854 ms** | 780 ms | 973 ms | **1764 ms** |
-| z12 | 502 ms | 1457 ms | **1949 ms** | 786 ms | 986 ms | **1767 ms** |
-| z10 | 490 ms | 1182 ms | **1684 ms** | 795 ms | 767 ms | **1566 ms** |
+| z14 | 501 ms | 1328 ms | **1829 ms** | 793 ms | 969 ms | **1767 ms** |
+| z12 | 488 ms | 1416 ms | **1896 ms** | 772 ms | 931 ms | **1694 ms** |
+| z10 | 480 ms | 1175 ms | **1651 ms** | 784 ms | 770 ms | **1556 ms** |
 
 ![Time per 3-band tile](img/cog_vs_geozarr/multiband_time.svg#only-light)
 ![Time per 3-band tile](img/cog_vs_geozarr/multiband_time_dark.svg#only-dark)
 
-- **GeoZarr is 5–9% faster** (1.57–1.77 s vs 1.68–1.95 s), with the same number of round trips.
-- COG **opens** faster (2.7 KB STAC Item vs 215 KB `zarr.json`, ~500 vs ~790 ms), but
-  its **tile** step is ~370–470 ms slower: it downloads more than twice the bytes, and with
+- **GeoZarr is 3–11% faster** (1.56–1.77 s vs 1.65–1.90 s), with the same number of round trips.
+- COG **opens** faster (2.7 KB STAC Item vs 215 KB `zarr.json`, ~490 vs ~780 ms), but
+  its **tile** step is ~360–490 ms slower: it downloads more than twice the bytes, and with
   one store per file each band's first request opens a new HTTPS connection, while the
   three GeoZarr index reads reuse the one store's connections.
 
@@ -301,7 +312,7 @@ read per band, then one data read per band.
   chunks still downloads chunks the tile doesn't need. At low zoom, a level picked finer
   than the COG's overview can cost more (z9).
 - **Metadata**: consolidated `zarr.json` pays off when reading several bands
-  or levels from the same store — and costs extra (~230 ms here) for a single-band tile.
+  or levels from the same store — and costs extra (~210 ms here) for a single-band tile.
 - **Several bands**: the round trips don't grow with the number of bands (bands are read
   concurrently): 3 for both, with the STAC Item playing the role of `zarr.json`. COG pays
   one header and one new connection per file; GeoZarr reads `zarr.json` once, reuses the
@@ -341,4 +352,4 @@ class TracingZarrStore(zarr.storage.WrapperStore):
         return zarr.abc.store.Store.get_ranges(self, key, byte_ranges, prototype=prototype, **kw)
 ```
 
-Versions: zarr-python 3.4.2, cast-value-rs 0.5.1, measured 2026-11-23.
+Versions: zarr-python 3.4.2, cast-value-rs 0.5.1, async-geotiff 0.5.1, obstore 0.12.1, measured 2026-11-27.

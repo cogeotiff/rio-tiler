@@ -6,32 +6,36 @@ Run with:
 
 === GroupReader.tile ===
 store calls: {'read_only': 1, '_ensure_open': 1, 'get': 2}
-1.254 test_sync_group_reader  tests/profiles/zarr_array_profiles.py:92
-├─ 0.663 open_group  zarr/api/synchronous.py:496
+1.341 test_sync_group_reader  tests/profiles/zarr_array_profiles.py:122
+├─ 0.833 open_group  zarr/api/synchronous.py:503
 │     [4 frames hidden]  zarr, concurrent, threading
-│        0.663 lock.acquire  <built-in>
-└─ 0.592 GroupReader.tile  rio_tiler/io/zarr.py:3846
-   └─ 0.592 GroupReader.part  rio_tiler/io/zarr.py:3910
-      └─ 0.592 _part  rio_tiler/io/zarr.py:3955
-         └─ 0.578 ArrayReader.part  rio_tiler/io/zarr.py:1432
-            └─ 0.567 ArrayReader._read  rio_tiler/io/zarr.py:1734
-               └─ 0.567 Array.get_orthogonal_selection  zarr/core/array.py:3103
+│        0.833 lock.acquire  <built-in>
+└─ 0.508 GroupReader.tile  rio_tiler/io/zarr.py:3860
+   └─ 0.508 GroupReader.part  rio_tiler/io/zarr.py:3924
+      └─ 0.508 _part  rio_tiler/io/zarr.py:3971
+         └─ 0.492 ArrayReader.part  rio_tiler/io/zarr.py:1440
+            └─ 0.482 ArrayReader._read  rio_tiler/io/zarr.py:1743
+               └─ 0.482 Array.get_orthogonal_selection  zarr/core/array.py:3114
                      [4 frames hidden]  zarr, concurrent, threading
-                        0.567 lock.acquire  <built-in>
+                        0.482 lock.acquire  <built-in>
 
 === AsyncGroupReader.tile ===
 store calls: {'read_only': 1, '_ensure_open': 1, 'get': 2}
-1.266 Handle._run  asyncio/events.py:92
-├─ 0.664 test_async_group_reader  tests/profiles/zarr_array_profiles.py:106
-│  └─ 0.663 open_group  zarr/api/asynchronous.py:814
-│        [13 frames hidden]  zarr, functools
-│           0.613 ObjectStore.get  zarr/storage/_obstore.py:97
-│           └─ 0.613 [await]  zarr/storage/_obstore.py
-├─ 0.444 _fetch_group  zarr/core/_coalesce.py:38
-│  └─ 0.444 ObjectStore.get  zarr/storage/_obstore.py:97
-│     └─ 0.444 [await]  zarr/storage/_obstore.py
-└─ 0.138 run  zarr/core/common.py:133
-      [7 frames hidden]  zarr
+1.183 _UnixSelectorEventLoop._run_once  asyncio/base_events.py:1966
+└─ 1.180 Handle._run  asyncio/events.py:92
+      [9 frames hidden]  zarr
+         0.757 test_async_group_reader  tests/profiles/zarr_array_profiles.py:136
+         └─ 0.755 open_group  zarr/api/asynchronous.py:829
+               [9 frames hidden]  zarr
+                  0.695 ObjectStore.get  zarr/storage/_obstore.py:97
+                  └─ 0.695 [await]  zarr/storage/_obstore.py
+         0.242 ObjectStore.get  zarr/storage/_obstore.py:97
+         └─ 0.242 [await]  zarr/storage/_obstore.py
+         0.022 _part  rio_tiler/io/zarr.py:2972
+         └─ 0.020 AsyncArrayReader.part  rio_tiler/io/zarr.py:870
+            └─ 0.014 run_sync  rio_tiler/utils.py:966
+               └─ 0.014 to_thread  asyncio/threads.py:12
+                  └─ 0.014 [await]  asyncio/threads.py
 
 """
 
