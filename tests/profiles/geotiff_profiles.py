@@ -6,36 +6,37 @@ Run with:
 
 === rasterio Reader.tile ===
 store calls: {'open: ': 1, 'tile: ': 1}
-2.332 test_sync_rasterio_reader  tests/profiles/geotiff_profiles.py:90
-├─ 1.742 Reader.__init__  <attrs generated methods rio_tiler.io.rasterio.Reader>:32
-│  └─ 1.742 Reader.__attrs_post_init__  rio_tiler/io/rasterio.py:94
-│     └─ 1.739 wrapper  rasterio/env.py:443
-│           [43 frames hidden]  rasterio, botocore, urllib3, http, so...
-│              0.725 _SSLSocket.read  <built-in>
-│              0.755 open  rasterio/__init__.py:100
-└─ 0.590 Reader.tile  rio_tiler/io/rasterio.py:263
-   └─ 0.584 Reader.part  rio_tiler/io/rasterio.py:314
-      └─ 0.584 part  rio_tiler/reader.py:315
-         └─ 0.577 read  rio_tiler/reader.py:71
+2.541 test_sync_rasterio_reader  tests/profiles/geotiff_profiles.py:119
+├─ 1.810 Reader.__init__  <attrs generated methods rio_tiler.io.rasterio.Reader>:32
+│  └─ 1.810 Reader.__attrs_post_init__  rio_tiler/io/rasterio.py:95
+│     └─ 1.809 wrapper  rasterio/env.py:443
+│           [54 frames hidden]  rasterio, botocore, urllib3, http, so...
+│              0.659 _SSLSocket.read  <built-in>
+│              0.819 open  rasterio/__init__.py:100
+└─ 0.730 Reader.tile  rio_tiler/io/rasterio.py:264
+   └─ 0.716 Reader.part  rio_tiler/io/rasterio.py:322
+      └─ 0.716 part  rio_tiler/reader.py:331
+         └─ 0.714 read  rio_tiler/reader.py:71
 
 === async-geotiff Reader.tile ===
 store calls: {'open: get_range_async': 1, 'tile: get_ranges_async': 1}
-1.120 Handle._run  asyncio/events.py:92
-├─ 0.550 CountingStore.get_range_async  tests/profiles/geotiff_profiles.py:50
-│  └─ 0.550 HTTPStore.get_range_async  obstore/store.py:212
-│     └─ 0.550 [await]  obstore/store.py
-├─ 0.515 CountingStore.get_ranges_async  tests/profiles/geotiff_profiles.py:57
-│  └─ 0.515 HTTPStore.get_ranges_async  obstore/store.py:254
-│     └─ 0.515 [await]  obstore/store.py
-└─ 0.055 test_async_geotiff_reader  tests/profiles/geotiff_profiles.py:113
-   └─ 0.053 Reader.tile  rio_tiler/io/geotiff.py:214
-      └─ 0.051 Reader.part  rio_tiler/io/geotiff.py:258
-         ├─ 0.021 Reader._read  rio_tiler/io/geotiff.py:643
-         │  └─ 0.020 GeoTIFF.read  async_geotiff/_read.py:34
-         │        [3 frames hidden]  async_geotiff
-         └─ 0.020 run_sync  rio_tiler/utils.py:952
-            └─ 0.020 to_thread  asyncio/threads.py:12
-               └─ 0.019 [await]  asyncio/threads.py
+1.260 _UnixSelectorEventLoop._run_once  asyncio/base_events.py:1966
+└─ 1.259 Handle._run  asyncio/events.py:92
+   ├─ 0.631 CountingStore.get_ranges_async  tests/profiles/geotiff_profiles.py:88
+   │  └─ 0.631 HTTPStore.get_ranges_async  obstore/store.py:254
+   │     └─ 0.631 [await]  obstore/store.py
+   ├─ 0.580 CountingStore.get_range_async  tests/profiles/geotiff_profiles.py:83
+   │  └─ 0.580 HTTPStore.get_range_async  obstore/store.py:212
+   │     └─ 0.580 [await]  obstore/store.py
+   └─ 0.048 test_async_geotiff_reader  tests/profiles/geotiff_profiles.py:142
+      └─ 0.043 Reader.tile  rio_tiler/io/geotiff.py:212
+         └─ 0.042 Reader.part  rio_tiler/io/geotiff.py:256
+            ├─ 0.016 Reader._read  rio_tiler/io/geotiff.py:630
+            │  └─ 0.015 GeoTIFF.read  async_geotiff/_read.py:34
+            │        [3 frames hidden]  async_geotiff
+            └─ 0.015 run_sync  rio_tiler/utils.py:966
+               └─ 0.015 to_thread  asyncio/threads.py:12
+                  └─ 0.015 [await]  asyncio/threads.py
 
 """
 
