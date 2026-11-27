@@ -1440,7 +1440,12 @@ class ImageData:
         )
 
         leading = self.array.shape[:-2]
-        destination = numpy.ma.zeros((int(numpy.prod(leading)), h, w), self.array.dtype)
+        # NOTE: Destination must start fully masked: GDAL skips the chunks
+        # with no source pixels, leaving the initial mask untouched.
+        destination = numpy.ma.masked_array(
+            numpy.zeros((int(numpy.prod(leading)), h, w), self.array.dtype),
+            mask=True,
+        )
 
         destination, _ = reproject(
             self._as_3d(self.array),

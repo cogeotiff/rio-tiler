@@ -914,3 +914,19 @@ async def test_run_sync_env():
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
         res = await utils.run_sync(_func)
     assert res == (True, "FALSE")
+
+
+@pytest.mark.parametrize(
+    "bounds,expected",
+    [
+        ((0.0, 0.0, 1.0, 1.0), False),
+        ((-math.inf, 0.0, math.inf, 1.0), False),
+        ((-1e23, -1e23, 1e23, 1e23), False),
+        ((math.inf, math.inf, math.inf, math.inf), True),
+        ((-math.inf, -math.inf, -math.inf, -math.inf), True),
+        ((math.nan, 0.0, 1.0, 1.0), True),
+    ],
+)
+def test_has_undefined_extent(bounds, expected):
+    """Check undefined extent of transformed bounds."""
+    assert utils.has_undefined_extent(bounds) is expected

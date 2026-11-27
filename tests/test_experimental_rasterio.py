@@ -3,10 +3,13 @@
 import os
 import warnings
 
+import morecantile
 import numpy
 import pytest
 import rasterio
+from rasterio.crs import CRS
 from rasterio.vrt import WarpedVRT
+from rasterio.warp import transform as transform_coords
 
 from rio_tiler.errors import (
     ExpressionMixingWarning,
@@ -631,3 +634,148 @@ def test_reader_feature():
         img = src.feature(feature, indexes=(1, 1), max_size=1024)
         assert img.data.shape == (2, 334, 1024)
         assert img.band_descriptions == ["b1", "b1"]
+
+
+def _assert_lat_lon_code(img, tol_km: float, south: bool = False):
+    """Check the values of the pole/antimeridian fixtures against the pixels location.
+
+    The fixtures encode the geographic position of each pixel:
+    value = round(|lat|) * 1000 + round(lon + 180) (% 360).
+
+    We decode the values and check the great-circle distance to the output
+    pixel center (integer rounding alone accounts for ~80 km).
+    """
+    assert isinstance(img.crs, CRS)
+    valid = ~numpy.ma.getmaskarray(img.array[0])
+    assert valid.any()
+
+    rows, cols = numpy.nonzero(valid)
+    xs, ys = img.transform * (cols + 0.5, rows + 0.5)
+    lons, lats = transform_coords(img.crs, "epsg:4326", xs.tolist(), ys.tolist())
+
+    values = img.array.data[0][valid]
+    dec_lat = (values // 1000).astype("float64") * (-1 if south else 1)
+    dec_lon = (values % 1000).astype("float64") - 180
+
+    lon1, lat1, lon2, lat2 = map(
+        numpy.radians, (numpy.array(lons), numpy.array(lats), dec_lon, dec_lat)
+    )
+    a = (
+        numpy.sin((lat2 - lat1) / 2) ** 2
+        + numpy.cos(lat1) * numpy.cos(lat2) * numpy.sin((lon2 - lon1) / 2) ** 2
+    )
+    dist = 6371 * 2 * numpy.arcsin(numpy.sqrt(numpy.clip(a, 0, 1)))
+    assert dist.max() < tol_km
+
+
+@pytest.mark.parametrize(
+    "src_path,tms,tile,tol_km",
+    [
+        ("cog_north_pole.tif", "WebMercatorQuad", (0, 0, 1), 150),
+        ("cog_north_pole.tif", "WebMercatorQuad", (4, 1, 4), 100),
+        ("cog_north_pole.tif", "WGS1984Quad", (2, 0, 2), 100),
+        ("cog_south_pole.tif", "WebMercatorQuad", (1, 7, 3), 100),
+        ("cog_south_pole.tif", "WGS1984Quad", (1, 1, 1), 150),
+        # Contains the south pole (used to raise ZeroDivisionError)
+        ("cog_south_pole.tif", "WGS1984Quad", (60, 63, 6), 100),
+        # Both sides of the antimeridian
+        ("cog_antimeridian.tif", "WebMercatorQuad", (0, 1, 3), 100),
+        ("cog_antimeridian.tif", "WebMercatorQuad", (7, 1, 3), 100),
+        ("cog_antimeridian.tif", "WGS1984Quad", (0, 16, 7), 100),
+        ("cog_antimeridian.tif", "WGS1984Quad", (255, 16, 7), 100),
+    ],
+)
+def test_reader_tile_poles_antimeridian(src_path, tms, tile, tol_km):
+    """Tiles over the poles and the antimeridian."""
+    with ExpReader(_path(src_path), tms=morecantile.tms.get(tms)) as src:
+        img = src.tile(*tile)
+        assert img.array.shape == (1, 256, 256)
+        _assert_lat_lon_code(img, tol_km, south="south" in src_path)
+
+
+@pytest.mark.parametrize(
+    "src_path,bbox,tol_km",
+    [
+        ("cog_north_pole.tif", (-180, 80, 180, 90), 150),
+        ("cog_north_pole.tif", (170, 60, 180, 75), 100),
+        ("cog_south_pole.tif", (-180, -90, 180, -80), 150),
+        ("cog_south_pole.tif", (-180, -90, 180, -60), 150),
+        ("cog_antimeridian.tif", (172, 62, 180, 70), 100),
+        ("cog_antimeridian.tif", (-180, 62, -168, 70), 100),
+        ("cog_antimeridian.tif", (179, 65, 180, 66), 100),
+        ("cog_antimeridian.tif", (-180, 65, -179, 66), 100),
+    ],
+)
+def test_reader_part_poles_antimeridian(src_path, bbox, tol_km):
+    """Part over the poles and the antimeridian (in EPSG:4326)."""
+    with ExpReader(_path(src_path)) as src:
+        img = src.part(bbox, max_size=512)
+        assert img.crs == CRS.from_epsg(4326)
+        _assert_lat_lon_code(img, tol_km, south="south" in src_path)
+
+        # NOTE: clamp to WebMercator latitude limits (lat=90 is at y=+inf)
+        w, s, e, n = bbox
+        bbox = (w, max(s, -85.05), e, min(n, 85.05))
+        img = src.part(bbox, max_size=512, dst_crs="epsg:3857")
+        assert img.crs == CRS.from_epsg(3857)
+        _assert_lat_lon_code(img, 150, south="south" in src_path)
+
+
+def test_reader_antimeridian_outside_utm_zone():
+    """Tiles/bbox far from the UTM zone can't be transformed to the dataset CRS."""
+    # lon 78.75 -> 81.56, ~97 degrees away from UTM 60N central meridian (177E)
+    tms = morecantile.tms.get("WGS1984Quad")
+    with ExpReader(_path("cog_antimeridian.tif"), tms=tms) as src:
+        assert not src.tile_exists(92, 31, 6)
+        with pytest.raises(TileOutsideBounds):
+            src.tile(92, 31, 6)
+
+        with pytest.raises(ValueError, match="do not intersect"):
+            src.part((78.75, 0.0, 81.5625, 2.8125))
+
+        # Tiles crossing the antimeridian still exist
+        assert src.tile_exists(0, 16, 7)
+        assert src.tile_exists(255, 16, 7)
+
+
+@pytest.mark.parametrize(
+    "src_path,dst_crs",
+    [
+        ("cog_north_pole.tif", "epsg:4326"),
+        ("cog_north_pole.tif", "epsg:3857"),
+        ("cog_south_pole.tif", "epsg:4326"),
+        ("cog_antimeridian.tif", "epsg:4326"),
+        ("cog_antimeridian.tif", "epsg:3857"),
+    ],
+)
+def test_reader_preview_poles_antimeridian(src_path, dst_crs):
+    """Preview in another CRS, over the poles and the antimeridian."""
+    with ExpReader(_path(src_path)) as src:
+        img = src.preview(dst_crs=dst_crs, max_size=512)
+        assert img.crs == CRS.from_user_input(dst_crs)
+        _assert_lat_lon_code(img, 150, south="south" in src_path)
+
+        if "antimeridian" in src_path:
+            # The output spans the whole world (dataset crosses the antimeridian)
+            # but only the dataset footprint is valid (not zeros)
+            assert img.width == 512
+            assert numpy.ma.getmaskarray(img.array).mean() > 0.9
+
+
+def test_reader_point_poles_antimeridian():
+    """Point over the poles and the antimeridian."""
+    with ExpReader(_path("cog_antimeridian.tif")) as src:
+        for lon in (180, -180, 179.999, -179.999):
+            assert src.point(lon, 66).data.tolist() == [66000]
+        assert src.point(175, 66).data.tolist() == [66355]
+        assert src.point(-175, 66).data.tolist() == [66005]
+
+    with ExpReader(_path("cog_south_pole.tif")) as src:
+        assert src.point(0, -90).data[0] // 1000 == 90
+        assert src.point(180, -89.5).data.tolist() == src.point(-180, -89.5).data.tolist()
+
+    with ExpReader(_path("cog_north_pole.tif")) as src:
+        # The North Pole is in the ocean (nodata)
+        pt = src.point(0, 90)
+        assert pt.data.tolist() == [-9999]
+        assert numpy.ma.getmaskarray(pt.array).tolist() == [True]

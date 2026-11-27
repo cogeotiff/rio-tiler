@@ -21,6 +21,7 @@ import attr
 import numpy
 from affine import Affine
 from morecantile import Tile
+from rasterio.crs import CRS
 from rasterio.dtypes import dtype_ranges
 from rasterio.enums import ColorInterp, Resampling
 from rasterio.transform import rowcol
@@ -46,6 +47,7 @@ from rio_tiler.types import BBox, Indexes, NoData, RIOResampling, WarpResampling
 from rio_tiler.utils import (
     cast_to_sequence,
     estimate_output,
+    has_undefined_extent,
     non_alpha_indexes,
     output_size,
 )
@@ -265,11 +267,19 @@ class Reader(RasterioReader):
 
         indexes = cast_to_sequence(indexes)
 
-        dst_crs = dst_crs or bounds_crs
+        bounds_crs = CRS.from_user_input(bounds_crs)
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else bounds_crs
 
         # 1. Transform output bbox from bounds_crs → output_crs
         if bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
+
+        # NOTE: the bbox can't be transformed when it's outside the validity area
+        # of the dataset CRS (e.g. far from a UTM zone)
+        if dst_crs != self.crs and has_undefined_extent(
+            transform_bounds(dst_crs, self.crs, *bbox, densify_pts=21)
+        ):
+            raise ValueError("Input BBOX and dataset's bounds do not intersect")
 
         # 2. Estimate output shape and bounds (in dataset CRS)
         height, width, src_bounds = estimate_output(
@@ -418,7 +428,7 @@ class Reader(RasterioReader):
         """
         self._warn_unsupported(kwargs)
 
-        dst_crs = dst_crs or self.crs
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else self.crs
 
         if indexes and expression:
             warnings.warn(

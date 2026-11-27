@@ -857,6 +857,20 @@ def normalize_bounds(bounds: BBox) -> BBox:
     )
 
 
+def has_undefined_extent(bounds: Sequence[float]) -> bool:
+    """Check if bounds returned by `rasterio.warp.transform_bounds` have an undefined extent.
+
+    When none of the points can be transformed (e.g. far outside the validity area
+    of a UTM zone), `transform_bounds` returns `NaN` or `(inf, inf, inf, inf)`.
+
+    NOTE: bounds with only some infinite values (e.g. bounds containing a pole)
+    have a defined (infinite) extent.
+
+    """
+    w, s, e, n = bounds
+    return bool(numpy.isnan([w, s, e, n, e - w, n - s]).any())
+
+
 def _validate_shape_input(shape: dict) -> dict:
     """Ensure input shape is valid and reduce features to geometry"""
 
