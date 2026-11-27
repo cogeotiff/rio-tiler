@@ -10,10 +10,10 @@
       
       
       
-        <link rel="canonical" href="https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/experimental/geotiff/">
+        <link rel="canonical" href="https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/geotiff/">
       
       
-        <link rel="prev" href="../zarr/">
+        <link rel="prev" href="../base/">
       
       
         <link rel="next" href="../rasterio/">
@@ -27,7 +27,7 @@
     
     
       
-        <title>rio_tiler.experimental.geotiff - rio-tiler</title>
+        <title>rio_tiler.io.geotiff - rio-tiler</title>
       
     
     
@@ -80,7 +80,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#rio_tiler.experimental.geotiff" class="md-skip">
+        <a href="#rio_tiler.io.geotiff" class="md-skip">
           Skip to content
         </a>
       
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              rio_tiler.experimental.geotiff
+              rio_tiler.io.geotiff
             
           </span>
         </div>
@@ -326,6 +326,12 @@
       
         
       
+        
+      
+        
+      
+        
+      
     
     
     
@@ -409,6 +415,90 @@
     
   
     Readers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../async-geotiff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async-GeoTIFF Reader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../geozarr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    GeoZarr Readers
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../../async-stac/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async-STAC Reader
   
 
     
@@ -553,12 +643,6 @@
       
         
       
-        
-      
-        
-      
-        
-      
     
     
     
@@ -567,7 +651,7 @@
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
         
           
           <div class="md-nav__link md-nav__container">
@@ -589,14 +673,14 @@
             </a>
             
               
-              <label class="md-nav__link " for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
+              <label class="md-nav__link " for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
                 <span class="md-nav__icon md-icon"></span>
               </label>
             
           </div>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="false">
-          <label class="md-nav__title" for="__nav_2_7">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
             <span class="md-nav__icon md-icon"></span>
             
   
@@ -615,34 +699,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../../../experimental/async-geotiff/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Async-GeoTIFF
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../../../../experimental/rasterio/" class="md-nav__link">
         
   
@@ -651,62 +707,6 @@
     
   
     Rasterio (read, then warp)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../experimental/async-stac/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Async-STAC
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../../../experimental/geozarr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Async/Sync GeoZarr
   
 
     
@@ -1700,8 +1700,10 @@
                 
   
   
+    
   
   
+  
     
     
       
@@ -1713,15 +1715,19 @@
       
         
       
+        
+      
+        
+      
     
     
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_1" checked>
         
           
           <label class="md-nav__link" for="__nav_6_1" id="__nav_6_1_label" tabindex="0">
@@ -1742,7 +1748,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_1_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6_1">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1760,7 +1766,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../io/base/" class="md-nav__link">
+      <a href="../base/" class="md-nav__link">
         
   
   
@@ -1785,10 +1791,269 @@
                 
   
   
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+      
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.geotiff
+  
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.geotiff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;geotiff
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" geotiff">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Reader
+      
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label=" Reader">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.maxzoom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;maxzoom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.minzoom" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;minzoom
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.__aenter__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__aenter__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.__aexit__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__aexit__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.__attrs_post_init__" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__attrs_post_init__
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader._get_overview_level" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;_get_overview_level
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader._read" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;_read
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.feature" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;feature
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.info" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;info
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.part" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;part
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.point" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;point
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.preview" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;preview
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.statistics" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;statistics
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.io.geotiff.Reader.tile" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;tile
+      
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
   
   
     <li class="md-nav__item">
-      <a href="../../io/rasterio/" class="md-nav__link">
+      <a href="../rasterio/" class="md-nav__link">
         
   
   
@@ -1816,7 +2081,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../io/stac/" class="md-nav__link">
+      <a href="../stac/" class="md-nav__link">
         
   
   
@@ -1844,7 +2109,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../io/xarray/" class="md-nav__link">
+      <a href="../xarray/" class="md-nav__link">
         
   
   
@@ -1852,6 +2117,34 @@
     
   
     rio_tiler.io.xarray
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zarr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.zarr
   
 
     
@@ -2083,16 +2376,10 @@
                 
   
   
-    
   
   
-  
     
     
-      
-        
-      
-        
       
         
       
@@ -2102,11 +2389,11 @@
     
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_3" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6_3" >
         
           
           <label class="md-nav__link" for="__nav_6_3" id="__nav_6_3_label" tabindex="0">
@@ -2127,7 +2414,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_6_3_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_6_3">
             <span class="md-nav__icon md-icon"></span>
             
@@ -2145,294 +2432,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../zarr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    rio_tiler.experimental.zarr
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
-      
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    rio_tiler.experimental.geotiff
-  
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="./" class="md-nav__link md-nav__link--active">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    rio_tiler.experimental.geotiff
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-      
-        
-
-<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
-  
-  
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      Table of contents
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;geotiff
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label=" geotiff">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Reader
-      
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label=" Reader">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.maxzoom" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;maxzoom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.minzoom" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;minzoom
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.__aenter__" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__aenter__
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.__aexit__" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__aexit__
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.__attrs_post_init__" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__attrs_post_init__
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader._get_overview_level" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;_get_overview_level
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader._read" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;_read
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.feature" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;feature
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.info" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;info
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.part" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;part
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.point" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;point
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.preview" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;preview
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.statistics" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;statistics
-      
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.tile" class="md-nav__link">
-    <span class="md-ellipsis">
-      
-        <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;tile
-      
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../rasterio/" class="md-nav__link">
+      <a href="../../experimental/rasterio/" class="md-nav__link">
         
   
   
@@ -2460,7 +2460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vsifile/" class="md-nav__link">
+      <a href="../../experimental/vsifile/" class="md-nav__link">
         
   
   
@@ -3133,7 +3133,7 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-module"></code>&nbsp;geotiff
@@ -3145,7 +3145,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-class"></code>&nbsp;Reader
@@ -3157,7 +3157,7 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.maxzoom" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.maxzoom" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;maxzoom
@@ -3168,7 +3168,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.minzoom" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.minzoom" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-attribute"></code>&nbsp;minzoom
@@ -3179,7 +3179,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.__aenter__" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.__aenter__" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__aenter__
@@ -3190,7 +3190,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.__aexit__" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.__aexit__" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__aexit__
@@ -3201,7 +3201,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.__attrs_post_init__" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.__attrs_post_init__" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;__attrs_post_init__
@@ -3212,7 +3212,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader._get_overview_level" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader._get_overview_level" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;_get_overview_level
@@ -3223,7 +3223,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader._read" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader._read" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;_read
@@ -3234,7 +3234,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.feature" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.feature" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;feature
@@ -3245,7 +3245,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.info" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.info" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;info
@@ -3256,7 +3256,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.part" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.part" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;part
@@ -3267,7 +3267,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.point" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.point" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;point
@@ -3278,7 +3278,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.preview" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.preview" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;preview
@@ -3289,7 +3289,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.statistics" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.statistics" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;statistics
@@ -3300,7 +3300,7 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#rio_tiler.experimental.geotiff.Reader.tile" class="md-nav__link">
+  <a href="#rio_tiler.io.geotiff.Reader.tile" class="md-nav__link">
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-method"></code>&nbsp;tile
@@ -3343,21 +3343,21 @@
   
 
 
-  <h1>rio_tiler.experimental.geotiff</h1>
+  <h1>rio_tiler.io.geotiff</h1>
 
 <div class="doc doc-object doc-module">
 
 
 
-<h2 id="rio_tiler.experimental.geotiff" class="doc doc-heading">
-            <span class="doc doc-object-name doc-module-name">rio_tiler.experimental.geotiff</span>
+<h2 id="rio_tiler.io.geotiff" class="doc doc-heading">
+            <span class="doc doc-object-name doc-module-name">rio_tiler.io.geotiff</span>
 
 
-<a href="#rio_tiler.experimental.geotiff" class="headerlink" title="Permanent link">&para;</a></h2>
+<a href="#rio_tiler.io.geotiff" class="headerlink" title="Permanent link">&para;</a></h2>
 
     <div class="doc doc-contents first">
 
-        <p>rio_tiler.experimental.geotiff reader: rio-tiler Async reader built on top of async-geotiff.</p>
+        <p>rio_tiler.io.geotiff reader: rio-tiler Async reader built on top of async-geotiff.</p>
 
 
 
@@ -3382,16 +3382,16 @@
 
 
 
-<h3 id="rio_tiler.experimental.geotiff.Reader" class="doc doc-heading">
+<h3 id="rio_tiler.io.geotiff.Reader" class="doc doc-heading">
             <span class="doc doc-object-name doc-class-name">Reader</span>
 
 
-<a href="#rio_tiler.experimental.geotiff.Reader" class="headerlink" title="Permanent link">&para;</a></h3>
+<a href="#rio_tiler.io.geotiff.Reader" class="headerlink" title="Permanent link">&para;</a></h3>
 
 
     <div class="doc doc-contents ">
             <p class="doc doc-class-bases">
-              Bases: <code><a class="autorefs autorefs-internal" title="AsyncBaseReader (rio_tiler.io.AsyncBaseReader)" href="../../io/base/#rio_tiler.io.base.AsyncBaseReader">AsyncBaseReader</a></code></p>
+              Bases: <code><a class="autorefs autorefs-internal" title="AsyncBaseReader (rio_tiler.io.AsyncBaseReader)" href="../base/#rio_tiler.io.base.AsyncBaseReader">AsyncBaseReader</a></code></p>
 
 
 
@@ -3419,7 +3419,7 @@
 
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.maxzoom" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.maxzoom" class="doc doc-heading">
             <span class="doc doc-object-name doc-attribute-name">maxzoom</span>
 
 
@@ -3427,7 +3427,7 @@
       <small class="doc doc-label doc-label-property"><code>property</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.maxzoom" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.maxzoom" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="n">maxzoom</span>
 </code></pre></div>
 
@@ -3443,7 +3443,7 @@
 
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.minzoom" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.minzoom" class="doc doc-heading">
             <span class="doc doc-object-name doc-attribute-name">minzoom</span>
 
 
@@ -3451,7 +3451,7 @@
       <small class="doc doc-label doc-label-property"><code>property</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.minzoom" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.minzoom" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="n">minzoom</span>
 </code></pre></div>
 
@@ -3469,7 +3469,7 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.__aenter__" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.__aenter__" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">__aenter__</span>
 
 
@@ -3477,7 +3477,7 @@
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.__aenter__" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.__aenter__" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">__aenter__</span><span class="p">()</span>
 </code></pre></div>
 
@@ -3493,7 +3493,7 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.__aexit__" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.__aexit__" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">__aexit__</span>
 
 
@@ -3501,7 +3501,7 @@
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.__aexit__" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.__aexit__" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">__aexit__</span><span class="p">(</span><span class="n">exc_type</span><span class="p">,</span> <span class="n">exc_value</span><span class="p">,</span> <span class="n">traceback</span><span class="p">)</span>
 </code></pre></div>
 
@@ -3517,11 +3517,11 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.__attrs_post_init__" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.__attrs_post_init__" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">__attrs_post_init__</span>
 
 
-<a href="#rio_tiler.experimental.geotiff.Reader.__attrs_post_init__" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.__attrs_post_init__" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">__attrs_post_init__</span><span class="p">()</span>
 </code></pre></div>
 
@@ -3537,11 +3537,11 @@
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader._get_overview_level" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader._get_overview_level" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">_get_overview_level</span>
 
 
-<a href="#rio_tiler.experimental.geotiff.Reader._get_overview_level" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader._get_overview_level" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_get_overview_level</span><span class="p">(</span><span class="n">desired_factor</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">resampling_method</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="RIOResampling
 
 
@@ -3565,7 +3565,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader._read" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader._read" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">_read</span>
 
 
@@ -3573,7 +3573,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader._read" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader._read" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">_read</span><span class="p">(</span><span class="n">dataset</span><span class="p">:</span> <span class="n"><span title="async_geotiff.GeoTIFF">GeoTIFF</span></span> <span class="o">|</span> <span class="n"><span title="async_geotiff.Overview">Overview</span></span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><span title="collections.abc.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">window</span><span class="p">:</span> <span class="n"><span title="async_geotiff.Window">Window</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">unscale</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">)</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="ImageData (rio_tiler.models.ImageData)" href="../../models/#rio_tiler.models.ImageData">ImageData</a></span>
 </code></pre></div>
 
@@ -3589,7 +3589,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.feature" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.feature" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">feature</span>
 
 
@@ -3597,7 +3597,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.feature" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.feature" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">feature</span><span class="p">(</span><span class="n">shape</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span><span class="p">,</span> <span class="n">dst_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">shape_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
 
 
@@ -3623,7 +3623,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>dst_crs</code></b>
-              (<code><span title="rio_tiler.experimental.rasterio.crs.CRS">CRS</span></code>, default:
+              (<code><span title="rio_tiler.io.rasterio.crs.CRS">CRS</span></code>, default:
                   <code>None</code>
 )
           –
@@ -3633,7 +3633,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>shape_crs</code></b>
-              (<code><span title="rio_tiler.experimental.rasterio.crs.CRS">CRS</span></code>, default:
+              (<code><span title="rio_tiler.io.rasterio.crs.CRS">CRS</span></code>, default:
                   <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
 )
           –
@@ -3723,7 +3723,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.info" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.info" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">info</span>
 
 
@@ -3731,7 +3731,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.info" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.info" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">info</span><span class="p">()</span> <span class="o">-&gt;</span> <span class="n"><a class="autorefs autorefs-internal" title="Info (rio_tiler.models.Info)" href="../../models/#rio_tiler.models.Info">Info</a></span>
 </code></pre></div>
 
@@ -3759,7 +3759,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.part" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.part" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">part</span>
 
 
@@ -3767,7 +3767,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.part" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.part" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">part</span><span class="p">(</span><span class="n">bbox</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="BBox
 
 
@@ -3808,7 +3808,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>dst_crs</code></b>
-              (<code><span title="rio_tiler.experimental.rasterio.crs.CRS">CRS</span></code>, default:
+              (<code><span title="rio_tiler.io.rasterio.crs.CRS">CRS</span></code>, default:
                   <code>None</code>
 )
           –
@@ -3818,7 +3818,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>bounds_crs</code></b>
-              (<code><span title="rio_tiler.experimental.rasterio.crs.CRS">CRS</span></code>, default:
+              (<code><span title="rio_tiler.io.rasterio.crs.CRS">CRS</span></code>, default:
                   <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
 )
           –
@@ -3928,7 +3928,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.point" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.point" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">point</span>
 
 
@@ -3936,7 +3936,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.point" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.point" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">point</span><span class="p">(</span><span class="n">lon</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">lat</span><span class="p">:</span> <span class="n"><span title="float">float</span></span><span class="p">,</span> <span class="n">coord_crs</span><span class="p">:</span> <span class="n"><span title="rasterio.crs.CRS">CRS</span></span> <span class="o">=</span> <span class="n"><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
 
 
@@ -3970,7 +3970,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>coord_crs</code></b>
-              (<code><span title="rio_tiler.experimental.rasterio.crs.CRS">CRS</span></code>, default:
+              (<code><span title="rio_tiler.io.rasterio.crs.CRS">CRS</span></code>, default:
                   <code><span title="rio_tiler.constants.WGS84_CRS">WGS84_CRS</span></code>
 )
           –
@@ -4030,7 +4030,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.preview" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.preview" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">preview</span>
 
 
@@ -4038,7 +4038,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.preview" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.preview" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">preview</span><span class="p">(</span><span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
 
 
@@ -4086,7 +4086,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
         </li>
         <li class="doc-section-item field-body">
             <b><code>dst_crs</code></b>
-              (<code><span title="rio_tiler.experimental.rasterio.crs.CRS">CRS</span></code>, default:
+              (<code><span title="rio_tiler.io.rasterio.crs.CRS">CRS</span></code>, default:
                   <code>None</code>
 )
           –
@@ -4176,7 +4176,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.statistics" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.statistics" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">statistics</span>
 
 
@@ -4184,7 +4184,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.statistics" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.statistics" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">statistics</span><span class="p">(</span><span class="n">categorical</span><span class="p">:</span> <span class="n"><span title="bool">bool</span></span> <span class="o">=</span> <span class="kc">False</span><span class="p">,</span> <span class="n">categories</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">percentiles</span><span class="p">:</span> <span class="n"><span title="list">list</span></span><span class="p">[</span><span class="n"><span title="int">int</span></span><span class="p">]</span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">hist_options</span><span class="p">:</span> <span class="n"><span title="dict">dict</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">max_size</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">=</span> <span class="mi">1024</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
 
 
@@ -4302,7 +4302,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
 <div class="doc doc-object doc-function">
 
 
-<h4 id="rio_tiler.experimental.geotiff.Reader.tile" class="doc doc-heading">
+<h4 id="rio_tiler.io.geotiff.Reader.tile" class="doc doc-heading">
             <span class="doc doc-object-name doc-function-name">tile</span>
 
 
@@ -4310,7 +4310,7 @@ with GDAL's rule (see <code>rio_tiler._warp.get_overview_level</code>).</p>
       <small class="doc doc-label doc-label-async"><code>async</code></small>
   </span>
 
-<a href="#rio_tiler.experimental.geotiff.Reader.tile" class="headerlink" title="Permanent link">&para;</a></h4>
+<a href="#rio_tiler.io.geotiff.Reader.tile" class="headerlink" title="Permanent link">&para;</a></h4>
 <div class="doc-signature codehilite"><pre><span></span><code><span class="nf">tile</span><span class="p">(</span><span class="n">tile_x</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_y</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tile_z</span><span class="p">:</span> <span class="n"><span title="int">int</span></span><span class="p">,</span> <span class="n">tilesize</span><span class="p">:</span> <span class="n"><span title="int">int</span></span> <span class="o">|</span> <span class="kc">None</span> <span class="o">=</span> <span class="kc">None</span><span class="p">,</span> <span class="n">indexes</span><span class="p">:</span> <span class="n"><a class="autorefs autorefs-internal" title="Indexes
 
 

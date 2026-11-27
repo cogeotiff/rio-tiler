@@ -5,11 +5,23 @@
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
+         <loc>https://cogeotiff.github.io/rio-tiler/latest/async-geotiff/</loc>
+         <lastmod>2026-11-27</lastmod>
+    </url>
+    <url>
+         <loc>https://cogeotiff.github.io/rio-tiler/latest/async-stac/</loc>
+         <lastmod>2026-11-27</lastmod>
+    </url>
+    <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/colormap/</loc>
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/contributing/</loc>
+         <lastmod>2026-11-27</lastmod>
+    </url>
+    <url>
+         <loc>https://cogeotiff.github.io/rio-tiler/latest/geozarr/</loc>
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
@@ -101,10 +113,6 @@
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/experimental/geotiff/</loc>
-         <lastmod>2026-11-27</lastmod>
-    </url>
-    <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/experimental/rasterio/</loc>
          <lastmod>2026-11-27</lastmod>
     </url>
@@ -113,11 +121,11 @@
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/experimental/zarr/</loc>
+         <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/base/</loc>
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/base/</loc>
+         <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/geotiff/</loc>
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
@@ -130,6 +138,10 @@
     </url>
     <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/xarray/</loc>
+         <lastmod>2026-11-27</lastmod>
+    </url>
+    <url>
+         <loc>https://cogeotiff.github.io/rio-tiler/latest/api/rio_tiler/io/zarr/</loc>
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
@@ -193,19 +205,7 @@
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/latest/experimental/async-geotiff/</loc>
-         <lastmod>2026-11-27</lastmod>
-    </url>
-    <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/latest/experimental/async-stac/</loc>
-         <lastmod>2026-11-27</lastmod>
-    </url>
-    <url>
          <loc>https://cogeotiff.github.io/rio-tiler/latest/experimental/geoxarray/</loc>
-         <lastmod>2026-11-27</lastmod>
-    </url>
-    <url>
-         <loc>https://cogeotiff.github.io/rio-tiler/latest/experimental/geozarr/</loc>
          <lastmod>2026-11-27</lastmod>
     </url>
     <url>

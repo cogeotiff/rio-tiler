@@ -10,31 +10,31 @@
       
       
       
-        <link rel="canonical" href="https://cogeotiff.github.io/rio-tiler/latest/experimental/geozarr/">
+        <link rel="canonical" href="https://cogeotiff.github.io/rio-tiler/latest/geozarr/">
       
       
-        <link rel="prev" href="../async-stac/">
+        <link rel="prev" href="../async-geotiff/">
       
       
-        <link rel="next" href="../geoxarray/">
+        <link rel="next" href="../async-stac/">
       
       
         
       
       
-      <link rel="icon" href="../../assets/images/favicon.png">
+      <link rel="icon" href="../assets/images/favicon.png">
       <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-9.7.7">
     
     
       
-        <title>Async/Sync GeoZarr - rio-tiler</title>
+        <title>GeoZarr Readers - rio-tiler</title>
       
     
     
-      <link rel="stylesheet" href="../../assets/stylesheets/main.ec1eaa64.min.css">
+      <link rel="stylesheet" href="../assets/stylesheets/main.ec1eaa64.min.css">
       
         
-        <link rel="stylesheet" href="../../assets/stylesheets/palette.ab4e12ef.min.css">
+        <link rel="stylesheet" href="../assets/stylesheets/palette.ab4e12ef.min.css">
       
       
 
@@ -53,9 +53,9 @@
       
     
     
-      <link rel="stylesheet" href="../../assets/_mkdocstrings.css">
+      <link rel="stylesheet" href="../assets/_mkdocstrings.css">
     
-    <script>__md_scope=new URL("../..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce(((e,_)=>(e<<5)-e+_.charCodeAt(0)),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
     
       
 
@@ -100,7 +100,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="../.." title="rio-tiler" class="md-header__button md-logo" aria-label="rio-tiler" data-md-component="logo">
+    <a href=".." title="rio-tiler" class="md-header__button md-logo" aria-label="rio-tiler" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -120,7 +120,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Async/Sync GeoZarr
+              GeoZarr Readers
             
           </span>
         </div>
@@ -253,7 +253,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="../.." title="rio-tiler" class="md-nav__button md-logo" aria-label="rio-tiler" data-md-component="logo">
+    <a href=".." title="rio-tiler" class="md-nav__button md-logo" aria-label="rio-tiler" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z"/></svg>
@@ -283,7 +283,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../.." class="md-nav__link">
+      <a href=".." class="md-nav__link">
         
   
   
@@ -313,6 +313,12 @@
   
     
     
+      
+        
+      
+        
+      
+        
       
         
       
@@ -375,7 +381,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../intro/" class="md-nav__link">
+      <a href="../intro/" class="md-nav__link">
         
   
   
@@ -403,7 +409,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../readers/" class="md-nav__link">
+      <a href="../readers/" class="md-nav__link">
         
   
   
@@ -431,194 +437,6 @@
   
   
     <li class="md-nav__item">
-      <a href="../../models/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Models
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../mosaic/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Mosaic
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../colormap/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Colormaps
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../supported_format/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Supported file formats
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-    
-  
-  
-  
-    
-    
-      
-        
-          
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-    <li class="md-nav__item md-nav__item--active md-nav__item--nested">
-      
-        
-        
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_7" checked>
-        
-          
-          <div class="md-nav__link md-nav__container">
-            <a href="../" class="md-nav__link ">
-              
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Experimental
-  
-
-    
-  </span>
-  
-  
-
-            </a>
-            
-              
-              <label class="md-nav__link " for="__nav_2_7" id="__nav_2_7_label" tabindex="0">
-                <span class="md-nav__icon md-icon"></span>
-              </label>
-            
-          </div>
-        
-        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_7_label" aria-expanded="true">
-          <label class="md-nav__title" for="__nav_2_7">
-            <span class="md-nav__icon md-icon"></span>
-            
-  
-    Experimental
-  
-
-          </label>
-          <ul class="md-nav__list" data-md-scrollfix>
-            
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
       <a href="../async-geotiff/" class="md-nav__link">
         
   
@@ -626,63 +444,7 @@
   <span class="md-ellipsis">
     
   
-    Async-GeoTIFF
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../rasterio/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Rasterio (read, then warp)
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../async-stac/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    Async-STAC
+    Async-GeoTIFF Reader
   
 
     
@@ -717,7 +479,7 @@
   <span class="md-ellipsis">
     
   
-    Async/Sync GeoZarr
+    GeoZarr Readers
   
 
     
@@ -735,7 +497,7 @@
   <span class="md-ellipsis">
     
   
-    Async/Sync GeoZarr
+    GeoZarr Readers
   
 
     
@@ -919,7 +681,243 @@
   
   
     <li class="md-nav__item">
-      <a href="../geoxarray/" class="md-nav__link">
+      <a href="../async-stac/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Async-STAC Reader
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../models/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Models
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../mosaic/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Mosaic
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../colormap/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Colormaps
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../supported_format/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Supported file formats
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    
+    
+      
+        
+          
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_2_10" >
+        
+          
+          <div class="md-nav__link md-nav__container">
+            <a href="../experimental/" class="md-nav__link ">
+              
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Experimental
+  
+
+    
+  </span>
+  
+  
+
+            </a>
+            
+              
+              <label class="md-nav__link " for="__nav_2_10" id="__nav_2_10_label" tabindex="0">
+                <span class="md-nav__icon md-icon"></span>
+              </label>
+            
+          </div>
+        
+        <nav class="md-nav" data-md-level="2" aria-labelledby="__nav_2_10_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_2_10">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+    Experimental
+  
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experimental/rasterio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rasterio (read, then warp)
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experimental/geoxarray/" class="md-nav__link">
         
   
   
@@ -947,7 +945,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../vsifile/" class="md-nav__link">
+      <a href="../experimental/vsifile/" class="md-nav__link">
         
   
   
@@ -1051,7 +1049,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/custom_readers/" class="md-nav__link">
+      <a href="../advanced/custom_readers/" class="md-nav__link">
         
   
   
@@ -1079,7 +1077,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/mosaic_backend/" class="md-nav__link">
+      <a href="../advanced/mosaic_backend/" class="md-nav__link">
         
   
   
@@ -1107,7 +1105,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/feature/" class="md-nav__link">
+      <a href="../advanced/feature/" class="md-nav__link">
         
   
   
@@ -1135,7 +1133,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/statistics/" class="md-nav__link">
+      <a href="../advanced/statistics/" class="md-nav__link">
         
   
   
@@ -1163,7 +1161,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/dynamic_tiler/" class="md-nav__link">
+      <a href="../advanced/dynamic_tiler/" class="md-nav__link">
         
   
   
@@ -1191,7 +1189,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/tms/" class="md-nav__link">
+      <a href="../advanced/tms/" class="md-nav__link">
         
   
   
@@ -1293,7 +1291,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Using-rio-tiler/" class="md-nav__link">
+      <a href="../examples/Using-rio-tiler/" class="md-nav__link">
         
   
   
@@ -1321,7 +1319,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Using-rio-tiler-mosaic/" class="md-nav__link">
+      <a href="../examples/Using-rio-tiler-mosaic/" class="md-nav__link">
         
   
   
@@ -1349,7 +1347,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Using-tms/" class="md-nav__link">
+      <a href="../examples/Using-tms/" class="md-nav__link">
         
   
   
@@ -1377,7 +1375,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Using-rio-tiler-STACReader/" class="md-nav__link">
+      <a href="../examples/Using-rio-tiler-STACReader/" class="md-nav__link">
         
   
   
@@ -1405,7 +1403,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Using-nonEarth-dataset/" class="md-nav__link">
+      <a href="../examples/Using-nonEarth-dataset/" class="md-nav__link">
         
   
   
@@ -1433,7 +1431,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Using-rio-tiler-XarrayReader/" class="md-nav__link">
+      <a href="../examples/Using-rio-tiler-XarrayReader/" class="md-nav__link">
         
   
   
@@ -1461,7 +1459,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/STAC_datacube_support/" class="md-nav__link">
+      <a href="../examples/STAC_datacube_support/" class="md-nav__link">
         
   
   
@@ -1489,7 +1487,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Working-with-GeoZarr/" class="md-nav__link">
+      <a href="../examples/Working-with-GeoZarr/" class="md-nav__link">
         
   
   
@@ -1517,7 +1515,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../examples/Using-rio-tiler-in-lonboard/" class="md-nav__link">
+      <a href="../examples/Using-rio-tiler-in-lonboard/" class="md-nav__link">
         
   
   
@@ -1615,7 +1613,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/v2_migration/" class="md-nav__link">
+      <a href="../migrations/v2_migration/" class="md-nav__link">
         
   
   
@@ -1643,7 +1641,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/v3_migration/" class="md-nav__link">
+      <a href="../migrations/v3_migration/" class="md-nav__link">
         
   
   
@@ -1671,7 +1669,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/v4_migration/" class="md-nav__link">
+      <a href="../migrations/v4_migration/" class="md-nav__link">
         
   
   
@@ -1699,7 +1697,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/v5_migration/" class="md-nav__link">
+      <a href="../migrations/v5_migration/" class="md-nav__link">
         
   
   
@@ -1727,7 +1725,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/v7_migration/" class="md-nav__link">
+      <a href="../migrations/v7_migration/" class="md-nav__link">
         
   
   
@@ -1755,7 +1753,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/v9_migration/" class="md-nav__link">
+      <a href="../migrations/v9_migration/" class="md-nav__link">
         
   
   
@@ -1783,7 +1781,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../migrations/v10_migration/" class="md-nav__link">
+      <a href="../migrations/v10_migration/" class="md-nav__link">
         
   
   
@@ -1903,6 +1901,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -1950,7 +1952,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/io/base/" class="md-nav__link">
+      <a href="../api/rio_tiler/io/base/" class="md-nav__link">
         
   
   
@@ -1978,7 +1980,35 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/io/rasterio/" class="md-nav__link">
+      <a href="../api/rio_tiler/io/geotiff/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.geotiff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/rio_tiler/io/rasterio/" class="md-nav__link">
         
   
   
@@ -2006,7 +2036,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/io/stac/" class="md-nav__link">
+      <a href="../api/rio_tiler/io/stac/" class="md-nav__link">
         
   
   
@@ -2034,7 +2064,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/io/xarray/" class="md-nav__link">
+      <a href="../api/rio_tiler/io/xarray/" class="md-nav__link">
         
   
   
@@ -2042,6 +2072,34 @@
     
   
     rio_tiler.io.xarray
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/rio_tiler/io/zarr/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.io.zarr
   
 
     
@@ -2123,7 +2181,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/mosaic/reader/" class="md-nav__link">
+      <a href="../api/rio_tiler/mosaic/reader/" class="md-nav__link">
         
   
   
@@ -2204,7 +2262,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/mosaic/methods/base/" class="md-nav__link">
+      <a href="../api/rio_tiler/mosaic/methods/base/" class="md-nav__link">
         
   
   
@@ -2232,7 +2290,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/mosaic/methods/defaults/" class="md-nav__link">
+      <a href="../api/rio_tiler/mosaic/methods/defaults/" class="md-nav__link">
         
   
   
@@ -2277,10 +2335,6 @@
   
     
     
-      
-        
-      
-        
       
         
       
@@ -2333,63 +2387,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/experimental/zarr/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    rio_tiler.experimental.zarr
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/rio_tiler/experimental/geotiff/" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-    rio_tiler.experimental.geotiff
-  
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="../../api/rio_tiler/experimental/rasterio/" class="md-nav__link">
+      <a href="../api/rio_tiler/experimental/rasterio/" class="md-nav__link">
         
   
   
@@ -2417,7 +2415,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/experimental/vsifile/" class="md-nav__link">
+      <a href="../api/rio_tiler/experimental/vsifile/" class="md-nav__link">
         
   
   
@@ -2453,7 +2451,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/colormap/" class="md-nav__link">
+      <a href="../api/rio_tiler/colormap/" class="md-nav__link">
         
   
   
@@ -2481,7 +2479,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/constants/" class="md-nav__link">
+      <a href="../api/rio_tiler/constants/" class="md-nav__link">
         
   
   
@@ -2509,7 +2507,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/errors/" class="md-nav__link">
+      <a href="../api/rio_tiler/errors/" class="md-nav__link">
         
   
   
@@ -2537,7 +2535,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/expression/" class="md-nav__link">
+      <a href="../api/rio_tiler/expression/" class="md-nav__link">
         
   
   
@@ -2565,7 +2563,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/models/" class="md-nav__link">
+      <a href="../api/rio_tiler/models/" class="md-nav__link">
         
   
   
@@ -2593,7 +2591,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/profiles/" class="md-nav__link">
+      <a href="../api/rio_tiler/profiles/" class="md-nav__link">
         
   
   
@@ -2621,7 +2619,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/reader/" class="md-nav__link">
+      <a href="../api/rio_tiler/reader/" class="md-nav__link">
         
   
   
@@ -2649,7 +2647,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/tasks/" class="md-nav__link">
+      <a href="../api/rio_tiler/tasks/" class="md-nav__link">
         
   
   
@@ -2677,7 +2675,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/types/" class="md-nav__link">
+      <a href="../api/rio_tiler/types/" class="md-nav__link">
         
   
   
@@ -2705,7 +2703,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../api/rio_tiler/utils/" class="md-nav__link">
+      <a href="../api/rio_tiler/utils/" class="md-nav__link">
         
   
   
@@ -2740,7 +2738,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../advanced/benchmark.html" class="md-nav__link">
+      <a href="../advanced/benchmark.html" class="md-nav__link">
         
   
   
@@ -2767,7 +2765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../contributing/" class="md-nav__link">
+      <a href="../contributing/" class="md-nav__link">
         
   
   
@@ -2794,7 +2792,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../release-notes/" class="md-nav__link">
+      <a href="../release-notes/" class="md-nav__link">
         
   
   
@@ -2843,7 +2841,7 @@
         
           
           <div class="md-nav__link md-nav__container">
-            <a href="../../blog/" class="md-nav__link ">
+            <a href="../blog/" class="md-nav__link ">
               
   
   
@@ -2940,7 +2938,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../blog/archive/2026/" class="md-nav__link">
+      <a href="../blog/archive/2026/" class="md-nav__link">
         
   
   
@@ -3029,7 +3027,7 @@
   
   
     <li class="md-nav__item">
-      <a href="../../blog/category/benchmarks/" class="md-nav__link">
+      <a href="../blog/category/benchmarks/" class="md-nav__link">
         
   
   
@@ -3257,7 +3255,7 @@
   
 
 
-  <h1>Async/Sync GeoZarr</h1>
+  <h1>GeoZarr Readers</h1>
 
 <p>Asynchronous rio-tiler readers built on top <a href="https://zarr.readthedocs.io/"><code>zarr-python</code></a> that can read zarr groups or arrays.</p>
 <p>Required dependencies:</p>
@@ -3266,7 +3264,7 @@
 <li><code>obstore</code> </li>
 <li><code>isochron</code></li>
 </ul>
-<p>You can install the dependencies with `python -m pip install "rio-tiler[zarr]".</p>
+<p>You can install the dependencies with <code>python -m pip install "rio-tiler[zarr]"</code>.</p>
 <h2 id="mini-spec">Mini Spec<a class="headerlink" href="#mini-spec" title="Permanent link">&para;</a></h2>
 <h3 id="arrays">Arrays<a class="headerlink" href="#arrays" title="Permanent link">&para;</a></h3>
 <p>If not provided as attribute, the <code>AsyncArrayReader</code>/<code>ArrayReader</code> will require some zarr-metadata/conventions:</p>
@@ -3414,7 +3412,7 @@
 <span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">rasterio.crs</span><span class="w"> </span><span class="kn">import</span> <span class="n">CRS</span>
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncArrayReader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncArrayReader</span>
 
 <span class="c1"># Create Obstore Store</span>
 <span class="n">store</span> <span class="o">=</span> <span class="n">S3Store</span><span class="p">(</span><span class="s2">"mur-sst/zarr-v1"</span><span class="p">,</span> <span class="n">skip_signature</span><span class="o">=</span><span class="kc">True</span><span class="p">,</span> <span class="n">region</span><span class="o">=</span><span class="s2">"us-west-2"</span><span class="p">)</span>
@@ -3536,7 +3534,7 @@ for the non-spatial dimensions:</p>
 <span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncGroupReader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncGroupReader</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imshow</span>
 
@@ -3624,7 +3622,7 @@ for the non-spatial dimensions:</p>
 <span class="kn">import</span><span class="w"> </span><span class="nn">zarr</span>
 <span class="kn">from</span><span class="w"> </span><span class="nn">zarr.storage</span><span class="w"> </span><span class="kn">import</span> <span class="n">ObjectStore</span>
 
-<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.experimental.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncGroupReader</span>
+<span class="kn">from</span><span class="w"> </span><span class="nn">rio_tiler.io.zarr</span><span class="w"> </span><span class="kn">import</span> <span class="n">AsyncGroupReader</span>
 
 <span class="kn">from</span><span class="w"> </span><span class="nn">matplotlib.pyplot</span><span class="w"> </span><span class="kn">import</span> <span class="n">imshow</span>
 
@@ -3802,10 +3800,10 @@ for the non-spatial dimensions:</p>
     
       
       
-      <script id="__config" type="application/json">{"annotate": null, "base": "../..", "features": ["content.code.annotate", "content.code.copy", "navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
+      <script id="__config" type="application/json">{"annotate": null, "base": "..", "features": ["content.code.annotate", "content.code.copy", "navigation.indexes", "navigation.instant", "navigation.tracking", "search.suggest", "search.share"], "search": "../assets/javascripts/workers/search.2c215733.min.js", "tags": null, "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version": "Select version"}, "version": {"default": "latest", "provider": "mike"}}</script>
     
     
-      <script src="../../assets/javascripts/bundle.d7400e89.min.js"></script>
+      <script src="../assets/javascripts/bundle.d7400e89.min.js"></script>
       
     
   <script data-mkdocs-jupyter-mathjax="{&quot;url&quot;: &quot;https://cdn.jsdelivr.net/npm/mathjax@4.1.3/tex-mml-chtml.js&quot;, &quot;version&quot;: 4}">
