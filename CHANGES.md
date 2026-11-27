@@ -1,5 +1,8 @@
+# Release Notes
 
-# Unreleased
+## Unreleased
+
+## [10.0.0a1](https://github.com/cogeotiff/rio-tiler/compare/9.4.13...10.0.0a1) (2026-11-27)
 
 ### Misc Breaking changes
 
