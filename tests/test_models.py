@@ -1476,3 +1476,23 @@ def test_create_from_list_stack_on_dim_2d():
 
     with pytest.raises(InvalidPointDataError):
         PointData.create_from_list([pt1, pt3], stack_on_dim="variables")
+
+
+def test_image_reproject_uncovered_area_is_masked():
+    """Output pixels not covered by the source are masked.
+
+    A UTM 60N image crossing the antimeridian reprojected to EPSG:4326 spans the
+    whole world; GDAL skips the output chunks with no source pixels, which must
+    stay masked (not valid zeros).
+    """
+    img = ImageData(
+        numpy.ma.MaskedArray(numpy.ones((1, 200, 200), dtype="int32")),
+        crs=CRS.from_epsg(32660),
+        bounds=(186300.0, 6873300.0, 1086300.0, 7773300.0),
+    )
+    reprojected = img.reproject(CRS.from_epsg(4326))
+    w, _, e, _ = reprojected.bounds
+    assert e - w > 359  # whole world width
+    valid = ~numpy.ma.getmaskarray(reprojected.array)
+    assert 0 < valid.mean() < 0.1
+    assert (reprojected.array.data[valid] == 1).all()

@@ -444,3 +444,26 @@ def test_get_downsampling_factor():
     )
     assert 0.9 < full < 1.1
     assert half == 2 * full
+
+
+def test_warp_source_with_pole():
+    """Warp a source containing the south pole to a geographic CRS.
+
+    `calculate_default_transform` returns a null resolution for such a source,
+    which must not be used by the single pass warp (used to raise ZeroDivisionError).
+    """
+    img = ImageData(
+        numpy.ma.MaskedArray(numpy.ones((1, 26, 6), dtype="int32")),
+        crs=CRS.from_epsg(3031),
+        bounds=(-62500.0, -12500.0, 12500.0, 312500.0),
+    )
+    out = warp(
+        img,
+        dst_crs=WGS84,
+        dst_bounds=(-11.25, -90.0, -8.4375, -87.1875),
+        dst_width=256,
+        dst_height=256,
+    )
+    assert out.array.shape == (1, 256, 256)
+    assert not out.array.mask.all()
+    assert (out.array[~out.array.mask] == 1).all()

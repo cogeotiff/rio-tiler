@@ -857,6 +857,20 @@ def normalize_bounds(bounds: BBox) -> BBox:
     )
 
 
+def has_undefined_extent(bounds: Sequence[float]) -> bool:
+    """Check if bounds returned by `rasterio.warp.transform_bounds` have an undefined extent.
+
+    When none of the points can be transformed (e.g. far outside the validity area
+    of a UTM zone), `transform_bounds` returns `NaN` or `(inf, inf, inf, inf)`.
+
+    NOTE: bounds with only some infinite values (e.g. bounds containing a pole)
+    have a defined (infinite) extent.
+
+    """
+    w, s, e, n = bounds
+    return bool(numpy.isnan([w, s, e, n, e - w, n - s]).any())
+
+
 def _validate_shape_input(shape: dict) -> dict:
     """Ensure input shape is valid and reduce features to geometry"""
 
@@ -1072,6 +1086,11 @@ def estimate_output(
         output_bounds = transform_bounds(
             output_crs, dataset_crs, *output_bounds, densify_pts=21
         )
+
+        # NOTE: the bbox can't be transformed when it's outside the validity
+        # area of the dataset CRS (e.g. far from a UTM zone)
+        if has_undefined_extent(output_bounds):
+            raise ValueError("Input BBOX and dataset's bounds do not intersect")
 
         # Compute native output shape in dataset resolution/CRS
         native_src_w = max(

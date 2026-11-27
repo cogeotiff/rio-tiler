@@ -37,6 +37,7 @@ nav:
     - Experimental:
       - experimental/index.md
       - Async-GeoTIFF: 'experimental/async-geotiff.md'
+      - Rasterio (read, then warp): 'experimental/rasterio.md'
       - Async-STAC: 'experimental/async-stac.md'
       - Async/Sync GeoZarr: 'experimental/geozarr.md'
       - GeoXarray: 'experimental/geoxarray.md'
@@ -80,6 +81,7 @@ nav:
     - rio_tiler.experimental:
       - rio_tiler.experimental.zarr: api/rio_tiler/experimental/zarr.md
       - rio_tiler.experimental.geotiff: api/rio_tiler/experimental/geotiff.md
+      - rio_tiler.experimental.rasterio: api/rio_tiler/experimental/rasterio.md
       - rio_tiler.experimental.vsifile: api/rio_tiler/experimental/vsifile.md
     - rio_tiler.colormap: api/rio_tiler/colormap.md
     - rio_tiler.constants: api/rio_tiler/constants.md

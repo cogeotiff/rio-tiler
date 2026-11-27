@@ -914,3 +914,33 @@ async def test_run_sync_env():
     with rasterio.Env(GDAL_DISABLE_READDIR_ON_OPEN="FALSE"):
         res = await utils.run_sync(_func)
     assert res == (True, "FALSE")
+
+
+@pytest.mark.parametrize(
+    "bounds,expected",
+    [
+        ((0.0, 0.0, 1.0, 1.0), False),
+        ((-math.inf, 0.0, math.inf, 1.0), False),
+        ((-1e23, -1e23, 1e23, 1e23), False),
+        ((math.inf, math.inf, math.inf, math.inf), True),
+        ((-math.inf, -math.inf, -math.inf, -math.inf), True),
+        ((math.nan, 0.0, 1.0, 1.0), True),
+    ],
+)
+def test_has_undefined_extent(bounds, expected):
+    """Check undefined extent of transformed bounds."""
+    assert utils.has_undefined_extent(bounds) is expected
+
+
+def test_estimate_output_outside_crs_validity_area():
+    """Bounds which can't be transformed to the dataset CRS do not intersect."""
+    # UTM 60N dataset, bbox ~97 degrees away from the zone central meridian (177E)
+    with pytest.raises(ValueError, match="do not intersect"):
+        utils.estimate_output(
+            dataset_crs=CRS.from_epsg(32660),
+            dataset_transform=rasterio.Affine(
+                450.0, 0.0, 186300.0, 0.0, -450.0, 7773300.0
+            ),
+            output_bounds=(78.75, 0.0, 81.5625, 2.8125),
+            output_crs=CRS.from_epsg(4326),
+        )

@@ -1291,3 +1291,27 @@ def test_tile_below_minzoom_warns():
         with warnings.catch_warnings():
             warnings.simplefilter("error", ZoomOutsideNativeRangeWarning)
             src.tile(tile.x, tile.y, tile.z)
+
+
+def test_tile_exists_outside_crs_validity_area():
+    """Tiles which can't be transformed to the dataset CRS do not exist.
+
+    The dataset is in UTM 60N and crosses the antimeridian. Tiles ~97 degrees away
+    from the UTM zone central meridian (177E) can't be transformed to the dataset
+    CRS (`transform_bounds` returns `(inf, inf, inf, inf)`).
+    """
+    tms = morecantile.tms.get("WGS1984Quad")
+    with Reader(os.path.join(PREFIX, "cog_antimeridian.tif"), tms=tms) as src:
+        # lon 78.75 -> 81.5625, lat 0 -> 2.8125
+        assert not src.tile_exists(92, 31, 6)
+        with pytest.raises(TileOutsideBounds):
+            src.tile(92, 31, 6)
+
+        # Tiles on both sides of the antimeridian
+        assert src.tile_exists(0, 16, 7)
+        assert src.tile_exists(255, 16, 7)
+
+    # Tiles containing the pole have infinite (not undefined) bounds in the
+    # dataset CRS and still exist
+    with Reader(os.path.join(PREFIX, "cog_south_pole.tif"), tms=tms) as src:
+        assert src.tile_exists(60, 63, 6)

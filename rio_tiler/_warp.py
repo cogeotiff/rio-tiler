@@ -149,16 +149,21 @@ def warp(
     if (img.crs == dst_crs) and resampling_method != "gauss":
         warp_method = resampling_method
 
-    # Compute native resolution in dst_crs
-    dst_transform, _, _ = calculate_default_transform(
-        img.crs, dst_crs, img.width, img.height, *img.bounds
-    )
+    single_pass = not ((img.crs == dst_crs) and resampling_method == "gauss")
 
-    w_res = dst_transform.a  # positive
-    h_res = dst_transform.e  # negative (north-up)
-    w, s, e, n = dst_bounds
-    native_width = max(1, round((e - w) / w_res))
-    native_height = max(1, round((s - n) / h_res))
+    # Native resolution in dst_crs, only needed for the two steps (gauss) warp.
+    # NOTE: not computed for the single pass warp because `calculate_default_transform`
+    # can return a null resolution (e.g. when the source contains a pole and dst_crs
+    # is geographic).
+    if not single_pass:
+        dst_transform, _, _ = calculate_default_transform(
+            img.crs, dst_crs, img.width, img.height, *img.bounds
+        )
+        w_res = dst_transform.a  # positive
+        h_res = dst_transform.e  # negative (north-up)
+        w, s, e, n = dst_bounds
+        native_width = max(1, round((e - w) / w_res))
+        native_height = max(1, round((s - n) / h_res))
 
     # NOTE: N-D data (*leading, height, width) are warped as (prod(leading), height, width)
     leading = img.array.shape[:-2]
@@ -192,13 +197,12 @@ def warp(
             tile_h = min(_TILE_SIZE, dst_height - dst_row)
             tile_w = min(_TILE_SIZE, dst_width - dst_col)
 
-            single_pass = not ((img.crs == dst_crs) and resampling_method == "gauss")
             if single_pass:
                 # Warp directly onto the output tile grid
                 chunk_h, chunk_w = tile_h, tile_w
                 chunk_transform = from_bounds(
                     *dst_bounds, dst_width, dst_height
-                ) * Affine.translation(dst_col, dst_row)
+                ) @ Affine.translation(dst_col, dst_row)
 
             else:
                 # Map output tile → intermediate window (proportional)

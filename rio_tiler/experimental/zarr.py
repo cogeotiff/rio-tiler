@@ -894,7 +894,8 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        dst_crs = dst_crs or bounds_crs
+        bounds_crs = CRS.from_user_input(bounds_crs)
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else bounds_crs
 
         # 1. Transform output bbox from bounds_crs → output_crs
         if bounds_crs != dst_crs:
@@ -974,7 +975,7 @@ class AsyncArrayReader(AsyncBaseReader, ArrayMixin):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        dst_crs = dst_crs or self.crs
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else self.crs
 
         # 1. Determine output shape
         # get height/width of the dataset in the output CRS
@@ -1463,7 +1464,8 @@ class ArrayReader(BaseReader, ArrayMixin):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        dst_crs = dst_crs or bounds_crs
+        bounds_crs = CRS.from_user_input(bounds_crs)
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else bounds_crs
 
         # 1. Transform output bbox from bounds_crs → output_crs
         if bounds_crs != dst_crs:
@@ -1542,7 +1544,7 @@ class ArrayReader(BaseReader, ArrayMixin):
             rio_tiler.models.ImageData: ImageData instance with data, mask and input spatial info.
 
         """
-        dst_crs = dst_crs or self.crs
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else self.crs
 
         # 1. Determine output shape
         # get height/width of the dataset in the output CRS
@@ -2954,7 +2956,8 @@ class AsyncGroupReader(AsyncBaseReader, GroupMixin):
         """
         variables = cast_to_sequence(variables)
 
-        dst_crs = dst_crs or bounds_crs
+        bounds_crs = CRS.from_user_input(bounds_crs)
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else bounds_crs
 
         if bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)
@@ -3952,7 +3955,8 @@ class GroupReader(BaseReader, GroupMixin):
         """
         variables = cast_to_sequence(variables)
 
-        dst_crs = dst_crs or bounds_crs
+        bounds_crs = CRS.from_user_input(bounds_crs)
+        dst_crs = CRS.from_user_input(dst_crs) if dst_crs else bounds_crs
 
         if bounds_crs != dst_crs:
             bbox = transform_bounds(bounds_crs, dst_crs, *bbox, densify_pts=21)

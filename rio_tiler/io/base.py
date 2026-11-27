@@ -32,6 +32,7 @@ from rio_tiler.types import AssetInfo, AssetType, AssetWithOptions, BBox, Indexe
 from rio_tiler.utils import (
     CRS_to_uri,
     cast_to_sequence,
+    has_undefined_extent,
     inherit_rasterio_env,
     normalize_bounds,
 )
@@ -198,7 +199,12 @@ class SpatialMixin:
 
         tile_bounds = cast(BBox, tile_bounds)
 
-        # If tile_bounds has non-finite value in the dataset CRS we return True
+        # The tile can't be transformed to the dataset CRS (e.g. far outside the
+        # validity area of a UTM zone)
+        if has_undefined_extent(tile_bounds):
+            return False
+
+        # Partially infinite bounds (e.g. a tile containing a pole): the tile might intersect
         if not all(numpy.isfinite(tile_bounds)):
             return True
 
