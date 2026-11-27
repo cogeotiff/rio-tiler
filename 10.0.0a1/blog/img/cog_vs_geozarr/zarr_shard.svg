@@ -1,0 +1,207 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1000 430" width="1000" height="430" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="GeoZarr: shard index, then chunks">
+<style>
+  :root { --bg:#ffffff; --panel:#f6f7f9; --fg:#1f2328; --muted:#59636e; --line:#d0d7de;
+          --cog:#2563eb; --cog-soft:#dbe6fd; --zarr:#c2410c; --zarr-soft:#fde4d6;
+          --cog-o:#a8c1f7; --zarr-o:#e7b3a0; }
+  text { white-space:pre; }
+  .bg { fill:none; } .panel { fill:var(--panel); stroke:var(--line); }
+  .t { fill:var(--fg); font-size:13px; } .s { fill:var(--muted); font-size:11.5px; }
+  .xs { fill:var(--muted); font-size:10.5px; }
+  .h1 { fill:var(--fg); font-size:20px; font-weight:600; }
+  .h2c { fill:var(--cog); font-size:16px; font-weight:600; }
+  .h2z { fill:var(--zarr); font-size:16px; font-weight:600; }
+  .b { fill:var(--fg); font-size:13px; font-weight:600; }
+  .bc { fill:var(--cog); font-size:13px; font-weight:600; }
+  .bz { fill:var(--zarr); font-size:13px; font-weight:600; }
+  .mono { fill:var(--fg); font-size:11.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .monos { fill:var(--muted); font-size:10.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .onc { fill:#ffffff; font-size:12px; font-weight:600; }
+  .ln { stroke:var(--line); stroke-width:1; fill:none; }
+  .axis { stroke:var(--line); stroke-width:1; fill:none; }
+  .dash { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .life { stroke:var(--line); stroke-width:2; fill:none; }
+  .cogS { fill:var(--cog); } .cogF { fill:var(--cog-soft); stroke:var(--cog); stroke-width:1; }
+  .cogG { stroke:var(--cog); stroke-width:0.6; opacity:.7; }
+  .cogO { fill:var(--cog-o); }
+  .zarS { fill:var(--zarr); } .zarF { fill:var(--zarr-soft); stroke:var(--zarr); stroke-width:1; }
+  .zarG { stroke:var(--zarr); stroke-width:0.5; opacity:.6; }
+  .zarO { fill:var(--zarr-o); }
+  .fpc { fill:none; stroke:var(--fg); stroke-width:1.6; }
+  .box { fill:var(--bg); stroke:var(--line); }
+  .gray { fill:var(--muted); } .grayO { fill:var(--muted); opacity:.4; }
+  .hc { paint-order:stroke; stroke:var(--cog-soft); stroke-width:5px; stroke-linejoin:round; }
+  .hp { paint-order:stroke; stroke:var(--panel); stroke-width:5px; stroke-linejoin:round; }
+  .arr { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#am); }
+  .arr-c { stroke:var(--cog); stroke-width:1.5; fill:none; marker-end:url(#ac); }
+  .arr-z { stroke:var(--zarr); stroke-width:1.5; fill:none; marker-end:url(#az); }
+  .arr-cd { stroke:var(--cog); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#ac); }
+  .arr-zd { stroke:var(--zarr); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#az); }
+</style>
+<defs>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--cog)"/></marker>
+  <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--zarr)"/></marker>
+</defs>
+<rect x="0.0" y="0.0" width="1000.0" height="430.0" rx="0" class="bg"></rect>
+<rect x="40.0" y="90.0" width="760.0" height="50.0" rx="0" class="zarF"></rect>
+<rect x="800.0" y="90.0" width="160.0" height="50.0" rx="0" class="zarS"></rect>
+<line x1="48.0" y1="90.0" x2="48.0" y2="140.0" class="zarG"/>
+<line x1="56.0" y1="90.0" x2="56.0" y2="140.0" class="zarG"/>
+<line x1="64.0" y1="90.0" x2="64.0" y2="140.0" class="zarG"/>
+<line x1="72.0" y1="90.0" x2="72.0" y2="140.0" class="zarG"/>
+<line x1="80.0" y1="90.0" x2="80.0" y2="140.0" class="zarG"/>
+<line x1="88.0" y1="90.0" x2="88.0" y2="140.0" class="zarG"/>
+<line x1="96.0" y1="90.0" x2="96.0" y2="140.0" class="zarG"/>
+<line x1="104.0" y1="90.0" x2="104.0" y2="140.0" class="zarG"/>
+<line x1="112.0" y1="90.0" x2="112.0" y2="140.0" class="zarG"/>
+<line x1="120.0" y1="90.0" x2="120.0" y2="140.0" class="zarG"/>
+<line x1="128.0" y1="90.0" x2="128.0" y2="140.0" class="zarG"/>
+<line x1="136.0" y1="90.0" x2="136.0" y2="140.0" class="zarG"/>
+<line x1="144.0" y1="90.0" x2="144.0" y2="140.0" class="zarG"/>
+<line x1="152.0" y1="90.0" x2="152.0" y2="140.0" class="zarG"/>
+<line x1="160.0" y1="90.0" x2="160.0" y2="140.0" class="zarG"/>
+<line x1="168.0" y1="90.0" x2="168.0" y2="140.0" class="zarG"/>
+<line x1="176.0" y1="90.0" x2="176.0" y2="140.0" class="zarG"/>
+<line x1="184.0" y1="90.0" x2="184.0" y2="140.0" class="zarG"/>
+<line x1="192.0" y1="90.0" x2="192.0" y2="140.0" class="zarG"/>
+<line x1="200.0" y1="90.0" x2="200.0" y2="140.0" class="zarG"/>
+<line x1="208.0" y1="90.0" x2="208.0" y2="140.0" class="zarG"/>
+<line x1="216.0" y1="90.0" x2="216.0" y2="140.0" class="zarG"/>
+<line x1="224.0" y1="90.0" x2="224.0" y2="140.0" class="zarG"/>
+<line x1="232.0" y1="90.0" x2="232.0" y2="140.0" class="zarG"/>
+<line x1="240.0" y1="90.0" x2="240.0" y2="140.0" class="zarG"/>
+<line x1="248.0" y1="90.0" x2="248.0" y2="140.0" class="zarG"/>
+<line x1="256.0" y1="90.0" x2="256.0" y2="140.0" class="zarG"/>
+<line x1="264.0" y1="90.0" x2="264.0" y2="140.0" class="zarG"/>
+<line x1="272.0" y1="90.0" x2="272.0" y2="140.0" class="zarG"/>
+<line x1="280.0" y1="90.0" x2="280.0" y2="140.0" class="zarG"/>
+<line x1="288.0" y1="90.0" x2="288.0" y2="140.0" class="zarG"/>
+<line x1="296.0" y1="90.0" x2="296.0" y2="140.0" class="zarG"/>
+<line x1="304.0" y1="90.0" x2="304.0" y2="140.0" class="zarG"/>
+<line x1="312.0" y1="90.0" x2="312.0" y2="140.0" class="zarG"/>
+<line x1="320.0" y1="90.0" x2="320.0" y2="140.0" class="zarG"/>
+<line x1="328.0" y1="90.0" x2="328.0" y2="140.0" class="zarG"/>
+<line x1="336.0" y1="90.0" x2="336.0" y2="140.0" class="zarG"/>
+<line x1="344.0" y1="90.0" x2="344.0" y2="140.0" class="zarG"/>
+<line x1="352.0" y1="90.0" x2="352.0" y2="140.0" class="zarG"/>
+<line x1="360.0" y1="90.0" x2="360.0" y2="140.0" class="zarG"/>
+<line x1="368.0" y1="90.0" x2="368.0" y2="140.0" class="zarG"/>
+<line x1="376.0" y1="90.0" x2="376.0" y2="140.0" class="zarG"/>
+<line x1="384.0" y1="90.0" x2="384.0" y2="140.0" class="zarG"/>
+<line x1="392.0" y1="90.0" x2="392.0" y2="140.0" class="zarG"/>
+<line x1="400.0" y1="90.0" x2="400.0" y2="140.0" class="zarG"/>
+<line x1="408.0" y1="90.0" x2="408.0" y2="140.0" class="zarG"/>
+<line x1="416.0" y1="90.0" x2="416.0" y2="140.0" class="zarG"/>
+<line x1="424.0" y1="90.0" x2="424.0" y2="140.0" class="zarG"/>
+<line x1="432.0" y1="90.0" x2="432.0" y2="140.0" class="zarG"/>
+<line x1="440.0" y1="90.0" x2="440.0" y2="140.0" class="zarG"/>
+<line x1="448.0" y1="90.0" x2="448.0" y2="140.0" class="zarG"/>
+<line x1="456.0" y1="90.0" x2="456.0" y2="140.0" class="zarG"/>
+<line x1="464.0" y1="90.0" x2="464.0" y2="140.0" class="zarG"/>
+<line x1="472.0" y1="90.0" x2="472.0" y2="140.0" class="zarG"/>
+<line x1="480.0" y1="90.0" x2="480.0" y2="140.0" class="zarG"/>
+<line x1="488.0" y1="90.0" x2="488.0" y2="140.0" class="zarG"/>
+<line x1="496.0" y1="90.0" x2="496.0" y2="140.0" class="zarG"/>
+<line x1="504.0" y1="90.0" x2="504.0" y2="140.0" class="zarG"/>
+<line x1="512.0" y1="90.0" x2="512.0" y2="140.0" class="zarG"/>
+<line x1="520.0" y1="90.0" x2="520.0" y2="140.0" class="zarG"/>
+<line x1="528.0" y1="90.0" x2="528.0" y2="140.0" class="zarG"/>
+<line x1="536.0" y1="90.0" x2="536.0" y2="140.0" class="zarG"/>
+<line x1="544.0" y1="90.0" x2="544.0" y2="140.0" class="zarG"/>
+<line x1="552.0" y1="90.0" x2="552.0" y2="140.0" class="zarG"/>
+<line x1="560.0" y1="90.0" x2="560.0" y2="140.0" class="zarG"/>
+<line x1="568.0" y1="90.0" x2="568.0" y2="140.0" class="zarG"/>
+<line x1="576.0" y1="90.0" x2="576.0" y2="140.0" class="zarG"/>
+<line x1="584.0" y1="90.0" x2="584.0" y2="140.0" class="zarG"/>
+<line x1="592.0" y1="90.0" x2="592.0" y2="140.0" class="zarG"/>
+<line x1="600.0" y1="90.0" x2="600.0" y2="140.0" class="zarG"/>
+<line x1="608.0" y1="90.0" x2="608.0" y2="140.0" class="zarG"/>
+<line x1="616.0" y1="90.0" x2="616.0" y2="140.0" class="zarG"/>
+<line x1="624.0" y1="90.0" x2="624.0" y2="140.0" class="zarG"/>
+<line x1="632.0" y1="90.0" x2="632.0" y2="140.0" class="zarG"/>
+<line x1="640.0" y1="90.0" x2="640.0" y2="140.0" class="zarG"/>
+<line x1="648.0" y1="90.0" x2="648.0" y2="140.0" class="zarG"/>
+<line x1="656.0" y1="90.0" x2="656.0" y2="140.0" class="zarG"/>
+<line x1="664.0" y1="90.0" x2="664.0" y2="140.0" class="zarG"/>
+<line x1="672.0" y1="90.0" x2="672.0" y2="140.0" class="zarG"/>
+<line x1="680.0" y1="90.0" x2="680.0" y2="140.0" class="zarG"/>
+<line x1="688.0" y1="90.0" x2="688.0" y2="140.0" class="zarG"/>
+<line x1="696.0" y1="90.0" x2="696.0" y2="140.0" class="zarG"/>
+<line x1="704.0" y1="90.0" x2="704.0" y2="140.0" class="zarG"/>
+<line x1="712.0" y1="90.0" x2="712.0" y2="140.0" class="zarG"/>
+<line x1="720.0" y1="90.0" x2="720.0" y2="140.0" class="zarG"/>
+<line x1="728.0" y1="90.0" x2="728.0" y2="140.0" class="zarG"/>
+<line x1="736.0" y1="90.0" x2="736.0" y2="140.0" class="zarG"/>
+<line x1="744.0" y1="90.0" x2="744.0" y2="140.0" class="zarG"/>
+<line x1="752.0" y1="90.0" x2="752.0" y2="140.0" class="zarG"/>
+<line x1="760.0" y1="90.0" x2="760.0" y2="140.0" class="zarG"/>
+<line x1="768.0" y1="90.0" x2="768.0" y2="140.0" class="zarG"/>
+<line x1="776.0" y1="90.0" x2="776.0" y2="140.0" class="zarG"/>
+<line x1="784.0" y1="90.0" x2="784.0" y2="140.0" class="zarG"/>
+<line x1="792.0" y1="90.0" x2="792.0" y2="140.0" class="zarG"/>
+<rect x="352.0" y="90.0" width="16.0" height="50.0" rx="0" class="zarO"><title>coalesced chunk range</title></rect>
+<text x="580.0" y="121.0" class="t hp" text-anchor="middle">chunk(0,0) … chunk(i,j) … chunk(44,44)</text>
+<text x="880.0" y="121.0" class="onc" text-anchor="middle">INDEX</text>
+<text x="880.0" y="34.0" class="bz" text-anchor="middle">②a GET bytes=-32404</text>
+<text x="880.0" y="52.0" class="s" text-anchor="middle">2025 × 16 B + crc32c</text>
+<path d="M880,58 L880,87" class="arr-z"/>
+<text x="360.0" y="34.0" class="bz" text-anchor="middle">②b GET bytes=63161124-63740650</text>
+<text x="360.0" y="52.0" class="s" text-anchor="middle">needs ②a to know the offsets</text>
+<path d="M360,58 L360,87" class="arr-z"/>
+<path d="M880,142 C880,174 360,174 360,143" class="arr-zd"/>
+<text x="620.0" y="182.0" class="s" text-anchor="middle">offsets</text>
+<text x="40.0" y="156.0" class="monos" text-anchor="middle">0</text>
+<text x="960.0" y="156.0" class="monos" text-anchor="middle">150 MB</text>
+<text x="40.0" y="212.0" class="s" text-anchor="start">r10m/b04/c/0/0 · 45 × 45 = 2025 inner chunks of 244×244 uint16 · index at the end</text>
+<line x1="40.0" y1="232.0" x2="960.0" y2="232.0" class="ln"/>
+<text x="40.0" y="258.0" class="b" text-anchor="start">②b is coalesced</text>
+<text x="150.0" y="258.0" class="s" text-anchor="start">the reader merges chunk ranges into one GET when the gap between them is small (&lt; 1 MiB)</text>
+<rect x="80.0" y="292.0" width="24.0" height="24.0" rx="2" class="zarF"></rect>
+<rect x="106.0" y="292.0" width="24.0" height="24.0" rx="2" class="zarO"></rect>
+<rect x="132.0" y="292.0" width="24.0" height="24.0" rx="2" class="zarO"></rect>
+<text x="72.0" y="308.0" class="xs" text-anchor="end">20</text>
+<rect x="80.0" y="318.0" width="24.0" height="24.0" rx="2" class="zarF"></rect>
+<rect x="106.0" y="318.0" width="24.0" height="24.0" rx="2" class="zarO"></rect>
+<rect x="132.0" y="318.0" width="24.0" height="24.0" rx="2" class="zarO"></rect>
+<text x="72.0" y="334.0" class="xs" text-anchor="end">21</text>
+<rect x="80.0" y="344.0" width="24.0" height="24.0" rx="2" class="zarS"></rect>
+<rect x="106.0" y="344.0" width="24.0" height="24.0" rx="2" class="zarS"></rect>
+<rect x="132.0" y="344.0" width="24.0" height="24.0" rx="2" class="zarF"></rect>
+<text x="72.0" y="360.0" class="xs" text-anchor="end">22</text>
+<rect x="80.0" y="370.0" width="24.0" height="24.0" rx="2" class="zarO"></rect>
+<rect x="106.0" y="370.0" width="24.0" height="24.0" rx="2" class="zarF"></rect>
+<rect x="132.0" y="370.0" width="24.0" height="24.0" rx="2" class="zarF"></rect>
+<text x="72.0" y="386.0" class="xs" text-anchor="end">23</text>
+<text x="92.0" y="286.0" class="xs" text-anchor="middle">21</text>
+<text x="118.0" y="286.0" class="xs" text-anchor="middle">22</text>
+<text x="144.0" y="286.0" class="xs" text-anchor="middle">23</text>
+<text x="119.0" y="412.0" class="xs" text-anchor="middle">tile needs (22,21), (22,22)</text>
+<rect x="240.0" y="312.0" width="30.0" height="40.0" rx="0" class="zarF"></rect>
+<text x="255.0" y="337.0" class="t" text-anchor="middle">…</text>
+<rect x="270.0" y="312.0" width="86.0" height="40.0" rx="0" class="zarS"></rect>
+<text x="313.0" y="337.0" class="onc" text-anchor="middle">22,21</text>
+<rect x="358.0" y="312.0" width="86.0" height="40.0" rx="0" class="zarO"></rect>
+<text x="401.0" y="337.0" class="mono" text-anchor="middle">23,21</text>
+<rect x="446.0" y="312.0" width="86.0" height="40.0" rx="0" class="zarO"></rect>
+<text x="489.0" y="337.0" class="mono" text-anchor="middle">20,22</text>
+<rect x="534.0" y="312.0" width="86.0" height="40.0" rx="0" class="zarO"></rect>
+<text x="577.0" y="337.0" class="mono" text-anchor="middle">21,22</text>
+<rect x="622.0" y="312.0" width="86.0" height="40.0" rx="0" class="zarO"></rect>
+<text x="665.0" y="337.0" class="mono" text-anchor="middle">20,23</text>
+<rect x="710.0" y="312.0" width="86.0" height="40.0" rx="0" class="zarO"></rect>
+<text x="753.0" y="337.0" class="mono" text-anchor="middle">21,23</text>
+<rect x="798.0" y="312.0" width="86.0" height="40.0" rx="0" class="zarS"></rect>
+<text x="841.0" y="337.0" class="onc" text-anchor="middle">22,22</text>
+<rect x="886.0" y="312.0" width="40.0" height="40.0" rx="0" class="zarF"></rect>
+<text x="906.0" y="337.0" class="t" text-anchor="middle">…</text>
+<path d="M270,306 L270,298 L884,298 L884,306" class="ln"/>
+<text x="577.0" y="292.0" class="b" text-anchor="middle">one coalesced GET · 580 KB (7 chunks) for the 2 chunks needed (163 KB)</text>
+<text x="240.0" y="372.0" class="s" text-anchor="start">chunks are stored in Morton (Z) order — everything in between is downloaded too</text>
+<rect x="240.0" y="388.0" width="14.0" height="10.0" rx="0" class="zarS"></rect>
+<text x="260.0" y="397.0" class="xs" text-anchor="start">needed</text>
+<rect x="320.0" y="388.0" width="14.0" height="10.0" rx="0" class="zarO"></rect>
+<text x="340.0" y="397.0" class="xs" text-anchor="start">downloaded, not needed</text>
+</svg>

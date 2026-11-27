@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1000 280" width="1000" height="280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="A tile request in two steps">
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d;
+          --cog:#4a8cf0; --cog-soft:#1c2c4d; --zarr:#e06a30; --zarr-soft:#4a2516;
+          --cog-o:#27406a; --zarr-o:#633420; }
+  text { white-space:pre; }
+  .bg { fill:none; } .panel { fill:var(--panel); stroke:var(--line); }
+  .t { fill:var(--fg); font-size:13px; } .s { fill:var(--muted); font-size:11.5px; }
+  .xs { fill:var(--muted); font-size:10.5px; }
+  .h1 { fill:var(--fg); font-size:20px; font-weight:600; }
+  .h2c { fill:var(--cog); font-size:16px; font-weight:600; }
+  .h2z { fill:var(--zarr); font-size:16px; font-weight:600; }
+  .b { fill:var(--fg); font-size:13px; font-weight:600; }
+  .bc { fill:var(--cog); font-size:13px; font-weight:600; }
+  .bz { fill:var(--zarr); font-size:13px; font-weight:600; }
+  .mono { fill:var(--fg); font-size:11.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .monos { fill:var(--muted); font-size:10.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .onc { fill:#ffffff; font-size:12px; font-weight:600; }
+  .ln { stroke:var(--line); stroke-width:1; fill:none; }
+  .axis { stroke:var(--line); stroke-width:1; fill:none; }
+  .dash { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .life { stroke:var(--line); stroke-width:2; fill:none; }
+  .cogS { fill:var(--cog); } .cogF { fill:var(--cog-soft); stroke:var(--cog); stroke-width:1; }
+  .cogG { stroke:var(--cog); stroke-width:0.6; opacity:.7; }
+  .cogO { fill:var(--cog-o); }
+  .zarS { fill:var(--zarr); } .zarF { fill:var(--zarr-soft); stroke:var(--zarr); stroke-width:1; }
+  .zarG { stroke:var(--zarr); stroke-width:0.5; opacity:.6; }
+  .zarO { fill:var(--zarr-o); }
+  .fpc { fill:none; stroke:var(--fg); stroke-width:1.6; }
+  .box { fill:var(--bg); stroke:var(--line); }
+  .gray { fill:var(--muted); } .grayO { fill:var(--muted); opacity:.4; }
+  .hc { paint-order:stroke; stroke:var(--cog-soft); stroke-width:5px; stroke-linejoin:round; }
+  .hp { paint-order:stroke; stroke:var(--panel); stroke-width:5px; stroke-linejoin:round; }
+  .arr { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#am); }
+  .arr-c { stroke:var(--cog); stroke-width:1.5; fill:none; marker-end:url(#ac); }
+  .arr-z { stroke:var(--zarr); stroke-width:1.5; fill:none; marker-end:url(#az); }
+  .arr-cd { stroke:var(--cog); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#ac); }
+  .arr-zd { stroke:var(--zarr); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#az); }
+</style>
+<defs>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--cog)"/></marker>
+  <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--zarr)"/></marker>
+</defs>
+<rect x="0.0" y="0.0" width="1000.0" height="280.0" rx="0" class="bg"></rect>
+<rect x="20.0" y="55.0" width="180.0" height="70.0" rx="6" class="box"></rect>
+<text x="110.0" y="85.0" class="mono" text-anchor="middle">GET /tiles/14/6944/6268</text>
+<text x="110.0" y="104.0" class="xs" text-anchor="middle">one 256×256 web-map tile</text>
+<path d="M200,90 L246,90" class="arr"/>
+<rect x="250.0" y="30.0" width="290.0" height="120.0" rx="6" class="panel"></rect>
+<text x="268.0" y="56.0" class="b" text-anchor="start">Dataset Reader</text>
+<text x="268.0" y="82.0" class="s" text-anchor="start">· tile → bbox in the dataset CRS</text>
+<text x="268.0" y="102.0" class="s" text-anchor="start">· pick the level (overview / multiscale)</text>
+<text x="268.0" y="122.0" class="s" text-anchor="start">· find the overlapping blocks / chunks</text>
+<rect x="800.0" y="30.0" width="180.0" height="120.0" rx="6" class="panel"></rect>
+<text x="890.0" y="82.0" class="b" text-anchor="middle">Storage</text>
+<text x="890.0" y="101.0" class="s" text-anchor="middle">HTTP range requests</text>
+<path d="M542,60 L796,60" class="arr"/>
+<path d="M796,68 L544,68" class="arr"/>
+<text x="670.0" y="52.0" class="b" text-anchor="middle">① metadata</text>
+<text x="670.0" y="84.0" class="xs" text-anchor="middle">“what is in there, and where are the bytes?”</text>
+<path d="M542,126 L796,126" class="arr"/>
+<path d="M796,134 L544,134" class="arr"/>
+<text x="670.0" y="118.0" class="b" text-anchor="middle">② data</text>
+<text x="670.0" y="150.0" class="xs" text-anchor="middle">“give me exactly those bytes”</text>
+<path d="M395,150 L395,186" class="arr"/>
+<rect x="250.0" y="190.0" width="290.0" height="50.0" rx="6" class="box"></rect>
+<text x="395.0" y="212.0" class="t" text-anchor="middle">decode → reproject</text>
+<text x="395.0" y="229.0" class="s" text-anchor="middle">to WebMercator → 256×256 array</text>
+<text x="600.0" y="205.0" class="b" text-anchor="start">Every request/response pair = 1 round trip</text>
+<text x="600.0" y="224.0" class="s" text-anchor="start">(~100 ms+ to remote storage). On object storage the cost is</text>
+<text x="600.0" y="241.0" class="s" text-anchor="start">round trips, not bytes: each one that waits for the</text>
+<text x="600.0" y="258.0" class="s" text-anchor="start">previous adds a full latency.</text>
+</svg>

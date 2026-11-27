@@ -1,0 +1,100 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1000 280" width="1000" height="280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="Time per 3-band tile">
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d;
+          --cog:#4a8cf0; --cog-soft:#1c2c4d; --zarr:#e06a30; --zarr-soft:#4a2516;
+          --cog-o:#27406a; --zarr-o:#633420; }
+  text { white-space:pre; }
+  .bg { fill:none; } .panel { fill:var(--panel); stroke:var(--line); }
+  .t { fill:var(--fg); font-size:13px; } .s { fill:var(--muted); font-size:11.5px; }
+  .xs { fill:var(--muted); font-size:10.5px; }
+  .h1 { fill:var(--fg); font-size:20px; font-weight:600; }
+  .h2c { fill:var(--cog); font-size:16px; font-weight:600; }
+  .h2z { fill:var(--zarr); font-size:16px; font-weight:600; }
+  .b { fill:var(--fg); font-size:13px; font-weight:600; }
+  .bc { fill:var(--cog); font-size:13px; font-weight:600; }
+  .bz { fill:var(--zarr); font-size:13px; font-weight:600; }
+  .mono { fill:var(--fg); font-size:11.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .monos { fill:var(--muted); font-size:10.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .onc { fill:#ffffff; font-size:12px; font-weight:600; }
+  .ln { stroke:var(--line); stroke-width:1; fill:none; }
+  .axis { stroke:var(--line); stroke-width:1; fill:none; }
+  .dash { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .life { stroke:var(--line); stroke-width:2; fill:none; }
+  .cogS { fill:var(--cog); } .cogF { fill:var(--cog-soft); stroke:var(--cog); stroke-width:1; }
+  .cogG { stroke:var(--cog); stroke-width:0.6; opacity:.7; }
+  .cogO { fill:var(--cog-o); }
+  .zarS { fill:var(--zarr); } .zarF { fill:var(--zarr-soft); stroke:var(--zarr); stroke-width:1; }
+  .zarG { stroke:var(--zarr); stroke-width:0.5; opacity:.6; }
+  .zarO { fill:var(--zarr-o); }
+  .fpc { fill:none; stroke:var(--fg); stroke-width:1.6; }
+  .box { fill:var(--bg); stroke:var(--line); }
+  .gray { fill:var(--muted); } .grayO { fill:var(--muted); opacity:.4; }
+  .hc { paint-order:stroke; stroke:var(--cog-soft); stroke-width:5px; stroke-linejoin:round; }
+  .hp { paint-order:stroke; stroke:var(--panel); stroke-width:5px; stroke-linejoin:round; }
+  .arr { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#am); }
+  .arr-c { stroke:var(--cog); stroke-width:1.5; fill:none; marker-end:url(#ac); }
+  .arr-z { stroke:var(--zarr); stroke-width:1.5; fill:none; marker-end:url(#az); }
+  .arr-cd { stroke:var(--cog); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#ac); }
+  .arr-zd { stroke:var(--zarr); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#az); }
+</style>
+<defs>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--cog)"/></marker>
+  <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--zarr)"/></marker>
+</defs>
+<rect x="0.0" y="0.0" width="1000.0" height="280.0" rx="0" class="bg"></rect>
+<rect x="300.0" y="16.0" width="12.0" height="12.0" rx="2" class="cogS"></rect>
+<text x="318.0" y="26.0" class="s" text-anchor="start">COG</text>
+<rect x="360.0" y="16.0" width="12.0" height="12.0" rx="2" class="zarS"></rect>
+<text x="378.0" y="26.0" class="s" text-anchor="start">GeoZarr</text>
+<rect x="450.0" y="16.0" width="12.0" height="12.0" rx="0" class="grayO"></rect>
+<text x="468.0" y="26.0" class="s" text-anchor="start">open</text>
+<rect x="510.0" y="16.0" width="12.0" height="12.0" rx="0" class="gray"></rect>
+<text x="528.0" y="26.0" class="s" text-anchor="start">tile</text>
+<line x1="300.0" y1="64.0" x2="300.0" y2="250.0" class="axis"/>
+<text x="300.0" y="58.0" class="xs" text-anchor="middle">0</text>
+<line x1="416.0" y1="64.0" x2="416.0" y2="250.0" class="axis"/>
+<text x="416.0" y="58.0" class="xs" text-anchor="middle">400</text>
+<line x1="532.0" y1="64.0" x2="532.0" y2="250.0" class="axis"/>
+<text x="532.0" y="58.0" class="xs" text-anchor="middle">800</text>
+<line x1="648.0" y1="64.0" x2="648.0" y2="250.0" class="axis"/>
+<text x="648.0" y="58.0" class="xs" text-anchor="middle">1,200</text>
+<line x1="764.0" y1="64.0" x2="764.0" y2="250.0" class="axis"/>
+<text x="764.0" y="58.0" class="xs" text-anchor="middle">1,600</text>
+<line x1="880.0" y1="64.0" x2="880.0" y2="250.0" class="axis"/>
+<text x="880.0" y="58.0" class="xs" text-anchor="middle">2,000 ms</text>
+<text x="30.0" y="92.0" class="t" text-anchor="start">z14 · 14/8849/6139</text>
+<text x="30.0" y="109.0" class="xs" text-anchor="start">full res / r10m</text>
+<text x="292.0" y="90.0" class="xs" text-anchor="end">COG</text>
+<rect x="300.0" y="78.0" width="144.3" height="16.0" rx="0" class="cogO"><title>z14 COG open: 501 ms</title></rect>
+<path d="M446.3,78.0 H826.4 Q830.4,78.0 830.4,82.0 V90.0 Q830.4,94.0 826.4,94.0 H446.3 Z" class="cogS"><title>z14 COG tile: 1328 ms</title></path>
+<text x="836.4" y="90.0" class="s" text-anchor="start">1,829 ms</text>
+<text x="292.0" y="108.0" class="xs" text-anchor="end">GeoZarr</text>
+<rect x="300.0" y="96.0" width="229.0" height="16.0" rx="0" class="zarO"><title>z14 GeoZarr open: 793 ms</title></rect>
+<path d="M531.0,96.0 H807.0 Q811.0,96.0 811.0,100.0 V108.0 Q811.0,112.0 807.0,112.0 H531.0 Z" class="zarS"><title>z14 GeoZarr tile: 969 ms</title></path>
+<text x="817.0" y="108.0" class="s" text-anchor="start">1,767 ms</text>
+<text x="30.0" y="150.0" class="t" text-anchor="start">z12 · 12/2212/1534</text>
+<text x="30.0" y="167.0" class="xs" text-anchor="start">full res / r20m</text>
+<text x="292.0" y="148.0" class="xs" text-anchor="end">COG</text>
+<rect x="300.0" y="136.0" width="140.5" height="16.0" rx="0" class="cogO"><title>z12 COG open: 488 ms</title></rect>
+<path d="M442.5,136.0 H848.2 Q852.2,136.0 852.2,140.0 V148.0 Q852.2,152.0 848.2,152.0 H442.5 Z" class="cogS"><title>z12 COG tile: 1416 ms</title></path>
+<text x="858.2" y="148.0" class="s" text-anchor="start">1,896 ms</text>
+<text x="292.0" y="166.0" class="xs" text-anchor="end">GeoZarr</text>
+<rect x="300.0" y="154.0" width="222.9" height="16.0" rx="0" class="zarO"><title>z12 GeoZarr open: 772 ms</title></rect>
+<path d="M524.9,154.0 H789.9 Q793.9,154.0 793.9,158.0 V166.0 Q793.9,170.0 789.9,170.0 H524.9 Z" class="zarS"><title>z12 GeoZarr tile: 931 ms</title></path>
+<text x="799.9" y="166.0" class="s" text-anchor="start">1,694 ms</text>
+<text x="30.0" y="208.0" class="t" text-anchor="start">z10 · 10/553/383</text>
+<text x="30.0" y="225.0" class="xs" text-anchor="start">overview / r120m</text>
+<text x="292.0" y="206.0" class="xs" text-anchor="end">COG</text>
+<rect x="300.0" y="194.0" width="138.2" height="16.0" rx="0" class="cogO"><title>z10 COG open: 480 ms</title></rect>
+<path d="M440.2,194.0 H776.0 Q780.0,194.0 780.0,198.0 V206.0 Q780.0,210.0 776.0,210.0 H440.2 Z" class="cogS"><title>z10 COG tile: 1175 ms</title></path>
+<text x="786.0" y="206.0" class="s" text-anchor="start">1,651 ms</text>
+<text x="292.0" y="224.0" class="xs" text-anchor="end">GeoZarr</text>
+<rect x="300.0" y="212.0" width="226.4" height="16.0" rx="0" class="zarO"><title>z10 GeoZarr open: 784 ms</title></rect>
+<path d="M528.4,212.0 H746.7 Q750.7,212.0 750.7,216.0 V224.0 Q750.7,228.0 746.7,228.0 H528.4 Z" class="zarS"><title>z10 GeoZarr tile: 770 ms</title></path>
+<text x="756.7" y="224.0" class="s" text-anchor="start">1,556 ms</text>
+<text x="30.0" y="270.0" class="xs" text-anchor="start">Median of 10 cold runs (fresh process each), laptop → us-east-1. COG open = STAC Item fetch; GeoZarr open = zarr.json.</text>
+</svg>

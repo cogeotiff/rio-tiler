@@ -1,0 +1,89 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1000 430" width="1000" height="430" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="Round trips: COG vs GeoZarr">
+<style>
+  :root { --bg:#0d1117; --panel:#161b22; --fg:#e6edf3; --muted:#9198a1; --line:#3d444d;
+          --cog:#4a8cf0; --cog-soft:#1c2c4d; --zarr:#e06a30; --zarr-soft:#4a2516;
+          --cog-o:#27406a; --zarr-o:#633420; }
+  text { white-space:pre; }
+  .bg { fill:none; } .panel { fill:var(--panel); stroke:var(--line); }
+  .t { fill:var(--fg); font-size:13px; } .s { fill:var(--muted); font-size:11.5px; }
+  .xs { fill:var(--muted); font-size:10.5px; }
+  .h1 { fill:var(--fg); font-size:20px; font-weight:600; }
+  .h2c { fill:var(--cog); font-size:16px; font-weight:600; }
+  .h2z { fill:var(--zarr); font-size:16px; font-weight:600; }
+  .b { fill:var(--fg); font-size:13px; font-weight:600; }
+  .bc { fill:var(--cog); font-size:13px; font-weight:600; }
+  .bz { fill:var(--zarr); font-size:13px; font-weight:600; }
+  .mono { fill:var(--fg); font-size:11.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .monos { fill:var(--muted); font-size:10.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .onc { fill:#ffffff; font-size:12px; font-weight:600; }
+  .ln { stroke:var(--line); stroke-width:1; fill:none; }
+  .axis { stroke:var(--line); stroke-width:1; fill:none; }
+  .dash { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .life { stroke:var(--line); stroke-width:2; fill:none; }
+  .cogS { fill:var(--cog); } .cogF { fill:var(--cog-soft); stroke:var(--cog); stroke-width:1; }
+  .cogG { stroke:var(--cog); stroke-width:0.6; opacity:.7; }
+  .cogO { fill:var(--cog-o); }
+  .zarS { fill:var(--zarr); } .zarF { fill:var(--zarr-soft); stroke:var(--zarr); stroke-width:1; }
+  .zarG { stroke:var(--zarr); stroke-width:0.5; opacity:.6; }
+  .zarO { fill:var(--zarr-o); }
+  .fpc { fill:none; stroke:var(--fg); stroke-width:1.6; }
+  .box { fill:var(--bg); stroke:var(--line); }
+  .gray { fill:var(--muted); } .grayO { fill:var(--muted); opacity:.4; }
+  .hc { paint-order:stroke; stroke:var(--cog-soft); stroke-width:5px; stroke-linejoin:round; }
+  .hp { paint-order:stroke; stroke:var(--panel); stroke-width:5px; stroke-linejoin:round; }
+  .arr { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#am); }
+  .arr-c { stroke:var(--cog); stroke-width:1.5; fill:none; marker-end:url(#ac); }
+  .arr-z { stroke:var(--zarr); stroke-width:1.5; fill:none; marker-end:url(#az); }
+  .arr-cd { stroke:var(--cog); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#ac); }
+  .arr-zd { stroke:var(--zarr); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#az); }
+</style>
+<defs>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--cog)"/></marker>
+  <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--zarr)"/></marker>
+</defs>
+<rect x="0.0" y="0.0" width="1000.0" height="430.0" rx="0" class="bg"></rect>
+<text x="30.0" y="30.0" class="h2c" text-anchor="start">COG — 2 round trips</text>
+<text x="70.0" y="60.0" class="b" text-anchor="middle">reader</text>
+<text x="400.0" y="60.0" class="b" text-anchor="middle">storage</text>
+<line x1="70.0" y1="70.0" x2="70.0" y2="285.0" class="life"/>
+<line x1="400.0" y1="70.0" x2="400.0" y2="395.0" class="life"/>
+<path d="M70,90 L398,106" class="arr-c"/>
+<text x="235.0" y="88.0" class="mono" text-anchor="middle">GET bytes=0-32767</text>
+<path d="M400,128 L72,144" class="arr-cd"/>
+<text x="235.0" y="156.0" class="s" text-anchor="middle">32 KB</text>
+<text x="412.0" y="122.0" class="b" text-anchor="start">RTT 1</text>
+<path d="M70,190 L398,206" class="arr-c"/>
+<text x="235.0" y="188.0" class="mono" text-anchor="middle">GET block ranges (parallel)</text>
+<path d="M400,228 L72,244" class="arr-cd"/>
+<text x="235.0" y="256.0" class="s" text-anchor="middle">0.4 – 1.6 MB</text>
+<text x="412.0" y="222.0" class="b" text-anchor="start">RTT 2</text>
+<text x="70.0" y="303.0" class="s" text-anchor="middle">decode, reproject</text>
+<rect x="65.0" y="280.0" width="10.0" height="10.0" rx="2" class="cogS"></rect>
+<text x="530.0" y="30.0" class="h2z" text-anchor="start">GeoZarr (sharded) — 3 round trips</text>
+<text x="570.0" y="60.0" class="b" text-anchor="middle">reader</text>
+<text x="900.0" y="60.0" class="b" text-anchor="middle">storage</text>
+<line x1="570.0" y1="70.0" x2="570.0" y2="385.0" class="life"/>
+<line x1="900.0" y1="70.0" x2="900.0" y2="395.0" class="life"/>
+<path d="M570,90 L898,106" class="arr-z"/>
+<text x="735.0" y="88.0" class="mono" text-anchor="middle">GET zarr.json</text>
+<path d="M900,128 L572,144" class="arr-zd"/>
+<text x="735.0" y="156.0" class="s" text-anchor="middle">215 KB</text>
+<text x="912.0" y="122.0" class="b" text-anchor="start">RTT 1</text>
+<path d="M570,190 L898,206" class="arr-z"/>
+<text x="735.0" y="188.0" class="mono" text-anchor="middle">GET bytes=-32404 (shard index)</text>
+<path d="M900,228 L572,244" class="arr-zd"/>
+<text x="735.0" y="256.0" class="s" text-anchor="middle">32 KB</text>
+<text x="912.0" y="222.0" class="b" text-anchor="start">RTT 2</text>
+<path d="M570,290 L898,306" class="arr-z"/>
+<text x="735.0" y="288.0" class="mono" text-anchor="middle">GET chunk range (coalesced)</text>
+<path d="M900,328 L572,344" class="arr-zd"/>
+<text x="735.0" y="356.0" class="s" text-anchor="middle">0.3 – 0.7 MB</text>
+<text x="912.0" y="322.0" class="b" text-anchor="start">RTT 3</text>
+<text x="570.0" y="403.0" class="s" text-anchor="middle">decode, reproject</text>
+<rect x="565.0" y="380.0" width="10.0" height="10.0" rx="2" class="zarS"></rect>
+<line x1="500.0" y1="20.0" x2="500.0" y2="410.0" class="ln"/>
+</svg>

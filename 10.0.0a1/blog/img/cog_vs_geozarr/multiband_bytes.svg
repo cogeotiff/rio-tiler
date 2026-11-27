@@ -1,0 +1,90 @@
+<svg xmlns="http://www.w3.org/2000/svg" xml:space="preserve" viewBox="0 0 1000 280" width="1000" height="280" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" role="img" aria-label="Bytes downloaded per 3-band tile">
+<style>
+  :root { --bg:#ffffff; --panel:#f6f7f9; --fg:#1f2328; --muted:#59636e; --line:#d0d7de;
+          --cog:#2563eb; --cog-soft:#dbe6fd; --zarr:#c2410c; --zarr-soft:#fde4d6;
+          --cog-o:#a8c1f7; --zarr-o:#e7b3a0; }
+  text { white-space:pre; }
+  .bg { fill:none; } .panel { fill:var(--panel); stroke:var(--line); }
+  .t { fill:var(--fg); font-size:13px; } .s { fill:var(--muted); font-size:11.5px; }
+  .xs { fill:var(--muted); font-size:10.5px; }
+  .h1 { fill:var(--fg); font-size:20px; font-weight:600; }
+  .h2c { fill:var(--cog); font-size:16px; font-weight:600; }
+  .h2z { fill:var(--zarr); font-size:16px; font-weight:600; }
+  .b { fill:var(--fg); font-size:13px; font-weight:600; }
+  .bc { fill:var(--cog); font-size:13px; font-weight:600; }
+  .bz { fill:var(--zarr); font-size:13px; font-weight:600; }
+  .mono { fill:var(--fg); font-size:11.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .monos { fill:var(--muted); font-size:10.5px; font-family:ui-monospace, SFMono-Regular, Menlo, monospace; }
+  .onc { fill:#ffffff; font-size:12px; font-weight:600; }
+  .ln { stroke:var(--line); stroke-width:1; fill:none; }
+  .axis { stroke:var(--line); stroke-width:1; fill:none; }
+  .dash { stroke:var(--muted); stroke-width:1; stroke-dasharray:3 3; fill:none; }
+  .life { stroke:var(--line); stroke-width:2; fill:none; }
+  .cogS { fill:var(--cog); } .cogF { fill:var(--cog-soft); stroke:var(--cog); stroke-width:1; }
+  .cogG { stroke:var(--cog); stroke-width:0.6; opacity:.7; }
+  .cogO { fill:var(--cog-o); }
+  .zarS { fill:var(--zarr); } .zarF { fill:var(--zarr-soft); stroke:var(--zarr); stroke-width:1; }
+  .zarG { stroke:var(--zarr); stroke-width:0.5; opacity:.6; }
+  .zarO { fill:var(--zarr-o); }
+  .fpc { fill:none; stroke:var(--fg); stroke-width:1.6; }
+  .box { fill:var(--bg); stroke:var(--line); }
+  .gray { fill:var(--muted); } .grayO { fill:var(--muted); opacity:.4; }
+  .hc { paint-order:stroke; stroke:var(--cog-soft); stroke-width:5px; stroke-linejoin:round; }
+  .hp { paint-order:stroke; stroke:var(--panel); stroke-width:5px; stroke-linejoin:round; }
+  .arr { stroke:var(--muted); stroke-width:1.5; fill:none; marker-end:url(#am); }
+  .arr-c { stroke:var(--cog); stroke-width:1.5; fill:none; marker-end:url(#ac); }
+  .arr-z { stroke:var(--zarr); stroke-width:1.5; fill:none; marker-end:url(#az); }
+  .arr-cd { stroke:var(--cog); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#ac); }
+  .arr-zd { stroke:var(--zarr); stroke-width:1.5; fill:none; stroke-dasharray:5 3; marker-end:url(#az); }
+</style>
+<defs>
+  <marker id="am" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--muted)"/></marker>
+  <marker id="ac" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--cog)"/></marker>
+  <marker id="az" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,5 L0,10 z" fill="var(--zarr)"/></marker>
+</defs>
+<rect x="0.0" y="0.0" width="1000.0" height="280.0" rx="0" class="bg"></rect>
+<rect x="300.0" y="16.0" width="12.0" height="12.0" rx="2" class="cogS"></rect>
+<text x="318.0" y="26.0" class="s" text-anchor="start">COG — 3 files</text>
+<rect x="420.0" y="16.0" width="12.0" height="12.0" rx="2" class="zarS"></rect>
+<text x="438.0" y="26.0" class="s" text-anchor="start">GeoZarr — 1 store</text>
+<line x1="300.0" y1="64.0" x2="300.0" y2="250.0" class="axis"/>
+<text x="300.0" y="58.0" class="xs" text-anchor="middle">0</text>
+<line x1="412.0" y1="64.0" x2="412.0" y2="250.0" class="axis"/>
+<text x="412.0" y="58.0" class="xs" text-anchor="middle">1,000</text>
+<line x1="524.0" y1="64.0" x2="524.0" y2="250.0" class="axis"/>
+<text x="524.0" y="58.0" class="xs" text-anchor="middle">2,000</text>
+<line x1="636.0" y1="64.0" x2="636.0" y2="250.0" class="axis"/>
+<text x="636.0" y="58.0" class="xs" text-anchor="middle">3,000</text>
+<line x1="748.0" y1="64.0" x2="748.0" y2="250.0" class="axis"/>
+<text x="748.0" y="58.0" class="xs" text-anchor="middle">4,000</text>
+<line x1="860.0" y1="64.0" x2="860.0" y2="250.0" class="axis"/>
+<text x="860.0" y="58.0" class="xs" text-anchor="middle">5,000 KB</text>
+<text x="30.0" y="92.0" class="t" text-anchor="start">z14 · 14/8849/6139</text>
+<text x="30.0" y="109.0" class="xs" text-anchor="start">full res / r10m</text>
+<text x="292.0" y="90.0" class="xs" text-anchor="end">7 ranges</text>
+<path d="M300.0,78.0 H824.3 Q828.3,78.0 828.3,82.0 V90.0 Q828.3,94.0 824.3,94.0 H300.0 Z" class="cogS"><title>z14 COG: 4,717 KB, 7 ranges</title></path>
+<text x="834.3" y="90.0" class="s" text-anchor="start">4,717 KB</text>
+<text x="292.0" y="108.0" class="xs" text-anchor="end">7 GET</text>
+<path d="M300.0,96.0 H519.0 Q523.0,96.0 523.0,100.0 V108.0 Q523.0,112.0 519.0,112.0 H300.0 Z" class="zarS"><title>z14 GeoZarr: 1,991 KB, 7 GET</title></path>
+<text x="529.0" y="108.0" class="s" text-anchor="start">1,991 KB</text>
+<text x="30.0" y="150.0" class="t" text-anchor="start">z12 · 12/2212/1534</text>
+<text x="30.0" y="167.0" class="xs" text-anchor="start">full res / r20m</text>
+<text x="292.0" y="148.0" class="xs" text-anchor="end">16 ranges</text>
+<path d="M300.0,136.0 H838.0 Q842.0,136.0 842.0,140.0 V148.0 Q842.0,152.0 838.0,152.0 H300.0 Z" class="cogS"><title>z12 COG: 4,839 KB, 16 ranges</title></path>
+<text x="848.0" y="148.0" class="s" text-anchor="start">4,839 KB</text>
+<text x="292.0" y="166.0" class="xs" text-anchor="end">7 GET</text>
+<path d="M300.0,154.0 H527.0 Q531.0,154.0 531.0,158.0 V166.0 Q531.0,170.0 527.0,170.0 H300.0 Z" class="zarS"><title>z12 GeoZarr: 2,062 KB, 7 GET</title></path>
+<text x="537.0" y="166.0" class="s" text-anchor="start">2,062 KB</text>
+<text x="30.0" y="208.0" class="t" text-anchor="start">z10 · 10/553/383</text>
+<text x="30.0" y="225.0" class="xs" text-anchor="start">overview / r120m</text>
+<text x="292.0" y="206.0" class="xs" text-anchor="end">10 ranges</text>
+<path d="M300.0,194.0 H564.1 Q568.1,194.0 568.1,198.0 V206.0 Q568.1,210.0 564.1,210.0 H300.0 Z" class="cogS"><title>z10 COG: 2,394 KB, 10 ranges</title></path>
+<text x="574.1" y="206.0" class="s" text-anchor="start">2,394 KB</text>
+<text x="292.0" y="224.0" class="xs" text-anchor="end">7 GET</text>
+<path d="M300.0,212.0 H411.7 Q415.7,212.0 415.7,216.0 V224.0 Q415.7,228.0 411.7,228.0 H300.0 Z" class="zarS"><title>z10 GeoZarr: 1,033 KB, 7 GET</title></path>
+<text x="421.7" y="224.0" class="s" text-anchor="start">1,033 KB</text>
+<text x="30.0" y="270.0" class="xs" text-anchor="start">B04 + B03 + B02, cold, every range recorded. COG: 7 calls (STAC Item + 3 headers + 3 block reads). GeoZarr: 7 GETs.</text>
+</svg>
