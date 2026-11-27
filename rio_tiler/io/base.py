@@ -204,7 +204,7 @@ class SpatialMixin:
         if has_undefined_extent(tile_bounds):
             return False
 
-        # If tile_bounds has non-finite value in the dataset CRS we return True
+        # Partially infinite bounds (e.g. a tile containing a pole): the tile might intersect
         if not all(numpy.isfinite(tile_bounds)):
             return True
 
