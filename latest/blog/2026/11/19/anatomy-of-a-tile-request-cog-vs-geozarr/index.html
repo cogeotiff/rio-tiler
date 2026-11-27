@@ -3147,7 +3147,7 @@
                       <li class="md-nav__item">
                         <div class="md-nav__link">
                           <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M15 13h1.5v2.82l2.44 1.41-.75 1.3L15 16.69zm4-5H5v11h4.67c-.43-.91-.67-1.93-.67-3a7 7 0 0 1 7-7c1.07 0 2.09.24 3 .67zM5 21a2 2 0 0 1-2-2V5c0-1.11.89-2 2-2h1V1h2v2h8V1h2v2h1a2 2 0 0 1 2 2v6.1c1.24 1.26 2 2.99 2 4.9a7 7 0 0 1-7 7c-1.91 0-3.64-.76-4.9-2zm11-9.85A4.85 4.85 0 0 0 11.15 16c0 2.68 2.17 4.85 4.85 4.85A4.85 4.85 0 0 0 20.85 16c0-2.68-2.17-4.85-4.85-4.85"/></svg>
-                          <time datetime="2026-11-23 00:00:00+00:00" class="md-ellipsis">November 23, 2026</time>
+                          <time datetime="2026-11-27 00:00:00+00:00" class="md-ellipsis">November 27, 2026</time>
                         </div>
                       </li>
                     
@@ -3204,6 +3204,16 @@ from the same Sentinel-2 band (B04, red), stored as a COG and as a GeoZarr.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>This post, along with its benchmark scripts and figures, was written with the help of <a href="https://claude.com/claude-code">Claude Code</a> (Anthropic).</p>
+</div>
+<div class="admonition info">
+<p class="admonition-title">Updated on 2026-11-27: measured again with rio-tiler's new readers</p>
+<p>The readers left <code>rio_tiler.experimental</code>: they are now <code>rio_tiler.io.geotiff.Reader</code>,
+<code>rio_tiler.io.zarr.AsyncGroupReader</code> and <code>rio_tiler.io.stac.AsyncSTACReader</code>. They also
+pick the overview (or multiscale level) with GDAL's rule, and warp the pixels onto the
+tile in a single pass.</p>
+<p>All the scripts were run again. Requests and bytes are <strong>exactly the same</strong> for every tile
+(same levels, same byte ranges). Only the timings were measured again (new 10-run medians).
+The conclusions don't change.</p>
 </div>
 <div class="admonition info">
 <p class="admonition-title">Updated on 2026-11-23: GeoZarr stored as <code>uint16</code></p>
@@ -3408,39 +3418,39 @@ internet to <code>us-east-1</code>.</p>
 <tbody>
 <tr>
 <td>z14</td>
-<td>544 ms</td>
-<td>738 ms</td>
-<td><strong>1281 ms</strong></td>
-<td>769 ms</td>
+<td>571 ms</td>
+<td>743 ms</td>
+<td><strong>1305 ms</strong></td>
+<td>770 ms</td>
 <td>533 ms</td>
-<td><strong>1290 ms</strong></td>
+<td><strong>1321 ms</strong></td>
 </tr>
 <tr>
 <td>z12</td>
-<td>572 ms</td>
-<td>874 ms</td>
-<td><strong>1465 ms</strong></td>
+<td>556 ms</td>
+<td>843 ms</td>
+<td><strong>1414 ms</strong></td>
 <td>796 ms</td>
-<td>509 ms</td>
-<td><strong>1291 ms</strong></td>
+<td>438 ms</td>
+<td><strong>1214 ms</strong></td>
 </tr>
 <tr>
 <td>z10</td>
-<td>565 ms</td>
-<td>657 ms</td>
-<td><strong>1205 ms</strong></td>
-<td>786 ms</td>
-<td>391 ms</td>
-<td><strong>1175 ms</strong></td>
+<td>577 ms</td>
+<td>650 ms</td>
+<td><strong>1217 ms</strong></td>
+<td>776 ms</td>
+<td>388 ms</td>
+<td><strong>1162 ms</strong></td>
 </tr>
 <tr>
 <td>z9</td>
-<td>580 ms</td>
-<td>485 ms</td>
-<td><strong>1066 ms</strong></td>
-<td>791 ms</td>
-<td>498 ms</td>
-<td><strong>1283 ms</strong></td>
+<td>563 ms</td>
+<td>456 ms</td>
+<td><strong>1011 ms</strong></td>
+<td>783 ms</td>
+<td>500 ms</td>
+<td><strong>1270 ms</strong></td>
 </tr>
 </tbody>
 </table>
@@ -3448,13 +3458,13 @@ internet to <code>us-east-1</code>.</p>
 <img alt="Time per tile" src="../../../../img/cog_vs_geozarr/time_per_tile_dark.svg#only-dark" /></p>
 <ul>
 <li><strong>Open</strong> is dominated by the first request (DNS + TLS + cold connection). It costs
-  ~560 ms for the COG (32 KB header) and ~790 ms for Zarr (215 KB <code>zarr.json</code>).</li>
-<li><strong>Totals are close</strong>: within 3% at z14 and z10. Zarr is 12% faster at z12 (half the bytes),
-  the COG 17% faster at z9 (half the bytes, the other way around).</li>
+  ~570 ms for the COG (32 KB header) and ~780 ms for Zarr (215 KB <code>zarr.json</code>).</li>
+<li><strong>Totals are close</strong> at z14 (within 1%) and z10 (Zarr 5% faster). Zarr is 14% faster at
+  z12 (half the bytes), the COG 20% faster at z9 (half the bytes, the other way around).</li>
 </ul>
 <p><strong>Why is Zarr's tile step faster with <em>more</em> round trips?</strong></p>
 <p>Zarr's tile step (2 dependent GETs: shard index, then chunks) takes 390–530 ms, the COG's
-(1 GET for the blocks) 490–870 ms. From a laptop, bandwidth is part of the cost:</p>
+(1 GET for the blocks) 460–840 ms. From a laptop, bandwidth is part of the cost:</p>
 <ul>
 <li>Zarr downloads about half the bytes from z14 to z10, which pays for its extra round trip.</li>
 <li>A bigger first read also warms the TCP connection: in an earlier run of this benchmark,
@@ -3562,39 +3572,39 @@ read per band, then one data read per band.</p>
 <tbody>
 <tr>
 <td>z14</td>
-<td>503 ms</td>
-<td>1339 ms</td>
-<td><strong>1854 ms</strong></td>
-<td>780 ms</td>
-<td>973 ms</td>
-<td><strong>1764 ms</strong></td>
-</tr>
-<tr>
-<td>z12</td>
-<td>502 ms</td>
-<td>1457 ms</td>
-<td><strong>1949 ms</strong></td>
-<td>786 ms</td>
-<td>986 ms</td>
+<td>501 ms</td>
+<td>1328 ms</td>
+<td><strong>1829 ms</strong></td>
+<td>793 ms</td>
+<td>969 ms</td>
 <td><strong>1767 ms</strong></td>
 </tr>
 <tr>
+<td>z12</td>
+<td>488 ms</td>
+<td>1416 ms</td>
+<td><strong>1896 ms</strong></td>
+<td>772 ms</td>
+<td>931 ms</td>
+<td><strong>1694 ms</strong></td>
+</tr>
+<tr>
 <td>z10</td>
-<td>490 ms</td>
-<td>1182 ms</td>
-<td><strong>1684 ms</strong></td>
-<td>795 ms</td>
-<td>767 ms</td>
-<td><strong>1566 ms</strong></td>
+<td>480 ms</td>
+<td>1175 ms</td>
+<td><strong>1651 ms</strong></td>
+<td>784 ms</td>
+<td>770 ms</td>
+<td><strong>1556 ms</strong></td>
 </tr>
 </tbody>
 </table>
 <p><img alt="Time per 3-band tile" src="../../../../img/cog_vs_geozarr/multiband_time.svg#only-light" />
 <img alt="Time per 3-band tile" src="../../../../img/cog_vs_geozarr/multiband_time_dark.svg#only-dark" /></p>
 <ul>
-<li><strong>GeoZarr is 5–9% faster</strong> (1.57–1.77 s vs 1.68–1.95 s), with the same number of round trips.</li>
-<li>COG <strong>opens</strong> faster (2.7 KB STAC Item vs 215 KB <code>zarr.json</code>, ~500 vs ~790 ms), but
-  its <strong>tile</strong> step is ~370–470 ms slower: it downloads more than twice the bytes, and with
+<li><strong>GeoZarr is 3–11% faster</strong> (1.56–1.77 s vs 1.65–1.90 s), with the same number of round trips.</li>
+<li>COG <strong>opens</strong> faster (2.7 KB STAC Item vs 215 KB <code>zarr.json</code>, ~490 vs ~780 ms), but
+  its <strong>tile</strong> step is ~360–490 ms slower: it downloads more than twice the bytes, and with
   one store per file each band's first request opens a new HTTPS connection, while the
   three GeoZarr index reads reuse the one store's connections.</li>
 </ul>
@@ -3650,7 +3660,7 @@ read per band, then one data read per band.</p>
   chunks still downloads chunks the tile doesn't need. At low zoom, a level picked finer
   than the COG's overview can cost more (z9).</li>
 <li><strong>Metadata</strong>: consolidated <code>zarr.json</code> pays off when reading several bands
-  or levels from the same store — and costs extra (~230 ms here) for a single-band tile.</li>
+  or levels from the same store — and costs extra (~210 ms here) for a single-band tile.</li>
 <li><strong>Several bands</strong>: the round trips don't grow with the number of bands (bands are read
   concurrently): 3 for both, with the STAC Item playing the role of <code>zarr.json</code>. COG pays
   one header and one new connection per file; GeoZarr reads <code>zarr.json</code> once, reuses the
@@ -3686,7 +3696,7 @@ read per band, then one data read per band.</p>
         <span class="n">kw</span> <span class="o">=</span> <span class="p">{</span><span class="n">k</span><span class="p">:</span> <span class="n">v</span> <span class="k">for</span> <span class="n">k</span><span class="p">,</span> <span class="n">v</span> <span class="ow">in</span> <span class="n">kw</span><span class="o">.</span><span class="n">items</span><span class="p">()</span> <span class="k">if</span> <span class="n">v</span> <span class="ow">is</span> <span class="ow">not</span> <span class="kc">None</span><span class="p">}</span>
         <span class="k">return</span> <span class="n">zarr</span><span class="o">.</span><span class="n">abc</span><span class="o">.</span><span class="n">store</span><span class="o">.</span><span class="n">Store</span><span class="o">.</span><span class="n">get_ranges</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">key</span><span class="p">,</span> <span class="n">byte_ranges</span><span class="p">,</span> <span class="n">prototype</span><span class="o">=</span><span class="n">prototype</span><span class="p">,</span> <span class="o">**</span><span class="n">kw</span><span class="p">)</span>
 </code></pre></div>
-<p>Versions: zarr-python 3.4.2, cast-value-rs 0.5.1, measured 2026-11-23.</p>
+<p>Versions: zarr-python 3.4.2, cast-value-rs 0.5.1, async-geotiff 0.5.1, obstore 0.12.1, measured 2026-11-27.</p>
 
 
 
