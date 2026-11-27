@@ -1,60 +1,88 @@
 
 # Unreleased
 
-* breaking: move `rio_tiler.experimental.geotiff` to `rio_tiler.io.geotiff` and `rio_tiler.experimental.zarr` to `rio_tiler.io.zarr` (the readers are no longer experimental)
-* breaking: move `rio_tiler.experimental.async_stac.AsyncSTACReader` to `rio_tiler.io.stac.AsyncSTACReader` (also available as `rio_tiler.io.AsyncSTACReader`)
-* breaking: remove python 3.11 support (rasterio 1.5 requires python >=3.12)
-* breaking: remove `scales` and `offsets` attributes in ImageData and PointData models
-* breaking: remove `count` attribute in ImageData and PointData models
-* breaking: `band_descriptions` and `band_names` attributes are not forwarded from ImageData and PointData models when using mosaic readers
-* breaking: refactor `rio_tiler.experimental.zarr` Array (`AsyncArrayReader`, `ArrayReader`) and Group (`AsyncGroupReader`, `GroupReader`) readers
-    * remove `band_names` attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to `{dim}{n}`)
-    * remove: `_variables` property in `AsyncGroupReader` and `GroupReader`
+### Misc Breaking changes
+
+* remove python 3.11 support
+* require `rasterio>=1.5.1` and `affine>=3.0`
+* move readers out of `experimental`:
+    * `rio_tiler.experimental.geotiff` -> `rio_tiler.io.geotiff`
+    * `rio_tiler.experimental.zarr` -> `rio_tiler.io.zarr`
+    * `rio_tiler.experimental.async_stac.AsyncSTACReader` -> `rio_tiler.io.stac.AsyncSTACReader` (also `rio_tiler.io.AsyncSTACReader`)
+* `ImageData` / `PointData`:
+    * remove `scales`, `offsets` and `count` attributes
+    * mosaic readers no longer forward `band_descriptions` and `band_names`
+
+### Zarr readers (rio_tiler.io.zarr)
+
+* **breaking** replace `indexes` with an xarray-like `sel` option:
+
+    ```python
+    sel=[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}]
+    ```
+
+    * selects non-spatial dimensions by coordinate labels (or positions when a dimension has no coordinates)
+    * `values`: a scalar (the dimension is dropped), a list of labels or a slice of labels
+    * `method`: exact (default), `nearest`, `pad`/`ffill`, `backfill`/`bfill`
+    * unselected non-spatial dimensions are kept: readers return `(*non-spatial dims, height, width)` data
+    * the selected labels are stored in `ImageData.metadata["selected"]`
+* **breaking** dimensions and coordinates:
+    * remove `band_names` attribute: band descriptions come from the coordinates of the non-spatial dimensions (fallback to `{dim}{n}`); `ImageData.band_descriptions` is `{dimension: labels}` (a `list` for 2D/3D arrays)
     * add `dimensions` attribute (defaults to the zarr `dimension_names` metadata)
-    * add `spatial_dims` attribute (`[y_dim, x_dim]`, defaults to `spatial:dimensions` from the `spatial` zarr-convention), so Y/X no longer need to be the last two axes
-    * change: `coordinates` now holds the full `coords:coordinates` mapping (`{dim: {...}}`) for all dimensions instead of the coordinate of the first non-spatial dimension
-    * change: `info().dimensions` now returns the `dimensions` attribute
-    * change: reads use `get_orthogonal_selection` with per-dimension selection (internal `_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=)`)
-    * change: `GroupReader`/`AsyncGroupReader` forward the arrays' `spatial_dims` and `coordinates` to the Array readers
-    * add: `selectable_dimensions` (`{dimension: coordinates}` for the non-spatial dimensions, usable with `sel`) in `GroupReader`/`AsyncGroupReader` `list_variables()` entries
-* breaking: replace `indexes` with xarray-like `sel` option in `rio_tiler.experimental.zarr` readers
-    * `sel` (`list[Selector]`, e.g `[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}]`) selects non-spatial dimensions using the `coordinates` values (or positions when a dimension has no coordinates)
-    * `Selector["values"]` can be a scalar (the dimension is dropped), a list of labels or a slice of labels
-    * `Selector["method"]` (per dimension) supports exact (default), `nearest`, `pad`/`ffill` and `backfill`/`bfill` matching
-    * support N-D arrays: unselected non-spatial dimensions are kept, and readers return `(*non-spatial dims, height, width)` data
-    * the returned `ImageData.band_descriptions` is `{dimension: labels}` for all the non-spatial dimensions (a `list` for 2D/3D arrays)
+    * add `spatial_dims` attribute (`[y_dim, x_dim]`, defaults to `spatial:dimensions` from the `spatial` zarr-convention): Y/X no longer need to be the last two axes
+    * `coordinates` now holds the full `coords:coordinates` mapping (`{dim: {...}}`) for all dimensions
     * add `coordinate_values` property (`{dimension: values}`)
-    * the selected non-spatial labels are stored in `ImageData.metadata["selected"]`
-    * `info()` no longer lists per-band metadata and adds `dimensions_count` (plus `coordinates` when called with `with_coordinates=True`)
-* change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) stack the variables along a new `variables` dimension (labeled with the variable names in `band_descriptions`) (N-D data, or 3D `[variables, y, x]` when all the variables are 2D). When only one variable is requested, its data is returned as is (no `variables` dimension)
-* change: `rio_tiler.experimental.zarr` group readers (`GroupReader`, `AsyncGroupReader`) cache `get_group_metadata` results in a cache shared by all readers (keyed by store location and group path), concurrent calls for the same group share a single request. Cache size and TTL are configurable with `RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE` (default: 512) and `RIO_TILER_ZARR_METADATA_CACHE_TTL` (default: 300 seconds)
-* change: `rio_tiler.experimental.zarr.AsyncGroupReader.get_group_metadata` fetches the multiscale levels concurrently
-* perf: `rio_tiler.experimental.zarr` Array readers build fixed-step temporal `interval` coordinates with numpy (no Python loop) and create coordinate labels only for the selected positions
-* change: require `rasterio>=1.5.1` and `affine>=3.0`
-* add: `reduce(dim, func)` method to `ImageData` and `PointData` to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in `metadata["reduced"]`)
-* add: `resampling_method` option to the zarr Array readers' `tile` method
-* add: `async-lru>=2.4` to the `zarr` optional dependencies
-* add: `rio_tiler.utils.run_sync` to run a blocking function in a worker thread, forwarding the active rasterio environment
-* add: `stack_on_dim` option to `ImageData.create_from_list` and `PointData.create_from_list` to stack data along a new leading dimension (instead of concatenating them along the first dimension), which enables merging N-D data. 2D data (`(1, y, x)` with a `b` dimension) are stacked directly on the new dimension (`[stack_on_dim, y, x]`)
-* add: N-D support in `ImageData`/`PointData` (`(*leading, height, width)`): N-D data have per-dimension `band_descriptions` and `band_names` (`dict`). Expression, colormap, color formula, rescale, statistics, `to_raster` and rendering (except `NPY`/`NPZ`) raise `ValueError` for N-D data
-* fix: use masked array reprojection in `rio_tiler._warp.warp` (fix mask warping with GDAL >= 3.11)
-* fix: use `@` instead of `*` for affine matrix multiplication
-* fix: compute the cumulative weights in `float64` in `rio_tiler.utils._weighted_quantiles` to avoid wrong `median`/`percentile_*` statistics with `float32` coverage arrays (https://github.com/cogeotiff/rio-tiler/issues/1045)
-* fix: run blocking warp/reproject/resize in a worker thread (`asyncio.to_thread`) in the async experimental readers (`geotiff.Reader`, `zarr.AsyncArrayReader`) to avoid blocking the event loop
-* perf: skip the dataset mask read in `rio_tiler.reader.read` when the mask only comes from the nodata value (the mask is re-created from the data), avoiding full-resolution mask reads through `WarpedVRT`
-* feat: emit a `ZoomOutsideNativeRangeWarning` in `Reader.tile()` when the tile zoom is below the dataset `minzoom` (output is resampled beyond the coarsest overview and the read can be slow)
-* fix: `rio_tiler.experimental.zarr` Array readers (`ArrayReader`, `AsyncArrayReader`) read the exact pixel window in `part()` (no extra row/column, avoiding reading neighbouring chunks); 1 pixel padding is added on each side only for `bilinear`/`cubic`/... resampling methods. Windows outside the array now raise `InvalidBounds`
-* docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
-* fix: `rio_tiler.experimental.geotiff.Reader.part()` now raises `ValueError` when the bbox is entirely left of or above the dataset (previously created a window with a negative size)
-* change: `rio_tiler._warp.warp` (used by the experimental `geotiff`, `xarray` and `zarr` readers) warps the source pixels directly onto the output grid in a single pass (previously: reproject at native resolution, then resize). Like `rio_tiler.io.Reader`, the kernel is `reproject_method` when the CRS changes and `resampling_method` otherwise (`gauss`, not supported by the warper, still uses two steps)
-* change: `rio_tiler.experimental.geotiff.Reader` and the `rio_tiler.experimental.zarr` group readers select the overview (or multiscale level) with GDAL's rule (`rio_tiler._warp.get_overview_level`) instead of the aiocogeo 50% rule: the most downsampled overview whose downsampling factor is lower than `desired factor * threshold`, with `threshold=1.2` for `nearest` and `1.0` for other resampling methods (configurable with the new `RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD` environment variable, `rio_tiler.constants.OVERVIEW_OVERSAMPLING_THRESHOLD`, which defaults to GDAL's `GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD` when defined). For `bilinear`/`cubic`/... resampling, a finer overview is now read (and downsampled) instead of a coarser one (upsampled). The `zoom_level_strategy` option of the internal overview selection methods is removed
-* fix: `rio_tiler.experimental.zarr.GroupReader.part()` now accepts and forwards `resampling_method` (it was documented but missing)
-* add: `rio_tiler.experimental.rasterio.Reader`, a rasterio reader that doesn't use `WarpedVRT`: it reads the native pixels in the dataset CRS (from the overview selected with GDAL's rule, using GDAL's overview geometry), then warps them onto the output grid in memory with `rio_tiler._warp.warp` (same logic as `rio_tiler.experimental.geotiff.Reader`)
-* fix: `ImageData.reproject` masks the output pixels not covered by the source (they were returned as valid zeros, e.g. a dataset crossing the antimeridian reprojected to EPSG:4326)
+    * `info()`: `dimensions` returns the `dimensions` attribute, per-band metadata is no longer listed, adds `dimensions_count` (and `coordinates` with `with_coordinates=True`)
+    * internal: reads use `get_orthogonal_selection` (`_read(row_slice=, col_slice=)` -> `_read(y_slice=, x_slice=)`)
+* **breaking** group readers (`GroupReader`, `AsyncGroupReader`):
+    * variables are stacked along a new `variables` dimension (labeled with the variable names). A single variable is returned as is
+    * `list_variables()` entries include `selectable_dimensions` (`{dimension: coordinates}`, usable with `sel`)
+    * `spatial_dims` and `coordinates` are forwarded to the Array readers
+* group metadata (`get_group_metadata`) is cached in a cache shared by all readers (keyed by store and group path); concurrent calls share a single request. Configure with `RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE` (default: 512) and `RIO_TILER_ZARR_METADATA_CACHE_TTL` (default: 300s)
+* `AsyncGroupReader.get_group_metadata` fetches the multiscale levels concurrently
+* add `async-lru>=2.4` to the `zarr` optional dependencies
+* add `resampling_method` option to the Array readers' `tile()` method
+* Array readers' `part()` reads the exact pixel window (no neighbouring chunks); 1 pixel padding is added only for `bilinear`/`cubic`/... resampling. Windows outside the array raise `InvalidBounds`
+* fix: `GroupReader.part()` accepts and forwards `resampling_method`
+* perf: fixed-step temporal `interval` coordinates are built with numpy, and labels are only created for the selected positions
+
+### N-D data
+
+* `ImageData` / `PointData` support N-D data (`(*leading, height, width)`), with per-dimension `band_descriptions` and `band_names` (`dict`)
+    * expression, colormap, color formula, rescale, statistics, `to_raster` and rendering (except `NPY`/`NPZ`) raise `ValueError` for N-D data
+* add `ImageData.reduce(dim, func)` / `PointData.reduce(dim, func)` to reduce along a non-spatial dimension (listed in `metadata["reduced"]`)
+* add `stack_on_dim` option to `ImageData.create_from_list` / `PointData.create_from_list` to stack data along a new leading dimension instead of concatenating along the first one. 2D data (`(1, y, x)`) are stacked as `[stack_on_dim, y, x]`
+
+### Warping and overview selection (`geotiff`, `zarr`, `xarray` readers)
+
+* `rio_tiler._warp.warp` warps the source pixels onto the output grid in a single pass (previously: reproject at native resolution, then resize). The kernel is `reproject_method` when the CRS changes, `resampling_method` otherwise (`gauss` still uses two steps)
+* `geotiff.Reader` and the zarr group readers select overviews (multiscale levels) with GDAL's rule (`rio_tiler._warp.get_overview_level`) instead of the aiocogeo 50% rule
+    * pick the most downsampled overview whose factor is lower than `desired factor * threshold` (`threshold=1.2` for `nearest`, `1.0` otherwise)
+    * the threshold is configurable with `RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD` (`rio_tiler.constants.OVERVIEW_OVERSAMPLING_THRESHOLD`, defaults to `GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD` when set)
+    * for `bilinear`/`cubic`/... a finer overview is now read and downsampled (instead of a coarser one upsampled)
+    * remove `zoom_level_strategy` option from the internal overview selection methods
+* fix: use masked array reprojection in `rio_tiler._warp.warp` (mask warping with GDAL >= 3.11)
 * fix: `rio_tiler._warp.warp` no longer raises `ZeroDivisionError` when the source contains a pole and the output CRS is geographic
-* fix: `tile_exists` returns `False` when the tile bounds can't be transformed to the dataset CRS (e.g. tiles far outside a UTM zone), so `tile()` raises `TileOutsideBounds` (`rio_tiler.io.Reader` used to return a fully valid tile of misplaced data). Add `rio_tiler.utils.has_undefined_extent`
-* fix: `part()` of the experimental readers (`geotiff`, `rasterio`, `xarray`, `zarr`) raises `Input BBOX and dataset's bounds do not intersect` instead of `cannot convert float NaN to integer` when the bbox can't be transformed to the dataset CRS
-* fix: experimental `geotiff` and `zarr` readers return a `rasterio.crs.CRS` as output `crs` when `dst_crs` is passed as a string
+* fix: run blocking warp/reproject/resize in a worker thread in the async readers (`geotiff.Reader`, `zarr.AsyncArrayReader`)
+
+### Other additions
+
+* add `rio_tiler.experimental.rasterio.Reader`: a rasterio reader without `WarpedVRT`. It reads native pixels from the overview selected with GDAL's rule, then warps them in memory with `rio_tiler._warp.warp` (same logic as `rio_tiler.io.geotiff.Reader`)
+* add `rio_tiler.utils.run_sync` to run a blocking function in a worker thread, forwarding the active rasterio environment
+* add `rio_tiler.utils.has_undefined_extent`
+* `Reader.tile()` emits a `ZoomOutsideNativeRangeWarning` when the zoom is below the dataset `minzoom` (resampling beyond the coarsest overview can be slow)
+* perf: `rio_tiler.reader.read` skips the dataset mask read when the mask only comes from the nodata value (avoids full-resolution mask reads through `WarpedVRT`)
+* docs: new `experimental` documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)
+
+### Fixes
+
+* `tile_exists` returns `False` when the tile bounds can't be transformed to the dataset CRS (e.g. far outside a UTM zone), so `tile()` raises `TileOutsideBounds` instead of returning misplaced data
+* `ImageData.reproject` masks output pixels not covered by the source (previously valid zeros, e.g. antimeridian-crossing datasets reprojected to EPSG:4326)
+* `part()` of the `geotiff`, `rasterio` (experimental), `xarray` and `zarr` readers raises `Input BBOX and dataset's bounds do not intersect` (instead of `cannot convert float NaN to integer`) when the bbox can't be transformed to the dataset CRS
+* `geotiff.Reader.part()` raises `ValueError` when the bbox is entirely left of or above the dataset (previously a negative-size window)
+* `geotiff` and `zarr` readers return a `rasterio.crs.CRS` as output `crs` when `dst_crs` is a string
+* use `@` instead of `*` for affine matrix multiplication
+* compute cumulative weights in `float64` in `rio_tiler.utils._weighted_quantiles` (wrong `median`/`percentile_*` with `float32` coverage arrays, https://github.com/cogeotiff/rio-tiler/issues/1045)
 
 ## 9.4.13 (2026-11-02)
 
