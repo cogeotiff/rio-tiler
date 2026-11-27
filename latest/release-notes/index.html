@@ -557,6 +557,8 @@
       
         
       
+        
+      
     
     
     
@@ -621,6 +623,34 @@
     
   
     Async-GeoTIFF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experimental/rasterio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rasterio (read, then warp)
   
 
     
@@ -2062,6 +2092,8 @@
       
         
       
+        
+      
     
     
     
@@ -2145,6 +2177,34 @@
     
   
     rio_tiler.experimental.geotiff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../api/rio_tiler/experimental/rasterio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.experimental.rasterio
   
 
     
@@ -8131,6 +8191,12 @@
 <li>change: <code>rio_tiler._warp.warp</code> (used by the experimental <code>geotiff</code>, <code>xarray</code> and <code>zarr</code> readers) warps the source pixels directly onto the output grid in a single pass (previously: reproject at native resolution, then resize). Like <code>rio_tiler.io.Reader</code>, the kernel is <code>reproject_method</code> when the CRS changes and <code>resampling_method</code> otherwise (<code>gauss</code>, not supported by the warper, still uses two steps)</li>
 <li>change: <code>rio_tiler.experimental.geotiff.Reader</code> and the <code>rio_tiler.experimental.zarr</code> group readers select the overview (or multiscale level) with GDAL's rule (<code>rio_tiler._warp.get_overview_level</code>) instead of the aiocogeo 50% rule: the most downsampled overview whose downsampling factor is lower than <code>desired factor * threshold</code>, with <code>threshold=1.2</code> for <code>nearest</code> and <code>1.0</code> for other resampling methods (configurable with the new <code>RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD</code> environment variable, <code>rio_tiler.constants.OVERVIEW_OVERSAMPLING_THRESHOLD</code>, which defaults to GDAL's <code>GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD</code> when defined). For <code>bilinear</code>/<code>cubic</code>/... resampling, a finer overview is now read (and downsampled) instead of a coarser one (upsampled). The <code>zoom_level_strategy</code> option of the internal overview selection methods is removed</li>
 <li>fix: <code>rio_tiler.experimental.zarr.GroupReader.part()</code> now accepts and forwards <code>resampling_method</code> (it was documented but missing)</li>
+<li>add: <code>rio_tiler.experimental.rasterio.Reader</code>, a rasterio reader that doesn't use <code>WarpedVRT</code>: it reads the native pixels in the dataset CRS (from the overview selected with GDAL's rule, using GDAL's overview geometry), then warps them onto the output grid in memory with <code>rio_tiler._warp.warp</code> (same logic as <code>rio_tiler.experimental.geotiff.Reader</code>)</li>
+<li>fix: <code>ImageData.reproject</code> masks the output pixels not covered by the source (they were returned as valid zeros, e.g. a dataset crossing the antimeridian reprojected to EPSG:4326)</li>
+<li>fix: <code>rio_tiler._warp.warp</code> no longer raises <code>ZeroDivisionError</code> when the source contains a pole and the output CRS is geographic</li>
+<li>fix: <code>tile_exists</code> returns <code>False</code> when the tile bounds can't be transformed to the dataset CRS (e.g. tiles far outside a UTM zone), so <code>tile()</code> raises <code>TileOutsideBounds</code> (<code>rio_tiler.io.Reader</code> used to return a fully valid tile of misplaced data). Add <code>rio_tiler.utils.has_undefined_extent</code></li>
+<li>fix: <code>part()</code> of the experimental readers (<code>geotiff</code>, <code>rasterio</code>, <code>xarray</code>, <code>zarr</code>) raises <code>Input BBOX and dataset's bounds do not intersect</code> instead of <code>cannot convert float NaN to integer</code> when the bbox can't be transformed to the dataset CRS</li>
+<li>fix: experimental <code>geotiff</code> and <code>zarr</code> readers return a <code>rasterio.crs.CRS</code> as output <code>crs</code> when <code>dst_crs</code> is passed as a string</li>
 </ul>
 <h2 id="9413-2026-11-02">9.4.13 (2026-11-02)<a class="headerlink" href="#9413-2026-11-02" title="Permanent link">&para;</a></h2>
 <ul>

@@ -557,6 +557,8 @@
       
         
       
+        
+      
     
     
     
@@ -621,6 +623,34 @@
     
   
     Async-GeoTIFF
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../../../experimental/rasterio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    Rasterio (read, then warp)
   
 
     
@@ -2064,6 +2094,8 @@
       
         
       
+        
+      
     
     
     
@@ -2147,6 +2179,34 @@
     
   
     rio_tiler.experimental.geotiff
+  
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../experimental/rasterio/" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+    rio_tiler.experimental.rasterio
   
 
     
@@ -2753,6 +2813,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_mask_band
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_undefined_extent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_undefined_extent
       
     </span>
   </a>
@@ -3500,6 +3571,17 @@
     <span class="md-ellipsis">
       
         <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_mask_band
+      
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rio_tiler.utils.has_undefined_extent" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        <code class="doc-symbol doc-symbol-toc doc-symbol-function"></code>&nbsp;has_undefined_extent
       
     </span>
   </a>
@@ -4440,6 +4522,30 @@
     <div class="doc doc-contents ">
 
         <p>Check for mask band in source.</p>
+
+
+    </div>
+
+</div>
+
+<div class="doc doc-object doc-function">
+
+
+<h3 id="rio_tiler.utils.has_undefined_extent" class="doc doc-heading">
+            <span class="doc doc-object-name doc-function-name">has_undefined_extent</span>
+
+
+<a href="#rio_tiler.utils.has_undefined_extent" class="headerlink" title="Permanent link">&para;</a></h3>
+<div class="doc-signature codehilite"><pre><span></span><code><span class="nf">has_undefined_extent</span><span class="p">(</span><span class="n">bounds</span><span class="p">:</span> <span class="n"><span title="typing.Sequence">Sequence</span></span><span class="p">[</span><span class="n"><span title="float">float</span></span><span class="p">])</span> <span class="o">-&gt;</span> <span class="n"><span title="bool">bool</span></span>
+</code></pre></div>
+
+    <div class="doc doc-contents ">
+
+        <p>Check if bounds returned by <code>rasterio.warp.transform_bounds</code> have an undefined extent.</p>
+<p>When none of the points can be transformed (e.g. far outside the validity area
+of a UTM zone), <code>transform_bounds</code> returns <code>NaN</code> or <code>(inf, inf, inf, inf)</code>.</p>
+<p>NOTE: bounds with only some infinite values (e.g. bounds containing a pole)
+have a defined (infinite) extent.</p>
 
 
     </div>
