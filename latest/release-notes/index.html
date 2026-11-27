@@ -2662,6 +2662,72 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#misc-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Misc Breaking changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zarr-readers-rio_tileriozarr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zarr readers (rio_tiler.io.zarr)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#n-d-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        N-D data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warping-and-overview-selection-geotiff-zarr-xarray-readers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warping and overview selection (geotiff, zarr, xarray readers)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-additions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other additions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#9413-2026-11-02" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -5532,6 +5598,72 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#misc-breaking-changes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Misc Breaking changes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#zarr-readers-rio_tileriozarr" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Zarr readers (rio_tiler.io.zarr)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#n-d-data" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        N-D data
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#warping-and-overview-selection-geotiff-zarr-xarray-readers" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Warping and overview selection (geotiff, zarr, xarray readers)
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-additions" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Other additions
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fixes" class="md-nav__link">
+    <span class="md-ellipsis">
+      
+        Fixes
+      
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#9413-2026-11-02" class="md-nav__link">
     <span class="md-ellipsis">
       
@@ -8140,65 +8272,97 @@
 
 
 <h1 id="unreleased">Unreleased<a class="headerlink" href="#unreleased" title="Permanent link">&para;</a></h1>
+<h3 id="misc-breaking-changes">Misc Breaking changes<a class="headerlink" href="#misc-breaking-changes" title="Permanent link">&para;</a></h3>
 <ul>
-<li>breaking: move <code>rio_tiler.experimental.geotiff</code> to <code>rio_tiler.io.geotiff</code> and <code>rio_tiler.experimental.zarr</code> to <code>rio_tiler.io.zarr</code> (the readers are no longer experimental)</li>
-<li>breaking: move <code>rio_tiler.experimental.async_stac.AsyncSTACReader</code> to <code>rio_tiler.io.stac.AsyncSTACReader</code> (also available as <code>rio_tiler.io.AsyncSTACReader</code>)</li>
-<li>breaking: remove python 3.11 support (rasterio 1.5 requires python &gt;=3.12)</li>
-<li>breaking: remove <code>scales</code> and <code>offsets</code> attributes in ImageData and PointData models</li>
-<li>breaking: remove <code>count</code> attribute in ImageData and PointData models</li>
-<li>breaking: <code>band_descriptions</code> and <code>band_names</code> attributes are not forwarded from ImageData and PointData models when using mosaic readers</li>
-<li>breaking: refactor <code>rio_tiler.experimental.zarr</code> Array (<code>AsyncArrayReader</code>, <code>ArrayReader</code>) and Group (<code>AsyncGroupReader</code>, <code>GroupReader</code>) readers<ul>
-<li>remove <code>band_names</code> attribute; band descriptions are derived from the coordinates of the first non-spatial dimension (fallback to <code>{dim}{n}</code>)</li>
-<li>remove: <code>_variables</code> property in <code>AsyncGroupReader</code> and <code>GroupReader</code></li>
+<li>remove python 3.11 support</li>
+<li>require <code>rasterio&gt;=1.5.1</code> and <code>affine&gt;=3.0</code></li>
+<li>move readers out of <code>experimental</code>:<ul>
+<li><code>rio_tiler.experimental.geotiff</code> -&gt; <code>rio_tiler.io.geotiff</code></li>
+<li><code>rio_tiler.experimental.zarr</code> -&gt; <code>rio_tiler.io.zarr</code></li>
+<li><code>rio_tiler.experimental.async_stac.AsyncSTACReader</code> -&gt; <code>rio_tiler.io.stac.AsyncSTACReader</code> (also <code>rio_tiler.io.AsyncSTACReader</code>)</li>
+</ul>
+</li>
+<li><code>ImageData</code> / <code>PointData</code>:<ul>
+<li>remove <code>scales</code>, <code>offsets</code> and <code>count</code> attributes</li>
+<li>mosaic readers no longer forward <code>band_descriptions</code> and <code>band_names</code></li>
+</ul>
+</li>
+</ul>
+<h3 id="zarr-readers-rio_tileriozarr">Zarr readers (rio_tiler.io.zarr)<a class="headerlink" href="#zarr-readers-rio_tileriozarr" title="Permanent link">&para;</a></h3>
+<ul>
+<li>
+<p><strong>breaking</strong> replace <code>indexes</code> with an xarray-like <code>sel</code> option:</p>
+<div class="highlight"><pre><span></span><code><span class="n">sel</span><span class="o">=</span><span class="p">[{</span><span class="s2">"dimension"</span><span class="p">:</span> <span class="s2">"time"</span><span class="p">,</span> <span class="s2">"values"</span><span class="p">:</span> <span class="s2">"2025-01-01"</span><span class="p">,</span> <span class="s2">"method"</span><span class="p">:</span> <span class="s2">"nearest"</span><span class="p">}]</span>
+</code></pre></div>
+<ul>
+<li>selects non-spatial dimensions by coordinate labels (or positions when a dimension has no coordinates)</li>
+<li><code>values</code>: a scalar (the dimension is dropped), a list of labels or a slice of labels</li>
+<li><code>method</code>: exact (default), <code>nearest</code>, <code>pad</code>/<code>ffill</code>, <code>backfill</code>/<code>bfill</code></li>
+<li>unselected non-spatial dimensions are kept: readers return <code>(*non-spatial dims, height, width)</code> data</li>
+<li>the selected labels are stored in <code>ImageData.metadata["selected"]</code></li>
+<li><strong>breaking</strong> dimensions and coordinates:</li>
+<li>remove <code>band_names</code> attribute: band descriptions come from the coordinates of the non-spatial dimensions (fallback to <code>{dim}{n}</code>); <code>ImageData.band_descriptions</code> is <code>{dimension: labels}</code> (a <code>list</code> for 2D/3D arrays)</li>
 <li>add <code>dimensions</code> attribute (defaults to the zarr <code>dimension_names</code> metadata)</li>
-<li>add <code>spatial_dims</code> attribute (<code>[y_dim, x_dim]</code>, defaults to <code>spatial:dimensions</code> from the <code>spatial</code> zarr-convention), so Y/X no longer need to be the last two axes</li>
-<li>change: <code>coordinates</code> now holds the full <code>coords:coordinates</code> mapping (<code>{dim: {...}}</code>) for all dimensions instead of the coordinate of the first non-spatial dimension</li>
-<li>change: <code>info().dimensions</code> now returns the <code>dimensions</code> attribute</li>
-<li>change: reads use <code>get_orthogonal_selection</code> with per-dimension selection (internal <code>_read(row_slice=, col_slice=)</code> -&gt; <code>_read(y_slice=, x_slice=)</code>)</li>
-<li>change: <code>GroupReader</code>/<code>AsyncGroupReader</code> forward the arrays' <code>spatial_dims</code> and <code>coordinates</code> to the Array readers</li>
-<li>add: <code>selectable_dimensions</code> (<code>{dimension: coordinates}</code> for the non-spatial dimensions, usable with <code>sel</code>) in <code>GroupReader</code>/<code>AsyncGroupReader</code> <code>list_variables()</code> entries</li>
-</ul>
-</li>
-<li>breaking: replace <code>indexes</code> with xarray-like <code>sel</code> option in <code>rio_tiler.experimental.zarr</code> readers<ul>
-<li><code>sel</code> (<code>list[Selector]</code>, e.g <code>[{"dimension": "time", "values": "2025-01-01", "method": "nearest"}]</code>) selects non-spatial dimensions using the <code>coordinates</code> values (or positions when a dimension has no coordinates)</li>
-<li><code>Selector["values"]</code> can be a scalar (the dimension is dropped), a list of labels or a slice of labels</li>
-<li><code>Selector["method"]</code> (per dimension) supports exact (default), <code>nearest</code>, <code>pad</code>/<code>ffill</code> and <code>backfill</code>/<code>bfill</code> matching</li>
-<li>support N-D arrays: unselected non-spatial dimensions are kept, and readers return <code>(*non-spatial dims, height, width)</code> data</li>
-<li>the returned <code>ImageData.band_descriptions</code> is <code>{dimension: labels}</code> for all the non-spatial dimensions (a <code>list</code> for 2D/3D arrays)</li>
+<li>add <code>spatial_dims</code> attribute (<code>[y_dim, x_dim]</code>, defaults to <code>spatial:dimensions</code> from the <code>spatial</code> zarr-convention): Y/X no longer need to be the last two axes</li>
+<li><code>coordinates</code> now holds the full <code>coords:coordinates</code> mapping (<code>{dim: {...}}</code>) for all dimensions</li>
 <li>add <code>coordinate_values</code> property (<code>{dimension: values}</code>)</li>
-<li>the selected non-spatial labels are stored in <code>ImageData.metadata["selected"]</code></li>
-<li><code>info()</code> no longer lists per-band metadata and adds <code>dimensions_count</code> (plus <code>coordinates</code> when called with <code>with_coordinates=True</code>)</li>
+<li><code>info()</code>: <code>dimensions</code> returns the <code>dimensions</code> attribute, per-band metadata is no longer listed, adds <code>dimensions_count</code> (and <code>coordinates</code> with <code>with_coordinates=True</code>)</li>
+<li>internal: reads use <code>get_orthogonal_selection</code> (<code>_read(row_slice=, col_slice=)</code> -&gt; <code>_read(y_slice=, x_slice=)</code>)</li>
+<li><strong>breaking</strong> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>):</li>
+<li>variables are stacked along a new <code>variables</code> dimension (labeled with the variable names). A single variable is returned as is</li>
+<li><code>list_variables()</code> entries include <code>selectable_dimensions</code> (<code>{dimension: coordinates}</code>, usable with <code>sel</code>)</li>
+<li><code>spatial_dims</code> and <code>coordinates</code> are forwarded to the Array readers</li>
+<li>group metadata (<code>get_group_metadata</code>) is cached in a cache shared by all readers (keyed by store and group path); concurrent calls share a single request. Configure with <code>RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE</code> (default: 512) and <code>RIO_TILER_ZARR_METADATA_CACHE_TTL</code> (default: 300s)</li>
+<li><code>AsyncGroupReader.get_group_metadata</code> fetches the multiscale levels concurrently</li>
+<li>add <code>async-lru&gt;=2.4</code> to the <code>zarr</code> optional dependencies</li>
+<li>add <code>resampling_method</code> option to the Array readers' <code>tile()</code> method</li>
+<li>Array readers' <code>part()</code> reads the exact pixel window (no neighbouring chunks); 1 pixel padding is added only for <code>bilinear</code>/<code>cubic</code>/... resampling. Windows outside the array raise <code>InvalidBounds</code></li>
+<li>fix: <code>GroupReader.part()</code> accepts and forwards <code>resampling_method</code></li>
+<li>perf: fixed-step temporal <code>interval</code> coordinates are built with numpy, and labels are only created for the selected positions</li>
 </ul>
 </li>
-<li>change: <code>rio_tiler.experimental.zarr</code> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>) stack the variables along a new <code>variables</code> dimension (labeled with the variable names in <code>band_descriptions</code>) (N-D data, or 3D <code>[variables, y, x]</code> when all the variables are 2D). When only one variable is requested, its data is returned as is (no <code>variables</code> dimension)</li>
-<li>change: <code>rio_tiler.experimental.zarr</code> group readers (<code>GroupReader</code>, <code>AsyncGroupReader</code>) cache <code>get_group_metadata</code> results in a cache shared by all readers (keyed by store location and group path), concurrent calls for the same group share a single request. Cache size and TTL are configurable with <code>RIO_TILER_ZARR_METADATA_CACHE_MAXSIZE</code> (default: 512) and <code>RIO_TILER_ZARR_METADATA_CACHE_TTL</code> (default: 300 seconds)</li>
-<li>change: <code>rio_tiler.experimental.zarr.AsyncGroupReader.get_group_metadata</code> fetches the multiscale levels concurrently</li>
-<li>perf: <code>rio_tiler.experimental.zarr</code> Array readers build fixed-step temporal <code>interval</code> coordinates with numpy (no Python loop) and create coordinate labels only for the selected positions</li>
-<li>change: require <code>rasterio&gt;=1.5.1</code> and <code>affine&gt;=3.0</code></li>
-<li>add: <code>reduce(dim, func)</code> method to <code>ImageData</code> and <code>PointData</code> to reduce N-D data along a non-spatial dimension (reduced dimensions are listed in <code>metadata["reduced"]</code>)</li>
-<li>add: <code>resampling_method</code> option to the zarr Array readers' <code>tile</code> method</li>
-<li>add: <code>async-lru&gt;=2.4</code> to the <code>zarr</code> optional dependencies</li>
-<li>add: <code>rio_tiler.utils.run_sync</code> to run a blocking function in a worker thread, forwarding the active rasterio environment</li>
-<li>add: <code>stack_on_dim</code> option to <code>ImageData.create_from_list</code> and <code>PointData.create_from_list</code> to stack data along a new leading dimension (instead of concatenating them along the first dimension), which enables merging N-D data. 2D data (<code>(1, y, x)</code> with a <code>b</code> dimension) are stacked directly on the new dimension (<code>[stack_on_dim, y, x]</code>)</li>
-<li>add: N-D support in <code>ImageData</code>/<code>PointData</code> (<code>(*leading, height, width)</code>): N-D data have per-dimension <code>band_descriptions</code> and <code>band_names</code> (<code>dict</code>). Expression, colormap, color formula, rescale, statistics, <code>to_raster</code> and rendering (except <code>NPY</code>/<code>NPZ</code>) raise <code>ValueError</code> for N-D data</li>
-<li>fix: use masked array reprojection in <code>rio_tiler._warp.warp</code> (fix mask warping with GDAL &gt;= 3.11)</li>
-<li>fix: use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
-<li>fix: compute the cumulative weights in <code>float64</code> in <code>rio_tiler.utils._weighted_quantiles</code> to avoid wrong <code>median</code>/<code>percentile_*</code> statistics with <code>float32</code> coverage arrays (<a class="magiclink magiclink-github magiclink-issue" href="https://github.com/cogeotiff/rio-tiler/issues/1045" title="GitHub Issue: cogeotiff/rio-tiler #1045">cogeotiff/rio-tiler#1045</a>)</li>
-<li>fix: run blocking warp/reproject/resize in a worker thread (<code>asyncio.to_thread</code>) in the async experimental readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>) to avoid blocking the event loop</li>
-<li>perf: skip the dataset mask read in <code>rio_tiler.reader.read</code> when the mask only comes from the nodata value (the mask is re-created from the data), avoiding full-resolution mask reads through <code>WarpedVRT</code></li>
-<li>feat: emit a <code>ZoomOutsideNativeRangeWarning</code> in <code>Reader.tile()</code> when the tile zoom is below the dataset <code>minzoom</code> (output is resampled beyond the coarsest overview and the read can be slow)</li>
-<li>fix: <code>rio_tiler.experimental.zarr</code> Array readers (<code>ArrayReader</code>, <code>AsyncArrayReader</code>) read the exact pixel window in <code>part()</code> (no extra row/column, avoiding reading neighbouring chunks); 1 pixel padding is added on each side only for <code>bilinear</code>/<code>cubic</code>/... resampling methods. Windows outside the array now raise <code>InvalidBounds</code></li>
-<li>docs: new <code>experimental</code> documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)</li>
-<li>fix: <code>rio_tiler.experimental.geotiff.Reader.part()</code> now raises <code>ValueError</code> when the bbox is entirely left of or above the dataset (previously created a window with a negative size)</li>
-<li>change: <code>rio_tiler._warp.warp</code> (used by the experimental <code>geotiff</code>, <code>xarray</code> and <code>zarr</code> readers) warps the source pixels directly onto the output grid in a single pass (previously: reproject at native resolution, then resize). Like <code>rio_tiler.io.Reader</code>, the kernel is <code>reproject_method</code> when the CRS changes and <code>resampling_method</code> otherwise (<code>gauss</code>, not supported by the warper, still uses two steps)</li>
-<li>change: <code>rio_tiler.experimental.geotiff.Reader</code> and the <code>rio_tiler.experimental.zarr</code> group readers select the overview (or multiscale level) with GDAL's rule (<code>rio_tiler._warp.get_overview_level</code>) instead of the aiocogeo 50% rule: the most downsampled overview whose downsampling factor is lower than <code>desired factor * threshold</code>, with <code>threshold=1.2</code> for <code>nearest</code> and <code>1.0</code> for other resampling methods (configurable with the new <code>RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD</code> environment variable, <code>rio_tiler.constants.OVERVIEW_OVERSAMPLING_THRESHOLD</code>, which defaults to GDAL's <code>GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD</code> when defined). For <code>bilinear</code>/<code>cubic</code>/... resampling, a finer overview is now read (and downsampled) instead of a coarser one (upsampled). The <code>zoom_level_strategy</code> option of the internal overview selection methods is removed</li>
-<li>fix: <code>rio_tiler.experimental.zarr.GroupReader.part()</code> now accepts and forwards <code>resampling_method</code> (it was documented but missing)</li>
-<li>add: <code>rio_tiler.experimental.rasterio.Reader</code>, a rasterio reader that doesn't use <code>WarpedVRT</code>: it reads the native pixels in the dataset CRS (from the overview selected with GDAL's rule, using GDAL's overview geometry), then warps them onto the output grid in memory with <code>rio_tiler._warp.warp</code> (same logic as <code>rio_tiler.experimental.geotiff.Reader</code>)</li>
-<li>fix: <code>ImageData.reproject</code> masks the output pixels not covered by the source (they were returned as valid zeros, e.g. a dataset crossing the antimeridian reprojected to EPSG:4326)</li>
+</ul>
+<h3 id="n-d-data">N-D data<a class="headerlink" href="#n-d-data" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>ImageData</code> / <code>PointData</code> support N-D data (<code>(*leading, height, width)</code>), with per-dimension <code>band_descriptions</code> and <code>band_names</code> (<code>dict</code>)<ul>
+<li>expression, colormap, color formula, rescale, statistics, <code>to_raster</code> and rendering (except <code>NPY</code>/<code>NPZ</code>) raise <code>ValueError</code> for N-D data</li>
+</ul>
+</li>
+<li>add <code>ImageData.reduce(dim, func)</code> / <code>PointData.reduce(dim, func)</code> to reduce along a non-spatial dimension (listed in <code>metadata["reduced"]</code>)</li>
+<li>add <code>stack_on_dim</code> option to <code>ImageData.create_from_list</code> / <code>PointData.create_from_list</code> to stack data along a new leading dimension instead of concatenating along the first one. 2D data (<code>(1, y, x)</code>) are stacked as <code>[stack_on_dim, y, x]</code></li>
+</ul>
+<h3 id="warping-and-overview-selection-geotiff-zarr-xarray-readers">Warping and overview selection (<code>geotiff</code>, <code>zarr</code>, <code>xarray</code> readers)<a class="headerlink" href="#warping-and-overview-selection-geotiff-zarr-xarray-readers" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>rio_tiler._warp.warp</code> warps the source pixels onto the output grid in a single pass (previously: reproject at native resolution, then resize). The kernel is <code>reproject_method</code> when the CRS changes, <code>resampling_method</code> otherwise (<code>gauss</code> still uses two steps)</li>
+<li><code>geotiff.Reader</code> and the zarr group readers select overviews (multiscale levels) with GDAL's rule (<code>rio_tiler._warp.get_overview_level</code>) instead of the aiocogeo 50% rule<ul>
+<li>pick the most downsampled overview whose factor is lower than <code>desired factor * threshold</code> (<code>threshold=1.2</code> for <code>nearest</code>, <code>1.0</code> otherwise)</li>
+<li>the threshold is configurable with <code>RIO_TILER_OVERVIEW_OVERSAMPLING_THRESHOLD</code> (<code>rio_tiler.constants.OVERVIEW_OVERSAMPLING_THRESHOLD</code>, defaults to <code>GDAL_OVERVIEW_OVERSAMPLING_THRESHOLD</code> when set)</li>
+<li>for <code>bilinear</code>/<code>cubic</code>/... a finer overview is now read and downsampled (instead of a coarser one upsampled)</li>
+<li>remove <code>zoom_level_strategy</code> option from the internal overview selection methods</li>
+</ul>
+</li>
+<li>fix: use masked array reprojection in <code>rio_tiler._warp.warp</code> (mask warping with GDAL &gt;= 3.11)</li>
 <li>fix: <code>rio_tiler._warp.warp</code> no longer raises <code>ZeroDivisionError</code> when the source contains a pole and the output CRS is geographic</li>
-<li>fix: <code>tile_exists</code> returns <code>False</code> when the tile bounds can't be transformed to the dataset CRS (e.g. tiles far outside a UTM zone), so <code>tile()</code> raises <code>TileOutsideBounds</code> (<code>rio_tiler.io.Reader</code> used to return a fully valid tile of misplaced data). Add <code>rio_tiler.utils.has_undefined_extent</code></li>
-<li>fix: <code>part()</code> of the experimental readers (<code>geotiff</code>, <code>rasterio</code>, <code>xarray</code>, <code>zarr</code>) raises <code>Input BBOX and dataset's bounds do not intersect</code> instead of <code>cannot convert float NaN to integer</code> when the bbox can't be transformed to the dataset CRS</li>
-<li>fix: experimental <code>geotiff</code> and <code>zarr</code> readers return a <code>rasterio.crs.CRS</code> as output <code>crs</code> when <code>dst_crs</code> is passed as a string</li>
+<li>fix: run blocking warp/reproject/resize in a worker thread in the async readers (<code>geotiff.Reader</code>, <code>zarr.AsyncArrayReader</code>)</li>
+</ul>
+<h3 id="other-additions">Other additions<a class="headerlink" href="#other-additions" title="Permanent link">&para;</a></h3>
+<ul>
+<li>add <code>rio_tiler.experimental.rasterio.Reader</code>: a rasterio reader without <code>WarpedVRT</code>. It reads native pixels from the overview selected with GDAL's rule, then warps them in memory with <code>rio_tiler._warp.warp</code> (same logic as <code>rio_tiler.io.geotiff.Reader</code>)</li>
+<li>add <code>rio_tiler.utils.run_sync</code> to run a blocking function in a worker thread, forwarding the active rasterio environment</li>
+<li>add <code>rio_tiler.utils.has_undefined_extent</code></li>
+<li><code>Reader.tile()</code> emits a <code>ZoomOutsideNativeRangeWarning</code> when the zoom is below the dataset <code>minzoom</code> (resampling beyond the coarsest overview can be slow)</li>
+<li>perf: <code>rio_tiler.reader.read</code> skips the dataset mask read when the mask only comes from the nodata value (avoids full-resolution mask reads through <code>WarpedVRT</code>)</li>
+<li>docs: new <code>experimental</code> documentation section (async-geotiff, async-stac, geoxarray, geozarr, vsifile)</li>
+</ul>
+<h3 id="fixes">Fixes<a class="headerlink" href="#fixes" title="Permanent link">&para;</a></h3>
+<ul>
+<li><code>tile_exists</code> returns <code>False</code> when the tile bounds can't be transformed to the dataset CRS (e.g. far outside a UTM zone), so <code>tile()</code> raises <code>TileOutsideBounds</code> instead of returning misplaced data</li>
+<li><code>ImageData.reproject</code> masks output pixels not covered by the source (previously valid zeros, e.g. antimeridian-crossing datasets reprojected to EPSG:4326)</li>
+<li><code>part()</code> of the <code>geotiff</code>, <code>rasterio</code> (experimental), <code>xarray</code> and <code>zarr</code> readers raises <code>Input BBOX and dataset's bounds do not intersect</code> (instead of <code>cannot convert float NaN to integer</code>) when the bbox can't be transformed to the dataset CRS</li>
+<li><code>geotiff.Reader.part()</code> raises <code>ValueError</code> when the bbox is entirely left of or above the dataset (previously a negative-size window)</li>
+<li><code>geotiff</code> and <code>zarr</code> readers return a <code>rasterio.crs.CRS</code> as output <code>crs</code> when <code>dst_crs</code> is a string</li>
+<li>use <code>@</code> instead of <code>*</code> for affine matrix multiplication</li>
+<li>compute cumulative weights in <code>float64</code> in <code>rio_tiler.utils._weighted_quantiles</code> (wrong <code>median</code>/<code>percentile_*</code> with <code>float32</code> coverage arrays, <a class="magiclink magiclink-github magiclink-issue" href="https://github.com/cogeotiff/rio-tiler/issues/1045" title="GitHub Issue: cogeotiff/rio-tiler #1045">cogeotiff/rio-tiler#1045</a>)</li>
 </ul>
 <h2 id="9413-2026-11-02">9.4.13 (2026-11-02)<a class="headerlink" href="#9413-2026-11-02" title="Permanent link">&para;</a></h2>
 <ul>
